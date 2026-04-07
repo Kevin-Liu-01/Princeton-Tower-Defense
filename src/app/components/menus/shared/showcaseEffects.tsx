@@ -18,12 +18,12 @@ export function FloatingParticles({
           key={index}
           className="absolute w-1 h-1 rounded-full animate-float-particle"
           style={{
-            background: color,
-            left: `${15 + (index * 70) / count}%`,
-            bottom: `${10 + (index % 3) * 15}%`,
             animationDelay: `${index * 0.5}s`,
             animationDuration: `${2.5 + (index % 3) * 0.5}s`,
+            background: color,
+            bottom: `${10 + (index % 3) * 15}%`,
             boxShadow: `0 0 6px ${color}`,
+            left: `${15 + (index * 70) / count}%`,
           }}
         />
       ))}
@@ -46,9 +46,19 @@ export function RuneBackground({
 }: RuneBackgroundProps) {
   return (
     <div className="absolute inset-0 pointer-events-none animate-rune-fade overflow-hidden">
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        className="absolute inset-0 w-full h-full opacity-[0.12]"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <defs>
-          <pattern id={patternId} x="0" y="0" width={width} height={height} patternUnits="userSpaceOnUse">
+          <pattern
+            id={patternId}
+            x="0"
+            y="0"
+            width={width}
+            height={height}
+            patternUnits="userSpaceOnUse"
+          >
             {children}
           </pattern>
         </defs>

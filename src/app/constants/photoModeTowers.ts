@@ -1,5 +1,20 @@
-import type { Tower, TowerType, TowerUpgrade, GridPosition, Position } from "../types";
-import { TOWER_DATA } from "./towers";
+import {
+  getBlockedPositionsForMap,
+  getLevelAllowedTowers,
+} from "../game/setup/levelState";
+import type {
+  Tower,
+  TowerType,
+  TowerUpgrade,
+  GridPosition,
+  Position,
+} from "../types";
+import {
+  gridToWorld,
+  gridToWorldPath,
+  distanceToLineSegment,
+  isValidBuildPosition,
+} from "../utils";
 import {
   GRID_WIDTH,
   GRID_HEIGHT,
@@ -8,13 +23,7 @@ import {
 } from "./gameplay";
 import { LEVEL_DATA } from "./maps";
 import { getLevelPaths, getLevelUniquePathSegments } from "./pathing";
-import {
-  gridToWorld,
-  gridToWorldPath,
-  distanceToLineSegment,
-  isValidBuildPosition,
-} from "../utils";
-import { getBlockedPositionsForMap, getLevelAllowedTowers } from "../game/setup/levelState";
+import { TOWER_DATA } from "./towers";
 
 // =============================================================================
 // Seeded PRNG for deterministic placement per map
@@ -23,14 +32,14 @@ import { getBlockedPositionsForMap, getLevelAllowedTowers } from "../game/setup/
 function createSeededRng(seed: string): () => number {
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
-    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
+    h = (Math.imul(31, h) + seed.codePointAt(i)) | 0;
   }
   let s = h >>> 0;
   return () => {
     s = (s ^ (s << 13)) >>> 0;
     s = (s ^ (s >> 17)) >>> 0;
     s = (s ^ (s << 5)) >>> 0;
-    return (s >>> 0) / 4294967296;
+    return (s >>> 0) / 4_294_967_296;
   };
 }
 
@@ -54,7 +63,7 @@ const TARGET_TOWER_COUNT_PER_PATH = 4;
 function scoreCandidatePositions(
   mapKey: string,
   blockedPositions: Set<string>,
-  allowedTowers: TowerType[] | null,
+  allowedTowers: TowerType[] | null
 ): ScoredPosition[] {
   const segments = getLevelUniquePathSegments(mapKey);
   const paths = getLevelPaths(mapKey);
@@ -65,7 +74,9 @@ function scoreCandidatePositions(
       const prev = points[i - 1];
       const curr = points[i];
       const next = points[i + 1];
-      if (!prev || !curr || !next) continue;
+      if (!prev || !curr || !next) {
+        continue;
+      }
       const dx1 = curr.x - prev.x;
       const dy1 = curr.y - prev.y;
       const dx2 = next.x - curr.x;
@@ -87,7 +98,9 @@ function scoreCandidatePositions(
       }
     }
     for (const [key, count] of nodeCount) {
-      if (count > 1) intersectionNodes.add(key);
+      if (count > 1) {
+        intersectionNodes.add(key);
+      }
     }
   }
 
@@ -98,10 +111,23 @@ function scoreCandidatePositions(
     for (let gy = -margin; gy < GRID_HEIGHT + margin; gy++) {
       const gridPos: GridPosition = { x: gx, y: gy };
 
-      if (blockedPositions.has(`${gx},${gy}`)) continue;
+      if (blockedPositions.has(`${gx},${gy}`)) {
+        continue;
+      }
 
       const testType: TowerType = allowedTowers?.[0] ?? "cannon";
-      if (!isValidBuildPosition(gridPos, mapKey, [], GRID_WIDTH, GRID_HEIGHT, TOWER_PLACEMENT_BUFFER, blockedPositions, testType)) {
+      if (
+        !isValidBuildPosition(
+          gridPos,
+          mapKey,
+          [],
+          GRID_WIDTH,
+          GRID_HEIGHT,
+          TOWER_PLACEMENT_BUFFER,
+          blockedPositions,
+          testType
+        )
+      ) {
         continue;
       }
 
@@ -113,15 +139,22 @@ function scoreCandidatePositions(
         const p1 = gridToWorldPath(seg.start);
         const p2 = gridToWorldPath(seg.end);
         const dist = distanceToLineSegment(worldPos, p1, p2);
-        if (dist < minDist) minDist = dist;
-        if (dist < TOWER_EFFECTIVE_RANGE) segmentsInRange++;
+        if (dist < minDist) {
+          minDist = dist;
+        }
+        if (dist < TOWER_EFFECTIVE_RANGE) {
+          segmentsInRange++;
+        }
       }
 
-      if (minDist < TOWER_PLACEMENT_BUFFER || minDist > TOWER_EFFECTIVE_RANGE * 1.8) {
+      if (
+        minDist < TOWER_PLACEMENT_BUFFER ||
+        minDist > TOWER_EFFECTIVE_RANGE * 1.8
+      ) {
         continue;
       }
 
-      const nearBend = Array.from(bendNodes).some((key) => {
+      const nearBend = [...bendNodes].some((key) => {
         const [bx, by] = key.split(",").map(Number);
         const bWorld: Position = { x: bx! * TILE_SIZE, y: by! * TILE_SIZE };
         const dx = worldPos.x - bWorld.x;
@@ -129,7 +162,7 @@ function scoreCandidatePositions(
         return Math.sqrt(dx * dx + dy * dy) < TILE_SIZE * 5;
       });
 
-      const nearIntersection = Array.from(intersectionNodes).some((key) => {
+      const nearIntersection = [...intersectionNodes].some((key) => {
         const [ix, iy] = key.split(",").map(Number);
         const iWorld: Position = { x: ix! * TILE_SIZE, y: iy! * TILE_SIZE };
         const dx = worldPos.x - iWorld.x;
@@ -138,11 +171,11 @@ function scoreCandidatePositions(
       });
 
       scored.push({
-        pos: gridPos,
         minPathDist: minDist,
-        pathSegmentsInRange: segmentsInRange,
         nearBend,
         nearIntersection,
+        pathSegmentsInRange: segmentsInRange,
+        pos: gridPos,
       });
     }
   }
@@ -155,22 +188,22 @@ function scoreCandidatePositions(
 // =============================================================================
 
 type TowerRole =
-  | "blocker"      // station — near chokepoints
+  | "blocker" // station — near chokepoints
   | "backline_aoe" // mortar — far from path
-  | "damage"       // cannon — medium range
-  | "cc"           // library — near bends
-  | "energy"       // lab — spread out
-  | "multitarget"  // arch — spread out
-  | "economy";     // club — near clusters for boosting
+  | "damage" // cannon — medium range
+  | "cc" // library — near bends
+  | "energy" // lab — spread out
+  | "multitarget" // arch — spread out
+  | "economy"; // club — near clusters for boosting
 
 const ROLE_TO_TYPE: Record<TowerRole, TowerType> = {
-  blocker: "station",
   backline_aoe: "mortar",
-  damage: "cannon",
+  blocker: "station",
   cc: "library",
+  damage: "cannon",
+  economy: "club",
   energy: "lab",
   multitarget: "arch",
-  economy: "club",
 };
 
 interface PlacementSlot {
@@ -182,7 +215,11 @@ interface PlacementSlot {
 
 function countRole(roles: TowerRole[], role: TowerRole): number {
   let n = 0;
-  for (const r of roles) if (r === role) n++;
+  for (const r of roles) {
+    if (r === role) {
+      n++;
+    }
+  }
   return n;
 }
 
@@ -190,7 +227,7 @@ function assignRole(
   scored: ScoredPosition,
   rng: () => number,
   existingRoles: TowerRole[],
-  targetCount: number,
+  targetCount: number
 ): TowerRole {
   const mortarCount = countRole(existingRoles, "backline_aoe");
   const labCount = countRole(existingRoles, "energy");
@@ -199,44 +236,71 @@ function assignRole(
   const labTarget = Math.max(3, Math.round(targetCount * 0.18));
 
   // Mortars: far positions are always mortars, but also force some at medium range
-  if (scored.minPathDist > TOWER_EFFECTIVE_RANGE * 1.0) {
+  if (scored.minPathDist > TOWER_EFFECTIVE_RANGE * 1) {
     return "backline_aoe";
   }
-  if (mortarCount < mortarTarget && scored.minPathDist > TILE_SIZE * 1.8 && rng() < 0.55) {
+  if (
+    mortarCount < mortarTarget &&
+    scored.minPathDist > TILE_SIZE * 1.8 &&
+    rng() < 0.55
+  ) {
     return "backline_aoe";
   }
 
   // Labs: proactively assign when under-represented
-  if (labCount < labTarget && scored.minPathDist > TILE_SIZE * 1.2 && rng() < 0.5) {
+  if (
+    labCount < labTarget &&
+    scored.minPathDist > TILE_SIZE * 1.2 &&
+    rng() < 0.5
+  ) {
     return "energy";
   }
 
   // Stations at chokepoints
-  if ((scored.nearBend || scored.nearIntersection) && scored.minPathDist < TILE_SIZE * 2.5) {
+  if (
+    (scored.nearBend || scored.nearIntersection) &&
+    scored.minPathDist < TILE_SIZE * 2.5
+  ) {
     const blockerCount = countRole(existingRoles, "blocker");
-    if (blockerCount < 3 && rng() < 0.6) return "blocker";
+    if (blockerCount < 3 && rng() < 0.6) {
+      return "blocker";
+    }
   }
 
   // Libraries at bends with good coverage
   if (scored.nearBend && scored.pathSegmentsInRange >= 2) {
     const ccCount = countRole(existingRoles, "cc");
-    if (ccCount < 3 && rng() < 0.5) return "cc";
+    if (ccCount < 3 && rng() < 0.5) {
+      return "cc";
+    }
   }
 
   // High-coverage spots: mix of types
   if (scored.pathSegmentsInRange >= 3) {
     const r = rng();
-    if (r < 0.3) return "multitarget";
-    if (r < 0.55) return "energy";
+    if (r < 0.3) {
+      return "multitarget";
+    }
+    if (r < 0.55) {
+      return "energy";
+    }
     return "damage";
   }
 
   // Generic fallback — balanced distribution
   const roll = rng();
-  if (roll < 0.22) return "damage";
-  if (roll < 0.44) return "energy";
-  if (roll < 0.62) return "backline_aoe";
-  if (roll < 0.80) return "multitarget";
+  if (roll < 0.22) {
+    return "damage";
+  }
+  if (roll < 0.44) {
+    return "energy";
+  }
+  if (roll < 0.62) {
+    return "backline_aoe";
+  }
+  if (roll < 0.8) {
+    return "multitarget";
+  }
   return "damage";
 }
 
@@ -244,40 +308,66 @@ function assignLevel(
   role: TowerRole,
   rng: () => number,
   placedCount: number,
-  totalTarget: number,
+  totalTarget: number
 ): { level: 1 | 2 | 3 | 4; upgrade?: TowerUpgrade } {
   const progress = placedCount / Math.max(totalTarget, 1);
   const roll = rng();
 
   if (role === "economy") {
-    if (roll < 0.3) return { level: 4, upgrade: "A" };
-    if (roll < 0.6) return { level: 4, upgrade: "B" };
+    if (roll < 0.3) {
+      return { level: 4, upgrade: "A" };
+    }
+    if (roll < 0.6) {
+      return { level: 4, upgrade: "B" };
+    }
     return { level: 3 };
   }
 
   if (role === "backline_aoe") {
-    if (roll < 0.35) return { level: 4, upgrade: "A" };
-    if (roll < 0.55) return { level: 4, upgrade: "B" };
-    if (roll < 0.8) return { level: 3 };
+    if (roll < 0.35) {
+      return { level: 4, upgrade: "A" };
+    }
+    if (roll < 0.55) {
+      return { level: 4, upgrade: "B" };
+    }
+    if (roll < 0.8) {
+      return { level: 3 };
+    }
     return { level: 2 };
   }
 
   if (role === "blocker") {
-    if (roll < 0.3) return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
-    if (roll < 0.65) return { level: 3 };
+    if (roll < 0.3) {
+      return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
+    }
+    if (roll < 0.65) {
+      return { level: 3 };
+    }
     return { level: 2 };
   }
 
   if (progress > 0.7) {
-    if (roll < 0.15) return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
-    if (roll < 0.45) return { level: 3 };
-    if (roll < 0.8) return { level: 2 };
+    if (roll < 0.15) {
+      return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
+    }
+    if (roll < 0.45) {
+      return { level: 3 };
+    }
+    if (roll < 0.8) {
+      return { level: 2 };
+    }
     return { level: 1 };
   }
 
-  if (roll < 0.1) return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
-  if (roll < 0.35) return { level: 3 };
-  if (roll < 0.7) return { level: 2 };
+  if (roll < 0.1) {
+    return { level: 4, upgrade: rng() < 0.5 ? "A" : "B" };
+  }
+  if (roll < 0.35) {
+    return { level: 3 };
+  }
+  if (roll < 0.7) {
+    return { level: 2 };
+  }
   return { level: 1 };
 }
 
@@ -288,21 +378,25 @@ function assignLevel(
 function isTooCloseToExisting(
   pos: GridPosition,
   existing: GridPosition[],
-  minSpacing: number,
+  minSpacing: number
 ): boolean {
   for (const other of existing) {
     const dx = pos.x - other.x;
     const dy = pos.y - other.y;
-    if (Math.sqrt(dx * dx + dy * dy) < minSpacing) return true;
+    if (Math.sqrt(dx * dx + dy * dy) < minSpacing) {
+      return true;
+    }
   }
   return false;
 }
 
 function filterByAllowedTowers(
   slots: PlacementSlot[],
-  allowed: TowerType[] | null,
+  allowed: TowerType[] | null
 ): PlacementSlot[] {
-  if (!allowed) return slots;
+  if (!allowed) {
+    return slots;
+  }
   const allowedSet = new Set(allowed);
   return slots.filter((s) => allowedSet.has(ROLE_TO_TYPE[s.role]));
 }
@@ -313,22 +407,33 @@ function buildPhotoModePlacementsForMap(mapKey: string): Tower[] {
   const allowedTowers = getLevelAllowedTowers(mapKey);
   const paths = getLevelPaths(mapKey);
 
-  if (paths.length === 0) return [];
+  if (paths.length === 0) {
+    return [];
+  }
 
-  const candidates = scoreCandidatePositions(mapKey, blockedPositions, allowedTowers);
-  if (candidates.length === 0) return [];
+  const candidates = scoreCandidatePositions(
+    mapKey,
+    blockedPositions,
+    allowedTowers
+  );
+  if (candidates.length === 0) {
+    return [];
+  }
 
-  const targetCount = TARGET_TOWER_COUNT_BASE + (paths.length - 1) * TARGET_TOWER_COUNT_PER_PATH;
+  const targetCount =
+    TARGET_TOWER_COUNT_BASE + (paths.length - 1) * TARGET_TOWER_COUNT_PER_PATH;
 
   candidates.sort((a, b) => {
-    const scoreA = a.pathSegmentsInRange * 3
-      + (a.nearBend ? 5 : 0)
-      + (a.nearIntersection ? 4 : 0)
-      - Math.abs(a.minPathDist - TILE_SIZE * 1.5) * 0.02;
-    const scoreB = b.pathSegmentsInRange * 3
-      + (b.nearBend ? 5 : 0)
-      + (b.nearIntersection ? 4 : 0)
-      - Math.abs(b.minPathDist - TILE_SIZE * 1.5) * 0.02;
+    const scoreA =
+      a.pathSegmentsInRange * 3 +
+      (a.nearBend ? 5 : 0) +
+      (a.nearIntersection ? 4 : 0) -
+      Math.abs(a.minPathDist - TILE_SIZE * 1.5) * 0.02;
+    const scoreB =
+      b.pathSegmentsInRange * 3 +
+      (b.nearBend ? 5 : 0) +
+      (b.nearIntersection ? 4 : 0) -
+      Math.abs(b.minPathDist - TILE_SIZE * 1.5) * 0.02;
     return scoreB - scoreA;
   });
 
@@ -346,26 +451,38 @@ function buildPhotoModePlacementsForMap(mapKey: string): Tower[] {
   let economyCount = 0;
 
   for (const candidate of candidates) {
-    if (slots.length >= targetCount) break;
+    if (slots.length >= targetCount) {
+      break;
+    }
 
-    if (isTooCloseToExisting(candidate.pos, placedPositions, MIN_TOWER_SPACING)) {
+    if (
+      isTooCloseToExisting(candidate.pos, placedPositions, MIN_TOWER_SPACING)
+    ) {
       continue;
     }
 
     const placedTowers: Tower[] = placedPositions.map((p, i) => ({
       id: `temp-${i}`,
-      type: ROLE_TO_TYPE[placedRoles[i]!],
-      pos: p,
-      level: 1 as const,
       lastAttack: 0,
+      level: 1 as const,
+      pos: p,
       rotation: 0,
+      type: ROLE_TO_TYPE[placedRoles[i]!],
     }));
 
     const testType = allowedTowers?.[0] ?? "cannon";
-    if (!isValidBuildPosition(
-      candidate.pos, mapKey, placedTowers, GRID_WIDTH, GRID_HEIGHT,
-      TOWER_PLACEMENT_BUFFER, blockedPositions, testType,
-    )) {
+    if (
+      !isValidBuildPosition(
+        candidate.pos,
+        mapKey,
+        placedTowers,
+        GRID_WIDTH,
+        GRID_HEIGHT,
+        TOWER_PLACEMENT_BUFFER,
+        blockedPositions,
+        testType
+      )
+    ) {
       continue;
     }
 
@@ -378,15 +495,17 @@ function buildPhotoModePlacementsForMap(mapKey: string): Tower[] {
 
     if (allowedTowers && !allowedTowers.includes(ROLE_TO_TYPE[role])) {
       const fallback = allowedTowers[Math.floor(rng() * allowedTowers.length)];
-      if (!fallback) continue;
+      if (!fallback) {
+        continue;
+      }
       const reverseMap: Partial<Record<TowerType, TowerRole>> = {
-        station: "blocker",
-        mortar: "backline_aoe",
-        cannon: "damage",
-        library: "cc",
-        lab: "energy",
         arch: "multitarget",
+        cannon: "damage",
         club: "economy",
+        lab: "energy",
+        library: "cc",
+        mortar: "backline_aoe",
+        station: "blocker",
       };
       role = reverseMap[fallback] ?? "damage";
     }
@@ -394,9 +513,9 @@ function buildPhotoModePlacementsForMap(mapKey: string): Tower[] {
     const levelInfo = assignLevel(role, rng, slots.length, targetCount);
 
     slots.push({
+      level: levelInfo.level,
       pos: candidate.pos,
       role,
-      level: levelInfo.level,
       upgrade: levelInfo.upgrade,
     });
     placedPositions.push(candidate.pos);
@@ -409,30 +528,31 @@ function buildPhotoModePlacementsForMap(mapKey: string): Tower[] {
 function convertSlotsToTowers(
   slots: PlacementSlot[],
   rng: () => number,
-  _mapKey: string,
+  _mapKey: string
 ): Tower[] {
   return slots.map((slot, idx) => {
     const type = ROLE_TO_TYPE[slot.role];
     const isStation = type === "station";
 
-    const rotation = type === "cannon"
-      ? rng() * Math.PI * 2
-      : type === "mortar"
-        ? -Math.PI / 2 + (rng() - 0.5) * 0.4
-        : 0;
+    const rotation =
+      type === "cannon"
+        ? rng() * Math.PI * 2
+        : type === "mortar"
+          ? -Math.PI / 2 + (rng() - 0.5) * 0.4
+          : 0;
 
     const tower: Tower = {
       id: `photo-${type}-${idx}`,
-      type,
-      pos: slot.pos,
-      level: slot.level,
-      upgrade: slot.upgrade,
       lastAttack: 0,
-      rotation,
-      spawnRange: isStation ? TOWER_DATA.station.spawnRange : undefined,
+      level: slot.level,
+      mortarAutoAim: type === "mortar" ? true : undefined,
       occupiedSpawnSlots: isStation ? [false, false, false] : undefined,
       pendingRespawns: isStation ? [] : undefined,
-      mortarAutoAim: type === "mortar" ? true : undefined,
+      pos: slot.pos,
+      rotation,
+      spawnRange: isStation ? TOWER_DATA.station.spawnRange : undefined,
+      type,
+      upgrade: slot.upgrade,
     };
 
     return tower;
@@ -447,10 +567,14 @@ const photoModeCache = new Map<string, Tower[]>();
 
 export function buildPhotoModeTowers(mapKey: string): Tower[] {
   const cached = photoModeCache.get(mapKey);
-  if (cached) return cached.map((t) => ({ ...t }));
+  if (cached) {
+    return cached.map((t) => ({ ...t }));
+  }
 
   const levelData = LEVEL_DATA[mapKey];
-  if (!levelData) return [];
+  if (!levelData) {
+    return [];
+  }
 
   const towers = buildPhotoModePlacementsForMap(mapKey);
   photoModeCache.set(mapKey, towers);

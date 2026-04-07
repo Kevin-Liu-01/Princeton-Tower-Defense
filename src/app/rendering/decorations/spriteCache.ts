@@ -1,4 +1,8 @@
-import type { Position, DecorationType, DecorationHeightTag } from "../../types";
+import type {
+  Position,
+  DecorationType,
+  DecorationHeightTag,
+} from "../../types";
 import { getDecorationVolumeSpec } from "../../utils";
 import { renderDecorationItem } from "./renderDecorationItem";
 
@@ -15,10 +19,10 @@ export interface DecorationSprite {
 
 const SPRITE_BASE_CSS: Record<DecorationHeightTag, number> = {
   ground: 80,
-  short: 110,
-  medium: 180,
-  tall: 300,
   landmark: 520,
+  medium: 180,
+  short: 110,
+  tall: 300,
 };
 
 const MAX_SPRITE_CSS = 700;
@@ -27,10 +31,13 @@ const LARGE_SPRITE_THRESHOLD = 400;
 
 function getSpriteCSS(
   heightTag: DecorationHeightTag,
-  effectiveScale: number,
+  effectiveScale: number
 ): number {
   const base = SPRITE_BASE_CSS[heightTag] ?? 180;
-  return Math.min(Math.ceil(base * Math.max(effectiveScale, 0.5)), MAX_SPRITE_CSS);
+  return Math.min(
+    Math.ceil(base * Math.max(effectiveScale, 0.5)),
+    MAX_SPRITE_CSS
+  );
 }
 
 export function prerenderDecorationSprite(
@@ -46,22 +53,27 @@ export function prerenderDecorationSprite(
   heightTag?: DecorationHeightTag,
   shadowOnly?: boolean,
   skipShadow?: boolean,
-  zoom?: number,
+  zoom?: number
 ): DecorationSprite | null {
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined") {
+    return null;
+  }
 
   const vol = getDecorationVolumeSpec(type as string, heightTag);
   const cssSize = getSpriteCSS(vol.heightTag, effectiveScale);
-  const spriteDpr = cssSize > LARGE_SPRITE_THRESHOLD
-    ? Math.min(dpr, LARGE_SPRITE_DPR_CAP)
-    : dpr;
+  const spriteDpr =
+    cssSize > LARGE_SPRITE_THRESHOLD
+      ? Math.min(dpr, LARGE_SPRITE_DPR_CAP)
+      : dpr;
   const pxSize = Math.ceil(cssSize * spriteDpr);
 
   const canvas = document.createElement("canvas");
   canvas.width = pxSize;
   canvas.height = pxSize;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
+  if (!ctx) {
+    return null;
+  }
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(spriteDpr, spriteDpr);
@@ -72,28 +84,28 @@ export function prerenderDecorationSprite(
   ctx.save();
   renderDecorationItem({
     ctx,
-    screenPos: { x: centerX, y: centerY },
-    scale: effectiveScale,
-    type,
-    rotation,
-    variant,
     decorTime: 0,
     decorX,
     decorY,
-    selectedMap,
     mapTheme,
+    rotation,
+    scale: effectiveScale,
+    screenPos: { x: centerX, y: centerY },
+    selectedMap,
     shadowOnly: !!shadowOnly,
     skipShadow: !!skipShadow,
+    type,
+    variant,
     zoom,
   });
   ctx.restore();
 
   return {
     canvas,
+    cssHeight: cssSize,
+    cssWidth: cssSize,
     offsetX: centerX,
     offsetY: centerY,
-    cssWidth: cssSize,
-    cssHeight: cssSize,
     spriteDpr,
   };
 }
@@ -105,13 +117,19 @@ export function prerenderDecorationSprite(
 export function drawDecorationSprite(
   ctx: CanvasRenderingContext2D,
   sprite: DecorationSprite,
-  screenPos: Position,
+  screenPos: Position
 ): void {
   const dx = screenPos.x - sprite.offsetX;
   const dy = screenPos.y - sprite.offsetY;
   ctx.drawImage(
     sprite.canvas,
-    0, 0, sprite.canvas.width, sprite.canvas.height,
-    dx, dy, sprite.cssWidth, sprite.cssHeight,
+    0,
+    0,
+    sprite.canvas.width,
+    sprite.canvas.height,
+    dx,
+    dy,
+    sprite.cssWidth,
+    sprite.cssHeight
   );
 }

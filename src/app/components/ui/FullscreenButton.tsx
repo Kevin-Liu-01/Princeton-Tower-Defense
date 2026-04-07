@@ -1,26 +1,36 @@
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
 import { Maximize, Minimize } from "lucide-react";
+import React, { useState, useCallback, useEffect } from "react";
+
 import { GOLD, panelGradient } from "./system/theme";
 
 function getIsFullscreen(): boolean {
   return !!(
     document.fullscreenElement ??
-    (document as unknown as Record<string, Element | null>).webkitFullscreenElement
+    (document as unknown as Record<string, Element | null>)
+      .webkitFullscreenElement
   );
 }
 
 function requestFullscreen(el: HTMLElement): Promise<void> {
-  if (el.requestFullscreen) return el.requestFullscreen();
+  if (el.requestFullscreen) {
+    return el.requestFullscreen();
+  }
   const wk = el as unknown as Record<string, () => Promise<void>>;
-  if (typeof wk.webkitRequestFullscreen === "function") return wk.webkitRequestFullscreen();
+  if (typeof wk.webkitRequestFullscreen === "function") {
+    return wk.webkitRequestFullscreen();
+  }
   return Promise.resolve();
 }
 
 function exitFullscreen(): Promise<void> {
-  if (document.exitFullscreen) return document.exitFullscreen();
+  if (document.exitFullscreen) {
+    return document.exitFullscreen();
+  }
   const wk = document as unknown as Record<string, () => Promise<void>>;
-  if (typeof wk.webkitExitFullscreen === "function") return wk.webkitExitFullscreen();
+  if (typeof wk.webkitExitFullscreen === "function") {
+    return wk.webkitExitFullscreen();
+  }
   return Promise.resolve();
 }
 

@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Region Boss Enemy Sprite Functions
 // 5 mega-boss enemies: the climactic encounters of each region.
 
-import { drawRadialAura } from "./helpers";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawGlowingEyes,
@@ -16,7 +16,7 @@ import {
   drawFrostCrystals,
 } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
-import { ISO_Y_RATIO } from "../../constants/isometric";
+import { drawRadialAura } from "./helpers";
 
 const TAU = Math.PI * 2;
 
@@ -36,7 +36,7 @@ export function drawTitanOfNassauEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -67,7 +67,7 @@ export function drawTitanOfNassauEnemy(
     0,
     x,
     y + size * 0.3,
-    size * 1.3,
+    size * 1.3
   );
   auraGrad.addColorStop(0, `rgba(251, 191, 36, ${crackGlow * 0.28})`);
   auraGrad.addColorStop(0.2, `rgba(251, 191, 36, ${crackGlow * 0.2})`);
@@ -76,17 +76,40 @@ export function drawTitanOfNassauEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.3, size * 1.3, size * 1.3 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y + size * 0.3,
+    size * 1.3,
+    size * 1.3 * ISO_Y_RATIO,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // Secondary inner aura (bright core)
-  const coreAura = ctx.createRadialGradient(x, y + size * 0.2, 0, x, y + size * 0.2, size * 0.6);
+  const coreAura = ctx.createRadialGradient(
+    x,
+    y + size * 0.2,
+    0,
+    x,
+    y + size * 0.2,
+    size * 0.6
+  );
   coreAura.addColorStop(0, `rgba(255, 230, 100, ${crackGlow * 0.12})`);
   coreAura.addColorStop(0.5, `rgba(251, 191, 36, ${crackGlow * 0.06})`);
   coreAura.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = coreAura;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.2, size * 0.6, size * 0.6 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y + size * 0.2,
+    size * 0.6,
+    size * 0.6 * ISO_Y_RATIO,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // Pulsing glow rings on ground (isometric)
@@ -94,12 +117,12 @@ export function drawTitanOfNassauEnemy(
   ctx.translate(x, y + size * 0.45);
   ctx.scale(1, ISO_Y_RATIO);
   drawPulsingGlowRings(ctx, 0, 0, size * 0.7, time, zoom, {
-    count: 4,
-    speed: 1.5,
     color: "rgba(251, 191, 36, 0.3)",
-    maxAlpha: 0.3,
+    count: 4,
     expansion: 0.45,
     lineWidth: 2.5,
+    maxAlpha: 0.3,
+    speed: 1.5,
   });
   ctx.restore();
 
@@ -155,14 +178,14 @@ export function drawTitanOfNassauEnemy(
     ctx.moveTo(cx0, cy0);
     ctx.lineTo(
       cx0 + Math.cos(crackAngle + 0.7) * size * 0.09,
-      cy0 + Math.sin(crackAngle + 0.7) * size * 0.09,
+      cy0 + Math.sin(crackAngle + 0.7) * size * 0.09
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(cx0, cy0);
     ctx.lineTo(
       cx0 + Math.cos(crackAngle - 0.5) * size * 0.07,
-      cy0 + Math.sin(crackAngle - 0.5) * size * 0.07,
+      cy0 + Math.sin(crackAngle - 0.5) * size * 0.07
     );
     ctx.stroke();
     ctx.lineWidth = 2.5 * zoom;
@@ -171,13 +194,13 @@ export function drawTitanOfNassauEnemy(
 
   // === ORBITING ROCK DEBRIS ===
   drawOrbitingDebris(ctx, x, y, size, time, zoom, {
-    count: 10,
-    minRadius: 0.6,
-    maxRadius: 0.85,
-    speed: 0.6,
-    particleSize: 0.04,
     color: "#78716c",
+    count: 10,
     glowColor: "rgba(251,191,36,0.3)",
+    maxRadius: 0.85,
+    minRadius: 0.6,
+    particleSize: 0.04,
+    speed: 0.6,
     trailLen: 0.3,
   });
 
@@ -199,7 +222,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.3,
     -size * 0.06 - tailWave,
     size * 0.5,
-    -size * 0.02,
+    -size * 0.02
   );
   ctx.bezierCurveTo(
     size * 0.3,
@@ -207,7 +230,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.15,
     size * 0.03 + tailWave,
     0,
-    size * 0.05,
+    size * 0.05
   );
   ctx.fill();
   // Tail tuft - stone carved plume
@@ -220,7 +243,7 @@ export function drawTitanOfNassauEnemy(
       size * 0.56 + Math.cos(tuftAngle) * size * 0.09,
       Math.sin(tuftAngle) * size * 0.07,
       size * 0.62 + Math.cos(tuftAngle) * size * 0.12,
-      Math.sin(tuftAngle) * size * 0.12,
+      Math.sin(tuftAngle) * size * 0.12
     );
   }
   ctx.fill();
@@ -236,7 +259,7 @@ export function drawTitanOfNassauEnemy(
       size * 0.54,
       Math.sin(tuftAngle + time * 2) * size * 0.05,
       size * 0.58 + Math.cos(tuftAngle) * size * 0.08,
-      Math.sin(tuftAngle) * size * 0.08,
+      Math.sin(tuftAngle) * size * 0.08
     );
     ctx.stroke();
   }
@@ -257,7 +280,7 @@ export function drawTitanOfNassauEnemy(
     x - size * 0.3,
     y + size * 0.15,
     size * 0.12,
-    size * 0.35,
+    size * 0.35
   );
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.18);
@@ -265,11 +288,11 @@ export function drawTitanOfNassauEnemy(
     x - size * 0.26,
     y + size * 0.32,
     x - size * 0.3 - backLegAnimL * 0.4,
-    y + size * 0.48 + backLegAnimL,
+    y + size * 0.48 + backLegAnimL
   );
   ctx.lineTo(
     x - size * 0.38 - backLegAnimL * 0.4,
-    y + size * 0.5 + backLegAnimL,
+    y + size * 0.5 + backLegAnimL
   );
   ctx.lineTo(x - size * 0.2, y + size * 0.5 + backLegAnimL);
   ctx.lineTo(x - size * 0.16, y + size * 0.18);
@@ -284,7 +307,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.09 * ISO_Y_RATIO,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   // Toe lines
@@ -304,7 +327,7 @@ export function drawTitanOfNassauEnemy(
     x + size * 0.16,
     y + size * 0.15,
     size * 0.12,
-    size * 0.35,
+    size * 0.35
   );
   ctx.beginPath();
   ctx.moveTo(x + size * 0.22, y + size * 0.18);
@@ -312,11 +335,11 @@ export function drawTitanOfNassauEnemy(
     x + size * 0.26,
     y + size * 0.32,
     x + size * 0.3 - backLegAnimR * 0.4,
-    y + size * 0.48 + backLegAnimR,
+    y + size * 0.48 + backLegAnimR
   );
   ctx.lineTo(
     x + size * 0.38 - backLegAnimR * 0.4,
-    y + size * 0.5 + backLegAnimR,
+    y + size * 0.5 + backLegAnimR
   );
   ctx.lineTo(x + size * 0.2, y + size * 0.5 + backLegAnimR);
   ctx.lineTo(x + size * 0.16, y + size * 0.18);
@@ -330,7 +353,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.09 * ISO_Y_RATIO,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   ctx.strokeStyle = "#44403c";
@@ -350,7 +373,7 @@ export function drawTitanOfNassauEnemy(
     0,
     x,
     y + size * 0.06,
-    size * 0.52,
+    size * 0.52
   );
   bodyGrad.addColorStop(0, "#a8a29e");
   bodyGrad.addColorStop(0.3, "#78716c");
@@ -365,7 +388,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.36,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
 
@@ -380,7 +403,7 @@ export function drawTitanOfNassauEnemy(
       x,
       seamY + size * 0.025,
       x + size * 0.34,
-      seamY - size * 0.015,
+      seamY - size * 0.015
     );
     ctx.stroke();
   }
@@ -395,7 +418,7 @@ export function drawTitanOfNassauEnemy(
       vx + size * 0.03,
       y + size * 0.08 + breathe,
       vx - size * 0.02,
-      y + size * 0.28 + breathe,
+      y + size * 0.28 + breathe
     );
     ctx.stroke();
   }
@@ -404,11 +427,11 @@ export function drawTitanOfNassauEnemy(
   ctx.strokeStyle = "#3f3a36";
   ctx.lineWidth = 2.5 * zoom;
   const stripePositions = [
-    { sx: -0.3, sy: -0.05, ex: -0.2, ey: 0.15, cpx: -0.35, cpy: 0.06 },
-    { sx: -0.15, sy: -0.12, ex: -0.08, ey: 0.18, cpx: -0.2, cpy: 0.04 },
-    { sx: 0.0, sy: -0.14, ex: 0.05, ey: 0.2, cpx: -0.05, cpy: 0.02 },
-    { sx: 0.12, sy: -0.12, ex: 0.18, ey: 0.18, cpx: 0.08, cpy: 0.05 },
-    { sx: 0.25, sy: -0.05, ex: 0.33, ey: 0.15, cpx: 0.22, cpy: 0.08 },
+    { cpx: -0.35, cpy: 0.06, ex: -0.2, ey: 0.15, sx: -0.3, sy: -0.05 },
+    { cpx: -0.2, cpy: 0.04, ex: -0.08, ey: 0.18, sx: -0.15, sy: -0.12 },
+    { cpx: -0.05, cpy: 0.02, ex: 0.05, ey: 0.2, sx: 0, sy: -0.14 },
+    { cpx: 0.08, cpy: 0.05, ex: 0.18, ey: 0.18, sx: 0.12, sy: -0.12 },
+    { cpx: 0.22, cpy: 0.08, ex: 0.33, ey: 0.15, sx: 0.25, sy: -0.05 },
   ];
   for (const stripe of stripePositions) {
     ctx.beginPath();
@@ -417,7 +440,7 @@ export function drawTitanOfNassauEnemy(
       x + stripe.cpx * size,
       y + stripe.cpy * size + breathe,
       x + stripe.ex * size,
-      y + stripe.ey * size + breathe,
+      y + stripe.ey * size + breathe
     );
     ctx.stroke();
   }
@@ -435,7 +458,7 @@ export function drawTitanOfNassauEnemy(
     x + size * 0.1,
     y - size * 0.06 + breathe,
     x + size * 0.35,
-    y + size * 0.02 + breathe,
+    y + size * 0.02 + breathe
   );
   ctx.stroke();
   // Branch circuits
@@ -515,29 +538,24 @@ export function drawTitanOfNassauEnemy(
   // === FRONT LEGS ===
   // Left front leg
   const frontLegAnimL = -sin3 * size * 0.07;
-  ctx.fillStyle = stoneGrad(
-    x - size * 0.38,
-    y + size * 0.0,
-    size * 0.14,
-    size * 0.4,
-  );
+  ctx.fillStyle = stoneGrad(x - size * 0.38, y + 0, size * 0.14, size * 0.4);
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.3, y + size * 0.0);
+  ctx.moveTo(x - size * 0.3, y + 0);
   ctx.quadraticCurveTo(
     x - size * 0.34,
     y + size * 0.2,
     x - size * 0.32 + frontLegAnimL * 0.3,
-    y + size * 0.45 + frontLegAnimL,
+    y + size * 0.45 + frontLegAnimL
   );
   ctx.lineTo(
     x - size * 0.4 + frontLegAnimL * 0.3,
-    y + size * 0.48 + frontLegAnimL,
+    y + size * 0.48 + frontLegAnimL
   );
   ctx.lineTo(
     x - size * 0.22 + frontLegAnimL * 0.3,
-    y + size * 0.48 + frontLegAnimL,
+    y + size * 0.48 + frontLegAnimL
   );
-  ctx.lineTo(x - size * 0.24, y + size * 0.0);
+  ctx.lineTo(x - size * 0.24, y + 0);
   ctx.fill();
   // Muscular definition
   ctx.strokeStyle = "#44403c";
@@ -548,7 +566,7 @@ export function drawTitanOfNassauEnemy(
     x - size * 0.3,
     y + size * 0.15,
     x - size * 0.27,
-    y + size * 0.25,
+    y + size * 0.25
   );
   ctx.stroke();
   // Paw
@@ -561,7 +579,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.1 * ISO_Y_RATIO,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   // Claws (stone)
@@ -579,29 +597,24 @@ export function drawTitanOfNassauEnemy(
 
   // Right front leg
   const frontLegAnimR = sin3 * size * 0.07;
-  ctx.fillStyle = stoneGrad(
-    x + size * 0.24,
-    y + size * 0.0,
-    size * 0.14,
-    size * 0.4,
-  );
+  ctx.fillStyle = stoneGrad(x + size * 0.24, y + 0, size * 0.14, size * 0.4);
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.3, y + size * 0.0);
+  ctx.moveTo(x + size * 0.3, y + 0);
   ctx.quadraticCurveTo(
     x + size * 0.34,
     y + size * 0.2,
     x + size * 0.32 + frontLegAnimR * 0.3,
-    y + size * 0.45 + frontLegAnimR,
+    y + size * 0.45 + frontLegAnimR
   );
   ctx.lineTo(
     x + size * 0.4 + frontLegAnimR * 0.3,
-    y + size * 0.48 + frontLegAnimR,
+    y + size * 0.48 + frontLegAnimR
   );
   ctx.lineTo(
     x + size * 0.22 + frontLegAnimR * 0.3,
-    y + size * 0.48 + frontLegAnimR,
+    y + size * 0.48 + frontLegAnimR
   );
-  ctx.lineTo(x + size * 0.24, y + size * 0.0);
+  ctx.lineTo(x + size * 0.24, y + 0);
   ctx.fill();
   ctx.strokeStyle = "#44403c";
   ctx.lineWidth = 1.5 * zoom;
@@ -611,7 +624,7 @@ export function drawTitanOfNassauEnemy(
     x + size * 0.3,
     y + size * 0.15,
     x + size * 0.27,
-    y + size * 0.25,
+    y + size * 0.25
   );
   ctx.stroke();
   ctx.fillStyle = "#57534e";
@@ -623,7 +636,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.1 * ISO_Y_RATIO,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   ctx.fillStyle = "#3f3a36";
@@ -642,7 +655,14 @@ export function drawTitanOfNassauEnemy(
   for (const side of [-1, 1]) {
     const armorX = x + side * size * 0.38;
     const armorY = y - size * 0.02 + breathe;
-    const armGrad = ctx.createRadialGradient(armorX, armorY, 0, armorX, armorY, size * 0.1);
+    const armGrad = ctx.createRadialGradient(
+      armorX,
+      armorY,
+      0,
+      armorX,
+      armorY,
+      size * 0.1
+    );
     armGrad.addColorStop(0, "#fbbf24");
     armGrad.addColorStop(0.5, "#c4a35a");
     armGrad.addColorStop(1, "#7a6020");
@@ -665,7 +685,14 @@ export function drawTitanOfNassauEnemy(
   const medalX = x;
   const medalY = y - size * 0.05 + breathe;
   setShadowBlur(ctx, 10 * zoom, "#fbbf24");
-  const medalGrad = ctx.createRadialGradient(medalX, medalY, 0, medalX, medalY, size * 0.06);
+  const medalGrad = ctx.createRadialGradient(
+    medalX,
+    medalY,
+    0,
+    medalX,
+    medalY,
+    size * 0.06
+  );
   medalGrad.addColorStop(0, "#fff7c2");
   medalGrad.addColorStop(0.4, "#fbbf24");
   medalGrad.addColorStop(0.8, "#c4a35a");
@@ -696,7 +723,7 @@ export function drawTitanOfNassauEnemy(
     0,
     x,
     y - size * 0.2,
-    size * 0.45,
+    size * 0.45
   );
   maneGrad.addColorStop(0, "#b5afa8");
   maneGrad.addColorStop(0.3, "#a8a29e");
@@ -715,11 +742,11 @@ export function drawTitanOfNassauEnemy(
       mx + Math.cos(maneAngle) * maneLen * 0.6 + sin4 * size * 0.02,
       my + Math.sin(maneAngle) * maneLen * 0.6,
       mx + Math.cos(maneAngle) * maneLen,
-      my + Math.sin(maneAngle) * maneLen,
+      my + Math.sin(maneAngle) * maneLen
     );
     ctx.lineTo(
       mx + Math.cos(maneAngle + 0.15) * maneLen * 0.8,
-      my + Math.sin(maneAngle + 0.15) * maneLen * 0.7,
+      my + Math.sin(maneAngle + 0.15) * maneLen * 0.7
     );
     ctx.closePath();
     ctx.fill();
@@ -734,11 +761,11 @@ export function drawTitanOfNassauEnemy(
     ctx.beginPath();
     ctx.moveTo(
       x + Math.cos(evAngle) * size * 0.15,
-      y - size * 0.22 + Math.sin(evAngle) * size * 0.1,
+      y - size * 0.22 + Math.sin(evAngle) * size * 0.1
     );
     ctx.lineTo(
       x + Math.cos(evAngle) * (size * 0.15 + evLen),
-      y - size * 0.22 + Math.sin(evAngle) * (size * 0.1 + evLen * 0.4),
+      y - size * 0.22 + Math.sin(evAngle) * (size * 0.1 + evLen * 0.4)
     );
     ctx.stroke();
   }
@@ -753,7 +780,7 @@ export function drawTitanOfNassauEnemy(
     0,
     headX,
     headY,
-    size * 0.22,
+    size * 0.22
   );
   headGrad.addColorStop(0, "#a8a29e");
   headGrad.addColorStop(0.5, "#78716c");
@@ -773,7 +800,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.06,
     0,
     Math.PI,
-    TAU,
+    TAU
   );
   ctx.fill();
 
@@ -784,7 +811,7 @@ export function drawTitanOfNassauEnemy(
     0,
     headX,
     headY + size * 0.08,
-    size * 0.14,
+    size * 0.14
   );
   snoutGrad.addColorStop(0, "#8a8580");
   snoutGrad.addColorStop(1, "#57534e");
@@ -807,14 +834,11 @@ export function drawTitanOfNassauEnemy(
       ctx.beginPath();
       ctx.moveTo(
         headX + side * size * 0.06,
-        headY + size * 0.08 + w * size * 0.015,
+        headY + size * 0.08 + w * size * 0.015
       );
       ctx.lineTo(
         headX + side * size * 0.2,
-        headY +
-          size * 0.06 +
-          w * size * 0.02 +
-          Math.sin(time + w) * size * 0.01,
+        headY + size * 0.06 + w * size * 0.02 + Math.sin(time + w) * size * 0.01
       );
       ctx.stroke();
     }
@@ -830,7 +854,7 @@ export function drawTitanOfNassauEnemy(
     size * 0.06 + jawOpen * 0.5,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   // Teeth
@@ -884,7 +908,7 @@ export function drawTitanOfNassauEnemy(
       0,
       eyeX,
       eyeY,
-      size * 0.035,
+      size * 0.035
     );
     eyeGrad.addColorStop(0, `rgba(255, 255, 200, ${eyeIntensity})`);
     eyeGrad.addColorStop(0.4, `rgba(249, 115, 22, ${eyeIntensity * 0.9})`);
@@ -908,7 +932,7 @@ export function drawTitanOfNassauEnemy(
       eyeX + side * size * 0.08,
       eyeY - size * 0.02 + sin8 * size * 0.01,
       eyeX + side * size * 0.12,
-      eyeY - size * 0.04 + sin8 * size * 0.02,
+      eyeY - size * 0.04 + sin8 * size * 0.02
     );
     ctx.stroke();
   }
@@ -958,11 +982,23 @@ export function drawTitanOfNassauEnemy(
   for (let g = 0; g < 3; g++) {
     ctx.fillStyle = gemColors[g];
     ctx.beginPath();
-    ctx.arc(headX + gemOffsets[g] * size, crownY - size * (g === 1 ? 0.04 : 0.02), size * 0.015, 0, TAU);
+    ctx.arc(
+      headX + gemOffsets[g] * size,
+      crownY - size * (g === 1 ? 0.04 : 0.02),
+      size * 0.015,
+      0,
+      TAU
+    );
     ctx.fill();
     ctx.fillStyle = `rgba(255, 255, 255, ${crackGlow * 0.6})`;
     ctx.beginPath();
-    ctx.arc(headX + gemOffsets[g] * size - size * 0.005, crownY - size * (g === 1 ? 0.045 : 0.025), size * 0.006, 0, TAU);
+    ctx.arc(
+      headX + gemOffsets[g] * size - size * 0.005,
+      crownY - size * (g === 1 ? 0.045 : 0.025),
+      size * 0.006,
+      0,
+      TAU
+    );
     ctx.fill();
   }
   // Crown band
@@ -998,23 +1034,23 @@ export function drawTitanOfNassauEnemy(
     const plateY =
       y - size * 0.05 + breathe + Math.sin(time * 2 + side) * size * 0.015;
     drawFloatingPiece(ctx, plateX, plateY, size, time, side * 1.5, {
-      width: 0.12,
-      height: 0.08,
+      bobAmt: 0.015,
+      bobSpeed: 2,
       color: "#78716c",
       colorEdge: "#57534e",
-      bobSpeed: 2,
-      bobAmt: 0.015,
-      rotateSpeed: 0.5,
+      height: 0.08,
       rotateAmt: 0.1,
+      rotateSpeed: 0.5,
+      width: 0.12,
     });
   }
 
   // === SHADOW WISPS for ancient power ===
   drawShadowWisps(ctx, x, y + size * 0.3, size, time, zoom, {
-    count: 6,
-    speed: 1.5,
     color: "rgba(120, 113, 108, 0.3)",
+    count: 6,
     maxAlpha: 0.3,
+    speed: 1.5,
   });
 }
 
@@ -1033,7 +1069,7 @@ export function drawSwampLeviathanEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -1053,14 +1089,14 @@ export function drawSwampLeviathanEnemy(
     : sin5 * size * 0.005;
 
   // === TOXIC MIST AURA (isometric ground plane) ===
-  const mistGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 1.0);
+  const mistGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 1);
   mistGrad.addColorStop(0, `rgba(74, 222, 128, ${toxicPulse * 0.15})`);
   mistGrad.addColorStop(0.4, `rgba(34, 197, 94, ${toxicPulse * 0.1})`);
   mistGrad.addColorStop(0.7, `rgba(88, 28, 135, ${toxicPulse * 0.06})`);
   mistGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = mistGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y, size * 1.0, size * 1.0 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(x, y, size * 1, size * 1 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
   // === SWAMP WATER SPLASHES at base (isometric) ===
@@ -1078,27 +1114,27 @@ export function drawSwampLeviathanEnemy(
       size * 0.02 + Math.sin(time * 3 + splash) * size * 0.01,
       0,
       Math.PI,
-      true,
+      true
     );
     ctx.stroke();
   }
 
   // Poison bubbles
   drawPoisonBubbles(ctx, x, y + size * 0.3, size * 0.6, time, zoom, {
-    count: 12,
-    speed: 1.2,
     color: "rgba(74, 222, 128, 0.5)",
+    count: 12,
     maxAlpha: 0.5,
     maxSize: 0.04,
+    speed: 1.2,
     spread: 0.8,
   });
 
   // === SHADOW WISPS ===
   drawShadowWisps(ctx, x, y + size * 0.2, size, time, zoom, {
-    count: 8,
-    speed: 1,
     color: "rgba(88, 28, 135, 0.25)",
+    count: 8,
     maxAlpha: 0.3,
+    speed: 1,
   });
 
   // === MASSIVE COILED TAIL SECTION ===
@@ -1121,8 +1157,11 @@ export function drawSwampLeviathanEnemy(
         size * 0.3 -
         t * size * 0.05 +
         Math.cos(t * Math.PI * 1.5 + time) * size * 0.08;
-      if (seg === 0) ctx.moveTo(segX, segY);
-      else ctx.lineTo(segX, segY);
+      if (seg === 0) {
+        ctx.moveTo(segX, segY);
+      } else {
+        ctx.lineTo(segX, segY);
+      }
     }
     if (pass === 0) {
       ctx.strokeStyle = bodyColorDark;
@@ -1133,7 +1172,7 @@ export function drawSwampLeviathanEnemy(
         x - size * 0.2,
         y + size * 0.2,
         x + size * 0.2,
-        y + size * 0.35,
+        y + size * 0.35
       );
       tailGrad.addColorStop(0, bodyColor);
       tailGrad.addColorStop(0.5, bodyColorLight);
@@ -1157,7 +1196,7 @@ export function drawSwampLeviathanEnemy(
     tailTipX + size * 0.12,
     tailTipY,
     tailTipX,
-    tailTipY + size * 0.04,
+    tailTipY + size * 0.04
   );
   ctx.closePath();
   ctx.fill();
@@ -1196,15 +1235,15 @@ export function drawSwampLeviathanEnemy(
       time,
       zoom,
       {
-        length: 0.18,
-        width: 0.015,
-        segments: 5,
-        waveSpeed: 2,
-        waveAmt: 0.08,
         color: bodyColorDark,
+        length: 0.18,
+        segments: 5,
         tipColor: "rgba(74, 222, 128, 0.6)",
         tipRadius: 0.01,
-      },
+        waveAmt: 0.08,
+        waveSpeed: 2,
+        width: 0.015,
+      }
     );
   }
 
@@ -1225,7 +1264,7 @@ export function drawSwampLeviathanEnemy(
     x,
     y - size * 0.2,
     x,
-    y + size * 0.3,
+    y + size * 0.3
   );
   bellyGrad.addColorStop(0, "rgba(0,0,0,0)");
   bellyGrad.addColorStop(0.4, `rgba(200, 230, 200, 0.12)`);
@@ -1233,7 +1272,15 @@ export function drawSwampLeviathanEnemy(
   bellyGrad.addColorStop(1, `rgba(200, 230, 200, 0.35)`);
   ctx.fillStyle = bellyGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.06 + bodyUndulate, size * 0.28, size * 0.24, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y + size * 0.06 + bodyUndulate,
+    size * 0.28,
+    size * 0.24,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // === BIOLUMINESCENT VEIN PATTERN ===
@@ -1241,18 +1288,20 @@ export function drawSwampLeviathanEnemy(
   ctx.strokeStyle = `rgba(74, 222, 128, ${toxicPulse * 0.7})`;
   ctx.lineWidth = 2.5 * zoom;
   const veinPaths = [
-    { sx: -0.15, sy: -0.15, cx: 0.05, cy: 0, ex: -0.1, ey: 0.2 },
-    { sx: 0.15, sy: -0.15, cx: -0.05, cy: 0.05, ex: 0.12, ey: 0.2 },
-    { sx: 0, sy: -0.2, cx: -0.1, cy: -0.05, ex: 0, ey: 0.15 },
-    { sx: -0.25, sy: 0, cx: -0.1, cy: 0.1, ex: 0.05, ey: 0.18 },
-    { sx: 0.25, sy: 0, cx: 0.1, cy: 0.1, ex: -0.05, ey: 0.18 },
+    { cx: 0.05, cy: 0, ex: -0.1, ey: 0.2, sx: -0.15, sy: -0.15 },
+    { cx: -0.05, cy: 0.05, ex: 0.12, ey: 0.2, sx: 0.15, sy: -0.15 },
+    { cx: -0.1, cy: -0.05, ex: 0, ey: 0.15, sx: 0, sy: -0.2 },
+    { cx: -0.1, cy: 0.1, ex: 0.05, ey: 0.18, sx: -0.25, sy: 0 },
+    { cx: 0.1, cy: 0.1, ex: -0.05, ey: 0.18, sx: 0.25, sy: 0 },
   ];
   for (const vein of veinPaths) {
     ctx.beginPath();
     ctx.moveTo(x + vein.sx * size, y + vein.sy * size + bodyUndulate);
     ctx.quadraticCurveTo(
-      x + vein.cx * size, y + vein.cy * size + bodyUndulate,
-      x + vein.ex * size, y + vein.ey * size + bodyUndulate,
+      x + vein.cx * size,
+      y + vein.cy * size + bodyUndulate,
+      x + vein.ex * size,
+      y + vein.ey * size + bodyUndulate
     );
     ctx.stroke();
   }
@@ -1260,7 +1309,13 @@ export function drawSwampLeviathanEnemy(
   ctx.fillStyle = `rgba(74, 222, 128, ${toxicPulse * 0.9})`;
   for (const vein of veinPaths) {
     ctx.beginPath();
-    ctx.arc(x + vein.cx * size, y + vein.cy * size + bodyUndulate, size * 0.015, 0, TAU);
+    ctx.arc(
+      x + vein.cx * size,
+      y + vein.cy * size + bodyUndulate,
+      size * 0.015,
+      0,
+      TAU
+    );
     ctx.fill();
   }
   clearShadow(ctx);
@@ -1270,7 +1325,8 @@ export function drawSwampLeviathanEnemy(
   ctx.lineWidth = 1.2 * zoom;
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 6; col++) {
-      const scaleX = x - size * 0.24 + col * size * 0.1 + (row % 2) * size * 0.05;
+      const scaleX =
+        x - size * 0.24 + col * size * 0.1 + (row % 2) * size * 0.05;
       const scaleY = y - size * 0.15 + row * size * 0.08 + bodyUndulate;
       ctx.beginPath();
       ctx.arc(scaleX, scaleY, size * 0.028, 0, Math.PI, true);
@@ -1298,7 +1354,14 @@ export function drawSwampLeviathanEnemy(
     const sacY = y + size * 0.05 + bodyUndulate;
     const sacPulse = 0.5 + Math.sin(time * 2.5 + side) * 0.3;
     setShadowBlur(ctx, 8 * zoom, "#22c55e");
-    const sacGrad = ctx.createRadialGradient(sacX, sacY, 0, sacX, sacY, size * 0.06);
+    const sacGrad = ctx.createRadialGradient(
+      sacX,
+      sacY,
+      0,
+      sacX,
+      sacY,
+      size * 0.06
+    );
     sacGrad.addColorStop(0, `rgba(180, 255, 150, ${sacPulse * 0.8})`);
     sacGrad.addColorStop(0.4, `rgba(74, 222, 128, ${sacPulse * 0.6})`);
     sacGrad.addColorStop(1, `rgba(34, 197, 94, ${sacPulse * 0.2})`);
@@ -1330,15 +1393,21 @@ export function drawSwampLeviathanEnemy(
     ctx.fill();
     ctx.fillStyle = `rgba(74, 222, 128, ${toxicPulse * 0.5})`;
     ctx.beginPath();
-    ctx.arc(spineBaseX + wobble, spineBaseY - spineH * 0.7, size * 0.006, 0, TAU);
+    ctx.arc(
+      spineBaseX + wobble,
+      spineBaseY - spineH * 0.7,
+      size * 0.006,
+      0,
+      TAU
+    );
     ctx.fill();
   }
 
   // === THREE NECKS AND HEADS ===
   const neckConfigs = [
-    { angle: -0.4, phaseOff: 0, headScale: 1.0 },
-    { angle: 0.0, phaseOff: 1.2, headScale: 1.15 },
-    { angle: 0.4, phaseOff: 2.4, headScale: 1.0 },
+    { angle: -0.4, headScale: 1, phaseOff: 0 },
+    { angle: 0, headScale: 1.15, phaseOff: 1.2 },
+    { angle: 0.4, headScale: 1, phaseOff: 2.4 },
   ];
 
   for (let ni = 0; ni < neckConfigs.length; ni++) {
@@ -1365,8 +1434,11 @@ export function drawSwampLeviathanEnemy(
           neckBaseY -
           neckLen * t * 0.7 +
           Math.sin(t * Math.PI * 0.5 + time * 2) * size * 0.03;
-        if (seg === 0) ctx.moveTo(nx, ny);
-        else ctx.lineTo(nx, ny);
+        if (seg === 0) {
+          ctx.moveTo(nx, ny);
+        } else {
+          ctx.lineTo(nx, ny);
+        }
       }
       if (pass === 0) {
         ctx.strokeStyle = bodyColorDark;
@@ -1414,7 +1486,7 @@ export function drawSwampLeviathanEnemy(
       0,
       headX,
       headY,
-      size * 0.12 * hs,
+      size * 0.12 * hs
     );
     hGrad.addColorStop(0, bodyColorLight);
     hGrad.addColorStop(0.5, bodyColor);
@@ -1428,7 +1500,7 @@ export function drawSwampLeviathanEnemy(
       size * 0.09 * hs,
       neckAngle * 0.3,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
 
@@ -1445,7 +1517,7 @@ export function drawSwampLeviathanEnemy(
       size * 0.05 * hs,
       snoutDir * 0.3,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
 
@@ -1460,7 +1532,7 @@ export function drawSwampLeviathanEnemy(
       size * 0.025 * hs + thisJaw * 0.5,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
 
@@ -1471,7 +1543,7 @@ export function drawSwampLeviathanEnemy(
       ctx.moveTo(snoutX + fSide * size * 0.04 * hs, snoutY + thisJaw * 0.3);
       ctx.lineTo(
         snoutX + fSide * size * 0.035 * hs,
-        snoutY + size * 0.04 * hs + thisJaw,
+        snoutY + size * 0.04 * hs + thisJaw
       );
       ctx.lineTo(snoutX + fSide * size * 0.025 * hs, snoutY + thisJaw * 0.3);
       ctx.closePath();
@@ -1511,7 +1583,7 @@ export function drawSwampLeviathanEnemy(
         0,
         eyeX,
         eyeY,
-        size * 0.022 * hs,
+        size * 0.022 * hs
       );
       eGrad.addColorStop(0, `rgba(200, 255, 200, ${toxicPulse})`);
       eGrad.addColorStop(0.5, `rgba(74, 222, 128, ${toxicPulse * 0.8})`);
@@ -1531,30 +1603,36 @@ export function drawSwampLeviathanEnemy(
     // Head horns/spines (more dramatic)
     ctx.fillStyle = bodyColorDark;
     for (let horn = 0; horn < 5; horn++) {
-      const hornAngle = -Math.PI * 0.7 + horn * Math.PI * 0.22 + neckAngle * 0.3;
-      const hornLen = size * (0.06 + horn * 0.01 + Math.sin(horn * 2) * 0.015) * hs;
+      const hornAngle =
+        -Math.PI * 0.7 + horn * Math.PI * 0.22 + neckAngle * 0.3;
+      const hornLen =
+        size * (0.06 + horn * 0.01 + Math.sin(horn * 2) * 0.015) * hs;
       const hornWobble = Math.sin(time * 3 + ni * 2 + horn) * size * 0.003;
       ctx.beginPath();
       ctx.moveTo(
         headX + Math.cos(hornAngle) * size * 0.09 * hs,
-        headY + Math.sin(hornAngle) * size * 0.07 * hs,
+        headY + Math.sin(hornAngle) * size * 0.07 * hs
       );
       ctx.lineTo(
         headX + Math.cos(hornAngle) * (size * 0.09 * hs + hornLen) + hornWobble,
-        headY + Math.sin(hornAngle) * (size * 0.07 * hs + hornLen * 0.5),
+        headY + Math.sin(hornAngle) * (size * 0.07 * hs + hornLen * 0.5)
       );
       ctx.lineTo(
         headX + Math.cos(hornAngle + 0.2) * size * 0.08 * hs,
-        headY + Math.sin(hornAngle + 0.2) * size * 0.06 * hs,
+        headY + Math.sin(hornAngle + 0.2) * size * 0.06 * hs
       );
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = `rgba(74, 222, 128, ${toxicPulse * 0.4})`;
       ctx.beginPath();
       ctx.arc(
-        headX + Math.cos(hornAngle) * (size * 0.09 * hs + hornLen * 0.6) + hornWobble,
+        headX +
+          Math.cos(hornAngle) * (size * 0.09 * hs + hornLen * 0.6) +
+          hornWobble,
         headY + Math.sin(hornAngle) * (size * 0.07 * hs + hornLen * 0.3),
-        size * 0.005 * hs, 0, TAU,
+        size * 0.005 * hs,
+        0,
+        TAU
       );
       ctx.fill();
       ctx.fillStyle = bodyColorDark;
@@ -1565,12 +1643,16 @@ export function drawSwampLeviathanEnemy(
     ctx.beginPath();
     ctx.moveTo(headX - size * 0.06 * hs, headY + size * 0.03 * hs);
     ctx.quadraticCurveTo(
-      headX - size * 0.1 * hs, headY - size * 0.08 * hs,
-      headX, headY - size * 0.1 * hs,
+      headX - size * 0.1 * hs,
+      headY - size * 0.08 * hs,
+      headX,
+      headY - size * 0.1 * hs
     );
     ctx.quadraticCurveTo(
-      headX + size * 0.1 * hs, headY - size * 0.08 * hs,
-      headX + size * 0.06 * hs, headY + size * 0.03 * hs,
+      headX + size * 0.1 * hs,
+      headY - size * 0.08 * hs,
+      headX + size * 0.06 * hs,
+      headY + size * 0.03 * hs
     );
     ctx.closePath();
     ctx.fill();
@@ -1578,24 +1660,24 @@ export function drawSwampLeviathanEnemy(
 
   // === POISON CLOUD PARTICLES orbiting ===
   drawOrbitingDebris(ctx, x, y - size * 0.1, size, time, zoom, {
-    count: 8,
-    minRadius: 0.5,
-    maxRadius: 0.75,
-    speed: 0.8,
-    particleSize: 0.025,
     color: "rgba(74, 222, 128, 0.5)",
+    count: 8,
     glowColor: "rgba(34, 197, 94, 0.3)",
+    maxRadius: 0.75,
+    minRadius: 0.5,
+    particleSize: 0.025,
+    speed: 0.8,
     trailLen: 0.4,
   });
 
   // === TOXIC PULSE RINGS ===
   drawPulsingGlowRings(ctx, x, y, size * 0.55, time, zoom, {
-    count: 2,
-    speed: 2,
     color: "rgba(88, 28, 135, 0.25)",
-    maxAlpha: 0.2,
+    count: 2,
     expansion: 0.35,
     lineWidth: 1.5,
+    maxAlpha: 0.2,
+    speed: 2,
   });
 }
 
@@ -1614,7 +1696,7 @@ export function drawSphinxGuardianEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -1654,7 +1736,7 @@ export function drawSphinxGuardianEnemy(
     0,
     x,
     y + size * 0.2,
-    size * 1.0,
+    size * 1
   );
   auraGrad.addColorStop(0, `rgba(251, 191, 36, ${goldPulse * 0.2})`);
   auraGrad.addColorStop(0.4, `rgba(217, 119, 6, ${goldPulse * 0.12})`);
@@ -1662,7 +1744,7 @@ export function drawSphinxGuardianEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.2, size * 1.0, size * 1.0 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(x, y + size * 0.2, size * 1, size * 1 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
   // Pulsing glow rings (isometric)
@@ -1670,38 +1752,38 @@ export function drawSphinxGuardianEnemy(
   ctx.translate(x, y + size * 0.4);
   ctx.scale(1, ISO_Y_RATIO);
   drawPulsingGlowRings(ctx, 0, 0, size * 0.65, time, zoom, {
-    count: 3,
-    speed: 1.2,
     color: "rgba(251, 191, 36, 0.2)",
-    maxAlpha: 0.2,
+    count: 3,
     expansion: 0.35,
     lineWidth: 1.5,
+    maxAlpha: 0.2,
+    speed: 1.2,
   });
   ctx.restore();
 
   // === ORBITING HIEROGLYPHIC SYMBOLS ===
   drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
-    count: 8,
-    orbitRadius: 0.65,
-    segmentSize: 0.04,
-    orbitSpeed: 0.6,
-    bobSpeed: 2,
     bobAmt: 0.03,
+    bobSpeed: 2,
     color: "#fbbf24",
     colorAlt: "#d97706",
-    shape: "diamond",
+    count: 8,
+    orbitRadius: 0.65,
+    orbitSpeed: 0.6,
     rotateWithOrbit: true,
+    segmentSize: 0.04,
+    shape: "diamond",
   });
 
   // === SAND PARTICLES SWIRLING ===
   drawOrbitingDebris(ctx, x, y + size * 0.1, size, time, zoom, {
-    count: 14,
-    minRadius: 0.55,
-    maxRadius: 0.9,
-    speed: 0.5,
-    particleSize: 0.015,
     color: "#d4a574",
+    count: 14,
     glowColor: "rgba(251, 191, 36, 0.2)",
+    maxRadius: 0.9,
+    minRadius: 0.55,
+    particleSize: 0.015,
+    speed: 0.5,
     trailLen: 0.5,
   });
 
@@ -1714,7 +1796,7 @@ export function drawSphinxGuardianEnemy(
       0,
       -size * 0.3,
       side * size * 0.35,
-      size * 0.1,
+      size * 0.1
     );
     wingGrad.addColorStop(0, "#c4a35a");
     wingGrad.addColorStop(0.4, "#b8963e");
@@ -1727,13 +1809,13 @@ export function drawSphinxGuardianEnemy(
       side * size * 0.15,
       -size * 0.35,
       side * size * 0.35,
-      -size * 0.28,
+      -size * 0.28
     );
     ctx.quadraticCurveTo(
       side * size * 0.4,
       -size * 0.15,
       side * size * 0.38,
-      size * 0.05,
+      size * 0.05
     );
     ctx.quadraticCurveTo(side * size * 0.25, size * 0.15, 0, size * 0.12);
     ctx.closePath();
@@ -1749,7 +1831,7 @@ export function drawSphinxGuardianEnemy(
         side * size * ft * 0.3,
         -size * 0.25 + f * size * 0.06,
         side * size * ft * 0.38,
-        -size * 0.15 + f * size * 0.04,
+        -size * 0.15 + f * size * 0.04
       );
       ctx.stroke();
     }
@@ -1763,7 +1845,7 @@ export function drawSphinxGuardianEnemy(
       side * size * 0.15,
       -size * 0.35,
       side * size * 0.35,
-      -size * 0.28,
+      -size * 0.28
     );
     ctx.stroke();
     clearShadow(ctx);
@@ -1777,7 +1859,7 @@ export function drawSphinxGuardianEnemy(
     0,
     x,
     y + size * 0.08,
-    size * 0.52,
+    size * 0.52
   );
   bodyGrad.addColorStop(0, "#d4b870");
   bodyGrad.addColorStop(0.3, "#c4a35a");
@@ -1794,11 +1876,21 @@ export function drawSphinxGuardianEnemy(
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.3, y - size * 0.05 + breathe);
-  ctx.quadraticCurveTo(x - size * 0.15, y + size * 0.15 + breathe, x, y + size * 0.2 + breathe);
+  ctx.quadraticCurveTo(
+    x - size * 0.15,
+    y + size * 0.15 + breathe,
+    x,
+    y + size * 0.2 + breathe
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.3, y - size * 0.05 + breathe);
-  ctx.quadraticCurveTo(x + size * 0.15, y + size * 0.15 + breathe, x, y + size * 0.2 + breathe);
+  ctx.quadraticCurveTo(
+    x + size * 0.15,
+    y + size * 0.15 + breathe,
+    x,
+    y + size * 0.2 + breathe
+  );
   ctx.stroke();
 
   // Sandstone texture cracks
@@ -1806,12 +1898,15 @@ export function drawSphinxGuardianEnemy(
   ctx.lineWidth = 1.5 * zoom;
   for (let crack = 0; crack < 8; crack++) {
     const crackX = x - size * 0.33 + crack * size * 0.1;
-    const crackYstart = y - size * 0.1 + breathe + Math.sin(crack * 2.1) * size * 0.05;
+    const crackYstart =
+      y - size * 0.1 + breathe + Math.sin(crack * 2.1) * size * 0.05;
     ctx.beginPath();
     ctx.moveTo(crackX, crackYstart);
     ctx.quadraticCurveTo(
-      crackX + size * 0.02, crackYstart + size * 0.12,
-      crackX - size * 0.015, crackYstart + size * 0.22,
+      crackX + size * 0.02,
+      crackYstart + size * 0.12,
+      crackX - size * 0.015,
+      crackYstart + size * 0.22
     );
     ctx.stroke();
   }
@@ -1821,15 +1916,20 @@ export function drawSphinxGuardianEnemy(
   ctx.strokeStyle = `rgba(251, 191, 36, ${goldPulse * 0.6})`;
   ctx.lineWidth = 2 * zoom;
   const goldVeins = [
-    { sx: -0.2, sy: -0.05, cx: -0.1, cy: 0.08, ex: 0.05, ey: 0.15 },
-    { sx: 0.2, sy: -0.05, cx: 0.1, cy: 0.08, ex: -0.05, ey: 0.15 },
-    { sx: -0.1, sy: -0.12, cx: 0, cy: 0, ex: 0.1, ey: 0.1 },
-    { sx: 0, sy: -0.15, cx: 0.08, cy: -0.05, ex: 0.15, ey: 0.1 },
+    { cx: -0.1, cy: 0.08, ex: 0.05, ey: 0.15, sx: -0.2, sy: -0.05 },
+    { cx: 0.1, cy: 0.08, ex: -0.05, ey: 0.15, sx: 0.2, sy: -0.05 },
+    { cx: 0, cy: 0, ex: 0.1, ey: 0.1, sx: -0.1, sy: -0.12 },
+    { cx: 0.08, cy: -0.05, ex: 0.15, ey: 0.1, sx: 0, sy: -0.15 },
   ];
   for (const gv of goldVeins) {
     ctx.beginPath();
     ctx.moveTo(x + gv.sx * size, y + gv.sy * size + breathe);
-    ctx.quadraticCurveTo(x + gv.cx * size, y + gv.cy * size + breathe, x + gv.ex * size, y + gv.ey * size + breathe);
+    ctx.quadraticCurveTo(
+      x + gv.cx * size,
+      y + gv.cy * size + breathe,
+      x + gv.ex * size,
+      y + gv.ey * size + breathe
+    );
     ctx.stroke();
   }
   ctx.fillStyle = `rgba(251, 191, 36, ${goldPulse * 0.8})`;
@@ -1845,7 +1945,12 @@ export function drawSphinxGuardianEnemy(
   for (let ring = 0; ring < 3; ring++) {
     const ringW = size * (0.32 - ring * 0.06);
     const ringH = size * (0.08 + ring * 0.03);
-    const ringGrad = ctx.createLinearGradient(x - ringW, pectoralY, x + ringW, pectoralY);
+    const ringGrad = ctx.createLinearGradient(
+      x - ringW,
+      pectoralY,
+      x + ringW,
+      pectoralY
+    );
     ringGrad.addColorStop(0, "#7a6020");
     ringGrad.addColorStop(0.3, "#fbbf24");
     ringGrad.addColorStop(0.5, "#d4b870");
@@ -1860,7 +1965,14 @@ export function drawSphinxGuardianEnemy(
     ctx.stroke();
   }
   // Pectoral gems
-  const pGemColors = ["#ef4444", "#3b82f6", "#22c55e", "#fbbf24", "#ef4444", "#3b82f6"];
+  const pGemColors = [
+    "#ef4444",
+    "#3b82f6",
+    "#22c55e",
+    "#fbbf24",
+    "#ef4444",
+    "#3b82f6",
+  ];
   for (let gem = 0; gem < 6; gem++) {
     const gemAngle = -Math.PI * 0.4 + gem * Math.PI * 0.16;
     const gemR = size * 0.26;
@@ -1885,7 +1997,7 @@ export function drawSphinxGuardianEnemy(
       pawX - size * 0.05,
       pawBaseY - size * 0.25,
       pawX + size * 0.05,
-      pawBaseY,
+      pawBaseY
     );
     legGrad.addColorStop(0, "#c4a35a");
     legGrad.addColorStop(0.6, "#b8963e");
@@ -1897,14 +2009,14 @@ export function drawSphinxGuardianEnemy(
       pawX - size * 0.07,
       pawBaseY - size * 0.1,
       pawX - size * 0.08,
-      pawBaseY + size * 0.06,
+      pawBaseY + size * 0.06
     );
     ctx.lineTo(pawX + size * 0.08, pawBaseY + size * 0.06);
     ctx.quadraticCurveTo(
       pawX + size * 0.07,
       pawBaseY - size * 0.1,
       pawX + size * 0.06,
-      pawBaseY - size * 0.25,
+      pawBaseY - size * 0.25
     );
     ctx.closePath();
     ctx.fill();
@@ -1918,7 +2030,7 @@ export function drawSphinxGuardianEnemy(
       size * 0.1 * ISO_Y_RATIO,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     // Toes
@@ -1944,21 +2056,29 @@ export function drawSphinxGuardianEnemy(
       bLegX - size * 0.07,
       bLegY + size * 0.15,
       bLegX - size * 0.06,
-      bLegY + size * 0.28,
+      bLegY + size * 0.28
     );
     ctx.lineTo(bLegX + size * 0.06, bLegY + size * 0.28);
     ctx.quadraticCurveTo(
       bLegX + size * 0.07,
       bLegY + size * 0.15,
       bLegX + size * 0.05,
-      bLegY,
+      bLegY
     );
     ctx.closePath();
     ctx.fill();
     // Paw
     ctx.fillStyle = "#7a6020";
     ctx.beginPath();
-    ctx.ellipse(bLegX, bLegY + size * 0.3, size * 0.08, size * 0.08 * ISO_Y_RATIO, 0, 0, TAU);
+    ctx.ellipse(
+      bLegX,
+      bLegY + size * 0.3,
+      size * 0.08,
+      size * 0.08 * ISO_Y_RATIO,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
   }
 
@@ -2001,7 +2121,7 @@ export function drawSphinxGuardianEnemy(
     headX - size * 0.2,
     headY - size * 0.15,
     headX + size * 0.2,
-    headY + size * 0.15,
+    headY + size * 0.15
   );
   nemesGrad.addColorStop(0, "#c4a35a");
   nemesGrad.addColorStop(0.3, "#fbbf24");
@@ -2016,33 +2136,33 @@ export function drawSphinxGuardianEnemy(
     headX - size * 0.2,
     headY - size * 0.15,
     headX - size * 0.22,
-    headY,
+    headY
   );
   ctx.quadraticCurveTo(
     headX - size * 0.24,
     headY + size * 0.15,
     headX - size * 0.18,
-    headY + size * 0.25,
+    headY + size * 0.25
   );
   ctx.lineTo(headX - size * 0.1, headY + size * 0.22);
   ctx.quadraticCurveTo(
     headX,
     headY + size * 0.12,
     headX + size * 0.1,
-    headY + size * 0.22,
+    headY + size * 0.22
   );
   ctx.lineTo(headX + size * 0.18, headY + size * 0.25);
   ctx.quadraticCurveTo(
     headX + size * 0.24,
     headY + size * 0.15,
     headX + size * 0.22,
-    headY,
+    headY
   );
   ctx.quadraticCurveTo(
     headX + size * 0.2,
     headY - size * 0.15,
     headX,
-    headY - size * 0.2,
+    headY - size * 0.2
   );
   ctx.closePath();
   ctx.fill();
@@ -2058,7 +2178,7 @@ export function drawSphinxGuardianEnemy(
       headX,
       headY + st * size - size * 0.015,
       headX + size * 0.2,
-      headY + st * size,
+      headY + st * size
     );
     ctx.stroke();
   }
@@ -2070,7 +2190,7 @@ export function drawSphinxGuardianEnemy(
     0,
     headX,
     headY,
-    size * 0.14,
+    size * 0.14
   );
   faceGrad.addColorStop(0, "#d4a574");
   faceGrad.addColorStop(0.5, "#c4935a");
@@ -2104,7 +2224,7 @@ export function drawSphinxGuardianEnemy(
       0,
       eyeX,
       eyeY,
-      size * 0.02,
+      size * 0.02
     );
     irisGrad.addColorStop(0, `rgba(255, 230, 100, ${goldPulse})`);
     irisGrad.addColorStop(0.5, `rgba(251, 191, 36, ${goldPulse * 0.9})`);
@@ -2146,7 +2266,7 @@ export function drawSphinxGuardianEnemy(
     headX,
     headY + size * 0.085,
     headX + size * 0.04,
-    headY + size * 0.09,
+    headY + size * 0.09
   );
   ctx.stroke();
 
@@ -2155,7 +2275,7 @@ export function drawSphinxGuardianEnemy(
     headX,
     headY + size * 0.12,
     headX,
-    headY + size * 0.3,
+    headY + size * 0.3
   );
   beardGrad.addColorStop(0, "#c4a35a");
   beardGrad.addColorStop(0.5, "#b8963e");
@@ -2187,13 +2307,13 @@ export function drawSphinxGuardianEnemy(
     headX - size * 0.02,
     headY - size * 0.2,
     headX,
-    headY - size * 0.25,
+    headY - size * 0.25
   );
   ctx.quadraticCurveTo(
     headX + size * 0.02,
     headY - size * 0.2,
     headX,
-    headY - size * 0.14,
+    headY - size * 0.14
   );
   ctx.fill();
   // Cobra hood
@@ -2206,7 +2326,7 @@ export function drawSphinxGuardianEnemy(
     size * 0.015,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   // Cobra eyes
@@ -2226,7 +2346,7 @@ export function drawSphinxGuardianEnemy(
     0,
     headX,
     headY - size * 0.08,
-    size * 0.03,
+    size * 0.03
   );
   thirdEyeGrad.addColorStop(0, `rgba(255, 255, 200, ${thirdEyePulse})`);
   thirdEyeGrad.addColorStop(0.4, `rgba(251, 191, 36, ${thirdEyePulse * 0.9})`);
@@ -2239,13 +2359,13 @@ export function drawSphinxGuardianEnemy(
     headX + size * 0.03,
     headY - size * 0.08,
     headX,
-    headY - size * 0.055,
+    headY - size * 0.055
   );
   ctx.quadraticCurveTo(
     headX - size * 0.03,
     headY - size * 0.08,
     headX,
-    headY - size * 0.105,
+    headY - size * 0.105
   );
   ctx.fill();
   clearShadow(ctx);
@@ -2270,17 +2390,20 @@ export function drawSphinxGuardianEnemy(
 
   // Rays from third eye (always visible, enhanced when attacking)
   setShadowBlur(ctx, 10 * zoom, "#fbbf24");
-  const rayIntensity = isAttacking ? attackIntensity * 0.7 : thirdEyePulse * 0.15;
+  const rayIntensity = isAttacking
+    ? attackIntensity * 0.7
+    : thirdEyePulse * 0.15;
   const rayLen = isAttacking ? size * 0.3 : size * 0.12;
   ctx.strokeStyle = `rgba(251, 191, 36, ${rayIntensity})`;
   ctx.lineWidth = isAttacking ? 2.5 * zoom : 1.5 * zoom;
   for (let ray = 0; ray < 8; ray++) {
-    const rayAngle = -Math.PI * 0.5 + (ray - 3.5) * 0.2 + Math.sin(time * 3 + ray) * 0.05;
+    const rayAngle =
+      -Math.PI * 0.5 + (ray - 3.5) * 0.2 + Math.sin(time * 3 + ray) * 0.05;
     ctx.beginPath();
     ctx.moveTo(headX, headY - size * 0.08);
     ctx.lineTo(
       headX + Math.cos(rayAngle) * rayLen,
-      headY - size * 0.08 + Math.sin(rayAngle) * rayLen,
+      headY - size * 0.08 + Math.sin(rayAngle) * rayLen
     );
     ctx.stroke();
   }
@@ -2306,10 +2429,22 @@ export function drawSphinxGuardianEnemy(
   ctx.strokeStyle = "#fbbf24";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.arc(scarabX - size * 0.02, scarabY, size * 0.025, Math.PI * 0.3, Math.PI * 1.3);
+  ctx.arc(
+    scarabX - size * 0.02,
+    scarabY,
+    size * 0.025,
+    Math.PI * 0.3,
+    Math.PI * 1.3
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(scarabX + size * 0.02, scarabY, size * 0.025, -Math.PI * 0.3, Math.PI * 0.7);
+  ctx.arc(
+    scarabX + size * 0.02,
+    scarabY,
+    size * 0.025,
+    -Math.PI * 0.3,
+    Math.PI * 0.7
+  );
   ctx.stroke();
   clearShadow(ctx);
 }
@@ -2329,7 +2464,7 @@ export function drawFrostColossusEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -2357,14 +2492,22 @@ export function drawFrostColossusEnemy(
     0,
     x,
     y + size * 0.5,
-    size * 0.7,
+    size * 0.7
   );
   iceAuraGrad.addColorStop(0, "rgba(56, 189, 248, 0.15)");
   iceAuraGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.08)");
   iceAuraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = iceAuraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y + size * 0.5,
+    size * 0.7,
+    size * 0.7 * ISO_Y_RATIO,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // Ground freezing effect (isometric ground plane)
@@ -2390,7 +2533,7 @@ export function drawFrostColossusEnemy(
       ctx.moveTo(fEndX, fEndY);
       ctx.lineTo(
         fEndX + Math.cos(bAngle) * bLen,
-        fEndY + Math.sin(bAngle) * bLen,
+        fEndY + Math.sin(bAngle) * bLen
       );
       ctx.stroke();
     }
@@ -2400,12 +2543,12 @@ export function drawFrostColossusEnemy(
 
   // === FROST CRYSTALS orbiting ===
   drawFrostCrystals(ctx, x, y - size * 0.1, size * 0.7, time, zoom, {
-    count: 10,
-    speed: 0.7,
     color: "rgba(186, 230, 253, 0.6)",
+    count: 10,
+    crystalSize: 0.03,
     glowColor: "rgba(56, 189, 248, 0.3)",
     maxAlpha: 0.6,
-    crystalSize: 0.03,
+    speed: 0.7,
   });
 
   // === SNOWFLAKE PARTICLES ===
@@ -2427,7 +2570,7 @@ export function drawFrostColossusEnemy(
       ctx.moveTo(snowX, snowY);
       ctx.lineTo(
         snowX + Math.cos(spokeAngle) * size * 0.01,
-        snowY + Math.sin(spokeAngle) * size * 0.01,
+        snowY + Math.sin(spokeAngle) * size * 0.01
       );
       ctx.stroke();
     }
@@ -2435,15 +2578,15 @@ export function drawFrostColossusEnemy(
 
   // === ANIMATED LEGS ===
   drawPathLegs(ctx, x, y + size * 0.2, size, time, zoom, {
-    legLen: 0.3,
-    width: 0.08,
-    strideSpeed: 2.5,
-    strideAmt: 0.15,
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#e0f2fe",
     footLen: 0.08,
+    legLen: 0.3,
+    strideAmt: 0.15,
+    strideSpeed: 2.5,
     style: "armored",
+    width: 0.08,
   });
 
   // === MASSIVE ICE BODY ===
@@ -2456,7 +2599,7 @@ export function drawFrostColossusEnemy(
     0,
     x,
     y - size * 0.05,
-    size * 0.35,
+    size * 0.35
   );
   innerStormGrad.addColorStop(0, "rgba(186, 230, 253, 0.4)");
   innerStormGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.2)");
@@ -2470,7 +2613,7 @@ export function drawFrostColossusEnemy(
     size * 0.32,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
   // Swirling blizzard particles inside
@@ -2497,15 +2640,24 @@ export function drawFrostColossusEnemy(
     ctx.lineWidth = (4 + aurora * 2) * zoom;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.5, auroraY);
-    ctx.quadraticCurveTo(x + auroraWave, auroraY - size * 0.05, x + size * 0.5, auroraY);
+    ctx.quadraticCurveTo(
+      x + auroraWave,
+      auroraY - size * 0.05,
+      x + size * 0.5,
+      auroraY
+    );
     ctx.stroke();
   }
   ctx.restore();
 
   // Main translucent body
   const bodyGrad = ctx.createRadialGradient(
-    x, y - size * 0.05, size * 0.05,
-    x, y - size * 0.05, size * 0.4,
+    x,
+    y - size * 0.05,
+    size * 0.05,
+    x,
+    y - size * 0.05,
+    size * 0.4
   );
   bodyGrad.addColorStop(0, "rgba(230, 248, 255, 0.9)");
   bodyGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.85)");
@@ -2514,7 +2666,15 @@ export function drawFrostColossusEnemy(
   bodyGrad.addColorStop(1, "rgba(56, 189, 248, 0.5)");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.05 + breathe, size * 0.38, size * 0.34, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y - size * 0.05 + breathe,
+    size * 0.38,
+    size * 0.34,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // === ICE RUNE PATTERNS carved on body ===
@@ -2522,19 +2682,21 @@ export function drawFrostColossusEnemy(
   ctx.strokeStyle = `rgba(56, 189, 248, ${icePulse * 0.8})`;
   ctx.lineWidth = 2.5 * zoom;
   const iceVeinPaths = [
-    { sx: -0.22, sy: -0.25, mx: -0.06, my: -0.05, ex: 0.16, ey: 0.18 },
-    { sx: 0.2, sy: -0.22, mx: 0.06, my: 0.02, ex: -0.14, ey: 0.22 },
-    { sx: -0.12, sy: -0.32, mx: 0.0, my: -0.12, ex: 0.12, ey: 0.12 },
-    { sx: 0.0, sy: -0.36, mx: 0.1, my: -0.16, ex: 0.22, ey: 0.06 },
-    { sx: -0.18, sy: 0.0, mx: -0.06, my: 0.12, ex: 0.12, ey: 0.2 },
-    { sx: 0.16, sy: 0.0, mx: 0.06, my: 0.12, ex: -0.1, ey: 0.2 },
+    { ex: 0.16, ey: 0.18, mx: -0.06, my: -0.05, sx: -0.22, sy: -0.25 },
+    { ex: -0.14, ey: 0.22, mx: 0.06, my: 0.02, sx: 0.2, sy: -0.22 },
+    { ex: 0.12, ey: 0.12, mx: 0, my: -0.12, sx: -0.12, sy: -0.32 },
+    { ex: 0.22, ey: 0.06, mx: 0.1, my: -0.16, sx: 0, sy: -0.36 },
+    { ex: 0.12, ey: 0.2, mx: -0.06, my: 0.12, sx: -0.18, sy: 0 },
+    { ex: -0.1, ey: 0.2, mx: 0.06, my: 0.12, sx: 0.16, sy: 0 },
   ];
   for (const vein of iceVeinPaths) {
     ctx.beginPath();
     ctx.moveTo(x + vein.sx * size, y + vein.sy * size + breathe);
     ctx.quadraticCurveTo(
-      x + vein.mx * size, y + vein.my * size + breathe,
-      x + vein.ex * size, y + vein.ey * size + breathe,
+      x + vein.mx * size,
+      y + vein.my * size + breathe,
+      x + vein.ex * size,
+      y + vein.ey * size + breathe
     );
     ctx.stroke();
   }
@@ -2543,18 +2705,30 @@ export function drawFrostColossusEnemy(
   for (const vein of iceVeinPaths) {
     ctx.beginPath();
     ctx.moveTo(x + vein.mx * size, y + vein.my * size + breathe);
-    ctx.lineTo(x + vein.mx * size + size * 0.08, y + vein.my * size + size * 0.07 + breathe);
+    ctx.lineTo(
+      x + vein.mx * size + size * 0.08,
+      y + vein.my * size + size * 0.07 + breathe
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(x + vein.mx * size, y + vein.my * size + breathe);
-    ctx.lineTo(x + vein.mx * size - size * 0.06, y + vein.my * size + size * 0.05 + breathe);
+    ctx.lineTo(
+      x + vein.mx * size - size * 0.06,
+      y + vein.my * size + size * 0.05 + breathe
+    );
     ctx.stroke();
   }
   // Rune nodes at vein junctions
   ctx.fillStyle = `rgba(200, 240, 255, ${icePulse * 0.9})`;
   for (const vein of iceVeinPaths) {
     ctx.beginPath();
-    ctx.arc(x + vein.mx * size, y + vein.my * size + breathe, size * 0.012, 0, TAU);
+    ctx.arc(
+      x + vein.mx * size,
+      y + vein.my * size + breathe,
+      size * 0.012,
+      0,
+      TAU
+    );
     ctx.fill();
   }
   clearShadow(ctx);
@@ -2576,11 +2750,11 @@ export function drawFrostColossusEnemy(
     ctx.beginPath();
     ctx.moveTo(
       x + Math.cos(sigAngle) * size * 0.06,
-      y - size * 0.05 + breathe + Math.sin(sigAngle) * size * 0.06,
+      y - size * 0.05 + breathe + Math.sin(sigAngle) * size * 0.06
     );
     ctx.lineTo(
       x + Math.cos(sigAngle) * size * 0.1,
-      y - size * 0.05 + breathe + Math.sin(sigAngle) * size * 0.1,
+      y - size * 0.05 + breathe + Math.sin(sigAngle) * size * 0.1
     );
     ctx.stroke();
   }
@@ -2588,12 +2762,12 @@ export function drawFrostColossusEnemy(
 
   // === CRYSTALLINE ARMOR PLATES (floating) ===
   const armorConfigs = [
-    { cx: -0.25, cy: -0.15, w: 0.12, h: 0.14, phase: 0 },
-    { cx: 0.25, cy: -0.15, w: 0.12, h: 0.14, phase: 1.5 },
-    { cx: -0.15, cy: 0.1, w: 0.1, h: 0.08, phase: 0.8 },
-    { cx: 0.15, cy: 0.1, w: 0.1, h: 0.08, phase: 2.0 },
-    { cx: 0.0, cy: -0.28, w: 0.08, h: 0.06, phase: 1.0 },
-    { cx: 0.0, cy: 0.18, w: 0.1, h: 0.06, phase: 2.5 },
+    { cx: -0.25, cy: -0.15, h: 0.14, phase: 0, w: 0.12 },
+    { cx: 0.25, cy: -0.15, h: 0.14, phase: 1.5, w: 0.12 },
+    { cx: -0.15, cy: 0.1, h: 0.08, phase: 0.8, w: 0.1 },
+    { cx: 0.15, cy: 0.1, h: 0.08, phase: 2, w: 0.1 },
+    { cx: 0, cy: -0.28, h: 0.06, phase: 1, w: 0.08 },
+    { cx: 0, cy: 0.18, h: 0.06, phase: 2.5, w: 0.1 },
   ];
   for (const armor of armorConfigs) {
     const ax =
@@ -2605,14 +2779,14 @@ export function drawFrostColossusEnemy(
       breathe +
       Math.sin(time * 2 + armor.phase) * size * 0.015;
     drawFloatingPiece(ctx, ax, ay, size, time, armor.phase, {
-      width: armor.w,
-      height: armor.h,
+      bobAmt: 0.012,
+      bobSpeed: 1.5,
       color: "rgba(186, 230, 253, 0.7)",
       colorEdge: "rgba(56, 189, 248, 0.5)",
-      bobSpeed: 1.5,
-      bobAmt: 0.012,
-      rotateSpeed: 0.3,
+      height: armor.h,
       rotateAmt: 0.15,
+      rotateSpeed: 0.3,
+      width: armor.w,
     });
   }
 
@@ -2627,31 +2801,35 @@ export function drawFrostColossusEnemy(
       zoom,
       side,
       {
-        upperLen: 0.22,
-        foreLen: 0.2,
-        width: 0.07,
-        shoulderAngle: side * (0.9 + Math.sin(time * 1.5 + side * 0.5) * 0.1 + (isAttacking ? attackIntensity * 0.5 : 0)),
-        elbowAngle: 0.3 + Math.sin(time * 2 + side * 1.5) * 0.1,
         color: bodyColor,
         colorDark: bodyColorDark,
+        elbowAngle: 0.3 + Math.sin(time * 2 + side * 1.5) * 0.1,
+        foreLen: 0.2,
         handColor: "#e0f2fe",
         handRadius: 0.04,
+        shoulderAngle:
+          side *
+          (0.9 +
+            Math.sin(time * 1.5 + side * 0.5) * 0.1 +
+            (isAttacking ? attackIntensity * 0.5 : 0)),
         style: "armored",
-      },
+        upperLen: 0.22,
+        width: 0.07,
+      }
     );
   }
 
   // === ICE CROWN with jagged spikes (enhanced) ===
   const crownBaseY = headY + size * 0.03;
   const crownSpikes = [
-    { offset: -0.1, height: -0.18, width: 0.025 },
-    { offset: -0.06, height: -0.24, width: 0.028 },
-    { offset: -0.02, height: -0.28, width: 0.025 },
-    { offset: 0.02, height: -0.32, width: 0.032 },
-    { offset: 0.06, height: -0.28, width: 0.025 },
-    { offset: 0.1, height: -0.22, width: 0.028 },
-    { offset: -0.13, height: -0.12, width: 0.02 },
-    { offset: 0.13, height: -0.12, width: 0.02 },
+    { height: -0.18, offset: -0.1, width: 0.025 },
+    { height: -0.24, offset: -0.06, width: 0.028 },
+    { height: -0.28, offset: -0.02, width: 0.025 },
+    { height: -0.32, offset: 0.02, width: 0.032 },
+    { height: -0.28, offset: 0.06, width: 0.025 },
+    { height: -0.22, offset: 0.1, width: 0.028 },
+    { height: -0.12, offset: -0.13, width: 0.02 },
+    { height: -0.12, offset: 0.13, width: 0.02 },
   ];
   // Inner glow behind spikes
   setShadowBlur(ctx, 15 * zoom, "#38bdf8");
@@ -2663,11 +2841,16 @@ export function drawFrostColossusEnemy(
 
   // Crystal spikes with prismatic shimmer
   for (const spike of crownSpikes) {
-    const spikeTop = crownBaseY + spike.height * size + Math.sin(time * 2 + spike.offset * 10) * size * 0.015;
+    const spikeTop =
+      crownBaseY +
+      spike.height * size +
+      Math.sin(time * 2 + spike.offset * 10) * size * 0.015;
     // Spike body
     const spikeGrad = ctx.createLinearGradient(
-      x + spike.offset * size, crownBaseY,
-      x + spike.offset * size, spikeTop,
+      x + spike.offset * size,
+      crownBaseY,
+      x + spike.offset * size,
+      spikeTop
     );
     spikeGrad.addColorStop(0, "rgba(186, 230, 253, 0.9)");
     spikeGrad.addColorStop(0.5, "rgba(224, 242, 254, 0.95)");
@@ -2697,7 +2880,15 @@ export function drawFrostColossusEnemy(
   ctx.strokeStyle = `rgba(186, 230, 253, ${icePulse * 0.6})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x, crownBaseY - size * 0.015, size * 0.13, size * 0.04, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    crownBaseY - size * 0.015,
+    size * 0.13,
+    size * 0.04,
+    0,
+    0,
+    TAU
+  );
   ctx.stroke();
   clearShadow(ctx);
 
@@ -2786,7 +2977,7 @@ export function drawFrostColossusEnemy(
       0,
       eyeX,
       eyeY,
-      size * 0.025,
+      size * 0.025
     );
     eyeGrad.addColorStop(0, `rgba(255, 255, 255, ${icePulse})`);
     eyeGrad.addColorStop(0.4, `rgba(186, 230, 253, ${icePulse * 0.9})`);
@@ -2807,7 +2998,7 @@ export function drawFrostColossusEnemy(
       eyeX + side * size * 0.09,
       eyeY - size * 0.005 + sin6 * size * 0.01,
       eyeX + side * size * 0.12,
-      eyeY - size * 0.02 + sin5 * size * 0.015,
+      eyeY - size * 0.02 + sin5 * size * 0.015
     );
     ctx.stroke();
   }
@@ -2821,7 +3012,7 @@ export function drawFrostColossusEnemy(
     x,
     headY + size * 0.065,
     x + size * 0.04,
-    headY + size * 0.06,
+    headY + size * 0.06
   );
   ctx.stroke();
 
@@ -2842,12 +3033,12 @@ export function drawFrostColossusEnemy(
 
   // === PULSING GLOW RINGS ===
   drawPulsingGlowRings(ctx, x, y, size * 0.5, time, zoom, {
-    count: 2,
-    speed: 1.8,
     color: "rgba(56, 189, 248, 0.2)",
-    maxAlpha: 0.2,
+    count: 2,
     expansion: 0.3,
     lineWidth: 1.5,
+    maxAlpha: 0.2,
+    speed: 1.8,
   });
 }
 
@@ -2867,7 +3058,7 @@ export function drawInfernoWyrmEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -2904,7 +3095,7 @@ export function drawInfernoWyrmEnemy(
       size * 0.03,
       Math.sin(time + h) * 0.3,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -2956,25 +3147,33 @@ export function drawInfernoWyrmEnemy(
       0,
       poolX,
       poolY,
-      size * 0.06,
+      size * 0.06
     );
     poolGrad.addColorStop(0, `rgba(255, 200, 50, ${lavaPulse * 0.6})`);
     poolGrad.addColorStop(0.5, `rgba(249, 115, 22, ${lavaPulse * 0.4})`);
     poolGrad.addColorStop(1, `rgba(239, 68, 68, ${lavaPulse * 0.15})`);
     ctx.fillStyle = poolGrad;
     ctx.beginPath();
-    ctx.ellipse(poolX, poolY, size * 0.06, size * 0.06 * ISO_Y_RATIO, 0, 0, TAU);
+    ctx.ellipse(
+      poolX,
+      poolY,
+      size * 0.06,
+      size * 0.06 * ISO_Y_RATIO,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
   }
 
   // === EMBER SPARKS ===
   drawEmberSparks(ctx, x, y - size * 0.1, size * 0.8, time, zoom, {
-    count: 16,
-    speed: 1.5,
     color: "rgba(249, 115, 22, 0.7)",
     coreColor: "rgba(255, 255, 100, 0.9)",
+    count: 16,
     maxAlpha: 0.7,
     sparkSize: 0.025,
+    speed: 1.5,
   });
 
   // === FIRE PULSING RINGS (isometric) ===
@@ -2982,12 +3181,12 @@ export function drawInfernoWyrmEnemy(
   ctx.translate(x, y);
   ctx.scale(1, ISO_Y_RATIO);
   drawPulsingGlowRings(ctx, 0, 0, size * 0.7, time, zoom, {
-    count: 3,
-    speed: 2,
     color: "rgba(239, 68, 68, 0.25)",
-    maxAlpha: 0.25,
+    count: 3,
     expansion: 0.4,
     lineWidth: 2,
+    maxAlpha: 0.25,
+    speed: 2,
   });
   ctx.restore();
 
@@ -3006,7 +3205,7 @@ export function drawInfernoWyrmEnemy(
       t * size * 0.8 +
       Math.cos(t * Math.PI + time * 0.8) * size * 0.1;
     const width = size * (0.16 - t * 0.08) * (1 + Math.sin(t * Math.PI) * 0.15);
-    segmentPositions.push({ x: curveX, y: curveY, width });
+    segmentPositions.push({ width, x: curveX, y: curveY });
   }
 
   // Draw body shadow (underneath)
@@ -3023,7 +3222,7 @@ export function drawInfernoWyrmEnemy(
       p.width * 0.6,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -3070,7 +3269,9 @@ export function drawInfernoWyrmEnemy(
   // === OBSIDIAN ARMOR PLATES on body ===
   for (let plate = 0; plate < 8; plate++) {
     const plateIdx = Math.floor((plate * bodySegments) / 8) + 2;
-    if (plateIdx >= bodySegments) continue;
+    if (plateIdx >= bodySegments) {
+      continue;
+    }
     const pp = segmentPositions[plateIdx];
     const plateAngle = Math.sin(time * 1.5 + plate) * 0.1;
     const plateW = pp.width * 0.6;
@@ -3110,17 +3311,34 @@ export function drawInfernoWyrmEnemy(
   // === VOLCANIC SPINES along the back (enhanced) ===
   for (let spine = 0; spine < 20; spine++) {
     const spineIdx = Math.floor((spine * bodySegments) / 20);
-    if (spineIdx >= bodySegments) continue;
+    if (spineIdx >= bodySegments) {
+      continue;
+    }
     const sp = segmentPositions[spineIdx];
-    const spineHeight = size * (0.07 + Math.sin(spine * 1.3) * 0.025 + (spine % 3 === 0 ? 0.02 : 0));
+    const spineHeight =
+      size *
+      (0.07 + Math.sin(spine * 1.3) * 0.025 + (spine % 3 === 0 ? 0.02 : 0));
     const spineWobble = Math.sin(time * 3 + spine * 0.5) * size * 0.006;
     // Spine base shadow
     ctx.fillStyle = "#1a0000";
     ctx.beginPath();
-    ctx.ellipse(sp.x, sp.y - sp.width * 0.4, size * 0.02, size * 0.008, 0, 0, TAU);
+    ctx.ellipse(
+      sp.x,
+      sp.y - sp.width * 0.4,
+      size * 0.02,
+      size * 0.008,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
     // Spine body
-    const spineGrad = ctx.createLinearGradient(sp.x, sp.y - sp.width * 0.4, sp.x, sp.y - sp.width * 0.4 - spineHeight);
+    const spineGrad = ctx.createLinearGradient(
+      sp.x,
+      sp.y - sp.width * 0.4,
+      sp.x,
+      sp.y - sp.width * 0.4 - spineHeight
+    );
     spineGrad.addColorStop(0, bodyColorDark);
     spineGrad.addColorStop(0.7, "#3a1010");
     spineGrad.addColorStop(1, "#5a2020");
@@ -3135,7 +3353,13 @@ export function drawInfernoWyrmEnemy(
     setShadowBlur(ctx, 6 * zoom, "#f97316");
     ctx.fillStyle = `rgba(255, 180, 50, ${lavaPulse * 0.7})`;
     ctx.beginPath();
-    ctx.arc(sp.x + spineWobble, sp.y - sp.width * 0.4 - spineHeight * 0.6, size * 0.01, 0, TAU);
+    ctx.arc(
+      sp.x + spineWobble,
+      sp.y - sp.width * 0.4 - spineHeight * 0.6,
+      size * 0.01,
+      0,
+      TAU
+    );
     ctx.fill();
     // Molten veins on spine
     ctx.strokeStyle = `rgba(255, 150, 50, ${lavaPulse * 0.4})`;
@@ -3153,7 +3377,9 @@ export function drawInfernoWyrmEnemy(
     const maneIdx =
       Math.floor((mane * (bodySegments * 0.4)) / 10) +
       Math.floor(bodySegments * 0.5);
-    if (maneIdx >= bodySegments) continue;
+    if (maneIdx >= bodySegments) {
+      continue;
+    }
     const mp = segmentPositions[maneIdx];
     const manePhase = time * 5 + mane * 0.8;
     const maneHeight = size * (0.05 + Math.sin(manePhase) * 0.025);
@@ -3165,7 +3391,7 @@ export function drawInfernoWyrmEnemy(
       mp.x + Math.sin(manePhase) * size * 0.02,
       mp.y - mp.width * 0.4 - maneHeight,
       mp.x + size * 0.02,
-      mp.y - mp.width * 0.4,
+      mp.y - mp.width * 0.4
     );
     ctx.fill();
     // Secondary flame layer
@@ -3176,7 +3402,7 @@ export function drawInfernoWyrmEnemy(
       mp.x + Math.sin(manePhase + 1) * size * 0.015,
       mp.y - mp.width * 0.35 - maneHeight * 0.7,
       mp.x + size * 0.015,
-      mp.y - mp.width * 0.35,
+      mp.y - mp.width * 0.35
     );
     ctx.fill();
   }
@@ -3185,7 +3411,9 @@ export function drawInfernoWyrmEnemy(
   // === LAVA DRIPPING from body ===
   for (let drip = 0; drip < 8; drip++) {
     const dripIdx = Math.floor((drip * bodySegments) / 8);
-    if (dripIdx >= bodySegments) continue;
+    if (dripIdx >= bodySegments) {
+      continue;
+    }
     const dp = segmentPositions[dripIdx];
     const dripPhase = (time * 1.5 + drip * 0.7) % 2;
     const dripX = dp.x + Math.sin(drip * 2.3) * dp.width * 0.5;
@@ -3216,13 +3444,13 @@ export function drawInfernoWyrmEnemy(
     tailTipX,
     tailTipY - size * 0.02,
     tailTipX + size * 0.08,
-    tailTipY,
+    tailTipY
   );
   ctx.quadraticCurveTo(
     tailTipX,
     tailTipY + size * 0.02,
     tailPos.x + size * 0.04,
-    tailPos.y,
+    tailPos.y
   );
   ctx.fill();
   // Flame at tail tip
@@ -3242,13 +3470,13 @@ export function drawInfernoWyrmEnemy(
       flameX + size * 0.02,
       flameY - flameH,
       flameX + size * 0.01,
-      flameY + flameH * 0.3,
+      flameY + flameH * 0.3
     );
     ctx.quadraticCurveTo(
       flameX - size * 0.005,
       flameY + flameH * 0.5,
       flameX,
-      flameY - flameH * 0.3,
+      flameY - flameH * 0.3
     );
     ctx.fill();
   }
@@ -3266,7 +3494,7 @@ export function drawInfernoWyrmEnemy(
     0,
     headX,
     headBaseY,
-    size * 0.2,
+    size * 0.2
   );
   headGrad.addColorStop(0, bodyColorLight);
   headGrad.addColorStop(0.4, bodyColor);
@@ -3306,7 +3534,7 @@ export function drawInfernoWyrmEnemy(
           Math.sin(time * 3 + smoke) * size * 0.01,
         nostrilY + size * 0.03 + smokePhase * size * 0.04,
         nostrilX + side * size * 0.03,
-        nostrilY + size * 0.05 + smokePhase * size * 0.06,
+        nostrilY + size * 0.05 + smokePhase * size * 0.06
       );
       ctx.stroke();
     }
@@ -3317,22 +3545,30 @@ export function drawInfernoWyrmEnemy(
     const hornBaseX = headX + side * size * 0.13;
     const hornBaseY = headBaseY - size * 0.09;
     const hornTipX = hornBaseX + side * size * 0.18;
-    const hornTipY = hornBaseY - size * 0.24 + Math.sin(time * 2 + side) * size * 0.012;
-    
+    const hornTipY =
+      hornBaseY - size * 0.24 + Math.sin(time * 2 + side) * size * 0.012;
+
     // Horn shadow
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.beginPath();
     ctx.moveTo(hornBaseX + side * size * 0.01, hornBaseY + size * 0.01);
     ctx.quadraticCurveTo(
-      hornBaseX + side * size * 0.1, hornBaseY - size * 0.1,
-      hornTipX + side * size * 0.01, hornTipY + size * 0.01,
+      hornBaseX + side * size * 0.1,
+      hornBaseY - size * 0.1,
+      hornTipX + side * size * 0.01,
+      hornTipY + size * 0.01
     );
     ctx.lineTo(hornBaseX + side * size * 0.04, hornBaseY + size * 0.01);
     ctx.closePath();
     ctx.fill();
-    
+
     // Main horn body with gradient
-    const hornGrad = ctx.createLinearGradient(hornBaseX, hornBaseY, hornTipX, hornTipY);
+    const hornGrad = ctx.createLinearGradient(
+      hornBaseX,
+      hornBaseY,
+      hornTipX,
+      hornTipY
+    );
     hornGrad.addColorStop(0, "#2a0a0a");
     hornGrad.addColorStop(0.3, "#3a1515");
     hornGrad.addColorStop(0.6, "#4a2020");
@@ -3341,13 +3577,15 @@ export function drawInfernoWyrmEnemy(
     ctx.beginPath();
     ctx.moveTo(hornBaseX - side * size * 0.01, hornBaseY);
     ctx.quadraticCurveTo(
-      hornBaseX + side * size * 0.1, hornBaseY - size * 0.14,
-      hornTipX, hornTipY,
+      hornBaseX + side * size * 0.1,
+      hornBaseY - size * 0.14,
+      hornTipX,
+      hornTipY
     );
     ctx.lineTo(hornBaseX + side * size * 0.03, hornBaseY);
     ctx.closePath();
     ctx.fill();
-    
+
     // Horn ridges (more detailed)
     ctx.strokeStyle = "#5a2525";
     ctx.lineWidth = 1.5 * zoom;
@@ -3361,7 +3599,7 @@ export function drawInfernoWyrmEnemy(
       ctx.lineTo(rx + side * rWidth, ry + size * 0.008);
       ctx.stroke();
     }
-    
+
     // Molten lava flowing through horn cracks
     setShadowBlur(ctx, 8 * zoom, "#f97316");
     ctx.strokeStyle = `rgba(255, 180, 50, ${lavaPulse * 0.8})`;
@@ -3369,11 +3607,13 @@ export function drawInfernoWyrmEnemy(
     ctx.beginPath();
     ctx.moveTo(hornBaseX + side * size * 0.01, hornBaseY);
     ctx.quadraticCurveTo(
-      hornBaseX + side * size * 0.08, hornBaseY - size * 0.1,
-      hornTipX - side * size * 0.02, hornTipY + size * 0.02,
+      hornBaseX + side * size * 0.08,
+      hornBaseY - size * 0.1,
+      hornTipX - side * size * 0.02,
+      hornTipY + size * 0.02
     );
     ctx.stroke();
-    
+
     // Horn glow tip (intense)
     ctx.fillStyle = `rgba(255, 200, 50, ${lavaPulse * 0.9})`;
     ctx.beginPath();
@@ -3390,12 +3630,13 @@ export function drawInfernoWyrmEnemy(
         hornTipX + side * size * 0.01 + Math.sin(wispPhase) * size * 0.01,
         hornTipY - wispH,
         hornTipX + side * size * 0.02,
-        hornTipY - wispH * 2,
+        hornTipY - wispH * 2
       );
       ctx.quadraticCurveTo(
         hornTipX - side * size * 0.005,
         hornTipY - wispH,
-        hornTipX, hornTipY,
+        hornTipX,
+        hornTipY
       );
       ctx.fill();
     }
@@ -3413,7 +3654,7 @@ export function drawInfernoWyrmEnemy(
     size * 0.05 + mawGape * 0.3,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
 
@@ -3426,7 +3667,7 @@ export function drawInfernoWyrmEnemy(
       0,
       snoutX,
       snoutY + size * 0.04,
-      size * 0.1,
+      size * 0.1
     );
     mawGrad.addColorStop(0, `rgba(255, 200, 50, ${lavaPulse * 0.8})`);
     mawGrad.addColorStop(0.5, `rgba(249, 115, 22, ${lavaPulse * 0.5})`);
@@ -3440,7 +3681,7 @@ export function drawInfernoWyrmEnemy(
       size * 0.03 + mawGape * 0.2,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     clearShadow(ctx);
@@ -3504,7 +3745,7 @@ export function drawInfernoWyrmEnemy(
       0,
       eyeX,
       eyeY,
-      size * 0.035,
+      size * 0.035
     );
     eyeGrad.addColorStop(0, `rgba(255, 255, 150, ${lavaPulse})`);
     eyeGrad.addColorStop(0.3, `rgba(255, 200, 50, ${lavaPulse * 0.9})`);
@@ -3531,7 +3772,7 @@ export function drawInfernoWyrmEnemy(
       eyeX + side * size * 0.08,
       eyeY - size * 0.02 + sin6 * size * 0.01,
       eyeX + side * size * 0.1,
-      eyeY - size * 0.03 + sin6 * size * 0.015,
+      eyeY - size * 0.03 + sin6 * size * 0.015
     );
     ctx.stroke();
   }
@@ -3580,18 +3821,33 @@ export function drawInfernoWyrmEnemy(
   ctx.fillStyle = "#2a0a0a";
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.06, headBaseY - size * 0.1);
-  ctx.quadraticCurveTo(headX, headBaseY - size * 0.22 + Math.sin(time * 3) * size * 0.015, headX + size * 0.06, headBaseY - size * 0.1);
+  ctx.quadraticCurveTo(
+    headX,
+    headBaseY - size * 0.22 + Math.sin(time * 3) * size * 0.015,
+    headX + size * 0.06,
+    headBaseY - size * 0.1
+  );
   ctx.closePath();
   ctx.fill();
   // Front crest
-  const crestGrad = ctx.createLinearGradient(headX, headBaseY - size * 0.1, headX, headBaseY - size * 0.2);
+  const crestGrad = ctx.createLinearGradient(
+    headX,
+    headBaseY - size * 0.1,
+    headX,
+    headBaseY - size * 0.2
+  );
   crestGrad.addColorStop(0, bodyColorDark);
   crestGrad.addColorStop(0.5, "#4a1515");
   crestGrad.addColorStop(1, "#6a2525");
   ctx.fillStyle = crestGrad;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.045, headBaseY - size * 0.1);
-  ctx.quadraticCurveTo(headX, headBaseY - size * 0.19 + Math.sin(time * 3) * size * 0.012, headX + size * 0.045, headBaseY - size * 0.1);
+  ctx.quadraticCurveTo(
+    headX,
+    headBaseY - size * 0.19 + Math.sin(time * 3) * size * 0.012,
+    headX + size * 0.045,
+    headBaseY - size * 0.1
+  );
   ctx.closePath();
   ctx.fill();
   // Crest glow veins
@@ -3600,7 +3856,12 @@ export function drawInfernoWyrmEnemy(
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.03, headBaseY - size * 0.1);
-  ctx.quadraticCurveTo(headX, headBaseY - size * 0.16, headX + size * 0.03, headBaseY - size * 0.1);
+  ctx.quadraticCurveTo(
+    headX,
+    headBaseY - size * 0.16,
+    headX + size * 0.03,
+    headBaseY - size * 0.1
+  );
   ctx.stroke();
   // Crest flame tips
   for (let cf = 0; cf < 3; cf++) {
@@ -3621,7 +3882,14 @@ export function drawInfernoWyrmEnemy(
   if (coreIdx < bodySegments) {
     const cp = segmentPositions[coreIdx];
     setShadowBlur(ctx, 15 * zoom, "#f97316");
-    const coreGrad = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, cp.width * 0.5);
+    const coreGrad = ctx.createRadialGradient(
+      cp.x,
+      cp.y,
+      0,
+      cp.x,
+      cp.y,
+      cp.width * 0.5
+    );
     coreGrad.addColorStop(0, `rgba(255, 255, 150, ${lavaPulse * 0.8})`);
     coreGrad.addColorStop(0.3, `rgba(255, 200, 50, ${lavaPulse * 0.5})`);
     coreGrad.addColorStop(0.6, `rgba(249, 115, 22, ${lavaPulse * 0.3})`);
@@ -3635,13 +3903,13 @@ export function drawInfernoWyrmEnemy(
 
   // === ORBITING DEBRIS ===
   drawOrbitingDebris(ctx, x, y - size * 0.1, size, time, zoom, {
-    count: 8,
-    minRadius: 0.6,
-    maxRadius: 0.9,
-    speed: 0.5,
-    particleSize: 0.03,
     color: "#7f1d1d",
+    count: 8,
     glowColor: "rgba(249, 115, 22, 0.4)",
+    maxRadius: 0.9,
+    minRadius: 0.6,
+    particleSize: 0.03,
+    speed: 0.5,
     trailLen: 0.3,
   });
 }

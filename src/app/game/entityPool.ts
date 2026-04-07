@@ -38,9 +38,11 @@ export class EntityPool<T extends { id: string }> {
   }
 
   release(obj: T): void {
-    if (!this.activeSet.delete(obj)) return;
+    if (!this.activeSet.delete(obj)) {
+      return;
+    }
     const idx = this.pool.indexOf(obj);
-    if (idx >= 0) {
+    if (idx !== -1) {
       this.freeIndices.push(idx);
     }
   }
@@ -78,12 +80,12 @@ let idCounter = 0;
 
 function createBlankProjectile(_index: number): Projectile {
   return {
-    id: `pool_proj_${_index}`,
     from: { x: 0, y: 0 },
-    to: { x: 0, y: 0 },
+    id: `pool_proj_${_index}`,
     progress: 0,
-    type: "arrow",
     rotation: 0,
+    to: { x: 0, y: 0 },
+    type: "arrow",
   };
 }
 
@@ -91,7 +93,10 @@ let projectilePool: EntityPool<Projectile> | null = null;
 
 export function getProjectilePool(): EntityPool<Projectile> {
   if (!projectilePool) {
-    projectilePool = new EntityPool(PROJECTILE_POOL_SIZE, createBlankProjectile);
+    projectilePool = new EntityPool(
+      PROJECTILE_POOL_SIZE,
+      createBlankProjectile
+    );
   }
   return projectilePool;
 }
@@ -101,7 +106,9 @@ export function getProjectilePool(): EntityPool<Projectile> {
  * Returns a fresh object (spread from pooled template) so it works
  * with React's immutable state pattern.
  */
-export function acquireProjectile(props: Omit<Projectile, "id"> & { id?: string }): Projectile {
+export function acquireProjectile(
+  props: Omit<Projectile, "id"> & { id?: string }
+): Projectile {
   const pool = getProjectilePool();
   const template = pool.acquire();
   const proj: Projectile = {
@@ -124,23 +131,23 @@ let enemyIdCounter = 0;
 
 function createBlankEnemy(_index: number): Enemy {
   return {
-    id: `pool_enemy_${_index}`,
-    type: "frosh" as EnemyType,
-    pathIndex: 0,
-    progress: 0,
-    hp: 1,
-    maxHp: 1,
-    speed: 1,
-    slowEffect: 0,
-    stunUntil: 0,
-    frozen: false,
     damageFlash: 0,
+    frozen: false,
+    hp: 1,
+    id: `pool_enemy_${_index}`,
     inCombat: false,
-    lastTroopAttack: 0,
+    laneOffset: 0,
     lastHeroAttack: 0,
     lastRangedAttack: 0,
+    lastTroopAttack: 0,
+    maxHp: 1,
+    pathIndex: 0,
+    progress: 0,
+    slowEffect: 0,
     spawnProgress: 1,
-    laneOffset: 0,
+    speed: 1,
+    stunUntil: 0,
+    type: "frosh" as EnemyType,
   };
 }
 
@@ -158,7 +165,9 @@ export function getEnemyPool(): EntityPool<Enemy> {
  * Returns a fresh object (spread from pooled template) compatible
  * with React's immutable state pattern.
  */
-export function acquireEnemy(props: Omit<Enemy, "id"> & { id?: string }): Enemy {
+export function acquireEnemy(
+  props: Omit<Enemy, "id"> & { id?: string }
+): Enemy {
   const pool = getEnemyPool();
   const template = pool.acquire();
   const enemy: Enemy = {

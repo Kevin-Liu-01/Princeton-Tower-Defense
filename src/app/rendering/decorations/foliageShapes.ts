@@ -1,6 +1,5 @@
-import { drawDirectionalShadow } from "./shadowHelpers";
-import { drawOrganicBlobAt } from "../helpers";
 import { ISO_Y_RATIO } from "../../constants";
+import { drawOrganicBlobAt } from "../helpers";
 import {
   TREE_PALETTES,
   BUSH_PALETTES,
@@ -12,6 +11,7 @@ import {
   CHARRED_TREE_PALETTES,
   SWAMP_TREE_PALETTES,
 } from "./foliagePalettes";
+import { drawDirectionalShadow } from "./shadowHelpers";
 
 function traceOrganicEllipse(
   ctx: CanvasRenderingContext2D,
@@ -21,7 +21,7 @@ function traceOrganicEllipse(
   ry: number,
   seed: number,
   bumpiness: number = 0.12,
-  rotation: number = 0,
+  rotation: number = 0
 ): void {
   const pts = 28;
   ctx.beginPath();
@@ -35,8 +35,11 @@ function traceOrganicEllipse(
     const ly = Math.sin(ang) * ry * variation;
     const px = cx + lx * Math.cos(rotation) - ly * Math.sin(rotation);
     const py = cy + lx * Math.sin(rotation) + ly * Math.cos(rotation);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.closePath();
 }
@@ -46,7 +49,7 @@ function drawLeafMark(
   cx: number,
   cy: number,
   size: number,
-  angle: number,
+  angle: number
 ): void {
   ctx.beginPath();
   ctx.ellipse(cx, cy, size * 1.6, size * 0.5, angle, 0, Math.PI * 2);
@@ -61,7 +64,7 @@ function drawSwampWaterBase(
   widthMul: number,
   sSeed: number,
   decorTime: number,
-  palette: typeof SWAMP_TREE_PALETTES[number],
+  palette: (typeof SWAMP_TREE_PALETTES)[number]
 ): void {
   const waterGrad = ctx.createRadialGradient(
     x - 4 * s,
@@ -69,7 +72,7 @@ function drawSwampWaterBase(
     2 * s,
     x,
     y + 6 * s,
-    22 * widthMul * s,
+    22 * widthMul * s
   );
   waterGrad.addColorStop(0, "rgba(40,70,62,0.34)");
   waterGrad.addColorStop(0.45, "rgba(24,46,42,0.22)");
@@ -83,12 +86,13 @@ function drawSwampWaterBase(
     8 * s,
     sSeed * 0.61,
     0.11,
-    -0.06,
+    -0.06
   );
   ctx.fill();
 
   for (let r = 0; r < 3; r++) {
-    const ripplePhase = ((decorTime * 0.9 + r * 0.45 + sSeed * 0.003) % 1 + 1) % 1;
+    const ripplePhase =
+      (((decorTime * 0.9 + r * 0.45 + sSeed * 0.003) % 1) + 1) % 1;
     const rx = (8 + ripplePhase * 10) * widthMul * s;
     const ry = (3.5 + ripplePhase * 4.2) * s;
     ctx.strokeStyle = `rgba(120,170,150,${(0.14 * (1 - ripplePhase)).toFixed(3)})`;
@@ -109,7 +113,7 @@ function drawSwampWaterBase(
       (2.4 + Math.sin(sSeed + p * 2.7) * 0.8) * s,
       (1.5 + Math.cos(sSeed + p * 1.3) * 0.3) * s,
       sSeed * 1.9 + p * 13,
-      0.12,
+      0.12
     );
     ctx.fill();
   }
@@ -123,7 +127,7 @@ function drawSwampTrunkRidges(
   heightMul: number,
   twistDir: number,
   sSeed: number,
-  palette: typeof SWAMP_TREE_PALETTES[number],
+  palette: (typeof SWAMP_TREE_PALETTES)[number]
 ): void {
   const ridgeCount = 6;
   ctx.strokeStyle = palette.trunkMid;
@@ -131,14 +135,15 @@ function drawSwampTrunkRidges(
   for (let i = 0; i < ridgeCount; i++) {
     const frac = (i + 0.7) / (ridgeCount + 0.8);
     const startY = y + 1.5 * s - frac * 41 * heightMul * s;
-    const offsetX = (-4 + i * 1.9 + Math.sin(sSeed + i * 2.2) * 1.3) * twistDir * s;
+    const offsetX =
+      (-4 + i * 1.9 + Math.sin(sSeed + i * 2.2) * 1.3) * twistDir * s;
     ctx.beginPath();
     ctx.moveTo(x + offsetX, startY);
     ctx.quadraticCurveTo(
       x + (offsetX - 2.8 * twistDir * s),
       startY - 6 * s,
       x + (offsetX + 1.6 * twistDir * s),
-      startY - 12 * s,
+      startY - 12 * s
     );
     ctx.stroke();
   }
@@ -154,7 +159,7 @@ function drawSwampTrunkRidges(
       x + (2 + i) * twistDir * s,
       ridgeY - 3 * s,
       x + 4.5 * twistDir * s,
-      ridgeY - 7 * s,
+      ridgeY - 7 * s
     );
     ctx.stroke();
   }
@@ -168,7 +173,7 @@ function drawSwampCanopyDetail(
   widthMul: number,
   heightMul: number,
   sSeed: number,
-  palette: typeof SWAMP_TREE_PALETTES[number],
+  palette: (typeof SWAMP_TREE_PALETTES)[number]
 ): void {
   ctx.fillStyle = "rgba(0,0,0,0.18)";
   traceOrganicEllipse(
@@ -178,7 +183,7 @@ function drawSwampCanopyDetail(
     22 * widthMul * s,
     8 * heightMul * s,
     sSeed * 0.37,
-    0.09,
+    0.09
   );
   ctx.fill();
 
@@ -208,9 +213,17 @@ function drawSwampCanopyDetail(
   ctx.globalAlpha = 1;
 
   for (let tu = 0; tu < 4; tu++) {
-    const tx = x + (-12 + tu * 8 + Math.sin(sSeed + tu * 2.1) * 2) * widthMul * s;
+    const tx =
+      x + (-12 + tu * 8 + Math.sin(sSeed + tu * 2.1) * 2) * widthMul * s;
     const ty = y + (-48 - Math.cos(sSeed + tu * 1.7) * 4) * heightMul * s;
-    const highlight = ctx.createRadialGradient(tx - 2 * s, ty - 2 * s, 0, tx, ty, 9 * s);
+    const highlight = ctx.createRadialGradient(
+      tx - 2 * s,
+      ty - 2 * s,
+      0,
+      tx,
+      ty,
+      9 * s
+    );
     highlight.addColorStop(0, "rgba(170,210,150,0.20)");
     highlight.addColorStop(0.55, "rgba(110,150,95,0.10)");
     highlight.addColorStop(1, "rgba(0,0,0,0)");
@@ -228,7 +241,7 @@ export function drawTree(
   s: number,
   variant: number,
   decorX: number,
-  decorY: number,
+  decorY: number
 ): void {
   const tv = TREE_PALETTES[variant % TREE_PALETTES.length];
   const tSeed = decorX * 73 + decorY * 41;
@@ -238,7 +251,7 @@ export function drawTree(
   const trunkH = 22 + (Math.abs(tSeed * 7) % 7);
   const trunkW = 4.5 + (Math.abs(tSeed * 13) % 3) * 0.4;
   const lean = Math.sin(tSeed * 0.17) * 1.5;
-  const cScale = shapeType === 2 ? 1.12 : shapeType === 1 ? 0.88 : 1.0;
+  const cScale = shapeType === 2 ? 1.12 : shapeType === 1 ? 0.88 : 1;
 
   // Isometric ground shadow
   drawDirectionalShadow(
@@ -249,7 +262,7 @@ export function drawTree(
     20 * cScale * s,
     20 * cScale * s * isoY,
     35 * s,
-    0.3,
+    0.3
   );
 
   const topX = x + lean * s;
@@ -259,7 +272,15 @@ export function drawTree(
   const rootRy = rootRx * isoY;
 
   ctx.fillStyle = tv.trunkDark;
-  drawOrganicBlobAt(ctx, x, y + 3 * s, rootRx * 1.1, rootRy * 1.1, tSeed * 1.7, 0.12);
+  drawOrganicBlobAt(
+    ctx,
+    x,
+    y + 3 * s,
+    rootRx * 1.1,
+    rootRy * 1.1,
+    tSeed * 1.7,
+    0.12
+  );
   ctx.fill();
   ctx.fillStyle = tv.trunk;
   ctx.beginPath();
@@ -290,7 +311,10 @@ export function drawTree(
 
   // Trunk body — right face (lit side) with gradient
   const trunkGrad = ctx.createLinearGradient(
-    x - baseRx * 0.3, y, x + baseRx * 1.2, y,
+    x - baseRx * 0.3,
+    y,
+    x + baseRx * 1.2,
+    y
   );
   trunkGrad.addColorStop(0, tv.trunk);
   trunkGrad.addColorStop(0.45, tv.trunkHighlight);
@@ -347,12 +371,27 @@ export function drawTree(
     const mossX = x + mossLean * s - mossRx * 0.75;
     const mossY = y + 2 * s - mossFrac * (trunkH + 2) * s;
     ctx.fillStyle = "rgba(80,120,55,0.35)";
-    traceOrganicEllipse(ctx, mossX, mossY, 2.5 * s, 1.5 * s * isoY, tSeed + mi * 17, 0.2, 0.4);
+    traceOrganicEllipse(
+      ctx,
+      mossX,
+      mossY,
+      2.5 * s,
+      1.5 * s * isoY,
+      tSeed + mi * 17,
+      0.2,
+      0.4
+    );
     ctx.fill();
     ctx.fillStyle = "rgba(100,145,65,0.25)";
     traceOrganicEllipse(
-      ctx, mossX + 0.3 * s, mossY - 0.3 * s,
-      1.6 * s, 1.0 * s * isoY, tSeed + mi * 23, 0.18, 0.3,
+      ctx,
+      mossX + 0.3 * s,
+      mossY - 0.3 * s,
+      1.6 * s,
+      1 * s * isoY,
+      tSeed + mi * 23,
+      0.18,
+      0.3
     );
     ctx.fill();
   }
@@ -376,13 +415,14 @@ export function drawTree(
     const bEndY = bStartY + Math.sin(bd.ang) * bLen * isoY;
 
     ctx.strokeStyle = tv.trunkDark;
-    ctx.lineWidth = (2.0 - bi * 0.2) * s * 0.3;
+    ctx.lineWidth = (2 - bi * 0.2) * s * 0.3;
     ctx.beginPath();
     ctx.moveTo(bStartX, bStartY);
     ctx.quadraticCurveTo(
       (bStartX + bEndX) * 0.5 + bd.side * 1.5 * s,
       (bStartY + bEndY) * 0.5 - 1 * s,
-      bEndX, bEndY,
+      bEndX,
+      bEndY
     );
     ctx.stroke();
     ctx.strokeStyle = tv.trunkHighlight;
@@ -393,7 +433,8 @@ export function drawTree(
     ctx.quadraticCurveTo(
       (bStartX + bEndX) * 0.5 + bd.side * 1.5 * s,
       (bStartY + bEndY) * 0.5 - 1 * s - 0.5,
-      bEndX, bEndY - 0.5,
+      bEndX,
+      bEndY - 0.5
     );
     ctx.stroke();
     ctx.globalAlpha = 1;
@@ -402,8 +443,12 @@ export function drawTree(
 
   // Ambient occlusion under canopy onto trunk
   const aoGrad = ctx.createRadialGradient(
-    canopyCX, y + (baseCanopyY + 1) * s, 0,
-    canopyCX, y + (baseCanopyY + 1) * s, 14 * cScale * s,
+    canopyCX,
+    y + (baseCanopyY + 1) * s,
+    0,
+    canopyCX,
+    y + (baseCanopyY + 1) * s,
+    14 * cScale * s
   );
   aoGrad.addColorStop(0, "rgba(0,20,0,0.28)");
   aoGrad.addColorStop(0.5, "rgba(0,15,0,0.12)");
@@ -411,8 +456,13 @@ export function drawTree(
   ctx.fillStyle = aoGrad;
   ctx.beginPath();
   ctx.ellipse(
-    canopyCX, y + (baseCanopyY + 1) * s,
-    14 * cScale * s, 14 * cScale * s * isoY, 0, 0, Math.PI * 2,
+    canopyCX,
+    y + (baseCanopyY + 1) * s,
+    14 * cScale * s,
+    14 * cScale * s * isoY,
+    0,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -421,18 +471,22 @@ export function drawTree(
   const canopyCenter = baseCanopyY - 8;
 
   const foliageLayers = [
-    { oy: baseCanopyY,      rxMul: 1.08, ryMul: 0.7, ci: 0, bump: 0.12 },
-    { oy: baseCanopyY - 5,  rxMul: 1.0,  ryMul: 0.75, ci: 1, bump: 0.10 },
-    { oy: baseCanopyY - 10, rxMul: 0.88, ryMul: 0.65, ci: 2, bump: 0.09 },
-    { oy: baseCanopyY - 15, rxMul: 0.6,  ryMul: 0.5,  ci: 3, bump: 0.08 },
+    { bump: 0.12, ci: 0, oy: baseCanopyY, rxMul: 1.08, ryMul: 0.7 },
+    { bump: 0.1, ci: 1, oy: baseCanopyY - 5, rxMul: 1, ryMul: 0.75 },
+    { bump: 0.09, ci: 2, oy: baseCanopyY - 10, rxMul: 0.88, ryMul: 0.65 },
+    { bump: 0.08, ci: 3, oy: baseCanopyY - 15, rxMul: 0.6, ryMul: 0.5 },
   ];
 
   // Canopy underside shadow (isometric ellipse)
   ctx.fillStyle = "rgba(0,0,0,0.18)";
   traceOrganicEllipse(
-    ctx, canopyCX, y + (baseCanopyY + 3) * s,
-    canopyRx * 1.05 * s, canopyRx * 1.05 * s * isoY * 0.6,
-    tSeed * 0.7, 0.1,
+    ctx,
+    canopyCX,
+    y + (baseCanopyY + 3) * s,
+    canopyRx * 1.05 * s,
+    canopyRx * 1.05 * s * isoY * 0.6,
+    tSeed * 0.7,
+    0.1
   );
   ctx.fill();
 
@@ -442,16 +496,25 @@ export function drawTree(
     const lRy = lRx * isoY * layer.ryMul;
     const lCY = y + layer.oy * s;
     const grad = ctx.createRadialGradient(
-      canopyCX - lRx * 0.25, lCY - lRy * 0.3, 0,
-      canopyCX, lCY, lRx,
+      canopyCX - lRx * 0.25,
+      lCY - lRy * 0.3,
+      0,
+      canopyCX,
+      lCY,
+      lRx
     );
     grad.addColorStop(0, tv.foliage[Math.min(layer.ci + 1, 3)]);
     grad.addColorStop(0.65, tv.foliage[layer.ci]);
     grad.addColorStop(1, tv.foliage[0]);
     ctx.fillStyle = grad;
     traceOrganicEllipse(
-      ctx, canopyCX, lCY, lRx, lRy,
-      tSeed + idx * 11, layer.bump,
+      ctx,
+      canopyCX,
+      lCY,
+      lRx,
+      lRy,
+      tSeed + idx * 11,
+      layer.bump
     );
     ctx.fill();
   }
@@ -464,7 +527,15 @@ export function drawTree(
     const crevDist = (8 + Math.sin(tSeed + i * 3.3) * 5) * cScale;
     const cx2 = canopyCX + Math.cos(crevAngle) * crevDist * s;
     const cy2 = y + (canopyCenter + Math.sin(crevAngle) * 5) * s;
-    traceOrganicEllipse(ctx, cx2, cy2, 4 * s, 4 * s * isoY * 0.65, tSeed + i * 7, 0.15);
+    traceOrganicEllipse(
+      ctx,
+      cx2,
+      cy2,
+      4 * s,
+      4 * s * isoY * 0.65,
+      tSeed + i * 7,
+      0.15
+    );
     ctx.fill();
   }
 
@@ -474,17 +545,33 @@ export function drawTree(
     const cAngle = (ci / clusterCount) * Math.PI * 2 + tSeed * 0.1;
     const cDist = (10 + Math.sin(tSeed + ci * 2.7) * 7) * cScale;
     const lcx = canopyCX + Math.cos(cAngle) * cDist * s;
-    const lcy = y + (canopyCenter + Math.sin(cAngle) * 6 + Math.cos(tSeed + ci * 1.9) * 3) * s;
+    const lcy =
+      y +
+      (canopyCenter + Math.sin(cAngle) * 6 + Math.cos(tSeed + ci * 1.9) * 3) *
+        s;
     const lcr = (5 + Math.sin(tSeed + ci * 3.1) * 2) * s;
     const grad = ctx.createRadialGradient(
-      lcx - lcr * 0.3, lcy - lcr * isoY * 0.3, 0,
-      lcx, lcy, lcr,
+      lcx - lcr * 0.3,
+      lcy - lcr * isoY * 0.3,
+      0,
+      lcx,
+      lcy,
+      lcr
     );
     grad.addColorStop(0, tv.foliage[3]);
     grad.addColorStop(0.5, tv.foliage[2]);
     grad.addColorStop(1, tv.foliage[1]);
     ctx.fillStyle = grad;
-    traceOrganicEllipse(ctx, lcx, lcy, lcr, lcr * isoY * 0.7, tSeed + ci * 13, 0.14, cAngle * 0.3);
+    traceOrganicEllipse(
+      ctx,
+      lcx,
+      lcy,
+      lcr,
+      lcr * isoY * 0.7,
+      tSeed + ci * 13,
+      0.14,
+      cAngle * 0.3
+    );
     ctx.fill();
   }
 
@@ -520,15 +607,25 @@ export function drawTree(
   // Highlight patches on canopy (top-left light)
   ctx.fillStyle = "rgba(255,255,255,0.1)";
   traceOrganicEllipse(
-    ctx, canopyCX - 4 * s, y + (canopyCenter - 4) * s,
-    5 * cScale * s, 5 * cScale * s * isoY * 0.6,
-    tSeed * 2.1, 0.15, -0.3,
+    ctx,
+    canopyCX - 4 * s,
+    y + (canopyCenter - 4) * s,
+    5 * cScale * s,
+    5 * cScale * s * isoY * 0.6,
+    tSeed * 2.1,
+    0.15,
+    -0.3
   );
   ctx.fill();
   traceOrganicEllipse(
-    ctx, canopyCX + 7 * s, y + (canopyCenter + 2) * s,
-    4 * cScale * s, 4 * cScale * s * isoY * 0.6,
-    tSeed * 3.1, 0.12, 0.2,
+    ctx,
+    canopyCX + 7 * s,
+    y + (canopyCenter + 2) * s,
+    4 * cScale * s,
+    4 * cScale * s * isoY * 0.6,
+    tSeed * 3.1,
+    0.12,
+    0.2
   );
   ctx.fill();
 
@@ -549,39 +646,62 @@ export function drawTree(
     const ex = canopyCX + Math.cos(eAng) * edgeRx * s;
     const ey = y + (canopyCenter - 3 + Math.sin(eAng) * 7) * s;
     const er = (1.8 + Math.sin(tSeed + ei * 3.3) * 0.6) * s;
-    traceOrganicEllipse(ctx, ex, ey, er * 1.3, er * 1.3 * isoY * 0.6, tSeed + ei * 23, 0.2, eAng);
+    traceOrganicEllipse(
+      ctx,
+      ex,
+      ey,
+      er * 1.3,
+      er * 1.3 * isoY * 0.6,
+      tSeed + ei * 23,
+      0.2,
+      eAng
+    );
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
   // Warm directional light gradient from top-left
   const dirLight = ctx.createRadialGradient(
-    canopyCX - 8 * cScale * s, y + (canopyCenter - 8) * s, 0,
-    canopyCX + 4 * cScale * s, y + canopyCenter * s, 28 * cScale * s,
+    canopyCX - 8 * cScale * s,
+    y + (canopyCenter - 8) * s,
+    0,
+    canopyCX + 4 * cScale * s,
+    y + canopyCenter * s,
+    28 * cScale * s
   );
   dirLight.addColorStop(0, "rgba(200,240,120,0.14)");
   dirLight.addColorStop(0.35, "rgba(160,220,80,0.06)");
   dirLight.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = dirLight;
   traceOrganicEllipse(
-    ctx, canopyCX, y + canopyCenter * s,
-    canopyRx * cScale * s, canopyRx * cScale * s * isoY,
-    tSeed * 0.71, 0.09,
+    ctx,
+    canopyCX,
+    y + canopyCenter * s,
+    canopyRx * cScale * s,
+    canopyRx * cScale * s * isoY,
+    tSeed * 0.71,
+    0.09
   );
   ctx.fill();
 
   // Cool shadow on canopy underside
   const coolShadow = ctx.createLinearGradient(
-    canopyCX, y + (baseCanopyY + 2) * s,
-    canopyCX, y + (baseCanopyY - 6) * s,
+    canopyCX,
+    y + (baseCanopyY + 2) * s,
+    canopyCX,
+    y + (baseCanopyY - 6) * s
   );
   coolShadow.addColorStop(0, "rgba(15,40,60,0.16)");
   coolShadow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = coolShadow;
   traceOrganicEllipse(
-    ctx, canopyCX, y + (baseCanopyY - 1) * s,
-    canopyRx * 0.9 * cScale * s, canopyRx * 0.9 * cScale * s * isoY * 0.5,
-    tSeed * 1.23, 0.08,
+    ctx,
+    canopyCX,
+    y + (baseCanopyY - 1) * s,
+    canopyRx * 0.9 * cScale * s,
+    canopyRx * 0.9 * cScale * s * isoY * 0.5,
+    tSeed * 1.23,
+    0.08
   );
   ctx.fill();
 
@@ -592,7 +712,7 @@ export function drawTree(
     const dDist = (4 + Math.sin(tSeed + di * 2.3) * 8) * cScale;
     const dx = canopyCX + Math.cos(dAng) * dDist * s;
     const dy = y + (canopyCenter + Math.sin(dAng) * 6) * s;
-    const dr = (2.2 + Math.sin(tSeed + di * 4.1) * 1.0) * s;
+    const dr = (2.2 + Math.sin(tSeed + di * 4.1) * 1) * s;
     const dappleGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, dr);
     dappleGrad.addColorStop(0, "rgba(220,255,160,0.22)");
     dappleGrad.addColorStop(0.6, "rgba(180,230,100,0.08)");
@@ -614,7 +734,8 @@ export function drawTree(
     ctx.fillStyle = grassColors[gi % grassColors.length];
     ctx.globalAlpha = 0.55;
     for (let bl = 0; bl < 3; bl++) {
-      const bladeAng = -Math.PI / 2 + (bl - 1) * 0.3 + Math.sin(tSeed + gi * 4 + bl) * 0.2;
+      const bladeAng =
+        -Math.PI / 2 + (bl - 1) * 0.3 + Math.sin(tSeed + gi * 4 + bl) * 0.2;
       const bladeH = (3.5 + Math.sin(tSeed + gi * 2 + bl * 3) * 1.5) * s;
       ctx.beginPath();
       ctx.moveTo(gx + bl * 0.6 * s, gy);
@@ -622,7 +743,7 @@ export function drawTree(
         gx + bl * 0.6 * s + Math.cos(bladeAng) * bladeH * 0.5,
         gy + Math.sin(bladeAng) * bladeH * 0.5,
         gx + bl * 0.6 * s + Math.cos(bladeAng) * bladeH,
-        gy + Math.sin(bladeAng) * bladeH,
+        gy + Math.sin(bladeAng) * bladeH
       );
       ctx.lineWidth = 0.6 * s;
       ctx.strokeStyle = grassColors[(gi + bl) % grassColors.length];
@@ -639,7 +760,10 @@ export function drawTree(
       const fAng = (ai / 5) * Math.PI * 2 + tSeed * 0.12;
       const fDist = 14 * cScale;
       ctx.fillStyle = colors[ai % colors.length];
-      const ax = canopyCX + Math.cos(fAng) * fDist * s + Math.sin(tSeed + ai * 3.3) * 3 * s;
+      const ax =
+        canopyCX +
+        Math.cos(fAng) * fDist * s +
+        Math.sin(tSeed + ai * 3.3) * 3 * s;
       const ay = y + (canopyCenter + Math.sin(fAng) * 8) * s;
       ctx.beginPath();
       ctx.arc(ax, ay, 1.3 * s, 0, Math.PI * 2);
@@ -654,7 +778,10 @@ export function drawTree(
     for (let ai = 0; ai < 4; ai++) {
       const bAng = (ai / 4) * Math.PI * 2 + tSeed * 0.15;
       const bDist = 12 * cScale;
-      const bx = canopyCX + Math.cos(bAng) * bDist * s + Math.sin(tSeed + ai * 4.1) * 2 * s;
+      const bx =
+        canopyCX +
+        Math.cos(bAng) * bDist * s +
+        Math.sin(tSeed + ai * 4.1) * 2 * s;
       const by = y + (canopyCenter + Math.sin(bAng) * 6) * s;
       ctx.fillStyle = colors[ai % colors.length];
       for (let p = 0; p < 5; p++) {
@@ -662,8 +789,12 @@ export function drawTree(
         ctx.beginPath();
         ctx.ellipse(
           bx + Math.cos(pa) * 1.4 * s,
-          by + Math.sin(pa) * 1.0 * s * isoY,
-          1 * s, 0.5 * s, pa, 0, Math.PI * 2,
+          by + Math.sin(pa) * 1 * s * isoY,
+          1 * s,
+          0.5 * s,
+          pa,
+          0,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -678,7 +809,10 @@ export function drawTree(
       const aAng = (ai / 3) * Math.PI * 2 + tSeed * 0.18;
       const aDist = 10 * cScale;
       ctx.fillStyle = colors[ai % colors.length];
-      const ax = canopyCX + Math.cos(aAng) * aDist * s + Math.sin(tSeed + ai * 2.5) * 2 * s;
+      const ax =
+        canopyCX +
+        Math.cos(aAng) * aDist * s +
+        Math.sin(tSeed + ai * 2.5) * 2 * s;
       const ay = y + (canopyCenter + Math.sin(aAng) * 6 + 2) * s;
       ctx.beginPath();
       ctx.ellipse(ax, ay, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2);
@@ -698,14 +832,14 @@ export function drawBush(
   s: number,
   variant: number,
   decorX: number,
-  decorY: number,
+  decorY: number
 ): void {
   const bv = BUSH_PALETTES[variant % BUSH_PALETTES.length];
   const bSeed = decorX * 59 + decorY * 37;
 
   const shapeType = Math.abs(bSeed) % 3;
-  const wScale = shapeType === 1 ? 1.2 : shapeType === 2 ? 0.85 : 1.0;
-  const hScale = shapeType === 2 ? 1.15 : shapeType === 1 ? 0.85 : 1.0;
+  const wScale = shapeType === 1 ? 1.2 : shapeType === 2 ? 0.85 : 1;
+  const hScale = shapeType === 2 ? 1.15 : shapeType === 1 ? 0.85 : 1;
   const baseRx = 18 * wScale;
   const baseRy = 12 * hScale;
 
@@ -717,7 +851,7 @@ export function drawBush(
     14 * wScale * s,
     7 * s,
     18 * s,
-    0.25,
+    0.25
   );
 
   // Subtle stem/branch at base
@@ -742,7 +876,7 @@ export function drawBush(
     0,
     x,
     y - 2 * hScale * s,
-    baseRx * s,
+    baseRx * s
   );
   baseGrad.addColorStop(0, bv.mid);
   baseGrad.addColorStop(0.55, bv.base);
@@ -755,7 +889,7 @@ export function drawBush(
     baseRx * s,
     baseRy * s,
     bSeed,
-    0.1,
+    0.1
   );
   ctx.fill();
 
@@ -779,21 +913,13 @@ export function drawBush(
       0,
       cx,
       cy,
-      crx * s,
+      crx * s
     );
     grad.addColorStop(0, ci < clusterCount / 2 ? bv.light : bv.accent);
     grad.addColorStop(0.4, bv.mid);
     grad.addColorStop(1, bv.base);
     ctx.fillStyle = grad;
-    traceOrganicEllipse(
-      ctx,
-      cx,
-      cy,
-      crx * s,
-      cry * s,
-      bSeed + ci * 11,
-      0.13,
-    );
+    traceOrganicEllipse(ctx, cx, cy, crx * s, cry * s, bSeed + ci * 11, 0.13);
     ctx.fill();
   }
 
@@ -804,15 +930,7 @@ export function drawBush(
     const cdist = 4 + Math.sin(bSeed + i * 3.3) * 3;
     const ccx = x + Math.cos(ca) * cdist * wScale * s;
     const ccy = y + (-5 * hScale + Math.sin(ca) * 3 * hScale) * s;
-    traceOrganicEllipse(
-      ctx,
-      ccx,
-      ccy,
-      3 * s,
-      2 * s,
-      bSeed + i * 17,
-      0.15,
-    );
+    traceOrganicEllipse(ctx, ccx, ccy, 3 * s, 2 * s, bSeed + i * 17, 0.15);
     ctx.fill();
   }
 
@@ -821,11 +939,9 @@ export function drawBush(
     const bAng = (i / 8) * Math.PI * 2 + bSeed * 0.04;
     const bDist = (4 + Math.sin(bSeed + i * 2.3) * 7) * wScale;
     const bx = x + Math.cos(bAng) * bDist * s;
-    const by =
-      y + (-6 * hScale + Math.sin(bAng) * 4 * hScale) * s;
+    const by = y + (-6 * hScale + Math.sin(bAng) * 4 * hScale) * s;
     const br = (1.8 + Math.sin(bSeed + i * 3.7) * 0.5) * s;
-    ctx.fillStyle =
-      i % 3 === 0 ? bv.light : i % 3 === 1 ? bv.accent : bv.mid;
+    ctx.fillStyle = i % 3 === 0 ? bv.light : i % 3 === 1 ? bv.accent : bv.mid;
     ctx.globalAlpha = 0.55;
     traceOrganicEllipse(ctx, bx, by, br, br * 0.6, bSeed + i * 19, 0.18);
     ctx.fill();
@@ -847,7 +963,7 @@ export function drawBush(
       hlr * 0.55 * s,
       bSeed + hi * 31,
       0.14,
-      -0.2,
+      -0.2
     );
     ctx.fill();
   }
@@ -858,8 +974,7 @@ export function drawBush(
     const lAng = (li / leafMarks) * Math.PI * 2 + bSeed * 0.06;
     const lDist = 4 + Math.sin(bSeed + li * 1.9) * 8;
     const lx = x + Math.cos(lAng) * lDist * wScale * s;
-    const ly =
-      y + (-7 * hScale + Math.sin(lAng) * 4 * hScale) * s;
+    const ly = y + (-7 * hScale + Math.sin(lAng) * 4 * hScale) * s;
     ctx.fillStyle = bv.accent;
     ctx.globalAlpha = 0.4;
     drawLeafMark(ctx, lx, ly, 1 * s, lAng + Math.sin(bSeed + li) * 0.5);
@@ -873,8 +988,7 @@ export function drawBush(
     const eAng = (ei / 8) * Math.PI * 2 + bSeed * 0.02;
     const edgeDist = baseRx * 0.88 + Math.sin(bSeed + ei * 5.1) * 1.5;
     const ex = x + Math.cos(eAng) * edgeDist * s;
-    const ey =
-      y + (-2 * hScale + Math.sin(eAng) * baseRy * 0.8 * hScale) * s;
+    const ey = y + (-2 * hScale + Math.sin(eAng) * baseRy * 0.8 * hScale) * s;
     const er = (1.4 + Math.sin(bSeed + ei * 3.7) * 0.4) * s;
     traceOrganicEllipse(ctx, ex, ey, er, er * 0.6, bSeed + ei * 29, 0.2, eAng);
     ctx.fill();
@@ -916,7 +1030,7 @@ export function drawBush(
           0.45 * s,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -942,7 +1056,7 @@ export function drawBush(
           0.35 * s,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -962,7 +1076,7 @@ export function drawBush(
     14 * wScale * s,
     4 * s,
     bSeed * 1.3,
-    0.08,
+    0.08
   );
   ctx.fill();
 }
@@ -974,28 +1088,20 @@ export function drawHedge(
   s: number,
   variant: number,
   decorX: number,
-  decorY: number,
+  decorY: number
 ): void {
   const hp = HEDGE_PALETTES[variant % HEDGE_PALETTES.length];
   const hSeed = decorX * 73 + decorY * 41;
 
-  const wMul = 1.0 + Math.sin(hSeed * 0.13) * 0.08;
-  const hMul = 1.0 + Math.cos(hSeed * 0.17) * 0.06;
+  const wMul = 1 + Math.sin(hSeed * 0.13) * 0.08;
+  const hMul = 1 + Math.cos(hSeed * 0.17) * 0.06;
   const hw = 22 * s * wMul;
   const hd = 10 * s;
   const hh = 20 * s * hMul;
 
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.beginPath();
-  ctx.ellipse(
-    x + 3 * s,
-    y + 5 * s,
-    hw * 0.6,
-    hd * 0.55,
-    0.1,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x + 3 * s, y + 5 * s, hw * 0.6, hd * 0.55, 0.1, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = hp.stem;
@@ -1013,13 +1119,13 @@ export function drawHedge(
     x - hw * 0.46,
     y - hh * 0.6,
     x - hw * 0.28,
-    y - hh * 0.82,
+    y - hh * 0.82
   );
   ctx.quadraticCurveTo(
     x - hw * 0.1,
     y - hh * 0.98,
     x,
-    y - hh * 0.88 + hd * 0.35,
+    y - hh * 0.88 + hd * 0.35
   );
   ctx.lineTo(x, y + hd * 0.45);
   ctx.closePath();
@@ -1037,13 +1143,13 @@ export function drawHedge(
     x + hw * 0.46,
     y - hh * 0.55,
     x + hw * 0.28,
-    y - hh * 0.78,
+    y - hh * 0.78
   );
   ctx.quadraticCurveTo(
     x + hw * 0.1,
     y - hh * 0.92,
     x,
-    y - hh * 0.88 + hd * 0.35,
+    y - hh * 0.88 + hd * 0.35
   );
   ctx.lineTo(x, y + hd * 0.45);
   ctx.closePath();
@@ -1056,22 +1162,14 @@ export function drawHedge(
     0,
     x,
     y - hh * 0.85,
-    hw * 0.45,
+    hw * 0.45
   );
   topG.addColorStop(0, hp.topBright);
   topG.addColorStop(0.5, hp.topMid);
   topG.addColorStop(1, hp.topDark);
   ctx.fillStyle = topG;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - hh * 0.85,
-    hw * 0.44,
-    hd * 0.42,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x, y - hh * 0.85, hw * 0.44, hd * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Layered leaf clusters on left face
@@ -1089,7 +1187,7 @@ export function drawHedge(
       lr * 0.85,
       hSeed + i * 7,
       0.16,
-      0.3 * ((i % 5) - 2),
+      0.3 * ((i % 5) - 2)
     );
     ctx.fill();
   }
@@ -1109,7 +1207,7 @@ export function drawHedge(
       rr * 0.85,
       hSeed + i * 9,
       0.16,
-      -0.3 * ((i % 5) - 2),
+      -0.3 * ((i % 5) - 2)
     );
     ctx.fill();
   }
@@ -1139,7 +1237,7 @@ export function drawHedge(
       (2.2 + Math.sin(hSeed + i * 2.1)) * s,
       (1.6 + Math.sin(hSeed + i * 2.1) * 0.5) * s,
       hSeed + i * 17,
-      0.14,
+      0.14
     );
     ctx.fill();
   }
@@ -1168,15 +1266,14 @@ export function drawHedge(
       faceX,
       faceY,
       1.2 * s,
-      side * 0.4 + Math.sin(hSeed + i * 1.7) * 0.3,
+      side * 0.4 + Math.sin(hSeed + i * 1.7) * 0.3
     );
   }
   ctx.globalAlpha = 1;
 
   // Flowers integrated into foliage (even variants)
   if (variant % 2 === 0) {
-    const flwC =
-      HEDGE_FLOWER_PALETTES[variant % HEDGE_FLOWER_PALETTES.length];
+    const flwC = HEDGE_FLOWER_PALETTES[variant % HEDGE_FLOWER_PALETTES.length];
     for (let f = 0; f < 7; f++) {
       const fx = x + Math.sin(hSeed + f * 4.7) * hw * 0.32;
       const fy =
@@ -1192,7 +1289,7 @@ export function drawHedge(
           0.55 * s,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1236,23 +1333,41 @@ export function drawPine(
   s: number,
   variant: number,
   decorX: number,
-  decorY: number,
+  decorY: number
 ): void {
   const pp = PINE_PALETTES[variant % PINE_PALETTES.length];
   const pSeed = decorX * 67 + decorY * 43;
 
-  const heightMul = 1.0 + Math.sin(pSeed * 0.11) * 0.15;
-  const widthMul = 1.0 + Math.cos(pSeed * 0.13) * 0.1;
+  const heightMul = 1 + Math.sin(pSeed * 0.11) * 0.15;
+  const widthMul = 1 + Math.cos(pSeed * 0.13) * 0.1;
   const lean = Math.sin(pSeed * 0.19) * 1.5;
 
-  drawDirectionalShadow(ctx, x, y + 5 * s, s, 18 * widthMul * s, 10 * s, 50 * heightMul * s, 0.28);
+  drawDirectionalShadow(
+    ctx,
+    x,
+    y + 5 * s,
+    s,
+    18 * widthMul * s,
+    10 * s,
+    50 * heightMul * s,
+    0.28
+  );
 
   // Snow mound at base
   ctx.fillStyle = pp.snowBlue;
   traceOrganicEllipse(ctx, x, y + 5 * s, 12 * s, 5 * s, pSeed, 0.08);
   ctx.fill();
   ctx.fillStyle = pp.snowWhite;
-  traceOrganicEllipse(ctx, x - 2 * s, y + 3 * s, 8 * s, 3 * s, pSeed * 1.3, 0.1, -0.2);
+  traceOrganicEllipse(
+    ctx,
+    x - 2 * s,
+    y + 3 * s,
+    8 * s,
+    3 * s,
+    pSeed * 1.3,
+    0.1,
+    -0.2
+  );
   ctx.fill();
 
   // Trunk
@@ -1306,7 +1421,7 @@ export function drawPine(
     for (let i = 0; i <= leftPts; i++) {
       const t = i / leftPts;
       const edgeX = x + layerLean - lw * (1 - t);
-      const edgeY = layerY + 5 * s * (1 - t) + (-lh) * t;
+      const edgeY = layerY + 5 * s * (1 - t) + -lh * t;
       const bump = Math.sin(pSeed + idx * 5 + i * 3.1) * 2 * s;
       ctx.lineTo(edgeX + bump, edgeY);
     }
@@ -1321,7 +1436,7 @@ export function drawPine(
     for (let i = 0; i <= leftPts; i++) {
       const t = i / leftPts;
       const edgeX = x + layerLean + lw * (1 - t);
-      const edgeY = layerY + 5 * s * (1 - t) + (-lh) * t;
+      const edgeY = layerY + 5 * s * (1 - t) + -lh * t;
       const bump = Math.sin(pSeed + idx * 7 + i * 2.7) * 2 * s;
       ctx.lineTo(edgeX + bump, edgeY);
     }
@@ -1335,8 +1450,9 @@ export function drawPine(
     const needleCount = 3 + (Math.abs(pSeed + idx) % 3);
     for (let ni = 0; ni < needleCount; ni++) {
       const nFrac = (ni + 0.5) / needleCount;
-      const nx = x + layerLean + (-lw * 0.6 + lw * 1.2 * nFrac) * (1 - nFrac * 0.3);
-      const ny = layerY + 4 * s * (1 - nFrac) + (-lh * 0.5) * nFrac;
+      const nx =
+        x + layerLean + (-lw * 0.6 + lw * 1.2 * nFrac) * (1 - nFrac * 0.3);
+      const ny = layerY + 4 * s * (1 - nFrac) + -lh * 0.5 * nFrac;
       ctx.beginPath();
       ctx.moveTo(nx, ny);
       ctx.lineTo(nx + Math.sin(pSeed + ni * 2.3) * 3 * s, ny - 3 * s);
@@ -1359,8 +1475,10 @@ export function drawPine(
     }
     ctx.lineTo(x + layerLean + lw * 0.5, layerY - lh * 0.3);
     ctx.quadraticCurveTo(
-      x + layerLean + lw * 0.2, layerY - lh * 0.15,
-      x + layerLean - lw * 0.2, layerY - lh * 0.1,
+      x + layerLean + lw * 0.2,
+      layerY - lh * 0.15,
+      x + layerLean - lw * 0.2,
+      layerY - lh * 0.1
     );
     ctx.closePath();
     ctx.fill();
@@ -1371,8 +1489,10 @@ export function drawPine(
     ctx.beginPath();
     ctx.moveTo(x + layerLean - lw * 0.6, layerY - lh * 0.15);
     ctx.quadraticCurveTo(
-      x + layerLean - lw * 0.3, layerY - lh * 0.4,
-      x + layerLean, layerY - lh * 0.8,
+      x + layerLean - lw * 0.3,
+      layerY - lh * 0.4,
+      x + layerLean,
+      layerY - lh * 0.8
     );
     ctx.lineTo(x + layerLean - lw * 0.1, layerY - lh * 0.1);
     ctx.closePath();
@@ -1382,11 +1502,31 @@ export function drawPine(
     // Snow clumps hanging from branch tips
     if (idx < layerCount - 1) {
       ctx.fillStyle = pp.snowWhite;
-      const clumpX1 = x + layerLean - lw * (0.5 + Math.sin(pSeed + idx * 4) * 0.1);
-      const clumpX2 = x + layerLean + lw * (0.4 + Math.cos(pSeed + idx * 5) * 0.1);
-      traceOrganicEllipse(ctx, clumpX1, layerY + 2 * s, 4 * s, 2.5 * s, pSeed + idx * 13, 0.12, 0.3);
+      const clumpX1 =
+        x + layerLean - lw * (0.5 + Math.sin(pSeed + idx * 4) * 0.1);
+      const clumpX2 =
+        x + layerLean + lw * (0.4 + Math.cos(pSeed + idx * 5) * 0.1);
+      traceOrganicEllipse(
+        ctx,
+        clumpX1,
+        layerY + 2 * s,
+        4 * s,
+        2.5 * s,
+        pSeed + idx * 13,
+        0.12,
+        0.3
+      );
       ctx.fill();
-      traceOrganicEllipse(ctx, clumpX2, layerY + 1 * s, 3.5 * s, 2 * s, pSeed + idx * 17, 0.12, -0.2);
+      traceOrganicEllipse(
+        ctx,
+        clumpX2,
+        layerY + 1 * s,
+        3.5 * s,
+        2 * s,
+        pSeed + idx * 17,
+        0.12,
+        -0.2
+      );
       ctx.fill();
     }
   }
@@ -1394,7 +1534,15 @@ export function drawPine(
   // Top snow cap
   ctx.fillStyle = pp.snowWhite;
   const topY = y + (-8 - 46 * heightMul) * s;
-  traceOrganicEllipse(ctx, x + lean * s, topY - 4 * s, 3 * s, 2 * s, pSeed * 2.1, 0.15);
+  traceOrganicEllipse(
+    ctx,
+    x + lean * s,
+    topY - 4 * s,
+    3 * s,
+    2 * s,
+    pSeed * 2.1,
+    0.15
+  );
   ctx.fill();
 
   // Sparkle effects (seed-positioned)
@@ -1402,7 +1550,8 @@ export function drawPine(
   const sparkleCount = 3 + (Math.abs(pSeed) % 3);
   for (let si = 0; si < sparkleCount; si++) {
     const spX = x + Math.sin(pSeed + si * 4.3) * 12 * widthMul * s;
-    const spY = y + (-15 - si * 12 * heightMul + Math.cos(pSeed + si * 2.7) * 5) * s;
+    const spY =
+      y + (-15 - si * 12 * heightMul + Math.cos(pSeed + si * 2.7) * 5) * s;
     ctx.beginPath();
     ctx.arc(spX, spY, 0.9 * s, 0, Math.PI * 2);
     ctx.fill();
@@ -1417,7 +1566,7 @@ export function drawCharredTree(
   variant: number,
   decorX: number,
   decorY: number,
-  decorTime: number,
+  decorTime: number
 ): void {
   const cp = CHARRED_TREE_PALETTES[variant % CHARRED_TREE_PALETTES.length];
   const cSeed = decorX * 71 + decorY * 47;
@@ -1434,7 +1583,16 @@ export function drawCharredTree(
   drawOrganicBlobAt(ctx, x, y + 4 * s, 10 * s, 4 * s, cSeed * 1.7, 0.1);
   ctx.fill();
   ctx.fillStyle = cp.light;
-  traceOrganicEllipse(ctx, x - 2 * s, y + 3 * s, 6 * s, 2.5 * s, cSeed * 2.1, 0.12, -0.2);
+  traceOrganicEllipse(
+    ctx,
+    x - 2 * s,
+    y + 3 * s,
+    6 * s,
+    2.5 * s,
+    cSeed * 2.1,
+    0.12,
+    -0.2
+  );
   ctx.fill();
 
   const topX = x + lean * s;
@@ -1488,9 +1646,9 @@ export function drawCharredTree(
   ctx.strokeStyle = cp.dark;
   ctx.lineCap = "round";
   const branches = [
-    { startFrac: 0.55, angle: -2.5, len: 16, width: 4, sub: true },
-    { startFrac: 0.4, angle: 0.3, len: 13, width: 3, sub: false },
-    { startFrac: 0.75, angle: -2.8, len: 10, width: 2.5, sub: false },
+    { angle: -2.5, len: 16, startFrac: 0.55, sub: true, width: 4 },
+    { angle: 0.3, len: 13, startFrac: 0.4, sub: false, width: 3 },
+    { angle: -2.8, len: 10, startFrac: 0.75, sub: false, width: 2.5 },
   ];
   branches.forEach((br, bi) => {
     const bAngle = br.angle + Math.sin(cSeed + bi * 5.1) * 0.3;
@@ -1500,7 +1658,10 @@ export function drawCharredTree(
     ctx.lineWidth = br.width * s;
     ctx.beginPath();
     ctx.moveTo(bStartX, bStartY);
-    ctx.lineTo(bStartX + Math.cos(bAngle) * bLen, bStartY + Math.sin(bAngle) * bLen);
+    ctx.lineTo(
+      bStartX + Math.cos(bAngle) * bLen,
+      bStartY + Math.sin(bAngle) * bLen
+    );
     ctx.stroke();
     if (br.sub) {
       const midX = bStartX + Math.cos(bAngle) * bLen * 0.6;
@@ -1508,7 +1669,10 @@ export function drawCharredTree(
       ctx.lineWidth = 2 * s;
       ctx.beginPath();
       ctx.moveTo(midX, midY);
-      ctx.lineTo(midX + Math.cos(bAngle - 0.5) * 6 * s, midY + Math.sin(bAngle - 0.5) * 6 * s);
+      ctx.lineTo(
+        midX + Math.cos(bAngle - 0.5) * 6 * s,
+        midY + Math.sin(bAngle - 0.5) * 6 * s
+      );
       ctx.stroke();
     }
   });
@@ -1527,7 +1691,7 @@ export function drawCharredTree(
       cx + Math.sin(cSeed + ci * 3) * 2 * s,
       (startY + endY) / 2,
       cx + Math.sin(cSeed + ci * 5) * 3 * s,
-      endY,
+      endY
     );
     ctx.stroke();
   }
@@ -1540,7 +1704,8 @@ export function drawCharredTree(
     const ex = topX + Math.cos(eAngle) * eDist * s;
     const ey = y - trunkH * (0.3 + (ei / emberCount) * 0.5) * s;
     const er = (1.5 + Math.sin(cSeed + ei * 3.1) * 0.8) * s;
-    const pulse = 0.4 + Math.sin(decorTime * (2.5 + ei * 0.3) + cSeed + ei) * 0.4;
+    const pulse =
+      0.4 + Math.sin(decorTime * (2.5 + ei * 0.3) + cSeed + ei) * 0.4;
 
     const glow = ctx.createRadialGradient(ex, ey, 0, ex, ey, er * 3);
     glow.addColorStop(0, `rgba(255,150,50,${(pulse * 0.6).toFixed(3)})`);
@@ -1566,7 +1731,8 @@ export function drawCharredTree(
   for (let sm = 0; sm < 4; sm++) {
     const smokeTime = (decorTime * 15 + sm * 12) % 35;
     const smokeY = y - brokenTopH * s - smokeTime * s;
-    const smokeX = x + lean * s + Math.sin(decorTime * 1.5 + sm + cSeed * 0.01) * 5 * s;
+    const smokeX =
+      x + lean * s + Math.sin(decorTime * 1.5 + sm + cSeed * 0.01) * 5 * s;
     const smokeSize = (2 + smokeTime * 0.15) * s;
     const smokeAlpha = Math.max(0, 0.25 - smokeTime * 0.007);
     ctx.fillStyle = `rgba(50,50,50,${smokeAlpha.toFixed(3)})`;
@@ -1580,7 +1746,8 @@ export function drawCharredTree(
   for (let ash = 0; ash < 5; ash++) {
     const ashTime = (decorTime * 8 + ash * 15) % 50;
     const ashY = y + 5 * s - ashTime * s;
-    const ashX = x + Math.sin(decorTime * 0.8 + ash * 2 + cSeed * 0.01) * 15 * s;
+    const ashX =
+      x + Math.sin(decorTime * 0.8 + ash * 2 + cSeed * 0.01) * 15 * s;
     ctx.beginPath();
     ctx.arc(ashX, ashY, 0.8 * s, 0, Math.PI * 2);
     ctx.fill();
@@ -1595,17 +1762,27 @@ export function drawSwampTree(
   variant: number,
   decorX: number,
   decorY: number,
-  decorTime: number,
+  decorTime: number
 ): void {
   const sp = SWAMP_TREE_PALETTES[variant % SWAMP_TREE_PALETTES.length];
   const sSeed = decorX * 79 + decorY * 53;
 
-  const heightMul = 1.0 + Math.sin(sSeed * 0.11) * 0.12;
-  const widthMul = 1.0 + Math.cos(sSeed * 0.13) * 0.08;
+  const heightMul = 1 + Math.sin(sSeed * 0.11) * 0.12;
+  const widthMul = 1 + Math.cos(sSeed * 0.13) * 0.08;
   const twistDir = Math.sin(sSeed * 0.17) > 0 ? 1 : -1;
   const canopyY = y - 44 * heightMul * s;
 
-  drawDirectionalShadow(ctx, x, y + 5 * s, s, 20 * widthMul * s, 10 * s, 45 * heightMul * s, 0.35, "10,20,10");
+  drawDirectionalShadow(
+    ctx,
+    x,
+    y + 5 * s,
+    s,
+    20 * widthMul * s,
+    10 * s,
+    45 * heightMul * s,
+    0.35,
+    "10,20,10"
+  );
 
   drawSwampWaterBase(ctx, x, y, s, widthMul, sSeed, decorTime, sp);
 
@@ -1614,7 +1791,8 @@ export function drawSwampTree(
   ctx.lineWidth = 3 * s;
   const rootCount = 3 + (Math.abs(sSeed) % 3);
   for (let r = 0; r < rootCount; r++) {
-    const rootAngle = -0.8 + r * (1.6 / rootCount) + Math.sin(sSeed + r * 3.7) * 0.2;
+    const rootAngle =
+      -0.8 + r * (1.6 / rootCount) + Math.sin(sSeed + r * 3.7) * 0.2;
     const rootLen = (12 + r * 3 + Math.sin(sSeed + r * 2.3) * 3) * widthMul;
     ctx.beginPath();
     ctx.moveTo(x + (r - rootCount / 2) * 4 * s, y + 4 * s);
@@ -1622,7 +1800,7 @@ export function drawSwampTree(
       x + Math.cos(rootAngle) * rootLen * 0.5 * s,
       y + 6 * s,
       x + Math.cos(rootAngle) * rootLen * s,
-      y + 8 * s,
+      y + 8 * s
     );
     ctx.stroke();
 
@@ -1634,7 +1812,7 @@ export function drawSwampTree(
       x + Math.cos(rootAngle) * rootLen * 0.45 * s,
       y + 5.5 * s,
       x + Math.cos(rootAngle) * rootLen * 0.82 * s,
-      y + 7.2 * s,
+      y + 7.2 * s
     );
     ctx.stroke();
 
@@ -1646,11 +1824,17 @@ export function drawSwampTree(
       ctx.lineWidth = 1.4 * s;
       ctx.beginPath();
       ctx.moveTo(rootTipX, rootTipY);
-      ctx.lineTo(rootTipX + Math.cos(rootAngle + 0.55 * twistDir) * 5 * s, rootTipY + 1.5 * s);
+      ctx.lineTo(
+        rootTipX + Math.cos(rootAngle + 0.55 * twistDir) * 5 * s,
+        rootTipY + 1.5 * s
+      );
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(rootTipX - 1.5 * s, rootTipY - 0.4 * s);
-      ctx.lineTo(rootTipX + Math.cos(rootAngle - 0.45 * twistDir) * 4 * s, rootTipY + 2.3 * s);
+      ctx.lineTo(
+        rootTipX + Math.cos(rootAngle - 0.45 * twistDir) * 4 * s,
+        rootTipY + 2.3 * s
+      );
       ctx.stroke();
       ctx.lineWidth = 3 * s;
     }
@@ -1664,7 +1848,7 @@ export function drawSwampTree(
     12 * widthMul * s,
     3.8 * s,
     sSeed * 1.4,
-    0.08,
+    0.08
   );
   ctx.fill();
 
@@ -1674,21 +1858,32 @@ export function drawSwampTree(
   ctx.beginPath();
   ctx.moveTo(x - 10 * widthMul * s, y + 4 * s);
   ctx.bezierCurveTo(
-    x - (14 + twistAmt) * widthMul * s, y - 10 * heightMul * s,
-    x - (8 - twistAmt) * widthMul * s, y - 25 * heightMul * s,
-    x - 6 * widthMul * s, y - 38 * heightMul * s,
+    x - (14 + twistAmt) * widthMul * s,
+    y - 10 * heightMul * s,
+    x - (8 - twistAmt) * widthMul * s,
+    y - 25 * heightMul * s,
+    x - 6 * widthMul * s,
+    y - 38 * heightMul * s
   );
   ctx.lineTo(x - 2 * s, y - 40 * heightMul * s);
   ctx.bezierCurveTo(
-    x - 4 * s, y - 20 * heightMul * s,
-    x - 6 * s, y - 5 * heightMul * s,
-    x - 2 * s, y + 2 * s,
+    x - 4 * s,
+    y - 20 * heightMul * s,
+    x - 6 * s,
+    y - 5 * heightMul * s,
+    x - 2 * s,
+    y + 2 * s
   );
   ctx.closePath();
   ctx.fill();
 
   // Gnarled trunk right side
-  const tGrad = ctx.createLinearGradient(x, y, x + 12 * widthMul * s, y - 20 * heightMul * s);
+  const tGrad = ctx.createLinearGradient(
+    x,
+    y,
+    x + 12 * widthMul * s,
+    y - 20 * heightMul * s
+  );
   tGrad.addColorStop(0, sp.trunkMid);
   tGrad.addColorStop(0.5, sp.trunkLight);
   tGrad.addColorStop(1, sp.trunkMid);
@@ -1696,15 +1891,21 @@ export function drawSwampTree(
   ctx.beginPath();
   ctx.moveTo(x + 10 * widthMul * s, y + 4 * s);
   ctx.bezierCurveTo(
-    x + (12 - twistAmt) * widthMul * s, y - 8 * heightMul * s,
-    x + (6 + twistAmt) * widthMul * s, y - 22 * heightMul * s,
-    x + 4 * widthMul * s, y - 38 * heightMul * s,
+    x + (12 - twistAmt) * widthMul * s,
+    y - 8 * heightMul * s,
+    x + (6 + twistAmt) * widthMul * s,
+    y - 22 * heightMul * s,
+    x + 4 * widthMul * s,
+    y - 38 * heightMul * s
   );
   ctx.lineTo(x - 2 * s, y - 40 * heightMul * s);
   ctx.bezierCurveTo(
-    x + 2 * s, y - 18 * heightMul * s,
-    x + 4 * s, y - 5 * heightMul * s,
-    x + 2 * s, y + 2 * s,
+    x + 2 * s,
+    y - 18 * heightMul * s,
+    x + 4 * s,
+    y - 5 * heightMul * s,
+    x + 2 * s,
+    y + 2 * s
   );
   ctx.closePath();
   ctx.fill();
@@ -1714,10 +1915,19 @@ export function drawSwampTree(
   const knotCount = 2 + (Math.abs(sSeed) % 2);
   for (let ki = 0; ki < knotCount; ki++) {
     const kFrac = 0.3 + ki * 0.25;
-    const kx = x + (twistDir * (-3 + ki * 5) + Math.sin(sSeed + ki * 3) * 2) * s;
+    const kx =
+      x + (twistDir * (-3 + ki * 5) + Math.sin(sSeed + ki * 3) * 2) * s;
     const ky = y - kFrac * 40 * heightMul * s;
     ctx.beginPath();
-    ctx.ellipse(kx, ky, (2.5 + Math.sin(sSeed + ki) * 0.5) * s, (3.5 + Math.cos(sSeed + ki) * 0.5) * s, 0.3 * twistDir, 0, Math.PI * 2);
+    ctx.ellipse(
+      kx,
+      ky,
+      (2.5 + Math.sin(sSeed + ki) * 0.5) * s,
+      (3.5 + Math.cos(sSeed + ki) * 0.5) * s,
+      0.3 * twistDir,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -1736,7 +1946,10 @@ export function drawSwampTree(
     ctx.lineWidth = (2.5 - bi * 0.3) * s;
     ctx.beginPath();
     ctx.moveTo(bx, by);
-    ctx.lineTo(bx + Math.cos(bAngle) * bLen * s, by + Math.sin(bAngle) * bLen * s - 4 * s);
+    ctx.lineTo(
+      bx + Math.cos(bAngle) * bLen * s,
+      by + Math.sin(bAngle) * bLen * s - 4 * s
+    );
     ctx.stroke();
 
     const tipX = bx + Math.cos(bAngle) * bLen * s;
@@ -1746,7 +1959,7 @@ export function drawSwampTree(
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(
       tipX + Math.cos(bAngle + 0.55 * bSide) * 5 * s,
-      tipY + Math.sin(bAngle + 0.55 * bSide) * 5 * s,
+      tipY + Math.sin(bAngle + 0.55 * bSide) * 5 * s
     );
     ctx.stroke();
 
@@ -1761,7 +1974,7 @@ export function drawSwampTree(
         tipX + 1.5 * s,
         tipY + 9 * s,
         tipX + 0.5 * s,
-        tipY + 13 * s,
+        tipY + 13 * s
       );
       ctx.stroke();
       ctx.strokeStyle = sp.trunkMid;
@@ -1771,7 +1984,10 @@ export function drawSwampTree(
   // Dark sparse foliage canopy — organic blobs
   const canopyCount = 3 + (Math.abs(sSeed) % 2);
   for (let ci = 0; ci < canopyCount; ci++) {
-    const cAngle = (ci / canopyCount) * Math.PI * 1.5 - Math.PI * 0.25 + Math.sin(sSeed + ci * 3) * 0.3;
+    const cAngle =
+      (ci / canopyCount) * Math.PI * 1.5 -
+      Math.PI * 0.25 +
+      Math.sin(sSeed + ci * 3) * 0.3;
     const cDist = 6 + Math.sin(sSeed + ci * 2.7) * 4;
     const ccx = x + Math.cos(cAngle) * cDist * widthMul * s;
     const ccy = y + (-44 + Math.sin(cAngle) * 6) * heightMul * s;
@@ -1779,8 +1995,12 @@ export function drawSwampTree(
     const cry = (8 - ci + Math.cos(sSeed + ci * 2.3) * 1.5) * heightMul;
 
     const cGrad = ctx.createRadialGradient(
-      ccx - 3 * s, ccy - 3 * s, 0,
-      ccx, ccy, crx * s,
+      ccx - 3 * s,
+      ccy - 3 * s,
+      0,
+      ccx,
+      ccy,
+      crx * s
     );
     cGrad.addColorStop(0, sp.foliage[2]);
     cGrad.addColorStop(0.5, sp.foliage[ci % 4]);
@@ -1807,12 +2027,22 @@ export function drawSwampTree(
   // Hanging Spanish moss strands — seed-positioned
   const mossCount = 6 + (Math.abs(sSeed) % 4);
   for (let m = 0; m < mossCount; m++) {
-    const mossX = x + (-16 + m * (32 / mossCount) + Math.sin(sSeed + m * 2.3) * 3) * widthMul * s;
-    const mossStartY = y + (-35 - Math.sin(sSeed + m * 1.7) * 10) * heightMul * s;
+    const mossX =
+      x +
+      (-16 + m * (32 / mossCount) + Math.sin(sSeed + m * 2.3) * 3) *
+        widthMul *
+        s;
+    const mossStartY =
+      y + (-35 - Math.sin(sSeed + m * 1.7) * 10) * heightMul * s;
     const mossLen = (15 + Math.sin(sSeed + m * 1.5) * 8) * heightMul;
     const sway = Math.sin(decorTime * 0.8 + m * 0.7 + sSeed * 0.01) * 4 * s;
 
-    const mGrad = ctx.createLinearGradient(mossX, mossStartY, mossX + sway, mossStartY + mossLen * s);
+    const mGrad = ctx.createLinearGradient(
+      mossX,
+      mossStartY,
+      mossX + sway,
+      mossStartY + mossLen * s
+    );
     mGrad.addColorStop(0, sp.mossDark);
     mGrad.addColorStop(0.5, sp.mossLight);
     mGrad.addColorStop(1, sp.mossDark);
@@ -1822,9 +2052,12 @@ export function drawSwampTree(
     ctx.beginPath();
     ctx.moveTo(mossX, mossStartY);
     ctx.bezierCurveTo(
-      mossX + sway * 0.3, mossStartY + mossLen * 0.3 * s,
-      mossX + sway * 0.7, mossStartY + mossLen * 0.6 * s,
-      mossX + sway, mossStartY + mossLen * s,
+      mossX + sway * 0.3,
+      mossStartY + mossLen * 0.3 * s,
+      mossX + sway * 0.7,
+      mossStartY + mossLen * 0.6 * s,
+      mossX + sway,
+      mossStartY + mossLen * s
     );
     ctx.stroke();
 
@@ -1846,7 +2079,7 @@ export function drawSwampTree(
         2.8 * s,
         1.8 * s,
         sSeed * 2.3 + m * 7,
-        0.15,
+        0.15
       );
       ctx.fill();
     }
@@ -1856,10 +2089,17 @@ export function drawSwampTree(
   const flyAlpha = 0.4 + Math.sin(decorTime * 2 + sSeed * 0.01) * 0.3;
   const flyCount = 2 + (Math.abs(sSeed) % 3);
   for (let f = 0; f < flyCount; f++) {
-    const flyX = x + Math.sin(decorTime + f * 2 + sSeed * 0.01) * 15 * widthMul * s;
-    const flyY = y - 25 * heightMul * s + Math.cos(decorTime * 1.3 + f + sSeed * 0.01) * 10 * s;
+    const flyX =
+      x + Math.sin(decorTime + f * 2 + sSeed * 0.01) * 15 * widthMul * s;
+    const flyY =
+      y -
+      25 * heightMul * s +
+      Math.cos(decorTime * 1.3 + f + sSeed * 0.01) * 10 * s;
     const glow = ctx.createRadialGradient(flyX, flyY, 0, flyX, flyY, 5 * s);
-    glow.addColorStop(0, `rgba(${sp.fireflyColor},${(flyAlpha * 0.5).toFixed(3)})`);
+    glow.addColorStop(
+      0,
+      `rgba(${sp.fireflyColor},${(flyAlpha * 0.5).toFixed(3)})`
+    );
     glow.addColorStop(1, `rgba(${sp.fireflyColor},0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
@@ -1880,7 +2120,7 @@ export function drawSwampTree(
     10 * widthMul * s,
     3.8 * s,
     sSeed * 2.6,
-    0.08,
+    0.08
   );
   ctx.fill();
 }

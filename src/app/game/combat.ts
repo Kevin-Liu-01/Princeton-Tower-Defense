@@ -10,10 +10,12 @@ function getEnemyArmor(enemyType: EnemyType): number {
 export function getEnemyDamageTaken(
   enemy: Pick<Enemy, "type" | "hexWard" | "hexWardUntil" | "hexWardDamageAmp">,
   rawDamage: number,
-  damageType: EnemyDamageType = "default",
+  damageType: EnemyDamageType = "default"
 ): number {
   const safeDamage = Math.max(0, rawDamage);
-  if (safeDamage <= 0) return 0;
+  if (safeDamage <= 0) {
+    return 0;
+  }
   const baseDamage =
     damageType === "fire" || damageType === "poison"
       ? safeDamage

@@ -1,9 +1,9 @@
 import type { MapTheme } from "../../types";
-import { createSeededRandom } from "../../utils/seededRandom";
 import { hexToRgba } from "../../utils";
+import { createSeededRandom } from "../../utils/seededRandom";
+import { drawBiomeDetails } from "./terrainBiomeDetails";
 import { TERRAIN_PALETTES } from "./terrainConstants";
 import { fbmNoise, domainWarpedNoise, ridgedNoise } from "./terrainNoise";
-import { drawBiomeDetails } from "./terrainBiomeDetails";
 
 // ============================================================================
 // TERRAIN TEXTURE – Multi-pass procedural ground detail
@@ -33,9 +33,7 @@ function drawDomainWarpedField(params: TerrainTextureParams): void {
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const n = domainWarpedNoise(
-        col * 0.08, row * 0.08, mapSeed + 42, 4, 1.8,
-      );
+      const n = domainWarpedNoise(col * 0.08, row * 0.08, mapSeed + 42, 4, 1.8);
       const colorIdx = Math.floor(n * colorCount) % colorCount;
       const color = palette.basePatches[Math.abs(colorIdx)];
 
@@ -70,7 +68,7 @@ function drawLargeTerrainPatches(params: TerrainTextureParams): void {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(rotation);
-    ctx.globalAlpha = 0.10 + rng() * 0.12;
+    ctx.globalAlpha = 0.1 + rng() * 0.12;
 
     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
     grad.addColorStop(0, color);
@@ -112,7 +110,9 @@ function drawNoiseOverlay(params: TerrainTextureParams): void {
         ctx.fillRect(x, y, step, step);
       } else if (n > 0.48) {
         const color =
-          palette.mossCover[Math.floor(((n - 0.48) * 10) % palette.mossCover.length)];
+          palette.mossCover[
+            Math.floor(((n - 0.48) * 10) % palette.mossCover.length)
+          ];
         ctx.globalAlpha = 0.03 + (n - 0.48) * 0.2;
         ctx.fillStyle = color;
         ctx.fillRect(x, y, step, step);
@@ -149,9 +149,13 @@ function drawSoilVariation(params: TerrainTextureParams): void {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.ellipse(
-      x, y,
-      size, size * (0.35 + rng() * 0.35),
-      rng() * Math.PI, 0, Math.PI * 2,
+      x,
+      y,
+      size,
+      size * (0.35 + rng() * 0.35),
+      rng() * Math.PI,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -183,9 +187,13 @@ function drawMossAndGround(params: TerrainTextureParams): void {
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.ellipse(
-      cx, cy,
-      r, r * (0.4 + rng() * 0.35),
-      rng() * Math.PI, 0, Math.PI * 2,
+      cx,
+      cy,
+      r,
+      r * (0.4 + rng() * 0.35),
+      rng() * Math.PI,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -293,7 +301,7 @@ function drawAtmosphere(params: TerrainTextureParams): void {
     Math.min(cssWidth, cssHeight) * 0.12,
     cssWidth * 0.5,
     cssHeight * 0.5,
-    Math.max(cssWidth, cssHeight) * 0.65,
+    Math.max(cssWidth, cssHeight) * 0.65
   );
   vig.addColorStop(0, hexToRgba(palette.highlight, 0.03));
   vig.addColorStop(0.3, "rgba(0,0,0,0)");
@@ -319,7 +327,7 @@ export function renderTerrainTexture(params: TerrainTextureParams): void {
     params.cssWidth,
     params.cssHeight,
     params.themeName,
-    params.mapSeed,
+    params.mapSeed
   );
   drawTerrainContours(params);
   drawMicroDetail(params);

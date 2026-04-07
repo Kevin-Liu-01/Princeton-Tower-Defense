@@ -1,6 +1,7 @@
-import { LEVEL_WAVES } from "../../../../constants/waves";
 import { ENEMY_DATA } from "../../../../constants/enemies";
-import { LEVEL_DATA, type MapTheme } from "../../../../constants/maps";
+import { LEVEL_DATA } from "../../../../constants/maps";
+import type { MapTheme } from "../../../../constants/maps";
+import { LEVEL_WAVES } from "../../../../constants/waves";
 import { drawEnemySprite } from "../../../../rendering/enemies";
 import type { EnemyType } from "../../../../types";
 
@@ -11,10 +12,14 @@ const levelEnemyCache = new Map<string, EnemyType[]>();
 
 function getUniqueEnemiesForLevel(levelId: string): EnemyType[] {
   const cached = levelEnemyCache.get(levelId);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const waves = LEVEL_WAVES[levelId];
-  if (!waves) return [];
+  if (!waves) {
+    return [];
+  }
 
   const seen = new Set<EnemyType>();
   for (const wave of waves) {
@@ -22,7 +27,7 @@ function getUniqueEnemiesForLevel(levelId: string): EnemyType[] {
       seen.add(group.type as EnemyType);
     }
   }
-  const result = Array.from(seen);
+  const result = [...seen];
   levelEnemyCache.set(levelId, result);
   return result;
 }
@@ -49,10 +54,12 @@ export function drawLevelBattlePreview(
   heroY: number,
   levelId: string,
   time: number,
-  isMobile: boolean,
+  isMobile: boolean
 ) {
   const enemies = getUniqueEnemiesForLevel(levelId);
-  if (enemies.length === 0) return;
+  if (enemies.length === 0) {
+    return;
+  }
 
   const theme = getLevelTheme(levelId);
   const displayCount = isMobile ? 3 : 5;
@@ -79,7 +86,9 @@ export function drawLevelBattlePreview(
   for (let i = 0; i < shownEnemies.length; i++) {
     const eType = shownEnemies[i];
     const eData = ENEMY_DATA[eType];
-    if (!eData) continue;
+    if (!eData) {
+      continue;
+    }
 
     const slot = ENEMY_ARC_SLOTS[i % ENEMY_ARC_SLOTS.length];
     const sway = Math.sin(time * 1.2 + i * 1.7) * 3;
@@ -89,18 +98,19 @@ export function drawLevelBattlePreview(
     const attackPhase = Math.max(0, Math.sin(time * 1.8 + i * 1.5)) * 0.35;
 
     const ex = heroX + Math.cos(slot.angle) * slot.radius + sway;
-    const ey = heroY + Math.sin(slot.angle) * slot.radius * 0.45 + bob + flyOffset;
+    const ey =
+      heroY + Math.sin(slot.angle) * slot.radius * 0.45 + bob + flyOffset;
     const facingLeft = ex > heroX;
 
     enemyDrawCalls.push({
+      attackPhase,
+      color: eData.color,
+      eType,
+      facingLeft,
+      isFlying,
+      shadowY: heroY + Math.sin(slot.angle) * slot.radius * 0.45 + 10,
       x: ex,
       y: ey,
-      shadowY: heroY + Math.sin(slot.angle) * slot.radius * 0.45 + 10,
-      eType,
-      color: eData.color,
-      isFlying,
-      attackPhase,
-      facingLeft,
     });
   }
 
@@ -116,7 +126,7 @@ export function drawLevelBattlePreview(
     const sparkAlpha = (sparkPhase - 0.2) * 0.7;
     ctx.fillStyle = `rgba(255,215,0,${sparkAlpha * 0.6})`;
     for (let s = 0; s < 5; s++) {
-      const angle = time * 3 + s * (Math.PI * 2 / 5);
+      const angle = time * 3 + s * ((Math.PI * 2) / 5);
       const dist = 10 + Math.sin(time * 5 + s * 2) * 5;
       const sx = heroX + Math.cos(angle) * dist;
       const sy = heroY - 4 + Math.sin(angle) * dist * 0.4;
@@ -144,11 +154,19 @@ function drawPreviewEnemy(
     facingLeft: boolean;
   },
   theme: MapTheme,
-  time: number,
+  time: number
 ) {
   ctx.fillStyle = `rgba(0,0,0,${e.isFlying ? 0.1 : 0.2})`;
   ctx.beginPath();
-  ctx.ellipse(e.x, e.shadowY, PREVIEW_ENEMY_SIZE * 0.32, PREVIEW_ENEMY_SIZE * 0.12, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    e.x,
+    e.shadowY,
+    PREVIEW_ENEMY_SIZE * 0.32,
+    PREVIEW_ENEMY_SIZE * 0.12,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   ctx.save();
@@ -169,7 +187,7 @@ function drawPreviewEnemy(
     e.isFlying,
     PREVIEW_ENEMY_ZOOM,
     e.attackPhase,
-    theme,
+    theme
   );
 
   ctx.restore();

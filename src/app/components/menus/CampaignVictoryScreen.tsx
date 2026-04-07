@@ -1,5 +1,4 @@
 "use client";
-import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import {
   Star,
   Crown,
@@ -19,12 +18,20 @@ import {
   Zap,
   Check,
 } from "lucide-react";
-import { OrnateFrame } from "../ui/primitives/OrnateFrame";
-import { GOLD, DIVIDER, OVERLAY, panelGradient } from "../ui/system/theme";
-import { formatDuration } from "./shared/menuMath";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+
 import type { CumulativeCampaignStats } from "../../game/campaignStats";
 import type { EventStats } from "../../hooks/useGameEventLog";
 import { SITE_URL, SITE_AUTHOR } from "../../seo/constants";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { GOLD, DIVIDER, OVERLAY, panelGradient } from "../ui/system/theme";
+import { formatDuration } from "./shared/menuMath";
 
 // =============================================================================
 // TYPES
@@ -48,8 +55,18 @@ const STAT_STAGGER_MS = 80;
 const REGION_ICONS = [MapPin, Flame, Zap, Shield, Crown];
 
 const CREDITS_LINKS = [
-  { href: "https://www.kevin-liu.tech/", icon: Globe, label: "kevin-liu.tech", description: "Portfolio" },
-  { href: "https://github.com/Kevin-Liu-01/Princeton-Tower-Defense", icon: Github, label: "Source Code", description: "GitHub" },
+  {
+    description: "Portfolio",
+    href: "https://www.kevin-liu.tech/",
+    icon: Globe,
+    label: "kevin-liu.tech",
+  },
+  {
+    description: "GitHub",
+    href: "https://github.com/Kevin-Liu-01/Princeton-Tower-Defense",
+    icon: Github,
+    label: "Source Code",
+  },
 ];
 
 // =============================================================================
@@ -63,16 +80,22 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
 
     function draw() {
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
       const t = timeRef.current;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
@@ -100,8 +123,14 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
         ctx.fillStyle = `rgba(255,215,0,${alpha})`;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(angle - 0.08) * 50 * s, Math.sin(angle - 0.08) * 50 * s);
-        ctx.lineTo(Math.cos(angle + 0.08) * 50 * s, Math.sin(angle + 0.08) * 50 * s);
+        ctx.lineTo(
+          Math.cos(angle - 0.08) * 50 * s,
+          Math.sin(angle - 0.08) * 50 * s
+        );
+        ctx.lineTo(
+          Math.cos(angle + 0.08) * 50 * s,
+          Math.sin(angle + 0.08) * 50 * s
+        );
         ctx.closePath();
         ctx.fill();
       }
@@ -142,7 +171,12 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
       ctx.shadowBlur = 0;
 
       // Crown band
-      const bandGrad = ctx.createLinearGradient(-30 * s, 12 * s, 30 * s, 12 * s);
+      const bandGrad = ctx.createLinearGradient(
+        -30 * s,
+        12 * s,
+        30 * s,
+        12 * s
+      );
       bandGrad.addColorStop(0, "#6b4f10");
       bandGrad.addColorStop(0.5, "#b8860b");
       bandGrad.addColorStop(1, "#6b4f10");
@@ -151,12 +185,19 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
 
       // Jewels on crown points
       const jewels = [
-        { x: -11 * s, y: -14 * s, color: "#dc143c" },
-        { x: 0, y: 2 * s, color: "#4169e1" },
-        { x: 11 * s, y: -14 * s, color: "#50c878" },
+        { color: "#dc143c", x: -11 * s, y: -14 * s },
+        { color: "#4169e1", x: 0, y: 2 * s },
+        { color: "#50c878", x: 11 * s, y: -14 * s },
       ];
       for (const j of jewels) {
-        const jGrad = ctx.createRadialGradient(j.x - 1 * s, j.y - 1 * s, 0, j.x, j.y, 4 * s);
+        const jGrad = ctx.createRadialGradient(
+          j.x - 1 * s,
+          j.y - 1 * s,
+          0,
+          j.x,
+          j.y,
+          4 * s
+        );
         jGrad.addColorStop(0, "#fff");
         jGrad.addColorStop(0.3, j.color);
         jGrad.addColorStop(1, "#000");
@@ -192,8 +233,18 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
         const sparkSize = (2 + Math.sin(t * 2.5 + i) * 1.2) * s;
         if (alpha > 0.1) {
           ctx.fillStyle = `rgba(255,236,139,${alpha})`;
-          ctx.fillRect(sx - sparkSize * 0.15, sy - sparkSize, sparkSize * 0.3, sparkSize * 2);
-          ctx.fillRect(sx - sparkSize, sy - sparkSize * 0.15, sparkSize * 2, sparkSize * 0.3);
+          ctx.fillRect(
+            sx - sparkSize * 0.15,
+            sy - sparkSize,
+            sparkSize * 0.3,
+            sparkSize * 2
+          );
+          ctx.fillRect(
+            sx - sparkSize,
+            sy - sparkSize * 0.15,
+            sparkSize * 2,
+            sparkSize * 0.3
+          );
         }
       }
 
@@ -205,7 +256,7 @@ function CampaignTrophyCanvas({ size = 120 }: { size?: number }) {
     return () => cancelAnimationFrame(frameRef.current);
   }, [size]);
 
-  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+  return <canvas ref={canvasRef} style={{ height: size, width: size }} />;
 }
 
 // =============================================================================
@@ -218,9 +269,13 @@ function FireworksLayer() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -235,12 +290,26 @@ function FireworksLayer() {
     const h = () => canvas.offsetHeight;
 
     interface Particle {
-      x: number; y: number; vx: number; vy: number;
-      life: number; maxLife: number; color: string; size: number;
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      life: number;
+      maxLife: number;
+      color: string;
+      size: number;
     }
 
     const particles: Particle[] = [];
-    const colors = ["#ffd700", "#ff6b6b", "#4ade80", "#60a5fa", "#c084fc", "#fb923c", "#f472b6"];
+    const colors = [
+      "#ffd700",
+      "#ff6b6b",
+      "#4ade80",
+      "#60a5fa",
+      "#c084fc",
+      "#fb923c",
+      "#f472b6",
+    ];
     let nextBurst = 0;
 
     function burst(bx: number, by: number) {
@@ -250,21 +319,29 @@ function FireworksLayer() {
         const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
         const speed = 1.5 + Math.random() * 3;
         particles.push({
-          x: bx, y: by,
+          color,
+          life: 1,
+          maxLife: 60 + Math.random() * 40,
+          size: 1.5 + Math.random() * 2,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          life: 1, maxLife: 60 + Math.random() * 40,
-          color, size: 1.5 + Math.random() * 2,
+          x: bx,
+          y: by,
         });
       }
     }
 
     function draw() {
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
       ctx.clearRect(0, 0, w(), h());
 
       if (nextBurst <= 0) {
-        burst(50 + Math.random() * (w() - 100), 30 + Math.random() * (h() * 0.5));
+        burst(
+          50 + Math.random() * (w() - 100),
+          30 + Math.random() * (h() * 0.5)
+        );
         nextBurst = 50 + Math.random() * 80;
       }
       nextBurst--;
@@ -278,7 +355,10 @@ function FireworksLayer() {
         p.life++;
 
         const progress = p.life / p.maxLife;
-        if (progress >= 1) { particles.splice(i, 1); continue; }
+        if (progress >= 1) {
+          particles.splice(i, 1);
+          continue;
+        }
 
         const alpha = 1 - progress;
         ctx.globalAlpha = alpha * 0.7;
@@ -319,7 +399,13 @@ function FireworksLayer() {
 // ANIMATED SECTION WRAPPER
 // =============================================================================
 
-function AnimatedSection({ delay, children }: { delay: number; children: React.ReactNode }) {
+function AnimatedSection({
+  delay,
+  children,
+}: {
+  delay: number;
+  children: React.ReactNode;
+}) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -344,39 +430,65 @@ function AnimatedSection({ delay, children }: { delay: number; children: React.R
 // STAT COUNTER (animated number)
 // =============================================================================
 
-function AnimatedCounter({ target, duration = 1500, suffix = "" }: { target: number; duration?: number; suffix?: string }) {
+function AnimatedCounter({
+  target,
+  duration = 1500,
+  suffix = "",
+}: {
+  target: number;
+  duration?: number;
+  suffix?: string;
+}) {
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (target === 0) { setDisplay(0); return; }
+    if (target === 0) {
+      setDisplay(0);
+      return;
+    }
     const start = Date.now();
     const tick = () => {
       const elapsed = Date.now() - start;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - (1 - progress) ** 3;
       setDisplay(Math.round(target * eased));
-      if (progress < 1) requestAnimationFrame(tick);
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      }
     };
     requestAnimationFrame(tick);
   }, [target, duration]);
 
-  return <>{display}{suffix}</>;
+  return (
+    <>
+      {display}
+      {suffix}
+    </>
+  );
 }
 
 // =============================================================================
 // SHARE BUTTONS
 // =============================================================================
 
-function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: number }) {
+function ShareButtons({
+  totalStars,
+  maxStars,
+}: {
+  totalStars: number;
+  maxStars: number;
+}) {
   const [copied, setCopied] = useState(false);
 
-  const shareText = useMemo(() =>
-    `I completed the Princeton Tower Defense campaign with ${totalStars}/${maxStars} stars! ⭐⚔️🐅\n\nThink you can beat it? 👇`,
+  const shareText = useMemo(
+    () =>
+      `I completed the Princeton Tower Defense campaign with ${totalStars}/${maxStars} stars! ⭐⚔️🐅\n\nThink you can beat it? 👇`,
     [totalStars, maxStars]
   );
 
-  const twitterUrl = useMemo(() =>
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(`${SITE_URL}/`)}&hashtags=${encodeURIComponent("gamedev,indiegame,towerdefense,princeton")}`,
+  const twitterUrl = useMemo(
+    () =>
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(`${SITE_URL}/`)}&hashtags=${encodeURIComponent("gamedev,indiegame,towerdefense,princeton")}`,
     [shareText]
   );
 
@@ -385,18 +497,24 @@ function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: 
       await navigator.clipboard.writeText(`${SITE_URL}/`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* clipboard unavailable */ }
+    } catch {
+      /* clipboard unavailable */
+    }
   }, []);
 
   const handleNativeShare = useCallback(async () => {
-    if (!navigator.share) return;
+    if (!navigator.share) {
+      return;
+    }
     try {
       await navigator.share({
-        title: "Princeton Tower Defense - Campaign Complete!",
         text: shareText,
+        title: "Princeton Tower Defense - Campaign Complete!",
         url: `${SITE_URL}/`,
       });
-    } catch { /* cancelled */ }
+    } catch {
+      /* cancelled */
+    }
   }, [shareText]);
 
   return (
@@ -408,7 +526,8 @@ function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: 
         rel="noopener noreferrer"
         className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 hover:brightness-110"
         style={{
-          background: "linear-gradient(135deg, rgba(29,155,240,0.25), rgba(29,155,240,0.15))",
+          background:
+            "linear-gradient(135deg, rgba(29,155,240,0.25), rgba(29,155,240,0.15))",
           border: "1px solid rgba(29,155,240,0.4)",
           color: "rgba(29,155,240,0.9)",
         }}
@@ -423,7 +542,8 @@ function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: 
         onClick={handleCopyLink}
         className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all hover:scale-105"
         style={{
-          background: "linear-gradient(135deg, rgba(180,140,60,0.2), rgba(180,140,60,0.1))",
+          background:
+            "linear-gradient(135deg, rgba(180,140,60,0.2), rgba(180,140,60,0.1))",
           border: `1px solid ${GOLD.border25}`,
           color: "rgba(252,211,77,0.8)",
         }}
@@ -438,7 +558,8 @@ function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: 
           onClick={handleNativeShare}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all hover:scale-105"
           style={{
-            background: "linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.1))",
+            background:
+              "linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.1))",
             border: "1px solid rgba(74,222,128,0.35)",
             color: "rgba(74,222,128,0.9)",
           }}
@@ -455,15 +576,33 @@ function ShareButtons({ totalStars, maxStars }: { totalStars: number; maxStars: 
 // SECTION LABEL
 // =============================================================================
 
-function SectionLabel({ text, icon: Icon }: { text: string; icon?: typeof Crown }) {
+function SectionLabel({
+  text,
+  icon: Icon,
+}: {
+  text: string;
+  icon?: typeof Crown;
+}) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border35}, transparent)` }} />
+      <div
+        className="h-px flex-1"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${GOLD.border35}, transparent)`,
+        }}
+      />
       <div className="flex items-center gap-1.5">
         {Icon && <Icon size={12} className="text-amber-500/60" />}
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-500/60">{text}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-500/60">
+          {text}
+        </span>
       </div>
-      <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border35}, transparent)` }} />
+      <div
+        className="h-px flex-1"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${GOLD.border35}, transparent)`,
+        }}
+      />
     </div>
   );
 }
@@ -506,15 +645,24 @@ function StatCard({
     >
       <div className="flex items-center gap-1.5 mb-1">
         <Icon size={12} style={{ color: `${color}cc` }} />
-        <span className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: `${color}99` }}>
+        <span
+          className="text-[9px] font-bold tracking-[0.2em] uppercase"
+          style={{ color: `${color}99` }}
+        >
           {label}
         </span>
       </div>
-      <div className="text-lg font-black" style={{ color: `${color}dd`, textShadow: `0 0 12px ${color}30` }}>
+      <div
+        className="text-lg font-black"
+        style={{ color: `${color}dd`, textShadow: `0 0 12px ${color}30` }}
+      >
         {value}
       </div>
       {subValue && (
-        <span className="text-[9px] mt-0.5 block" style={{ color: `${color}66` }}>
+        <span
+          className="text-[9px] mt-0.5 block"
+          style={{ color: `${color}66` }}
+        >
           {subValue}
         </span>
       )}
@@ -549,8 +697,16 @@ export function CampaignVictoryScreen({
   }, []);
 
   const {
-    totalStars, maxStars, totalBestTime, totalTimesPlayed, totalTimesWon,
-    perfectLevels, levelsCompleted, totalLevels, bestOverallHearts, regionStats,
+    totalStars,
+    maxStars,
+    totalBestTime,
+    totalTimesPlayed,
+    totalTimesWon,
+    perfectLevels,
+    levelsCompleted,
+    totalLevels,
+    bestOverallHearts,
+    regionStats,
   } = cumulativeStats;
 
   const baseDelay = 600;
@@ -559,7 +715,8 @@ export function CampaignVictoryScreen({
     <div
       className="absolute inset-0 z-[500] flex flex-col items-center overflow-hidden pointer-events-auto"
       style={{
-        background: "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(50,35,15,0.98), rgba(12,9,5,0.99))",
+        background:
+          "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(50,35,15,0.98), rgba(12,9,5,0.99))",
       }}
     >
       {/* Fireworks */}
@@ -573,7 +730,6 @@ export function CampaignVictoryScreen({
         style={{ scrollBehavior: "smooth" }}
       >
         <div className="max-w-lg w-full mx-auto px-4 py-6 flex flex-col gap-5">
-
           {/* ===== HEADER ===== */}
           <AnimatedSection delay={0}>
             <div className="flex flex-col items-center">
@@ -583,7 +739,8 @@ export function CampaignVictoryScreen({
                 className="text-3xl sm:text-4xl font-black tracking-[0.2em] mt-1"
                 style={{
                   color: "#fcd34d",
-                  textShadow: "0 0 60px rgba(252,211,77,0.5), 0 0 25px rgba(252,211,77,0.3), 0 3px 0 #7a5c10, 0 4px 10px rgba(0,0,0,0.8)",
+                  textShadow:
+                    "0 0 60px rgba(252,211,77,0.5), 0 0 25px rgba(252,211,77,0.3), 0 3px 0 #7a5c10, 0 4px 10px rgba(0,0,0,0.8)",
                 }}
               >
                 CAMPAIGN
@@ -599,16 +756,33 @@ export function CampaignVictoryScreen({
               </h2>
 
               <div className="flex items-center gap-3 mt-3 w-full px-6">
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60})` }} />
-                <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`, border: `1px solid ${GOLD.border40}` }}>
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60})`,
+                  }}
+                />
+                <div
+                  className="p-1.5 rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`,
+                    border: `1px solid ${GOLD.border40}`,
+                  }}
+                >
                   <Crown size={14} className="text-amber-400" />
                 </div>
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.bright60}, ${DIVIDER.gold50} 70%, transparent)` }} />
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(90deg, ${GOLD.bright60}, ${DIVIDER.gold50} 70%, transparent)`,
+                  }}
+                />
               </div>
 
               <p className="text-xs text-amber-400/60 italic text-center mt-2 px-6 leading-relaxed max-w-md">
-                &ldquo;Against all odds, through fire and frost, across desert and marsh &mdash;
-                the realm stands defended. Your name shall echo through the halls of Princeton for eternity.&rdquo;
+                &ldquo;Against all odds, through fire and frost, across desert
+                and marsh &mdash; the realm stands defended. Your name shall
+                echo through the halls of Princeton for eternity.&rdquo;
               </p>
             </div>
           </AnimatedSection>
@@ -629,12 +803,16 @@ export function CampaignVictoryScreen({
                 <div className="flex items-center justify-center gap-3 mt-3">
                   <div className="flex items-center gap-1">
                     {[...Array(3)].map((_, i) => {
-                      const filled = totalStars >= (totalLevels * (i + 1));
+                      const filled = totalStars >= totalLevels * (i + 1);
                       return (
                         <Star
                           key={i}
                           size={28}
-                          className={filled ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" : "text-amber-900/40"}
+                          className={
+                            filled
+                              ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]"
+                              : "text-amber-900/40"
+                          }
                         />
                       );
                     })}
@@ -642,11 +820,19 @@ export function CampaignVictoryScreen({
                 </div>
 
                 <div className="text-center mt-2">
-                  <span className="text-2xl font-black text-amber-300" style={{ textShadow: "0 0 15px rgba(252,211,77,0.3)" }}>
+                  <span
+                    className="text-2xl font-black text-amber-300"
+                    style={{ textShadow: "0 0 15px rgba(252,211,77,0.3)" }}
+                  >
                     <AnimatedCounter target={totalStars} />
                   </span>
-                  <span className="text-sm text-amber-400/50 font-bold"> / {maxStars}</span>
-                  <span className="text-[10px] text-amber-400/40 block mt-0.5 tracking-wider uppercase">Total Stars Earned</span>
+                  <span className="text-sm text-amber-400/50 font-bold">
+                    {" "}
+                    / {maxStars}
+                  </span>
+                  <span className="text-[10px] text-amber-400/40 block mt-0.5 tracking-wider uppercase">
+                    Total Stars Earned
+                  </span>
                 </div>
 
                 {/* Perfect levels */}
@@ -654,7 +840,8 @@ export function CampaignVictoryScreen({
                   <div className="flex items-center justify-center gap-1.5 mt-2">
                     <Sparkles size={12} className="text-amber-400" />
                     <span className="text-[10px] font-bold text-amber-300/70 tracking-wider">
-                      {perfectLevels} Perfect (3-Star) Level{perfectLevels !== 1 ? "s" : ""}
+                      {perfectLevels} Perfect (3-Star) Level
+                      {perfectLevels !== 1 ? "s" : ""}
                     </span>
                   </div>
                 )}
@@ -667,26 +854,43 @@ export function CampaignVictoryScreen({
             <SectionLabel text="Campaign Stats" icon={Swords} />
             <div className="grid grid-cols-2 gap-2 mt-2">
               <StatCard
-                icon={Clock} label="Total Time" color="#60a5fa"
+                icon={Clock}
+                label="Total Time"
+                color="#60a5fa"
                 value={formatDuration(totalBestTime)}
                 subValue="Sum of best times"
                 delay={baseDelay + SECTION_DELAY_MS + STAT_STAGGER_MS}
               />
               <StatCard
-                icon={Heart} label="Hearts Saved" color="#f87171"
+                icon={Heart}
+                label="Hearts Saved"
+                color="#f87171"
                 value={<AnimatedCounter target={bestOverallHearts} />}
                 subValue="Sum of best hearts"
                 delay={baseDelay + SECTION_DELAY_MS + STAT_STAGGER_MS * 2}
               />
               <StatCard
-                icon={Swords} label="Battles Won" color="#4ade80"
-                value={<><AnimatedCounter target={totalTimesWon} /> / <AnimatedCounter target={totalTimesPlayed} /></>}
+                icon={Swords}
+                label="Battles Won"
+                color="#4ade80"
+                value={
+                  <>
+                    <AnimatedCounter target={totalTimesWon} /> /{" "}
+                    <AnimatedCounter target={totalTimesPlayed} />
+                  </>
+                }
                 subValue="Wins / Total attempts"
                 delay={baseDelay + SECTION_DELAY_MS + STAT_STAGGER_MS * 3}
               />
               <StatCard
-                icon={Shield} label="Levels Cleared" color="#c084fc"
-                value={<><AnimatedCounter target={levelsCompleted} /> / {totalLevels}</>}
+                icon={Shield}
+                label="Levels Cleared"
+                color="#c084fc"
+                value={
+                  <>
+                    <AnimatedCounter target={levelsCompleted} /> / {totalLevels}
+                  </>
+                }
                 delay={baseDelay + SECTION_DELAY_MS + STAT_STAGGER_MS * 4}
               />
             </div>
@@ -697,22 +901,30 @@ export function CampaignVictoryScreen({
             <SectionLabel text="Final Battle — Obsidian Throne" icon={Flame} />
             <div className="grid grid-cols-2 gap-2 mt-2">
               <StatCard
-                icon={Clock} label="Time" color="#60a5fa"
+                icon={Clock}
+                label="Time"
+                color="#60a5fa"
                 value={formatDuration(finalLevelTime)}
                 delay={baseDelay + SECTION_DELAY_MS * 2 + STAT_STAGGER_MS}
               />
               <StatCard
-                icon={Heart} label="Lives" color="#f87171"
+                icon={Heart}
+                label="Lives"
+                color="#f87171"
                 value={<>{finalLevelLives}/20</>}
                 delay={baseDelay + SECTION_DELAY_MS * 2 + STAT_STAGGER_MS * 2}
               />
               <StatCard
-                icon={Swords} label="Enemies Slain" color="#fb923c"
+                icon={Swords}
+                label="Enemies Slain"
+                color="#fb923c"
                 value={<AnimatedCounter target={sessionStats.enemiesKilled} />}
                 delay={baseDelay + SECTION_DELAY_MS * 2 + STAT_STAGGER_MS * 3}
               />
               <StatCard
-                icon={Zap} label="Towers Built" color="#a78bfa"
+                icon={Zap}
+                label="Towers Built"
+                color="#a78bfa"
                 value={<AnimatedCounter target={sessionStats.towersBuilt} />}
                 delay={baseDelay + SECTION_DELAY_MS * 2 + STAT_STAGGER_MS * 4}
               />
@@ -731,7 +943,8 @@ export function CampaignVictoryScreen({
                     key={r.region}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg"
                     style={{
-                      background: "linear-gradient(90deg, rgba(120,80,20,0.12), rgba(180,140,60,0.14), rgba(120,80,20,0.12))",
+                      background:
+                        "linear-gradient(90deg, rgba(120,80,20,0.12), rgba(180,140,60,0.14), rgba(120,80,20,0.12))",
                       border: "1px solid rgba(180,140,60,0.2)",
                     }}
                   >
@@ -745,21 +958,29 @@ export function CampaignVictoryScreen({
                           {r.stars}/{r.maxStars}
                         </span>
                       </div>
-                      <div className="h-1.5 mt-1 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.3)" }}>
+                      <div
+                        className="h-1.5 mt-1 rounded-full overflow-hidden"
+                        style={{ background: "rgba(0,0,0,0.3)" }}
+                      >
                         <div
                           className="h-full rounded-full transition-all duration-1000"
                           style={{
-                            width: `${pct}%`,
                             background: r.completed
                               ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
                               : "linear-gradient(90deg, rgba(251,191,36,0.5), rgba(245,158,11,0.3))",
-                            boxShadow: r.completed ? "0 0 8px rgba(251,191,36,0.3)" : undefined,
+                            boxShadow: r.completed
+                              ? "0 0 8px rgba(251,191,36,0.3)"
+                              : undefined,
+                            width: `${pct}%`,
                           }}
                         />
                       </div>
                     </div>
                     {r.completed && (
-                      <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />
+                      <Star
+                        size={12}
+                        className="text-amber-400 fill-amber-400 shrink-0"
+                      />
                     )}
                   </div>
                 );
@@ -803,12 +1024,16 @@ export function CampaignVictoryScreen({
                 <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-amber-950/30 border border-amber-800/25">
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-amber-900 shrink-0"
-                    style={{ background: "linear-gradient(135deg, #fbbf24, #d97706)" }}
+                    style={{
+                      background: "linear-gradient(135deg, #fbbf24, #d97706)",
+                    }}
                   >
                     KL
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-amber-200 text-sm">{SITE_AUTHOR}</div>
+                    <div className="font-semibold text-amber-200 text-sm">
+                      {SITE_AUTHOR}
+                    </div>
                     <div className="text-[10px] text-amber-200/45">
                       Princeton University &apos;28, B.S.E. in Computer Science
                     </div>
@@ -827,18 +1052,29 @@ export function CampaignVictoryScreen({
                       rel="noopener noreferrer"
                       className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-950/15 border border-amber-800/15 hover:bg-amber-900/25 hover:border-amber-700/35 transition-colors group"
                     >
-                      <link.icon size={14} className="text-amber-400/60 group-hover:text-amber-300 transition-colors shrink-0" />
+                      <link.icon
+                        size={14}
+                        className="text-amber-400/60 group-hover:text-amber-300 transition-colors shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-amber-200/70 group-hover:text-amber-200 transition-colors">{link.label}</div>
-                        <div className="text-[10px] text-amber-200/35">{link.description}</div>
+                        <div className="text-xs font-medium text-amber-200/70 group-hover:text-amber-200 transition-colors">
+                          {link.label}
+                        </div>
+                        <div className="text-[10px] text-amber-200/35">
+                          {link.description}
+                        </div>
                       </div>
-                      <ExternalLink size={11} className="text-amber-200/15 group-hover:text-amber-200/40 transition-colors shrink-0" />
+                      <ExternalLink
+                        size={11}
+                        className="text-amber-200/15 group-hover:text-amber-200/40 transition-colors shrink-0"
+                      />
                     </a>
                   ))}
                 </div>
 
                 <p className="text-[10px] text-amber-200/25 text-center mt-3 italic">
-                  Built with Canvas 2D, Next.js, React & TypeScript &mdash; no game engine required.
+                  Built with Canvas 2D, Next.js, React & TypeScript &mdash; no
+                  game engine required.
                 </p>
               </div>
             </OrnateFrame>
@@ -851,11 +1087,13 @@ export function CampaignVictoryScreen({
                 onClick={resetGame}
                 className="group relative px-8 py-3 rounded-xl font-bold tracking-[0.2em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
                 style={{
-                  background: "linear-gradient(180deg, rgba(180,130,30,0.92), rgba(120,78,15,0.95))",
+                  background:
+                    "linear-gradient(180deg, rgba(180,130,30,0.92), rgba(120,78,15,0.95))",
                   border: `1.5px solid ${GOLD.bright60}`,
-                  color: "#fff2c8",
-                  textShadow: "0 0 12px rgba(252,211,77,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                   boxShadow: `inset 0 1px 0 ${OVERLAY.white15}, 0 4px 20px ${OVERLAY.black40}, 0 0 30px rgba(180,140,60,0.2)`,
+                  color: "#fff2c8",
+                  textShadow:
+                    "0 0 12px rgba(252,211,77,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                 }}
               >
                 <span className="flex items-center gap-2.5">
@@ -874,7 +1112,9 @@ export function CampaignVictoryScreen({
           className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 animate-bounce pointer-events-none"
           style={{ opacity: 0.5 }}
         >
-          <span className="text-[9px] text-amber-400/60 uppercase tracking-widest font-bold">Scroll</span>
+          <span className="text-[9px] text-amber-400/60 uppercase tracking-widest font-bold">
+            Scroll
+          </span>
           <ChevronDown size={16} className="text-amber-400/60" />
         </div>
       )}

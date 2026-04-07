@@ -1,19 +1,14 @@
+import { ISO_PRISM_D_FACTOR } from "../../constants";
 import type { Tower, Enemy, Position } from "../../types";
-import {
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
-import {
-  lightenColor,
-  darkenColor,
-} from "../../utils";
+import { lightenColor, darkenColor } from "../../utils";
 import {
   generateIsoHexVertices,
   computeHexSideNormals,
   sortSidesByDepth,
   drawHexCap,
   scaleVerts,
-  type IsoOffFn,
 } from "../helpers";
+import type { IsoOffFn } from "../helpers";
 import {
   drawIsometricPrism,
   drawIsoOctPrism,
@@ -36,15 +31,18 @@ export function drawStar(
   y: number,
   outerR: number,
   innerR: number,
-  color: string,
+  color: string
 ) {
   ctx.fillStyle = color;
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
     const angle = ((i * 36 - 90) * Math.PI) / 180;
-    if (i === 0) ctx.moveTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
-    else ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    if (i === 0) {
+      ctx.moveTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    } else {
+      ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    }
   }
   ctx.closePath();
   ctx.fill();
@@ -64,7 +62,7 @@ export function renderCannonTower(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   void colors;
   void enemies;
@@ -98,7 +96,7 @@ export function renderCannonTower(
   const bRgba = uc("255, 200, 80", "255, 80, 30", "255, 150, 50");
 
   ctx.save();
-  const level = tower.level;
+  const { level } = tower;
   // Shift tower up to center on placement position
   screenPos = { x: screenPos.x, y: screenPos.y - (8 + level * 2) * zoom };
   const baseWidth = 36 + level * 5;
@@ -124,7 +122,7 @@ export function renderCannonTower(
     canBalRY,
     0,
     Math.PI,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
   ctx.strokeStyle = s.s4;
@@ -136,14 +134,16 @@ export function renderCannonTower(
     canBalRY,
     0,
     Math.PI,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
   ctx.strokeStyle = s.s4;
   ctx.lineWidth = 1 * zoom;
   for (let bp = 0; bp < canBalPosts; bp++) {
     const pa = (bp / canBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
+    if (Math.sin(pa) > 0) {
+      continue;
+    }
     const px = screenPos.x + Math.cos(pa) * canBalRX;
     const py = canBalY + Math.sin(pa) * canBalRY;
     ctx.beginPath();
@@ -154,7 +154,9 @@ export function renderCannonTower(
   for (let i = 0; i < canBalSegs; i++) {
     const a0 = (i / canBalSegs) * Math.PI * 2;
     const a1 = ((i + 1) / canBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    if (Math.sin((a0 + a1) / 2) > 0) {
+      continue;
+    }
     const x0 = screenPos.x + Math.cos(a0) * canBalRX;
     const y0b = canBalY + Math.sin(a0) * canBalRY;
     const x1 = screenPos.x + Math.cos(a1) * canBalRX;
@@ -177,17 +179,17 @@ export function renderCannonTower(
     baseWidth,
     baseHeight,
     {
+      accent: tAcc,
       base: s.s3,
       dark: s.s1,
       light: s.s5,
-      accent: tAcc,
     },
     zoom,
     time,
     level,
     s,
     tAcc,
-    tRgba,
+    tRgba
   );
 
   const topY = screenPos.y - baseHeight * zoom;
@@ -207,14 +209,16 @@ export function renderCannonTower(
     canBalRY,
     0,
     0,
-    Math.PI,
+    Math.PI
   );
   ctx.stroke();
   ctx.strokeStyle = s.s4;
   ctx.lineWidth = 1 * zoom;
   for (let bp = 0; bp < canBalPosts; bp++) {
     const pa = (bp / canBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
+    if (Math.sin(pa) <= 0) {
+      continue;
+    }
     const px = screenPos.x + Math.cos(pa) * canBalRX;
     const py = canBalY + Math.sin(pa) * canBalRY;
     ctx.beginPath();
@@ -225,7 +229,9 @@ export function renderCannonTower(
   for (let i = 0; i < canBalSegs; i++) {
     const a0 = (i / canBalSegs) * Math.PI * 2;
     const a1 = ((i + 1) / canBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    if (Math.sin((a0 + a1) / 2) <= 0) {
+      continue;
+    }
     const x0 = screenPos.x + Math.cos(a0) * canBalRX;
     const y0b = canBalY + Math.sin(a0) * canBalRY;
     const x1 = screenPos.x + Math.cos(a1) * canBalRX;
@@ -252,7 +258,7 @@ export function renderCannonTower(
     baseWidth * 0.29 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -266,7 +272,7 @@ export function renderCannonTower(
     baseWidth * ISO_PRISM_D_FACTOR * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -280,7 +286,7 @@ export function renderCannonTower(
     baseWidth * 0.2 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -296,7 +302,7 @@ export function renderCannonTower(
     baseWidth * 0.22 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -346,7 +352,7 @@ export function renderCannonTower(
       baseWidth * 0.12 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -361,7 +367,7 @@ export function renderCannonTower(
       baseWidth * 0.11 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -390,7 +396,7 @@ export function drawMechanicalFaceDetails(
   zoom: number,
   time: number,
   level: number,
-  tRgbaOverride?: string,
+  tRgbaOverride?: string
 ) {
   const _tR = tRgbaOverride ?? "255, 102, 0";
   const wFactor = 0.5;
@@ -415,7 +421,7 @@ export function drawMechanicalFaceDetails(
   const lerpV = (
     a: { x: number; y: number },
     b: { x: number; y: number },
-    t: number,
+    t: number
   ) => ({
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
@@ -619,7 +625,9 @@ export function drawMechanicalFaceDetails(
   // Left face crenellations
   for (let i = 0; i < crenelCount; i++) {
     const t = (i + 0.25) / crenelCount;
-    if (i % 2 !== 0) continue;
+    if (i % 2 !== 0) {
+      continue;
+    }
     const tNext = Math.min((i + crenelGap) / crenelCount, 1);
     const bl = lerpV(lTL, lTF, t);
     const br = lerpV(lTL, lTF, tNext);
@@ -641,7 +649,9 @@ export function drawMechanicalFaceDetails(
   // Right face crenellations
   for (let i = 0; i < crenelCount; i++) {
     const t = (i + 0.25) / crenelCount;
-    if (i % 2 !== 0) continue;
+    if (i % 2 !== 0) {
+      continue;
+    }
     const tNext = Math.min((i + crenelGap) / crenelCount, 1);
     const bl = lerpV(rTR, rTF, t);
     const br = lerpV(rTR, rTF, tNext);
@@ -671,11 +681,29 @@ export function drawMechanicalTowerBase(
   zoom: number,
   time: number,
   level: number,
-  sp?: { s0: string; s1: string; s2: string; s3: string; s4: string; s5: string; s6: string; s7: string },
+  sp?: {
+    s0: string;
+    s1: string;
+    s2: string;
+    s3: string;
+    s4: string;
+    s5: string;
+    s6: string;
+    s7: string;
+  },
   tAcc?: string,
-  tRgba?: string,
+  tRgba?: string
 ) {
-  const _s = sp ?? { s0: "#1a1a22", s1: "#2a2a32", s2: "#3a3a42", s3: "#4a4a52", s4: "#5a5a62", s5: "#6a6a72", s6: "#7a7a82", s7: "#8a8a92" };
+  const _s = sp ?? {
+    s0: "#1a1a22",
+    s1: "#2a2a32",
+    s2: "#3a3a42",
+    s3: "#4a4a52",
+    s4: "#5a5a62",
+    s5: "#6a6a72",
+    s6: "#7a7a82",
+    s7: "#8a8a92",
+  };
   const _tAcc = tAcc ?? "#ff6600";
   const _tRgba = tRgba ?? "255, 102, 0";
   const fndScale = level * 4;
@@ -690,7 +718,7 @@ export function drawMechanicalTowerBase(
     _s.s1,
     darkenColor(_s.s1, 8),
     darkenColor(_s.s1, 16),
-    zoom,
+    zoom
   );
 
   // Foundation middle tier — dressed stone
@@ -704,7 +732,7 @@ export function drawMechanicalTowerBase(
     _s.s2,
     _s.s1,
     darkenColor(_s.s1, 5),
-    zoom,
+    zoom
   );
 
   // Foundation upper tier — polished cap
@@ -718,7 +746,7 @@ export function drawMechanicalTowerBase(
     _s.s3,
     _s.s2,
     darkenColor(_s.s2, 5),
-    zoom,
+    zoom
   );
 
   // Copper trim band along upper step edge
@@ -806,13 +834,13 @@ export function drawMechanicalTowerBase(
     width,
     height - 8,
     {
-      top: colors.light,
       left: colors.base,
-      right: colors.dark,
       leftBack: lightenColor(colors.base, 10),
+      right: colors.dark,
       rightBack: lightenColor(colors.dark, 5),
+      top: colors.light,
     },
-    zoom,
+    zoom
   );
 
   // Tech layer on top
@@ -824,13 +852,13 @@ export function drawMechanicalTowerBase(
     width - 4,
     8,
     {
-      top: lightenColor(colors.base, 15),
       left: colors.base,
-      right: colors.dark,
       leftBack: colors.light,
+      right: colors.dark,
       rightBack: lightenColor(colors.dark, 8),
+      top: lightenColor(colors.base, 15),
     },
-    zoom,
+    zoom
   );
 
   // ========== FACE DETAIL OVERLAYS (panels, rivets, slits, crenellations) ==========
@@ -844,7 +872,7 @@ export function drawMechanicalTowerBase(
     zoom,
     time,
     level,
-    _tRgba,
+    _tRgba
   );
 
   // Add tech details on top of the fully enclosed base
@@ -860,7 +888,7 @@ export function drawMechanicalTowerBase(
     y - height * zoom * 0.1,
     time,
     0.8 + level * 0.2,
-    zoom,
+    zoom
   );
 
   // Right side steam vent
@@ -870,7 +898,7 @@ export function drawMechanicalTowerBase(
     y - height * zoom * 0.15,
     time + 0.5,
     0.6 + level * 0.15,
-    zoom,
+    zoom
   );
 
   // ========== ENERGY TUBES (following isometric faces) ==========
@@ -883,7 +911,7 @@ export function drawMechanicalTowerBase(
     2,
     time,
     zoom,
-    `rgb(${_tRgba})`,
+    `rgb(${_tRgba})`
   );
 
   if (level >= 2) {
@@ -896,7 +924,7 @@ export function drawMechanicalTowerBase(
       2.5,
       time + 0.3,
       zoom,
-      `rgb(${_tRgba})`,
+      `rgb(${_tRgba})`
     );
   }
 
@@ -933,7 +961,7 @@ export function drawMechanicalTowerBase(
     vh: number,
     isoSlopeX: number,
     isoSlopeY: number,
-    faceSide: number,
+    faceSide: number
   ) => {
     // Vent recess
     ctx.fillStyle = _s.s0;
@@ -976,11 +1004,11 @@ export function drawMechanicalTowerBase(
     ctx.moveTo(vx + 0.8 * zoom, vy + 0.8 * zoom);
     ctx.lineTo(
       vx + isoSlopeX * vw - 0.8 * zoom,
-      vy + isoSlopeY * vw + 0.8 * zoom,
+      vy + isoSlopeY * vw + 0.8 * zoom
     );
     ctx.lineTo(
       vx + isoSlopeX * vw - 0.8 * zoom,
-      vy + isoSlopeY * vw + vh - 0.8 * zoom,
+      vy + isoSlopeY * vw + vh - 0.8 * zoom
     );
     ctx.lineTo(vx + 0.8 * zoom, vy + vh - 0.8 * zoom);
     ctx.closePath();
@@ -1043,12 +1071,12 @@ export function drawMechanicalTowerBase(
     8 + level * 2,
     gearRotation,
     {
-      outer: _s.s3,
-      inner: _s.s2,
-      teeth: _s.s4,
       highlight: colors.accent,
+      inner: _s.s2,
+      outer: _s.s3,
+      teeth: _s.s4,
     },
-    zoom,
+    zoom
   );
 
   // Smaller gear meshing with large gear (counter-rotation)
@@ -1061,12 +1089,12 @@ export function drawMechanicalTowerBase(
     6 + level,
     gearRotation,
     {
-      outer: _s.s4,
-      inner: _s.s3,
-      teeth: _s.s5,
       highlight: colors.accent,
+      inner: _s.s3,
+      outer: _s.s4,
+      teeth: _s.s5,
     },
-    zoom,
+    zoom
   );
 
   // Gear on right side
@@ -1079,12 +1107,12 @@ export function drawMechanicalTowerBase(
     8 + level,
     -gearRotation,
     {
-      outer: _s.s3,
-      inner: _s.s2,
-      teeth: _s.s4,
       highlight: colors.accent,
+      inner: _s.s2,
+      outer: _s.s3,
+      teeth: _s.s4,
     },
-    zoom,
+    zoom
   );
 
   // ========== CONVEYOR BELT WITH AMMO ==========
@@ -1097,7 +1125,7 @@ export function drawMechanicalTowerBase(
     6,
     time,
     zoom,
-    "#8b4513",
+    "#8b4513"
   );
 
   // ========== WARNING LIGHTS ==========
@@ -1109,7 +1137,7 @@ export function drawMechanicalTowerBase(
     time,
     zoom,
     "#ff4400",
-    4,
+    4
   );
   drawWarningLight(
     ctx,
@@ -1119,7 +1147,7 @@ export function drawMechanicalTowerBase(
     time + 0.5,
     zoom,
     "#ffaa00",
-    3,
+    3
   );
 
   // ========== AMMO BOXES (skip for level 4 - turret has its own) ==========
@@ -1131,9 +1159,9 @@ export function drawMechanicalTowerBase(
       12,
       6,
       12,
-      { main: "#5a4a3a", accent: "#ff6600", label: "#c9a227" },
+      { accent: "#ff6600", label: "#c9a227", main: "#5a4a3a" },
       zoom,
-      time * 2,
+      time * 2
     );
   }
   if (level >= 3 && level < 4) {
@@ -1144,9 +1172,9 @@ export function drawMechanicalTowerBase(
       14,
       5,
       10,
-      { main: "#4a3a2a", accent: "#ffaa00", label: "#c9a227" },
+      { accent: "#ffaa00", label: "#c9a227", main: "#4a3a2a" },
       zoom,
-      time * 2 + 1,
+      time * 2 + 1
     );
   }
 
@@ -1183,7 +1211,7 @@ export function drawMechanicalTowerBase(
       by: number,
       thickness: number,
       color: string,
-      highlightAlpha: number,
+      highlightAlpha: number
     ) => {
       ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = (thickness + 1.5) * zoom;
@@ -1240,7 +1268,7 @@ export function drawMechanicalTowerBase(
       postTop[3].y,
       2.5,
       _s.s3,
-      0,
+      0
     );
     drawBeam(
       postBase[0].x,
@@ -1249,7 +1277,7 @@ export function drawMechanicalTowerBase(
       postTop[0].y,
       2.5,
       _s.s3,
-      0.04,
+      0.04
     );
 
     // Back X-braces (back-left face)
@@ -1280,7 +1308,7 @@ export function drawMechanicalTowerBase(
       postTop[1].y,
       3,
       _s.s5,
-      0.08,
+      0.08
     );
     drawBeam(
       postBase[2].x,
@@ -1289,7 +1317,7 @@ export function drawMechanicalTowerBase(
       postTop[2].y,
       2.8,
       _s.s4,
-      0.06,
+      0.06
     );
 
     // Front horizontal beams (front-left edge [0->1] and front-right edge [1->2])
@@ -1341,7 +1369,7 @@ export function drawMechanicalTowerBase(
   {
     // Ammo chain from side storage to turret
     const chainLinks = 8 + level * 2;
-    const chainStartX = x - w * 1.0;
+    const chainStartX = x - w * 1;
     const chainStartY = y - height * zoom * 0.1;
     const chainEndX = x - w * 0.3;
     const chainEndY = topY + 5 * zoom;
@@ -1380,7 +1408,7 @@ export function drawMechanicalTowerBase(
         1.5 * zoom,
         t * 0.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1436,7 +1464,7 @@ export function drawMechanicalTowerBase(
         drumRy * 0.65,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -1460,7 +1488,7 @@ export function drawMechanicalTowerBase(
           drumRy * 0.98,
           0,
           Math.PI * 0.2,
-          Math.PI * 0.8,
+          Math.PI * 0.8
         );
         ctx.stroke();
       }
@@ -1508,7 +1536,7 @@ export function drawMechanicalTowerBase(
     ctx.beginPath();
     ctx.moveTo(x - w * 1.05, y + 2 * zoom);
     ctx.lineTo(x - w * 1.15, y - height * zoom * 0.3);
-    ctx.lineTo(x - w * 1.0, y - height * zoom * 0.35);
+    ctx.lineTo(x - w * 1, y - height * zoom * 0.35);
     ctx.lineTo(x - w * 0.9, y - 2 * zoom);
     ctx.closePath();
     ctx.fill();
@@ -1517,7 +1545,7 @@ export function drawMechanicalTowerBase(
     ctx.beginPath();
     ctx.moveTo(x + w * 1.05, y + 2 * zoom);
     ctx.lineTo(x + w * 1.15, y - height * zoom * 0.3);
-    ctx.lineTo(x + w * 1.0, y - height * zoom * 0.35);
+    ctx.lineTo(x + w * 1, y - height * zoom * 0.35);
     ctx.lineTo(x + w * 0.9, y - 2 * zoom);
     ctx.closePath();
     ctx.fill();
@@ -1541,11 +1569,11 @@ export function drawMechanicalTowerBase(
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - w * 1.15, y - height * zoom * 0.3);
-    ctx.lineTo(x - w * 1.0, y - height * zoom * 0.35);
+    ctx.lineTo(x - w * 1, y - height * zoom * 0.35);
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(x + w * 1.15, y - height * zoom * 0.3);
-    ctx.lineTo(x + w * 1.0, y - height * zoom * 0.35);
+    ctx.lineTo(x + w * 1, y - height * zoom * 0.35);
     ctx.stroke();
   }
 
@@ -1553,7 +1581,7 @@ export function drawMechanicalTowerBase(
   if (level >= 3) {
     // Secondary ammo chain (right side)
     const chain2Links = 6;
-    const chain2StartX = x + w * 1.0;
+    const chain2StartX = x + w * 1;
     const chain2StartY = y - height * zoom * 0.15;
     const chain2EndX = x + w * 0.3;
     const chain2EndY = topY + 8 * zoom;
@@ -1566,7 +1594,7 @@ export function drawMechanicalTowerBase(
       (chain2StartX + chain2EndX) / 2,
       (chain2StartY + chain2EndY) / 2 + 8 * zoom,
       chain2EndX,
-      chain2EndY,
+      chain2EndY
     );
     ctx.stroke();
 
@@ -1596,7 +1624,7 @@ export function drawMechanicalTowerBase(
       9 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1618,7 +1646,7 @@ export function drawMechanicalTowerBase(
       topY + 18 * zoom + pistonExtend,
       3 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1635,7 +1663,7 @@ export function drawMechanicalTowerBase(
       topY + 18 * zoom - pistonExtend,
       3 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1651,7 +1679,7 @@ export function drawMechanicalTowerBase(
         x - w * 0.9,
         cableY + sag,
         x - w * 0.7,
-        cableY - 1 * zoom,
+        cableY - 1 * zoom
       );
       ctx.stroke();
     }
@@ -1670,11 +1698,11 @@ export function drawMechanicalTowerBase(
       ctx.moveTo(sensorX + 0.5 * zoom, sensorY + 0.5 * zoom);
       ctx.lineTo(
         sensorX + sensorW + 0.5 * zoom,
-        sensorY - sensorW * sIsoSlope + 0.5 * zoom,
+        sensorY - sensorW * sIsoSlope + 0.5 * zoom
       );
       ctx.lineTo(
         sensorX + sensorW + 0.5 * zoom,
-        sensorY - sensorW * sIsoSlope + sensorH + 0.5 * zoom,
+        sensorY - sensorW * sIsoSlope + sensorH + 0.5 * zoom
       );
       ctx.lineTo(sensorX + 0.5 * zoom, sensorY + sensorH + 0.5 * zoom);
       ctx.closePath();
@@ -1702,7 +1730,7 @@ export function drawMechanicalTowerBase(
       ctx.moveTo(sensorX + sensorW * 0.5, sensorY - sensorW * sIsoSlope * 0.5);
       ctx.lineTo(
         sensorX + sensorW * 0.5,
-        sensorY - sensorW * sIsoSlope * 0.5 - 5 * zoom,
+        sensorY - sensorW * sIsoSlope * 0.5 - 5 * zoom
       );
       ctx.stroke();
       ctx.fillStyle = "#ff0000";
@@ -1712,7 +1740,7 @@ export function drawMechanicalTowerBase(
         sensorY - sensorW * sIsoSlope * 0.5 - 5 * zoom,
         1 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1734,7 +1762,7 @@ export function drawMechanicalTowerBase(
         0,
         lensCx,
         lensCy,
-        3 * zoom,
+        3 * zoom
       );
       lensGrad.addColorStop(0, `rgba(255, 80, 80, ${sensorGlow})`);
       lensGrad.addColorStop(0.5, `rgba(255, 0, 0, ${sensorGlow * 0.7})`);
@@ -1759,7 +1787,7 @@ export function drawMechanicalTowerBase(
         lensCy - 0.8 * zoom,
         0.8 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1771,7 +1799,7 @@ export function drawMechanicalTowerBase(
       ctx.moveTo(lensCx, lensCy);
       ctx.lineTo(
         lensCx + Math.cos(sweepAngle) * 2.5 * zoom,
-        lensCy + Math.sin(sweepAngle) * 2.5 * zoom,
+        lensCy + Math.sin(sweepAngle) * 2.5 * zoom
       );
       ctx.stroke();
     }
@@ -1846,7 +1874,7 @@ export function drawMechanicalTowerBase(
           pY,
           (1.2 + pT * 0.6) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1889,7 +1917,7 @@ export function drawMechanicalTowerBase(
     y - height * zoom + d + 8 * zoom,
     boltSize,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -1898,14 +1926,14 @@ export function drawMechanicalTowerBase(
     y - height * zoom + d + 8 * zoom,
     boltSize,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
 // Helper function to calculate pitch based on tower elevation and typical range
 export function calculateBarrelPitch(
   towerElevation: number,
-  barrelLength: number,
+  barrelLength: number
 ): number {
   // Towers are elevated, enemies are on ground - barrel should pitch down
   // Use a reasonable pitch based on geometry (typically 15-25 degrees)
@@ -1919,10 +1947,10 @@ export function renderStandardCannon(
   topY: number,
   tower: Tower,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const rotation = tower.rotation || 0;
-  const level = tower.level;
+  const { level } = tower;
 
   // Recoil animation
   const timeSinceFire = Date.now() - tower.lastAttack;
@@ -1976,7 +2004,7 @@ export function renderStandardCannon(
     10 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1991,7 +2019,7 @@ export function renderStandardCannon(
     9 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -2016,7 +2044,7 @@ export function renderStandardCannon(
     8.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2032,7 +2060,7 @@ export function renderStandardCannon(
       foreshorten,
       zoom,
       tower,
-      time,
+      time
     );
   }
 
@@ -2043,7 +2071,7 @@ export function renderStandardCannon(
     0,
     turretX,
     turretY - 12 * zoom,
-    18 * zoom,
+    18 * zoom
   );
   housingGrad.addColorStop(0, "#7a7a82");
   housingGrad.addColorStop(0.4, "#5a5a62");
@@ -2057,7 +2085,7 @@ export function renderStandardCannon(
     8 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2096,7 +2124,7 @@ export function renderStandardCannon(
         shieldCenterX - shieldPerpX * shieldWidth * 0.5,
         shieldCenterY - shieldPerpY * shieldWidth * 0.5,
         shieldCenterX + shieldPerpX * shieldWidth * 0.5,
-        shieldCenterY + shieldPerpY * shieldWidth * 0.5,
+        shieldCenterY + shieldPerpY * shieldWidth * 0.5
       );
 
       if (shieldSide < 0) {
@@ -2123,34 +2151,34 @@ export function renderStandardCannon(
         turretX + Math.cos(shieldAngle - angleSpan * 0.4) * innerR,
         turretY -
           12 * zoom +
-          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.5,
+          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.5
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle - angleSpan * 0.35) * outerR,
         turretY -
           12 * zoom +
           Math.sin(shieldAngle - angleSpan * 0.35) * outerR * 0.5 -
-          2 * zoom,
+          2 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle) * (outerR + 2 * zoom),
         turretY -
           12 * zoom +
           Math.sin(shieldAngle) * (outerR + 2 * zoom) * 0.5 -
-          3 * zoom,
+          3 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.35) * outerR,
         turretY -
           12 * zoom +
           Math.sin(shieldAngle + angleSpan * 0.35) * outerR * 0.5 -
-          2 * zoom,
+          2 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.4) * innerR,
         turretY -
           12 * zoom +
-          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.5,
+          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.5
       );
       ctx.closePath();
       ctx.fill();
@@ -2185,7 +2213,7 @@ export function renderStandardCannon(
     5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -2221,7 +2249,7 @@ export function renderStandardCannon(
     0,
     turretX,
     turretY - 12 * zoom,
-    4 * zoom,
+    4 * zoom
   );
   coreGrad.addColorStop(0, `rgba(255, 180, 80, ${coreGlow})`);
   coreGrad.addColorStop(0.4, `rgba(255, 120, 30, ${coreGlow * 0.7})`);
@@ -2240,7 +2268,7 @@ export function renderStandardCannon(
     turretY - 12.5 * zoom,
     1.5 * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2276,7 +2304,7 @@ export function renderStandardCannon(
       time,
       isAttacking,
       attackPulse,
-      "small",
+      "small"
     );
   }
   if (shieldBehind) {
@@ -2287,7 +2315,7 @@ export function renderStandardCannon(
       shieldAngle,
       zoom,
       towerId,
-      "small",
+      "small"
     );
   }
 
@@ -2299,8 +2327,8 @@ export function renderStandardCannon(
       turretY - 12 * zoom,
       rotation,
       zoom,
-      1.0,
-      recoilOffset,
+      1,
+      recoilOffset
     );
   }
   drawBreechMechanism(
@@ -2309,8 +2337,8 @@ export function renderStandardCannon(
     turretY - 12 * zoom,
     rotation,
     zoom,
-    1.0,
-    recoilOffset,
+    1,
+    recoilOffset
   );
   drawBreechFeedAnimation(
     ctx,
@@ -2318,21 +2346,13 @@ export function renderStandardCannon(
     turretY - 12 * zoom,
     rotation,
     zoom,
-    1.0,
+    1,
     time,
     tower.lastAttack,
     400,
-    1.0,
+    1
   );
-  drawMantlets(
-    ctx,
-    turretX,
-    turretY - 12 * zoom,
-    rotation,
-    zoom,
-    1.0,
-    "behind",
-  );
+  drawMantlets(ctx, turretX, turretY - 12 * zoom, rotation, zoom, 1, "behind");
   if (!facingAway) {
     drawHexMantlet(
       ctx,
@@ -2340,8 +2360,8 @@ export function renderStandardCannon(
       turretY - 12 * zoom,
       rotation,
       zoom,
-      1.0,
-      recoilOffset,
+      1,
+      recoilOffset
     );
   }
 
@@ -2356,11 +2376,11 @@ export function renderStandardCannon(
       foreshorten,
       zoom,
       tower,
-      time,
+      time
     );
   }
 
-  drawMantlets(ctx, turretX, turretY - 12 * zoom, rotation, zoom, 1.0, "front");
+  drawMantlets(ctx, turretX, turretY - 12 * zoom, rotation, zoom, 1, "front");
 
   // Draw in-front-of-camera accessories
   if (!boxBehind) {
@@ -2373,7 +2393,7 @@ export function renderStandardCannon(
       time,
       isAttacking,
       attackPulse,
-      "small",
+      "small"
     );
   }
   if (!shieldBehind) {
@@ -2384,7 +2404,7 @@ export function renderStandardCannon(
       shieldAngle,
       zoom,
       towerId,
-      "small",
+      "small"
     );
   }
 
@@ -2401,7 +2421,7 @@ export function renderStandardCannon(
     isAttacking,
     attackPulse,
     boxSide,
-    recoilOffset,
+    recoilOffset
   );
 
   // Calculate pitch for muzzle flash positioning
@@ -2440,7 +2460,7 @@ export function renderStandardCannon(
       0,
       flashX,
       flashY,
-      bloomR,
+      bloomR
     );
     bloomGrad.addColorStop(0, `rgba(255, 255, 200, ${flashAlpha})`);
     bloomGrad.addColorStop(0.25, `rgba(255, 200, 80, ${flashAlpha * 0.9})`);
@@ -2504,11 +2524,11 @@ export function drawCannonBarrel(
   _foreshorten: number,
   zoom: number,
   tower: Tower,
-  time: number,
+  time: number
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
-  const level = tower.level;
+  const { level } = tower;
 
   // Isometric basis vectors
   const fwdX = cosR;
@@ -2579,7 +2599,7 @@ export function drawCannonBarrel(
       capVerts,
       facingFwd ? "#6c6c78" : "#5c5c6a",
       "#4a4a58",
-      0.6 * zoom,
+      0.6 * zoom
     );
   }
 
@@ -2605,7 +2625,7 @@ export function drawCannonBarrel(
         hexBackPt.x + v0.x,
         hexBackPt.y + v0.y,
         hexFrontPt.x + tv0.x,
-        hexFrontPt.y + tv0.y,
+        hexFrontPt.y + tv0.y
       );
       sGrad.addColorStop(0, `rgb(${rc + 4}, ${gc + 4}, ${bc + 6})`);
       sGrad.addColorStop(0.5, `rgb(${rc}, ${gc}, ${bc})`);
@@ -2662,14 +2682,16 @@ export function drawCannonBarrel(
         y: v.y * bScale * 1.06,
       }));
 
-      const bandSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-        (a, bb) => sideNormals[a] - sideNormals[bb],
+      const bandSorted = Array.from({ length: hexSides }, (_, i) => i).toSorted(
+        (a, bb) => sideNormals[a] - sideNormals[bb]
       );
 
       for (const i of bandSorted) {
         const ni = (i + 1) % hexSides;
         const normal = sideNormals[i];
-        if (normal < -0.15) continue;
+        if (normal < -0.15) {
+          continue;
+        }
 
         const v0 = bVerts[i];
         const v1 = bVerts[ni];
@@ -2711,8 +2733,9 @@ export function drawCannonBarrel(
         if (
           sideNormals[i] < -0.15 &&
           sideNormals[ni === 0 ? hexSides - 1 : ni - 1] < -0.15
-        )
+        ) {
           continue;
+        }
         ctx.moveTo(capPt.x + bVerts[i].x, capPt.y + bVerts[i].y);
         ctx.lineTo(capPt.x + bVerts[ni].x, capPt.y + bVerts[ni].y);
       }
@@ -2727,14 +2750,14 @@ export function drawCannonBarrel(
       facingFwd ? taperVerts : hexVerts,
       facingFwd ? "#60606e" : "#6c6c78",
       "#4e4e5c",
-      0.5 * zoom,
+      0.5 * zoom
     );
 
     drawHexCap(
       ctx,
       facingFwd ? muzzleBackPt : muzzleEndPt,
       facingFwd ? muzzleVerts : muzzleTipVerts,
-      facingFwd ? "#565664" : "#4c4c5a",
+      facingFwd ? "#565664" : "#4c4c5a"
     );
 
     const muzzleSideNormals: number[] = sideNormals;
@@ -2776,12 +2799,14 @@ export function drawCannonBarrel(
       for (let f = 0; f < 4; f++) {
         const fa = (f / 4) * Math.PI * 2 + Math.PI / 4;
         const fnormal = Math.cos(fa) * cosR + 0.5 * Math.sin(fa);
-        if (fnormal < -0.3) continue;
+        if (fnormal < -0.3) {
+          continue;
+        }
 
         const fOuter = isoOff(Math.cos(fa) * finH, Math.sin(fa) * finH);
         const fInner = isoOff(
           Math.cos(fa) * hexR * 0.5,
-          Math.sin(fa) * hexR * 0.5,
+          Math.sin(fa) * hexR * 0.5
         );
 
         const fLit = 0.3 + Math.max(0, fnormal) * 0.5;
@@ -2791,16 +2816,13 @@ export function drawCannonBarrel(
         ctx.beginPath();
         ctx.moveTo(
           finPt.x + fInner.x - fwdX * finW,
-          finPt.y + fInner.y - fwdY * finW,
+          finPt.y + fInner.y - fwdY * finW
         );
         ctx.lineTo(finPt.x + fOuter.x, finPt.y + fOuter.y);
-        ctx.lineTo(
-          finEndPt2.x + fOuter.x * 0.8,
-          finEndPt2.y + fOuter.y * 0.8,
-        );
+        ctx.lineTo(finEndPt2.x + fOuter.x * 0.8, finEndPt2.y + fOuter.y * 0.8);
         ctx.lineTo(
           finEndPt2.x + fInner.x + fwdX * finW,
-          finEndPt2.y + fInner.y + fwdY * finW,
+          finEndPt2.y + fInner.y + fwdY * finW
         );
         ctx.closePath();
         ctx.fill();
@@ -2816,7 +2838,7 @@ export function drawCannonBarrel(
         ctx.moveTo(finPt.x + finMidOuter.x, finPt.y + finMidOuter.y);
         ctx.lineTo(
           finEndPt2.x + finMidOuter.x * 0.8,
-          finEndPt2.y + finMidOuter.y * 0.8,
+          finEndPt2.y + finMidOuter.y * 0.8
         );
         ctx.stroke();
       }
@@ -2833,8 +2855,9 @@ export function drawCannonBarrel(
         ctx.lineWidth = 1.5 * zoom;
         ctx.beginPath();
         ctx.moveTo(ringPt.x + rVerts[0].x, ringPt.y + rVerts[0].y);
-        for (let vi = 1; vi < hexSides; vi++)
+        for (let vi = 1; vi < hexSides; vi++) {
           ctx.lineTo(ringPt.x + rVerts[vi].x, ringPt.y + rVerts[vi].y);
+        }
         ctx.closePath();
         ctx.stroke();
       }
@@ -2851,7 +2874,7 @@ export function drawCannonBarrel(
       mCapVerts,
       facingFwd ? "#5c5c6a" : "#4c4c5a",
       "#6a6a7a",
-      0.8 * zoom,
+      0.8 * zoom
     );
 
     if (facingFwd) {
@@ -2861,11 +2884,9 @@ export function drawCannonBarrel(
       ctx.beginPath();
       const riflingVerts = scaleVerts(mCapVerts, 0.32);
       ctx.moveTo(mCapPt.x + riflingVerts[0].x, mCapPt.y + riflingVerts[0].y);
-      for (let i = 1; i < hexSides; i++)
-        ctx.lineTo(
-          mCapPt.x + riflingVerts[i].x,
-          mCapPt.y + riflingVerts[i].y,
-        );
+      for (let i = 1; i < hexSides; i++) {
+        ctx.lineTo(mCapPt.x + riflingVerts[i].x, mCapPt.y + riflingVerts[i].y);
+      }
       ctx.closePath();
       ctx.stroke();
     }
@@ -2910,7 +2931,7 @@ export function drawCannonBarrel(
       plumeTipX,
       plumeTipY,
       fX - perpX * plumeW,
-      fY - perpY * plumeW,
+      fY - perpY * plumeW
     );
     ctx.closePath();
     ctx.fill();
@@ -2944,7 +2965,7 @@ export function drawHexMantlet(
   rotation: number,
   zoom: number,
   scale: number,
-  recoilOffset: number,
+  recoilOffset: number
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -2991,7 +3012,9 @@ export function drawHexMantlet(
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
     const normal = sideNormals[i];
-    if (normal < -0.15) continue;
+    if (normal < -0.15) {
+      continue;
+    }
     const v0 = hexVerts[i];
     const v1 = hexVerts[ni];
 
@@ -3030,7 +3053,7 @@ export function drawHexMantlet(
     hexVerts,
     facingFwd ? "#5e5e6c" : "#4e4e5c",
     "#6a6a78",
-    0.8 * zoom,
+    0.8 * zoom
   );
 
   // Barrel bore hole in center
@@ -3045,7 +3068,7 @@ export function drawHexMantlet(
       frontPt.y + hexVerts[i].y * 0.78,
       1.2 * zoom * scale,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3055,11 +3078,12 @@ export function drawHexMantlet(
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(frontPt.x + hexVerts[0].x * 0.6, frontPt.y + hexVerts[0].y * 0.6);
-  for (let i = 1; i < hexSides; i++)
+  for (let i = 1; i < hexSides; i++) {
     ctx.lineTo(
       frontPt.x + hexVerts[i].x * 0.6,
-      frontPt.y + hexVerts[i].y * 0.6,
+      frontPt.y + hexVerts[i].y * 0.6
     );
+  }
   ctx.closePath();
   ctx.stroke();
 
@@ -3068,8 +3092,9 @@ export function drawHexMantlet(
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(frontPt.x + hexVerts[0].x, frontPt.y + hexVerts[0].y);
-  for (let i = 1; i < hexSides; i++)
+  for (let i = 1; i < hexSides; i++) {
     ctx.lineTo(frontPt.x + hexVerts[i].x, frontPt.y + hexVerts[i].y);
+  }
   ctx.closePath();
   ctx.stroke();
 }
@@ -3081,7 +3106,7 @@ export function drawMantlets(
   rotation: number,
   zoom: number,
   scale: number,
-  layer: "behind" | "front" | "all" = "all",
+  layer: "behind" | "front" | "all" = "all"
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -3102,8 +3127,12 @@ export function drawMantlets(
 
   for (const side of sideOrder) {
     const closerToCamera = perpY * side > 0;
-    if (layer === "behind" && closerToCamera) continue;
-    if (layer === "front" && !closerToCamera) continue;
+    if (layer === "behind" && closerToCamera) {
+      continue;
+    }
+    if (layer === "front" && !closerToCamera) {
+      continue;
+    }
 
     const cx = pivotX + perpX * offset * side + fwdX * fwdOffset;
     const cy = pivotY + perpY * offset * side + fwdY * fwdOffset;
@@ -3134,11 +3163,11 @@ export function drawMantlets(
     ctx.moveTo(outerEdge.x, outerEdge.y);
     ctx.lineTo(
       outerEdge.x + fwdX * plateThick,
-      outerEdge.y + fwdY * plateThick,
+      outerEdge.y + fwdY * plateThick
     );
     ctx.lineTo(
       outerEdge.x + fwdX * plateThick,
-      outerEdge.y + fwdY * plateThick - plateH,
+      outerEdge.y + fwdY * plateThick - plateH
     );
     ctx.lineTo(outerEdge.x, outerEdge.y - plateH);
     ctx.closePath();
@@ -3177,7 +3206,7 @@ export function drawBreechMechanism(
   rotation: number,
   zoom: number,
   scale: number,
-  recoilOffset: number,
+  recoilOffset: number
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -3209,7 +3238,7 @@ export function drawBreechMechanism(
       sx + perpX * cylRad,
       sy + perpY * cylRad,
       sx - perpX * cylRad,
-      sy - perpY * cylRad,
+      sy - perpY * cylRad
     );
     if (isLit) {
       cGrad.addColorStop(0, "#7a7a85");
@@ -3274,7 +3303,7 @@ export function drawBreechMechanism(
     bx + perpX * blkW,
     by + perpY * blkW,
     bx - perpX * blkW,
-    by - perpY * blkW,
+    by - perpY * blkW
   );
   if (lightSide) {
     blkGrad.addColorStop(0, "#6a6a75");
@@ -3353,7 +3382,7 @@ export function drawBreechMechanism(
     1.2 * zoom * scale,
     rotation,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3414,7 +3443,7 @@ export function drawBreechMechanism(
     1.5 * zoom * scale,
     rotation,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -3430,7 +3459,7 @@ export function drawBreechFeedAnimation(
   lastAttack: number,
   cycleTime: number,
   animSpeed: number,
-  ejectCount: number = 1,
+  ejectCount: number = 1
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -3447,7 +3476,9 @@ export function drawBreechFeedAnimation(
   for (let shellIdx = 0; shellIdx < ejectCount; shellIdx++) {
     const phaseOffset = shellIdx * (0.4 / ejectCount);
     const shellPhase = phase - phaseOffset;
-    if (!firing || shellPhase < 0.08 || shellPhase > 0.75) continue;
+    if (!firing || shellPhase < 0.08 || shellPhase > 0.75) {
+      continue;
+    }
 
     const ejectPhase = (shellPhase - 0.08) / 0.67;
     const ejectDist = ejectPhase * 28 * zoom * scale;
@@ -3485,7 +3516,7 @@ export function drawBreechFeedAnimation(
           perpY * sideSpread,
         smokeR,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -3501,7 +3532,7 @@ export function drawBreechFeedAnimation(
       7 * zoom * scale,
       ejectSpin,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3514,7 +3545,7 @@ export function drawBreechFeedAnimation(
       5.5 * zoom * scale,
       ejectSpin,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3531,7 +3562,7 @@ export function drawBreechFeedAnimation(
       2.5 * zoom * scale,
       ejectSpin,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3567,7 +3598,7 @@ export function drawBreechFeedAnimation(
       1.5 * zoom * scale,
       rotation,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3577,7 +3608,7 @@ export function drawBreechFeedAnimation(
     ctx.moveTo(boltX, boltY - 2 * zoom * scale);
     ctx.lineTo(
       boltX + perpX * 4 * zoom * scale,
-      boltY + perpY * 4 * zoom * scale - 3 * zoom * scale,
+      boltY + perpY * 4 * zoom * scale - 3 * zoom * scale
     );
     ctx.stroke();
   }
@@ -3592,7 +3623,7 @@ export function drawBreechFeedAnimation(
       pivotY - 2 * zoom * scale,
       5 * zoom * scale,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3605,7 +3636,7 @@ export function renderHeavyCannon(
   topY: number,
   tower: Tower,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const rotation = tower.rotation || 0;
 
@@ -3659,7 +3690,7 @@ export function renderHeavyCannon(
     13 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3674,7 +3705,7 @@ export function renderHeavyCannon(
     12 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -3698,7 +3729,7 @@ export function renderHeavyCannon(
     11.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3711,7 +3742,7 @@ export function renderHeavyCannon(
     10.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3727,7 +3758,7 @@ export function renderHeavyCannon(
       foreshorten,
       zoom,
       tower,
-      time,
+      time
     );
   }
 
@@ -3738,7 +3769,7 @@ export function renderHeavyCannon(
     0,
     turretX,
     turretY - 16 * zoom,
-    24 * zoom,
+    24 * zoom
   );
   housingGrad.addColorStop(0, "#7a7a82");
   housingGrad.addColorStop(0.3, "#6a6a72");
@@ -3753,7 +3784,7 @@ export function renderHeavyCannon(
     10 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3783,7 +3814,7 @@ export function renderHeavyCannon(
         turretX + Math.cos(shieldAngle + angleSpan * 0.3) * outerR,
         turretY -
           16 * zoom +
-          Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.5,
+          Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.5
       );
 
       if (shieldSide < 0) {
@@ -3804,34 +3835,34 @@ export function renderHeavyCannon(
         turretX + Math.cos(shieldAngle - angleSpan * 0.4) * innerR,
         turretY -
           16 * zoom +
-          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.5,
+          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.5
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle - angleSpan * 0.35) * outerR,
         turretY -
           16 * zoom +
           Math.sin(shieldAngle - angleSpan * 0.35) * outerR * 0.5 -
-          3 * zoom,
+          3 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle) * (outerR + 3 * zoom),
         turretY -
           16 * zoom +
           Math.sin(shieldAngle) * (outerR + 3 * zoom) * 0.5 -
-          4 * zoom,
+          4 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.35) * outerR,
         turretY -
           16 * zoom +
           Math.sin(shieldAngle + angleSpan * 0.35) * outerR * 0.5 -
-          3 * zoom,
+          3 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.4) * innerR,
         turretY -
           16 * zoom +
-          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.5,
+          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.5
       );
       ctx.closePath();
       ctx.fill();
@@ -3880,7 +3911,7 @@ export function renderHeavyCannon(
     6 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -3916,7 +3947,7 @@ export function renderHeavyCannon(
     0,
     turretX,
     turretY - 16 * zoom,
-    6 * zoom,
+    6 * zoom
   );
   coreGrad.addColorStop(0, `rgba(255, 220, 120, ${coreGlow})`);
   coreGrad.addColorStop(0.3, `rgba(255, 180, 80, ${coreGlow * 0.8})`);
@@ -3965,7 +3996,7 @@ export function renderHeavyCannon(
       time,
       isAttacking,
       attackPulse,
-      "medium",
+      "medium"
     );
   }
   if (shieldBehind) {
@@ -3976,7 +4007,7 @@ export function renderHeavyCannon(
       shieldAngle,
       zoom,
       towerId,
-      "medium",
+      "medium"
     );
   }
 
@@ -3989,7 +4020,7 @@ export function renderHeavyCannon(
       rotation,
       zoom,
       1.3,
-      recoilOffset,
+      recoilOffset
     );
   }
   drawBreechMechanism(
@@ -3999,7 +4030,7 @@ export function renderHeavyCannon(
     rotation,
     zoom,
     1.3,
-    recoilOffset,
+    recoilOffset
   );
   drawBreechFeedAnimation(
     ctx,
@@ -4011,7 +4042,7 @@ export function renderHeavyCannon(
     time,
     tower.lastAttack,
     600,
-    1.0,
+    1
   );
   drawMantlets(
     ctx,
@@ -4020,7 +4051,7 @@ export function renderHeavyCannon(
     rotation,
     zoom,
     1.3,
-    "behind",
+    "behind"
   );
   if (!facingAway) {
     drawHexMantlet(
@@ -4030,7 +4061,7 @@ export function renderHeavyCannon(
       rotation,
       zoom,
       1.3,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -4045,7 +4076,7 @@ export function renderHeavyCannon(
       foreshorten,
       zoom,
       tower,
-      time,
+      time
     );
   }
 
@@ -4062,7 +4093,7 @@ export function renderHeavyCannon(
       time,
       isAttacking,
       attackPulse,
-      "medium",
+      "medium"
     );
   }
   if (!shieldBehind) {
@@ -4073,7 +4104,7 @@ export function renderHeavyCannon(
       shieldAngle,
       zoom,
       towerId,
-      "medium",
+      "medium"
     );
   }
 
@@ -4090,7 +4121,7 @@ export function renderHeavyCannon(
     isAttacking,
     attackPulse,
     boxSide,
-    recoilOffset,
+    recoilOffset
   );
 
   // Calculate pitch for muzzle flash positioning
@@ -4138,7 +4169,7 @@ export function renderHeavyCannon(
       0,
       flashX,
       flashY,
-      bloomR,
+      bloomR
     );
     bloomGrad.addColorStop(0, `rgba(255, 255, 210, ${flashAlpha})`);
     bloomGrad.addColorStop(0.2, `rgba(255, 210, 80, ${flashAlpha * 0.9})`);
@@ -4211,7 +4242,7 @@ export function drawHeavyCannonBarrel(
   _foreshorten: number,
   zoom: number,
   tower: Tower,
-  time: number,
+  time: number
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -4281,7 +4312,7 @@ export function drawHeavyCannonBarrel(
       capVerts,
       facingFwd ? "#5a5a68" : "#4a4a58",
       "#3a3a48",
-      0.6 * zoom,
+      0.6 * zoom
     );
   }
 
@@ -4306,7 +4337,7 @@ export function drawHeavyCannonBarrel(
         hexBackPt.x + v0.x,
         hexBackPt.y + v0.y,
         hexFrontPt.x + tv0.x,
-        hexFrontPt.y + tv0.y,
+        hexFrontPt.y + tv0.y
       );
       sGrad.addColorStop(0, `rgb(${rc + 4}, ${gc + 4}, ${bc + 6})`);
       sGrad.addColorStop(0.5, `rgb(${rc}, ${gc}, ${bc})`);
@@ -4363,14 +4394,16 @@ export function drawHeavyCannonBarrel(
         y: v.y * bScale * 1.08,
       }));
 
-      const bandSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-        (a, bb) => sideNormals[a] - sideNormals[bb],
+      const bandSorted = Array.from({ length: hexSides }, (_, i) => i).toSorted(
+        (a, bb) => sideNormals[a] - sideNormals[bb]
       );
 
       for (const i of bandSorted) {
         const ni = (i + 1) % hexSides;
         const normal = sideNormals[i];
-        if (normal < -0.15) continue;
+        if (normal < -0.15) {
+          continue;
+        }
 
         const bv0 = bVerts[i];
         const bv1 = bVerts[ni];
@@ -4411,8 +4444,9 @@ export function drawHeavyCannonBarrel(
         if (
           sideNormals[i] < -0.15 &&
           sideNormals[ni === 0 ? hexSides - 1 : ni - 1] < -0.15
-        )
+        ) {
           continue;
+        }
         ctx.moveTo(capPtB.x + bVerts[i].x, capPtB.y + bVerts[i].y);
         ctx.lineTo(capPtB.x + bVerts[ni].x, capPtB.y + bVerts[ni].y);
       }
@@ -4425,14 +4459,14 @@ export function drawHeavyCannonBarrel(
       ctx,
       facingFwd ? hexFrontPt : hexBackPt,
       facingFwd ? taperVerts : hexVerts,
-      facingFwd ? "#4e4e5c" : "#5a5a68",
+      facingFwd ? "#4e4e5c" : "#5a5a68"
     );
 
     drawHexCap(
       ctx,
       facingFwd ? muzzleBackPt : muzzleEndPt,
       facingFwd ? muzzleVerts : muzzleTipVerts,
-      facingFwd ? "#444454" : "#3a3a48",
+      facingFwd ? "#444454" : "#3a3a48"
     );
 
     const muzzleSorted = sortSidesByDepth(sideNormals);
@@ -4475,7 +4509,9 @@ export function drawHeavyCannonBarrel(
       ctx.beginPath();
       for (let vi = 0; vi < hexSides; vi++) {
         const nvi = (vi + 1) % hexSides;
-        if (sideNormals[vi] < -0.1) continue;
+        if (sideNormals[vi] < -0.1) {
+          continue;
+        }
         ctx.moveTo(ringPt.x + rVerts[vi].x, ringPt.y + rVerts[vi].y);
         ctx.lineTo(ringPt.x + rVerts[nvi].x, ringPt.y + rVerts[nvi].y);
       }
@@ -4485,18 +4521,20 @@ export function drawHeavyCannonBarrel(
     const finDist = startDist + hexLen * 0.88;
     const finPt = axisPoint(finDist);
     const finEndPt2 = axisPoint(finDist + 8 * zoom);
-    const finH = hexR * 2.0;
+    const finH = hexR * 2;
     const finW = 3 * zoom;
 
     for (let f = 0; f < 4; f++) {
       const fa = (f / 4) * Math.PI * 2 + Math.PI / 4;
       const fnormal = Math.cos(fa) * cosR + 0.5 * Math.sin(fa);
-      if (fnormal < -0.3) continue;
+      if (fnormal < -0.3) {
+        continue;
+      }
 
       const fOuter = isoOff(Math.cos(fa) * finH, Math.sin(fa) * finH);
       const fInner = isoOff(
         Math.cos(fa) * hexR * 0.5,
-        Math.sin(fa) * hexR * 0.5,
+        Math.sin(fa) * hexR * 0.5
       );
 
       const fLit = 0.3 + Math.max(0, fnormal) * 0.5;
@@ -4506,16 +4544,13 @@ export function drawHeavyCannonBarrel(
       ctx.beginPath();
       ctx.moveTo(
         finPt.x + fInner.x - fwdX * finW,
-        finPt.y + fInner.y - fwdY * finW,
+        finPt.y + fInner.y - fwdY * finW
       );
       ctx.lineTo(finPt.x + fOuter.x, finPt.y + fOuter.y);
-      ctx.lineTo(
-        finEndPt2.x + fOuter.x * 0.8,
-        finEndPt2.y + fOuter.y * 0.8,
-      );
+      ctx.lineTo(finEndPt2.x + fOuter.x * 0.8, finEndPt2.y + fOuter.y * 0.8);
       ctx.lineTo(
         finEndPt2.x + fInner.x + fwdX * finW,
-        finEndPt2.y + fInner.y + fwdY * finW,
+        finEndPt2.y + fInner.y + fwdY * finW
       );
       ctx.closePath();
       ctx.fill();
@@ -4531,7 +4566,7 @@ export function drawHeavyCannonBarrel(
       ctx.moveTo(finPt.x + finMidOuter.x, finPt.y + finMidOuter.y);
       ctx.lineTo(
         finEndPt2.x + finMidOuter.x * 0.8,
-        finEndPt2.y + finMidOuter.y * 0.8,
+        finEndPt2.y + finMidOuter.y * 0.8
       );
       ctx.stroke();
     }
@@ -4546,7 +4581,7 @@ export function drawHeavyCannonBarrel(
       mCapVerts,
       facingFwd ? "#4a4a58" : "#3a3a48",
       "#5a5a6a",
-      0.8 * zoom,
+      0.8 * zoom
     );
 
     if (facingFwd) {
@@ -4555,15 +4590,13 @@ export function drawHeavyCannonBarrel(
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
       const riflingVerts2 = scaleVerts(mCapVerts, 0.32);
-      ctx.moveTo(
-        mCapPt.x + riflingVerts2[0].x,
-        mCapPt.y + riflingVerts2[0].y,
-      );
-      for (let i = 1; i < hexSides; i++)
+      ctx.moveTo(mCapPt.x + riflingVerts2[0].x, mCapPt.y + riflingVerts2[0].y);
+      for (let i = 1; i < hexSides; i++) {
         ctx.lineTo(
           mCapPt.x + riflingVerts2[i].x,
-          mCapPt.y + riflingVerts2[i].y,
+          mCapPt.y + riflingVerts2[i].y
         );
+      }
       ctx.closePath();
       ctx.stroke();
     }
@@ -4608,7 +4641,7 @@ export function drawHeavyCannonBarrel(
       plumeTipX,
       plumeTipY,
       fX - perpX * plumeW,
-      fY - perpY * plumeW,
+      fY - perpY * plumeW
     );
     ctx.closePath();
     ctx.fill();
@@ -4642,7 +4675,7 @@ export function renderGatlingGun(
   topY: number,
   tower: Tower,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const rotation = tower.rotation || 0;
   const spinAngle = time * 30;
@@ -4687,7 +4720,7 @@ export function renderGatlingGun(
     13 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4700,7 +4733,7 @@ export function renderGatlingGun(
     11 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4723,7 +4756,7 @@ export function renderGatlingGun(
     10 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4751,7 +4784,7 @@ export function renderGatlingGun(
       zoom,
       tower,
       time,
-      recoilOffset,
+      recoilOffset
     );
     drawHexMantlet(
       ctx,
@@ -4760,7 +4793,7 @@ export function renderGatlingGun(
       rotation,
       zoom,
       1.2,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -4769,7 +4802,7 @@ export function renderGatlingGun(
     turretX - 20 * zoom,
     turretY - 6 * zoom,
     turretX + 20 * zoom,
-    turretY - 28 * zoom,
+    turretY - 28 * zoom
   );
   shieldGrad.addColorStop(0, "#3a3a42");
   shieldGrad.addColorStop(0.2, "#5a5a62");
@@ -4837,7 +4870,7 @@ export function renderGatlingGun(
         turretY - 10 * zoom - row * 8 * zoom,
         2.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -4850,7 +4883,7 @@ export function renderGatlingGun(
     0,
     turretX,
     turretY - 14 * zoom,
-    16 * zoom,
+    16 * zoom
   );
   turretGrad.addColorStop(0, "#7a7a82");
   turretGrad.addColorStop(0.5, "#5a5a62");
@@ -4864,7 +4897,7 @@ export function renderGatlingGun(
     12 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4894,7 +4927,7 @@ export function renderGatlingGun(
         turretX + Math.cos(shieldAngle + angleSpan * 0.3) * outerR,
         turretY -
           14 * zoom +
-          Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.8,
+          Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.8
       );
 
       if (shieldSide < 0) {
@@ -4915,34 +4948,34 @@ export function renderGatlingGun(
         turretX + Math.cos(shieldAngle - angleSpan * 0.4) * innerR,
         turretY -
           14 * zoom +
-          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.8,
+          Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.8
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle - angleSpan * 0.35) * outerR,
         turretY -
           14 * zoom +
           Math.sin(shieldAngle - angleSpan * 0.35) * outerR * 0.8 -
-          2 * zoom,
+          2 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle) * (outerR + 2 * zoom),
         turretY -
           14 * zoom +
           Math.sin(shieldAngle) * (outerR + 2 * zoom) * 0.8 -
-          3 * zoom,
+          3 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.35) * outerR,
         turretY -
           14 * zoom +
           Math.sin(shieldAngle + angleSpan * 0.35) * outerR * 0.8 -
-          2 * zoom,
+          2 * zoom
       );
       ctx.lineTo(
         turretX + Math.cos(shieldAngle + angleSpan * 0.4) * innerR,
         turretY -
           14 * zoom +
-          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.8,
+          Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.8
       );
       ctx.closePath();
       ctx.fill();
@@ -4977,7 +5010,7 @@ export function renderGatlingGun(
     7.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -5030,13 +5063,15 @@ export function renderGatlingGun(
       time,
       isAttacking,
       attackPulse,
-      "large",
+      "large"
     );
   };
 
   // Helper function to draw the armor plate with number
   const drawArmorPlate = () => {
-    if (!plateVisible) return;
+    if (!plateVisible) {
+      return;
+    }
 
     const plateWidth = 16 * zoom;
     const plateHeight = 20 * zoom;
@@ -5050,19 +5085,19 @@ export function renderGatlingGun(
       ctx.beginPath();
       ctx.moveTo(
         plateCenterX - plateWidth * 0.5,
-        plateCenterY - plateHeight * 0.5,
+        plateCenterY - plateHeight * 0.5
       );
       ctx.lineTo(
         plateCenterX - plateWidth * 0.5 - plateDepthSize * 0.4,
-        plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25,
+        plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25
       );
       ctx.lineTo(
         plateCenterX - plateWidth * 0.5 - plateDepthSize * 0.4,
-        plateCenterY + plateHeight * 0.5 - plateDepthSize * 0.25,
+        plateCenterY + plateHeight * 0.5 - plateDepthSize * 0.25
       );
       ctx.lineTo(
         plateCenterX - plateWidth * 0.5,
-        plateCenterY + plateHeight * 0.5,
+        plateCenterY + plateHeight * 0.5
       );
       ctx.closePath();
       ctx.fill();
@@ -5073,19 +5108,19 @@ export function renderGatlingGun(
       plateCenterX - plateWidth * 0.5,
       plateCenterY - plateHeight * 0.5,
       plateCenterX + plateWidth * 0.5,
-      plateCenterY + plateHeight * 0.5,
+      plateCenterY + plateHeight * 0.5
     );
     plateGrad.addColorStop(
       0,
-      `rgb(${Math.floor(70 + plateLightness * 35)}, ${Math.floor(70 + plateLightness * 30)}, ${Math.floor(65 + plateLightness * 25)})`,
+      `rgb(${Math.floor(70 + plateLightness * 35)}, ${Math.floor(70 + plateLightness * 30)}, ${Math.floor(65 + plateLightness * 25)})`
     );
     plateGrad.addColorStop(
       0.5,
-      `rgb(${Math.floor(55 + plateLightness * 30)}, ${Math.floor(55 + plateLightness * 25)}, ${Math.floor(50 + plateLightness * 20)})`,
+      `rgb(${Math.floor(55 + plateLightness * 30)}, ${Math.floor(55 + plateLightness * 25)}, ${Math.floor(50 + plateLightness * 20)})`
     );
     plateGrad.addColorStop(
       1,
-      `rgb(${Math.floor(45 + plateLightness * 20)}, ${Math.floor(45 + plateLightness * 15)}, ${Math.floor(40 + plateLightness * 12)})`,
+      `rgb(${Math.floor(45 + plateLightness * 20)}, ${Math.floor(45 + plateLightness * 15)}, ${Math.floor(40 + plateLightness * 12)})`
     );
     ctx.fillStyle = plateGrad;
 
@@ -5094,47 +5129,47 @@ export function renderGatlingGun(
     ctx.beginPath();
     ctx.moveTo(
       plateCenterX - plateWidth * 0.5 + radius,
-      plateCenterY - plateHeight * 0.5,
+      plateCenterY - plateHeight * 0.5
     );
     ctx.lineTo(
       plateCenterX + plateWidth * 0.5 - radius,
-      plateCenterY - plateHeight * 0.5,
+      plateCenterY - plateHeight * 0.5
     );
     ctx.quadraticCurveTo(
       plateCenterX + plateWidth * 0.5,
       plateCenterY - plateHeight * 0.5,
       plateCenterX + plateWidth * 0.5,
-      plateCenterY - plateHeight * 0.5 + radius,
+      plateCenterY - plateHeight * 0.5 + radius
     );
     ctx.lineTo(
       plateCenterX + plateWidth * 0.5,
-      plateCenterY + plateHeight * 0.5 - radius,
+      plateCenterY + plateHeight * 0.5 - radius
     );
     ctx.quadraticCurveTo(
       plateCenterX + plateWidth * 0.5,
       plateCenterY + plateHeight * 0.5,
       plateCenterX + plateWidth * 0.5 - radius,
-      plateCenterY + plateHeight * 0.5,
+      plateCenterY + plateHeight * 0.5
     );
     ctx.lineTo(
       plateCenterX - plateWidth * 0.5 + radius,
-      plateCenterY + plateHeight * 0.5,
+      plateCenterY + plateHeight * 0.5
     );
     ctx.quadraticCurveTo(
       plateCenterX - plateWidth * 0.5,
       plateCenterY + plateHeight * 0.5,
       plateCenterX - plateWidth * 0.5,
-      plateCenterY + plateHeight * 0.5 - radius,
+      plateCenterY + plateHeight * 0.5 - radius
     );
     ctx.lineTo(
       plateCenterX - plateWidth * 0.5,
-      plateCenterY - plateHeight * 0.5 + radius,
+      plateCenterY - plateHeight * 0.5 + radius
     );
     ctx.quadraticCurveTo(
       plateCenterX - plateWidth * 0.5,
       plateCenterY - plateHeight * 0.5,
       plateCenterX - plateWidth * 0.5 + radius,
-      plateCenterY - plateHeight * 0.5,
+      plateCenterY - plateHeight * 0.5
     );
     ctx.closePath();
     ctx.fill();
@@ -5150,19 +5185,19 @@ export function renderGatlingGun(
     ctx.beginPath();
     ctx.moveTo(
       plateCenterX - plateWidth * 0.5 + radius,
-      plateCenterY - plateHeight * 0.5,
+      plateCenterY - plateHeight * 0.5
     );
     ctx.lineTo(
       plateCenterX - plateWidth * 0.5 + radius - plateDepthSize * 0.4,
-      plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25,
+      plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25
     );
     ctx.lineTo(
       plateCenterX + plateWidth * 0.5 - radius - plateDepthSize * 0.4,
-      plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25,
+      plateCenterY - plateHeight * 0.5 - plateDepthSize * 0.25
     );
     ctx.lineTo(
       plateCenterX + plateWidth * 0.5 - radius,
-      plateCenterY - plateHeight * 0.5,
+      plateCenterY - plateHeight * 0.5
     );
     ctx.closePath();
     ctx.fill();
@@ -5174,19 +5209,19 @@ export function renderGatlingGun(
       ctx.beginPath();
       ctx.moveTo(
         plateCenterX + plateWidth * 0.5,
-        plateCenterY - plateHeight * 0.5 + radius,
+        plateCenterY - plateHeight * 0.5 + radius
       );
       ctx.lineTo(
         plateCenterX + plateWidth * 0.5 - plateDepthSize * 0.4,
-        plateCenterY - plateHeight * 0.5 + radius - plateDepthSize * 0.25,
+        plateCenterY - plateHeight * 0.5 + radius - plateDepthSize * 0.25
       );
       ctx.lineTo(
         plateCenterX + plateWidth * 0.5 - plateDepthSize * 0.4,
-        plateCenterY + plateHeight * 0.5 - radius - plateDepthSize * 0.25,
+        plateCenterY + plateHeight * 0.5 - radius - plateDepthSize * 0.25
       );
       ctx.lineTo(
         plateCenterX + plateWidth * 0.5,
-        plateCenterY + plateHeight * 0.5 - radius,
+        plateCenterY + plateHeight * 0.5 - radius
       );
       ctx.closePath();
       ctx.fill();
@@ -5207,7 +5242,7 @@ export function renderGatlingGun(
         plateCenterY + ry * plateHeight * 0.85,
         2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5265,7 +5300,7 @@ export function renderGatlingGun(
         isAttacking,
         attackPulse,
         boxSide,
-        recoilOffset,
+        recoilOffset
       );
       drawCannonAmmoBelt(
         ctx,
@@ -5279,7 +5314,7 @@ export function renderGatlingGun(
         isAttacking,
         attackPulse,
         boxSide,
-        recoilOffset,
+        recoilOffset
       );
     } else {
       drawCannonAmmoBelt(
@@ -5294,7 +5329,7 @@ export function renderGatlingGun(
         isAttacking,
         attackPulse,
         boxSide,
-        recoilOffset,
+        recoilOffset
       );
       drawCannonAmmoBelt(
         ctx,
@@ -5308,7 +5343,7 @@ export function renderGatlingGun(
         isAttacking,
         attackPulse,
         boxSide,
-        recoilOffset,
+        recoilOffset
       );
     }
   };
@@ -5345,7 +5380,7 @@ export function renderGatlingGun(
     0,
     turretX,
     turretY - 14 * zoom,
-    4 * zoom,
+    4 * zoom
   );
   coreGrad.addColorStop(0, `rgba(255, 240, 150, ${coreGlow})`);
   coreGrad.addColorStop(0.3, `rgba(255, 200, 80, ${coreGlow * 0.7})`);
@@ -5371,7 +5406,7 @@ export function renderGatlingGun(
       turretY - 14 * zoom,
       3 * zoom,
       indicatorAngle,
-      indicatorAngle + 0.3,
+      indicatorAngle + 0.3
     );
     ctx.stroke();
   }
@@ -5384,7 +5419,7 @@ export function renderGatlingGun(
     rotation,
     zoom,
     1.2,
-    recoilOffset,
+    recoilOffset
   );
   drawBreechFeedAnimation(
     ctx,
@@ -5396,8 +5431,8 @@ export function renderGatlingGun(
     time,
     tower.lastAttack,
     200,
-    3.0,
-    2,
+    3,
+    2
   );
   drawMantlets(
     ctx,
@@ -5406,7 +5441,7 @@ export function renderGatlingGun(
     rotation,
     zoom,
     1.2,
-    "behind",
+    "behind"
   );
   if (!facingAway) {
     drawHexMantlet(
@@ -5416,7 +5451,7 @@ export function renderGatlingGun(
       rotation,
       zoom,
       1.2,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -5431,7 +5466,7 @@ export function renderGatlingGun(
       zoom,
       tower,
       time,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -5475,7 +5510,7 @@ export function drawGatlingBarrels(
   zoom: number,
   tower: Tower,
   time: number,
-  recoilOffset: number = 0,
+  recoilOffset: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -5549,7 +5584,9 @@ export function drawGatlingBarrels(
     for (const i of sorted) {
       const ni = (i + 1) % hexSides;
       const normal = housingSideNormals[i];
-      if (normal < -0.15) continue;
+      if (normal < -0.15) {
+        continue;
+      }
 
       const v0 = hVerts[i];
       const v1 = hVerts[ni];
@@ -5563,7 +5600,7 @@ export function drawGatlingBarrels(
         bbx + v0.x,
         bby + v0.y,
         fbx + v0.x,
-        fby + v0.y,
+        fby + v0.y
       );
       sGrad.addColorStop(0, `rgb(${rc - 6}, ${gc - 6}, ${bc - 3})`);
       sGrad.addColorStop(0.5, `rgb(${rc}, ${gc}, ${bc})`);
@@ -5599,11 +5636,11 @@ export function drawGatlingBarrels(
       ctx.beginPath();
       ctx.moveTo(
         bbx + v0.x + (fbx + v0.x - bbx - v0.x) * mf,
-        bby + v0.y + (fby + v0.y - bby - v0.y) * mf,
+        bby + v0.y + (fby + v0.y - bby - v0.y) * mf
       );
       ctx.lineTo(
         bbx + v1.x + (fbx + v1.x - bbx - v1.x) * mf,
-        bby + v1.y + (fby + v1.y - bby - v1.y) * mf,
+        bby + v1.y + (fby + v1.y - bby - v1.y) * mf
       );
       ctx.stroke();
     }
@@ -5620,7 +5657,7 @@ export function drawGatlingBarrels(
       0,
       ffx,
       ffy,
-      housingR,
+      housingR
     );
     if (facingFwd) {
       fGrad.addColorStop(0, "#7a7a88");
@@ -5634,8 +5671,9 @@ export function drawGatlingBarrels(
     ctx.fillStyle = fGrad;
     ctx.beginPath();
     ctx.moveTo(ffx + hVerts[0].x, ffy + hVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
+    for (let i = 1; i < hexSides; i++) {
       ctx.lineTo(ffx + hVerts[i].x, ffy + hVerts[i].y);
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -5652,7 +5690,7 @@ export function drawGatlingBarrels(
         ffy + hVerts[i].y * 0.82,
         1.4 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5702,7 +5740,7 @@ export function drawGatlingBarrels(
   for (let ri = 0; ri < ringHexSides; ri++) {
     const ra = (ri / ringHexSides) * Math.PI * 2;
     ringBandVerts.push(
-      isoOffset(Math.cos(ra) * ringBandR, Math.sin(ra) * ringBandR),
+      isoOffset(Math.cos(ra) * ringBandR, Math.sin(ra) * ringBandR)
     );
   }
 
@@ -5721,14 +5759,17 @@ export function drawGatlingBarrels(
         y: v.y * rbTaper,
       }));
 
-      const rbSorted = Array.from({ length: ringHexSides }, (_, i) => i).sort(
-        (a, b) => ringBandSideNormals[a] - ringBandSideNormals[b],
-      );
+      const rbSorted = Array.from(
+        { length: ringHexSides },
+        (_, i) => i
+      ).toSorted((a, b) => ringBandSideNormals[a] - ringBandSideNormals[b]);
 
       for (const ri of rbSorted) {
         const rni = (ri + 1) % ringHexSides;
         const rnormal = ringBandSideNormals[ri];
-        if (rnormal < -0.15) continue;
+        if (rnormal < -0.15) {
+          continue;
+        }
 
         const rv0 = rbVerts[ri];
         const rv1 = rbVerts[rni];
@@ -5769,8 +5810,9 @@ export function drawGatlingBarrels(
         if (
           ringBandSideNormals[ri] < -0.15 &&
           ringBandSideNormals[rni === 0 ? ringHexSides - 1 : rni - 1] < -0.15
-        )
+        ) {
           continue;
+        }
         ctx.moveTo(rbCapPt.x + rbVerts[ri].x, rbCapPt.y + rbVerts[ri].y);
         ctx.lineTo(rbCapPt.x + rbVerts[rni].x, rbCapPt.y + rbVerts[rni].y);
       }
@@ -5779,20 +5821,20 @@ export function drawGatlingBarrels(
   };
 
   // === BARRELS — each as a quad strip projected with perp + up ===
-  type BarrelEntry = {
+  interface BarrelEntry {
     spinA: number;
     lat: number;
     vert: number;
     sortY: number;
     idx: number;
-  };
+  }
   const barrelData: BarrelEntry[] = [];
   for (let i = 0; i < barrelCount; i++) {
     const a = spinAngle + (i / barrelCount) * Math.PI * 2;
     const lat = Math.cos(a) * barrelSpread;
     const vert = Math.sin(a) * barrelSpread;
     const off = isoOffset(lat, vert);
-    barrelData.push({ spinA: a, lat, vert, sortY: off.y, idx: i });
+    barrelData.push({ idx: i, lat, sortY: off.y, spinA: a, vert });
   }
   barrelData.sort((a, b) => a.sortY - b.sortY);
 
@@ -5819,7 +5861,7 @@ export function drawGatlingBarrels(
       timeSinceFire,
       ex,
       ey,
-      pitchRate,
+      pitchRate
     );
   };
 
@@ -5833,21 +5875,18 @@ export function drawGatlingBarrels(
 
       const bwPerp = isoOffset(
         Math.cos(bd.spinA + Math.PI * 0.5) * barrelW,
-        Math.sin(bd.spinA + Math.PI * 0.5) * barrelW,
+        Math.sin(bd.spinA + Math.PI * 0.5) * barrelW
       );
 
       const shade = 0.3 + (bd.sortY / (barrelSpread * 1.5) + 0.5) * 0.4;
       const tint = bd.idx % 2 === 0 ? 10 : -10;
-      const c = Math.max(
-        30,
-        Math.min(140, Math.floor(45 + shade * 65 + tint)),
-      );
+      const c = Math.max(30, Math.min(140, Math.floor(45 + shade * 65 + tint)));
 
       const grad = ctx.createLinearGradient(
         bsx + bwPerp.x,
         bsy + bwPerp.y,
         bsx - bwPerp.x,
-        bsy - bwPerp.y,
+        bsy - bwPerp.y
       );
       grad.addColorStop(0, `rgb(${c + 20}, ${c + 20}, ${c + 26})`);
       grad.addColorStop(0.4, `rgb(${c + 5}, ${c + 5}, ${c + 10})`);
@@ -5934,7 +5973,7 @@ export function drawGatlingMuzzleIso(
   timeSinceFire: number,
   flashCx: number,
   flashCy: number,
-  pitchRate: number = 0,
+  pitchRate: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const facingCamera = fwdY >= 0;
@@ -5973,7 +6012,7 @@ export function drawGatlingMuzzleIso(
       hexVerts,
       "#7a7a8e",
       "#6a6a7e",
-      1 * zoom,
+      1 * zoom
     );
 
     // Back face bolts at each vertex
@@ -5985,7 +6024,7 @@ export function drawGatlingMuzzleIso(
         bfy + hexVerts[i].y * 0.75,
         1.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6003,7 +6042,9 @@ export function drawGatlingMuzzleIso(
     for (const i of sortedSides) {
       const ni = (i + 1) % hexSides;
       const normal = sideNormals[i];
-      if (normal < -0.15) continue;
+      if (normal < -0.15) {
+        continue;
+      }
 
       const v0 = hexVerts[i];
       const v1 = hexVerts[ni];
@@ -6019,7 +6060,7 @@ export function drawGatlingMuzzleIso(
         bbx + v0.x,
         bby + v0.y,
         fbx + v0.x,
-        fby + v0.y,
+        fby + v0.y
       );
       sGrad.addColorStop(0, `rgb(${baseR - 6}, ${baseG - 6}, ${baseB - 3})`);
       sGrad.addColorStop(0.5, `rgb(${baseR}, ${baseG}, ${baseB})`);
@@ -6087,7 +6128,7 @@ export function drawGatlingMuzzleIso(
       0,
       ffx,
       ffy,
-      hexR,
+      hexR
     );
     if (facingCamera) {
       fGrad.addColorStop(0, "#c0c0cc");
@@ -6122,12 +6163,12 @@ export function drawGatlingMuzzleIso(
       ctx.beginPath();
       ctx.moveTo(
         ffx + hexVerts[0].x * innerScale,
-        ffy + hexVerts[0].y * innerScale,
+        ffy + hexVerts[0].y * innerScale
       );
       for (let i = 1; i < hexSides; i++) {
         ctx.lineTo(
           ffx + hexVerts[i].x * innerScale,
-          ffy + hexVerts[i].y * innerScale,
+          ffy + hexVerts[i].y * innerScale
         );
       }
       ctx.closePath();
@@ -6158,11 +6199,11 @@ export function drawGatlingMuzzleIso(
         const slotA = (i / hexSides) * Math.PI * 2;
         ctx.moveTo(
           bx - Math.cos(slotA) * 1 * zoom,
-          by - Math.sin(slotA) * 1 * zoom,
+          by - Math.sin(slotA) * 1 * zoom
         );
         ctx.lineTo(
           bx + Math.cos(slotA) * 1 * zoom,
-          by + Math.sin(slotA) * 1 * zoom,
+          by + Math.sin(slotA) * 1 * zoom
         );
         ctx.stroke();
       }
@@ -6200,7 +6241,7 @@ export function drawGatlingMuzzleIso(
           ffy + hoy - 0.5 * zoom,
           0.8 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -6309,7 +6350,7 @@ export function renderFlamethrower(
   topY: number,
   tower: Tower,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const rotation = tower.rotation || 0;
 
@@ -6350,7 +6391,7 @@ export function renderFlamethrower(
     10 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -6363,7 +6404,7 @@ export function renderFlamethrower(
     9 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -6386,7 +6427,7 @@ export function renderFlamethrower(
     10 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -6400,7 +6441,7 @@ export function renderFlamethrower(
       zoom,
       tower,
       time,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -6415,7 +6456,7 @@ export function renderFlamethrower(
     tankCX - tankRX,
     turretY - 12 * zoom,
     tankCX + tankRX,
-    turretY - 12 * zoom,
+    turretY - 12 * zoom
   );
   tankBodyGrad.addColorStop(0, "#661010");
   tankBodyGrad.addColorStop(0.15, "#881515");
@@ -6436,7 +6477,7 @@ export function renderFlamethrower(
     0,
     Math.PI,
     Math.PI * 2,
-    false,
+    false
   );
   ctx.closePath();
   ctx.fill();
@@ -6470,7 +6511,7 @@ export function renderFlamethrower(
       0,
       -0.1,
       Math.PI + 0.1,
-      false,
+      false
     );
     ctx.stroke();
   }
@@ -6489,7 +6530,7 @@ export function renderFlamethrower(
       0,
       -0.1,
       Math.PI + 0.1,
-      false,
+      false
     );
     ctx.stroke();
   }
@@ -6501,7 +6542,7 @@ export function renderFlamethrower(
     0,
     tankCX,
     tankTopCapY,
-    tankRX,
+    tankRX
   );
   topCapGrad.addColorStop(0, "#5a5a62");
   topCapGrad.addColorStop(0.4, "#4a4a52");
@@ -6541,7 +6582,7 @@ export function renderFlamethrower(
       0,
       -0.15,
       Math.PI + 0.15,
-      false,
+      false
     );
     ctx.stroke();
     // Strap highlight
@@ -6556,7 +6597,7 @@ export function renderFlamethrower(
       0,
       0.1,
       Math.PI - 0.1,
-      false,
+      false
     );
     ctx.stroke();
     // Strap bolts
@@ -6627,7 +6668,7 @@ export function renderFlamethrower(
     0,
     0,
     Math.PI,
-    false,
+    false
   );
   ctx.fill();
   ctx.fillStyle = "#ddd";
@@ -6658,7 +6699,7 @@ export function renderFlamethrower(
   ctx.moveTo(gaugeX, gaugeY);
   ctx.lineTo(
     gaugeX + Math.cos(needleAngle) * 3 * zoom,
-    gaugeY + Math.sin(needleAngle) * 3 * zoom,
+    gaugeY + Math.sin(needleAngle) * 3 * zoom
   );
   ctx.stroke();
 
@@ -6674,7 +6715,7 @@ export function renderFlamethrower(
     secCX - secRX,
     0,
     secCX + secRX,
-    0,
+    0
   );
   secBodyGrad.addColorStop(0, "#0a3310");
   secBodyGrad.addColorStop(0.15, "#155518");
@@ -6720,7 +6761,7 @@ export function renderFlamethrower(
       0,
       -0.1,
       Math.PI + 0.1,
-      false,
+      false
     );
     ctx.stroke();
   }
@@ -6739,7 +6780,7 @@ export function renderFlamethrower(
       0,
       -0.1,
       Math.PI + 0.1,
-      false,
+      false
     );
     ctx.stroke();
   }
@@ -6751,7 +6792,7 @@ export function renderFlamethrower(
     0,
     secCX,
     secTopY,
-    secRX,
+    secRX
   );
   secCapGrad.addColorStop(0, "#5a5a62");
   secCapGrad.addColorStop(0.4, "#4a4a52");
@@ -6789,7 +6830,7 @@ export function renderFlamethrower(
       0,
       -0.15,
       Math.PI + 0.15,
-      false,
+      false
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(120, 120, 135, 0.25)";
@@ -6803,7 +6844,7 @@ export function renderFlamethrower(
       0,
       0.15,
       Math.PI - 0.15,
-      false,
+      false
     );
     ctx.stroke();
     // Strap rivets
@@ -6857,7 +6898,7 @@ export function renderFlamethrower(
     mainTankOutX + 4 * zoom,
     manifoldY + 4 * zoom,
     manifoldX - manifoldW * 0.35,
-    manifoldY + manifoldD * 0.5,
+    manifoldY + manifoldD * 0.5
   );
   ctx.stroke();
   // Tube highlight
@@ -6869,7 +6910,7 @@ export function renderFlamethrower(
     mainTankOutX + 4.5 * zoom,
     manifoldY + 3.2 * zoom,
     manifoldX - manifoldW * 0.35 + 0.5 * zoom,
-    manifoldY + manifoldD * 0.5 - 0.8 * zoom,
+    manifoldY + manifoldD * 0.5 - 0.8 * zoom
   );
   ctx.stroke();
 
@@ -6882,7 +6923,7 @@ export function renderFlamethrower(
     secTankOutX - 2 * zoom,
     manifoldY + 5 * zoom,
     manifoldX + manifoldW * 0.3,
-    manifoldY + manifoldD * 0.5,
+    manifoldY + manifoldD * 0.5
   );
   ctx.stroke();
   ctx.strokeStyle = "rgba(80, 180, 90, 0.2)";
@@ -6893,7 +6934,7 @@ export function renderFlamethrower(
     secTankOutX - 1.6 * zoom,
     manifoldY + 4.4 * zoom,
     manifoldX + manifoldW * 0.3 + 0.4 * zoom,
-    manifoldY + manifoldD * 0.5 - 0.6 * zoom,
+    manifoldY + manifoldD * 0.5 - 0.6 * zoom
   );
   ctx.stroke();
 
@@ -6908,7 +6949,7 @@ export function renderFlamethrower(
     igniterInX - 6 * zoom,
     igniterInY - 8 * zoom,
     igniterInX - 3 * zoom,
-    igniterInY - 2 * zoom,
+    igniterInY - 2 * zoom
   );
   ctx.stroke();
   ctx.strokeStyle = "rgba(80, 120, 200, 0.2)";
@@ -6921,7 +6962,7 @@ export function renderFlamethrower(
     igniterInX - 6 * zoom,
     igniterInY - 8.7 * zoom,
     igniterInX - 3 * zoom,
-    igniterInY - 2.7 * zoom,
+    igniterInY - 2.7 * zoom
   );
   ctx.stroke();
 
@@ -6977,7 +7018,7 @@ export function renderFlamethrower(
       manifoldX - manifoldW * 0.5,
       manifoldY - manifoldH,
       manifoldX + manifoldW * 0.5,
-      manifoldY - manifoldH,
+      manifoldY - manifoldH
     );
     mTopGrad.addColorStop(0, "#505058");
     mTopGrad.addColorStop(0.4, "#5e5e66");
@@ -6985,9 +7026,15 @@ export function renderFlamethrower(
     ctx.fillStyle = mTopGrad;
     ctx.beginPath();
     ctx.moveTo(manifoldX, manifoldY - manifoldH - manifoldD);
-    ctx.lineTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.lineTo(
+      manifoldX + manifoldW * 0.5,
+      manifoldY - manifoldH - manifoldD * 0.4
+    );
     ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
-    ctx.lineTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.lineTo(
+      manifoldX - manifoldW * 0.5,
+      manifoldY - manifoldH - manifoldD * 0.4
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#5a5a65";
@@ -6997,7 +7044,10 @@ export function renderFlamethrower(
     // Left face
     ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
-    ctx.moveTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.moveTo(
+      manifoldX - manifoldW * 0.5,
+      manifoldY - manifoldH - manifoldD * 0.4
+    );
     ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
     ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
     ctx.lineTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldD * 0.4);
@@ -7010,7 +7060,10 @@ export function renderFlamethrower(
     // Right face
     ctx.fillStyle = "#44444c";
     ctx.beginPath();
-    ctx.moveTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.moveTo(
+      manifoldX + manifoldW * 0.5,
+      manifoldY - manifoldH - manifoldD * 0.4
+    );
     ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
     ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
     ctx.lineTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldD * 0.4);
@@ -7031,7 +7084,7 @@ export function renderFlamethrower(
       1.2 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "#5a5a65";
@@ -7048,7 +7101,7 @@ export function renderFlamethrower(
       1.2 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "#5a5a65";
@@ -7070,13 +7123,25 @@ export function renderFlamethrower(
     ctx.fill();
     ctx.fillStyle = "rgba(255, 120, 120, 0.35)";
     ctx.beginPath();
-    ctx.arc(manifoldX - 0.4 * zoom, handleY - 0.4 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      manifoldX - 0.4 * zoom,
+      handleY - 0.4 * zoom,
+      0.7 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Bolts on manifold top face corners
     const mBolts = [
-      { x: manifoldX - manifoldW * 0.35, y: manifoldY - manifoldH - manifoldD * 0.3 },
-      { x: manifoldX + manifoldW * 0.35, y: manifoldY - manifoldH - manifoldD * 0.3 },
+      {
+        x: manifoldX - manifoldW * 0.35,
+        y: manifoldY - manifoldH - manifoldD * 0.3,
+      },
+      {
+        x: manifoldX + manifoldW * 0.35,
+        y: manifoldY - manifoldH - manifoldD * 0.3,
+      },
       { x: manifoldX, y: manifoldY - manifoldH + manifoldD * 0.05 },
     ];
     for (const bolt of mBolts) {
@@ -7086,7 +7151,13 @@ export function renderFlamethrower(
       ctx.fill();
       ctx.fillStyle = "rgba(140, 140, 155, 0.3)";
       ctx.beginPath();
-      ctx.arc(bolt.x - 0.2 * zoom, bolt.y - 0.2 * zoom, 0.4 * zoom, 0, Math.PI * 2);
+      ctx.arc(
+        bolt.x - 0.2 * zoom,
+        bolt.y - 0.2 * zoom,
+        0.4 * zoom,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -7117,7 +7188,7 @@ export function renderFlamethrower(
       0,
       0,
       Math.PI,
-      false,
+      false
     );
     ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
     ctx.ellipse(
@@ -7128,7 +7199,7 @@ export function renderFlamethrower(
       0,
       Math.PI,
       Math.PI * 2,
-      false,
+      false
     );
     ctx.closePath();
     ctx.fill();
@@ -7138,7 +7209,7 @@ export function renderFlamethrower(
       pumpX - pumpR,
       pumpY,
       pumpX + pumpR,
-      pumpY,
+      pumpY
     );
     pumpGrad.addColorStop(0, "#353540");
     pumpGrad.addColorStop(0.35, "#4a4a55");
@@ -7154,7 +7225,7 @@ export function renderFlamethrower(
       0,
       0,
       Math.PI,
-      false,
+      false
     );
     ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
     ctx.ellipse(
@@ -7165,7 +7236,7 @@ export function renderFlamethrower(
       0,
       Math.PI,
       Math.PI * 2,
-      false,
+      false
     );
     ctx.closePath();
     ctx.fill();
@@ -7177,7 +7248,7 @@ export function renderFlamethrower(
       0,
       pumpX,
       pumpY - 1 * zoom,
-      pumpR,
+      pumpR
     );
     pTopGrad.addColorStop(0, "#5a5a65");
     pTopGrad.addColorStop(0.5, "#4e4e58");
@@ -7216,7 +7287,7 @@ export function renderFlamethrower(
       ctx.moveTo(pumpX, pumpY - 1 * zoom);
       ctx.lineTo(
         pumpX + Math.cos(psAngle) * pumpR * 0.7,
-        pumpY - 1 * zoom + Math.sin(psAngle) * pumpR * 0.35,
+        pumpY - 1 * zoom + Math.sin(psAngle) * pumpR * 0.35
       );
       ctx.stroke();
     }
@@ -7235,7 +7306,7 @@ export function renderFlamethrower(
       pumpX - 2 * zoom,
       igniterInY + 2 * zoom,
       igniterInX,
-      igniterInY + 2 * zoom,
+      igniterInY + 2 * zoom
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(180, 80, 70, 0.2)";
@@ -7246,7 +7317,7 @@ export function renderFlamethrower(
       pumpX - 1.6 * zoom,
       igniterInY + 1.4 * zoom,
       igniterInX + 0.4 * zoom,
-      igniterInY + 1.4 * zoom,
+      igniterInY + 1.4 * zoom
     );
     ctx.stroke();
 
@@ -7254,27 +7325,33 @@ export function renderFlamethrower(
     ctx.strokeStyle = "#1a3320";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(manifoldX + manifoldW * 0.25, manifoldY - manifoldH - manifoldD * 0.3);
+    ctx.moveTo(
+      manifoldX + manifoldW * 0.25,
+      manifoldY - manifoldH - manifoldD * 0.3
+    );
     ctx.bezierCurveTo(
       manifoldX + manifoldW * 0.6,
       manifoldY - manifoldH - 5 * zoom,
       igniterInX + 6 * zoom,
       igniterInY + 3 * zoom,
       igniterInX + 3 * zoom,
-      igniterInY + 1 * zoom,
+      igniterInY + 1 * zoom
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(80, 180, 90, 0.15)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
-    ctx.moveTo(manifoldX + manifoldW * 0.25 + 0.3 * zoom, manifoldY - manifoldH - manifoldD * 0.3 - 0.5 * zoom);
+    ctx.moveTo(
+      manifoldX + manifoldW * 0.25 + 0.3 * zoom,
+      manifoldY - manifoldH - manifoldD * 0.3 - 0.5 * zoom
+    );
     ctx.bezierCurveTo(
       manifoldX + manifoldW * 0.6 + 0.3 * zoom,
       manifoldY - manifoldH - 5.5 * zoom,
       igniterInX + 6.3 * zoom,
       igniterInY + 2.5 * zoom,
       igniterInX + 3.3 * zoom,
-      igniterInY + 0.5 * zoom,
+      igniterInY + 0.5 * zoom
     );
     ctx.stroke();
   }
@@ -7291,8 +7368,11 @@ export function renderFlamethrower(
       const a = (rh / 6) * Math.PI * 2 - Math.PI / 6;
       const rx = regX + Math.cos(a) * regR;
       const ry = regY + Math.sin(a) * regR * 0.65;
-      if (rh === 0) ctx.moveTo(rx, ry);
-      else ctx.lineTo(rx, ry);
+      if (rh === 0) {
+        ctx.moveTo(rx, ry);
+      } else {
+        ctx.lineTo(rx, ry);
+      }
     }
     ctx.closePath();
     ctx.fill();
@@ -7316,7 +7396,7 @@ export function renderFlamethrower(
     turretX - igniterRX,
     igniterY,
     turretX + igniterRX,
-    igniterY,
+    igniterY
   );
   ignGrad.addColorStop(0, "#353540");
   ignGrad.addColorStop(0.3, "#4a4a52");
@@ -7332,7 +7412,7 @@ export function renderFlamethrower(
     0,
     0,
     Math.PI,
-    false,
+    false
   );
   ctx.lineTo(turretX - igniterRX, igniterY);
   ctx.ellipse(
@@ -7343,7 +7423,7 @@ export function renderFlamethrower(
     0,
     Math.PI,
     Math.PI * 2,
-    false,
+    false
   );
   ctx.closePath();
   ctx.fill();
@@ -7360,7 +7440,7 @@ export function renderFlamethrower(
     0,
     0,
     Math.PI,
-    false,
+    false
   );
   ctx.stroke();
 
@@ -7371,7 +7451,7 @@ export function renderFlamethrower(
     0,
     turretX,
     igniterY,
-    igniterRX,
+    igniterRX
   );
   ignTopGrad.addColorStop(0, "#5a5a62");
   ignTopGrad.addColorStop(0.5, "#4a4a52");
@@ -7429,7 +7509,7 @@ export function renderFlamethrower(
           p2x,
           p2y,
           p2x,
-          p2y + shieldThickness,
+          p2y + shieldThickness
         );
         sideGrad.addColorStop(0, `rgba(70, 55, 45, ${visibility})`);
         sideGrad.addColorStop(1, `rgba(50, 40, 35, ${visibility})`);
@@ -7453,7 +7533,7 @@ export function renderFlamethrower(
         turretX + Math.cos(shieldAngle - angleSpan * 0.3) * outerR,
         igniterY + Math.sin(shieldAngle - angleSpan * 0.3) * outerR * 0.7,
         turretX + Math.cos(shieldAngle + angleSpan * 0.3) * outerR,
-        igniterY + Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.7,
+        igniterY + Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.7
       );
 
       if (shieldSide < 0) {
@@ -7507,7 +7587,7 @@ export function renderFlamethrower(
         rivetY - 0.3 * zoom,
         0.6 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -7546,16 +7626,7 @@ export function renderFlamethrower(
     for (let cw = 0; cw < coilCount; cw++) {
       const cwY = coilY - coilH * 0.35 + (cw / (coilCount - 1)) * coilH * 0.7;
       ctx.beginPath();
-      ctx.ellipse(
-        coilX,
-        cwY,
-        coilW * 0.55,
-        1.2 * zoom,
-        0,
-        0,
-        Math.PI,
-        false,
-      );
+      ctx.ellipse(coilX, cwY, coilW * 0.55, 1.2 * zoom, 0, 0, Math.PI, false);
       ctx.stroke();
     }
     // Copper highlight
@@ -7572,7 +7643,7 @@ export function renderFlamethrower(
         0,
         0.3,
         Math.PI - 0.3,
-        false,
+        false
       );
       ctx.stroke();
     }
@@ -7580,10 +7651,22 @@ export function renderFlamethrower(
     // Terminal posts on top
     ctx.fillStyle = "#8a8a95";
     ctx.beginPath();
-    ctx.arc(coilX - 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      coilX - 1.2 * zoom,
+      coilY - coilH * 0.5 - 1 * zoom,
+      0.8 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(coilX + 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      coilX + 1.2 * zoom,
+      coilY - coilH * 0.5 - 1 * zoom,
+      0.8 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Wiring harness from coil to igniter center
@@ -7595,7 +7678,7 @@ export function renderFlamethrower(
       turretX + 5 * zoom,
       igniterY - 5 * zoom,
       turretX + 2 * zoom,
-      igniterY - 1 * zoom,
+      igniterY - 1 * zoom
     );
     ctx.stroke();
     // Second wire
@@ -7607,7 +7690,7 @@ export function renderFlamethrower(
       turretX + 7 * zoom,
       igniterY - 6 * zoom,
       turretX + 3 * zoom,
-      igniterY,
+      igniterY
     );
     ctx.stroke();
 
@@ -7620,7 +7703,7 @@ export function renderFlamethrower(
       coilY - coilH * 0.5 - 1 * zoom,
       1.5 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -7635,7 +7718,7 @@ export function renderFlamethrower(
       turretX - 4 * zoom,
       igniterY + 5 * zoom,
       turretX + 2 * zoom,
-      igniterY + 3 * zoom,
+      igniterY + 3 * zoom
     );
     ctx.stroke();
     // Conduit highlight
@@ -7647,7 +7730,7 @@ export function renderFlamethrower(
       turretX - 4 * zoom,
       igniterY + 4.4 * zoom,
       turretX + 2 * zoom,
-      igniterY + 2.4 * zoom,
+      igniterY + 2.4 * zoom
     );
     ctx.stroke();
     // Cable ties
@@ -7680,7 +7763,7 @@ export function renderFlamethrower(
     4 * zoom,
     rotation,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#3a3a42";
@@ -7692,7 +7775,7 @@ export function renderFlamethrower(
     3.5 * zoom,
     rotation,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = "#5a5a62";
@@ -7707,7 +7790,7 @@ export function renderFlamethrower(
     0,
     turretX,
     igniterY,
-    3.5 * zoom,
+    3.5 * zoom
   );
   flameGrad.addColorStop(0, `rgba(255, 200, 100, ${flameGlow})`);
   flameGrad.addColorStop(0.4, `rgba(255, 140, 50, ${flameGlow * 0.7})`);
@@ -7754,7 +7837,7 @@ export function renderFlamethrower(
       time,
       isAttacking,
       attackPulse,
-      "small",
+      "small"
     );
     drawFuelFeedingTube(
       ctx,
@@ -7767,7 +7850,7 @@ export function renderFlamethrower(
       time,
       isAttacking,
       attackPulse,
-      tankSide,
+      tankSide
     );
   }
   if (plateBehindAll && plateVisible) {
@@ -7778,7 +7861,7 @@ export function renderFlamethrower(
       plateAngle,
       zoom,
       towerId,
-      "small",
+      "small"
     );
   }
 
@@ -7792,7 +7875,7 @@ export function renderFlamethrower(
       zoom,
       tower,
       time,
-      recoilOffset,
+      recoilOffset
     );
   }
 
@@ -7806,7 +7889,7 @@ export function renderFlamethrower(
       time,
       isAttacking,
       attackPulse,
-      "small",
+      "small"
     );
     drawFuelFeedingTube(
       ctx,
@@ -7819,7 +7902,7 @@ export function renderFlamethrower(
       time,
       isAttacking,
       attackPulse,
-      tankSide,
+      tankSide
     );
   }
   if (!plateBehindAll && plateVisible) {
@@ -7830,7 +7913,7 @@ export function renderFlamethrower(
       plateAngle,
       zoom,
       towerId,
-      "small",
+      "small"
     );
   }
 }
@@ -7845,7 +7928,7 @@ export function drawFlamethrowerNozzle(
   zoom: number,
   tower: Tower,
   time: number,
-  recoilOffset: number = 0,
+  recoilOffset: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -7909,7 +7992,7 @@ export function drawFlamethrowerNozzle(
     pivotX + fwdX * 6 * zoom,
     pivotY + fwdY * 6 * zoom - 4 * zoom,
     hexBackPt.x + fwdX * 4 * zoom,
-    hexBackPt.y + fwdY * 4 * zoom,
+    hexBackPt.y + fwdY * 4 * zoom
   );
   ctx.stroke();
 
@@ -7954,7 +8037,7 @@ export function drawFlamethrowerNozzle(
         cageVerts,
         cageFacingFwd ? "#4a4a55" : "#5a5a65",
         "#3a3a45",
-        0.7 * zoom,
+        0.7 * zoom
       );
 
       // Breech cap bolts at vertices
@@ -7967,7 +8050,7 @@ export function drawFlamethrowerNozzle(
           capPt.y + boltVerts[i].y,
           1.3 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -7979,7 +8062,7 @@ export function drawFlamethrowerNozzle(
         scaleVerts(cageVerts, 0.45),
         "#555560",
         "#48484e",
-        0.5 * zoom,
+        0.5 * zoom
       );
     };
 
@@ -7992,7 +8075,7 @@ export function drawFlamethrowerNozzle(
         cageVerts,
         cageFacingFwd ? "#5a5a65" : "#4a4a55",
         "#3a3a45",
-        0.6 * zoom,
+        0.6 * zoom
       );
 
       // Barrel opening hole (dark circle in center)
@@ -8119,7 +8202,7 @@ export function drawFlamethrowerNozzle(
       hexBackPt.x + v0.x,
       hexBackPt.y + v0.y,
       hexFrontPt.x + tv0.x,
-      hexFrontPt.y + tv0.y,
+      hexFrontPt.y + tv0.y
     );
     const baseRC = Math.floor(55 + lit * 60);
     const baseGC = Math.floor(55 + lit * 58);
@@ -8131,7 +8214,7 @@ export function drawFlamethrowerNozzle(
     sGrad.addColorStop(0, `rgb(${baseRC}, ${baseGC}, ${baseBC})`);
     sGrad.addColorStop(
       0.55,
-      `rgb(${baseRC + 8}, ${baseGC - 4}, ${baseBC - 8})`,
+      `rgb(${baseRC + 8}, ${baseGC - 4}, ${baseBC - 8})`
     );
     sGrad.addColorStop(0.8, `rgb(${tipRC}, ${tipGC}, ${tipBC})`);
     sGrad.addColorStop(1, `rgb(${tipRC + 15}, ${tipGC - 5}, ${tipBC - 10})`);
@@ -8187,14 +8270,16 @@ export function drawFlamethrowerNozzle(
       y: v.y * bScale * 1.08,
     }));
 
-    const bandSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-      (a, bb) => sideNormals[a] - sideNormals[bb],
+    const bandSorted = Array.from({ length: hexSides }, (_, i) => i).toSorted(
+      (a, bb) => sideNormals[a] - sideNormals[bb]
     );
 
     for (const i of bandSorted) {
       const ni = (i + 1) % hexSides;
       const normal = sideNormals[i];
-      if (normal < -0.15) continue;
+      if (normal < -0.15) {
+        continue;
+      }
 
       const v0b = bVerts[i];
       const v1b = bVerts[ni];
@@ -8226,8 +8311,9 @@ export function drawFlamethrowerNozzle(
       if (
         sideNormals[i] < -0.15 &&
         sideNormals[ni === 0 ? hexSides - 1 : ni - 1] < -0.15
-      )
+      ) {
         continue;
+      }
       ctx.moveTo(capPt2.x + bVerts[i].x, capPt2.y + bVerts[i].y);
       ctx.lineTo(capPt2.x + bVerts[ni].x, capPt2.y + bVerts[ni].y);
     }
@@ -8241,7 +8327,7 @@ export function drawFlamethrowerNozzle(
     facingFwd ? taperVerts : hexVerts,
     facingFwd ? "#505058" : "#5a5a62",
     "#4e4e5c",
-    0.5 * zoom,
+    0.5 * zoom
   );
 
   // === MUZZLE BACK CAP ===
@@ -8249,7 +8335,7 @@ export function drawFlamethrowerNozzle(
     ctx,
     facingFwd ? muzzleBackPt : muzzleEndPt,
     facingFwd ? muzzleVerts : muzzleTipVerts,
-    facingFwd ? "#484850" : "#404048",
+    facingFwd ? "#484850" : "#404048"
   );
 
   // === FLARED HEXAGONAL MUZZLE — depth-sorted with heat coloring ===
@@ -8308,7 +8394,7 @@ export function drawFlamethrowerNozzle(
       mCapVerts,
       facingFwd ? "#4a3a30" : "#3a3035",
       "rgba(255, 80, 30, 0.4)",
-      0.8 * zoom,
+      0.8 * zoom
     );
   }
 
@@ -8325,8 +8411,9 @@ export function drawFlamethrowerNozzle(
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(ringPt.x + rVerts[0].x, ringPt.y + rVerts[0].y);
-    for (let vi = 1; vi < hexSides; vi++)
+    for (let vi = 1; vi < hexSides; vi++) {
       ctx.lineTo(ringPt.x + rVerts[vi].x, ringPt.y + rVerts[vi].y);
+    }
     ctx.closePath();
     ctx.stroke();
   }
@@ -8355,13 +8442,13 @@ export function drawFlamethrowerNozzle(
     ctx.beginPath();
     ctx.moveTo(
       pivotX + perpX * 5 * zoom * injSide,
-      pivotY + perpY * 5 * zoom * injSide,
+      pivotY + perpY * 5 * zoom * injSide
     );
     ctx.quadraticCurveTo(
       pivotX + fwdX * 5 * zoom + perpX * 6 * zoom * injSide,
       pivotY + fwdY * 5 * zoom - 3 * zoom + perpY * 6 * zoom * injSide,
       injBack.x + injOff.x,
-      injBack.y + injOff.y,
+      injBack.y + injOff.y
     );
     ctx.stroke();
     ctx.strokeStyle = "#5a5a65";
@@ -8369,13 +8456,13 @@ export function drawFlamethrowerNozzle(
     ctx.beginPath();
     ctx.moveTo(
       pivotX + perpX * 5 * zoom * injSide,
-      pivotY + perpY * 5 * zoom * injSide,
+      pivotY + perpY * 5 * zoom * injSide
     );
     ctx.quadraticCurveTo(
       pivotX + fwdX * 5 * zoom + perpX * 6 * zoom * injSide,
       pivotY + fwdY * 5 * zoom - 3 * zoom + perpY * 6 * zoom * injSide,
       injBack.x + injOff.x,
-      injBack.y + injOff.y,
+      injBack.y + injOff.y
     );
     ctx.stroke();
 
@@ -8390,7 +8477,7 @@ export function drawFlamethrowerNozzle(
         cVerts,
         injFacingFwd ? "#42424c" : "#4e4e58",
         "#35353e",
-        0.5 * zoom,
+        0.5 * zoom
       );
     };
 
@@ -8404,7 +8491,7 @@ export function drawFlamethrowerNozzle(
         cVerts,
         injFacingFwd ? "#4e4e58" : "#42424c",
         "rgba(255, 80, 30, 0.35)",
-        0.6 * zoom,
+        0.6 * zoom
       );
       // Bore hole
       ctx.fillStyle = "#1a1a22";
@@ -8414,7 +8501,7 @@ export function drawFlamethrowerNozzle(
         cPt.y + injOff.y,
         injHexR * injTaper * 0.4,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     };
@@ -8436,7 +8523,7 @@ export function drawFlamethrowerNozzle(
           injBack.x + injOff.x + v0.x,
           injBack.y + injOff.y + v0.y,
           injFront.x + injOff.x + tv0.x,
-          injFront.y + injOff.y + tv0.y,
+          injFront.y + injOff.y + tv0.y
         );
         const bR = Math.floor(50 + lit * 55);
         const bG = Math.floor(50 + lit * 52);
@@ -8455,11 +8542,11 @@ export function drawFlamethrowerNozzle(
         ctx.lineTo(injBack.x + injOff.x + v1.x, injBack.y + injOff.y + v1.y);
         ctx.lineTo(
           injFront.x + injOff.x + tv1.x,
-          injFront.y + injOff.y + tv1.y,
+          injFront.y + injOff.y + tv1.y
         );
         ctx.lineTo(
           injFront.x + injOff.x + tv0.x,
-          injFront.y + injOff.y + tv0.y,
+          injFront.y + injOff.y + tv0.y
         );
         ctx.closePath();
         ctx.fill();
@@ -8475,11 +8562,11 @@ export function drawFlamethrowerNozzle(
           ctx.beginPath();
           ctx.moveTo(
             injFront.x + injOff.x + tv0.x,
-            injFront.y + injOff.y + tv0.y,
+            injFront.y + injOff.y + tv0.y
           );
           ctx.lineTo(
             injFront.x + injOff.x + tv1.x,
-            injFront.y + injOff.y + tv1.y,
+            injFront.y + injOff.y + tv1.y
           );
           ctx.stroke();
         }
@@ -8497,7 +8584,7 @@ export function drawFlamethrowerNozzle(
           ctx.moveTo(injBack.x + injOff.x + mx0, injBack.y + injOff.y + my0);
           ctx.lineTo(
             injFront.x + injOff.x + mtx0,
-            injFront.y + injOff.y + mty0,
+            injFront.y + injOff.y + mty0
           );
           ctx.stroke();
         }
@@ -8530,26 +8617,28 @@ export function drawFlamethrowerNozzle(
       const bSorted = sortSidesByDepth(injNormals);
       for (const i of bSorted) {
         const ni = (i + 1) % injSides;
-        if (injNormals[i] < -0.15) continue;
+        if (injNormals[i] < -0.15) {
+          continue;
+        }
         const bLit = Math.max(0.2, 0.3 + Math.max(0, injNormals[i]) * 0.5);
         const gc = Math.floor(85 + bLit * 45);
         ctx.fillStyle = `rgb(${gc}, ${gc}, ${gc + 5})`;
         ctx.beginPath();
         ctx.moveTo(
           bPtB.x + injOff.x + bVerts[i].x,
-          bPtB.y + injOff.y + bVerts[i].y,
+          bPtB.y + injOff.y + bVerts[i].y
         );
         ctx.lineTo(
           bPtB.x + injOff.x + bVerts[ni].x,
-          bPtB.y + injOff.y + bVerts[ni].y,
+          bPtB.y + injOff.y + bVerts[ni].y
         );
         ctx.lineTo(
           bPtF.x + injOff.x + bVerts[ni].x,
-          bPtF.y + injOff.y + bVerts[ni].y,
+          bPtF.y + injOff.y + bVerts[ni].y
         );
         ctx.lineTo(
           bPtF.x + injOff.x + bVerts[i].x,
-          bPtF.y + injOff.y + bVerts[i].y,
+          bPtF.y + injOff.y + bVerts[i].y
         );
         ctx.closePath();
         ctx.fill();
@@ -8565,7 +8654,7 @@ export function drawFlamethrowerNozzle(
       const ct = (c + 1) / (clampCount + 1);
       const clampDist = startDist + injLen * ct;
       const clampPt = axisPoint(clampDist);
-      const mainSurfOff = isoOff(hexR * 1.0 * injSide, 0);
+      const mainSurfOff = isoOff(hexR * 1 * injSide, 0);
 
       // Bracket plate (L-shaped cross section)
       const bracketW = 1.5 * zoom;
@@ -8576,11 +8665,11 @@ export function drawFlamethrowerNozzle(
       ctx.lineTo(clampPt.x + injOff.x + bFwd.x, clampPt.y + injOff.y + bFwd.y);
       ctx.lineTo(
         clampPt.x + mainSurfOff.x + bFwd.x,
-        clampPt.y + mainSurfOff.y + bFwd.y,
+        clampPt.y + mainSurfOff.y + bFwd.y
       );
       ctx.lineTo(
         clampPt.x + mainSurfOff.x - bFwd.x,
-        clampPt.y + mainSurfOff.y - bFwd.y,
+        clampPt.y + mainSurfOff.y - bFwd.y
       );
       ctx.closePath();
       ctx.fill();
@@ -8596,7 +8685,7 @@ export function drawFlamethrowerNozzle(
         clampPt.y + injOff.y,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -8605,7 +8694,7 @@ export function drawFlamethrowerNozzle(
         clampPt.y + mainSurfOff.y,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -8628,7 +8717,7 @@ export function drawFlamethrowerNozzle(
       0,
       pilotPt.x,
       pilotPt.y,
-      haloR,
+      haloR
     );
     haloGrad.addColorStop(0, `rgba(0, 160, 255, ${baseGlow * 0.3})`);
     haloGrad.addColorStop(0.4, `rgba(0, 100, 220, ${baseGlow * 0.15})`);
@@ -8654,7 +8743,7 @@ export function drawFlamethrowerNozzle(
       pilotPt.x,
       pilotPt.y,
       tipX + wobX,
-      tipY + wobY,
+      tipY + wobY
     );
     outerFGrad.addColorStop(0, `rgba(0, 140, 255, ${baseGlow * 0.7})`);
     outerFGrad.addColorStop(0.5, `rgba(0, 180, 255, ${baseGlow * 0.5})`);
@@ -8670,7 +8759,7 @@ export function drawFlamethrowerNozzle(
         wobY -
         perpY * tongueW * 0.7,
       tipX + wobX,
-      tipY + wobY,
+      tipY + wobY
     );
     ctx.quadraticCurveTo(
       pilotPt.x + fwdX * tongueLen * 0.5 + wobX,
@@ -8680,7 +8769,7 @@ export function drawFlamethrowerNozzle(
         wobY +
         perpY * tongueW * 0.7,
       pilotPt.x + perpX * tongueW,
-      pilotPt.y + perpY * tongueW,
+      pilotPt.y + perpY * tongueW
     );
     ctx.closePath();
     ctx.fill();
@@ -8694,7 +8783,7 @@ export function drawFlamethrowerNozzle(
       pilotPt.x,
       pilotPt.y,
       coreTipX,
-      coreTipY,
+      coreTipY
     );
     coreFGrad.addColorStop(0, `rgba(200, 240, 255, ${baseGlow * 0.9})`);
     coreFGrad.addColorStop(0.5, `rgba(120, 210, 255, ${baseGlow * 0.7})`);
@@ -8709,7 +8798,7 @@ export function drawFlamethrowerNozzle(
         coreLen * 0.5 * pitchRate -
         perpY * coreW * 0.5,
       coreTipX,
-      coreTipY,
+      coreTipY
     );
     ctx.quadraticCurveTo(
       pilotPt.x + fwdX * coreLen * 0.5,
@@ -8718,7 +8807,7 @@ export function drawFlamethrowerNozzle(
         coreLen * 0.5 * pitchRate +
         perpY * coreW * 0.5,
       pilotPt.x + perpX * coreW,
-      pilotPt.y + perpY * coreW,
+      pilotPt.y + perpY * coreW
     );
     ctx.closePath();
     ctx.fill();
@@ -8730,7 +8819,7 @@ export function drawFlamethrowerNozzle(
       0,
       pilotPt.x,
       pilotPt.y,
-      4 * zoom,
+      4 * zoom
     );
     ignGrad2.addColorStop(0, `rgba(255, 255, 255, ${baseGlow})`);
     ignGrad2.addColorStop(0.4, `rgba(180, 230, 255, ${baseGlow * 0.8})`);
@@ -8780,20 +8869,20 @@ export function drawFlamethrowerNozzle(
         0,
         flamePt.x,
         flamePt.y + wobble,
-        flameSize,
+        flameSize
       );
       flameGrad2.addColorStop(0, `rgba(255, 255, 180, ${flameIntensity})`);
       flameGrad2.addColorStop(
         0.15,
-        `rgba(255, 220, 80, ${flameIntensity * 0.95})`,
+        `rgba(255, 220, 80, ${flameIntensity * 0.95})`
       );
       flameGrad2.addColorStop(
         0.4,
-        `rgba(255, 120, 0, ${flameIntensity * 0.75})`,
+        `rgba(255, 120, 0, ${flameIntensity * 0.75})`
       );
       flameGrad2.addColorStop(
         0.7,
-        `rgba(220, 60, 0, ${flameIntensity * 0.45})`,
+        `rgba(220, 60, 0, ${flameIntensity * 0.45})`
       );
       flameGrad2.addColorStop(1, "rgba(120, 30, 0, 0)");
       ctx.fillStyle = flameGrad2;

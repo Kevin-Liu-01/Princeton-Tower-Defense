@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import {
   X,
   Coins,
@@ -15,7 +14,8 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
-import type { SpellType, SpellUpgradeLevels } from "../../types";
+import React from "react";
+
 import {
   SPELL_DATA,
   SPELL_ACCENTS,
@@ -25,13 +25,20 @@ import {
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
-import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
+import type { SpellType, SpellUpgradeLevels } from "../../types";
 import { BaseModal } from "../ui/primitives/BaseModal";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
-import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
 import { spellFrameElements } from "../ui/primitives/ornateFrameHelpers";
-import { MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
+import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
+import {
+  PANEL,
+  GOLD,
+  OVERLAY,
+  panelGradient,
+  dividerGradient,
+} from "../ui/system/theme";
 import { hexToRgba } from "./shared/colorUtils";
+import { MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
 import { FloatingParticles, RuneBackground } from "./shared/showcaseEffects";
 
 const SHOWCASE_FRAME = 152;
@@ -55,68 +62,82 @@ const SPELL_META: Record<
   }
 > = {
   fireball: {
-    nameColor: "text-orange-200",
     accent: SPELL_ACCENTS.fireball,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(234,88,12,0.2), transparent, rgba(249,115,22,0.15), transparent)",
     bg: "rgba(55,28,12,0.97)",
     border: "rgba(234,88,12,0.5)",
-    trait: SPELL_TRAITS.fireball.trait,
-    icon: <Flame size={14} className="text-orange-400" />,
     element: "Fire",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(234,88,12,0.2), transparent, rgba(249,115,22,0.15), transparent)",
-  },
-  lightning: {
-    nameColor: "text-yellow-200",
-    accent: SPELL_ACCENTS.lightning,
-    bg: "rgba(48,38,14,0.97)",
-    border: "rgba(234,179,8,0.5)",
-    trait: SPELL_TRAITS.lightning.trait,
-    icon: <Zap size={14} className="text-yellow-400" />,
-    element: "Lightning",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(234,179,8,0.2), transparent, rgba(250,204,21,0.15), transparent)",
+    icon: <Flame size={14} className="text-orange-400" />,
+    nameColor: "text-orange-200",
+    trait: SPELL_TRAITS.fireball.trait,
   },
   freeze: {
-    nameColor: "text-cyan-200",
     accent: SPELL_ACCENTS.freeze,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(6,182,212,0.2), transparent, rgba(34,211,238,0.15), transparent)",
     bg: "rgba(12,28,42,0.98)",
     border: "rgba(6,182,212,0.5)",
-    trait: SPELL_TRAITS.freeze.trait,
-    icon: <Snowflake size={14} className="text-cyan-400" />,
     element: "Ice",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(6,182,212,0.2), transparent, rgba(34,211,238,0.15), transparent)",
+    icon: <Snowflake size={14} className="text-cyan-400" />,
+    nameColor: "text-cyan-200",
+    trait: SPELL_TRAITS.freeze.trait,
   },
   hex_ward: {
-    nameColor: "text-fuchsia-200",
     accent: SPELL_ACCENTS.hex_ward,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(168,85,247,0.22), transparent, rgba(232,121,249,0.16), transparent)",
     bg: "rgba(34,16,46,0.98)",
     border: "rgba(168,85,247,0.5)",
-    trait: SPELL_TRAITS.hex_ward.trait,
-    icon: <Eye size={14} className="text-fuchsia-400" />,
     element: "Shadow",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(168,85,247,0.22), transparent, rgba(232,121,249,0.16), transparent)",
+    icon: <Eye size={14} className="text-fuchsia-400" />,
+    nameColor: "text-fuchsia-200",
+    trait: SPELL_TRAITS.hex_ward.trait,
+  },
+  lightning: {
+    accent: SPELL_ACCENTS.lightning,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(234,179,8,0.2), transparent, rgba(250,204,21,0.15), transparent)",
+    bg: "rgba(48,38,14,0.97)",
+    border: "rgba(234,179,8,0.5)",
+    element: "Lightning",
+    icon: <Zap size={14} className="text-yellow-400" />,
+    nameColor: "text-yellow-200",
+    trait: SPELL_TRAITS.lightning.trait,
   },
   payday: {
-    nameColor: "text-amber-200",
     accent: SPELL_ACCENTS.payday,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(245,158,11,0.2), transparent, rgba(251,191,36,0.15), transparent)",
     bg: "rgba(48,34,12,0.97)",
     border: "rgba(245,158,11,0.5)",
-    trait: SPELL_TRAITS.payday.trait,
-    icon: <Coins size={14} className="text-amber-400" />,
     element: "Gold",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(245,158,11,0.2), transparent, rgba(251,191,36,0.15), transparent)",
+    icon: <Coins size={14} className="text-amber-400" />,
+    nameColor: "text-amber-200",
+    trait: SPELL_TRAITS.payday.trait,
   },
   reinforcements: {
-    nameColor: "text-emerald-200",
     accent: SPELL_ACCENTS.reinforcements,
+    auraGradient:
+      "conic-gradient(from 0deg, transparent, rgba(16,185,129,0.2), transparent, rgba(52,211,153,0.15), transparent)",
     bg: "rgba(16,32,22,0.98)",
     border: "rgba(16,185,129,0.5)",
-    trait: SPELL_TRAITS.reinforcements.trait,
-    icon: <Shield size={14} className="text-emerald-400" />,
     element: "Nature",
-    auraGradient: "conic-gradient(from 0deg, transparent, rgba(16,185,129,0.2), transparent, rgba(52,211,153,0.15), transparent)",
+    icon: <Shield size={14} className="text-emerald-400" />,
+    nameColor: "text-emerald-200",
+    trait: SPELL_TRAITS.reinforcements.trait,
   },
 };
 
-function UpgradeStarPips({ level, maxLevel, accent }: { level: number; maxLevel: number; accent: string }) {
+function UpgradeStarPips({
+  level,
+  maxLevel,
+  accent,
+}: {
+  level: number;
+  maxLevel: number;
+  accent: string;
+}) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: maxLevel }).map((_, i) => (
@@ -178,13 +199,21 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
   const focusedIdx = MENU_SPELL_OPTIONS.indexOf(focusedSpell);
 
   const navigate = (dir: -1 | 1) => {
-    const next = (focusedIdx + dir + MENU_SPELL_OPTIONS.length) % MENU_SPELL_OPTIONS.length;
+    const next =
+      (focusedIdx + dir + MENU_SPELL_OPTIONS.length) %
+      MENU_SPELL_OPTIONS.length;
     setFocusedSpell(MENU_SPELL_OPTIONS[next]);
   };
 
   return (
     <>
-      <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60} usePortal>
+      <BaseModal
+        isOpen={isOpen}
+        onClose={onClose}
+        zClass="z-[200]"
+        backdropBg={OVERLAY.black60}
+        usePortal
+      >
         <div
           className="relative w-[92vw] max-w-[880px] max-h-[88dvh] rounded-2xl overflow-hidden flex flex-col"
           style={{
@@ -193,20 +222,54 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
             boxShadow: `0 0 60px ${GOLD.glow07}, 0 0 120px rgba(140,80,200,0.04), inset 0 0 30px ${GOLD.glow04}`,
           }}
         >
-          <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={52} showSideBorders={false}>
-            <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+          <OrnateFrame
+            className="relative w-full h-full overflow-hidden flex flex-col"
+            cornerSize={52}
+            showSideBorders={false}
+          >
+            <div
+              className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20"
+              style={{ border: `1px solid ${GOLD.innerBorder10}` }}
+            />
             <RuneBackground patternId="spell-rune-grid" width={50} height={50}>
-              <circle cx="25" cy="25" r="8" stroke="rgba(140,80,200,0.25)" strokeWidth="0.3" fill="none" />
-              <circle cx="25" cy="25" r="3" stroke="rgba(140,80,200,0.2)" strokeWidth="0.3" fill="none" />
-              <path d="M25 17 L25 33 M17 25 L33 25" stroke="rgba(140,80,200,0.15)" strokeWidth="0.3" fill="none" />
-              <path d="M19 19 L31 31 M31 19 L19 31" stroke="rgba(140,80,200,0.1)" strokeWidth="0.3" fill="none" />
+              <circle
+                cx="25"
+                cy="25"
+                r="8"
+                stroke="rgba(140,80,200,0.25)"
+                strokeWidth="0.3"
+                fill="none"
+              />
+              <circle
+                cx="25"
+                cy="25"
+                r="3"
+                stroke="rgba(140,80,200,0.2)"
+                strokeWidth="0.3"
+                fill="none"
+              />
+              <path
+                d="M25 17 L25 33 M17 25 L33 25"
+                stroke="rgba(140,80,200,0.15)"
+                strokeWidth="0.3"
+                fill="none"
+              />
+              <path
+                d="M19 19 L31 31 M31 19 L19 31"
+                stroke="rgba(140,80,200,0.1)"
+                strokeWidth="0.3"
+                fill="none"
+              />
             </RuneBackground>
 
             {/* Close */}
             <button
               onClick={onClose}
               className="absolute top-3 right-3 z-50 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:rotate-90 duration-300"
-              style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
+              style={{
+                background: PANEL.bgDeep,
+                border: `1px solid ${GOLD.border25}`,
+              }}
             >
               <X size={16} className="text-amber-400" />
             </button>
@@ -214,12 +277,22 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
             {/* Header */}
             <div
               className="relative px-6 pr-14 py-4 flex-shrink-0 flex items-center justify-between"
-              style={{ background: "linear-gradient(90deg, rgba(120,60,180,0.18), rgba(80,30,140,0.08), transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(120,60,180,0.18), rgba(80,30,140,0.08), transparent)",
+              }}
             >
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <SpellOrbIcon size={30} />
-                  <div className="absolute -inset-1 rounded-full animate-badge-glow" style={{ "--glow-color": "rgba(140,80,200,0.3)" } as React.CSSProperties} />
+                  <div
+                    className="absolute -inset-1 rounded-full animate-badge-glow"
+                    style={
+                      {
+                        "--glow-color": "rgba(140,80,200,0.3)",
+                      } as React.CSSProperties
+                    }
+                  />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-purple-200 tracking-[0.2em] uppercase font-cinzel">
@@ -235,15 +308,22 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       key={i}
                       className="w-3.5 h-3.5 rounded-sm transition-all duration-300 relative"
                       style={{
-                        background: i < selectedSpells.length
-                          ? "linear-gradient(135deg, #a855f7, #7c3aed)"
-                          : "rgba(60,40,80,0.4)",
+                        background:
+                          i < selectedSpells.length
+                            ? "linear-gradient(135deg, #a855f7, #7c3aed)"
+                            : "rgba(60,40,80,0.4)",
                         border: `1px solid ${i < selectedSpells.length ? "rgba(168,85,247,0.6)" : "rgba(100,70,140,0.25)"}`,
-                        boxShadow: i < selectedSpells.length ? "0 0 8px rgba(168,85,247,0.4)" : "none",
+                        boxShadow:
+                          i < selectedSpells.length
+                            ? "0 0 8px rgba(168,85,247,0.4)"
+                            : "none",
                       }}
                     >
                       {i < selectedSpells.length && (
-                        <Sparkles size={7} className="absolute inset-0 m-auto text-purple-200" />
+                        <Sparkles
+                          size={7}
+                          className="absolute inset-0 m-auto text-purple-200"
+                        />
                       )}
                     </div>
                   ))}
@@ -256,13 +336,21 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                 onClick={() => setShowUpgradeModal(true)}
                 className="flex items-center gap-2 rounded-lg border py-2 px-3.5 transition-all hover:brightness-110 hover:scale-105 duration-200 group relative overflow-hidden"
                 style={{
-                  background: "linear-gradient(180deg, rgba(98,72,18,0.85), rgba(72,52,12,0.8))",
+                  background:
+                    "linear-gradient(180deg, rgba(98,72,18,0.85), rgba(72,52,12,0.8))",
                   borderColor: "rgba(250,204,21,0.5)",
-                  boxShadow: "inset 0 0 12px rgba(250,204,21,0.15), 0 0 12px rgba(250,204,21,0.08)",
+                  boxShadow:
+                    "inset 0 0 12px rgba(250,204,21,0.15), 0 0 12px rgba(250,204,21,0.08)",
                 }}
               >
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(90deg, transparent, rgba(250,204,21,0.08), transparent)" }} />
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(250,204,21,0.08), transparent)",
+                    }}
+                  />
                 </div>
                 <EnchantedAnvilIcon size={18} />
                 <span className="text-[10px] font-bold uppercase tracking-wide text-yellow-200">
@@ -274,7 +362,10 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                 </span>
               </button>
 
-              <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: dividerGradient }} />
+              <div
+                className="absolute bottom-0 left-0 right-0 h-px"
+                style={{ background: dividerGradient }}
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -293,8 +384,8 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                     className="absolute inset-0 opacity-[0.06]"
                     style={{
                       backgroundImage: `url('${getSpellActionImagePath(focusedSpell)}')`,
-                      backgroundSize: "cover",
                       backgroundPosition: "center",
+                      backgroundSize: "cover",
                     }}
                   />
                   <div
@@ -312,12 +403,22 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       key={side}
                       onClick={() => navigate(side === "left" ? -1 : 1)}
                       className={`absolute ${side === "left" ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-black/70 duration-200 group`}
-                      style={{ background: "rgba(0,0,0,0.45)", border: `1px solid ${meta.accent}40` }}
+                      style={{
+                        background: "rgba(0,0,0,0.45)",
+                        border: `1px solid ${meta.accent}40`,
+                      }}
                     >
-                      {side === "left"
-                        ? <ChevronLeft size={20} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                        : <ChevronRight size={20} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
-                      }
+                      {side === "left" ? (
+                        <ChevronLeft
+                          size={20}
+                          className="text-purple-400 group-hover:text-purple-300 transition-colors"
+                        />
+                      ) : (
+                        <ChevronRight
+                          size={20}
+                          className="text-purple-400 group-hover:text-purple-300 transition-colors"
+                        />
+                      )}
                     </button>
                   ))}
 
@@ -333,7 +434,9 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       {/* Pulsing elemental glow */}
                       <div
                         className="absolute -inset-5 rounded-full animate-spell-orb"
-                        style={{ background: `radial-gradient(circle, ${meta.accent}18, transparent 70%)` }}
+                        style={{
+                          background: `radial-gradient(circle, ${meta.accent}18, transparent 70%)`,
+                        }}
                       />
                       {/* Orb circle */}
                       <div
@@ -344,14 +447,23 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                           boxShadow: `0 0 40px ${meta.accent}25, 0 0 80px ${meta.accent}12, inset 0 0 25px ${meta.accent}08`,
                         }}
                       >
-                        <svg className="absolute pointer-events-none" style={{
-                          top: '50%', left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                        }} width={SHOWCASE_FRAME} height={SHOWCASE_FRAME} overflow="visible">
+                        <svg
+                          className="absolute pointer-events-none"
+                          style={{
+                            left: "50%",
+                            top: "50%",
+                            transform: "translate(-50%, -50%)",
+                          }}
+                          width={SHOWCASE_FRAME}
+                          height={SHOWCASE_FRAME}
+                          overflow="visible"
+                        >
                           {spellFrameElements({
-                            cx: SHOWCASE_CX, outerR: SHOWCASE_CX - 2, midR: SHOWCASE_MID_R,
                             color: hexToRgba(meta.accent, 0.3),
+                            cx: SHOWCASE_CX,
                             dimColor: hexToRgba(meta.accent, 0.15),
+                            midR: SHOWCASE_MID_R,
+                            outerR: SHOWCASE_CX - 2,
                             prefix: "sb-show",
                           })}
                         </svg>
@@ -361,11 +473,14 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       {isSelected && (
                         <div
                           className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider text-purple-200 animate-badge-glow z-20"
-                          style={{
-                            background: "linear-gradient(135deg, rgba(88,28,135,0.95), rgba(55,15,90,0.95))",
-                            border: "1px solid rgba(168,85,247,0.5)",
-                            "--glow-color": "rgba(168,85,247,0.3)",
-                          } as React.CSSProperties}
+                          style={
+                            {
+                              "--glow-color": "rgba(168,85,247,0.3)",
+                              background:
+                                "linear-gradient(135deg, rgba(88,28,135,0.95), rgba(55,15,90,0.95))",
+                              border: "1px solid rgba(168,85,247,0.5)",
+                            } as React.CSSProperties
+                          }
                         >
                           Slot {selectedSpells.indexOf(focusedSpell) + 1}
                         </div>
@@ -376,21 +491,36 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                     <div className="flex items-center gap-2 mb-2">
                       <div
                         className="px-2.5 py-0.5 rounded-md"
-                        style={{ background: "rgba(120,80,20,0.35)", border: "1px solid rgba(250,204,21,0.2)" }}
+                        style={{
+                          background: "rgba(120,80,20,0.35)",
+                          border: "1px solid rgba(250,204,21,0.2)",
+                        }}
                       >
                         <span className="text-[10px] font-bold text-yellow-200">
                           Level {spellLevel + 1}
                         </span>
                       </div>
-                      <UpgradeStarPips level={spellLevel + 1} maxLevel={MAX_SPELL_UPGRADE_LEVEL + 1} accent={meta.accent} />
+                      <UpgradeStarPips
+                        level={spellLevel + 1}
+                        maxLevel={MAX_SPELL_UPGRADE_LEVEL + 1}
+                        accent={meta.accent}
+                      />
                     </div>
 
                     {/* Name + Element */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: `${meta.accent}20`, border: `1px solid ${meta.accent}30` }}>
+                      <div
+                        className="w-5 h-5 rounded-md flex items-center justify-center"
+                        style={{
+                          background: `${meta.accent}20`,
+                          border: `1px solid ${meta.accent}30`,
+                        }}
+                      >
                         {meta.icon}
                       </div>
-                      <h3 className={`text-2xl font-black tracking-wide font-cinzel ${meta.nameColor}`}>
+                      <h3
+                        className={`text-2xl font-black tracking-wide font-cinzel ${meta.nameColor}`}
+                      >
                         {spell.name}
                       </h3>
                     </div>
@@ -399,35 +529,62 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                     <div className="flex items-center gap-2 mb-4">
                       <span
                         className="text-[9px] font-semibold uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-full"
-                        style={{ background: `${meta.accent}12`, border: `1px solid ${meta.accent}25`, color: meta.accent }}
+                        style={{
+                          background: `${meta.accent}12`,
+                          border: `1px solid ${meta.accent}25`,
+                          color: meta.accent,
+                        }}
                       >
                         {meta.element}
                       </span>
                       <span
                         className="text-[9px] font-semibold uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-full"
-                        style={{ background: `${meta.accent}18`, border: `1px solid ${meta.accent}30`, color: meta.accent }}
+                        style={{
+                          background: `${meta.accent}18`,
+                          border: `1px solid ${meta.accent}30`,
+                          color: meta.accent,
+                        }}
                       >
                         {meta.trait}
                       </span>
                     </div>
 
                     {/* Ornate divider */}
-                    <div className="w-48 h-px mb-5" style={{ background: `linear-gradient(90deg, transparent, ${meta.accent}40, transparent)` }} />
+                    <div
+                      className="w-48 h-px mb-5"
+                      style={{
+                        background: `linear-gradient(90deg, transparent, ${meta.accent}40, transparent)`,
+                      }}
+                    />
 
                     {/* Cost & Cooldown */}
                     <div className="flex gap-3 mb-5">
                       <div
                         className="flex flex-col items-center px-5 py-2.5 rounded-lg min-w-[80px] relative overflow-hidden"
                         style={{
-                          background: spell.cost > 0 ? "rgba(120,80,20,0.25)" : "rgba(20,83,45,0.25)",
+                          background:
+                            spell.cost > 0
+                              ? "rgba(120,80,20,0.25)"
+                              : "rgba(20,83,45,0.25)",
                           border: `1px solid ${spell.cost > 0 ? "rgba(120,80,20,0.25)" : "rgba(20,83,45,0.25)"}`,
                         }}
                       >
-                        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-                          style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 5px)" }}
+                        <div
+                          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                          style={{
+                            backgroundImage:
+                              "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 5px)",
+                          }}
                         />
-                        <Coins size={15} className={spell.cost > 0 ? "text-amber-400" : "text-green-400"} />
-                        <span className={`text-sm font-bold mt-1.5 tabular-nums ${spell.cost > 0 ? "text-amber-200" : "text-green-200"}`}>
+                        <Coins
+                          size={15}
+                          className={
+                            spell.cost > 0 ? "text-amber-400" : "text-green-400"
+                          }
+                        />
+                        <span
+                          className={`text-sm font-bold mt-1.5 tabular-nums ${spell.cost > 0 ? "text-amber-200" : "text-green-200"}`}
+                        >
                           {spell.cost > 0 ? `${spell.cost} PP` : "Free"}
                         </span>
                         <span className="text-[7px] text-amber-500/50 uppercase font-bold tracking-wider">
@@ -436,10 +593,17 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       </div>
                       <div
                         className="flex flex-col items-center px-5 py-2.5 rounded-lg min-w-[80px] relative overflow-hidden"
-                        style={{ background: "rgba(30,58,138,0.2)", border: "1px solid rgba(30,58,138,0.25)" }}
+                        style={{
+                          background: "rgba(30,58,138,0.2)",
+                          border: "1px solid rgba(30,58,138,0.25)",
+                        }}
                       >
-                        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-                          style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 5px)" }}
+                        <div
+                          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                          style={{
+                            backgroundImage:
+                              "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 5px)",
+                          }}
                         />
                         <Clock size={15} className="text-blue-400" />
                         <span className="text-sm font-bold text-blue-200 mt-1.5 tabular-nums">
@@ -460,7 +624,12 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       }}
                     >
                       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute inset-0 animate-shimmer" style={{ background: `linear-gradient(90deg, transparent, ${meta.accent}06, transparent)` }} />
+                        <div
+                          className="absolute inset-0 animate-shimmer"
+                          style={{
+                            background: `linear-gradient(90deg, transparent, ${meta.accent}06, transparent)`,
+                          }}
+                        />
                       </div>
                       <p className="relative text-[11px] text-purple-200/60 leading-relaxed">
                         {spell.desc}
@@ -485,7 +654,13 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       }}
                     >
                       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)",
+                          }}
+                        />
                       </div>
                       <span className="relative z-10">
                         {isSelected ? "Unequip" : "Equip Spell"}
@@ -500,8 +675,16 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                     <span className="text-[9px] font-bold text-purple-500/50 uppercase tracking-[0.2em]">
                       Grimoire
                     </span>
-                    <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(140,80,200,0.15), transparent)" }} />
-                    <span className="text-[8px] text-purple-600/30 font-medium">{MENU_SPELL_OPTIONS.length} spells</span>
+                    <div
+                      className="flex-1 h-px"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, rgba(140,80,200,0.15), transparent)",
+                      }}
+                    />
+                    <span className="text-[8px] text-purple-600/30 font-medium">
+                      {MENU_SPELL_OPTIONS.length} spells
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-3 lg:grid-cols-1 gap-2">
@@ -522,45 +705,85 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                               ? `linear-gradient(135deg, ${sm.accent}20, ${sm.accent}08)`
                               : "linear-gradient(135deg, rgba(30,24,38,0.9), rgba(20,16,26,0.9))",
                             border: `1.5px solid ${isFocused ? sm.border : "rgba(80,60,100,0.2)"}`,
-                            boxShadow: isFocused ? `0 0 18px ${sm.accent}20, inset 0 0 10px ${sm.accent}05` : "none",
+                            boxShadow: isFocused
+                              ? `0 0 18px ${sm.accent}20, inset 0 0 10px ${sm.accent}05`
+                              : "none",
                           }}
                         >
                           {/* Inner hover glow */}
                           <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `radial-gradient(circle at 30% 50%, ${sm.accent}08, transparent 70%)` }} />
+                            <div
+                              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{
+                                background: `radial-gradient(circle at 30% 50%, ${sm.accent}08, transparent 70%)`,
+                              }}
+                            />
                           </div>
 
-                          <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 38, height: 38 }}>
-                            <svg className="absolute pointer-events-none" style={{
-                              top: '50%', left: '50%',
-                              transform: 'translate(-50%, -50%)',
-                            }} width={ROSTER_FRAME} height={ROSTER_FRAME} overflow="visible">
+                          <div
+                            className="relative flex-shrink-0 flex items-center justify-center"
+                            style={{ height: 38, width: 38 }}
+                          >
+                            <svg
+                              className="absolute pointer-events-none"
+                              style={{
+                                left: "50%",
+                                top: "50%",
+                                transform: "translate(-50%, -50%)",
+                              }}
+                              width={ROSTER_FRAME}
+                              height={ROSTER_FRAME}
+                              overflow="visible"
+                            >
                               {spellFrameElements({
-                                cx: ROSTER_CX, outerR: ROSTER_CX - 2, midR: ROSTER_CX - 4,
-                                color: hexToRgba(sm.accent, isFocused ? 0.35 : isSel ? 0.22 : 0.12),
-                                dimColor: hexToRgba(sm.accent, isFocused ? 0.18 : isSel ? 0.1 : 0.06),
+                                color: hexToRgba(
+                                  sm.accent,
+                                  isFocused ? 0.35 : isSel ? 0.22 : 0.12
+                                ),
+                                cx: ROSTER_CX,
+                                dimColor: hexToRgba(
+                                  sm.accent,
+                                  isFocused ? 0.18 : isSel ? 0.1 : 0.06
+                                ),
+                                midR: ROSTER_CX - 4,
+                                outerR: ROSTER_CX - 2,
                                 prefix: `sr-${st}`,
                               })}
                             </svg>
                             <SpellSprite type={st} size={34} />
                             {isFocused && (
-                              <div className="absolute -inset-1 rounded-full" style={{ boxShadow: `0 0 10px ${sm.accent}25` }} />
+                              <div
+                                className="absolute -inset-1 rounded-full"
+                                style={{ boxShadow: `0 0 10px ${sm.accent}25` }}
+                              />
                             )}
                           </div>
                           <div className="hidden lg:flex flex-col items-start min-w-0 flex-1">
-                            <span className={`text-[10px] font-bold leading-none ${sm.nameColor}`}>
+                            <span
+                              className={`text-[10px] font-bold leading-none ${sm.nameColor}`}
+                            >
                               {sd.shortName}
                             </span>
                             <div className="flex items-center gap-1 mt-1">
-                              <span className="text-[8px] font-medium" style={{ color: `${sm.accent}90` }}>
+                              <span
+                                className="text-[8px] font-medium"
+                                style={{ color: `${sm.accent}90` }}
+                              >
                                 Lv {lvl + 1}
                               </span>
                               <div className="flex gap-px">
-                                {Array.from({ length: MAX_SPELL_UPGRADE_LEVEL }).map((_, i) => (
+                                {Array.from({
+                                  length: MAX_SPELL_UPGRADE_LEVEL,
+                                }).map((_, i) => (
                                   <div
                                     key={i}
                                     className="w-1 h-1 rounded-full"
-                                    style={{ background: i < lvl ? sm.accent : "rgba(200,200,200,0.15)" }}
+                                    style={{
+                                      background:
+                                        i < lvl
+                                          ? sm.accent
+                                          : "rgba(200,200,200,0.15)",
+                                    }}
                                   />
                                 ))}
                               </div>
@@ -573,7 +796,8 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                             <div
                               className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-bold border-[1.5px] border-stone-900"
                               style={{
-                                background: "linear-gradient(135deg, #a855f7, #7c3aed)",
+                                background:
+                                  "linear-gradient(135deg, #a855f7, #7c3aed)",
                                 boxShadow: "0 0 8px rgba(168,85,247,0.5)",
                               }}
                             >
@@ -587,12 +811,24 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
 
                   {/* Loadout summary */}
                   <div className="mt-auto pt-3">
-                    <div className="h-px mb-3" style={{ background: "linear-gradient(90deg, transparent, rgba(140,80,200,0.15) 30%, rgba(140,80,200,0.15) 70%, transparent)" }} />
+                    <div
+                      className="h-px mb-3"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent, rgba(140,80,200,0.15) 30%, rgba(140,80,200,0.15) 70%, transparent)",
+                      }}
+                    />
                     <div className="flex items-center gap-2 px-1 mb-2">
                       <span className="text-[8px] font-bold text-purple-500/40 uppercase tracking-wider">
                         Loadout
                       </span>
-                      <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(140,80,200,0.1), transparent)" }} />
+                      <div
+                        className="flex-1 h-px"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, rgba(140,80,200,0.1), transparent)",
+                        }}
+                      />
                     </div>
                     <div className="flex items-center gap-1.5">
                       {[0, 1, 2].map((i) =>
@@ -614,16 +850,27 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                           <div
                             key={i}
                             className="w-9 h-9 rounded-lg border border-dashed flex items-center justify-center animate-loadout-idle"
-                            style={{ borderColor: "rgba(140,80,200,0.2)", background: "rgba(88,28,135,0.05)" }}
+                            style={{
+                              background: "rgba(88,28,135,0.05)",
+                              borderColor: "rgba(140,80,200,0.2)",
+                            }}
                           >
-                            <span className="text-[10px] text-purple-600/25">?</span>
+                            <span className="text-[10px] text-purple-600/25">
+                              ?
+                            </span>
                           </div>
                         )
                       )}
                     </div>
                     {selectedSpells.length === 3 && (
                       <div className="flex items-center gap-1.5 mt-2.5 px-1">
-                        <div className="w-3 h-3 rounded-full flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                        <div
+                          className="w-3 h-3 rounded-full flex items-center justify-center"
+                          style={{
+                            background: "rgba(34,197,94,0.15)",
+                            border: "1px solid rgba(34,197,94,0.25)",
+                          }}
+                        >
                           <Check size={8} className="text-green-400" />
                         </div>
                         <span className="text-[8px] text-green-400/50 font-semibold uppercase tracking-wider">

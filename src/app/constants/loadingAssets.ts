@@ -1,4 +1,9 @@
-import { LEVEL_DATA, HERO_OPTIONS, SPELL_OPTIONS, getSpellActionImagePath } from "./index";
+import {
+  LEVEL_DATA,
+  HERO_OPTIONS,
+  SPELL_OPTIONS,
+  getSpellActionImagePath,
+} from "./index";
 import type { MapTheme } from "./maps";
 
 const BIOME_IMAGES = [
@@ -14,9 +19,7 @@ const TOP_BAR_IMAGES = [
   "/images/new/gameplay_winter.png",
 ];
 
-const UI_IMAGES = [
-  "/images/new/gameplay_missile1.png",
-];
+const UI_IMAGES = ["/images/new/gameplay_missile1.png"];
 
 function getAllPreviewImages(): string[] {
   const seen = new Set<string>();
@@ -25,7 +28,7 @@ function getAllPreviewImages(): string[] {
       seen.add(data.previewImage);
     }
   }
-  return Array.from(seen);
+  return [...seen];
 }
 
 function getHeroActionImages(): string[] {
@@ -46,10 +49,7 @@ export function getWorldMapAssets(): string[] {
 }
 
 export function getBattleAssets(selectedMap?: string): string[] {
-  const assets = [
-    ...getHeroActionImages(),
-    ...getSpellActionImages(),
-  ];
+  const assets = [...getHeroActionImages(), ...getSpellActionImages()];
   if (selectedMap) {
     const levelData = LEVEL_DATA[selectedMap];
     if (levelData?.previewImage) {
@@ -124,96 +124,106 @@ export interface LoadingTheme {
 }
 
 const GRASSLAND_THEME: LoadingTheme = {
-  bg: "rgb(10,18,8)",
-  bgRgb: "10,18,8",
-  bgImage: "/images/new/gameplay_grounds.png",
-  frameColor: "#5a8a3c",
-  frameGlow: "#7ab856",
   accent: "#7ab856",
-  accentRgb: "122,184,86",
   accentDark: "#3d6b24",
   accentDarkRgb: "61,107,36",
-  washRgb: "30,60,15",
+  accentRgb: "122,184,86",
+  barGradient:
+    "linear-gradient(90deg, rgba(61,107,36,0.95), rgba(100,160,50,1), rgba(122,184,86,1), rgba(100,160,50,1), rgba(61,107,36,0.95))",
+  barGradientComplete:
+    "linear-gradient(90deg, rgba(100,160,50,1), rgba(140,200,70,1), rgba(170,220,100,1), rgba(140,200,70,1), rgba(100,160,50,1))",
+  bg: "rgb(10,18,8)",
+  bgImage: "/images/new/gameplay_grounds.png",
+  bgRgb: "10,18,8",
   emberColors: ["#7ab856", "#a3d97a", "#5a8a3c", "#3d6b24"],
-  barGradient: "linear-gradient(90deg, rgba(61,107,36,0.95), rgba(100,160,50,1), rgba(122,184,86,1), rgba(100,160,50,1), rgba(61,107,36,0.95))",
-  barGradientComplete: "linear-gradient(90deg, rgba(100,160,50,1), rgba(140,200,70,1), rgba(170,220,100,1), rgba(140,200,70,1), rgba(100,160,50,1))",
+  frameColor: "#5a8a3c",
+  frameGlow: "#7ab856",
   subtitle: "Marshalling forces among the fields…",
+  washRgb: "30,60,15",
 };
 
 const SWAMP_THEME: LoadingTheme = {
-  bg: "rgb(8,14,12)",
-  bgRgb: "8,14,12",
-  bgImage: "/images/new/gameplay_swamp.png",
-  frameColor: "#4a7a6a",
-  frameGlow: "#5ea88e",
   accent: "#5ea88e",
-  accentRgb: "94,168,142",
   accentDark: "#2d5a48",
   accentDarkRgb: "45,90,72",
-  washRgb: "15,40,30",
+  accentRgb: "94,168,142",
+  barGradient:
+    "linear-gradient(90deg, rgba(45,90,72,0.95), rgba(70,140,110,1), rgba(94,168,142,1), rgba(70,140,110,1), rgba(45,90,72,0.95))",
+  barGradientComplete:
+    "linear-gradient(90deg, rgba(70,140,110,1), rgba(110,180,150,1), rgba(140,210,180,1), rgba(110,180,150,1), rgba(70,140,110,1))",
+  bg: "rgb(8,14,12)",
+  bgImage: "/images/new/gameplay_swamp.png",
+  bgRgb: "8,14,12",
   emberColors: ["#5ea88e", "#80c4a6", "#3d8a6e", "#2d5a48"],
-  barGradient: "linear-gradient(90deg, rgba(45,90,72,0.95), rgba(70,140,110,1), rgba(94,168,142,1), rgba(70,140,110,1), rgba(45,90,72,0.95))",
-  barGradientComplete: "linear-gradient(90deg, rgba(70,140,110,1), rgba(110,180,150,1), rgba(140,210,180,1), rgba(110,180,150,1), rgba(70,140,110,1))",
+  frameColor: "#4a7a6a",
+  frameGlow: "#5ea88e",
   subtitle: "Wading through the murky depths…",
+  washRgb: "15,40,30",
 };
 
 const DESERT_THEME: LoadingTheme = {
-  bg: "rgb(18,11,6)",
-  bgRgb: "18,11,6",
-  bgImage: "/images/new/gameplay_desert.png",
-  frameColor: "#b48c3c",
-  frameGlow: "#d4a84a",
   accent: "#d4a84a",
-  accentRgb: "212,168,74",
   accentDark: "#8a6420",
   accentDarkRgb: "138,100,32",
-  washRgb: "80,45,12",
+  accentRgb: "212,168,74",
+  barGradient:
+    "linear-gradient(90deg, rgba(120,78,12,0.95), rgba(185,135,25,1), rgba(200,155,35,1), rgba(185,135,25,1), rgba(120,78,12,0.95))",
+  barGradientComplete:
+    "linear-gradient(90deg, rgba(190,140,25,1), rgba(245,185,35,1), rgba(255,210,60,1), rgba(245,185,35,1), rgba(190,140,25,1))",
+  bg: "rgb(18,11,6)",
+  bgImage: "/images/new/gameplay_desert.png",
+  bgRgb: "18,11,6",
   emberColors: ["#f59e0b", "#fbbf24", "#d97706", "#b45309"],
-  barGradient: "linear-gradient(90deg, rgba(120,78,12,0.95), rgba(185,135,25,1), rgba(200,155,35,1), rgba(185,135,25,1), rgba(120,78,12,0.95))",
-  barGradientComplete: "linear-gradient(90deg, rgba(190,140,25,1), rgba(245,185,35,1), rgba(255,210,60,1), rgba(245,185,35,1), rgba(190,140,25,1))",
+  frameColor: "#b48c3c",
+  frameGlow: "#d4a84a",
   subtitle: "Crossing the scorching sands…",
+  washRgb: "80,45,12",
 };
 
 const WINTER_THEME: LoadingTheme = {
-  bg: "rgb(6,10,18)",
-  bgRgb: "6,10,18",
-  bgImage: "/images/new/gameplay_winter.png",
-  frameColor: "#5a8ab4",
-  frameGlow: "#7abaee",
   accent: "#7abaee",
-  accentRgb: "122,186,238",
   accentDark: "#3a6a94",
   accentDarkRgb: "58,106,148",
-  washRgb: "12,25,50",
+  accentRgb: "122,186,238",
+  barGradient:
+    "linear-gradient(90deg, rgba(58,106,148,0.95), rgba(90,150,200,1), rgba(122,186,238,1), rgba(90,150,200,1), rgba(58,106,148,0.95))",
+  barGradientComplete:
+    "linear-gradient(90deg, rgba(90,150,200,1), rgba(140,200,240,1), rgba(180,225,255,1), rgba(140,200,240,1), rgba(90,150,200,1))",
+  bg: "rgb(6,10,18)",
+  bgImage: "/images/new/gameplay_winter.png",
+  bgRgb: "6,10,18",
   emberColors: ["#7abaee", "#a0d4ff", "#5a9acc", "#3a6a94"],
-  barGradient: "linear-gradient(90deg, rgba(58,106,148,0.95), rgba(90,150,200,1), rgba(122,186,238,1), rgba(90,150,200,1), rgba(58,106,148,0.95))",
-  barGradientComplete: "linear-gradient(90deg, rgba(90,150,200,1), rgba(140,200,240,1), rgba(180,225,255,1), rgba(140,200,240,1), rgba(90,150,200,1))",
+  frameColor: "#5a8ab4",
+  frameGlow: "#7abaee",
   subtitle: "Braving the frozen wastes…",
+  washRgb: "12,25,50",
 };
 
 const VOLCANIC_THEME: LoadingTheme = {
-  bg: "rgb(18,6,4)",
-  bgRgb: "18,6,4",
-  bgImage: "/images/new/gameplay_volcano.png",
-  frameColor: "#b44a2a",
-  frameGlow: "#e06030",
   accent: "#e06030",
-  accentRgb: "224,96,48",
   accentDark: "#8a2a10",
   accentDarkRgb: "138,42,16",
-  washRgb: "60,15,5",
+  accentRgb: "224,96,48",
+  barGradient:
+    "linear-gradient(90deg, rgba(138,42,16,0.95), rgba(190,70,30,1), rgba(224,96,48,1), rgba(190,70,30,1), rgba(138,42,16,0.95))",
+  barGradientComplete:
+    "linear-gradient(90deg, rgba(190,70,30,1), rgba(240,100,40,1), rgba(255,140,60,1), rgba(240,100,40,1), rgba(190,70,30,1))",
+  bg: "rgb(18,6,4)",
+  bgImage: "/images/new/gameplay_volcano.png",
+  bgRgb: "18,6,4",
   emberColors: ["#e06030", "#ff8a50", "#c44020", "#8a2a10"],
-  barGradient: "linear-gradient(90deg, rgba(138,42,16,0.95), rgba(190,70,30,1), rgba(224,96,48,1), rgba(190,70,30,1), rgba(138,42,16,0.95))",
-  barGradientComplete: "linear-gradient(90deg, rgba(190,70,30,1), rgba(240,100,40,1), rgba(255,140,60,1), rgba(240,100,40,1), rgba(190,70,30,1))",
+  frameColor: "#b44a2a",
+  frameGlow: "#e06030",
   subtitle: "Descending into the inferno…",
+  washRgb: "60,15,5",
 };
 
 const THEME_MAP: Record<MapTheme, LoadingTheme> = {
+  desert: DESERT_THEME,
   grassland: GRASSLAND_THEME,
   swamp: SWAMP_THEME,
-  desert: DESERT_THEME,
-  winter: WINTER_THEME,
   volcanic: VOLCANIC_THEME,
+  winter: WINTER_THEME,
 };
 
 /** Default gold theme for world-map context (no region) */
@@ -229,26 +239,28 @@ export const DEFAULT_LOADING_THEME: LoadingTheme = {
  */
 export function resolveLoadingTheme(
   mapTheme?: MapTheme,
-  levelKind?: string,
+  levelKind?: string
 ): LoadingTheme {
   const base = mapTheme ? THEME_MAP[mapTheme] : DEFAULT_LOADING_THEME;
 
   if (levelKind === "challenge") {
     return {
       ...base,
-      bg: "rgb(16,4,6)",
-      bgRgb: "16,4,6",
-      frameColor: "#8a2a3a",
-      frameGlow: "#c44058",
       accent: "#c44058",
-      accentRgb: "196,64,88",
       accentDark: "#6a1a28",
       accentDarkRgb: "106,26,40",
-      washRgb: "50,10,15",
+      accentRgb: "196,64,88",
+      barGradient:
+        "linear-gradient(90deg, rgba(106,26,40,0.95), rgba(160,48,72,1), rgba(196,64,88,1), rgba(160,48,72,1), rgba(106,26,40,0.95))",
+      barGradientComplete:
+        "linear-gradient(90deg, rgba(160,48,72,1), rgba(210,80,100,1), rgba(240,110,130,1), rgba(210,80,100,1), rgba(160,48,72,1))",
+      bg: "rgb(16,4,6)",
+      bgRgb: "16,4,6",
       emberColors: ["#c44058", "#e06078", "#a03048", "#6a1a28"],
-      barGradient: "linear-gradient(90deg, rgba(106,26,40,0.95), rgba(160,48,72,1), rgba(196,64,88,1), rgba(160,48,72,1), rgba(106,26,40,0.95))",
-      barGradientComplete: "linear-gradient(90deg, rgba(160,48,72,1), rgba(210,80,100,1), rgba(240,110,130,1), rgba(210,80,100,1), rgba(160,48,72,1))",
+      frameColor: "#8a2a3a",
+      frameGlow: "#c44058",
       subtitle: "Entering the crucible of champions…",
+      washRgb: "50,10,15",
     };
   }
 

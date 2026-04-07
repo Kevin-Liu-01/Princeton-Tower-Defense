@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+
 import { LANDING_THEME } from "../landingConstants";
 
 const T = LANDING_THEME;
@@ -35,15 +36,16 @@ export function StatBar({
         <div
           className="h-full rounded-[3px] transition-all duration-700 ease-out relative animate-landing-stat-glow"
           style={{
-            width: `${clamped}%`,
             background: `linear-gradient(90deg, ${color}44, ${color}cc, ${color})`,
             boxShadow: `0 0 8px ${color}40, 0 0 2px ${color}60`,
+            width: `${clamped}%`,
           }}
         >
           <div
             className="absolute inset-0 rounded-[3px] pointer-events-none"
             style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 60%)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 60%)",
             }}
           />
           <div
@@ -107,10 +109,28 @@ export function SectionFlourish({
           </filter>
         </defs>
 
-        <path d="M0 12 L130 12" stroke="url(#flourish-line-l)" strokeWidth="1" />
-        <path d="M20 9 L120 9" stroke="url(#flourish-line-l)" strokeWidth="0.4" opacity="0.3" />
-        <path d="M230 12 L360 12" stroke="url(#flourish-line-r)" strokeWidth="1" />
-        <path d="M240 9 L340 9" stroke="url(#flourish-line-r)" strokeWidth="0.4" opacity="0.3" />
+        <path
+          d="M0 12 L130 12"
+          stroke="url(#flourish-line-l)"
+          strokeWidth="1"
+        />
+        <path
+          d="M20 9 L120 9"
+          stroke="url(#flourish-line-l)"
+          strokeWidth="0.4"
+          opacity="0.3"
+        />
+        <path
+          d="M230 12 L360 12"
+          stroke="url(#flourish-line-r)"
+          strokeWidth="1"
+        />
+        <path
+          d="M240 9 L340 9"
+          stroke="url(#flourish-line-r)"
+          strokeWidth="0.4"
+          opacity="0.3"
+        />
 
         <g filter="url(#flourish-glow)">
           <path
@@ -131,11 +151,27 @@ export function SectionFlourish({
           <circle cx="180" cy="12" r="1.5" fill={brightColor} opacity="0.7" />
         </g>
 
-        <path d="M150 12 L154 8.5 L158 12 L154 15.5 Z" fill={color} opacity="0.5" />
-        <path d="M202 12 L206 8.5 L210 12 L206 15.5 Z" fill={color} opacity="0.5" />
+        <path
+          d="M150 12 L154 8.5 L158 12 L154 15.5 Z"
+          fill={color}
+          opacity="0.5"
+        />
+        <path
+          d="M202 12 L206 8.5 L210 12 L206 15.5 Z"
+          fill={color}
+          opacity="0.5"
+        />
 
-        <path d="M138 12 L140 10 L142 12 L140 14 Z" fill={color} opacity="0.3" />
-        <path d="M218 12 L220 10 L222 12 L220 14 Z" fill={color} opacity="0.3" />
+        <path
+          d="M138 12 L140 10 L142 12 L140 14 Z"
+          fill={color}
+          opacity="0.3"
+        />
+        <path
+          d="M218 12 L220 10 L222 12 L220 14 Z"
+          fill={color}
+          opacity="0.3"
+        />
 
         <circle cx="50" cy="12" r="1.5" fill={brightColor} opacity="0.4" />
         <circle cx="90" cy="12" r="1" fill={brightColor} opacity="0.3" />

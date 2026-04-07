@@ -1,16 +1,17 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { Position, Hero, Troop, Tower, Particle } from "../../types";
-import type { TroopMoveInfo } from "../../utils";
+
 import { HERO_PATH_HITBOX_SIZE } from "../../constants";
-import {
-  findClosestPathPoint,
-  findClosestPathPointWithinRadius,
-} from "../../utils";
 import {
   isBarracksOwnerId,
   getFacingRightFromDelta,
 } from "../../game/movement";
 import { getFormationOffsets } from "../../game/setup";
+import type { Position, Hero, Troop, Tower, Particle } from "../../types";
+import type { TroopMoveInfo } from "../../utils";
+import {
+  findClosestPathPoint,
+  findClosestPathPointWithinRadius,
+} from "../../utils";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
 
@@ -18,9 +19,11 @@ export function resolveHeroCommandTargetImpl(
   clickWorldPos: Position,
   moveTargetPos: Position | null,
   moveTargetValid: boolean,
-  selectedMap: string,
+  selectedMap: string
 ): Position | null {
-  if (moveTargetPos && moveTargetValid) return moveTargetPos;
+  if (moveTargetPos && moveTargetValid) {
+    return moveTargetPos;
+  }
   const pathResult = findClosestPathPoint(clickWorldPos, selectedMap);
   if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
     return pathResult.point;
@@ -33,18 +36,23 @@ export function resolveTroopCommandTargetImpl(
   moveInfo: TroopMoveInfo,
   moveTargetPos: Position | null,
   moveTargetValid: boolean,
-  selectedMap: string,
+  selectedMap: string
 ): Position | null {
-  if (moveTargetPos && moveTargetValid) return moveTargetPos;
+  if (moveTargetPos && moveTargetValid) {
+    return moveTargetPos;
+  }
   const pathResult = findClosestPathPointWithinRadius(
     clickWorldPos,
     moveInfo.anchorPos,
     moveInfo.moveRadius,
     selectedMap
   );
-  if (!pathResult || !pathResult.isValid) return null;
+  if (!pathResult || !pathResult.isValid) {
+    return null;
+  }
   const pathPoint = findClosestPathPoint(clickWorldPos, selectedMap);
-  const isNearPath = !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
+  const isNearPath =
+    !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
   return isNearPath ? pathResult.point : null;
 }
 
@@ -52,21 +60,21 @@ export function issueHeroMoveCommandImpl(
   heroId: string,
   targetPos: Position,
   setHero: Setter<Hero | null>,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
   setHero((prev) =>
     prev && prev.id === heroId
       ? {
-        ...prev,
-        moving: true,
-        targetPos,
-        selected: false,
-        facingRight: getFacingRightFromDelta(
-          targetPos.x - prev.pos.x,
-          targetPos.y - prev.pos.y,
-          prev.facingRight ?? true,
-        ),
-      }
+          ...prev,
+          facingRight: getFacingRightFromDelta(
+            targetPos.x - prev.pos.x,
+            targetPos.y - prev.pos.y,
+            prev.facingRight ?? true
+          ),
+          moving: true,
+          selected: false,
+          targetPos,
+        }
       : prev
   );
   addParticles(targetPos, "glow", 5);
@@ -77,9 +85,11 @@ export function issueTroopFormationMoveCommandImpl(
   targetPos: Position,
   towers: Tower[],
   setTroops: Setter<Troop[]>,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
-  const station = towers.find((tower) => tower.id === ownerId && tower.type === "station");
+  const station = towers.find(
+    (tower) => tower.id === ownerId && tower.type === "station"
+  );
   const isBarracksTroop = isBarracksOwnerId(ownerId);
   const isSpellTroop = ownerId.startsWith("spell");
   setTroops((prev) => {
@@ -108,16 +118,16 @@ export function issueTroopFormationMoveCommandImpl(
       const shouldRelocateAnchor = !!station || isBarracksTroop || isSpellTroop;
       return {
         ...troop,
-        moving: true,
-        targetPos: newTarget,
-        userTargetPos: newTarget,
-        selected: false,
-        spawnPoint: shouldRelocateAnchor ? newTarget : troop.spawnPoint,
         facingRight: getFacingRightFromDelta(
           newTarget.x - troop.pos.x,
           newTarget.y - troop.pos.y,
-          troop.facingRight ?? true,
+          troop.facingRight ?? true
         ),
+        moving: true,
+        selected: false,
+        spawnPoint: shouldRelocateAnchor ? newTarget : troop.spawnPoint,
+        targetPos: newTarget,
+        userTargetPos: newTarget,
       };
     });
   });

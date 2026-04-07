@@ -1,8 +1,9 @@
 "use client";
 import React, { useRef, useCallback } from "react";
-import type { TowerType, TowerUpgrade } from "../types";
-import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
+
 import { drawTowerSprite } from "../rendering/towers";
+import type { TowerType, TowerUpgrade } from "../types";
+import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
 
 export const TowerSprite: React.FC<{
   type: TowerType;
@@ -12,32 +13,40 @@ export const TowerSprite: React.FC<{
   animated?: boolean;
 }> = ({ type, size = 48, level = 1, upgrade, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasSize = Math.ceil(size * SPRITE_PAD);
 
   const render = useCallback(
     (time: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = setupSpriteCanvas(canvas, size, size);
-      if (!ctx || size <= 0) return;
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        return;
+      }
+      const ctx = setupSpriteCanvas(canvas, canvasSize, canvasSize);
+      if (!ctx || size <= 0) {
+        return;
+      }
 
-    const cx = size / 2;
-    const cy = size / 2;
+      const offset = (canvasSize - size) / 2;
+      ctx.translate(offset, offset);
+
+      const cx = size / 2;
+      const cy = size / 2;
       const t = animated ? time * 0.08 : 0;
 
-        ctx.save();
+      ctx.save();
       drawTowerSprite(
         ctx,
         cx,
         cy,
         size,
         type,
-        (level as 1 | 2 | 3 | 4),
+        level as 1 | 2 | 3 | 4,
         upgrade as TowerUpgrade | undefined,
-        t,
+        t
       );
-        ctx.restore();
+      ctx.restore();
     },
-    [type, size, level, upgrade, animated],
+    [type, size, canvasSize, level, upgrade, animated]
   );
 
   useSpriteTicker(animated, 50, render);
@@ -45,7 +54,7 @@ export const TowerSprite: React.FC<{
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: size, height: size }}
+      style={{ height: canvasSize, width: canvasSize }}
       aria-label={`${type} tower sprite`}
     />
   );

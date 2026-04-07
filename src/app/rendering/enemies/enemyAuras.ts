@@ -1,5 +1,5 @@
-import type { EnemyCategory } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { EnemyCategory } from "../../types";
 
 const TAU = Math.PI * 2;
 
@@ -13,7 +13,7 @@ function renderInsectoidAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -25,10 +25,7 @@ function renderInsectoidAura(
     const angle = (i / 8) * TAU;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(
-      x + Math.cos(angle) * s * 1.3,
-      y + Math.sin(angle) * s * 0.65,
-    );
+    ctx.lineTo(x + Math.cos(angle) * s * 1.3, y + Math.sin(angle) * s * 0.65);
     ctx.stroke();
   }
 
@@ -53,7 +50,7 @@ function renderForestAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -69,7 +66,7 @@ function renderForestAura(
       x + Math.cos(angle + 0.5) * len * 0.5,
       y + Math.sin(angle + 0.5) * len * 0.25,
       x + Math.cos(angle) * len,
-      y + Math.sin(angle) * len * ISO_Y_RATIO,
+      y + Math.sin(angle) * len * ISO_Y_RATIO
     );
     ctx.stroke();
   }
@@ -92,7 +89,7 @@ function renderSwampAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -105,7 +102,9 @@ function renderSwampAura(
   // Occasional bubbles
   for (let i = 0; i < 3; i++) {
     const seed = (time * 0.001 + i * 1.7) % 1;
-    if (seed > 0.6) continue;
+    if (seed > 0.6) {
+      continue;
+    }
     const bx = x + Math.sin(i * 2.5 + time * 0.0005) * s * 0.4;
     const by = y + Math.cos(i * 1.8) * s * 0.2 * ISO_Y_RATIO - seed * s * 0.15;
     ctx.fillStyle = `rgba(80, 75, 40, ${0.12 * (1 - seed)})`;
@@ -127,7 +126,7 @@ function renderDesertAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -162,7 +161,7 @@ function renderWinterAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -190,8 +189,10 @@ function renderWinterAura(
 
   // Sparkles
   for (let i = 0; i < 3; i++) {
-    const sparkle = Math.sin(time * 0.006 + i * 2.0) * 0.5 + 0.5;
-    if (sparkle < 0.3) continue;
+    const sparkle = Math.sin(time * 0.006 + i * 2) * 0.5 + 0.5;
+    if (sparkle < 0.3) {
+      continue;
+    }
     const sx = x + Math.cos(i * 2.1 + time * 0.0003) * s * 0.5;
     const sy = y + Math.sin(i * 1.7) * s * 0.25 * ISO_Y_RATIO;
     ctx.fillStyle = `rgba(200, 230, 255, ${0.1 * sparkle})`;
@@ -213,7 +214,7 @@ function renderVolcanicAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   const flicker = Math.sin(time * 0.008) * 0.04 + 0.08;
@@ -234,7 +235,7 @@ function renderVolcanicAura(
     ctx.moveTo(x, y);
     ctx.lineTo(
       x + Math.cos(angle) * len,
-      y + Math.sin(angle) * len * ISO_Y_RATIO,
+      y + Math.sin(angle) * len * ISO_Y_RATIO
     );
     ctx.stroke();
   }
@@ -263,7 +264,7 @@ function renderDarkFantasyAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   ctx.save();
@@ -276,7 +277,9 @@ function renderDarkFantasyAura(
   // Faint soul wisps
   for (let i = 0; i < 2; i++) {
     const seed = (time * 0.001 + i * 1.4) % 1;
-    if (seed > 0.5) continue;
+    if (seed > 0.5) {
+      continue;
+    }
     const wx = x + Math.sin(time * 0.002 + i * 2.3) * s * 0.5;
     const wy = y - seed * s * 0.6;
     ctx.fillStyle = `rgba(120, 60, 180, ${0.1 * (1 - seed * 2)})`;
@@ -298,7 +301,7 @@ function renderRegionBossAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const s = size * zoom;
   const pulse = Math.sin(time * 0.003) * 0.03 + 0.09;
@@ -325,21 +328,35 @@ function renderRegionBossAura(
 // ============================================================================
 
 const AURA_CATEGORIES = new Set<EnemyCategory>([
-  "insectoid", "forest", "swamp", "desert", "winter", "volcanic", "dark_fantasy", "region_boss",
+  "insectoid",
+  "forest",
+  "swamp",
+  "desert",
+  "winter",
+  "volcanic",
+  "dark_fantasy",
+  "region_boss",
 ]);
 
-const AURA_RENDERERS: Record<string, (
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number, time: number, zoom: number,
-) => void> = {
-  insectoid: renderInsectoidAura,
-  forest: renderForestAura,
-  swamp: renderSwampAura,
-  desert: renderDesertAura,
-  winter: renderWinterAura,
-  volcanic: renderVolcanicAura,
+const AURA_RENDERERS: Record<
+  string,
+  (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    time: number,
+    zoom: number
+  ) => void
+> = {
   dark_fantasy: renderDarkFantasyAura,
+  desert: renderDesertAura,
+  forest: renderForestAura,
+  insectoid: renderInsectoidAura,
   region_boss: renderRegionBossAura,
+  swamp: renderSwampAura,
+  volcanic: renderVolcanicAura,
+  winter: renderWinterAura,
 };
 
 export function hasEnemyAura(category?: EnemyCategory): boolean {
@@ -353,7 +370,7 @@ export function renderEnemyAura(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const renderer = AURA_RENDERERS[category];
   if (renderer) {

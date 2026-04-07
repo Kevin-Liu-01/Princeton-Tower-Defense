@@ -1,5 +1,6 @@
 "use client";
-import React, { useRef, useState, useEffect, type RefObject } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import type { RefObject } from "react";
 
 interface SectionRevealProps {
   children: React.ReactNode;
@@ -20,7 +21,9 @@ export function SectionReveal({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -31,7 +34,7 @@ export function SectionReveal({
           observer.disconnect();
         }
       },
-      { threshold: 0.01, root: scrollRoot.current, rootMargin: "300px 0px" },
+      { root: scrollRoot.current, rootMargin: "300px 0px", threshold: 0.01 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -42,10 +45,10 @@ export function SectionReveal({
       ref={ref}
       className={className}
       style={{
+        minHeight: mounted ? undefined : 300,
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(40px)",
         transition: `opacity 0.8s ease-out ${delay}ms, transform 0.8s ease-out ${delay}ms`,
-        minHeight: mounted ? undefined : 300,
       }}
     >
       {mounted ? children : null}

@@ -55,7 +55,7 @@ export const RECRUITMENT_CENTER_BUFF_RANGE = 200;
 export const CHRONO_RELAY_SPEED_BUFF = 1.25;
 export const CHRONO_RELAY_BUFF_RANGE = 220;
 export const RANGE_BUFF_CAP = 2.5;
-export const DAMAGE_BUFF_CAP = 3.0;
+export const DAMAGE_BUFF_CAP = 3;
 export const ATTACK_SPEED_BUFF_CAP = 2.4;
 
 // --- Level Range Multipliers (all towers) ---
@@ -68,23 +68,23 @@ export const SPECIAL_TOWER_WARMUP_MS = 5000;
 
 export const SENTINEL_NEXUS_STATS = {
   damage: 100,
+  damageFlash: 120,
   radius: 140,
   strikeIntervalMs: 3000,
   stunDuration: 300,
-  damageFlash: 120,
 } as const;
 
 export const SUNFORGE_ORRERY_STATS = {
   barrageIntervalMs: 9000,
-  clusterScanRadius: 190,
-  strikeRadius: 115,
-  directDamage: 185,
   burnDps: 28,
   burnDurationMs: 2600,
-  stunDuration: 320,
+  clusterScanRadius: 190,
   damageFlash: 280,
+  directDamage: 185,
+  strikeRadius: 115,
+  stunDuration: 320,
   volleyOffsets: [
-    { multiplier: 1.0, radiusScale: 1.0 },
+    { multiplier: 1, radiusScale: 1 },
     { multiplier: 0.76, radiusScale: 0.92 },
     { multiplier: 0.72, radiusScale: 0.9 },
   ],

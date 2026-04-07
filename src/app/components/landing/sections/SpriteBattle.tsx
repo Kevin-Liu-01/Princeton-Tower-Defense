@@ -1,11 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  LANDING_THEME,
-  HERO_GALLERY,
-  type CharacterDisplay,
-} from "../landingConstants";
+import React, { useState, useEffect } from "react";
+
+import { LANDING_THEME, HERO_GALLERY } from "../landingConstants";
+import type { CharacterDisplay } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
@@ -43,8 +41,8 @@ function Battler({ hero, side, row }: BattlerProps) {
       <div
         className="absolute -bottom-2 w-16 h-4 sm:w-20 sm:h-5 rounded-full blur-md"
         style={{
-          background: `radial-gradient(ellipse, ${hero.color}55, transparent)`,
           animation: `landing-battle-glow 2.4s ease-in-out ${delay}s infinite`,
+          background: `radial-gradient(ellipse, ${hero.color}55, transparent)`,
         }}
       />
 
@@ -52,10 +50,10 @@ function Battler({ hero, side, row }: BattlerProps) {
       <div
         className="relative w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] md:w-[88px] md:h-[88px] rounded-full overflow-hidden"
         style={{
+          animation: `landing-battle-surge-${side} 3.2s ease-in-out ${delay}s infinite`,
           border: `2.5px solid ${hero.color}`,
           boxShadow: `0 0 20px ${hero.color}44, 0 0 40px ${hero.color}18`,
           transform: isLeft ? "none" : "scaleX(-1)",
-          animation: `landing-battle-surge-${side} 3.2s ease-in-out ${delay}s infinite`,
         }}
       >
         <Image
@@ -119,11 +117,13 @@ function ClashEffect() {
           <div
             key={i}
             className="absolute w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-            style={{
-              background: i % 2 === 0 ? T.accentBright : T.accent,
-              animation: `landing-spark ${2 + (i % 3) * 0.4}s ease-out ${sparkDelay}s infinite`,
-              "--spark-angle": `${angle}deg`,
-            } as React.CSSProperties}
+            style={
+              {
+                "--spark-angle": `${angle}deg`,
+                animation: `landing-spark ${2 + (i % 3) * 0.4}s ease-out ${sparkDelay}s infinite`,
+                background: i % 2 === 0 ? T.accentBright : T.accent,
+              } as React.CSSProperties
+            }
           />
         );
       })}
@@ -159,12 +159,14 @@ function BattleParticles() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {Array.from({ length: 10 }, (_, i) => {
-        const left = 20 + (i * 7) % 60;
+        const left = 20 + ((i * 7) % 60);
         const delay = i * 1.1;
         const duration = 3 + (i % 4);
         const size = 1.5 + (i % 3);
@@ -173,13 +175,13 @@ function BattleParticles() {
             key={i}
             className="absolute rounded-full"
             style={{
+              animation: `landing-battle-particle ${duration}s ease-out ${delay}s infinite`,
+              background: i % 2 === 0 ? T.accentBright : T.princeton,
+              height: size,
               left: `${left}%`,
+              opacity: 0,
               top: "50%",
               width: size,
-              height: size,
-              background: i % 2 === 0 ? T.accentBright : T.princeton,
-              opacity: 0,
-              animation: `landing-battle-particle ${duration}s ease-out ${delay}s infinite`,
             }}
           />
         );

@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   PawPrint,
   Heart,
@@ -20,21 +19,20 @@ import {
   Shield,
   RotateCcw,
 } from "lucide-react";
-import PrincetonTDLogo from "../primitives/PrincetonTDLogo";
-import { HudSurface } from "./HudSurface";
-import {
-  GOLD,
-  SELECTED,
-} from "../system/theme";
-import { SettingsModal } from "../../menus/SettingsModal";
-import { useSettings } from "../../../hooks/useSettings";
-import { HudTooltip } from "../tooltips/HudTooltip";
-import { ConfirmModal } from "../primitives/ConfirmModal";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useSettings } from "../../../hooks/useSettings";
+import { SettingsModal } from "../../menus/SettingsModal";
 import { HexWardNotification, PaydayNotification } from "../PaydayNotification";
+import { ConfirmModal } from "../primitives/ConfirmModal";
+import PrincetonTDLogo from "../primitives/PrincetonTDLogo";
+import { GOLD, SELECTED } from "../system/theme";
+import { HudTooltip } from "../tooltips/HudTooltip";
+import { GameTimer } from "./GameTimer";
+import { HudSurface } from "./HudSurface";
 import { PRESET_SPEEDS, getLivesTheme } from "./livesTheme";
 import { useAutoPerformanceMode } from "./useAutoPerformanceMode";
-import { GameTimer } from "./GameTimer";
 
 // =============================================================================
 // TOP HUD COMPONENT
@@ -61,11 +59,15 @@ interface TopHUDProps {
   hexWardRaisesRemaining?: number;
   hexWardDamageAmpPct?: number;
   hexWardBlocksHealing?: boolean;
-  eatingClubIncomeEvents?: Array<{ id: string; amount: number }>;
+  eatingClubIncomeEvents?: { id: string; amount: number }[];
   onEatingClubEventComplete?: (id: string) => void;
-  bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
+  bountyIncomeEvents?: {
+    id: string;
+    amount: number;
+    isGoldBoosted: boolean;
+  }[];
   onBountyEventComplete?: (id: string) => void;
-  leakedBountyEvents?: Array<{ id: string; amount: number }>;
+  leakedBountyEvents?: { id: string; amount: number }[];
   onLeakedBountyEventComplete?: (id: string) => void;
   inspectorActive?: boolean;
   setInspectorActive?: (active: boolean) => void;
@@ -118,13 +120,18 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   totalPausedTimeRef,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"restart" | "quit" | null>(null);
-  const { settings: gameSettings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
+  const [confirmAction, setConfirmAction] = useState<"restart" | "quit" | null>(
+    null
+  );
   const {
-    performanceMode,
-    currentFps,
-    togglePerformanceMode,
-  } = useAutoPerformanceMode();
+    settings: gameSettings,
+    updateCategory,
+    applyPreset,
+    resetToDefaults,
+    resetCategory,
+  } = useSettings();
+  const { performanceMode, currentFps, togglePerformanceMode } =
+    useAutoPerformanceMode();
 
   const prevPawPoints = useRef(pawPoints);
   const prevLives = useRef(lives);
@@ -135,23 +142,38 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const livesShakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const livesFlashTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const [activeEatingClubFloaters, setActiveEatingClubFloaters] = useState<Array<{ id: string; amount: number; startTime: number }>>([]);
+  const [activeEatingClubFloaters, setActiveEatingClubFloaters] = useState<
+    { id: string; amount: number; startTime: number }[]
+  >([]);
   const [eatingClubFlash, setEatingClubFlash] = useState(false);
   const processedEatingClubEventsRef = useRef<Set<string>>(new Set());
 
-  const [activeBountyFloaters, setActiveBountyFloaters] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean; startTime: number }>>([]);
+  const [activeBountyFloaters, setActiveBountyFloaters] = useState<
+    {
+      id: string;
+      amount: number;
+      isGoldBoosted: boolean;
+      startTime: number;
+    }[]
+  >([]);
   const processedBountyEventsRef = useRef<Set<string>>(new Set());
 
-  const [activeLeakedFloaters, setActiveLeakedFloaters] = useState<Array<{ id: string; amount: number; startTime: number }>>([]);
+  const [activeLeakedFloaters, setActiveLeakedFloaters] = useState<
+    { id: string; amount: number; startTime: number }[]
+  >([]);
   const processedLeakedEventsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const currentIds = new Set(eatingClubIncomeEvents.map(e => e.id));
-    Array.from(processedEatingClubEventsRef.current).forEach(id => {
-      if (!currentIds.has(id)) processedEatingClubEventsRef.current.delete(id);
+    const currentIds = new Set(eatingClubIncomeEvents.map((e) => e.id));
+    [...processedEatingClubEventsRef.current].forEach((id) => {
+      if (!currentIds.has(id)) {
+        processedEatingClubEventsRef.current.delete(id);
+      }
     });
 
-    const newEvents = eatingClubIncomeEvents.filter(e => !processedEatingClubEventsRef.current.has(e.id));
+    const newEvents = eatingClubIncomeEvents.filter(
+      (e) => !processedEatingClubEventsRef.current.has(e.id)
+    );
 
     if (newEvents.length > 0) {
       setEatingClubFlash(true);
@@ -160,32 +182,44 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       const now = Date.now();
       const newFloaters = newEvents.map((event, idx) => {
         processedEatingClubEventsRef.current.add(event.id);
-        return { id: event.id, amount: event.amount, startTime: now + idx * 80 };
+        return {
+          amount: event.amount,
+          id: event.id,
+          startTime: now + idx * 80,
+        };
       });
-      setActiveEatingClubFloaters(prev => [...prev, ...newFloaters]);
+      setActiveEatingClubFloaters((prev) => [...prev, ...newFloaters]);
     }
   }, [eatingClubIncomeEvents]);
 
   useEffect(() => {
-    if (activeEatingClubFloaters.length === 0) return;
-    const timers = activeEatingClubFloaters.map(floater => {
+    if (activeEatingClubFloaters.length === 0) {
+      return;
+    }
+    const timers = activeEatingClubFloaters.map((floater) => {
       const elapsed = Date.now() - floater.startTime;
       const remaining = Math.max(0, 1200 - elapsed);
       return setTimeout(() => {
-        setActiveEatingClubFloaters(prev => prev.filter(f => f.id !== floater.id));
+        setActiveEatingClubFloaters((prev) =>
+          prev.filter((f) => f.id !== floater.id)
+        );
         onEatingClubEventComplete?.(floater.id);
       }, remaining);
     });
-    return () => timers.forEach(t => clearTimeout(t));
+    return () => timers.forEach((t) => clearTimeout(t));
   }, [activeEatingClubFloaters, onEatingClubEventComplete]);
 
   useEffect(() => {
-    const currentIds = new Set(bountyIncomeEvents.map(e => e.id));
-    Array.from(processedBountyEventsRef.current).forEach(id => {
-      if (!currentIds.has(id)) processedBountyEventsRef.current.delete(id);
+    const currentIds = new Set(bountyIncomeEvents.map((e) => e.id));
+    [...processedBountyEventsRef.current].forEach((id) => {
+      if (!currentIds.has(id)) {
+        processedBountyEventsRef.current.delete(id);
+      }
     });
 
-    const newEvents = bountyIncomeEvents.filter(e => !processedBountyEventsRef.current.has(e.id));
+    const newEvents = bountyIncomeEvents.filter(
+      (e) => !processedBountyEventsRef.current.has(e.id)
+    );
 
     if (newEvents.length > 0) {
       setPpPulse(true);
@@ -194,32 +228,45 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       const now = Date.now();
       const newFloaters = newEvents.map((event, idx) => {
         processedBountyEventsRef.current.add(event.id);
-        return { id: event.id, amount: event.amount, isGoldBoosted: event.isGoldBoosted, startTime: now + idx * 50 };
+        return {
+          amount: event.amount,
+          id: event.id,
+          isGoldBoosted: event.isGoldBoosted,
+          startTime: now + idx * 50,
+        };
       });
-      setActiveBountyFloaters(prev => [...prev, ...newFloaters]);
+      setActiveBountyFloaters((prev) => [...prev, ...newFloaters]);
     }
   }, [bountyIncomeEvents]);
 
   useEffect(() => {
-    if (activeBountyFloaters.length === 0) return;
-    const timers = activeBountyFloaters.map(floater => {
+    if (activeBountyFloaters.length === 0) {
+      return;
+    }
+    const timers = activeBountyFloaters.map((floater) => {
       const elapsed = Date.now() - floater.startTime;
       const remaining = Math.max(0, 1000 - elapsed);
       return setTimeout(() => {
-        setActiveBountyFloaters(prev => prev.filter(f => f.id !== floater.id));
+        setActiveBountyFloaters((prev) =>
+          prev.filter((f) => f.id !== floater.id)
+        );
         onBountyEventComplete?.(floater.id);
       }, remaining);
     });
-    return () => timers.forEach(t => clearTimeout(t));
+    return () => timers.forEach((t) => clearTimeout(t));
   }, [activeBountyFloaters, onBountyEventComplete]);
 
   useEffect(() => {
-    const currentIds = new Set(leakedBountyEvents.map(e => e.id));
-    Array.from(processedLeakedEventsRef.current).forEach(id => {
-      if (!currentIds.has(id)) processedLeakedEventsRef.current.delete(id);
+    const currentIds = new Set(leakedBountyEvents.map((e) => e.id));
+    [...processedLeakedEventsRef.current].forEach((id) => {
+      if (!currentIds.has(id)) {
+        processedLeakedEventsRef.current.delete(id);
+      }
     });
 
-    const newEvents = leakedBountyEvents.filter(e => !processedLeakedEventsRef.current.has(e.id));
+    const newEvents = leakedBountyEvents.filter(
+      (e) => !processedLeakedEventsRef.current.has(e.id)
+    );
 
     if (newEvents.length > 0) {
       setPpPulse(true);
@@ -228,26 +275,36 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       const now = Date.now();
       const newFloaters = newEvents.map((event, idx) => {
         processedLeakedEventsRef.current.add(event.id);
-        return { id: event.id, amount: event.amount, startTime: now + idx * 50 };
+        return {
+          amount: event.amount,
+          id: event.id,
+          startTime: now + idx * 50,
+        };
       });
-      setActiveLeakedFloaters(prev => [...prev, ...newFloaters]);
+      setActiveLeakedFloaters((prev) => [...prev, ...newFloaters]);
     }
   }, [leakedBountyEvents]);
 
   useEffect(() => {
-    if (activeLeakedFloaters.length === 0) return;
-    const timers = activeLeakedFloaters.map(floater => {
+    if (activeLeakedFloaters.length === 0) {
+      return;
+    }
+    const timers = activeLeakedFloaters.map((floater) => {
       const elapsed = Date.now() - floater.startTime;
       const remaining = Math.max(0, 1200 - elapsed);
       return setTimeout(() => {
-        setActiveLeakedFloaters(prev => prev.filter(f => f.id !== floater.id));
+        setActiveLeakedFloaters((prev) =>
+          prev.filter((f) => f.id !== floater.id)
+        );
         onLeakedBountyEventComplete?.(floater.id);
       }, remaining);
     });
-    return () => timers.forEach(t => clearTimeout(t));
+    return () => timers.forEach((t) => clearTimeout(t));
   }, [activeLeakedFloaters, onLeakedBountyEventComplete]);
 
-  useEffect(() => { prevPawPoints.current = pawPoints; }, [pawPoints]);
+  useEffect(() => {
+    prevPawPoints.current = pawPoints;
+  }, [pawPoints]);
 
   useEffect(() => {
     if (lives < prevLives.current) {
@@ -261,17 +318,25 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     prevLives.current = lives;
   }, [lives]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       clearTimeout(livesShakeTimerRef.current);
       clearTimeout(livesFlashTimerRef.current);
-    };
-  }, []);
+    },
+    []
+  );
 
   const livesPercent = maxLives > 0 ? (lives / maxLives) * 100 : 100;
-  const livesTheme = useMemo(() => getLivesTheme(livesPercent, livesFlash), [livesPercent, livesFlash]);
+  const livesTheme = useMemo(
+    () => getLivesTheme(livesPercent, livesFlash),
+    [livesPercent, livesFlash]
+  );
 
-  const waveProgress = isSandbox ? 0 : totalWaves > 0 ? ((currentWave) / totalWaves) * 100 : 0;
+  const waveProgress = isSandbox
+    ? 0
+    : totalWaves > 0
+      ? (currentWave / totalWaves) * 100
+      : 0;
 
   const fallbackPausedRef = useRef(0);
   const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -279,17 +344,23 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const exitInspectorOnSpeed = () => {
     if (inspectorActive && setInspectorActive) {
       setInspectorActive(false);
-      if (setSelectedInspectEnemy) setSelectedInspectEnemy(null);
+      if (setSelectedInspectEnemy) {
+        setSelectedInspectEnemy(null);
+      }
     }
   };
 
-  const ICON_BADGE_BASE = "absolute left-0 top-1/2 z-20 flex h-7 w-7 -translate-x-1/3 -translate-y-1/2 items-center justify-center rounded-full sm:h-8 sm:w-8";
-  const ICON_BADGE_SHADOW = "0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)";
+  const ICON_BADGE_BASE =
+    "absolute left-0 top-1/2 z-20 flex h-7 w-7 -translate-x-1/3 -translate-y-1/2 items-center justify-center rounded-full sm:h-8 sm:w-8";
+  const ICON_BADGE_SHADOW =
+    "0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)";
 
   const leftStatsContent = (
     <div className="flex items-center gap-4 min-w-0 shrink-0">
       {/* Paw Points */}
-      <div className={`relative shrink-0 transition-transform duration-200 ${ppPulse ? "scale-110" : "scale-100"}`}>
+      <div
+        className={`relative shrink-0 transition-transform duration-200 ${ppPulse ? "scale-110" : "scale-100"}`}
+      >
         <div
           className="relative flex h-9 items-center gap-1.5 rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
@@ -341,7 +412,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 +{floater.amount}
               </span>
               {floater.isGoldBoosted && (
-                <Sparkles size={10} className="ml-0.5 inline-block text-yellow-300" />
+                <Sparkles
+                  size={10}
+                  className="ml-0.5 inline-block text-yellow-300"
+                />
               )}
             </div>
           ))}
@@ -359,7 +433,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
                 +{floater.amount}
               </span>
-              <Landmark size={10} className="ml-0.5 inline-block text-emerald-400" />
+              <Landmark
+                size={10}
+                className="ml-0.5 inline-block text-emerald-400"
+              />
             </div>
           ))}
           {activeLeakedFloaters.map((floater, index) => (
@@ -380,12 +457,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             </div>
           ))}
           <span
-            className={`relative z-10 text-sm font-black tabular-nums transition-colors duration-200 sm:text-base ${goldSpellActive
-              ? "text-yellow-200"
-              : eatingClubFlash
-                ? "text-emerald-200"
-                : "text-amber-200"
-              }`}
+            className={`relative z-10 text-sm font-black tabular-nums transition-colors duration-200 sm:text-base ${
+              goldSpellActive
+                ? "text-yellow-200"
+                : eatingClubFlash
+                  ? "text-emerald-200"
+                  : "text-amber-200"
+            }`}
           >
             {Math.round(pawPoints)}
           </span>
@@ -417,12 +495,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         >
           <PawPrint
             size={14}
-            className={`transition-colors duration-200 ${goldSpellActive
-              ? "text-yellow-300"
-              : eatingClubFlash
-                ? "text-emerald-300"
-                : "text-amber-400"
-              }`}
+            className={`transition-colors duration-200 ${
+              goldSpellActive
+                ? "text-yellow-300"
+                : eatingClubFlash
+                  ? "text-emerald-300"
+                  : "text-amber-400"
+            }`}
           />
         </div>
       </div>
@@ -470,7 +549,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <div
           className={ICON_BADGE_BASE}
           style={{
-            background: "linear-gradient(135deg, rgba(55,16,16,0.98), rgba(35,10,10,0.98))",
+            background:
+              "linear-gradient(135deg, rgba(55,16,16,0.98), rgba(35,10,10,0.98))",
             border: `2px solid ${livesTheme.iconFill}88`,
             boxShadow: ICON_BADGE_SHADOW,
           }}
@@ -482,12 +562,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             style={{
               animation:
                 livesPercent <= 60
-                  ? `heartbeat ${livesPercent <= 15
-                    ? "0.6s"
-                    : livesPercent <= 30
-                      ? "0.9s"
-                      : "1.4s"
-                  } ease-in-out infinite`
+                  ? `heartbeat ${
+                      livesPercent <= 15
+                        ? "0.6s"
+                        : livesPercent <= 30
+                          ? "0.9s"
+                          : "1.4s"
+                    } ease-in-out infinite`
                   : "none",
             }}
           />
@@ -499,9 +580,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <div
           className="relative flex h-9 items-center gap-1 overflow-hidden rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
-            background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+            background:
+              "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
             border: `1.5px solid ${GOLD.border25}`,
-            boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+            boxShadow:
+              "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
           }}
         >
           <div
@@ -518,7 +601,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           />
           <div className="relative z-10 flex items-center gap-1">
             <span className="text-sm font-black leading-none tabular-nums text-amber-200 sm:text-base">
-              {isSandbox ? currentWave + 1 : Math.min(currentWave + 1, totalWaves)}
+              {isSandbox
+                ? currentWave + 1
+                : Math.min(currentWave + 1, totalWaves)}
             </span>
             {!isSandbox && (
               <span className="text-[9px] font-medium text-amber-500/50 sm:text-[10px]">
@@ -535,7 +620,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <div
           className={ICON_BADGE_BASE}
           style={{
-            background: "linear-gradient(135deg, rgba(48,35,16,0.98), rgba(30,22,10,0.98))",
+            background:
+              "linear-gradient(135deg, rgba(48,35,16,0.98), rgba(30,22,10,0.98))",
             border: "2px solid rgba(180,140,60,0.5)",
             boxShadow: ICON_BADGE_SHADOW,
           }}
@@ -556,7 +642,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           background:
             "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
           border: "1.5px solid rgba(90,110,40,0.3)",
-          boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+          boxShadow:
+            "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
         }}
       >
         <div
@@ -564,21 +651,27 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           style={{ border: "1px solid rgba(90,110,40,0.08)" }}
         />
 
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed (−0.5)"}>
+        <HudTooltip
+          label={pauseLocked ? "Speed locked" : "Decrease speed (−0.5)"}
+        >
           <button
             onClick={() => {
-              if (pauseLocked) return;
+              if (pauseLocked) {
+                return;
+              }
               setGameSpeed((prev) => Math.max(prev - 0.5, 0));
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
-            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-l-lg transition-all sm:w-10 ${pauseLocked
-              ? "cursor-not-allowed opacity-40"
-              : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
-              }`}
+            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-l-lg transition-all sm:w-10 ${
+              pauseLocked
+                ? "cursor-not-allowed opacity-40"
+                : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
+            }`}
             style={{
+              background:
+                "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
               borderRight: "1px solid rgba(90,110,40,0.2)",
-              background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
             }}
           >
             <Rewind size={14} className="text-green-400/80 sm:scale-110" />
@@ -589,18 +682,24 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           {PRESET_SPEEDS.map((speed) => {
             const isActive = gameSpeed === speed;
             return (
-              <HudTooltip key={speed} label={pauseLocked ? "Speed locked" : `${speed}× speed`}>
+              <HudTooltip
+                key={speed}
+                label={pauseLocked ? "Speed locked" : `${speed}× speed`}
+              >
                 <button
                   onClick={() => {
-                    if (pauseLocked) return;
+                    if (pauseLocked) {
+                      return;
+                    }
                     setGameSpeed(speed);
                     exitInspectorOnSpeed();
                   }}
                   disabled={pauseLocked}
-                  className={`relative z-10 w-[38px] rounded-md py-1.5 text-center text-[11px] font-black tabular-nums transition-all sm:w-[42px] sm:text-xs ${pauseLocked
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:brightness-125 active:scale-95"
-                    }`}
+                  className={`relative z-10 w-[38px] rounded-md py-1.5 text-center text-[11px] font-black tabular-nums transition-all sm:w-[42px] sm:text-xs ${
+                    pauseLocked
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:brightness-125 active:scale-95"
+                  }`}
                   style={{
                     background: isActive
                       ? "linear-gradient(135deg, rgba(80,110,30,0.8), rgba(55,75,20,0.6))"
@@ -608,10 +707,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     border: isActive
                       ? "1px solid rgba(130,180,50,0.55)"
                       : "1px solid rgba(60,80,30,0.2)",
-                    color: isActive ? "#bef264" : "rgba(163,230,53,0.45)",
                     boxShadow: isActive
                       ? "0 0 8px rgba(130,180,50,0.2), inset 0 0 6px rgba(130,180,50,0.1)"
                       : "none",
+                    color: isActive ? "#bef264" : "rgba(163,230,53,0.45)",
                   }}
                 >
                   {speed}x
@@ -621,21 +720,27 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           })}
         </div>
 
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed (+0.5)"}>
+        <HudTooltip
+          label={pauseLocked ? "Speed locked" : "Increase speed (+0.5)"}
+        >
           <button
             onClick={() => {
-              if (pauseLocked) return;
+              if (pauseLocked) {
+                return;
+              }
               setGameSpeed((prev) => Math.min(prev + 0.5, 5));
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
-            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-r-lg transition-all sm:w-10 ${pauseLocked
-              ? "cursor-not-allowed opacity-40"
-              : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
-              }`}
+            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-r-lg transition-all sm:w-10 ${
+              pauseLocked
+                ? "cursor-not-allowed opacity-40"
+                : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
+            }`}
             style={{
+              background:
+                "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
               borderLeft: "1px solid rgba(90,110,40,0.2)",
-              background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
             }}
           >
             <FastForward size={14} className="text-green-400/80 sm:scale-110" />
@@ -644,16 +749,16 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </div>
 
       {!isPresetSpeed && gameSpeed > 0 && (
-        <div
-          className="pointer-events-none absolute -right-1 -top-2 z-30"
-        >
+        <div className="pointer-events-none absolute -right-1 -top-2 z-30">
           <span
             className="inline-block rounded-full px-1.5 py-px text-[8px] font-extrabold tabular-nums leading-tight"
             style={{
-              background: "linear-gradient(135deg, rgba(55,80,20,0.97), rgba(35,55,12,0.97))",
+              background:
+                "linear-gradient(135deg, rgba(55,80,20,0.97), rgba(35,55,12,0.97))",
               border: "1.5px solid rgba(160,220,60,0.55)",
+              boxShadow:
+                "0 1px 6px rgba(0,0,0,0.5), 0 0 6px rgba(130,180,50,0.25)",
               color: "#d9f99d",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.5), 0 0 6px rgba(130,180,50,0.25)",
             }}
           >
             {gameSpeed}x
@@ -663,23 +768,29 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     </div>
   );
 
-  const CIRCLE_BTN = "relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all hover:brightness-130 active:scale-95";
-  const CIRCLE_BTN_SHADOW = "0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+  const CIRCLE_BTN =
+    "relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all hover:brightness-130 active:scale-95";
+  const CIRCLE_BTN_SHADOW =
+    "0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
 
   const utilityControlsContent = (
     <div
       className="relative hidden h-9 items-center gap-1.5 rounded-lg px-2 sm:flex sm:h-10"
       style={{
-        background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+        background:
+          "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
         border: `1.5px solid ${GOLD.border25}`,
-        boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+        boxShadow:
+          "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
       }}
     >
       <div
         className="absolute inset-[2px] rounded-[6px] pointer-events-none"
         style={{ border: `1px solid ${GOLD.innerBorder08}` }}
       />
-      <HudTooltip label={`Performance mode: ${performanceMode ? "ON" : "OFF"} · ${currentFps} FPS`}>
+      <HudTooltip
+        label={`Performance mode: ${performanceMode ? "ON" : "OFF"} · ${currentFps} FPS`}
+      >
         <button
           onClick={togglePerformanceMode}
           className={`${CIRCLE_BTN} ${currentFps < 45 && !performanceMode ? "animate-pulse" : ""}`}
@@ -709,12 +820,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           />
           {gameSettings.ui.showFpsCounter && (
             <span
-              className={`absolute -bottom-1 -right-1 rounded-full px-1 text-[7px] font-bold leading-tight ${currentFps >= 55
-                ? "bg-green-700/90 text-green-100"
-                : currentFps >= 45
-                  ? "bg-yellow-700/90 text-yellow-100"
-                  : "bg-red-700/90 text-red-100"
-                }`}
+              className={`absolute -bottom-1 -right-1 rounded-full px-1 text-[7px] font-bold leading-tight ${
+                currentFps >= 55
+                  ? "bg-green-700/90 text-green-100"
+                  : currentFps >= 45
+                    ? "bg-yellow-700/90 text-yellow-100"
+                    : "bg-red-700/90 text-red-100"
+              }`}
             >
               {currentFps}
             </span>
@@ -726,7 +838,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           onClick={() => setShowSettings(true)}
           className={CIRCLE_BTN}
           style={{
-            background: "linear-gradient(180deg, rgba(150,75,12,0.6), rgba(100,48,6,0.4))",
+            background:
+              "linear-gradient(180deg, rgba(150,75,12,0.6), rgba(100,48,6,0.4))",
             border: "1.5px solid rgba(217,119,6,0.45)",
             boxShadow: CIRCLE_BTN_SHADOW,
           }}
@@ -735,7 +848,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         </button>
       </HudTooltip>
       {onTogglePhotoMode && (
-        <HudTooltip label={cameraModeActive ? "Exit photo mode (F2)" : "Photo mode (F2)"}>
+        <HudTooltip
+          label={cameraModeActive ? "Exit photo mode (F2)" : "Photo mode (F2)"}
+        >
           <button
             onClick={onTogglePhotoMode}
             className={CIRCLE_BTN}
@@ -751,7 +866,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 : CIRCLE_BTN_SHADOW,
             }}
           >
-            <Camera size={14} className={cameraModeActive ? "text-indigo-200" : "text-indigo-300"} />
+            <Camera
+              size={14}
+              className={
+                cameraModeActive ? "text-indigo-200" : "text-indigo-300"
+              }
+            />
           </button>
         </HudTooltip>
       )}
@@ -786,19 +906,31 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     <div
       className="relative flex h-9 items-center gap-1.5 rounded-lg px-2 sm:h-10"
       style={{
-        background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+        background:
+          "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
         border: `1.5px solid ${GOLD.border25}`,
-        boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+        boxShadow:
+          "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
       }}
     >
       <div
         className="absolute inset-[2px] rounded-[6px] pointer-events-none"
         style={{ border: `1px solid ${GOLD.innerBorder08}` }}
       />
-      <HudTooltip label={pauseLocked ? "Locked — exit photo/inspect mode first" : gameSpeed === 0 ? "Resume game (Space)" : "Pause game (Space)"}>
+      <HudTooltip
+        label={
+          pauseLocked
+            ? "Locked — exit photo/inspect mode first"
+            : gameSpeed === 0
+              ? "Resume game (Space)"
+              : "Pause game (Space)"
+        }
+      >
         <button
           onClick={() => {
-            if (pauseLocked) return;
+            if (pauseLocked) {
+              return;
+            }
             if (gameSpeed === 0) {
               setGameSpeed(1);
               exitInspectorOnSpeed();
@@ -828,7 +960,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           onClick={() => setConfirmAction("restart")}
           className={CIRCLE_BTN}
           style={{
-            background: "linear-gradient(180deg, rgba(25,95,48,0.6), rgba(12,60,28,0.4))",
+            background:
+              "linear-gradient(180deg, rgba(25,95,48,0.6), rgba(12,60,28,0.4))",
             border: "1.5px solid rgba(60,140,80,0.4)",
             boxShadow: CIRCLE_BTN_SHADOW,
           }}
@@ -841,7 +974,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           onClick={() => setConfirmAction("quit")}
           className={CIRCLE_BTN}
           style={{
-            background: "linear-gradient(180deg, rgba(110,22,22,0.6), rgba(75,12,12,0.4))",
+            background:
+              "linear-gradient(180deg, rgba(110,22,22,0.6), rgba(75,12,12,0.4))",
             border: "1.5px solid rgba(200,60,60,0.45)",
             boxShadow: CIRCLE_BTN_SHADOW,
           }}
@@ -898,39 +1032,75 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                         ? "linear-gradient(135deg, rgba(6,35,18,0.95), rgba(3,25,12,0.95))"
                         : "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
                     border: `1.5px solid ${GOLD.border25}`,
-                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                    boxShadow:
+                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
                   }}
                 >
                   {activeBountyFloaters.map((floater, index) => (
                     <div
                       key={floater.id}
                       className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
-                      style={{ animation: "bountyFloat 1s ease-out forwards", animationDelay: `${index * 30}ms`, bottom: -8, zIndex: 100 - index }}
+                      style={{
+                        animation: "bountyFloat 1s ease-out forwards",
+                        animationDelay: `${index * 30}ms`,
+                        bottom: -8,
+                        zIndex: 100 - index,
+                      }}
                     >
-                      <span className={floater.isGoldBoosted ? "text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]" : "text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]"}>+{floater.amount}</span>
+                      <span
+                        className={
+                          floater.isGoldBoosted
+                            ? "text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]"
+                            : "text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]"
+                        }
+                      >
+                        +{floater.amount}
+                      </span>
                     </div>
                   ))}
                   {activeEatingClubFloaters.map((floater, index) => (
                     <div
                       key={floater.id}
                       className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
-                      style={{ animation: "eatingClubFloat 1.2s ease-out forwards", animationDelay: `${index * 50}ms`, bottom: -8, zIndex: 90 - index }}
+                      style={{
+                        animation: "eatingClubFloat 1.2s ease-out forwards",
+                        animationDelay: `${index * 50}ms`,
+                        bottom: -8,
+                        zIndex: 90 - index,
+                      }}
                     >
-                      <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">+{floater.amount}</span>
+                      <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+                        +{floater.amount}
+                      </span>
                     </div>
                   ))}
                   {activeLeakedFloaters.map((floater, index) => (
                     <div
                       key={floater.id}
                       className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
-                      style={{ animation: "leakedFloat 1.2s ease-out forwards", animationDelay: `${index * 40}ms`, bottom: -8, zIndex: 80 - index }}
+                      style={{
+                        animation: "leakedFloat 1.2s ease-out forwards",
+                        animationDelay: `${index * 40}ms`,
+                        bottom: -8,
+                        zIndex: 80 - index,
+                      }}
                     >
-                      <span className="text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]">+{floater.amount}</span>
-                      <Skull size={9} className="ml-0.5 inline-block text-red-400" />
+                      <span className="text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]">
+                        +{floater.amount}
+                      </span>
+                      <Skull
+                        size={9}
+                        className="ml-0.5 inline-block text-red-400"
+                      />
                     </div>
                   ))}
-                  <PawPrint size={12} className={`shrink-0 ${goldSpellActive ? "text-yellow-300" : eatingClubFlash ? "text-emerald-300" : "text-amber-400"}`} />
-                  <span className={`text-sm font-black tabular-nums ${goldSpellActive ? "text-yellow-200" : eatingClubFlash ? "text-emerald-200" : "text-amber-200"}`}>
+                  <PawPrint
+                    size={12}
+                    className={`shrink-0 ${goldSpellActive ? "text-yellow-300" : eatingClubFlash ? "text-emerald-300" : "text-amber-400"}`}
+                  />
+                  <span
+                    className={`text-sm font-black tabular-nums ${goldSpellActive ? "text-yellow-200" : eatingClubFlash ? "text-emerald-200" : "text-amber-200"}`}
+                  >
                     {Math.round(pawPoints)}
                   </span>
                 </div>
@@ -938,10 +1108,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 <div
                   className="relative flex h-8 min-w-[48px] shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-2 py-1"
                   style={{
+                    animation: livesShake ? "shake 0.5s ease-in-out" : "none",
                     background: livesTheme.bg,
                     border: livesTheme.border,
                     boxShadow: livesTheme.shadow,
-                    animation: livesShake ? "shake 0.5s ease-in-out" : "none",
                   }}
                 >
                   <div
@@ -951,32 +1121,52 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                       clipPath: `inset(0 ${100 - livesPercent}% 0 0)`,
                     }}
                   />
-                  <Heart size={12} className={`relative z-10 shrink-0 ${livesTheme.iconClass}`} fill={livesTheme.iconFill} />
-                  <span className={`relative z-10 text-sm font-black tabular-nums ${livesTheme.textClass}`}>{lives}</span>
-                  {livesFlash && <div className="absolute inset-0 bg-red-500/30 pointer-events-none" />}
+                  <Heart
+                    size={12}
+                    className={`relative z-10 shrink-0 ${livesTheme.iconClass}`}
+                    fill={livesTheme.iconFill}
+                  />
+                  <span
+                    className={`relative z-10 text-sm font-black tabular-nums ${livesTheme.textClass}`}
+                  >
+                    {lives}
+                  </span>
+                  {livesFlash && (
+                    <div className="absolute inset-0 bg-red-500/30 pointer-events-none" />
+                  )}
                 </div>
                 {/* Wave — compact */}
                 <div
                   className="relative flex h-8 min-w-[48px] shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-2 py-1"
                   style={{
-                    background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+                    background:
+                      "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
                     border: `1.5px solid ${GOLD.border25}`,
-                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                    boxShadow:
+                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
                   }}
                 >
                   <div
                     className="absolute inset-0 pointer-events-none transition-all duration-700 ease-out"
                     style={{
-                      background: "linear-gradient(90deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12))",
+                      background:
+                        "linear-gradient(90deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12))",
                       clipPath: `inset(0 ${100 - waveProgress}% 0 0)`,
                     }}
                   />
-                  <Skull size={11} className="relative z-10 shrink-0 text-amber-400" />
+                  <Skull
+                    size={11}
+                    className="relative z-10 shrink-0 text-amber-400"
+                  />
                   <span className="relative z-10 text-sm font-black tabular-nums text-amber-200">
-                    {isSandbox ? currentWave + 1 : Math.min(currentWave + 1, totalWaves)}
+                    {isSandbox
+                      ? currentWave + 1
+                      : Math.min(currentWave + 1, totalWaves)}
                   </span>
                   {isSandbox && (
-                    <span className="relative z-10 text-[8px] font-medium text-amber-500/50">&#x221E;</span>
+                    <span className="relative z-10 text-[8px] font-medium text-amber-500/50">
+                      &#x221E;
+                    </span>
                   )}
                 </div>
               </div>
@@ -985,18 +1175,26 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 <div
                   className="relative flex h-8 items-center overflow-hidden rounded-lg"
                   style={{
-                    background: "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
+                    background:
+                      "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
                     border: "1.5px solid rgba(90,110,40,0.3)",
-                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                    boxShadow:
+                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
                   }}
                 >
                   <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.5, 0)); exitInspectorOnSpeed(); } }}
+                    onClick={() => {
+                      if (!pauseLocked) {
+                        setGameSpeed((prev) => Math.max(prev - 0.5, 0));
+                        exitInspectorOnSpeed();
+                      }
+                    }}
                     disabled={pauseLocked}
                     className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
                     style={{
+                      background:
+                        "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
                       borderRight: "1px solid rgba(90,110,40,0.2)",
-                      background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
                     }}
                   >
                     <Rewind size={10} className="text-green-400/80" />
@@ -1008,12 +1206,18 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     {gameSpeed}x
                   </span>
                   <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.5, 5)); exitInspectorOnSpeed(); } }}
+                    onClick={() => {
+                      if (!pauseLocked) {
+                        setGameSpeed((prev) => Math.min(prev + 0.5, 5));
+                        exitInspectorOnSpeed();
+                      }
+                    }}
                     disabled={pauseLocked}
                     className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
                     style={{
+                      background:
+                        "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
                       borderLeft: "1px solid rgba(90,110,40,0.2)",
-                      background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
                     }}
                   >
                     <FastForward size={10} className="text-green-400/80" />
@@ -1025,30 +1229,59 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 <div
                   className="relative flex h-8 items-center gap-0.5 rounded-lg px-0.5"
                   style={{
-                    background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+                    background:
+                      "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
                     border: `1.5px solid ${GOLD.border25}`,
-                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                    boxShadow:
+                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
                   }}
                 >
                   <button
-                    onClick={() => { if (pauseLocked) return; if (gameSpeed === 0) { setGameSpeed(1); exitInspectorOnSpeed(); } else { setGameSpeed(0); } }}
+                    onClick={() => {
+                      if (pauseLocked) {
+                        return;
+                      }
+                      if (gameSpeed === 0) {
+                        setGameSpeed(1);
+                        exitInspectorOnSpeed();
+                      } else {
+                        setGameSpeed(0);
+                      }
+                    }}
                     disabled={pauseLocked}
                     className={`relative z-10 rounded-md p-1 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125"}`}
-                    style={{ background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`, border: `1px solid ${GOLD.border35}` }}
+                    style={{
+                      background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
+                      border: `1px solid ${GOLD.border35}`,
+                    }}
                   >
-                    {pauseLocked ? <Lock size={12} className="text-amber-300/60" /> : gameSpeed === 0 ? <Play size={12} className="text-amber-300" /> : <Pause size={12} className="text-amber-300" />}
+                    {pauseLocked ? (
+                      <Lock size={12} className="text-amber-300/60" />
+                    ) : gameSpeed === 0 ? (
+                      <Play size={12} className="text-amber-300" />
+                    ) : (
+                      <Pause size={12} className="text-amber-300" />
+                    )}
                   </button>
                   <button
                     onClick={() => setConfirmAction("restart")}
                     className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
-                    style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))", border: "1px solid rgba(60,140,80,0.35)" }}
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))",
+                      border: "1px solid rgba(60,140,80,0.35)",
+                    }}
                   >
                     <RefreshCcw size={12} className="text-emerald-300" />
                   </button>
                   <button
                     onClick={() => setConfirmAction("quit")}
                     className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
-                    style={{ background: "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))", border: "1px solid rgba(200,60,60,0.45)" }}
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))",
+                      border: "1px solid rgba(200,60,60,0.45)",
+                    }}
                   >
                     <LogOut size={12} className="text-red-300" />
                   </button>
@@ -1082,47 +1315,119 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
         <style jsx>{`
           @keyframes floatUp {
-            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            0% {
+              opacity: 1;
+              transform: translateX(-50%) translateY(0);
+            }
+            100% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(-20px);
+            }
           }
           @keyframes bountyFloat {
-            0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.5); }
-            15% { opacity: 1; transform: translateX(-50%) translateY(-18px) scale(1.15); }
-            30% { transform: translateX(-50%) translateY(-24px) scale(1); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-45px) scale(0.85); }
+            0% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(0) scale(0.5);
+            }
+            15% {
+              opacity: 1;
+              transform: translateX(-50%) translateY(-18px) scale(1.15);
+            }
+            30% {
+              transform: translateX(-50%) translateY(-24px) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(-45px) scale(0.85);
+            }
           }
           @keyframes eatingClubFloat {
-            0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.6); }
-            12% { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
-            25% { transform: translateX(-50%) translateY(-28px) scale(1); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-55px) scale(0.9); }
+            0% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(0) scale(0.6);
+            }
+            12% {
+              opacity: 1;
+              transform: translateX(-50%) translateY(-20px) scale(1.2);
+            }
+            25% {
+              transform: translateX(-50%) translateY(-28px) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(-55px) scale(0.9);
+            }
           }
           @keyframes leakedFloat {
-            0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.5); }
-            12% { opacity: 1; transform: translateX(-50%) translateY(-16px) scale(1.2); }
-            25% { transform: translateX(-50%) translateY(-22px) scale(1); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(0.85); }
+            0% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(0) scale(0.5);
+            }
+            12% {
+              opacity: 1;
+              transform: translateX(-50%) translateY(-16px) scale(1.2);
+            }
+            25% {
+              transform: translateX(-50%) translateY(-22px) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(-50px) scale(0.85);
+            }
           }
           @keyframes eatingClubGlow {
-            0% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.05); }
-            100% { opacity: 0; transform: scale(1); }
+            0% {
+              opacity: 0.8;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.5;
+              transform: scale(1.05);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(1);
+            }
           }
           @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
-            20%, 40%, 60%, 80% { transform: translateX(3px); }
+            0%,
+            100% {
+              transform: translateX(0);
+            }
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+              transform: translateX(-3px);
+            }
+            20%,
+            40%,
+            60%,
+            80% {
+              transform: translateX(3px);
+            }
           }
           @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            12% { transform: scale(1.25); }
-            24% { transform: scale(1); }
-            36% { transform: scale(1.15); }
-            48% { transform: scale(1); }
+            0%,
+            100% {
+              transform: scale(1);
+            }
+            12% {
+              transform: scale(1.25);
+            }
+            24% {
+              transform: scale(1);
+            }
+            36% {
+              transform: scale(1.15);
+            }
+            48% {
+              transform: scale(1);
+            }
           }
         `}</style>
       </div>
-
 
       {showSettings && (
         <SettingsModal

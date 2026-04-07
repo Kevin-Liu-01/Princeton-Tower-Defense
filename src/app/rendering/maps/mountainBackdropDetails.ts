@@ -1,5 +1,5 @@
-import { createSeededRandom } from "../../utils/seededRandom";
 import { hexToRgba } from "../../utils";
+import { createSeededRandom } from "../../utils/seededRandom";
 
 type ChallengeThemeKey =
   | "grassland"
@@ -32,16 +32,18 @@ interface BackdropPalette {
 
 function smoothFill(
   ctx: CanvasRenderingContext2D,
-  pts: { x: number; y: number }[],
+  pts: { x: number; y: number }[]
 ): void {
-  if (pts.length < 2) return;
+  if (pts.length < 2) {
+    return;
+  }
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i = 1; i < pts.length - 1; i++) {
     const cpx = (pts[i].x + pts[i + 1].x) / 2;
     const cpy = (pts[i].y + pts[i + 1].y) / 2;
     ctx.quadraticCurveTo(pts[i].x, pts[i].y, cpx, cpy);
   }
-  ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+  ctx.lineTo(pts.at(-1).x, pts.at(-1).y);
 }
 
 function drawMistBand(
@@ -50,7 +52,7 @@ function drawMistBand(
   y: number,
   thickness: number,
   color: string,
-  alpha: number,
+  alpha: number
 ): void {
   const transparent = hexToRgba(color, 0);
   const grad = ctx.createLinearGradient(0, y - thickness, 0, y + thickness);
@@ -78,9 +80,9 @@ function drawOrganicCanopy(
   rx: number,
   ry: number,
   rand: () => number,
-  lobeCount?: number,
+  lobeCount?: number
 ): void {
-  const lobes = lobeCount ?? (6 + Math.floor(rand() * 5));
+  const lobes = lobeCount ?? 6 + Math.floor(rand() * 5);
   const pts: { x: number; y: number }[] = [];
   for (let i = 0; i <= lobes; i++) {
     const angle = (i / lobes) * Math.PI * 2;
@@ -116,7 +118,7 @@ function drawButtressedTrunk(
   topY: number,
   bottomY: number,
   trunkW: number,
-  rand: () => number,
+  rand: () => number
 ): void {
   const midY = lerp(topY, bottomY, 0.55);
   const lean = (rand() - 0.5) * trunkW * 0.4;
@@ -126,14 +128,20 @@ function drawButtressedTrunk(
   ctx.beginPath();
   ctx.moveTo(x - trunkW * 0.45, topY);
   ctx.bezierCurveTo(
-    x - trunkW * 0.5 + lean * 0.3, lerp(topY, midY, 0.4),
-    x - trunkW * 0.55, midY,
-    x - trunkW * 0.7, lerp(midY, bottomY, 0.3),
+    x - trunkW * 0.5 + lean * 0.3,
+    lerp(topY, midY, 0.4),
+    x - trunkW * 0.55,
+    midY,
+    x - trunkW * 0.7,
+    lerp(midY, bottomY, 0.3)
   );
   ctx.bezierCurveTo(
-    x - rootSpread * 0.5, bottomY - (bottomY - midY) * 0.15,
-    x - rootSpread * 0.45, bottomY,
-    x - rootSpread * 0.5, bottomY,
+    x - rootSpread * 0.5,
+    bottomY - (bottomY - midY) * 0.15,
+    x - rootSpread * 0.45,
+    bottomY,
+    x - rootSpread * 0.5,
+    bottomY
   );
 
   for (let i = 0; i < rootCount; i++) {
@@ -144,14 +152,20 @@ function drawButtressedTrunk(
   }
 
   ctx.bezierCurveTo(
-    x + rootSpread * 0.45, bottomY,
-    x + rootSpread * 0.5, bottomY - (bottomY - midY) * 0.15,
-    x + trunkW * 0.7, lerp(midY, bottomY, 0.3),
+    x + rootSpread * 0.45,
+    bottomY,
+    x + rootSpread * 0.5,
+    bottomY - (bottomY - midY) * 0.15,
+    x + trunkW * 0.7,
+    lerp(midY, bottomY, 0.3)
   );
   ctx.bezierCurveTo(
-    x + trunkW * 0.55, midY,
-    x + trunkW * 0.5 + lean * 0.3, lerp(topY, midY, 0.4),
-    x + trunkW * 0.45, topY,
+    x + trunkW * 0.55,
+    midY,
+    x + trunkW * 0.5 + lean * 0.3,
+    lerp(topY, midY, 0.4),
+    x + trunkW * 0.45,
+    topY
   );
   ctx.closePath();
   ctx.fill();
@@ -165,7 +179,7 @@ function drawMossyVines(
   count: number,
   spread: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.strokeStyle = color;
@@ -178,9 +192,12 @@ function drawMossyVines(
     ctx.moveTo(sx, y);
     const sway = (rand() - 0.5) * 12;
     ctx.bezierCurveTo(
-      sx + sway * 0.5, y + vineLen * 0.25,
-      sx + sway, y + vineLen * 0.55,
-      sx + sway * 0.7 + (rand() - 0.5) * 6, y + vineLen,
+      sx + sway * 0.5,
+      y + vineLen * 0.25,
+      sx + sway,
+      y + vineLen * 0.55,
+      sx + sway * 0.7 + (rand() - 0.5) * 6,
+      y + vineLen
     );
     ctx.stroke();
 
@@ -190,7 +207,15 @@ function drawMossyVines(
       ctx.globalAlpha *= 0.7;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.ellipse(sx + sway * 0.4, mossY, mossW, mossW * 0.5, rand() * 0.5, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx + sway * 0.4,
+        mossY,
+        mossW,
+        mossW * 0.5,
+        rand() * 0.5,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -204,7 +229,7 @@ function drawEpiphytes(
   maxY: number,
   trunkW: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   const count = 2 + Math.floor(rand() * 4);
@@ -216,7 +241,8 @@ function drawEpiphytes(
     ctx.fillStyle = color;
     ctx.globalAlpha = 0.15 + rand() * 0.1;
     for (let l = 0; l < leafCount; l++) {
-      const angle = (l / leafCount) * Math.PI * 1.5 - Math.PI * 0.5 + (rand() - 0.5) * 0.4;
+      const angle =
+        (l / leafCount) * Math.PI * 1.5 - Math.PI * 0.5 + (rand() - 0.5) * 0.4;
       const leafLen = 3 + rand() * 5;
       ctx.beginPath();
       ctx.moveTo(px, py);
@@ -224,12 +250,13 @@ function drawEpiphytes(
         px + Math.cos(angle) * leafLen * 0.7 + (rand() - 0.5) * 2,
         py + Math.sin(angle) * leafLen * 0.5,
         px + Math.cos(angle) * leafLen,
-        py + Math.sin(angle) * leafLen,
+        py + Math.sin(angle) * leafLen
       );
       ctx.quadraticCurveTo(
         px + Math.cos(angle) * leafLen * 0.5,
         py + Math.sin(angle) * leafLen * 0.3 + 1,
-        px, py,
+        px,
+        py
       );
       ctx.fill();
     }
@@ -244,7 +271,7 @@ function drawMushroomShelf(
   size: number,
   side: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.fillStyle = color;
@@ -253,12 +280,16 @@ function drawMushroomShelf(
   const sx = x + side * size * 0.2;
   ctx.moveTo(sx, y);
   ctx.quadraticCurveTo(
-    sx + side * size * 0.6, y - size * 0.15,
-    sx + side * size, y + size * 0.1,
+    sx + side * size * 0.6,
+    y - size * 0.15,
+    sx + side * size,
+    y + size * 0.1
   );
   ctx.quadraticCurveTo(
-    sx + side * size * 0.5, y + size * 0.25,
-    sx, y + size * 0.05,
+    sx + side * size * 0.5,
+    y + size * 0.25,
+    sx,
+    y + size * 0.05
   );
   ctx.closePath();
   ctx.fill();
@@ -273,7 +304,7 @@ function drawHangingAerialRoots(
   count: number,
   spread: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.strokeStyle = color;
@@ -287,9 +318,12 @@ function drawHangingAerialRoots(
     const sway1 = (rand() - 0.5) * 8;
     const sway2 = (rand() - 0.5) * 12;
     ctx.bezierCurveTo(
-      sx + sway1, y + rootLen * 0.3,
-      sx + sway2, y + rootLen * 0.65,
-      sx + sway2 * 0.8, y + rootLen,
+      sx + sway1,
+      y + rootLen * 0.3,
+      sx + sway2,
+      y + rootLen * 0.65,
+      sx + sway2 * 0.8,
+      y + rootLen
     );
     ctx.stroke();
 
@@ -297,7 +331,13 @@ function drawHangingAerialRoots(
     if (rand() > 0.5) {
       ctx.globalAlpha *= 0.6;
       ctx.beginPath();
-      ctx.arc(sx + sway2 * 0.8, y + rootLen, 0.8 + rand() * 1.2, 0, Math.PI * 2);
+      ctx.arc(
+        sx + sway2 * 0.8,
+        y + rootLen,
+        0.8 + rand() * 1.2,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -312,7 +352,7 @@ function drawGiantBranchArm(
   angle: number,
   thickness: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.fillStyle = color;
@@ -326,14 +366,20 @@ function drawGiantBranchArm(
   ctx.beginPath();
   ctx.moveTo(x + perpX * thickness, y + perpY * thickness);
   ctx.bezierCurveTo(
-    midX + perpX * thickness * 0.8, midY + perpY * thickness * 0.8,
-    endX + perpX * thickness * 0.2, endY + perpY * thickness * 0.2,
-    endX, endY,
+    midX + perpX * thickness * 0.8,
+    midY + perpY * thickness * 0.8,
+    endX + perpX * thickness * 0.2,
+    endY + perpY * thickness * 0.2,
+    endX,
+    endY
   );
   ctx.bezierCurveTo(
-    endX - perpX * thickness * 0.2, endY - perpY * thickness * 0.2,
-    midX - perpX * thickness * 0.8, midY - perpY * thickness * 0.8,
-    x - perpX * thickness, y - perpY * thickness,
+    endX - perpX * thickness * 0.2,
+    endY - perpY * thickness * 0.2,
+    midX - perpX * thickness * 0.8,
+    midY - perpY * thickness * 0.8,
+    x - perpX * thickness,
+    y - perpY * thickness
   );
   ctx.closePath();
   ctx.fill();
@@ -345,35 +391,71 @@ export function renderSwampBackdrop(
   width: number,
   height: number,
   seed: number,
-  pal: BackdropPalette,
+  pal: BackdropPalette
 ): void {
   const rand = createSeededRandom(seed + 3000);
   const bottomY = height;
 
   // ── L0: extra-far canopy ridge — faint silhouette at horizon
-  drawCraggyMountainRange(ctx, width, height, height * 0.20, height * 0.04,
-    hexToRgba(pal.farRidge, 0.5), null, seed + 3005, 14, 0.3,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.2,
+    height * 0.04,
+    hexToRgba(pal.farRidge, 0.5),
+    null,
+    seed + 3005,
+    14,
+    0.3
   );
 
   // ── L1: far canopy ridge + far canopy blobs on top
-  drawCraggyMountainRange(ctx, width, height, height * 0.24, height * 0.06,
-    pal.farRidge, null, seed + 3010, 12, 0.4,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.24,
+    height * 0.06,
+    pal.farRidge,
+    null,
+    seed + 3010,
+    12,
+    0.4
   );
   ctx.fillStyle = pal.farRidge;
   for (let i = 0; i < 14; i++) {
     const cx = (rand() - 0.1) * width * 1.2;
-    const cy = height * (0.20 + rand() * 0.05);
+    const cy = height * (0.2 + rand() * 0.05);
     drawOrganicCanopy(ctx, cx, cy, 25 + rand() * 40, 14 + rand() * 18, rand);
   }
 
   drawMistBand(ctx, width, height * 0.24, height * 0.018, pal.skyBottom, 0.07);
 
   // ── L2: mid canopy ridge + mid trees with trunks & canopies
-  drawCraggyMountainRange(ctx, width, height, height * 0.32, height * 0.08,
-    pal.midRidge, null, seed + 3020, 10, 0.35,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.32,
+    height * 0.08,
+    pal.midRidge,
+    null,
+    seed + 3020,
+    10,
+    0.35
   );
-  drawCraggyMountainRange(ctx, width, height, height * 0.35, height * 0.06,
-    pal.midRidge, null, seed + 3022, 8, 0.3,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.35,
+    height * 0.06,
+    pal.midRidge,
+    null,
+    seed + 3022,
+    8,
+    0.3
   );
 
   for (let i = 0; i < 7; i++) {
@@ -383,24 +465,73 @@ export function renderSwampBackdrop(
     ctx.fillStyle = pal.midRidge;
     drawButtressedTrunk(ctx, tx, trunkTop, bottomY, trunkW, rand);
     if (rand() > 0.5) {
-      drawGiantBranchArm(ctx, tx, lerp(trunkTop, bottomY, 0.15 + rand() * 0.15), 20 + rand() * 25, (rand() > 0.5 ? 1 : -1) * (0.2 + rand() * 0.4), trunkW * 0.35, pal.midRidge, rand);
+      drawGiantBranchArm(
+        ctx,
+        tx,
+        lerp(trunkTop, bottomY, 0.15 + rand() * 0.15),
+        20 + rand() * 25,
+        (rand() > 0.5 ? 1 : -1) * (0.2 + rand() * 0.4),
+        trunkW * 0.35,
+        pal.midRidge,
+        rand
+      );
     }
-    drawEpiphytes(ctx, tx, trunkTop, lerp(trunkTop, bottomY, 0.5), trunkW, pal.landHighlight, rand);
+    drawEpiphytes(
+      ctx,
+      tx,
+      trunkTop,
+      lerp(trunkTop, bottomY, 0.5),
+      trunkW,
+      pal.landHighlight,
+      rand
+    );
     const canopyY = trunkTop - 8 - rand() * 15;
     const canopyRx = 25 + rand() * 35;
     const canopyRy = 14 + rand() * 20;
-    drawOrganicCanopy(ctx, tx + (rand() - 0.5) * 8, canopyY, canopyRx, canopyRy, rand);
+    drawOrganicCanopy(
+      ctx,
+      tx + (rand() - 0.5) * 8,
+      canopyY,
+      canopyRx,
+      canopyRy,
+      rand
+    );
     for (let j = 0; j < 2; j++) {
-      drawOrganicCanopy(ctx, tx + (rand() - 0.5) * canopyRx * 0.9, canopyY + rand() * 6, canopyRx * (0.35 + rand() * 0.3), canopyRy * (0.4 + rand() * 0.3), rand);
+      drawOrganicCanopy(
+        ctx,
+        tx + (rand() - 0.5) * canopyRx * 0.9,
+        canopyY + rand() * 6,
+        canopyRx * (0.35 + rand() * 0.3),
+        canopyRy * (0.4 + rand() * 0.3),
+        rand
+      );
     }
-    drawMossyVines(ctx, tx, canopyY + canopyRy * 0.5, height * 0.12, 5, canopyRx, pal.nearRidge, rand);
+    drawMossyVines(
+      ctx,
+      tx,
+      canopyY + canopyRy * 0.5,
+      height * 0.12,
+      5,
+      canopyRx,
+      pal.nearRidge,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.36, height * 0.022, pal.skyBottom, 0.09);
 
   // ── L3: near canopy ridge + massive foreground trees
-  drawCraggyMountainRange(ctx, width, height, height * 0.44, height * 0.10,
-    pal.nearRidge, null, seed + 3030, 9, 0.3,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.44,
+    height * 0.1,
+    pal.nearRidge,
+    null,
+    seed + 3030,
+    9,
+    0.3
   );
 
   for (let i = 0; i < 5; i++) {
@@ -409,27 +540,94 @@ export function renderSwampBackdrop(
     const trunkW = 10 + rand() * 16;
     ctx.fillStyle = pal.nearRidge;
     drawButtressedTrunk(ctx, tx, trunkTop, bottomY, trunkW, rand);
-    drawGiantBranchArm(ctx, tx, lerp(trunkTop, bottomY, 0.1 + rand() * 0.15), 30 + rand() * 40, (rand() > 0.5 ? 1 : -1) * (0.15 + rand() * 0.5), trunkW * 0.45, pal.nearRidge, rand);
-    drawEpiphytes(ctx, tx, trunkTop, lerp(trunkTop, bottomY, 0.4), trunkW, pal.landHighlight, rand);
+    drawGiantBranchArm(
+      ctx,
+      tx,
+      lerp(trunkTop, bottomY, 0.1 + rand() * 0.15),
+      30 + rand() * 40,
+      (rand() > 0.5 ? 1 : -1) * (0.15 + rand() * 0.5),
+      trunkW * 0.45,
+      pal.nearRidge,
+      rand
+    );
+    drawEpiphytes(
+      ctx,
+      tx,
+      trunkTop,
+      lerp(trunkTop, bottomY, 0.4),
+      trunkW,
+      pal.landHighlight,
+      rand
+    );
     if (rand() > 0.4) {
-      drawMushroomShelf(ctx, tx, lerp(trunkTop, bottomY, 0.2 + rand() * 0.2), 5 + rand() * 7, rand() > 0.5 ? 1 : -1, pal.nearRidge, rand);
+      drawMushroomShelf(
+        ctx,
+        tx,
+        lerp(trunkTop, bottomY, 0.2 + rand() * 0.2),
+        5 + rand() * 7,
+        rand() > 0.5 ? 1 : -1,
+        pal.nearRidge,
+        rand
+      );
     }
     const canopyY = trunkTop - 16 - rand() * 25;
     const canopyRx = 40 + rand() * 55;
     const canopyRy = 24 + rand() * 30;
-    drawOrganicCanopy(ctx, tx + (rand() - 0.5) * 12, canopyY, canopyRx, canopyRy, rand, 8 + Math.floor(rand() * 3));
+    drawOrganicCanopy(
+      ctx,
+      tx + (rand() - 0.5) * 12,
+      canopyY,
+      canopyRx,
+      canopyRy,
+      rand,
+      8 + Math.floor(rand() * 3)
+    );
     for (let j = 0; j < 3; j++) {
-      drawOrganicCanopy(ctx, tx + (rand() - 0.5) * canopyRx, canopyY + rand() * 10, canopyRx * (0.3 + rand() * 0.3), canopyRy * (0.35 + rand() * 0.3), rand);
+      drawOrganicCanopy(
+        ctx,
+        tx + (rand() - 0.5) * canopyRx,
+        canopyY + rand() * 10,
+        canopyRx * (0.3 + rand() * 0.3),
+        canopyRy * (0.35 + rand() * 0.3),
+        rand
+      );
     }
-    drawMossyVines(ctx, tx, canopyY + canopyRy * 0.4, height * 0.2, 8, canopyRx * 1.2, pal.mountainShadow, rand);
-    drawHangingAerialRoots(ctx, tx, canopyY + canopyRy * 0.5, height * 0.14, 4, canopyRx * 0.8, pal.nearRidge, rand);
+    drawMossyVines(
+      ctx,
+      tx,
+      canopyY + canopyRy * 0.4,
+      height * 0.2,
+      8,
+      canopyRx * 1.2,
+      pal.mountainShadow,
+      rand
+    );
+    drawHangingAerialRoots(
+      ctx,
+      tx,
+      canopyY + canopyRy * 0.5,
+      height * 0.14,
+      4,
+      canopyRx * 0.8,
+      pal.nearRidge,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.46, height * 0.02, pal.skyBottom, 0.07);
 
   // ── L4: foreground canopy ridge + dense canopy fill
-  drawCraggyMountainRange(ctx, width, height, height * 0.52, height * 0.04,
-    pal.nearRidge, null, seed + 3040, 16, 0.25,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.52,
+    height * 0.04,
+    pal.nearRidge,
+    null,
+    seed + 3040,
+    16,
+    0.25
   );
 
   // firefly specks
@@ -464,7 +662,7 @@ function drawOrganicDuneLayer(
   color: string,
   highlightColor: string,
   seed: number,
-  segments: number = 10,
+  segments: number = 10
 ): void {
   const rand = createSeededRandom(seed);
   const pts: { x: number; y: number }[] = [];
@@ -472,9 +670,14 @@ function drawOrganicDuneLayer(
     const t = i / segments;
     const x = -40 + t * (width + 80);
     const dune1 = Math.sin(t * Math.PI * (1.2 + rand() * 0.6)) * amplitude;
-    const dune2 = Math.sin(t * Math.PI * (2.8 + rand() * 0.4)) * amplitude * 0.35;
-    const dune3 = Math.sin(t * Math.PI * (0.3 + rand() * 0.2)) * amplitude * 0.7;
-    pts.push({ x, y: baseY + dune1 + dune2 + dune3 + (rand() - 0.5) * amplitude * 0.1 });
+    const dune2 =
+      Math.sin(t * Math.PI * (2.8 + rand() * 0.4)) * amplitude * 0.35;
+    const dune3 =
+      Math.sin(t * Math.PI * (0.3 + rand() * 0.2)) * amplitude * 0.7;
+    pts.push({
+      x,
+      y: baseY + dune1 + dune2 + dune3 + (rand() - 0.5) * amplitude * 0.1,
+    });
   }
 
   ctx.fillStyle = color;
@@ -497,7 +700,7 @@ function drawOrganicDuneLayer(
   // secondary wind ripple near crest
   ctx.globalAlpha = 0.04;
   ctx.lineWidth = 0.6;
-  const ripplePts = pts.map(p => ({ x: p.x, y: p.y + 2 + rand() * 2 }));
+  const ripplePts = pts.map((p) => ({ x: p.x, y: p.y + 2 + rand() * 2 }));
   ctx.beginPath();
   smoothFill(ctx, ripplePts);
   ctx.stroke();
@@ -511,7 +714,7 @@ function drawMesa(
   mesaW: number,
   mesaH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   const topW = mesaW * (0.4 + rand() * 0.2);
   const topY = baseY - mesaH;
@@ -519,20 +722,29 @@ function drawMesa(
   ctx.beginPath();
   ctx.moveTo(cx - mesaW * 0.5, baseY);
   ctx.bezierCurveTo(
-    cx - mesaW * 0.45, baseY - mesaH * 0.3,
-    cx - topW * 0.7, topY + mesaH * 0.05,
-    cx - topW * 0.5, topY,
+    cx - mesaW * 0.45,
+    baseY - mesaH * 0.3,
+    cx - topW * 0.7,
+    topY + mesaH * 0.05,
+    cx - topW * 0.5,
+    topY
   );
   // flat-ish top with slight erosion
   ctx.bezierCurveTo(
-    cx - topW * 0.2, topY - mesaH * 0.02,
-    cx + topW * 0.15, topY + mesaH * 0.01,
-    cx + topW * 0.5, topY,
+    cx - topW * 0.2,
+    topY - mesaH * 0.02,
+    cx + topW * 0.15,
+    topY + mesaH * 0.01,
+    cx + topW * 0.5,
+    topY
   );
   ctx.bezierCurveTo(
-    cx + topW * 0.7, topY + mesaH * 0.05,
-    cx + mesaW * 0.45, baseY - mesaH * 0.3,
-    cx + mesaW * 0.5, baseY,
+    cx + topW * 0.7,
+    topY + mesaH * 0.05,
+    cx + mesaW * 0.45,
+    baseY - mesaH * 0.3,
+    cx + mesaW * 0.5,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -548,9 +760,12 @@ function drawMesa(
     ctx.beginPath();
     ctx.moveTo(eLeft, ey);
     ctx.bezierCurveTo(
-      lerp(eLeft, eRight, 0.3), ey + (rand() - 0.5) * 2,
-      lerp(eLeft, eRight, 0.7), ey + (rand() - 0.5) * 2,
-      eRight, ey,
+      lerp(eLeft, eRight, 0.3),
+      ey + (rand() - 0.5) * 2,
+      lerp(eLeft, eRight, 0.7),
+      ey + (rand() - 0.5) * 2,
+      eRight,
+      ey
     );
     ctx.stroke();
   }
@@ -566,7 +781,7 @@ function drawPyramid(
   leftColor: string,
   rightColor: string,
   capColor: string | null,
-  rand: () => number,
+  rand: () => number
 ): void {
   const peakX = cx + (rand() - 0.5) * pyramidW * 0.04;
   const peakY = baseY - pyramidH;
@@ -576,9 +791,12 @@ function drawPyramid(
   ctx.beginPath();
   ctx.moveTo(peakX, peakY);
   ctx.bezierCurveTo(
-    cx - pyramidW * 0.22, baseY - pyramidH * 0.45,
-    cx - pyramidW * 0.42, baseY - pyramidH * 0.12,
-    cx - pyramidW * 0.5, baseY,
+    cx - pyramidW * 0.22,
+    baseY - pyramidH * 0.45,
+    cx - pyramidW * 0.42,
+    baseY - pyramidH * 0.12,
+    cx - pyramidW * 0.5,
+    baseY
   );
   ctx.lineTo(cx, baseY);
   ctx.closePath();
@@ -589,9 +807,12 @@ function drawPyramid(
   ctx.beginPath();
   ctx.moveTo(peakX, peakY);
   ctx.bezierCurveTo(
-    cx + pyramidW * 0.2, baseY - pyramidH * 0.48,
-    cx + pyramidW * 0.4, baseY - pyramidH * 0.14,
-    cx + pyramidW * 0.5, baseY,
+    cx + pyramidW * 0.2,
+    baseY - pyramidH * 0.48,
+    cx + pyramidW * 0.4,
+    baseY - pyramidH * 0.14,
+    cx + pyramidW * 0.5,
+    baseY
   );
   ctx.lineTo(cx, baseY);
   ctx.closePath();
@@ -619,9 +840,12 @@ function drawPyramid(
     ctx.beginPath();
     ctx.moveTo(cx - halfW + rand() * 2, ly + (rand() - 0.5) * 1.5);
     ctx.bezierCurveTo(
-      cx - halfW * 0.4, ly + (rand() - 0.5) * 1.2,
-      cx + halfW * 0.4, ly + (rand() - 0.5) * 1.2,
-      cx + halfW - rand() * 2, ly + (rand() - 0.5) * 1.5,
+      cx - halfW * 0.4,
+      ly + (rand() - 0.5) * 1.2,
+      cx + halfW * 0.4,
+      ly + (rand() - 0.5) * 1.2,
+      cx + halfW - rand() * 2,
+      ly + (rand() - 0.5) * 1.5
     );
     ctx.stroke();
   }
@@ -635,9 +859,12 @@ function drawPyramid(
   const driftW = pyramidW * 0.7;
   ctx.moveTo(cx + pyramidW * 0.5, baseY);
   ctx.bezierCurveTo(
-    cx + pyramidW * 0.55, baseY + 1,
-    cx + pyramidW * 0.5 + driftW * 0.3, baseY + 2,
-    cx + pyramidW * 0.5 + driftW * 0.5, baseY + 3 + rand() * 2,
+    cx + pyramidW * 0.55,
+    baseY + 1,
+    cx + pyramidW * 0.5 + driftW * 0.3,
+    baseY + 2,
+    cx + pyramidW * 0.5 + driftW * 0.5,
+    baseY + 3 + rand() * 2
   );
   ctx.lineTo(cx + pyramidW * 0.5, baseY + 4);
   ctx.closePath();
@@ -653,7 +880,7 @@ function drawOasisPalmCluster(
   maxH: number,
   trunkColor: string,
   frondColor: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   for (let i = 0; i < count; i++) {
     const tx = cx + (rand() - 0.5) * count * 5;
@@ -668,9 +895,12 @@ function drawOasisPalmCluster(
     ctx.beginPath();
     ctx.moveTo(tx, baseY);
     ctx.bezierCurveTo(
-      tx + lean * 0.3, baseY - h * 0.35,
-      tx + lean * 0.7, baseY - h * 0.65,
-      tx + lean, baseY - h,
+      tx + lean * 0.3,
+      baseY - h * 0.35,
+      tx + lean * 0.7,
+      baseY - h * 0.65,
+      tx + lean,
+      baseY - h
     );
     ctx.stroke();
     ctx.restore();
@@ -694,14 +924,15 @@ function drawOasisPalmCluster(
         topX + Math.cos(angle) * frondLen * 0.8,
         topY + Math.sin(angle) * frondLen * 0.5 + droop * 0.5,
         topX + Math.cos(angle) * frondLen,
-        topY + droop,
+        topY + droop
       );
       ctx.bezierCurveTo(
         topX + Math.cos(angle) * frondLen * 0.6,
         topY + Math.sin(angle) * frondLen * 0.3 + droop * 0.3 + 1,
         topX + Math.cos(angle) * frondLen * 0.2,
         topY + 1,
-        topX, topY,
+        topX,
+        topY
       );
       ctx.fill();
     }
@@ -714,7 +945,7 @@ export function renderDesertBackdrop(
   width: number,
   height: number,
   seed: number,
-  pal: BackdropPalette,
+  pal: BackdropPalette
 ): void {
   const rand = createSeededRandom(seed + 4000);
   const pyramidLeft = hexToRgba(pal.mountainLeft, 0.85);
@@ -722,58 +953,214 @@ export function renderDesertBackdrop(
   const pyramidCap = hexToRgba(pal.landHighlight, 0.5);
 
   // ── L0: extra-far dunes — faint silhouette at horizon
-  drawOrganicDuneLayer(ctx, width, height, height * 0.20, height * 0.015, hexToRgba(pal.farRidge, 0.5), pal.landHighlight, seed + 4005, 7);
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.2,
+    height * 0.015,
+    hexToRgba(pal.farRidge, 0.5),
+    pal.landHighlight,
+    seed + 4005,
+    7
+  );
 
   // ── L1: far dunes + distant mesas & tiny pyramids
-  drawOrganicDuneLayer(ctx, width, height, height * 0.24, height * 0.025, pal.farRidge, pal.landHighlight, seed + 4010, 9);
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.24,
+    height * 0.025,
+    pal.farRidge,
+    pal.landHighlight,
+    seed + 4010,
+    9
+  );
 
   for (let i = 0; i < 2; i++) {
     const mx = width * (0.1 + rand() * 0.25 + i * 0.4);
-    drawMesa(ctx, mx, height * (0.21 + rand() * 0.02), 22 + rand() * 18, 10 + rand() * 8, hexToRgba(pal.farRidge, 0.7), rand);
+    drawMesa(
+      ctx,
+      mx,
+      height * (0.21 + rand() * 0.02),
+      22 + rand() * 18,
+      10 + rand() * 8,
+      hexToRgba(pal.farRidge, 0.7),
+      rand
+    );
   }
   for (let i = 0; i < 3; i++) {
     const px = width * (0.1 + i * 0.3 + (rand() - 0.5) * 0.1);
     ctx.globalAlpha = 0.45 + rand() * 0.15;
-    drawPyramid(ctx, px, height * (0.23 + rand() * 0.02), 16 + rand() * 12, 10 + rand() * 8, hexToRgba(pal.farRidge, 0.9), hexToRgba(pal.midRidge, 0.7), null, rand);
+    drawPyramid(
+      ctx,
+      px,
+      height * (0.23 + rand() * 0.02),
+      16 + rand() * 12,
+      10 + rand() * 8,
+      hexToRgba(pal.farRidge, 0.9),
+      hexToRgba(pal.midRidge, 0.7),
+      null,
+      rand
+    );
     ctx.globalAlpha = 1;
   }
 
   drawMistBand(ctx, width, height * 0.24, height * 0.018, pal.skyBottom, 0.05);
 
   // ── L2: mid dunes + main pyramid complex
-  drawOrganicDuneLayer(ctx, width, height, height * 0.32, height * 0.035, pal.midRidge, pal.landHighlight, seed + 4020, 10);
-  drawOrganicDuneLayer(ctx, width, height, height * 0.35, height * 0.025, pal.midRidge, pal.landHighlight, seed + 4022, 8);
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.32,
+    height * 0.035,
+    pal.midRidge,
+    pal.landHighlight,
+    seed + 4020,
+    10
+  );
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.35,
+    height * 0.025,
+    pal.midRidge,
+    pal.landHighlight,
+    seed + 4022,
+    8
+  );
 
   const pyramidClusterX = width * (0.28 + rand() * 0.15);
   const pyramidBaseY = height * (0.33 + rand() * 0.02);
-  drawPyramid(ctx, pyramidClusterX, pyramidBaseY, 55 + rand() * 20, 38 + rand() * 14, pyramidLeft, pyramidRight, pyramidCap, rand);
-  drawPyramid(ctx, pyramidClusterX - 48 - rand() * 15, pyramidBaseY + 2, 32 + rand() * 10, 22 + rand() * 8, pyramidLeft, pyramidRight, pyramidCap, rand);
-  drawPyramid(ctx, pyramidClusterX + 52 + rand() * 15, pyramidBaseY + 3, 26 + rand() * 10, 18 + rand() * 6, pyramidLeft, pyramidRight, null, rand);
+  drawPyramid(
+    ctx,
+    pyramidClusterX,
+    pyramidBaseY,
+    55 + rand() * 20,
+    38 + rand() * 14,
+    pyramidLeft,
+    pyramidRight,
+    pyramidCap,
+    rand
+  );
+  drawPyramid(
+    ctx,
+    pyramidClusterX - 48 - rand() * 15,
+    pyramidBaseY + 2,
+    32 + rand() * 10,
+    22 + rand() * 8,
+    pyramidLeft,
+    pyramidRight,
+    pyramidCap,
+    rand
+  );
+  drawPyramid(
+    ctx,
+    pyramidClusterX + 52 + rand() * 15,
+    pyramidBaseY + 3,
+    26 + rand() * 10,
+    18 + rand() * 6,
+    pyramidLeft,
+    pyramidRight,
+    null,
+    rand
+  );
 
   const cluster2X = width * (0.7 + rand() * 0.12);
-  drawPyramid(ctx, cluster2X, height * (0.34 + rand() * 0.02), 40 + rand() * 14, 28 + rand() * 10, pyramidLeft, pyramidRight, pyramidCap, rand);
-  drawPyramid(ctx, cluster2X + 35 + rand() * 10, height * (0.35 + rand() * 0.02), 22 + rand() * 8, 15 + rand() * 6, pyramidLeft, pyramidRight, null, rand);
+  drawPyramid(
+    ctx,
+    cluster2X,
+    height * (0.34 + rand() * 0.02),
+    40 + rand() * 14,
+    28 + rand() * 10,
+    pyramidLeft,
+    pyramidRight,
+    pyramidCap,
+    rand
+  );
+  drawPyramid(
+    ctx,
+    cluster2X + 35 + rand() * 10,
+    height * (0.35 + rand() * 0.02),
+    22 + rand() * 8,
+    15 + rand() * 6,
+    pyramidLeft,
+    pyramidRight,
+    null,
+    rand
+  );
 
   for (let i = 0; i < 2; i++) {
-    drawOasisPalmCluster(ctx, width * (0.15 + rand() * 0.7), height * (0.34 + rand() * 0.03), 3 + Math.floor(rand() * 2), 12 + rand() * 6, pal.mountainShadow, pal.landHighlight, rand);
+    drawOasisPalmCluster(
+      ctx,
+      width * (0.15 + rand() * 0.7),
+      height * (0.34 + rand() * 0.03),
+      3 + Math.floor(rand() * 2),
+      12 + rand() * 6,
+      pal.mountainShadow,
+      pal.landHighlight,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.36, height * 0.022, pal.skyBottom, 0.06);
 
   // ── L3: near dunes + large foreground pyramid
-  drawOrganicDuneLayer(ctx, width, height, height * 0.44, height * 0.045, pal.nearRidge, pal.landHighlight, seed + 4030, 11);
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.44,
+    height * 0.045,
+    pal.nearRidge,
+    pal.landHighlight,
+    seed + 4030,
+    11
+  );
 
   const nearPyX = width * (0.1 + rand() * 0.2);
-  drawPyramid(ctx, nearPyX, height * 0.45, 70 + rand() * 25, 45 + rand() * 15, pyramidLeft, pyramidRight, pyramidCap, rand);
+  drawPyramid(
+    ctx,
+    nearPyX,
+    height * 0.45,
+    70 + rand() * 25,
+    45 + rand() * 15,
+    pyramidLeft,
+    pyramidRight,
+    pyramidCap,
+    rand
+  );
 
   for (let i = 0; i < 2; i++) {
-    drawOasisPalmCluster(ctx, width * (0.2 + rand() * 0.6), height * (0.44 + rand() * 0.03), 2 + Math.floor(rand() * 3), 14 + rand() * 8, pal.mountainShadow, pal.landHighlight, rand);
+    drawOasisPalmCluster(
+      ctx,
+      width * (0.2 + rand() * 0.6),
+      height * (0.44 + rand() * 0.03),
+      2 + Math.floor(rand() * 3),
+      14 + rand() * 8,
+      pal.mountainShadow,
+      pal.landHighlight,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.46, height * 0.02, pal.skyBottom, 0.04);
 
   // ── L4: foreground dune covering pyramid base
-  drawOrganicDuneLayer(ctx, width, height, height * 0.52, height * 0.05, pal.nearRidge, pal.landHighlight, seed + 4040, 13);
+  drawOrganicDuneLayer(
+    ctx,
+    width,
+    height,
+    height * 0.52,
+    height * 0.05,
+    pal.nearRidge,
+    pal.landHighlight,
+    seed + 4040,
+    13
+  );
 
   // sand ripple texture
   ctx.save();
@@ -786,7 +1173,12 @@ export function renderDesertBackdrop(
     ctx.moveTo(-20, ry);
     for (let s = 1; s <= 6; s++) {
       const t = s / 6;
-      ctx.quadraticCurveTo(-20 + (t - 1 / 12) * (width + 40), ry + (rand() - 0.5) * 3, -20 + t * (width + 40), ry + (rand() - 0.5) * 2);
+      ctx.quadraticCurveTo(
+        -20 + (t - 1 / 12) * (width + 40),
+        ry + (rand() - 0.5) * 3,
+        -20 + t * (width + 40),
+        ry + (rand() - 0.5) * 2
+      );
     }
     ctx.stroke();
   }
@@ -816,7 +1208,7 @@ function drawCraggyMountainRange(
   snowColor: string | null,
   seed: number,
   peakCount: number = 6,
-  jaggedness: number = 1,
+  jaggedness: number = 1
 ): void {
   const rand = createSeededRandom(seed);
   const pts: { x: number; y: number }[] = [];
@@ -834,7 +1226,10 @@ function drawCraggyMountainRange(
       peakH = peakAmplitude * (0.03 + rand() * 0.1);
     }
     const jitter = (rand() - 0.5) * peakAmplitude * 0.12 * jaggedness;
-    pts.push({ x: x + (rand() - 0.5) * 8 * jaggedness, y: baseY - peakH + jitter });
+    pts.push({
+      x: x + (rand() - 0.5) * 8 * jaggedness,
+      y: baseY - peakH + jitter,
+    });
   }
 
   ctx.fillStyle = color;
@@ -859,9 +1254,9 @@ function drawCraggyMountainRange(
     ctx.save();
     ctx.fillStyle = snowColor;
     const peaks = pts
-      .map((p, idx) => ({ p, idx }))
+      .map((p, idx) => ({ idx, p }))
       .filter((_, idx) => idx % 3 === 1)
-      .sort((a, b) => a.p.y - b.p.y)
+      .toSorted((a, b) => a.p.y - b.p.y)
       .slice(0, Math.ceil(peakCount * 0.7));
 
     for (const { p, idx } of peaks) {
@@ -877,16 +1272,21 @@ function drawCraggyMountainRange(
 
       ctx.moveTo(lx, ly);
       ctx.bezierCurveTo(
-        lerp(lx, p.x, 0.4), p.y - snowDepth * 0.25,
-        lerp(p.x, rx, 0.6), p.y - snowDepth * 0.2,
-        rx, ry,
+        lerp(lx, p.x, 0.4),
+        p.y - snowDepth * 0.25,
+        lerp(p.x, rx, 0.6),
+        p.y - snowDepth * 0.2,
+        rx,
+        ry
       );
       // snow drifts downward with organic edge
       const driftPts = 4;
       for (let d = 0; d < driftPts; d++) {
         const dt = (driftPts - d) / driftPts;
         const dx = lerp(rx, lx, dt);
-        const dy = p.y + snowDepth * (0.5 + rand() * 0.3) * (1 - Math.abs(dt - 0.5) * 1.2);
+        const dy =
+          p.y +
+          snowDepth * (0.5 + rand() * 0.3) * (1 - Math.abs(dt - 0.5) * 1.2);
         ctx.lineTo(dx, dy);
       }
       ctx.closePath();
@@ -903,7 +1303,7 @@ function drawGlacier(
   glacierW: number,
   glacierH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   const topY = baseY - glacierH;
@@ -915,15 +1315,21 @@ function drawGlacier(
   ctx.beginPath();
   ctx.moveTo(cx - glacierW * 0.3, topY);
   ctx.bezierCurveTo(
-    cx - glacierW * 0.4, topY + glacierH * 0.3,
-    cx - glacierW * 0.5, topY + glacierH * 0.6,
-    cx - glacierW * 0.45, baseY,
+    cx - glacierW * 0.4,
+    topY + glacierH * 0.3,
+    cx - glacierW * 0.5,
+    topY + glacierH * 0.6,
+    cx - glacierW * 0.45,
+    baseY
   );
   ctx.lineTo(cx + glacierW * 0.45, baseY);
   ctx.bezierCurveTo(
-    cx + glacierW * 0.5, topY + glacierH * 0.6,
-    cx + glacierW * 0.4, topY + glacierH * 0.3,
-    cx + glacierW * 0.3, topY,
+    cx + glacierW * 0.5,
+    topY + glacierH * 0.6,
+    cx + glacierW * 0.4,
+    topY + glacierH * 0.3,
+    cx + glacierW * 0.3,
+    topY
   );
   ctx.closePath();
   ctx.fill();
@@ -949,7 +1355,7 @@ function drawFrozenPineCluster(
   maxH: number,
   color: string,
   snowColor: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   for (let i = 0; i < count; i++) {
     const tx = cx + (rand() - 0.5) * count * 6;
@@ -966,15 +1372,21 @@ function drawFrozenPineCluster(
       ctx.beginPath();
       ctx.moveTo(tx, layerY - layerH);
       ctx.bezierCurveTo(
-        tx - layerW * 0.35, layerY - layerH * 0.4,
-        tx - layerW * 0.85, layerY - 1,
-        tx - layerW, layerY + 2,
+        tx - layerW * 0.35,
+        layerY - layerH * 0.4,
+        tx - layerW * 0.85,
+        layerY - 1,
+        tx - layerW,
+        layerY + 2
       );
       ctx.lineTo(tx + layerW, layerY + 2);
       ctx.bezierCurveTo(
-        tx + layerW * 0.85, layerY - 1,
-        tx + layerW * 0.35, layerY - layerH * 0.4,
-        tx, layerY - layerH,
+        tx + layerW * 0.85,
+        layerY - 1,
+        tx + layerW * 0.35,
+        layerY - layerH * 0.4,
+        tx,
+        layerY - layerH
       );
       ctx.fill();
     }
@@ -989,7 +1401,12 @@ function drawFrozenPineCluster(
       const layerW = w * (1.2 - lt * 0.3);
       ctx.beginPath();
       ctx.moveTo(tx - layerW * 0.8, layerY + 1);
-      ctx.quadraticCurveTo(tx, layerY - 2 - rand() * 2, tx + layerW * 0.8, layerY + 1);
+      ctx.quadraticCurveTo(
+        tx,
+        layerY - 2 - rand() * 2,
+        tx + layerW * 0.8,
+        layerY + 1
+      );
       ctx.quadraticCurveTo(tx, layerY + 3, tx - layerW * 0.8, layerY + 1);
       ctx.fill();
     }
@@ -1009,7 +1426,7 @@ function drawIceCliff(
   cliffH: number,
   iceColor: string,
   rockColor: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   const topY = baseY - cliffH;
 
@@ -1018,19 +1435,28 @@ function drawIceCliff(
   ctx.beginPath();
   ctx.moveTo(cx - cliffW * 0.5, baseY);
   ctx.bezierCurveTo(
-    cx - cliffW * 0.48, baseY - cliffH * 0.2,
-    cx - cliffW * 0.35, topY + cliffH * 0.15,
-    cx - cliffW * 0.2, topY,
+    cx - cliffW * 0.48,
+    baseY - cliffH * 0.2,
+    cx - cliffW * 0.35,
+    topY + cliffH * 0.15,
+    cx - cliffW * 0.2,
+    topY
   );
   ctx.bezierCurveTo(
-    cx - cliffW * 0.05, topY - cliffH * 0.03 * rand(),
-    cx + cliffW * 0.1, topY + cliffH * 0.02,
-    cx + cliffW * 0.22, topY,
+    cx - cliffW * 0.05,
+    topY - cliffH * 0.03 * rand(),
+    cx + cliffW * 0.1,
+    topY + cliffH * 0.02,
+    cx + cliffW * 0.22,
+    topY
   );
   ctx.bezierCurveTo(
-    cx + cliffW * 0.36, topY + cliffH * 0.12,
-    cx + cliffW * 0.46, baseY - cliffH * 0.25,
-    cx + cliffW * 0.5, baseY,
+    cx + cliffW * 0.36,
+    topY + cliffH * 0.12,
+    cx + cliffW * 0.46,
+    baseY - cliffH * 0.25,
+    cx + cliffW * 0.5,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -1045,15 +1471,21 @@ function drawIceCliff(
   ctx.beginPath();
   ctx.moveTo(cx - cliffW * 0.15, topY + cliffH * 0.05);
   ctx.bezierCurveTo(
-    cx - cliffW * 0.18, topY + cliffH * 0.35,
-    cx - cliffW * 0.2, topY + cliffH * 0.6,
-    cx - cliffW * 0.15 - rand() * 3, baseY,
+    cx - cliffW * 0.18,
+    topY + cliffH * 0.35,
+    cx - cliffW * 0.2,
+    topY + cliffH * 0.6,
+    cx - cliffW * 0.15 - rand() * 3,
+    baseY
   );
   ctx.lineTo(cx + cliffW * 0.12 + rand() * 3, baseY);
   ctx.bezierCurveTo(
-    cx + cliffW * 0.15, topY + cliffH * 0.55,
-    cx + cliffW * 0.12, topY + cliffH * 0.3,
-    cx + cliffW * 0.08, topY + cliffH * 0.05,
+    cx + cliffW * 0.15,
+    topY + cliffH * 0.55,
+    cx + cliffW * 0.12,
+    topY + cliffH * 0.3,
+    cx + cliffW * 0.08,
+    topY + cliffH * 0.05
   );
   ctx.closePath();
   ctx.fill();
@@ -1065,19 +1497,37 @@ export function renderWinterBackdrop(
   width: number,
   height: number,
   seed: number,
-  pal: BackdropPalette,
+  pal: BackdropPalette
 ): void {
   const rand = createSeededRandom(seed + 5000);
   const snowColor = pal.mountainSnow ?? "#dceef8";
 
   // ── extremely distant range — faint, ethereal silhouettes at the horizon
-  drawCraggyMountainRange(ctx, width, height, height * 0.2, height * 0.05,
-    hexToRgba(pal.farRidge, 0.5), hexToRgba(snowColor, 0.1), seed + 5005, 12, 0.5,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.2,
+    height * 0.05,
+    hexToRgba(pal.farRidge, 0.5),
+    hexToRgba(snowColor, 0.1),
+    seed + 5005,
+    12,
+    0.5
   );
 
   // ── very distant range — towering peaks fading into the sky
-  drawCraggyMountainRange(ctx, width, height, height * 0.24, height * 0.09,
-    pal.farRidge, hexToRgba(snowColor, 0.22), seed + 5010, 10, 0.8,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.24,
+    height * 0.09,
+    pal.farRidge,
+    hexToRgba(snowColor, 0.22),
+    seed + 5010,
+    10,
+    0.8
   );
 
   drawMistBand(ctx, width, height * 0.24, height * 0.018, pal.skyBottom, 0.07);
@@ -1086,73 +1536,170 @@ export function renderWinterBackdrop(
   for (let i = 0; i < 4; i++) {
     const fx = width * (0.05 + rand() * 0.9);
     const fy = height * (0.22 + rand() * 0.03);
-    drawFrozenPineCluster(ctx, fx, fy, 4 + Math.floor(rand() * 3), 6 + rand() * 4, pal.farRidge, hexToRgba(snowColor, 0.12), rand);
+    drawFrozenPineCluster(
+      ctx,
+      fx,
+      fy,
+      4 + Math.floor(rand() * 3),
+      6 + rand() * 4,
+      pal.farRidge,
+      hexToRgba(snowColor, 0.12),
+      rand
+    );
   }
 
   // ── mid range — prominent dramatic peaks with heavy snow
-  drawCraggyMountainRange(ctx, width, height, height * 0.32, height * 0.14,
-    pal.midRidge, hexToRgba(snowColor, 0.4), seed + 5020, 9, 1.4,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.32,
+    height * 0.14,
+    pal.midRidge,
+    hexToRgba(snowColor, 0.4),
+    seed + 5020,
+    9,
+    1.4
   );
 
   // secondary mid ridge for depth
-  drawCraggyMountainRange(ctx, width, height, height * 0.35, height * 0.1,
-    pal.midRidge, hexToRgba(snowColor, 0.3), seed + 5022, 7, 1.2,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.35,
+    height * 0.1,
+    pal.midRidge,
+    hexToRgba(snowColor, 0.3),
+    seed + 5022,
+    7,
+    1.2
   );
 
   // glaciers and ice formations in mid-range saddles
   for (let i = 0; i < 4; i++) {
     const gx = width * (0.1 + rand() * 0.8);
     const gy = height * (0.28 + rand() * 0.06);
-    drawGlacier(ctx, gx, gy, 18 + rand() * 15, 10 + rand() * 8, snowColor, rand);
+    drawGlacier(
+      ctx,
+      gx,
+      gy,
+      18 + rand() * 15,
+      10 + rand() * 8,
+      snowColor,
+      rand
+    );
   }
 
   // ice cliffs on exposed ridges
   for (let i = 0; i < 2; i++) {
     const cx = width * (0.15 + rand() * 0.7);
     const cy = height * (0.32 + rand() * 0.04);
-    drawIceCliff(ctx, cx, cy, 20 + rand() * 15, 12 + rand() * 10, snowColor, pal.midRidge, rand);
+    drawIceCliff(
+      ctx,
+      cx,
+      cy,
+      20 + rand() * 15,
+      12 + rand() * 10,
+      snowColor,
+      pal.midRidge,
+      rand
+    );
   }
 
   // mid-distance pine forests
   for (let i = 0; i < 6; i++) {
     const fx = width * (0.02 + rand() * 0.96);
     const fy = height * (0.33 + rand() * 0.04);
-    drawFrozenPineCluster(ctx, fx, fy, 5 + Math.floor(rand() * 4), 8 + rand() * 6, pal.midRidge, hexToRgba(snowColor, 0.2), rand);
+    drawFrozenPineCluster(
+      ctx,
+      fx,
+      fy,
+      5 + Math.floor(rand() * 4),
+      8 + rand() * 6,
+      pal.midRidge,
+      hexToRgba(snowColor, 0.2),
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.36, height * 0.022, pal.skyBottom, 0.08);
 
   // ── near range — massive dramatic close peaks towering overhead
-  drawCraggyMountainRange(ctx, width, height, height * 0.44, height * 0.2,
-    pal.nearRidge, snowColor, seed + 5030, 8, 1.8,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.44,
+    height * 0.2,
+    pal.nearRidge,
+    snowColor,
+    seed + 5030,
+    8,
+    1.8
   );
 
   // large glaciers cascading from near peaks
   for (let i = 0; i < 3; i++) {
     const gx = width * (0.1 + rand() * 0.8);
     const gy = height * (0.36 + rand() * 0.06);
-    drawGlacier(ctx, gx, gy, 24 + rand() * 18, 14 + rand() * 10, snowColor, rand);
+    drawGlacier(
+      ctx,
+      gx,
+      gy,
+      24 + rand() * 18,
+      14 + rand() * 10,
+      snowColor,
+      rand
+    );
   }
 
   // prominent ice cliffs in the near range
   for (let i = 0; i < 2; i++) {
     const cx = width * (0.1 + rand() * 0.8);
     const cy = height * (0.42 + rand() * 0.04);
-    drawIceCliff(ctx, cx, cy, 25 + rand() * 18, 16 + rand() * 12, snowColor, pal.nearRidge, rand);
+    drawIceCliff(
+      ctx,
+      cx,
+      cy,
+      25 + rand() * 18,
+      16 + rand() * 12,
+      snowColor,
+      pal.nearRidge,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.46, height * 0.02, pal.skyBottom, 0.07);
 
   // ── foreground foothills with dense snow-covered forest
-  drawCraggyMountainRange(ctx, width, height, height * 0.52, height * 0.06,
-    pal.nearRidge, hexToRgba(snowColor, 0.25), seed + 5040, 14, 0.7,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.52,
+    height * 0.06,
+    pal.nearRidge,
+    hexToRgba(snowColor, 0.25),
+    seed + 5040,
+    14,
+    0.7
   );
 
   // dense foreground pine forests
   for (let i = 0; i < 10; i++) {
     const fx = width * (-0.05 + rand() * 1.1);
     const fy = height * (0.48 + rand() * 0.05);
-    drawFrozenPineCluster(ctx, fx, fy, 6 + Math.floor(rand() * 5), 12 + rand() * 8, pal.nearRidge, snowColor, rand);
+    drawFrozenPineCluster(
+      ctx,
+      fx,
+      fy,
+      6 + Math.floor(rand() * 5),
+      12 + rand() * 8,
+      pal.nearRidge,
+      snowColor,
+      rand
+    );
   }
 
   // ── wind-blown snow streaks — organic curved trails
@@ -1166,14 +1713,20 @@ export function renderWinterBackdrop(
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.bezierCurveTo(
-      sx + len * 0.25, sy - 2 - rand() * 4,
-      sx + len * 0.5, sy + (rand() - 0.5) * 5,
-      sx + len * 0.75, sy - 1 + rand() * 3,
+      sx + len * 0.25,
+      sy - 2 - rand() * 4,
+      sx + len * 0.5,
+      sy + (rand() - 0.5) * 5,
+      sx + len * 0.75,
+      sy - 1 + rand() * 3
     );
     ctx.bezierCurveTo(
-      sx + len * 0.85, sy + (rand() - 0.5) * 3,
-      sx + len * 0.95, sy + rand() * 2,
-      sx + len, sy + (rand() - 0.5) * 4,
+      sx + len * 0.85,
+      sy + (rand() - 0.5) * 3,
+      sx + len * 0.95,
+      sy + rand() * 2,
+      sx + len,
+      sy + (rand() - 0.5) * 4
     );
     ctx.stroke();
   }
@@ -1208,7 +1761,7 @@ function drawOrganicVolcano(
   bodyColor: string,
   craterColor: string,
   rand: () => number,
-  isActive: boolean = false,
+  isActive: boolean = false
 ): void {
   const peakY = baseY - volcH;
   const craterDepth = volcH * 0.07;
@@ -1221,26 +1774,38 @@ function drawOrganicVolcano(
   ctx.moveTo(cx - volcW * 0.55, baseY);
   // left slope with secondary ridge
   ctx.bezierCurveTo(
-    cx - volcW * 0.48, baseY - volcH * 0.08,
-    cx - volcW * 0.38 * leftBulge, baseY - volcH * 0.35,
-    cx - volcW * 0.25, baseY - volcH * 0.6,
+    cx - volcW * 0.48,
+    baseY - volcH * 0.08,
+    cx - volcW * 0.38 * leftBulge,
+    baseY - volcH * 0.35,
+    cx - volcW * 0.25,
+    baseY - volcH * 0.6
   );
   ctx.bezierCurveTo(
-    cx - volcW * 0.18, baseY - volcH * 0.8,
-    cx - craterW * 0.7, peakY + volcH * 0.03,
-    cx - craterW * 0.5, peakY,
+    cx - volcW * 0.18,
+    baseY - volcH * 0.8,
+    cx - craterW * 0.7,
+    peakY + volcH * 0.03,
+    cx - craterW * 0.5,
+    peakY
   );
   ctx.lineTo(cx + craterW * 0.5, peakY);
   // right slope
   ctx.bezierCurveTo(
-    cx + craterW * 0.7, peakY + volcH * 0.03,
-    cx + volcW * 0.18, baseY - volcH * 0.8,
-    cx + volcW * 0.25, baseY - volcH * 0.6,
+    cx + craterW * 0.7,
+    peakY + volcH * 0.03,
+    cx + volcW * 0.18,
+    baseY - volcH * 0.8,
+    cx + volcW * 0.25,
+    baseY - volcH * 0.6
   );
   ctx.bezierCurveTo(
-    cx + volcW * 0.38 * rightBulge, baseY - volcH * 0.35,
-    cx + volcW * 0.48, baseY - volcH * 0.08,
-    cx + volcW * 0.55, baseY,
+    cx + volcW * 0.38 * rightBulge,
+    baseY - volcH * 0.35,
+    cx + volcW * 0.48,
+    baseY - volcH * 0.08,
+    cx + volcW * 0.55,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -1270,14 +1835,29 @@ function drawOrganicVolcano(
   // crater hollow
   ctx.fillStyle = craterColor;
   ctx.beginPath();
-  ctx.ellipse(cx, peakY + craterDepth * 0.5, craterW * 0.52, craterDepth, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx,
+    peakY + craterDepth * 0.5,
+    craterW * 0.52,
+    craterDepth,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   if (isActive) {
     // crater inner glow
     ctx.save();
     const glowR = craterW * 1.5;
-    const glow = ctx.createRadialGradient(cx, peakY, craterW * 0.2, cx, peakY, glowR);
+    const glow = ctx.createRadialGradient(
+      cx,
+      peakY,
+      craterW * 0.2,
+      cx,
+      peakY,
+      glowR
+    );
     glow.addColorStop(0, "rgba(255,140,30,0.15)");
     glow.addColorStop(0.3, "rgba(255,80,10,0.08)");
     glow.addColorStop(0.6, "rgba(255,40,0,0.03)");
@@ -1296,7 +1876,7 @@ function drawOrganicSmokePlume(
   baseY: number,
   plumeH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   const puffCount = 8 + Math.floor(rand() * 5);
@@ -1307,7 +1887,9 @@ function drawOrganicSmokePlume(
     const puffW = (5 + t * 16 + rand() * 8) * (1 + t * 0.6);
     const puffH = puffW * (0.5 + rand() * 0.3);
     const alpha = (0.1 - t * 0.07) * (0.6 + rand() * 0.4);
-    if (alpha <= 0) continue;
+    if (alpha <= 0) {
+      continue;
+    }
     ctx.globalAlpha = alpha;
     ctx.fillStyle = color;
 
@@ -1319,13 +1901,15 @@ function drawOrganicSmokePlume(
       const wobble = 0.8 + rand() * 0.4;
       const px = cx + drift + Math.cos(angle) * puffW * wobble;
       const ppY = py + Math.sin(angle) * puffH * wobble;
-      if (l === 0) ctx.moveTo(px, ppY);
-      else {
+      if (l === 0) {
+        ctx.moveTo(px, ppY);
+      } else {
         const midAngle = ((l - 0.5) / (subLobes * 2)) * Math.PI * 2;
         ctx.quadraticCurveTo(
           cx + drift + Math.cos(midAngle) * puffW * (0.7 + rand() * 0.2),
           py + Math.sin(midAngle) * puffH * (0.7 + rand() * 0.2),
-          px, ppY,
+          px,
+          ppY
         );
       }
     }
@@ -1341,7 +1925,7 @@ function drawLavaRiver(
   startY: number,
   length: number,
   spreadAngle: number,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   const segments = 6 + Math.floor(rand() * 3);
@@ -1356,7 +1940,9 @@ function drawLavaRiver(
     const ny = py + Math.cos(spreadAngle) * segLen * 0.8;
 
     const alpha = (0.12 - t * 0.08) * (0.7 + rand() * 0.3);
-    if (alpha <= 0) break;
+    if (alpha <= 0) {
+      break;
+    }
 
     const grad = ctx.createLinearGradient(px, py, nx, ny);
     grad.addColorStop(0, `rgba(255,${100 - t * 40},${15 - t * 10},${alpha})`);
@@ -1371,7 +1957,8 @@ function drawLavaRiver(
       lerp(py, ny, 0.4),
       lerp(px, nx, 0.7) + (rand() - 0.5) * 4,
       lerp(py, ny, 0.6),
-      nx, ny,
+      nx,
+      ny
     );
     ctx.stroke();
 
@@ -1387,7 +1974,7 @@ function drawAshCloud(
   cy: number,
   cloudW: number,
   cloudH: number,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.globalAlpha = 0.04 + rand() * 0.04;
@@ -1400,13 +1987,15 @@ function drawAshCloud(
     const r = 0.7 + rand() * 0.35;
     const px = cx + Math.cos(angle) * cloudW * r;
     const py = cy + Math.sin(angle) * cloudH * r;
-    if (i === 0) ctx.moveTo(px, py);
-    else {
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
       const midAngle = ((i - 0.5) / (lobes * 2)) * Math.PI * 2;
       ctx.quadraticCurveTo(
         cx + Math.cos(midAngle) * cloudW * (0.6 + rand() * 0.2),
         cy + Math.sin(midAngle) * cloudH * (0.6 + rand() * 0.2),
-        px, py,
+        px,
+        py
       );
     }
   }
@@ -1420,7 +2009,7 @@ function drawCrackedEarth(
   width: number,
   minY: number,
   maxY: number,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   const crackCount = 8 + Math.floor(rand() * 6);
@@ -1441,8 +2030,8 @@ function drawCrackedEarth(
     let py = sy;
     const segs = 3 + Math.floor(rand() * 2);
     for (let s = 0; s < segs; s++) {
-      px += Math.cos(angle) * crackLen / segs + (rand() - 0.5) * 5;
-      py += Math.sin(angle) * crackLen / segs + (rand() - 0.5) * 3;
+      px += (Math.cos(angle) * crackLen) / segs + (rand() - 0.5) * 5;
+      py += (Math.sin(angle) * crackLen) / segs + (rand() - 0.5) * 3;
       ctx.lineTo(px, py);
     }
     ctx.stroke();
@@ -1456,8 +2045,8 @@ function drawCrackedEarth(
     px = sx;
     py = sy;
     for (let s = 0; s < segs; s++) {
-      px += Math.cos(angle) * crackLen / segs + (rand() - 0.5) * 3;
-      py += Math.sin(angle) * crackLen / segs + (rand() - 0.5) * 2;
+      px += (Math.cos(angle) * crackLen) / segs + (rand() - 0.5) * 3;
+      py += (Math.sin(angle) * crackLen) / segs + (rand() - 0.5) * 2;
       ctx.lineTo(px, py);
     }
     ctx.stroke();
@@ -1472,7 +2061,7 @@ function drawObsidianPillar(
   pillarW: number,
   pillarH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.fillStyle = color;
@@ -1483,17 +2072,23 @@ function drawObsidianPillar(
   ctx.beginPath();
   ctx.moveTo(cx - pillarW * 0.5, baseY);
   ctx.bezierCurveTo(
-    cx - pillarW * 0.45, baseY - pillarH * 0.3,
-    cx - pillarW * 0.3 + tilt * 0.5, topY + pillarH * 0.2,
-    cx + tilt - pillarW * 0.15, topY,
+    cx - pillarW * 0.45,
+    baseY - pillarH * 0.3,
+    cx - pillarW * 0.3 + tilt * 0.5,
+    topY + pillarH * 0.2,
+    cx + tilt - pillarW * 0.15,
+    topY
   );
   // jagged top
   ctx.lineTo(cx + tilt, topY - pillarH * 0.05 * rand());
   ctx.lineTo(cx + tilt + pillarW * 0.15, topY + pillarH * 0.03);
   ctx.bezierCurveTo(
-    cx + pillarW * 0.3 + tilt * 0.5, topY + pillarH * 0.2,
-    cx + pillarW * 0.45, baseY - pillarH * 0.3,
-    cx + pillarW * 0.5, baseY,
+    cx + pillarW * 0.3 + tilt * 0.5,
+    topY + pillarH * 0.2,
+    cx + pillarW * 0.45,
+    baseY - pillarH * 0.3,
+    cx + pillarW * 0.5,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -1505,13 +2100,20 @@ export function renderVolcanicBackdrop(
   width: number,
   height: number,
   seed: number,
-  pal: BackdropPalette,
+  pal: BackdropPalette
 ): void {
   const rand = createSeededRandom(seed + 6000);
 
   // sky under-glow + ash clouds (above the ridgelines)
   ctx.save();
-  const skyGlow = ctx.createRadialGradient(width * 0.5, height * 0.5, height * 0.1, width * 0.5, height * 0.5, height * 0.6);
+  const skyGlow = ctx.createRadialGradient(
+    width * 0.5,
+    height * 0.5,
+    height * 0.1,
+    width * 0.5,
+    height * 0.5,
+    height * 0.6
+  );
   skyGlow.addColorStop(0, "rgba(255,50,10,0.06)");
   skyGlow.addColorStop(0.5, "rgba(255,30,5,0.03)");
   skyGlow.addColorStop(1, "rgba(200,20,0,0)");
@@ -1519,37 +2121,96 @@ export function renderVolcanicBackdrop(
   ctx.fillRect(0, 0, width, height);
   ctx.restore();
   for (let i = 0; i < 8; i++) {
-    drawAshCloud(ctx, rand() * width, height * (0.03 + rand() * 0.15), 40 + rand() * 70, 14 + rand() * 22, rand);
+    drawAshCloud(
+      ctx,
+      rand() * width,
+      height * (0.03 + rand() * 0.15),
+      40 + rand() * 70,
+      14 + rand() * 22,
+      rand
+    );
   }
 
   // ── L0: extra-far volcanic ridge — faint jagged horizon
-  drawCraggyMountainRange(ctx, width, height, height * 0.20, height * 0.05,
-    hexToRgba(pal.farRidge, 0.5), null, seed + 6005, 12, 1.0,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.2,
+    height * 0.05,
+    hexToRgba(pal.farRidge, 0.5),
+    null,
+    seed + 6005,
+    12,
+    1
   );
 
   // ── L1: far ridge + distant small volcanoes
-  drawCraggyMountainRange(ctx, width, height, height * 0.24, height * 0.08,
-    pal.farRidge, null, seed + 6010, 10, 1.2,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.24,
+    height * 0.08,
+    pal.farRidge,
+    null,
+    seed + 6010,
+    10,
+    1.2
   );
   for (let i = 0; i < 5; i++) {
     const vx = width * (0.02 + rand() * 0.96);
     const active = rand() > 0.5;
-    drawOrganicVolcano(ctx, vx, height * (0.23 + rand() * 0.03), 25 + rand() * 25, 14 + rand() * 12, 3 + rand() * 3,
-      pal.farRidge, pal.mountainShadow, rand, active,
+    drawOrganicVolcano(
+      ctx,
+      vx,
+      height * (0.23 + rand() * 0.03),
+      25 + rand() * 25,
+      14 + rand() * 12,
+      3 + rand() * 3,
+      pal.farRidge,
+      pal.mountainShadow,
+      rand,
+      active
     );
     if (active) {
-      drawOrganicSmokePlume(ctx, vx, height * (0.20 - rand() * 0.04), 25 + rand() * 20, pal.farRidge, rand);
+      drawOrganicSmokePlume(
+        ctx,
+        vx,
+        height * (0.2 - rand() * 0.04),
+        25 + rand() * 20,
+        pal.farRidge,
+        rand
+      );
     }
   }
 
   drawMistBand(ctx, width, height * 0.24, height * 0.018, pal.skyBottom, 0.05);
 
   // ── L2: mid ridge + mid-sized volcanoes with lava
-  drawCraggyMountainRange(ctx, width, height, height * 0.32, height * 0.12,
-    pal.midRidge, null, seed + 6020, 9, 1.4,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.32,
+    height * 0.12,
+    pal.midRidge,
+    null,
+    seed + 6020,
+    9,
+    1.4
   );
-  drawCraggyMountainRange(ctx, width, height, height * 0.35, height * 0.08,
-    pal.midRidge, null, seed + 6022, 7, 1.2,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.35,
+    height * 0.08,
+    pal.midRidge,
+    null,
+    seed + 6022,
+    7,
+    1.2
   );
 
   for (let i = 0; i < 4; i++) {
@@ -1559,23 +2220,65 @@ export function renderVolcanicBackdrop(
     const vh = 30 + rand() * 22;
     const cw = 6 + rand() * 6;
     const active = rand() > 0.35;
-    drawOrganicVolcano(ctx, vx, vy, vw, vh, cw, pal.midRidge, pal.mountainShadow, rand, active);
+    drawOrganicVolcano(
+      ctx,
+      vx,
+      vy,
+      vw,
+      vh,
+      cw,
+      pal.midRidge,
+      pal.mountainShadow,
+      rand,
+      active
+    );
     if (active) {
       for (let r = 0; r < 1 + Math.floor(rand() * 2); r++) {
-        drawLavaRiver(ctx, vx + (rand() - 0.5) * cw, vy - vh + 4, vh * 0.6, (rand() - 0.5) * 0.5, rand);
+        drawLavaRiver(
+          ctx,
+          vx + (rand() - 0.5) * cw,
+          vy - vh + 4,
+          vh * 0.6,
+          (rand() - 0.5) * 0.5,
+          rand
+        );
       }
-      drawOrganicSmokePlume(ctx, vx, vy - vh, 40 + rand() * 30, "rgba(60,45,40,1)", rand);
+      drawOrganicSmokePlume(
+        ctx,
+        vx,
+        vy - vh,
+        40 + rand() * 30,
+        "rgba(60,45,40,1)",
+        rand
+      );
     }
     if (rand() > 0.5) {
-      drawObsidianPillar(ctx, vx + (rand() - 0.5) * vw * 0.6, vy, 4 + rand() * 5, 8 + rand() * 12, pal.midRidge, rand);
+      drawObsidianPillar(
+        ctx,
+        vx + (rand() - 0.5) * vw * 0.6,
+        vy,
+        4 + rand() * 5,
+        8 + rand() * 12,
+        pal.midRidge,
+        rand
+      );
     }
   }
 
   drawMistBand(ctx, width, height * 0.36, height * 0.022, pal.skyBottom, 0.04);
 
   // ── L3: near ridge + main erupting volcano + secondary
-  drawCraggyMountainRange(ctx, width, height, height * 0.44, height * 0.16,
-    pal.nearRidge, null, seed + 6030, 8, 1.6,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.44,
+    height * 0.16,
+    pal.nearRidge,
+    null,
+    seed + 6030,
+    8,
+    1.6
   );
 
   const mainX = width * (0.32 + rand() * 0.36);
@@ -1583,37 +2286,119 @@ export function renderVolcanicBackdrop(
   const mainW = 120 + rand() * 50;
   const mainH = 65 + rand() * 30;
   const mainCW = 12 + rand() * 8;
-  drawOrganicVolcano(ctx, mainX, mainBaseY, mainW, mainH, mainCW, pal.nearRidge, pal.mountainShadow, rand, true);
+  drawOrganicVolcano(
+    ctx,
+    mainX,
+    mainBaseY,
+    mainW,
+    mainH,
+    mainCW,
+    pal.nearRidge,
+    pal.mountainShadow,
+    rand,
+    true
+  );
   for (let i = 0; i < 4; i++) {
-    drawLavaRiver(ctx, mainX + (rand() - 0.5) * mainCW, mainBaseY - mainH + 5, mainH * 0.8, (rand() - 0.5) * 0.7, rand);
+    drawLavaRiver(
+      ctx,
+      mainX + (rand() - 0.5) * mainCW,
+      mainBaseY - mainH + 5,
+      mainH * 0.8,
+      (rand() - 0.5) * 0.7,
+      rand
+    );
   }
-  drawOrganicSmokePlume(ctx, mainX, mainBaseY - mainH, 80 + rand() * 40, "rgba(50,35,30,1)", rand);
+  drawOrganicSmokePlume(
+    ctx,
+    mainX,
+    mainBaseY - mainH,
+    80 + rand() * 40,
+    "rgba(50,35,30,1)",
+    rand
+  );
   for (let i = 0; i < 2; i++) {
-    drawOrganicSmokePlume(ctx, mainX + (rand() - 0.5) * mainW * 0.4, mainBaseY - mainH * (0.3 + rand() * 0.3), 20 + rand() * 15, "rgba(65,48,42,1)", rand);
+    drawOrganicSmokePlume(
+      ctx,
+      mainX + (rand() - 0.5) * mainW * 0.4,
+      mainBaseY - mainH * (0.3 + rand() * 0.3),
+      20 + rand() * 15,
+      "rgba(65,48,42,1)",
+      rand
+    );
   }
 
-  const secX = mainX > width * 0.5 ? width * (0.08 + rand() * 0.15) : width * (0.72 + rand() * 0.18);
-  drawOrganicVolcano(ctx, secX, height * 0.45, 80 + rand() * 35, 45 + rand() * 20, 8 + rand() * 6, pal.nearRidge, pal.mountainShadow, rand, true);
+  const secX =
+    mainX > width * 0.5
+      ? width * (0.08 + rand() * 0.15)
+      : width * (0.72 + rand() * 0.18);
+  drawOrganicVolcano(
+    ctx,
+    secX,
+    height * 0.45,
+    80 + rand() * 35,
+    45 + rand() * 20,
+    8 + rand() * 6,
+    pal.nearRidge,
+    pal.mountainShadow,
+    rand,
+    true
+  );
   for (let i = 0; i < 2; i++) {
-    drawLavaRiver(ctx, secX + (rand() - 0.5) * 8, height * 0.45 - 45 + 4, 35, (rand() - 0.5) * 0.5, rand);
+    drawLavaRiver(
+      ctx,
+      secX + (rand() - 0.5) * 8,
+      height * 0.45 - 45 + 4,
+      35,
+      (rand() - 0.5) * 0.5,
+      rand
+    );
   }
-  drawOrganicSmokePlume(ctx, secX, height * 0.45 - 45, 50 + rand() * 25, "rgba(55,40,35,1)", rand);
+  drawOrganicSmokePlume(
+    ctx,
+    secX,
+    height * 0.45 - 45,
+    50 + rand() * 25,
+    "rgba(55,40,35,1)",
+    rand
+  );
 
   for (let i = 0; i < 4; i++) {
-    drawObsidianPillar(ctx, lerp(mainX, secX, rand()) + (rand() - 0.5) * 30, height * (0.43 + rand() * 0.04), 4 + rand() * 6, 12 + rand() * 16, pal.nearRidge, rand);
+    drawObsidianPillar(
+      ctx,
+      lerp(mainX, secX, rand()) + (rand() - 0.5) * 30,
+      height * (0.43 + rand() * 0.04),
+      4 + rand() * 6,
+      12 + rand() * 16,
+      pal.nearRidge,
+      rand
+    );
   }
 
   drawMistBand(ctx, width, height * 0.46, height * 0.02, pal.skyBottom, 0.04);
 
   // ── L4: foreground scorched ridge + cracked earth
-  drawCraggyMountainRange(ctx, width, height, height * 0.52, height * 0.05,
-    pal.nearRidge, null, seed + 6040, 14, 1.0,
+  drawCraggyMountainRange(
+    ctx,
+    width,
+    height,
+    height * 0.52,
+    height * 0.05,
+    pal.nearRidge,
+    null,
+    seed + 6040,
+    14,
+    1
   );
   drawCrackedEarth(ctx, width, height * 0.49, height * 0.55, rand);
 
   // lava glow reflection
   ctx.save();
-  const lavaReflect = ctx.createLinearGradient(0, height * 0.44, 0, height * 0.55);
+  const lavaReflect = ctx.createLinearGradient(
+    0,
+    height * 0.44,
+    0,
+    height * 0.55
+  );
   lavaReflect.addColorStop(0, "rgba(255,60,10,0)");
   lavaReflect.addColorStop(0.4, "rgba(255,50,10,0.04)");
   lavaReflect.addColorStop(0.7, "rgba(255,40,5,0.06)");
@@ -1654,7 +2439,7 @@ function drawRollingHills(
   amplitude: number,
   color: string,
   seed: number,
-  hillCount: number = 5,
+  hillCount: number = 5
 ): void {
   const rand = createSeededRandom(seed);
   const pts: { x: number; y: number }[] = [];
@@ -1664,7 +2449,10 @@ function drawRollingHills(
     const broad = Math.sin(t * Math.PI * (1.4 + rand() * 0.5)) * amplitude;
     const med = Math.sin(t * Math.PI * (2.8 + rand() * 0.6)) * amplitude * 0.35;
     const fine = Math.sin(t * Math.PI * (5.2 + rand() * 0.4)) * amplitude * 0.1;
-    pts.push({ x, y: baseY + broad + med + fine + (rand() - 0.5) * amplitude * 0.08 });
+    pts.push({
+      x,
+      y: baseY + broad + med + fine + (rand() - 0.5) * amplitude * 0.08,
+    });
   }
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -1683,7 +2471,7 @@ function drawDeciduousTree(
   canopyW: number,
   trunkColor: string,
   canopyColor: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   const trunkW = treeH * (0.06 + rand() * 0.03);
   const trunkH = treeH * (0.3 + rand() * 0.15);
@@ -1694,15 +2482,21 @@ function drawDeciduousTree(
   ctx.beginPath();
   ctx.moveTo(cx - trunkW, baseY);
   ctx.bezierCurveTo(
-    cx - trunkW * 0.9 + lean * 0.3, baseY - trunkH * 0.4,
-    cx - trunkW * 0.6 + lean * 0.6, baseY - trunkH * 0.8,
-    cx + lean - trunkW * 0.3, baseY - trunkH,
+    cx - trunkW * 0.9 + lean * 0.3,
+    baseY - trunkH * 0.4,
+    cx - trunkW * 0.6 + lean * 0.6,
+    baseY - trunkH * 0.8,
+    cx + lean - trunkW * 0.3,
+    baseY - trunkH
   );
   ctx.lineTo(cx + lean + trunkW * 0.3, baseY - trunkH);
   ctx.bezierCurveTo(
-    cx + trunkW * 0.6 + lean * 0.6, baseY - trunkH * 0.8,
-    cx + trunkW * 0.9 + lean * 0.3, baseY - trunkH * 0.4,
-    cx + trunkW, baseY,
+    cx + trunkW * 0.6 + lean * 0.6,
+    baseY - trunkH * 0.8,
+    cx + trunkW * 0.9 + lean * 0.3,
+    baseY - trunkH * 0.4,
+    cx + trunkW,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -1730,7 +2524,8 @@ function drawDeciduousTree(
       ctx.quadraticCurveTo(
         canopyCx + Math.cos(midAngle) * canopyRx * pinch,
         canopyCy + Math.sin(midAngle) * canopyRy * pinch,
-        px, py,
+        px,
+        py
       );
     }
   }
@@ -1748,13 +2543,15 @@ function drawDeciduousTree(
       const r = 0.8 + rand() * 0.25;
       const px = canopyCx + offX + Math.cos(angle) * canopyRx * 0.55 * r;
       const py = canopyCy + offY + Math.sin(angle) * canopyRy * 0.5 * r;
-      if (i === 0) ctx.moveTo(px, py);
-      else {
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
         const ma = ((i - 0.5) / subLobes) * Math.PI * 2;
         ctx.quadraticCurveTo(
           canopyCx + offX + Math.cos(ma) * canopyRx * 0.4,
           canopyCy + offY + Math.sin(ma) * canopyRy * 0.35,
-          px, py,
+          px,
+          py
         );
       }
     }
@@ -1771,7 +2568,7 @@ function drawGothicSpire(
   spireH: number,
   bodyH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.fillStyle = color;
@@ -1800,14 +2597,20 @@ function drawGothicSpire(
   ctx.lineTo(cx - towerW, baseY - bodyH - spireH * 0.4);
   // pointed top
   ctx.bezierCurveTo(
-    cx - towerW * 0.6, baseY - bodyH - spireH * 0.7,
-    cx - towerW * 0.15, baseY - bodyH - spireH * 0.95,
-    cx, baseY - bodyH - spireH,
+    cx - towerW * 0.6,
+    baseY - bodyH - spireH * 0.7,
+    cx - towerW * 0.15,
+    baseY - bodyH - spireH * 0.95,
+    cx,
+    baseY - bodyH - spireH
   );
   ctx.bezierCurveTo(
-    cx + towerW * 0.15, baseY - bodyH - spireH * 0.95,
-    cx + towerW * 0.6, baseY - bodyH - spireH * 0.7,
-    cx + towerW, baseY - bodyH - spireH * 0.4,
+    cx + towerW * 0.15,
+    baseY - bodyH - spireH * 0.95,
+    cx + towerW * 0.6,
+    baseY - bodyH - spireH * 0.7,
+    cx + towerW,
+    baseY - bodyH - spireH * 0.4
   );
   ctx.lineTo(cx + towerW, baseY - bodyH);
   ctx.closePath();
@@ -1836,7 +2639,7 @@ function drawHedgerow(
   baseY: number,
   hedgeH: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   const pts: { x: number; y: number }[] = [];
   const segs = Math.max(4, Math.floor(Math.abs(endX - startX) / 8));
@@ -1864,7 +2667,7 @@ function drawBirdFlock(
   count: number,
   spread: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.strokeStyle = color;
@@ -1892,7 +2695,7 @@ function drawMeadowFlowers(
   maxY: number,
   count: number,
   colors: string[],
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   for (let i = 0; i < count; i++) {
@@ -1911,8 +2714,11 @@ function drawMeadowFlowers(
       ctx.ellipse(
         fx + Math.cos(angle) * size * 0.3,
         fy + Math.sin(angle) * size * 0.2,
-        pr, pr * (0.6 + rand() * 0.3),
-        rand() * Math.PI, 0, Math.PI * 2,
+        pr,
+        pr * (0.6 + rand() * 0.3),
+        rand() * Math.PI,
+        0,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1928,7 +2734,7 @@ function drawStonePath(
   endY: number,
   pathW: number,
   color: string,
-  rand: () => number,
+  rand: () => number
 ): void {
   ctx.save();
   ctx.strokeStyle = color;
@@ -1949,7 +2755,7 @@ export function renderGrasslandBackdrop(
   width: number,
   height: number,
   seed: number,
-  pal: BackdropPalette,
+  pal: BackdropPalette
 ): void {
   const rand = createSeededRandom(seed + 7000);
 
@@ -1963,8 +2769,16 @@ export function renderGrasslandBackdrop(
   const nearCanopyLight = hexToRgba(pal.landHighlight, 0.15);
 
   // ── L0: extra-far hills — faint hazy silhouette at horizon
-  drawRollingHills(ctx, width, height, height * 0.20, height * 0.02,
-    hexToRgba(pal.farRidge, 0.45), seed + 7005, 7);
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.2,
+    height * 0.02,
+    hexToRgba(pal.farRidge, 0.45),
+    seed + 7005,
+    7
+  );
 
   // highlight on far hill crests
   ctx.save();
@@ -1974,113 +2788,267 @@ export function renderGrasslandBackdrop(
   ctx.restore();
 
   // ── L1: far hills + distant trees & Gothic spires
-  drawRollingHills(ctx, width, height, height * 0.24, height * 0.04, pal.farRidge, seed + 7010, 9);
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.24,
+    height * 0.04,
+    pal.farRidge,
+    seed + 7010,
+    9
+  );
 
   for (let i = 0; i < 10; i++) {
     const tx = width * (-0.05 + rand() * 1.1);
     const th = 8 + rand() * 7;
-    drawDeciduousTree(ctx, tx, height * (0.25 + rand() * 0.03), th, th * (0.8 + rand() * 0.4),
-      farTreeColor, farTreeColor, rand);
+    drawDeciduousTree(
+      ctx,
+      tx,
+      height * (0.25 + rand() * 0.03),
+      th,
+      th * (0.8 + rand() * 0.4),
+      farTreeColor,
+      farTreeColor,
+      rand
+    );
   }
   // canopy highlight pass on far trees
   ctx.save();
   ctx.globalAlpha = 0.08;
   ctx.fillStyle = farCanopyLight;
   for (let i = 0; i < 6; i++) {
-    const tx = width * (rand() * 1.0);
+    const tx = width * (rand() * 1);
     const ty = height * (0.23 + rand() * 0.02);
     ctx.beginPath();
-    ctx.ellipse(tx, ty, 8 + rand() * 12, 4 + rand() * 6, rand() * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      tx,
+      ty,
+      8 + rand() * 12,
+      4 + rand() * 6,
+      rand() * 0.3,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
   ctx.restore();
 
-  drawGothicSpire(ctx, width * (0.18 + rand() * 0.15), height * (0.25 + rand() * 0.02),
-    5 + rand() * 3, 14 + rand() * 8, 7 + rand() * 4, hexToRgba(pal.farRidge, 0.9), rand);
-  drawGothicSpire(ctx, width * (0.58 + rand() * 0.22), height * (0.25 + rand() * 0.02),
-    4 + rand() * 2, 12 + rand() * 6, 6 + rand() * 3, hexToRgba(pal.farRidge, 0.9), rand);
+  drawGothicSpire(
+    ctx,
+    width * (0.18 + rand() * 0.15),
+    height * (0.25 + rand() * 0.02),
+    5 + rand() * 3,
+    14 + rand() * 8,
+    7 + rand() * 4,
+    hexToRgba(pal.farRidge, 0.9),
+    rand
+  );
+  drawGothicSpire(
+    ctx,
+    width * (0.58 + rand() * 0.22),
+    height * (0.25 + rand() * 0.02),
+    4 + rand() * 2,
+    12 + rand() * 6,
+    6 + rand() * 3,
+    hexToRgba(pal.farRidge, 0.9),
+    rand
+  );
   if (rand() > 0.5) {
-    drawGothicSpire(ctx, width * (0.4 + rand() * 0.15), height * (0.24 + rand() * 0.02),
-      3 + rand() * 2, 10 + rand() * 5, 5 + rand() * 3, hexToRgba(pal.farRidge, 0.8), rand);
+    drawGothicSpire(
+      ctx,
+      width * (0.4 + rand() * 0.15),
+      height * (0.24 + rand() * 0.02),
+      3 + rand() * 2,
+      10 + rand() * 5,
+      5 + rand() * 3,
+      hexToRgba(pal.farRidge, 0.8),
+      rand
+    );
   }
 
-  drawBirdFlock(ctx, width * (0.3 + rand() * 0.4), height * (0.14 + rand() * 0.06),
-    7 + Math.floor(rand() * 5), 45 + rand() * 35, hexToRgba(pal.farRidge, 0.6), rand);
+  drawBirdFlock(
+    ctx,
+    width * (0.3 + rand() * 0.4),
+    height * (0.14 + rand() * 0.06),
+    7 + Math.floor(rand() * 5),
+    45 + rand() * 35,
+    hexToRgba(pal.farRidge, 0.6),
+    rand
+  );
 
   drawMistBand(ctx, width, height * 0.26, height * 0.022, pal.skyBottom, 0.08);
 
   // ── L2: mid hills + buildings & tree groves & hedgerows
-  drawRollingHills(ctx, width, height, height * 0.32, height * 0.055, pal.midRidge, seed + 7020, 10);
-  drawRollingHills(ctx, width, height, height * 0.35, height * 0.04, pal.midRidge, seed + 7022, 8);
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.32,
+    height * 0.055,
+    pal.midRidge,
+    seed + 7020,
+    10
+  );
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.35,
+    height * 0.04,
+    pal.midRidge,
+    seed + 7022,
+    8
+  );
 
   // mid-layer field patches for color variation
   ctx.save();
   for (let i = 0; i < 6; i++) {
-    const fx = width * (rand() * 1.0);
+    const fx = width * (rand() * 1);
     const fy = height * (0.34 + rand() * 0.06);
     const fw = 30 + rand() * 60;
     const fh = 8 + rand() * 12;
     ctx.globalAlpha = 0.06 + rand() * 0.04;
-    ctx.fillStyle = rand() > 0.5 ? pal.landHighlight : hexToRgba(pal.midRidge, 0.7);
+    ctx.fillStyle =
+      rand() > 0.5 ? pal.landHighlight : hexToRgba(pal.midRidge, 0.7);
     ctx.beginPath();
     ctx.ellipse(fx, fy, fw, fh, rand() * 0.2, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
 
-  drawGothicSpire(ctx, width * (0.28 + rand() * 0.15), height * (0.34 + rand() * 0.02),
-    7 + rand() * 3, 20 + rand() * 10, 9 + rand() * 5, pal.midRidge, rand);
-  drawGothicSpire(ctx, width * (0.68 + rand() * 0.15), height * (0.34 + rand() * 0.02),
-    6 + rand() * 3, 16 + rand() * 8, 8 + rand() * 4, pal.midRidge, rand);
+  drawGothicSpire(
+    ctx,
+    width * (0.28 + rand() * 0.15),
+    height * (0.34 + rand() * 0.02),
+    7 + rand() * 3,
+    20 + rand() * 10,
+    9 + rand() * 5,
+    pal.midRidge,
+    rand
+  );
+  drawGothicSpire(
+    ctx,
+    width * (0.68 + rand() * 0.15),
+    height * (0.34 + rand() * 0.02),
+    6 + rand() * 3,
+    16 + rand() * 8,
+    8 + rand() * 4,
+    pal.midRidge,
+    rand
+  );
   if (rand() > 0.3) {
-    drawGothicSpire(ctx, width * (0.45 + rand() * 0.15), height * (0.33 + rand() * 0.03),
-      5 + rand() * 2, 14 + rand() * 6, 7 + rand() * 3, pal.midRidge, rand);
+    drawGothicSpire(
+      ctx,
+      width * (0.45 + rand() * 0.15),
+      height * (0.33 + rand() * 0.03),
+      5 + rand() * 2,
+      14 + rand() * 6,
+      7 + rand() * 3,
+      pal.midRidge,
+      rand
+    );
   }
 
   for (let i = 0; i < 14; i++) {
     const tx = width * (-0.05 + rand() * 1.1);
     const h = 14 + rand() * 12;
-    drawDeciduousTree(ctx, tx, height * (0.34 + rand() * 0.05), h, h * (0.7 + rand() * 0.4),
-      midTreeTrunk, midCanopyColor, rand);
+    drawDeciduousTree(
+      ctx,
+      tx,
+      height * (0.34 + rand() * 0.05),
+      h,
+      h * (0.7 + rand() * 0.4),
+      midTreeTrunk,
+      midCanopyColor,
+      rand
+    );
   }
   // canopy highlight pass on mid trees
   ctx.save();
-  ctx.globalAlpha = 0.10;
+  ctx.globalAlpha = 0.1;
   ctx.fillStyle = midCanopyLight;
   for (let i = 0; i < 8; i++) {
-    const tx = width * (rand() * 1.0);
+    const tx = width * (rand() * 1);
     const ty = height * (0.31 + rand() * 0.04);
     ctx.beginPath();
-    ctx.ellipse(tx, ty, 10 + rand() * 16, 5 + rand() * 8, rand() * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      tx,
+      ty,
+      10 + rand() * 16,
+      5 + rand() * 8,
+      rand() * 0.3,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
   ctx.restore();
 
   for (let i = 0; i < 4; i++) {
     const hx = width * (rand() * 0.8);
-    drawHedgerow(ctx, hx, hx + 35 + rand() * 55, height * (0.36 + rand() * 0.02),
-      4 + rand() * 3, hexToRgba(pal.midRidge, 0.85), rand);
+    drawHedgerow(
+      ctx,
+      hx,
+      hx + 35 + rand() * 55,
+      height * (0.36 + rand() * 0.02),
+      4 + rand() * 3,
+      hexToRgba(pal.midRidge, 0.85),
+      rand
+    );
   }
   for (let i = 0; i < 2; i++) {
     const sx = width * (0.1 + rand() * 0.3);
     const sy = height * (0.36 + rand() * 0.02);
-    drawStonePath(ctx, sx, sy, sx + 40 + rand() * 60, sy + 5 + rand() * 8,
-      1.5 + rand(), pal.mountainShadow, rand);
+    drawStonePath(
+      ctx,
+      sx,
+      sy,
+      sx + 40 + rand() * 60,
+      sy + 5 + rand() * 8,
+      1.5 + rand(),
+      pal.mountainShadow,
+      rand
+    );
   }
 
-  drawBirdFlock(ctx, width * (0.5 + rand() * 0.3), height * (0.19 + rand() * 0.06),
-    5 + Math.floor(rand() * 4), 35 + rand() * 25, hexToRgba(pal.midRidge, 0.5), rand);
+  drawBirdFlock(
+    ctx,
+    width * (0.5 + rand() * 0.3),
+    height * (0.19 + rand() * 0.06),
+    5 + Math.floor(rand() * 4),
+    35 + rand() * 25,
+    hexToRgba(pal.midRidge, 0.5),
+    rand
+  );
 
   drawMistBand(ctx, width, height * 0.37, height * 0.025, pal.skyBottom, 0.08);
 
   // ── L3: near hills + large trees, hedgerows, wildflowers
-  drawRollingHills(ctx, width, height, height * 0.44, height * 0.07, pal.nearRidge, seed + 7030, 10);
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.44,
+    height * 0.07,
+    pal.nearRidge,
+    seed + 7030,
+    10
+  );
 
   for (let i = 0; i < 16; i++) {
     const tx = width * (-0.08 + rand() * 1.16);
     const h = 18 + rand() * 16;
-    drawDeciduousTree(ctx, tx, height * (0.44 + rand() * 0.05), h, h * (0.65 + rand() * 0.45),
-      nearTreeTrunk, nearCanopyColor, rand);
+    drawDeciduousTree(
+      ctx,
+      tx,
+      height * (0.44 + rand() * 0.05),
+      h,
+      h * (0.65 + rand() * 0.45),
+      nearTreeTrunk,
+      nearCanopyColor,
+      rand
+    );
   }
   // canopy highlight pass on near trees
   ctx.save();
@@ -2090,27 +3058,63 @@ export function renderGrasslandBackdrop(
     const tx = width * (-0.05 + rand() * 1.1);
     const ty = height * (0.41 + rand() * 0.04);
     ctx.beginPath();
-    ctx.ellipse(tx, ty, 12 + rand() * 20, 6 + rand() * 10, rand() * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      tx,
+      ty,
+      12 + rand() * 20,
+      6 + rand() * 10,
+      rand() * 0.3,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
   ctx.restore();
 
   for (let i = 0; i < 5; i++) {
     const hx = width * (-0.05 + rand() * 0.85);
-    drawHedgerow(ctx, hx, hx + 25 + rand() * 60, height * (0.46 + rand() * 0.03),
-      5 + rand() * 4, hexToRgba(pal.nearRidge, 0.9), rand);
+    drawHedgerow(
+      ctx,
+      hx,
+      hx + 25 + rand() * 60,
+      height * (0.46 + rand() * 0.03),
+      5 + rand() * 4,
+      hexToRgba(pal.nearRidge, 0.9),
+      rand
+    );
   }
-  drawMeadowFlowers(ctx, width, height * 0.45, height * 0.50, 80,
-    ["#90c060", "#b0d870", "#d0e888", "#f0f0a8", "#e0d898", "#c8a878"], rand,
+  drawMeadowFlowers(
+    ctx,
+    width,
+    height * 0.45,
+    height * 0.5,
+    80,
+    ["#90c060", "#b0d870", "#d0e888", "#f0f0a8", "#e0d898", "#c8a878"],
+    rand
   );
 
   drawMistBand(ctx, width, height * 0.48, height * 0.022, pal.skyBottom, 0.06);
 
   // ── L4: foreground hills + flowers
-  drawRollingHills(ctx, width, height, height * 0.52, height * 0.045, pal.nearRidge, seed + 7040, 13);
+  drawRollingHills(
+    ctx,
+    width,
+    height,
+    height * 0.52,
+    height * 0.045,
+    pal.nearRidge,
+    seed + 7040,
+    13
+  );
 
-  drawMeadowFlowers(ctx, width, height * 0.52, height * 0.57, 50,
-    ["#80b850", "#98c860", "#c0e080", "#d8e898", "#e8d890"], rand,
+  drawMeadowFlowers(
+    ctx,
+    width,
+    height * 0.52,
+    height * 0.57,
+    50,
+    ["#80b850", "#98c860", "#c0e080", "#d8e898", "#e8d890"],
+    rand
   );
 }
 
@@ -2124,7 +3128,7 @@ export function renderThemedBackdropSilhouettes(
   height: number,
   seed: number,
   themeKey: ChallengeThemeKey,
-  palette: BackdropPalette,
+  palette: BackdropPalette
 ): void {
   // shift all landscape silhouettes down so they sit above the terrain
   // rather than floating high in the sky region
@@ -2133,22 +3137,27 @@ export function renderThemedBackdropSilhouettes(
   ctx.translate(0, verticalShift);
 
   switch (themeKey) {
-    case "swamp":
+    case "swamp": {
       renderSwampBackdrop(ctx, width, height, seed, palette);
       break;
-    case "desert":
+    }
+    case "desert": {
       renderDesertBackdrop(ctx, width, height, seed, palette);
       break;
-    case "winter":
+    }
+    case "winter": {
       renderWinterBackdrop(ctx, width, height, seed, palette);
       break;
-    case "volcanic":
+    }
+    case "volcanic": {
       renderVolcanicBackdrop(ctx, width, height, seed, palette);
       break;
+    }
     case "grassland":
-    default:
+    default: {
       renderGrasslandBackdrop(ctx, width, height, seed, palette);
       break;
+    }
   }
 
   ctx.restore();

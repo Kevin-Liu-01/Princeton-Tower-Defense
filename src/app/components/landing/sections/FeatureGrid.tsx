@@ -1,12 +1,10 @@
 "use client";
 import React from "react";
-import {
-  LANDING_THEME,
-  LANDING_STATS,
-  type FeatureStat,
-} from "../landingConstants";
-import { SectionFlourish } from "./LoadoutUI";
+
 import OrnateFrame from "../../ui/primitives/OrnateFrame";
+import { LANDING_THEME, LANDING_STATS } from "../landingConstants";
+import type { FeatureStat } from "../landingConstants";
+import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
 
@@ -21,9 +19,9 @@ function FeatureCard({ stat, index }: { stat: FeatureStat; index: number }) {
       color={T.accent}
       glowColor={T.accent}
       style={{
+        animationDelay: `${index * 80}ms`,
         background: "rgba(255,255,255,0.02)",
         borderRadius: 6,
-        animationDelay: `${index * 80}ms`,
       }}
     >
       <div

@@ -3,7 +3,7 @@ import { getEnemyPosition } from "../../utils";
 
 export const getEnemyPosWithPath = (
   enemy: Enemy,
-  defaultMap: string,
+  defaultMap: string
 ): Position => {
   const pathKey = enemy.pathKey || defaultMap;
   const basePos = getEnemyPosition(enemy, pathKey);

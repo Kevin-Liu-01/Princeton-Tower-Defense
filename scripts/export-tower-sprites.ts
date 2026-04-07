@@ -1,5 +1,7 @@
+import { writeFileSync, mkdirSync } from "node:fs";
+
 import { createCanvas } from "@napi-rs/canvas";
-import { writeFileSync, mkdirSync } from "fs";
+
 import { drawTowerSprite } from "../src/app/rendering/towers";
 
 const TOWERS = [

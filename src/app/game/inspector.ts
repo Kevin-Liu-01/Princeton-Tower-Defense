@@ -1,5 +1,5 @@
-import type { Enemy, Troop, Hero, Position } from "../types";
 import { ENEMY_DATA } from "../constants";
+import type { Enemy, Troop, Hero, Position } from "../types";
 import { getEnemyPosition, distance } from "../utils";
 
 export type InspectHitType = "enemy" | "troop" | "hero";
@@ -20,7 +20,7 @@ export function findClosestInspectUnit(
   troops: Troop[],
   hero: Hero | null,
   selectedMap: string,
-  interactionRadius: number,
+  interactionRadius: number
 ): InspectHitResult | null {
   let closestDist = Infinity;
   let result: InspectHitResult | null = null;
@@ -37,7 +37,7 @@ export function findClosestInspectUnit(
 
     if (dist < hitRadius + interactionRadius && dist < closestDist) {
       closestDist = dist;
-      result = { type: "enemy", enemy, troop: null, isHero: false };
+      result = { enemy, isHero: false, troop: null, type: "enemy" };
     }
   }
 
@@ -47,19 +47,21 @@ export function findClosestInspectUnit(
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < HERO_HIT_RADIUS + interactionRadius && dist < closestDist) {
       closestDist = dist;
-      result = { type: "hero", enemy: null, troop: null, isHero: true };
+      result = { enemy: null, isHero: true, troop: null, type: "hero" };
     }
   }
 
   for (let i = 0; i < troops.length; i++) {
     const troop = troops[i];
-    if (troop.dead) continue;
+    if (troop.dead) {
+      continue;
+    }
     const dx = worldPos.x - troop.pos.x;
     const dy = worldPos.y - troop.pos.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < TROOP_HIT_RADIUS + interactionRadius && dist < closestDist) {
       closestDist = dist;
-      result = { type: "troop", enemy: null, troop, isHero: false };
+      result = { enemy: null, isHero: false, troop, type: "troop" };
     }
   }
 

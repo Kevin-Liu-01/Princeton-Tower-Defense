@@ -42,7 +42,7 @@ export function drawTerrainBackdrop({
   verticalGradient.addColorStop(0.3, "rgba(0,0,0,0.05)");
   verticalGradient.addColorStop(0.5, "rgba(0,0,0,0)");
   verticalGradient.addColorStop(0.7, "rgba(0,0,0,0.05)");
-  verticalGradient.addColorStop(1.0, "rgba(0,0,0,0.35)");
+  verticalGradient.addColorStop(1, "rgba(0,0,0,0.35)");
   ctx.fillStyle = verticalGradient;
   ctx.fillRect(0, 0, width, height);
 
@@ -52,7 +52,7 @@ export function drawTerrainBackdrop({
     height * 0.3,
     width / 2,
     height / 2,
-    width,
+    width
   );
   vignetteGradient.addColorStop(0, "rgba(60,40,20,0)");
   vignetteGradient.addColorStop(0.7, "rgba(20,10,5,0.15)");
@@ -94,7 +94,7 @@ export function drawTerrainBackdrop({
       psize * 0.22,
       i * 7.3,
       0.25,
-      20,
+      20
     );
     ctx.fill();
   }
@@ -136,7 +136,7 @@ export function drawTerrainBackdrop({
   for (let i = 0; i < (isMobile ? 150 : 500); i++) {
     const sx = seededRandom(i * 13) * width;
     const sy = seededRandom(i * 13 + 1) * height;
-    const ss = 1.2 + seededRandom(i * 13 + 2) * 3.0;
+    const ss = 1.2 + seededRandom(i * 13 + 2) * 3;
     const sh = ss * (0.3 + seededRandom(i * 13 + 4) * 0.25);
     const rot = seededRandom(i * 13 + 5) * Math.PI;
 
@@ -192,10 +192,15 @@ export function drawTerrainBackdrop({
     const gx = seededRandom(i * 17) * width;
     const gy = seededRandom(i * 17 + 1) * height;
     let grassColor = "#3a5a2a";
-    if (gx > 1440) grassColor = "#3a2020";
-    else if (gx > 1080) grassColor = "#4a5a5a";
-    else if (gx > 720) grassColor = "#6a5a3a";
-    else if (gx > 380) grassColor = "#2a4a2a";
+    if (gx > 1440) {
+      grassColor = "#3a2020";
+    } else if (gx > 1080) {
+      grassColor = "#4a5a5a";
+    } else if (gx > 720) {
+      grassColor = "#6a5a3a";
+    } else if (gx > 380) {
+      grassColor = "#2a4a2a";
+    }
 
     drawGrassTuft(
       ctx,
@@ -203,7 +208,7 @@ export function drawTerrainBackdrop({
       gy,
       0.5 + seededRandom(i * 17 + 2) * 0.5,
       grassColor,
-      time,
+      time
     );
   }
   ctx.globalAlpha = 1;
@@ -215,11 +220,17 @@ export function drawTerrainBackdrop({
     const cy = seededRandom(i * 19 + 1) * height;
     const crackLength = 15 + seededRandom(i * 19 + 2) * 50;
 
-    if (cx > 1440) ctx.strokeStyle = "#2a0500";
-    else if (cx > 1080) ctx.strokeStyle = "#2a3a4a";
-    else if (cx > 720) ctx.strokeStyle = "#3a2a10";
-    else if (cx > 380) ctx.strokeStyle = "#0a1a0a";
-    else ctx.strokeStyle = "#1a2a00";
+    if (cx > 1440) {
+      ctx.strokeStyle = "#2a0500";
+    } else if (cx > 1080) {
+      ctx.strokeStyle = "#2a3a4a";
+    } else if (cx > 720) {
+      ctx.strokeStyle = "#3a2a10";
+    } else if (cx > 380) {
+      ctx.strokeStyle = "#0a1a0a";
+    } else {
+      ctx.strokeStyle = "#1a2a00";
+    }
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -270,67 +281,69 @@ export function drawTerrainBackdrop({
 
   const regions = [
     {
-      name: "PRINCETON GROUNDS",
-      x: 0,
-      w: 380,
+      accentBot: "rgba(40,80,20,0.15)",
+      accentTop: "rgba(100,180,60,0.12)",
       colors: ["#3d5a2f", "#2d4a1f", "#1a3010"],
       labelColor: "#8ade50",
       labelGlow: "#4a8020",
-      accentTop: "rgba(100,180,60,0.12)",
-      accentBot: "rgba(40,80,20,0.15)",
+      name: "PRINCETON GROUNDS",
+      w: 380,
+      x: 0,
     },
     {
-      name: "MATHEY MARSHES",
-      x: 380,
-      w: 340,
+      accentBot: "rgba(20,60,30,0.15)",
+      accentTop: "rgba(60,120,80,0.1)",
       colors: ["#2a3a2a", "#1a2a1a", "#0a1a0a"],
       labelColor: "#6aaa6a",
       labelGlow: "#2a5a2a",
-      accentTop: "rgba(60,120,80,0.1)",
-      accentBot: "rgba(20,60,30,0.15)",
+      name: "MATHEY MARSHES",
+      w: 340,
+      x: 380,
     },
     {
-      name: "STADIUM SANDS",
-      x: 720,
-      w: 360,
+      accentBot: "rgba(100,80,45,0.10)",
+      accentTop: "rgba(200,160,100,0.10)",
       colors: ["#a08058", "#886848", "#6a5038"],
       labelColor: "#ffe060",
       labelGlow: "#aa8020",
-      accentTop: "rgba(200,160,100,0.10)",
-      accentBot: "rgba(100,80,45,0.10)",
+      name: "STADIUM SANDS",
+      w: 360,
+      x: 720,
     },
     {
-      name: "FRIST FRONTIER",
-      x: 1080,
-      w: 360,
+      accentBot: "rgba(50,80,120,0.10)",
+      accentTop: "rgba(120,170,210,0.08)",
       colors: ["#6a8aa0", "#506a80", "#3a5068"],
       labelColor: "#d0f0ff",
       labelGlow: "#5090c0",
-      accentTop: "rgba(120,170,210,0.08)",
-      accentBot: "rgba(50,80,120,0.10)",
+      name: "FRIST FRONTIER",
+      w: 360,
+      x: 1080,
     },
     {
-      name: "DORMITORY DEPTHS",
-      x: 1440,
-      w: 380,
+      accentBot: "rgba(70,18,10,0.10)",
+      accentTop: "rgba(160,50,25,0.08)",
       colors: ["#4a2020", "#321010", "#1a0808"],
       labelColor: "#ff8855",
       labelGlow: "#aa3010",
-      accentTop: "rgba(160,50,25,0.08)",
-      accentBot: "rgba(70,18,10,0.10)",
+      name: "DORMITORY DEPTHS",
+      w: 380,
+      x: 1440,
     },
   ];
 
   const borderXPositions = [380, 720, 1080, 1450];
   const borderPaths = borderXPositions.map((bx) =>
-    generateOrganicBorderPoints(bx, height),
+    generateOrganicBorderPoints(bx, height)
   );
 
   const traceSmooth = (
     c: CanvasRenderingContext2D,
-    pts: ReadonlyArray<{ x: number; y: number }>,
+    pts: readonly { x: number; y: number }[]
   ) => {
-    if (pts.length < 2) return;
+    if (pts.length < 2) {
+      return;
+    }
     c.moveTo(pts[0].x, pts[0].y);
     for (let i = 0; i < pts.length - 1; i++) {
       const cur = pts[i];
@@ -339,10 +352,10 @@ export function drawTerrainBackdrop({
         cur.x,
         cur.y,
         (cur.x + nxt.x) / 2,
-        (cur.y + nxt.y) / 2,
+        (cur.y + nxt.y) / 2
       );
     }
-    c.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    c.lineTo(pts.at(-1).x, pts.at(-1).y);
   };
 
   regions.forEach((region, idx) => {
@@ -354,23 +367,27 @@ export function drawTerrainBackdrop({
     if (leftBorder) {
       traceSmooth(ctx, leftBorder);
       ctx.lineTo(
-        rightBorder
-          ? rightBorder[rightBorder.length - 1].x
-          : region.x + region.w + 40,
-        height + 4,
+        rightBorder ? rightBorder.at(-1).x : region.x + region.w + 40,
+        height + 4
       );
     } else {
       ctx.moveTo(-4, -4);
       ctx.lineTo(-4, height + 4);
     }
     if (rightBorder) {
-      const reversed = [...rightBorder].reverse();
-      for (const pt of reversed) ctx.lineTo(pt.x, pt.y);
-      if (!leftBorder) ctx.lineTo(-4, -4);
+      const reversed = [...rightBorder].toReversed();
+      for (const pt of reversed) {
+        ctx.lineTo(pt.x, pt.y);
+      }
+      if (!leftBorder) {
+        ctx.lineTo(-4, -4);
+      }
     } else {
       ctx.lineTo(region.x + region.w + 40, height + 4);
       ctx.lineTo(region.x + region.w + 40, -4);
-      if (leftBorder) ctx.lineTo(leftBorder[0].x, leftBorder[0].y);
+      if (leftBorder) {
+        ctx.lineTo(leftBorder[0].x, leftBorder[0].y);
+      }
     }
     ctx.closePath();
     ctx.clip();
@@ -379,7 +396,7 @@ export function drawTerrainBackdrop({
       region.x,
       0,
       region.x + region.w,
-      height,
+      height
     );
     gradient.addColorStop(0, region.colors[0]);
     gradient.addColorStop(0.5, region.colors[1]);
@@ -392,7 +409,7 @@ export function drawTerrainBackdrop({
       region.x,
       0,
       region.x,
-      height * 0.4,
+      height * 0.4
     );
     topGlow.addColorStop(0, region.accentTop);
     topGlow.addColorStop(1, "rgba(0,0,0,0)");
@@ -404,7 +421,7 @@ export function drawTerrainBackdrop({
       region.x,
       height * 0.6,
       region.x,
-      height,
+      height
     );
     bottomGlow.addColorStop(0, "rgba(0,0,0,0)");
     bottomGlow.addColorStop(1, region.accentBot);
@@ -419,7 +436,7 @@ export function drawTerrainBackdrop({
       0,
       regionCenterX,
       regionCenterY,
-      region.w * 0.6,
+      region.w * 0.6
     );
     innerGlow.addColorStop(0, region.accentTop);
     innerGlow.addColorStop(1, "rgba(0,0,0,0)");
@@ -433,7 +450,7 @@ export function drawTerrainBackdrop({
       height * 0.45,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.globalAlpha = 1;
@@ -474,7 +491,7 @@ export function drawTerrainBackdrop({
       bx - 10,
       by,
       bx + 5,
-      by,
+      by
     );
     ribbonGradientLeft.addColorStop(0, region.colors[2]);
     ribbonGradientLeft.addColorStop(1, region.colors[1]);
@@ -491,7 +508,7 @@ export function drawTerrainBackdrop({
       bx + bannerWidth - 5,
       by,
       bx + bannerWidth + 10,
-      by,
+      by
     );
     ribbonGradientRight.addColorStop(0, region.colors[1]);
     ribbonGradientRight.addColorStop(1, region.colors[2]);
@@ -508,7 +525,7 @@ export function drawTerrainBackdrop({
       bx,
       by,
       bx,
-      by + bannerHeight,
+      by + bannerHeight
     );
     bannerGradient.addColorStop(0, region.colors[0]);
     bannerGradient.addColorStop(0.3, region.colors[1]);

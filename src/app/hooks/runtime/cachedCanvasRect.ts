@@ -21,9 +21,11 @@ export type CachedCanvasRectRef = MutableRefObject<DOMRect | null>;
 
 export function getCachedRect(
   canvas: HTMLCanvasElement,
-  cacheRef: CachedCanvasRectRef,
+  cacheRef: CachedCanvasRectRef
 ): DOMRect {
-  if (cacheRef.current) return cacheRef.current;
+  if (cacheRef.current) {
+    return cacheRef.current;
+  }
   const rect = canvas.getBoundingClientRect();
   cacheRef.current = rect;
   return rect;

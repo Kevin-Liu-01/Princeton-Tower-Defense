@@ -1,19 +1,29 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import {
+  Swords,
+  ChevronLeft,
+  AlertTriangle,
+  MapPin,
+  Shield,
+  Star,
+} from "lucide-react";
 import Image from "next/image";
-import { Swords, ChevronLeft, AlertTriangle, MapPin, Shield, Star } from "lucide-react";
+import React, { useState, useEffect } from "react";
+
 import { LEVEL_DATA } from "../../constants";
-import { WORLD_LEVELS } from "./world-map/worldMapData";
+import { resolveLoadingTheme } from "../../constants/loadingAssets";
+import type { LoadingTheme } from "../../constants/loadingAssets";
+import { RegionIcon } from "../../sprites";
+import type { RegionType } from "../../sprites";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
-import { resolveLoadingTheme, type LoadingTheme } from "../../constants/loadingAssets";
-import { RegionIcon, type RegionType } from "../../sprites";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 
 const REGION_LABEL: Record<string, string> = {
+  desert: "Sahara Sands",
   grassland: "Princeton Grounds",
   swamp: "Murky Marshes",
-  desert: "Sahara Sands",
-  winter: "Frozen Frontier",
   volcanic: "Volcanic Depths",
+  winter: "Frozen Frontier",
 };
 
 const DIFFICULTY_LABEL: Record<number, string> = {
@@ -35,22 +45,38 @@ interface FreeplayDisclaimerProps {
   onBack: () => void;
 }
 
-export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: FreeplayDisclaimerProps) {
+export function FreeplayDisclaimer({
+  levelId,
+  isFreeplay,
+  onStart,
+  onBack,
+}: FreeplayDisclaimerProps) {
   const levelData = LEVEL_DATA[levelId];
   const worldLevel = WORLD_LEVELS.find((l) => l.id === levelId);
   const theme = resolveLoadingTheme(levelData?.theme, levelData?.levelKind);
   const previewImage = levelData?.previewImage;
   const levelName = levelData?.name ?? worldLevel?.name ?? levelId;
-  const region = (worldLevel?.region ?? levelData?.region ?? "grassland") as RegionType;
+  const region = (worldLevel?.region ??
+    levelData?.region ??
+    "grassland") as RegionType;
   const regionLabel = REGION_LABEL[region] ?? region;
   const difficulty = worldLevel?.difficulty ?? levelData?.difficulty ?? 1;
   const difficultyLabel = DIFFICULTY_LABEL[difficulty];
   const difficultyColor = DIFFICULTY_COLOR[difficulty];
-  const description = worldLevel?.description?.replace(/\n/g, " ") ?? levelData?.description ?? "";
+  const description =
+    worldLevel?.description?.replaceAll("\n", " ") ??
+    levelData?.description ??
+    "";
   const tags = worldLevel?.tags ?? [];
   const kind = worldLevel?.kind ?? "campaign";
 
-  const [stageVisible, setStageVisible] = useState([false, false, false, false, false]);
+  const [stageVisible, setStageVisible] = useState([
+    false,
+    false,
+    false,
+    false,
+    false,
+  ]);
 
   useEffect(() => {
     const delays = [80, 280, 480, 700, 950];
@@ -61,7 +87,7 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
           next[i] = true;
           return next;
         });
-      }, delay),
+      }, delay)
     );
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -91,7 +117,8 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
           style={{
             background: `linear-gradient(135deg, rgba(${theme.bgRgb},0.85) 0%, rgba(${theme.bgRgb},0.7) 100%)`,
             border: `1px solid rgba(${theme.accentDarkRgb},0.3)`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+            boxShadow:
+              "0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
           }}
         >
           <ChevronLeft
@@ -117,7 +144,12 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
               transform: stageVisible[0] ? "translateY(0)" : "translateY(14px)",
             }}
           >
-            <RegionIcon type={region} size={48} framed challenge={kind === "challenge"} />
+            <RegionIcon
+              type={region}
+              size={48}
+              framed
+              challenge={kind === "challenge"}
+            />
             <h1
               className="text-2xl sm:text-3xl font-bold tracking-[0.2em] uppercase text-center"
               style={{
@@ -169,7 +201,9 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
               className="w-full max-w-sm transition-all duration-700 ease-out"
               style={{
                 opacity: stageVisible[1] ? 1 : 0,
-                transform: stageVisible[1] ? "translateY(0) scale(1)" : "translateY(10px) scale(0.97)",
+                transform: stageVisible[1]
+                  ? "translateY(0) scale(1)"
+                  : "translateY(10px) scale(0.97)",
               }}
             >
               <OrnateFrame
@@ -225,9 +259,9 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
                     key={tag}
                     className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full"
                     style={{
-                      color: `rgba(${theme.accentRgb},0.5)`,
                       background: `rgba(${theme.accentDarkRgb},0.15)`,
                       border: `1px solid rgba(${theme.accentDarkRgb},0.2)`,
+                      color: `rgba(${theme.accentRgb},0.5)`,
                     }}
                   >
                     {tag}
@@ -243,7 +277,9 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
               className="w-full max-w-sm transition-all duration-700 ease-out"
               style={{
                 opacity: stageVisible[3] ? 1 : 0,
-                transform: stageVisible[3] ? "translateY(0)" : "translateY(10px)",
+                transform: stageVisible[3]
+                  ? "translateY(0)"
+                  : "translateY(10px)",
               }}
             >
               <div
@@ -269,8 +305,9 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
                     className="text-[11px] leading-relaxed"
                     style={{ color: `rgba(${theme.accentRgb},0.4)` }}
                   >
-                    This is not part of the campaign — just a way to enjoy every level!
-                    Victories here won&apos;t unlock new levels or save progress toward your campaign.
+                    This is not part of the campaign — just a way to enjoy every
+                    level! Victories here won&apos;t unlock new levels or save
+                    progress toward your campaign.
                   </p>
                 </div>
               </div>
@@ -321,16 +358,22 @@ export function FreeplayDisclaimer({ levelId, isFreeplay, onStart, onBack }: Fre
   );
 }
 
-function BackgroundLayer({ theme, previewImage }: { theme: LoadingTheme; previewImage?: string }) {
+function BackgroundLayer({
+  theme,
+  previewImage,
+}: {
+  theme: LoadingTheme;
+  previewImage?: string;
+}) {
   const bgSrc = previewImage ?? theme.bgImage;
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div
         className="absolute inset-[-8%]"
         style={{
-          width: "116%",
-          height: "116%",
           animation: "kenBurns 28s ease-in-out infinite alternate",
+          height: "116%",
+          width: "116%",
         }}
       >
         <Image
@@ -340,7 +383,7 @@ function BackgroundLayer({ theme, previewImage }: { theme: LoadingTheme; preview
           priority
           sizes="120vw"
           className="object-cover"
-          style={{ opacity: 0.28, filter: "blur(2px) saturate(0.6)" }}
+          style={{ filter: "blur(2px) saturate(0.6)", opacity: 0.28 }}
         />
       </div>
       <div

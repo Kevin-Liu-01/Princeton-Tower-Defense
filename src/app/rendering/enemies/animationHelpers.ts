@@ -33,7 +33,7 @@ export function drawAnimatedArm(
   time: number,
   zoom: number,
   side: -1 | 1,
-  opts: ArmOptions,
+  opts: ArmOptions
 ): void {
   const upperLen = (opts.upperLen ?? 0.18) * size;
   const foreLen = (opts.foreLen ?? 0.15) * size;
@@ -45,9 +45,12 @@ export function drawAnimatedArm(
   const elbowBendBase = opts.elbowBend ?? 0.4;
   const attackBoost = opts.attackExtra ?? 0;
 
-  const swing = Math.sin(time * speed + phase) * amt + attackBoost * Math.sin(time * speed * 2) * 0.2;
+  const swing =
+    Math.sin(time * speed + phase) * amt +
+    attackBoost * Math.sin(time * speed * 2) * 0.2;
   const shoulderAngle = base + swing;
-  const elbowAngle = elbowBendBase + Math.sin(time * speed + phase + 1.2) * 0.25 * side;
+  const elbowAngle =
+    elbowBendBase + Math.sin(time * speed + phase + 1.2) * 0.25 * side;
 
   ctx.save();
   ctx.translate(sx, sy);
@@ -103,7 +106,7 @@ export function drawAnimatedLegs(
   size: number,
   time: number,
   zoom: number,
-  opts: LegOptions,
+  opts: LegOptions
 ): void {
   const halfLen = ((opts.legLen ?? 0.16) * size) / 2;
   const width = (opts.width ?? 0.055) * size;
@@ -116,7 +119,8 @@ export function drawAnimatedLegs(
     const legSide = leg === 0 ? -1 : 1;
     const legPhase = leg === 0 ? 0 : Math.PI;
     const swing = Math.sin(time * speed + legPhase + phase) * stride;
-    const kneeBend = Math.max(0, Math.sin(time * speed + legPhase + phase + 0.8)) * 0.3;
+    const kneeBend =
+      Math.max(0, Math.sin(time * speed + legPhase + phase + 0.8)) * 0.3;
 
     const hipOffX = hipX + legSide * size * 0.08;
 
@@ -167,7 +171,7 @@ export function drawPulsingGlowRings(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: GlowRingOptions,
+  opts: GlowRingOptions
 ): void {
   const count = opts.count ?? 3;
   const speed = opts.speed ?? 1.5;
@@ -180,7 +184,9 @@ export function drawPulsingGlowRings(
     const phase = (time * speed + i * (1 / count)) % 1;
     const radius = Math.max(0, baseRadius + phase * baseRadius * expansion);
     const alpha = (1 - phase) * maxAlpha;
-    if (radius <= 0) continue;
+    if (radius <= 0) {
+      continue;
+    }
 
     ctx.strokeStyle = opts.color.replace(/[\d.]+\)$/, `${alpha})`);
     ctx.beginPath();
@@ -213,7 +219,7 @@ export function drawShiftingSegments(
   size: number,
   time: number,
   zoom: number,
-  opts: ShiftingSegmentOptions,
+  opts: ShiftingSegmentOptions
 ): void {
   const count = opts.count ?? 6;
   const orbit = (opts.orbitRadius ?? 0.3) * size;
@@ -231,7 +237,9 @@ export function drawShiftingSegments(
 
     ctx.save();
     ctx.translate(px, py);
-    if (shouldRotate) ctx.rotate(angle + time * 2);
+    if (shouldRotate) {
+      ctx.rotate(angle + time * 2);
+    }
 
     ctx.fillStyle = i % 2 === 0 ? opts.color : (opts.colorAlt ?? opts.color);
 
@@ -281,7 +289,7 @@ export function drawEnergyArc(
   y2: number,
   time: number,
   zoom: number,
-  opts: EnergyArcOptions,
+  opts: EnergyArcOptions
 ): void {
   const segs = opts.segments ?? 5;
   const amp = opts.amplitude ?? 6;
@@ -300,11 +308,14 @@ export function drawEnergyArc(
     const t = s / segs;
     const mx = x1 + dx * t;
     const my = y1 + dy * t;
-    const jitter = s < segs
-      ? (Math.sin(time * 15 + s * 3.7) * amp + Math.cos(time * 22 + s * 5.1) * amp * 0.5) * zoom
-      : 0;
-    const perpX = -dy / Math.sqrt(dx * dx + dy * dy) * jitter;
-    const perpY = dx / Math.sqrt(dx * dx + dy * dy) * jitter;
+    const jitter =
+      s < segs
+        ? (Math.sin(time * 15 + s * 3.7) * amp +
+            Math.cos(time * 22 + s * 5.1) * amp * 0.5) *
+          zoom
+        : 0;
+    const perpX = (-dy / Math.sqrt(dx * dx + dy * dy)) * jitter;
+    const perpY = (dx / Math.sqrt(dx * dx + dy * dy)) * jitter;
     ctx.lineTo(mx + perpX, my + perpY);
   }
   ctx.stroke();
@@ -333,7 +344,7 @@ export function drawOrbitingDebris(
   size: number,
   time: number,
   zoom: number,
-  opts: OrbitingDebrisOptions,
+  opts: OrbitingDebrisOptions
 ): void {
   const count = opts.count ?? 5;
   const minR = (opts.minRadius ?? 0.25) * size;
@@ -344,7 +355,8 @@ export function drawOrbitingDebris(
 
   for (let i = 0; i < count; i++) {
     const angle = time * speed + i * (TAU / count);
-    const r = minR + (maxR - minR) * (0.5 + Math.sin(time * 1.5 + i * 2.3) * 0.5);
+    const r =
+      minR + (maxR - minR) * (0.5 + Math.sin(time * 1.5 + i * 2.3) * 0.5);
     const px = cx + Math.cos(angle) * r;
     const py = cy + Math.sin(angle) * r * ISO_Y_RATIO;
 
@@ -356,7 +368,10 @@ export function drawOrbitingDebris(
       for (let t = 1; t <= trail; t++) {
         const ta = angle - t * 0.15;
         const tr = r - t * pSize * 0.5;
-        ctx.lineTo(cx + Math.cos(ta) * tr, cy + Math.sin(ta) * tr * ISO_Y_RATIO);
+        ctx.lineTo(
+          cx + Math.cos(ta) * tr,
+          cy + Math.sin(ta) * tr * ISO_Y_RATIO
+        );
       }
       ctx.stroke();
     }
@@ -372,7 +387,11 @@ export function drawOrbitingDebris(
 // BODY BREATHING / PULSING SCALE
 // ============================================================================
 
-export function getBreathScale(time: number, rate: number = 2, amount: number = 0.03): number {
+export function getBreathScale(
+  time: number,
+  rate: number = 2,
+  amount: number = 0.03
+): number {
   return 1 + Math.sin(time * rate) * amount;
 }
 
@@ -399,18 +418,28 @@ export function drawGlowingEyes(
   cy: number,
   size: number,
   time: number,
-  opts: GlowingEyeOptions,
+  opts: GlowingEyeOptions
 ): void {
   const pulse = 0.6 + Math.sin(time * (opts.pulseSpeed ?? 4)) * 0.4;
   const glowR = (opts.glowRadius ?? opts.eyeRadius * 2.5) * size;
-  const lookX = Math.sin(time * (opts.lookSpeed ?? 1.5)) * (opts.lookAmount ?? 0.015) * size;
-  const lookY = Math.cos(time * (opts.lookSpeed ?? 1.5) * 0.7) * (opts.lookAmount ?? 0.015) * size * 0.5;
+  const lookX =
+    Math.sin(time * (opts.lookSpeed ?? 1.5)) *
+    (opts.lookAmount ?? 0.015) *
+    size;
+  const lookY =
+    Math.cos(time * (opts.lookSpeed ?? 1.5) * 0.7) *
+    (opts.lookAmount ?? 0.015) *
+    size *
+    0.5;
 
   for (let side = -1; side <= 1; side += 2) {
     const ex = cx + side * opts.spacing * size;
 
     const glow = ctx.createRadialGradient(ex, cy, 0, ex, cy, glowR);
-    glow.addColorStop(0, opts.glowColor.replace(/[\d.]+\)$/, `${pulse * 0.5})`));
+    glow.addColorStop(
+      0,
+      opts.glowColor.replace(/[\d.]+\)$/, `${pulse * 0.5})`)
+    );
     glow.addColorStop(1, opts.glowColor.replace(/[\d.]+\)$/, "0)"));
     ctx.fillStyle = glow;
     ctx.beginPath();
@@ -435,7 +464,7 @@ export function drawGlowingEyes(
       cy - opts.eyeRadius * size * 0.25 + lookY * 0.3,
       opts.pupilRadius * size * 0.4,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -464,7 +493,7 @@ export function drawAnimatedTendril(
   size: number,
   time: number,
   zoom: number,
-  opts: TendrilOptions,
+  opts: TendrilOptions
 ): void {
   const length = (opts.length ?? 0.3) * size;
   const width = (opts.width ?? 0.03) * size;
@@ -477,8 +506,10 @@ export function drawAnimatedTendril(
     const t = i / segs;
     const dist = t * length;
     const wave = Math.sin(time * wSpeed + t * 4) * wAmt * t;
-    const px = startX + Math.cos(angle) * dist + Math.cos(angle + Math.PI / 2) * wave;
-    const py = startY + Math.sin(angle) * dist + Math.sin(angle + Math.PI / 2) * wave;
+    const px =
+      startX + Math.cos(angle) * dist + Math.cos(angle + Math.PI / 2) * wave;
+    const py =
+      startY + Math.sin(angle) * dist + Math.sin(angle + Math.PI / 2) * wave;
     points.push({ x: px, y: py });
   }
 
@@ -495,7 +526,7 @@ export function drawAnimatedTendril(
   ctx.lineCap = "butt";
 
   if (opts.tipColor) {
-    const tip = points[points.length - 1];
+    const tip = points.at(-1);
     const tipR = (opts.tipRadius ?? 0.015) * size;
     ctx.fillStyle = opts.tipColor;
     ctx.beginPath();
@@ -513,7 +544,7 @@ export function getIdleSway(
   speed: number = 2,
   amountX: number = 2,
   amountY: number = 1.5,
-  phase: number = 0,
+  phase: number = 0
 ): { dx: number; dy: number } {
   return {
     dx: Math.sin(time * speed + phase) * amountX,
@@ -543,12 +574,16 @@ export function drawFloatingPiece(
   size: number,
   time: number,
   phase: number,
-  opts: FloatingPieceOptions,
+  opts: FloatingPieceOptions
 ): void {
   const w = opts.width * size;
   const h = opts.height * size;
-  const bob = Math.sin(time * (opts.bobSpeed ?? 3) + phase) * (opts.bobAmt ?? 0.02) * size;
-  const rot = Math.sin(time * (opts.rotateSpeed ?? 2) + phase) * (opts.rotateAmt ?? 0.1);
+  const bob =
+    Math.sin(time * (opts.bobSpeed ?? 3) + phase) *
+    (opts.bobAmt ?? 0.02) *
+    size;
+  const rot =
+    Math.sin(time * (opts.rotateSpeed ?? 2) + phase) * (opts.rotateAmt ?? 0.1);
 
   ctx.save();
   ctx.translate(cx, cy + bob);
@@ -586,16 +621,16 @@ export function drawPoisonBubbles(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: PoisonBubbleOptions,
+  opts: PoisonBubbleOptions
 ): void {
   const count = opts.count ?? 5;
   const speed = opts.speed ?? 1.2;
   const maxAlpha = opts.maxAlpha ?? 0.5;
   const maxBubbleR = (opts.maxSize ?? 0.12) * baseRadius;
-  const spread = (opts.spread ?? 1.0) * baseRadius;
+  const spread = (opts.spread ?? 1) * baseRadius;
 
   for (let i = 0; i < count; i++) {
-    const seed = i * 2.39996;
+    const seed = i * 2.399_96;
     const phase = (time * speed + seed) % 1;
     const offsetX = Math.sin(seed * 7.3) * spread * 0.6;
     const riseDist = phase * baseRadius * 1.4;
@@ -619,7 +654,7 @@ export function drawPoisonBubbles(
         by - bubbleR * 0.25 * zoom,
         bubbleR * 0.3 * zoom,
         0,
-        TAU,
+        TAU
       );
       ctx.fill();
     }
@@ -647,10 +682,10 @@ export function drawSandDust(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: SandDustOptions,
+  opts: SandDustOptions
 ): void {
   const count = opts.count ?? 8;
-  const speed = opts.speed ?? 2.0;
+  const speed = opts.speed ?? 2;
   const maxAlpha = opts.maxAlpha ?? 0.4;
   const spread = (opts.spread ?? 1.2) * baseRadius;
   const pSize = (opts.particleSize ?? 0.06) * baseRadius;
@@ -696,7 +731,7 @@ export function drawFrostCrystals(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: FrostCrystalOptions,
+  opts: FrostCrystalOptions
 ): void {
   const count = opts.count ?? 5;
   const speed = opts.speed ?? 1.8;
@@ -711,7 +746,8 @@ export function drawFrostCrystals(
     const py = cy + Math.sin(angle) * orbitR * 0.5;
     const bob = Math.sin(time * 3 + seed * 2) * baseRadius * 0.08;
     const alpha = maxAlpha * (0.5 + Math.sin(time * 2.5 + seed) * 0.3);
-    const cs = crystalSize * (0.6 + Math.sin(time * 1.5 + seed * 3) * 0.2) * zoom;
+    const cs =
+      crystalSize * (0.6 + Math.sin(time * 1.5 + seed * 3) * 0.2) * zoom;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -763,7 +799,7 @@ export function drawEmberSparks(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: EmberSparkOptions,
+  opts: EmberSparkOptions
 ): void {
   const count = opts.count ?? 6;
   const speed = opts.speed ?? 1.5;
@@ -824,7 +860,7 @@ export function drawShadowWisps(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: ShadowWispOptions,
+  opts: ShadowWispOptions
 ): void {
   const count = opts.count ?? 4;
   const speed = opts.speed ?? 1.2;
@@ -849,16 +885,21 @@ export function drawShadowWisps(
     const segs = 5;
     for (let s = 1; s <= segs; s++) {
       const t = s / segs;
-      const endAngle = angle + Math.sin(time * speed * 1.5 + seed + s * 0.8) * 0.4;
+      const endAngle =
+        angle + Math.sin(time * speed * 1.5 + seed + s * 0.8) * 0.4;
       const r = startR + wispLen * t;
-      const wx = cx + Math.cos(endAngle) * r + Math.sin(time * 2.5 + s) * baseRadius * 0.05;
+      const wx =
+        cx +
+        Math.cos(endAngle) * r +
+        Math.sin(time * 2.5 + s) * baseRadius * 0.05;
       const wy = cy + Math.sin(endAngle) * r * ISO_Y_RATIO;
       ctx.lineTo(wx, wy);
     }
     ctx.stroke();
 
     const tipR = baseRadius * 0.04 * zoom;
-    const tipAngle = angle + Math.sin(time * speed * 1.5 + seed + 5 * 0.8) * 0.4;
+    const tipAngle =
+      angle + Math.sin(time * speed * 1.5 + seed + 5 * 0.8) * 0.4;
     const tipDist = startR + wispLen;
     ctx.fillStyle = opts.color;
     ctx.beginPath();
@@ -867,7 +908,7 @@ export function drawShadowWisps(
       cy + Math.sin(tipAngle) * tipDist * ISO_Y_RATIO,
       tipR,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.restore();
@@ -893,10 +934,10 @@ export function drawArcaneSparkles(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: ArcaneSparkleOptions,
+  opts: ArcaneSparkleOptions
 ): void {
   const count = opts.count ?? 6;
-  const speed = opts.speed ?? 2.0;
+  const speed = opts.speed ?? 2;
   const maxAlpha = opts.maxAlpha ?? 0.5;
   const sparkleSize = (opts.sparkleSize ?? 0.08) * baseRadius;
 
@@ -910,7 +951,9 @@ export function drawArcaneSparkles(
     const alpha = maxAlpha * Math.max(0, twinkle);
     const sz = sparkleSize * (0.3 + Math.max(0, twinkle) * 0.7) * zoom;
 
-    if (alpha <= 0.01) continue;
+    if (alpha <= 0.01) {
+      continue;
+    }
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -953,7 +996,7 @@ export function drawLeafSwirl(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: LeafSwirlOptions,
+  opts: LeafSwirlOptions
 ): void {
   const count = opts.count ?? 5;
   const speed = opts.speed ?? 1.5;
@@ -1006,7 +1049,7 @@ export function drawWindGusts(
   baseRadius: number,
   time: number,
   zoom: number,
-  opts: WindGustOptions,
+  opts: WindGustOptions
 ): void {
   const count = opts.count ?? 4;
   const speed = opts.speed ?? 2.5;
@@ -1035,7 +1078,7 @@ export function drawWindGusts(
       gx,
       gy + Math.sin(time * 4 + seed) * baseRadius * 0.05,
       gx + len * 0.5,
-      gy - Math.sin(time * 3 + seed * 2) * baseRadius * 0.03,
+      gy - Math.sin(time * 3 + seed * 2) * baseRadius * 0.03
     );
     ctx.stroke();
     ctx.restore();

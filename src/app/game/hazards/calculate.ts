@@ -11,12 +11,12 @@ import type {
 
 function createDefaultEffect(): HazardEffect {
   return {
-    poisonDamage: 0,
-    lavaDamage: 0,
     environmentalSlow: 0,
     environmentalSlowSource: undefined,
     environmentalSpeed: 1,
     fireParticlePos: undefined,
+    lavaDamage: 0,
+    poisonDamage: 0,
   };
 }
 
@@ -34,7 +34,7 @@ function calculateSingleHazardEffect(
   unitPos: Position,
   currentEffect: HazardEffect,
   deltaTime: number,
-  particles: HazardParticle[],
+  particles: HazardParticle[]
 ): HazardEffect {
   const dist = distance(unitPos, hazard.worldPos);
   if (dist >= hazard.radius) {
@@ -44,12 +44,13 @@ function calculateSingleHazardEffect(
   const effect = { ...currentEffect };
 
   switch (hazard.type) {
-    case "poison_fog":
+    case "poison_fog": {
       effect.poisonDamage += (15 * deltaTime) / 1000;
       if (Math.random() < 0.1) {
-        particles.push({ pos: hazard.worldPos, type: "poison", count: 3 });
+        particles.push({ count: 3, pos: hazard.worldPos, type: "poison" });
       }
       break;
+    }
     case "deep_water": {
       const distFactor = 1 - dist / hazard.radius;
       const drownDps = 4 + distFactor * 5;
@@ -59,7 +60,7 @@ function calculateSingleHazardEffect(
         effect.environmentalSlowSource = "deep_water";
       }
       if (Math.random() < 0.08) {
-        particles.push({ pos: hazard.worldPos, type: "water", count: 2 });
+        particles.push({ count: 2, pos: hazard.worldPos, type: "water" });
       }
       break;
     }
@@ -73,45 +74,48 @@ function calculateSingleHazardEffect(
       }
       if (Math.random() < 0.04) {
         effect.lavaDamage += 12;
-        particles.push({ pos: unitPos, type: "storm", count: 5 });
+        particles.push({ count: 5, pos: unitPos, type: "storm" });
       }
       if (Math.random() < 0.12) {
-        particles.push({ pos: hazard.worldPos, type: "water", count: 3 });
+        particles.push({ count: 3, pos: hazard.worldPos, type: "water" });
       }
       break;
     }
-    case "storm_field":
+    case "storm_field": {
       effect.environmentalSpeed = Math.max(effect.environmentalSpeed, 1.15);
       effect.lavaDamage += (6 * deltaTime) / 1000;
       if (Math.random() < 0.14) {
-        particles.push({ pos: hazard.worldPos, type: "storm", count: 3 });
+        particles.push({ count: 3, pos: hazard.worldPos, type: "storm" });
       }
       break;
-    case "quicksand":
+    }
+    case "quicksand": {
       if (effect.environmentalSlow < 0.5) {
         effect.environmentalSlow = 0.5;
         effect.environmentalSlowSource = "quicksand";
       }
       if (Math.random() < 0.1) {
-        particles.push({ pos: hazard.worldPos, type: "sand", count: 3 });
+        particles.push({ count: 3, pos: hazard.worldPos, type: "sand" });
       }
       break;
+    }
     case "ice_sheet":
-    case "slippery_ice":
+    case "slippery_ice": {
       effect.environmentalSpeed = 1.6;
       if (Math.random() < 0.1) {
-        particles.push({ pos: hazard.worldPos, type: "ice", count: 3 });
+        particles.push({ count: 3, pos: hazard.worldPos, type: "ice" });
       }
       break;
+    }
     case "ice_spikes":
-    case "spikes":
+    case "spikes": {
       if (!hazard.iceSpikeCycle || hazard.iceSpikeCycle.extend < 0.2) {
         break;
       }
 
       const intensity = Math.min(
         1,
-        Math.max(0, (hazard.iceSpikeCycle.extend - 0.2) / 0.8),
+        Math.max(0, (hazard.iceSpikeCycle.extend - 0.2) / 0.8)
       );
       {
         const distFactor = 1 - dist / hazard.radius;
@@ -130,69 +134,79 @@ function calculateSingleHazardEffect(
           distFactor > 0.25 &&
           (hazard.iceSpikeCycle.burst || Math.random() < 0.06)
         ) {
-          particles.push({ pos: hazard.worldPos, type: "ice", count: 3 });
+          particles.push({ count: 3, pos: hazard.worldPos, type: "ice" });
           hazard.particleBudget -= 1;
         }
       }
       break;
+    }
     case "lava_geyser":
-    case "eruption_zone":
+    case "eruption_zone": {
       if (Math.random() < 0.095) {
         effect.lavaDamage += 5;
         effect.fireParticlePos = unitPos;
       }
       break;
-    case "volcano":
+    }
+    case "volcano": {
       if (Math.random() < 0.055) {
         effect.lavaDamage += 15;
         effect.fireParticlePos = unitPos;
-        particles.push({ pos: unitPos, type: "fire", count: 8 });
+        particles.push({ count: 8, pos: unitPos, type: "fire" });
       }
       break;
-    case "lava":
+    }
+    case "lava": {
       if (Math.random() < 0.08) {
         effect.lavaDamage += 4;
         effect.fireParticlePos = unitPos;
       }
       break;
-    case "swamp":
+    }
+    case "swamp": {
       effect.poisonDamage += (6 * deltaTime) / 1000;
       if (effect.environmentalSlow < 0.35) {
         effect.environmentalSlow = 0.35;
         effect.environmentalSlowSource = "quicksand";
       }
       break;
-    case "ice":
+    }
+    case "ice": {
       effect.environmentalSpeed = 1.5;
       if (Math.random() < 0.08) {
-        particles.push({ pos: hazard.worldPos, type: "ice", count: 2 });
+        particles.push({ count: 2, pos: hazard.worldPos, type: "ice" });
       }
       break;
-    case "poison":
+    }
+    case "poison": {
       effect.poisonDamage += (12 * deltaTime) / 1000;
       if (Math.random() < 0.08) {
-        particles.push({ pos: hazard.worldPos, type: "poison", count: 2 });
+        particles.push({ count: 2, pos: hazard.worldPos, type: "poison" });
       }
       break;
-    case "fire":
+    }
+    case "fire": {
       effect.lavaDamage += (10 * deltaTime) / 1000;
       if (Math.random() < 0.1) {
         effect.fireParticlePos = unitPos;
       }
       break;
-    case "lightning":
+    }
+    case "lightning": {
       if (Math.random() < 0.06) {
         effect.lavaDamage += 18;
-        particles.push({ pos: unitPos, type: "storm", count: 4 });
+        particles.push({ count: 4, pos: unitPos, type: "storm" });
       }
       break;
-    case "void":
+    }
+    case "void": {
       effect.poisonDamage += (8 * deltaTime) / 1000;
       if (effect.environmentalSlow < 0.3) {
         effect.environmentalSlow = 0.3;
         effect.environmentalSlowSource = "unknown";
       }
       break;
+    }
   }
 
   return effect;
@@ -202,7 +216,7 @@ function calculateUnitEffect(
   hazards: HazardData[],
   unitPos: Position,
   deltaTime: number,
-  particles: HazardParticle[],
+  particles: HazardParticle[]
 ): HazardEffect {
   let effect = createDefaultEffect();
   for (const hazard of hazards) {
@@ -211,7 +225,7 @@ function calculateUnitEffect(
       unitPos,
       effect,
       deltaTime,
-      particles,
+      particles
     );
   }
   return effect;
@@ -221,7 +235,7 @@ export function calculateHazardEffects(
   hazards: MapHazard[],
   enemies: Enemy[],
   deltaTime: number,
-  getEnemyPosition: (enemy: Enemy) => Position,
+  getEnemyPosition: (enemy: Enemy) => Position
 ): HazardCalculationResult {
   const nowSeconds = Date.now() / 1000;
   const hazardData = prepareHazardData(hazards, nowSeconds);
@@ -233,7 +247,7 @@ export function calculateHazardEffects(
       hazardData,
       getEnemyPosition(enemy),
       deltaTime,
-      particles,
+      particles
     );
     if (hasEffect(effect)) {
       effects.set(enemy.id, effect);
@@ -247,7 +261,7 @@ export function calculateFriendlyHazardEffects(
   hazards: MapHazard[],
   troops: Troop[],
   hero: Hero | null,
-  deltaTime: number,
+  deltaTime: number
 ): FriendlyHazardResult {
   const nowSeconds = Date.now() / 1000;
   const hazardData = prepareHazardData(hazards, nowSeconds);
@@ -262,7 +276,7 @@ export function calculateFriendlyHazardEffects(
       hazardData,
       troop.pos,
       deltaTime,
-      particles,
+      particles
     );
     if (hasEffect(effect)) {
       troopEffects.set(troop.id, effect);
@@ -275,12 +289,12 @@ export function calculateFriendlyHazardEffects(
       hazardData,
       hero.pos,
       deltaTime,
-      particles,
+      particles
     );
     if (hasEffect(effect)) {
       heroEffect = effect;
     }
   }
 
-  return { troopEffects, heroEffect, particles };
+  return { heroEffect, particles, troopEffects };
 }

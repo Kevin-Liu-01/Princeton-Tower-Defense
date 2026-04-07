@@ -1,7 +1,8 @@
 import type { MapTheme } from "../../types";
-import { createSeededRandom } from "../../utils/seededRandom";
 import { hexToRgba } from "../../utils";
-import { TERRAIN_PALETTES, type TerrainPalette } from "./terrainConstants";
+import { createSeededRandom } from "../../utils/seededRandom";
+import { TERRAIN_PALETTES } from "./terrainConstants";
+import type { TerrainPalette } from "./terrainConstants";
 
 interface BiomeDetailParams {
   ctx: CanvasRenderingContext2D;
@@ -39,7 +40,12 @@ function drawGrassTufts(p: BiomeDetailParams): void {
       const cpx = bx + Math.cos(angle) * len * 0.7 + (rng() - 0.5) * 2;
       const cpy = y + Math.sin(angle) * len * 0.7;
       ctx.moveTo(bx, y);
-      ctx.quadraticCurveTo(cpx, cpy, bx + Math.cos(angle) * len, y + Math.sin(angle) * len);
+      ctx.quadraticCurveTo(
+        cpx,
+        cpy,
+        bx + Math.cos(angle) * len,
+        y + Math.sin(angle) * len
+      );
       ctx.stroke();
     }
   }
@@ -131,7 +137,12 @@ function drawSandRipples(p: BiomeDetailParams): void {
     const dy = Math.sin(windAngle) * length;
     ctx.beginPath();
     ctx.moveTo(cx - dx / 2, cy - dy / 2);
-    ctx.quadraticCurveTo(cx + curve, cy + curve * 0.5, cx + dx / 2, cy + dy / 2);
+    ctx.quadraticCurveTo(
+      cx + curve,
+      cy + curve * 0.5,
+      cx + dx / 2,
+      cy + dy / 2
+    );
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -185,7 +196,15 @@ function drawScatteredStones(p: BiomeDetailParams): void {
     ctx.globalAlpha = 0.08 + rng() * 0.12;
     ctx.fillStyle = palette.biomeFeature[3 + Math.floor(rng() * 2)];
     ctx.beginPath();
-    ctx.ellipse(x, y, size, size * (0.5 + rng() * 0.3), rng() * Math.PI, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      size,
+      size * (0.5 + rng() * 0.3),
+      rng() * Math.PI,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -258,7 +277,15 @@ function drawIcePatches(p: BiomeDetailParams): void {
     grad.addColorStop(1, hexToRgba(palette.biomeFeature[2], 0));
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, r, r * (0.5 + rng() * 0.3), rng() * Math.PI, 0, Math.PI * 2);
+    ctx.ellipse(
+      cx,
+      cy,
+      r,
+      r * (0.5 + rng() * 0.3),
+      rng() * Math.PI,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -346,10 +373,7 @@ function drawLavaCracks(p: BiomeDetailParams): void {
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(nx, ny);
-        ctx.lineTo(
-          nx + Math.cos(bAngle) * bLen,
-          ny + Math.sin(bAngle) * bLen,
-        );
+        ctx.lineTo(nx + Math.cos(bAngle) * bLen, ny + Math.sin(bAngle) * bLen);
         ctx.stroke();
       }
 
@@ -430,9 +454,13 @@ function drawMurkyPuddles(p: BiomeDetailParams): void {
     ctx.fillStyle = palette.highlight;
     ctx.beginPath();
     ctx.ellipse(
-      cx - rx * 0.2, cy - ry * 0.2,
-      rx * 0.3, ry * 0.3,
-      0, 0, Math.PI * 2,
+      cx - rx * 0.2,
+      cy - ry * 0.2,
+      rx * 0.3,
+      ry * 0.3,
+      0,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.globalAlpha = 1;
@@ -460,9 +488,10 @@ function drawAlgaeStreaks(p: BiomeDetailParams): void {
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.quadraticCurveTo(
-      midX, midY,
+      midX,
+      midY,
       x + Math.cos(angle) * len,
-      y + Math.sin(angle) * len,
+      y + Math.sin(angle) * len
     );
     ctx.stroke();
   }
@@ -513,7 +542,8 @@ function drawRootPatterns(p: BiomeDetailParams): void {
     const segments = 4 + Math.floor(rng() * 6);
 
     ctx.globalAlpha = 0.04 + rng() * 0.05;
-    ctx.strokeStyle = palette.soilSpots[Math.floor(rng() * palette.soilSpots.length)];
+    ctx.strokeStyle =
+      palette.soilSpots[Math.floor(rng() * palette.soilSpots.length)];
     ctx.lineWidth = 0.5 + rng() * 1.5;
     ctx.lineCap = "round";
 
@@ -541,39 +571,50 @@ export function drawBiomeDetails(
   cssWidth: number,
   cssHeight: number,
   themeName: MapTheme,
-  mapSeed: number,
+  mapSeed: number
 ): void {
   const palette = TERRAIN_PALETTES[themeName];
-  const params: BiomeDetailParams = { ctx, cssWidth, cssHeight, mapSeed, palette };
+  const params: BiomeDetailParams = {
+    cssHeight,
+    cssWidth,
+    ctx,
+    mapSeed,
+    palette,
+  };
 
   switch (themeName) {
-    case "grassland":
+    case "grassland": {
       drawGrassTufts(params);
       drawWildflowers(params);
       drawGrassWaves(params);
       break;
-    case "desert":
+    }
+    case "desert": {
       drawSandRipples(params);
       drawCrackedEarth(params);
       drawScatteredStones(params);
       drawDuneShading(params);
       break;
-    case "winter":
+    }
+    case "winter": {
       drawSnowDrifts(params);
       drawIcePatches(params);
       drawFrostSparkles(params);
       drawExposedRock(params);
       break;
-    case "volcanic":
+    }
+    case "volcanic": {
       drawLavaCracks(params);
       drawEmberGlow(params);
       drawAshDeposits(params);
       break;
-    case "swamp":
+    }
+    case "swamp": {
       drawMurkyPuddles(params);
       drawAlgaeStreaks(params);
       drawSwampBubbles(params);
       drawRootPatterns(params);
       break;
+    }
   }
 }

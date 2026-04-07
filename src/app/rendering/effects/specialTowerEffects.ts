@@ -2,7 +2,7 @@ import { ISO_Y_RATIO } from "../../constants";
 import type { Position } from "../../types";
 
 function parseRgb(rgb: string): [number, number, number] {
-  const parts = rgb.split(",").map((s) => parseInt(s.trim(), 10));
+  const parts = rgb.split(",").map((s) => Number.parseInt(s.trim(), 10));
   return [parts[0] || 255, parts[1] || 110, parts[2] || 96];
 }
 
@@ -27,7 +27,7 @@ export function renderSentinelImpact(
   progress: number,
   alpha: number,
   size: number,
-  hotRgb?: string,
+  hotRgb?: string
 ): void {
   const [hr, hg, hb] = parseRgb(hotRgb || "255, 110, 96");
   const impactRadius = Math.max(24, size * zoom * progress);
@@ -80,7 +80,14 @@ export function renderSentinelImpact(
 
   // Ground scorch mark (fades in, persists)
   const scorchAlpha = alpha * Math.min(1, progress * 3) * 0.35;
-  const scorchGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius * 0.85);
+  const scorchGrad = ctx.createRadialGradient(
+    0,
+    0,
+    0,
+    0,
+    0,
+    impactRadius * 0.85
+  );
   scorchGrad.addColorStop(0, `rgba(${scorchDark}, ${scorchAlpha})`);
   scorchGrad.addColorStop(0.5, `rgba(${scorchMid}, ${scorchAlpha * 0.6})`);
   scorchGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -106,10 +113,13 @@ export function renderSentinelImpact(
   for (let i = 0; i < rayCount; i++) {
     const angle = (i / rayCount) * Math.PI * 2 + progress * 0.6;
     const inner = impactRadius * 0.1;
-    const rayLength = impactRadius * (0.35 + ((i * 7 + 3) % 5) / 5 * 0.35);
+    const rayLength = impactRadius * (0.35 + (((i * 7 + 3) % 5) / 5) * 0.35);
     const outer = inner + rayLength * Math.min(1, progress * 2.5);
-    const rayAlpha = alpha * (0.7 - progress * 0.5) * (0.6 + Math.sin(t * 8 + i * 2) * 0.4);
-    if (rayAlpha <= 0) continue;
+    const rayAlpha =
+      alpha * (0.7 - progress * 0.5) * (0.6 + Math.sin(t * 8 + i * 2) * 0.4);
+    if (rayAlpha <= 0) {
+      continue;
+    }
 
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle) * ISO_Y_RATIO;
@@ -136,8 +146,13 @@ export function renderSentinelImpact(
     const shardDist = impactRadius * (0.15 + progress * (0.5 + (i % 3) * 0.15));
     const shardSize = (2 + (i % 3)) * zoom * Math.max(0, 1 - progress * 1.3);
     const sx = screenX + Math.cos(shardAngle) * shardDist;
-    const sy = screenY + Math.sin(shardAngle) * shardDist * ISO_Y_RATIO - progress * 15 * zoom * (1 + (i % 2));
-    if (shardSize <= 0) continue;
+    const sy =
+      screenY +
+      Math.sin(shardAngle) * shardDist * ISO_Y_RATIO -
+      progress * 15 * zoom * (1 + (i % 2));
+    if (shardSize <= 0) {
+      continue;
+    }
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(shardAngle + progress * 4);
@@ -149,7 +164,14 @@ export function renderSentinelImpact(
   // Bright center flash
   const flashAlpha = alpha * Math.max(0, 1 - progress * 2);
   if (flashAlpha > 0) {
-    const flashGrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, coreRadius * 3);
+    const flashGrad = ctx.createRadialGradient(
+      screenX,
+      screenY,
+      0,
+      screenX,
+      screenY,
+      coreRadius * 3
+    );
     flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
     flashGrad.addColorStop(0.4, `rgba(${flashMid}, ${flashAlpha * 0.6})`);
     flashGrad.addColorStop(1, `rgba(${flashEdge}, 0)`);
@@ -183,7 +205,7 @@ export function renderSunforgeBeam(
   progress: number,
   alpha: number,
   intensity: number,
-  effectId: string,
+  effectId: string
 ): void {
   const t = Date.now() / 1000;
   const dx = targetX - sourceX;
@@ -252,17 +274,27 @@ export function renderSunforgeBeam(
   ctx.shadowColor = "transparent";
   const particleCount = 6;
   for (let i = 0; i < particleCount; i++) {
-    const paramT = ((t * 2.5 + i * 0.4 + seed * 0.0001) % 1);
+    const paramT = (t * 2.5 + i * 0.4 + seed * 0.0001) % 1;
     const bx = sx + dx * paramT;
     const by = sy + dy * paramT;
     const spiralR = (6 + Math.sin(t * 4 + i * 1.7) * 3) * zoom;
     const spiralAngle = t * 8 + paramT * 12 + i * 1.1;
-    const pxOff = Math.cos(spiralAngle) * spiralR * px + Math.sin(spiralAngle) * spiralR * nx * 0.3;
-    const pyOff = Math.cos(spiralAngle) * spiralR * py + Math.sin(spiralAngle) * spiralR * ny * 0.3;
+    const pxOff =
+      Math.cos(spiralAngle) * spiralR * px +
+      Math.sin(spiralAngle) * spiralR * nx * 0.3;
+    const pyOff =
+      Math.cos(spiralAngle) * spiralR * py +
+      Math.sin(spiralAngle) * spiralR * ny * 0.3;
     const pAlpha = alpha * (0.5 + Math.sin(paramT * Math.PI) * 0.4) * intensity;
     ctx.fillStyle = `rgba(255, 230, 140, ${pAlpha})`;
     ctx.beginPath();
-    ctx.arc(bx + pxOff, by + pyOff, (1.5 + intensity * 0.8) * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      bx + pxOff,
+      by + pyOff,
+      (1.5 + intensity * 0.8) * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -277,7 +309,7 @@ export function renderSunforgeBeam(
     ctx.moveTo(sx, sy);
     ctx.lineTo(
       sx + Math.cos(flareAngle) * flareLen,
-      sy + Math.sin(flareAngle) * flareLen * 0.6,
+      sy + Math.sin(flareAngle) * flareLen * 0.6
     );
     ctx.stroke();
   }
@@ -297,7 +329,7 @@ export function renderSunforgeImpact(
   zoom: number,
   progress: number,
   alpha: number,
-  size: number,
+  size: number
 ): void {
   const impactRadius = Math.max(22, size * zoom * (0.4 + progress * 0.85));
   const t = Date.now() / 1000;
@@ -310,7 +342,14 @@ export function renderSunforgeImpact(
   ctx.translate(screenX, screenY);
   ctx.scale(1, ISO_Y_RATIO);
   const scorchAlpha = alpha * Math.min(1, progress * 4) * 0.3;
-  const scorchGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius * 0.9);
+  const scorchGrad = ctx.createRadialGradient(
+    0,
+    0,
+    0,
+    0,
+    0,
+    impactRadius * 0.9
+  );
   scorchGrad.addColorStop(0, `rgba(50, 20, 5, ${scorchAlpha})`);
   scorchGrad.addColorStop(0.6, `rgba(40, 15, 0, ${scorchAlpha * 0.5})`);
   scorchGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -355,7 +394,12 @@ export function renderSunforgeImpact(
   const pillarH = impactRadius * 1.4 * Math.max(0, 1 - progress * 1.2);
   if (pillarH > 5) {
     const pillarW = impactRadius * 0.25;
-    const pillarGrad = ctx.createLinearGradient(screenX, screenY, screenX, screenY - pillarH);
+    const pillarGrad = ctx.createLinearGradient(
+      screenX,
+      screenY,
+      screenX,
+      screenY - pillarH
+    );
     pillarGrad.addColorStop(0, `rgba(255, 200, 80, ${alpha * 0.5})`);
     pillarGrad.addColorStop(0.4, `rgba(255, 140, 40, ${alpha * 0.35})`);
     pillarGrad.addColorStop(0.8, `rgba(200, 80, 20, ${alpha * 0.15})`);
@@ -375,10 +419,13 @@ export function renderSunforgeImpact(
   for (let i = 0; i < rayCount; i++) {
     const angle = (i / rayCount) * Math.PI * 2 + progress * 0.5 + 0.2;
     const inner = impactRadius * 0.12;
-    const rayLen = impactRadius * (0.4 + ((i * 5 + 2) % 4) / 4 * 0.3);
+    const rayLen = impactRadius * (0.4 + (((i * 5 + 2) % 4) / 4) * 0.3);
     const outer = inner + rayLen;
-    const rayAlpha = alpha * (0.75 - progress * 0.4) * (0.7 + Math.sin(t * 7 + i * 1.8) * 0.3);
-    if (rayAlpha <= 0) continue;
+    const rayAlpha =
+      alpha * (0.75 - progress * 0.4) * (0.7 + Math.sin(t * 7 + i * 1.8) * 0.3);
+    if (rayAlpha <= 0) {
+      continue;
+    }
 
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle) * ISO_Y_RATIO;
@@ -406,8 +453,14 @@ export function renderSunforgeImpact(
     const dropR = (1.5 + (i % 2)) * zoom * Math.max(0, 1 - progress * 1.4);
     const dropX = screenX + Math.cos(dropAngle) * dropDist;
     const gravity = progress * progress * 20 * zoom;
-    const dropY = screenY + Math.sin(dropAngle) * dropDist * ISO_Y_RATIO - progress * 12 * zoom * (1 + (i % 2)) + gravity;
-    if (dropR <= 0) continue;
+    const dropY =
+      screenY +
+      Math.sin(dropAngle) * dropDist * ISO_Y_RATIO -
+      progress * 12 * zoom * (1 + (i % 2)) +
+      gravity;
+    if (dropR <= 0) {
+      continue;
+    }
     ctx.fillStyle = `rgba(255, 200, 80, ${alpha * (0.7 - progress * 0.5)})`;
     ctx.beginPath();
     ctx.arc(dropX, dropY, dropR, 0, Math.PI * 2);
@@ -418,7 +471,14 @@ export function renderSunforgeImpact(
   const flashAlpha = alpha * Math.max(0, 1 - progress * 2.2);
   if (flashAlpha > 0.01) {
     const flashR = impactRadius * 0.2;
-    const flashGrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, flashR);
+    const flashGrad = ctx.createRadialGradient(
+      screenX,
+      screenY,
+      0,
+      screenX,
+      screenY,
+      flashR
+    );
     flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
     flashGrad.addColorStop(0.5, `rgba(255, 240, 200, ${flashAlpha * 0.6})`);
     flashGrad.addColorStop(1, "rgba(255, 180, 60, 0)");
@@ -439,10 +499,10 @@ export function renderSunforgeImpact(
 
 // FNV-1a hash for deterministic per-effect variation
 function hashFnv(input: string): number {
-  let hash = 2166136261;
+  let hash = 2_166_136_261;
   for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+    hash ^= input.codePointAt(i);
+    hash = Math.imul(hash, 16_777_619);
   }
   return hash >>> 0;
 }

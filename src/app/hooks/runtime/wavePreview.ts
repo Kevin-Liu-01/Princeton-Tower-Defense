@@ -1,13 +1,13 @@
-import type { EnemyType } from "../../types";
 import { ENEMY_DATA, getLevelPathKeys } from "../../constants";
-import { getLevelWaves } from "../../game/setup";
 import { isSandboxLevel, ensureSandboxWaves } from "../../game/sandboxWaves";
+import { getLevelWaves } from "../../game/setup";
+import type { EnemyType } from "../../types";
 import type { WavePreviewEnemyEntry } from "./renderScene";
 
 export function computeWavePreviewByPath(
   selectedMap: string,
   currentWave: number,
-  activeWaveSpawnPaths: string[],
+  activeWaveSpawnPaths: string[]
 ): Map<string, WavePreviewEnemyEntry[]> {
   if (isSandboxLevel(selectedMap)) {
     ensureSandboxWaves(currentWave);
@@ -22,10 +22,18 @@ export function computeWavePreviewByPath(
     return new Map<string, WavePreviewEnemyEntry[]>();
   }
 
-  const addEnemyCount = (pathKey: string, enemyType: EnemyType, count: number) => {
-    if (count <= 0) return;
+  const addEnemyCount = (
+    pathKey: string,
+    enemyType: EnemyType,
+    count: number
+  ) => {
+    if (count <= 0) {
+      return;
+    }
     const pathMap = groupedCounts.get(pathKey);
-    if (!pathMap) return;
+    if (!pathMap) {
+      return;
+    }
     pathMap.set(enemyType, (pathMap.get(enemyType) ?? 0) + count);
   };
 
@@ -35,7 +43,9 @@ export function computeWavePreviewByPath(
     const remainder = group.count % pathCount;
     for (let i = 0; i < pathCount; i++) {
       const pathKey = activeWaveSpawnPaths[i];
-      if (!pathKey) continue;
+      if (!pathKey) {
+        continue;
+      }
       const count = baseCount + (i < remainder ? 1 : 0);
       addEnemyCount(pathKey, group.type, count);
     }
@@ -43,21 +53,24 @@ export function computeWavePreviewByPath(
 
   const previewByPath = new Map<string, WavePreviewEnemyEntry[]>();
   for (const pathKey of activeWaveSpawnPaths) {
-    const countByType = groupedCounts.get(pathKey) ?? new Map<EnemyType, number>();
-    const entries = Array.from(countByType.entries())
+    const countByType =
+      groupedCounts.get(pathKey) ?? new Map<EnemyType, number>();
+    const entries = [...countByType.entries()]
       .map(([type, count]) => {
         const enemyData = ENEMY_DATA[type];
         return {
-          type,
+          color: enemyData?.color ?? "#f87171",
           count,
           name: enemyData?.name ?? type,
-          color: enemyData?.color ?? "#f87171",
+          type,
         };
       })
-      .sort((a, b) => {
+      .toSorted((a, b) => {
         const aBoss = ENEMY_DATA[a.type]?.isBoss ? 1 : 0;
         const bBoss = ENEMY_DATA[b.type]?.isBoss ? 1 : 0;
-        return bBoss - aBoss || b.count - a.count || a.name.localeCompare(b.name);
+        return (
+          bBoss - aBoss || b.count - a.count || a.name.localeCompare(b.name)
+        );
       });
     previewByPath.set(pathKey, entries);
   }

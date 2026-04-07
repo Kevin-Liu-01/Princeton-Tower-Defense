@@ -1,12 +1,16 @@
 import { useEffect, useLayoutEffect } from "react";
 
+export const SPRITE_PAD = 1.8;
+
 export function setupSpriteCanvas(
   canvas: HTMLCanvasElement,
   width: number,
   height: number
 ): CanvasRenderingContext2D | null {
   const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
+  if (!ctx) {
+    return null;
+  }
 
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.max(1, Math.round(width * dpr));
@@ -33,7 +37,9 @@ export function useSpriteTicker(
   }, [render]);
 
   useEffect(() => {
-    if (!animated) return;
+    if (!animated) {
+      return;
+    }
 
     let rafId = 0;
     const start = performance.now();
@@ -47,4 +53,3 @@ export function useSpriteTicker(
     return () => window.cancelAnimationFrame(rafId);
   }, [animated, frameMs, render]);
 }
-

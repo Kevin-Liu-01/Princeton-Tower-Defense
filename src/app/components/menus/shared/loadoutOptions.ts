@@ -1,5 +1,5 @@
-import type { HeroType, SpellType } from "../../../types";
 import { SPELL_OPTIONS } from "../../../constants";
+import type { HeroType, SpellType } from "../../../types";
 
 export const HERO_OPTIONS: HeroType[] = [
   "tiger",

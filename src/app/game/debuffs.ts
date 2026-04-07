@@ -15,6 +15,6 @@ export function addOrRefreshDebuff(
   const filtered = (debuffs || []).filter(
     (d) => d.until > now && d.type !== debuffType
   );
-  filtered.push({ type: debuffType, intensity, until, sourceId });
+  filtered.push({ intensity, sourceId, type: debuffType, until });
   return filtered;
 }

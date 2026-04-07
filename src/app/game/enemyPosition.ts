@@ -1,5 +1,5 @@
-import type { Position, Enemy, EnemyType } from "../types";
 import { ENEMY_DATA } from "../constants";
+import type { Position, Enemy, EnemyType } from "../types";
 
 const FLYING_AIM_WORLD_OFFSET = 70;
 
@@ -12,7 +12,9 @@ export function createEnemyPosCache(
 
   const getPos = (enemy: Enemy): Position => {
     const cached = posCache.get(enemy);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
     const pos = getEnemyPosWithPath(enemy, selectedMap);
     posCache.set(enemy, pos);
     return pos;
@@ -20,7 +22,9 @@ export function createEnemyPosCache(
 
   const getAimPos = (enemy: Enemy): Position => {
     const cached = aimPosCache.get(enemy);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
     const basePos = getPos(enemy);
     const enemyData = ENEMY_DATA[enemy.type as EnemyType];
     if (!enemyData?.flying) {
@@ -35,5 +39,5 @@ export function createEnemyPosCache(
     return aimPos;
   };
 
-  return { getPos, getAimPos };
+  return { getAimPos, getPos };
 }

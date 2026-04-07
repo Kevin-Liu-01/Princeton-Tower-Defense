@@ -1,5 +1,5 @@
-import type { Position, TroopOwnerType } from "../../types";
 import type { MapTheme } from "../../constants/maps";
+import type { Position, TroopOwnerType } from "../../types";
 import { getKnightTheme, getKnightGearVariant } from "./knightThemes";
 import type { KnightTheme, KnightGearVariant } from "./knightThemes";
 import {
@@ -22,7 +22,7 @@ export function drawKnightTroop(
   ownerType?: TroopOwnerType,
   targetPos?: Position,
   mapTheme?: MapTheme,
-  knightVariant?: number,
+  knightVariant?: number
 ) {
   const theme = getKnightTheme(ownerType, mapTheme);
   const gear = getKnightGearVariant(knightVariant, ownerType);
@@ -39,10 +39,10 @@ export function drawKnightTroop(
     ? Math.sin(attackPhase * Math.PI) * 0.25
     : Math.sin(time * 1.7) * 0.03;
   const attackIntensity = attackPhase;
-  const armorPeak = gear.armorPeak;
-  const armorHigh = gear.armorHigh;
-  const armorMid = gear.armorMid;
-  const armorDark = gear.armorDark;
+  const { armorPeak } = gear;
+  const { armorHigh } = gear;
+  const { armorMid } = gear;
+  const { armorDark } = gear;
 
   // === DARK FLAME AURA (always present) ===
   const auraIntensity = isAttacking ? 0.6 : 0.35;
@@ -55,15 +55,15 @@ export function drawKnightTroop(
     size * 0.1,
     x,
     y + size * 0.1,
-    size * 0.8,
+    size * 0.8
   );
   auraGrad.addColorStop(
     0,
-    `${theme.auraColorInner}${auraIntensity * auraPulse * 0.5})`,
+    `${theme.auraColorInner}${auraIntensity * auraPulse * 0.5})`
   );
   auraGrad.addColorStop(
     0.4,
-    `${theme.auraColorMid}${auraIntensity * auraPulse * 0.3})`,
+    `${theme.auraColorMid}${auraIntensity * auraPulse * 0.3})`
   );
   auraGrad.addColorStop(1, theme.auraColorOuter);
   ctx.fillStyle = auraGrad;
@@ -99,7 +99,7 @@ export function drawKnightTroop(
         size * (0.65 + ringPhase * 0.35),
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -119,13 +119,13 @@ export function drawKnightTroop(
     const isLeft = side === -1;
     ctx.save();
     ctx.translate(x + side * knightStanceSpread, y + size * 0.32);
-    ctx.rotate(side * (-0.10 + stance * 0.025));
+    ctx.rotate(side * (-0.1 + stance * 0.025));
 
     const lw = size * 0.15;
     const hlw = lw * 0.5;
 
     // --- Thigh plate (cuisse) ---
-    const thighH = size * 0.10;
+    const thighH = size * 0.1;
     const thighGrad = ctx.createLinearGradient(-hlw, 0, hlw, 0);
     thighGrad.addColorStop(0, armorDark);
     thighGrad.addColorStop(0.2, armorMid);
@@ -170,7 +170,13 @@ export function drawKnightTroop(
     // Side rivet
     ctx.fillStyle = armorPeak;
     ctx.beginPath();
-    ctx.arc(isLeft ? -hlw + size * 0.015 : hlw - size * 0.015, thighH * 0.55, size * 0.008, 0, Math.PI * 2);
+    ctx.arc(
+      isLeft ? -hlw + size * 0.015 : hlw - size * 0.015,
+      thighH * 0.55,
+      size * 0.008,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // --- Knee cop (poleyn) with spike ---
@@ -181,7 +187,12 @@ export function drawKnightTroop(
     ctx.fill();
     // Inner dome
     const kneeCopGrad = ctx.createRadialGradient(
-      -size * 0.01, kneeY, 0, 0, kneeY, size * 0.06,
+      -size * 0.01,
+      kneeY,
+      0,
+      0,
+      kneeY,
+      size * 0.06
     );
     kneeCopGrad.addColorStop(0, armorPeak);
     kneeCopGrad.addColorStop(0.5, armorHigh);
@@ -215,7 +226,12 @@ export function drawKnightTroop(
     // --- Greave (shin guard) ---
     const greaveTop = kneeY + size * 0.05;
     const greaveH = size * 0.12;
-    const greaveGrad = ctx.createLinearGradient(-hlw, greaveTop, hlw, greaveTop);
+    const greaveGrad = ctx.createLinearGradient(
+      -hlw,
+      greaveTop,
+      hlw,
+      greaveTop
+    );
     greaveGrad.addColorStop(0, armorDark);
     greaveGrad.addColorStop(0.15, armorMid);
     greaveGrad.addColorStop(0.45, armorHigh);
@@ -224,7 +240,12 @@ export function drawKnightTroop(
     greaveGrad.addColorStop(1, armorDark);
     ctx.fillStyle = greaveGrad;
     ctx.beginPath();
-    ctx.roundRect(-hlw, greaveTop, lw, greaveH, [0, 0, size * 0.02, size * 0.02]);
+    ctx.roundRect(-hlw, greaveTop, lw, greaveH, [
+      0,
+      0,
+      size * 0.02,
+      size * 0.02,
+    ]);
     ctx.fill();
 
     // Greave center ridge
@@ -295,7 +316,12 @@ export function drawKnightTroop(
 
     // Sole
     ctx.fillStyle = armorDark;
-    ctx.fillRect(-hlw - size * 0.01, bootTop + bootH - size * 0.01, lw + size * 0.02, size * 0.01);
+    ctx.fillRect(
+      -hlw - size * 0.01,
+      bootTop + bootH - size * 0.01,
+      lw + size * 0.02,
+      size * 0.01
+    );
 
     ctx.restore();
   }
@@ -315,8 +341,10 @@ export function drawKnightTroop(
 
   // Front chest plate — rich multi-stop gradient
   const plateGrad = ctx.createLinearGradient(
-    x - size * 0.22, y - size * 0.18 + by * 0.5,
-    x + size * 0.22, y + size * 0.34 + by,
+    x - size * 0.22,
+    y - size * 0.18 + by * 0.5,
+    x + size * 0.22,
+    y + size * 0.34 + by
   );
   plateGrad.addColorStop(0, armorDark);
   plateGrad.addColorStop(0.12, armorMid);
@@ -329,7 +357,12 @@ export function drawKnightTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
   ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.5);
-  ctx.quadraticCurveTo(x, y - size * 0.24 + by * 0.3, x + size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.24 + by * 0.3,
+    x + size * 0.24,
+    y - size * 0.14 + by * 0.5
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.closePath();
   ctx.fill();
@@ -341,8 +374,10 @@ export function drawKnightTroop(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.02, y - size * 0.12 + by * 0.4);
     ctx.quadraticCurveTo(
-      x + side * size * 0.12, y - size * 0.02 + by * 0.6,
-      x + side * size * 0.08, y + size * 0.12 + by,
+      x + side * size * 0.12,
+      y - size * 0.02 + by * 0.6,
+      x + side * size * 0.08,
+      y + size * 0.12 + by
     );
     ctx.stroke();
 
@@ -350,10 +385,12 @@ export function drawKnightTroop(
     ctx.strokeStyle = `rgba(255, 255, 255, 0.08)`;
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.03, y - size * 0.10 + by * 0.4);
+    ctx.moveTo(x + side * size * 0.03, y - size * 0.1 + by * 0.4);
     ctx.quadraticCurveTo(
-      x + side * size * 0.10, y - size * 0.01 + by * 0.6,
-      x + side * size * 0.07, y + size * 0.10 + by,
+      x + side * size * 0.1,
+      y - size * 0.01 + by * 0.6,
+      x + side * size * 0.07,
+      y + size * 0.1 + by
     );
     ctx.stroke();
   }
@@ -376,20 +413,26 @@ export function drawKnightTroop(
   ctx.arc(x, y + size * 0.12 + by * 0.8, size * 0.12, 0.35, Math.PI - 0.35);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.19 + by * 0.9, size * 0.10, 0.4, Math.PI - 0.4);
+  ctx.arc(x, y + size * 0.19 + by * 0.9, size * 0.1, 0.4, Math.PI - 0.4);
   ctx.stroke();
 
   // Armor plate edge rivets
   for (let side = -1; side <= 1; side += 2) {
     for (let r = 0; r < 3; r++) {
-      const ry = y - size * 0.06 + r * size * 0.10 + by * (0.5 + r * 0.15);
+      const ry = y - size * 0.06 + r * size * 0.1 + by * (0.5 + r * 0.15);
       ctx.fillStyle = armorPeak;
       ctx.beginPath();
-      ctx.arc(x + side * size * 0.20, ry, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(x + side * size * 0.2, ry, size * 0.008, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.beginPath();
-      ctx.arc(x + side * size * 0.20 - size * 0.003, ry - size * 0.003, size * 0.003, 0, Math.PI * 2);
+      ctx.arc(
+        x + side * size * 0.2 - size * 0.003,
+        ry - size * 0.003,
+        size * 0.003,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -400,7 +443,12 @@ export function drawKnightTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
   ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.5);
-  ctx.quadraticCurveTo(x, y - size * 0.24 + by * 0.3, x + size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.24 + by * 0.3,
+    x + size * 0.24,
+    y - size * 0.14 + by * 0.5
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.stroke();
 
@@ -439,15 +487,19 @@ export function drawKnightTroop(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.04, y + size * 0.06 + by);
     ctx.quadraticCurveTo(
-      x + side * size * 0.07, y + size * 0.04 + by,
-      x + side * size * 0.065, y + size * 0.02 + by,
+      x + side * size * 0.07,
+      y + size * 0.04 + by,
+      x + side * size * 0.065,
+      y + size * 0.02 + by
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.04, y + size * 0.06 + by);
     ctx.quadraticCurveTo(
-      x + side * size * 0.07, y + size * 0.09 + by,
-      x + side * size * 0.065, y + size * 0.12 + by,
+      x + side * size * 0.07,
+      y + size * 0.09 + by,
+      x + side * size * 0.065,
+      y + size * 0.12 + by
     );
     ctx.stroke();
   }
@@ -484,7 +536,12 @@ export function drawKnightTroop(
   ctx.fillRect(x - size * 0.21, beltY, size * 0.42, size * 0.015);
   // Belt lower trim
   ctx.fillStyle = armorMid;
-  ctx.fillRect(x - size * 0.21, beltY + size * 0.055, size * 0.42, size * 0.015);
+  ctx.fillRect(
+    x - size * 0.21,
+    beltY + size * 0.055,
+    size * 0.42,
+    size * 0.015
+  );
   // Belt segment lines
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
   ctx.lineWidth = 0.7 * zoom;
@@ -515,10 +572,23 @@ export function drawKnightTroop(
   ctx.stroke();
 
   // === ARMORED SKIRT (tassets) ===
-  drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
-    armorPeak, armorHigh, armorMid, armorDark,
-    trimColor: gear.trimHighlight,
-  }, { plateCount: 5, widthFactor: 0.52, depthFactor: 0.18 });
+  drawArmoredSkirt(
+    ctx,
+    x,
+    y,
+    size,
+    zoom,
+    stance,
+    breathe,
+    {
+      armorDark,
+      armorHigh,
+      armorMid,
+      armorPeak,
+      trimColor: gear.trimHighlight,
+    },
+    { depthFactor: 0.18, plateCount: 5, widthFactor: 0.52 }
+  );
 
   // === MASSIVE PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
@@ -535,7 +605,7 @@ export function drawKnightTroop(
       size * 0.115,
       side * 0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -546,7 +616,7 @@ export function drawKnightTroop(
       size * 0.01,
       pauldronX,
       pauldronY,
-      size * 0.14,
+      size * 0.14
     );
     pauldGrad.addColorStop(0, armorPeak);
     pauldGrad.addColorStop(0.45, armorHigh);
@@ -560,7 +630,7 @@ export function drawKnightTroop(
       size * 0.11,
       side * 0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -577,7 +647,7 @@ export function drawKnightTroop(
         size * 0.03,
         side * 0.3,
         0,
-        Math.PI,
+        Math.PI
       );
       ctx.stroke();
     }
@@ -609,10 +679,10 @@ export function drawKnightTroop(
       size * 0.04,
       side * 0.3,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.stroke();
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 
     // Rivets
     ctx.fillStyle = armorPeak;
@@ -628,14 +698,14 @@ export function drawKnightTroop(
 
   // === ARMS ===
   const knightArmColors: ArmColors = {
-    upper: armorMid,
-    upperLight: armorHigh,
-    upperDark: armorDark,
-    vambrace: armorHigh,
-    vambraceLight: armorPeak,
     elbow: armorMid,
     hand: armorMid,
     trim: gear.trimColor,
+    upper: armorMid,
+    upperDark: armorDark,
+    upperLight: armorHigh,
+    vambrace: armorHigh,
+    vambraceLight: armorPeak,
   };
 
   // Left arm
@@ -659,8 +729,10 @@ export function drawKnightTroop(
     ? -0.6 + (1 - attackPhase) * 1.4
     : 0.6 + stance * 0.03;
 
-  const knightHandX = knightShoulderX + Math.cos(knightArmSwing) * knightArmLength;
-  const knightHandY = knightShoulderY + Math.sin(knightArmSwing) * knightArmLength;
+  const knightHandX =
+    knightShoulderX + Math.cos(knightArmSwing) * knightArmLength;
+  const knightHandY =
+    knightShoulderY + Math.sin(knightArmSwing) * knightArmLength;
 
   // Blade orientation
   const swordBaseAngle = isAttacking
@@ -673,7 +745,7 @@ export function drawKnightTroop(
     swordBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.45 : 0.82,
-    WEAPON_LIMITS.rightMelee,
+    WEAPON_LIMITS.rightMelee
   );
 
   // Derive sword origin so grip lands exactly on the hand
@@ -690,7 +762,19 @@ export function drawKnightTroop(
   ctx.save();
   ctx.translate(swordX, swordY);
   ctx.rotate(swordAngle);
-  drawKnightWeapon(ctx, size, swordScale, zoom, time, theme, gear.weaponStyle, gear.trimColor, attackIntensity, isAttacking, attackPhase);
+  drawKnightWeapon(
+    ctx,
+    size,
+    swordScale,
+    zoom,
+    time,
+    theme,
+    gear.weaponStyle,
+    gear.trimColor,
+    attackIntensity,
+    isAttacking,
+    attackPhase
+  );
   ctx.restore();
 
   // === SHIELD (on back) ===
@@ -716,7 +800,7 @@ export function drawKnightTroop(
     -size * 0.12 * shieldScale,
     0,
     size * 0.12 * shieldScale,
-    0,
+    0
   );
   shieldGrad.addColorStop(0, armorDark);
   shieldGrad.addColorStop(0.28, armorMid);
@@ -802,16 +886,18 @@ export function drawKnightTroop(
   // === SWEEPING HORSEHAIR PLUME (rendered behind helmet) - THEMED ===
   {
     const plumeBaseY = helmY - size * 0.18;
-    const plumeWind = Math.sin(time * 3.8) * 2.5 + (isAttacking ? swordSwing * 2.0 : 0);
+    const plumeWind =
+      Math.sin(time * 3.8) * 2.5 + (isAttacking ? swordSwing * 2 : 0);
     const plumeWhip = Math.sin(time * 5.2 + 0.5) * 1.4;
     const plumeGust = Math.sin(time * 2.8) * 0.7;
 
     const crownX = x;
     const crownY = plumeBaseY;
     const sweepLen = size * 0.7;
-    const sweepAngle = 1.8 + Math.sin(time * 2.0) * 0.12;
+    const sweepAngle = 1.8 + Math.sin(time * 2) * 0.12;
     const tipX = crownX + Math.cos(sweepAngle) * sweepLen + plumeWind * 1.5;
-    const tipY = crownY + Math.sin(sweepAngle) * sweepLen * 0.45 + plumeGust * 2;
+    const tipY =
+      crownY + Math.sin(sweepAngle) * sweepLen * 0.45 + plumeGust * 2;
     const midX = (crownX + tipX) * 0.5 + plumeWind * 0.6;
     const midY = crownY - size * 0.32 + plumeWhip * 0.5;
 
@@ -825,7 +911,7 @@ export function drawKnightTroop(
       tipX + size * 0.04,
       tipY - size * 0.02,
       tipX + size * 0.06,
-      tipY + size * 0.12,
+      tipY + size * 0.12
     );
     ctx.bezierCurveTo(
       tipX - size * 0.02,
@@ -833,7 +919,7 @@ export function drawKnightTroop(
       midX - size * 0.02,
       midY + size * 0.12,
       crownX + size * 0.04,
-      crownY + size * 0.04,
+      crownY + size * 0.04
     );
     ctx.closePath();
     ctx.fill();
@@ -843,7 +929,7 @@ export function drawKnightTroop(
       crownX,
       crownY - size * 0.15,
       tipX,
-      tipY,
+      tipY
     );
     plumeBaseGrad.addColorStop(0, theme.plumeDark);
     plumeBaseGrad.addColorStop(0.35, theme.plume);
@@ -858,7 +944,7 @@ export function drawKnightTroop(
       tipX - size * 0.06,
       tipY - size * 0.14,
       tipX + size * 0.04,
-      tipY + size * 0.02,
+      tipY + size * 0.02
     );
     ctx.bezierCurveTo(
       tipX + size * 0.02,
@@ -866,7 +952,7 @@ export function drawKnightTroop(
       midX + size * 0.03,
       midY + size * 0.1,
       crownX + size * 0.06,
-      crownY + size * 0.02,
+      crownY + size * 0.02
     );
     ctx.closePath();
     ctx.fill();
@@ -876,7 +962,7 @@ export function drawKnightTroop(
       crownX,
       crownY - size * 0.1,
       tipX,
-      tipY,
+      tipY
     );
     plumeMainGrad.addColorStop(0, theme.plumeDark);
     plumeMainGrad.addColorStop(0.15, theme.plume);
@@ -893,7 +979,7 @@ export function drawKnightTroop(
       tipX - size * 0.05,
       tipY - size * 0.12,
       tipX + size * 0.02,
-      tipY + size * 0.01,
+      tipY + size * 0.01
     );
     ctx.bezierCurveTo(
       tipX,
@@ -901,18 +987,13 @@ export function drawKnightTroop(
       midX + size * 0.02,
       midY + size * 0.08,
       crownX + size * 0.045,
-      crownY + size * 0.015,
+      crownY + size * 0.015
     );
     ctx.closePath();
     ctx.fill();
 
     // Inner highlight shimmer (bright ribbon along center)
-    const plumeHiGrad = ctx.createLinearGradient(
-      crownX,
-      crownY,
-      tipX,
-      tipY,
-    );
+    const plumeHiGrad = ctx.createLinearGradient(crownX, crownY, tipX, tipY);
     plumeHiGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
     plumeHiGrad.addColorStop(0.15, theme.plumeHighlight + "55");
     plumeHiGrad.addColorStop(0.4, theme.plumeHighlight + "77");
@@ -927,7 +1008,7 @@ export function drawKnightTroop(
       tipX - size * 0.04,
       tipY - size * 0.06,
       tipX,
-      tipY + size * 0.02,
+      tipY + size * 0.02
     );
     ctx.bezierCurveTo(
       tipX - size * 0.01,
@@ -935,7 +1016,7 @@ export function drawKnightTroop(
       midX + size * 0.01,
       midY + size * 0.04,
       crownX + size * 0.02,
-      crownY + size * 0.01,
+      crownY + size * 0.01
     );
     ctx.closePath();
     ctx.fill();
@@ -944,7 +1025,7 @@ export function drawKnightTroop(
     for (let strand = 0; strand < 10; strand++) {
       const strandT = strand / 9;
       const strandPhase = time * (3.5 + strand * 0.4) + strand * 1.1;
-      const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 3.0);
+      const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 3);
       const strandAlpha = 0.15 + Math.sin(time * 2.5 + strand * 0.8) * 0.1;
       const strandSpread = (strandT - 0.5) * size * 0.08;
       const strandStartX = crownX + strandSpread * 0.4;
@@ -952,24 +1033,35 @@ export function drawKnightTroop(
 
       ctx.strokeStyle =
         strand % 3 === 0
-          ? theme.plumeHighlight + Math.round(strandAlpha * 255).toString(16).padStart(2, "0")
+          ? theme.plumeHighlight +
+            Math.round(strandAlpha * 255)
+              .toString(16)
+              .padStart(2, "0")
           : strand % 3 === 1
-            ? theme.plumeLight + Math.round(strandAlpha * 255).toString(16).padStart(2, "0")
-            : theme.plume + Math.round((strandAlpha * 0.8) * 255).toString(16).padStart(2, "0");
+            ? theme.plumeLight +
+              Math.round(strandAlpha * 255)
+                .toString(16)
+                .padStart(2, "0")
+            : theme.plume +
+              Math.round(strandAlpha * 0.8 * 255)
+                .toString(16)
+                .padStart(2, "0");
       ctx.lineWidth = (0.6 + (1 - Math.abs(strandT - 0.5) * 2) * 0.5) * zoom;
       ctx.beginPath();
       ctx.moveTo(strandStartX, strandStartY);
       const strandMidX = midX + strandSpread + strandBend;
       const strandMidY = midY - size * 0.05 + Math.abs(strandSpread) * 0.8;
-      const strandEndX = tipX + strandSpread * 1.5 + strandBend * 1.6 + plumeWind * 0.4;
-      const strandEndY = tipY + strandSpread * 0.6 + Math.abs(strandSpread) * 0.5;
+      const strandEndX =
+        tipX + strandSpread * 1.5 + strandBend * 1.6 + plumeWind * 0.4;
+      const strandEndY =
+        tipY + strandSpread * 0.6 + Math.abs(strandSpread) * 0.5;
       ctx.bezierCurveTo(
         strandMidX,
         strandMidY,
         strandEndX - size * 0.06,
         strandEndY - size * 0.04,
         strandEndX,
-        strandEndY,
+        strandEndY
       );
       ctx.stroke();
     }
@@ -983,7 +1075,11 @@ export function drawKnightTroop(
       const wispX = tipX + wispSpread + plumeWind * 0.3;
       const wispY = tipY + wispSpread * 0.4;
 
-      ctx.strokeStyle = theme.plumeHighlight + Math.round(wispAlpha * 255).toString(16).padStart(2, "0");
+      ctx.strokeStyle =
+        theme.plumeHighlight +
+        Math.round(wispAlpha * 255)
+          .toString(16)
+          .padStart(2, "0");
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(wispX, wispY);
@@ -991,7 +1087,7 @@ export function drawKnightTroop(
         wispX + size * 0.06 + wispPhase * size * 0.03,
         wispY - size * 0.02,
         wispX + size * 0.1 + wispPhase * size * 0.05,
-        wispY + size * 0.03,
+        wispY + size * 0.03
       );
       ctx.stroke();
     }
@@ -1001,7 +1097,7 @@ export function drawKnightTroop(
       crownX - size * 0.06,
       crownY,
       crownX + size * 0.06,
-      crownY,
+      crownY
     );
     clampGrad.addColorStop(0, "#5a4518");
     clampGrad.addColorStop(0.3, "#a08028");
@@ -1015,7 +1111,7 @@ export function drawKnightTroop(
       crownY - size * 0.008,
       size * 0.12,
       size * 0.025,
-      size * 0.005,
+      size * 0.005
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(255, 230, 160, 0.25)";
@@ -1036,7 +1132,7 @@ export function drawKnightTroop(
     x - size * 0.14,
     0,
     x + size * 0.14,
-    0,
+    0
   );
   gorgetGrad.addColorStop(0, armorDark);
   gorgetGrad.addColorStop(0.3, armorMid);
@@ -1059,7 +1155,25 @@ export function drawKnightTroop(
   ctx.stroke();
 
   // === HELMET (variant-dependent) ===
-  drawKnightHelmet(ctx, x, helmY, size, zoom, time, armorPeak, armorHigh, armorMid, armorDark, gear.helmetStyle, gear.trimColor, gear.trimHighlight, theme, attackIntensity, isAttacking, attackPhase);
+  drawKnightHelmet(
+    ctx,
+    x,
+    helmY,
+    size,
+    zoom,
+    time,
+    armorPeak,
+    armorHigh,
+    armorMid,
+    armorDark,
+    gear.helmetStyle,
+    gear.trimColor,
+    gear.trimHighlight,
+    theme,
+    attackIntensity,
+    isAttacking,
+    attackPhase
+  );
 
   // Battle cry shockwave during attack - THEMED
   if (isAttacking && attackPhase > 0.25 && attackPhase < 0.65) {
@@ -1097,12 +1211,16 @@ function drawKnightHelmet(
   theme: import("./knightThemes").KnightTheme,
   attackIntensity: number,
   isAttacking: boolean,
-  attackPhase: number,
+  attackPhase: number
 ) {
   // Base dome (shared across variants)
   const helmGrad = ctx.createRadialGradient(
-    x - size * 0.04, helmY - size * 0.04, size * 0.02,
-    x, helmY, size * 0.21,
+    x - size * 0.04,
+    helmY - size * 0.04,
+    size * 0.02,
+    x,
+    helmY,
+    size * 0.21
   );
   helmGrad.addColorStop(0, armorPeak);
   helmGrad.addColorStop(0.35, armorHigh);
@@ -1122,15 +1240,53 @@ function drawKnightHelmet(
   ctx.stroke();
 
   switch (helmetStyle) {
-    case "greathelm":
-      drawGreatHelm(ctx, x, helmY, size, zoom, armorPeak, armorHigh, armorMid, armorDark);
+    case "greathelm": {
+      drawGreatHelm(
+        ctx,
+        x,
+        helmY,
+        size,
+        zoom,
+        armorPeak,
+        armorHigh,
+        armorMid,
+        armorDark
+      );
       break;
-    case "crusader":
-      drawCrusaderHelm(ctx, x, helmY, size, zoom, armorPeak, armorHigh, armorMid, armorDark, trimColor, trimHighlight);
+    }
+    case "crusader": {
+      drawCrusaderHelm(
+        ctx,
+        x,
+        helmY,
+        size,
+        zoom,
+        armorPeak,
+        armorHigh,
+        armorMid,
+        armorDark,
+        trimColor,
+        trimHighlight
+      );
       break;
-    case "winged":
-      drawWingedHelm(ctx, x, helmY, size, zoom, time, armorPeak, armorHigh, armorMid, armorDark, trimColor, trimHighlight);
+    }
+    case "winged": {
+      drawWingedHelm(
+        ctx,
+        x,
+        helmY,
+        size,
+        zoom,
+        time,
+        armorPeak,
+        armorHigh,
+        armorMid,
+        armorDark,
+        trimColor,
+        trimHighlight
+      );
       break;
+    }
   }
 
   // Glowing eyes behind visor (all variants)
@@ -1139,10 +1295,26 @@ function drawKnightHelmet(
   ctx.shadowColor = theme.eyeShadow;
   ctx.shadowBlur = 6 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.058, helmY - size * 0.002, size * 0.018, size * 0.008, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.058,
+    helmY - size * 0.002,
+    size * 0.018,
+    size * 0.008,
+    -0.1,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.058, helmY - size * 0.002, size * 0.018, size * 0.008, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.058,
+    helmY - size * 0.002,
+    size * 0.018,
+    size * 0.008,
+    0.1,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.18})`;
   ctx.beginPath();
@@ -1155,10 +1327,21 @@ function drawKnightHelmet(
 // Variant 0: Classic Great Helm — flat top with narrow slit and breathing holes
 function drawGreatHelm(
   ctx: CanvasRenderingContext2D,
-  x: number, helmY: number, size: number, zoom: number,
-  armorPeak: string, armorHigh: string, _armorMid: string, armorDark: string,
+  x: number,
+  helmY: number,
+  size: number,
+  zoom: number,
+  armorPeak: string,
+  armorHigh: string,
+  _armorMid: string,
+  armorDark: string
 ) {
-  const fpGrad = ctx.createLinearGradient(x - size * 0.16, helmY, x + size * 0.16, helmY);
+  const fpGrad = ctx.createLinearGradient(
+    x - size * 0.16,
+    helmY,
+    x + size * 0.16,
+    helmY
+  );
   fpGrad.addColorStop(0, armorDark);
   fpGrad.addColorStop(0.4, armorHigh);
   fpGrad.addColorStop(0.55, armorPeak);
@@ -1197,7 +1380,9 @@ function drawGreatHelm(
       ctx.arc(
         x + bSide * (size * 0.03 + i * size * 0.025),
         helmY + size * 0.06 + i * size * 0.018,
-        size * 0.009, 0, Math.PI * 2,
+        size * 0.009,
+        0,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1207,12 +1392,24 @@ function drawGreatHelm(
 // Variant 1: Crusader Helm — cross-shaped visor opening, chainmail fringe
 function drawCrusaderHelm(
   ctx: CanvasRenderingContext2D,
-  x: number, helmY: number, size: number, zoom: number,
-  armorPeak: string, armorHigh: string, _armorMid: string, armorDark: string,
-  trimColor: string, trimHighlight: string,
+  x: number,
+  helmY: number,
+  size: number,
+  zoom: number,
+  armorPeak: string,
+  armorHigh: string,
+  _armorMid: string,
+  armorDark: string,
+  trimColor: string,
+  trimHighlight: string
 ) {
   // Flat face plate (slightly more squared)
-  const fpGrad = ctx.createLinearGradient(x - size * 0.16, helmY, x + size * 0.16, helmY);
+  const fpGrad = ctx.createLinearGradient(
+    x - size * 0.16,
+    helmY,
+    x + size * 0.16,
+    helmY
+  );
   fpGrad.addColorStop(0, armorDark);
   fpGrad.addColorStop(0.35, armorHigh);
   fpGrad.addColorStop(0.6, armorPeak);
@@ -1234,7 +1431,12 @@ function drawCrusaderHelm(
   ctx.shadowBlur = 4 * zoom;
   ctx.fillStyle = "#020208";
   // Horizontal eye slit (wide)
-  ctx.fillRect(x - size * 0.13, helmY - size * 0.022, size * 0.26, size * 0.042);
+  ctx.fillRect(
+    x - size * 0.13,
+    helmY - size * 0.022,
+    size * 0.26,
+    size * 0.042
+  );
   // Vertical nose/mouth slit (tall)
   ctx.fillRect(x - size * 0.02, helmY - size * 0.07, size * 0.04, size * 0.14);
   ctx.shadowBlur = 0;
@@ -1274,12 +1476,25 @@ function drawCrusaderHelm(
 // Variant 2: Winged Helm — open-face with decorative metal wings on sides
 function drawWingedHelm(
   ctx: CanvasRenderingContext2D,
-  x: number, helmY: number, size: number, zoom: number, time: number,
-  armorPeak: string, armorHigh: string, armorMid: string, armorDark: string,
-  trimColor: string, trimHighlight: string,
+  x: number,
+  helmY: number,
+  size: number,
+  zoom: number,
+  time: number,
+  armorPeak: string,
+  armorHigh: string,
+  armorMid: string,
+  armorDark: string,
+  trimColor: string,
+  trimHighlight: string
 ) {
   // Face plate with nose guard
-  const fpGrad = ctx.createLinearGradient(x - size * 0.16, helmY, x + size * 0.16, helmY);
+  const fpGrad = ctx.createLinearGradient(
+    x - size * 0.16,
+    helmY,
+    x + size * 0.16,
+    helmY
+  );
   fpGrad.addColorStop(0, armorDark);
   fpGrad.addColorStop(0.4, armorHigh);
   fpGrad.addColorStop(0.55, armorPeak);
@@ -1300,11 +1515,27 @@ function drawWingedHelm(
   ctx.fillStyle = "#06060d";
   // Left eye opening
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.06, helmY - size * 0.005, size * 0.04, size * 0.016, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.06,
+    helmY - size * 0.005,
+    size * 0.04,
+    size * 0.016,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Right eye opening
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.06, helmY - size * 0.005, size * 0.04, size * 0.016, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.06,
+    helmY - size * 0.005,
+    size * 0.04,
+    size * 0.016,
+    0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Central nose guard
@@ -1325,8 +1556,10 @@ function drawWingedHelm(
 
     // Wing base plate
     const wingGrad = ctx.createLinearGradient(
-      wingX, wingY - size * 0.12,
-      wingX + side * size * 0.08, wingY + size * 0.06,
+      wingX,
+      wingY - size * 0.12,
+      wingX + side * size * 0.08,
+      wingY + size * 0.06
     );
     wingGrad.addColorStop(0, trimHighlight);
     wingGrad.addColorStop(0.5, trimColor);
@@ -1335,13 +1568,17 @@ function drawWingedHelm(
     ctx.beginPath();
     ctx.moveTo(wingX, wingY + size * 0.04);
     ctx.quadraticCurveTo(
-      wingX + side * size * 0.06, wingY - size * 0.02,
-      wingX + side * size * 0.12, wingY - size * 0.2,
+      wingX + side * size * 0.06,
+      wingY - size * 0.02,
+      wingX + side * size * 0.12,
+      wingY - size * 0.2
     );
     ctx.lineTo(wingX + side * size * 0.08, wingY - size * 0.15);
     ctx.quadraticCurveTo(
-      wingX + side * size * 0.04, wingY - size * 0.06,
-      wingX - side * size * 0.01, wingY + size * 0.02,
+      wingX + side * size * 0.04,
+      wingY - size * 0.06,
+      wingX - side * size * 0.01,
+      wingY + size * 0.02
     );
     ctx.closePath();
     ctx.fill();
@@ -1360,7 +1597,8 @@ function drawWingedHelm(
       ctx.quadraticCurveTo(
         (fStartX + fEndX) / 2 + side * size * 0.02,
         (fStartY + fEndY) / 2,
-        fEndX, fEndY,
+        fEndX,
+        fEndY
       );
       ctx.stroke();
     }
@@ -1368,7 +1606,13 @@ function drawWingedHelm(
     // Wing tip highlight
     ctx.fillStyle = trimHighlight;
     ctx.beginPath();
-    ctx.arc(wingX + side * size * 0.12, wingY - size * 0.2, size * 0.012, 0, Math.PI * 2);
+    ctx.arc(
+      wingX + side * size * 0.12,
+      wingY - size * 0.2,
+      size * 0.012,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.restore();
   }
@@ -1400,43 +1644,74 @@ function drawKnightWeapon(
   trimColor: string,
   attackIntensity: number,
   isAttacking: boolean,
-  attackPhase: number,
+  attackPhase: number
 ) {
   // Pommel (shared)
   ctx.fillStyle = "#3a2a1a";
   ctx.beginPath();
-  ctx.arc(0, size * 0.32 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    0,
+    size * 0.32 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = `${theme.gemColor}0.6)`;
   ctx.beginPath();
-  ctx.arc(0, size * 0.32 * swordScale, size * 0.015 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    0,
+    size * 0.32 * swordScale,
+    size * 0.015 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Handle (shared, length varies by weapon)
-  const handleLen = weaponStyle === "longsword" ? 0.26 : weaponStyle === "bastardsword" ? 0.24 : 0.22;
+  const handleLen =
+    weaponStyle === "longsword"
+      ? 0.26
+      : weaponStyle === "bastardsword"
+        ? 0.24
+        : 0.22;
   ctx.fillStyle = "#2a1a10";
-  ctx.fillRect(-size * 0.032 * swordScale, size * 0.1 * swordScale, size * 0.064 * swordScale, size * handleLen * swordScale);
+  ctx.fillRect(
+    -size * 0.032 * swordScale,
+    size * 0.1 * swordScale,
+    size * 0.064 * swordScale,
+    size * handleLen * swordScale
+  );
   ctx.strokeStyle = "#4a3525";
   ctx.lineWidth = 2 * zoom;
   const wraps = weaponStyle === "longsword" ? 7 : 6;
   for (let i = 0; i < wraps; i++) {
     ctx.beginPath();
-    ctx.moveTo(-size * 0.032 * swordScale, size * (0.12 + i * (handleLen / wraps)) * swordScale);
-    ctx.lineTo(size * 0.032 * swordScale, size * (0.14 + i * (handleLen / wraps)) * swordScale);
+    ctx.moveTo(
+      -size * 0.032 * swordScale,
+      size * (0.12 + i * (handleLen / wraps)) * swordScale
+    );
+    ctx.lineTo(
+      size * 0.032 * swordScale,
+      size * (0.14 + i * (handleLen / wraps)) * swordScale
+    );
     ctx.stroke();
   }
 
   // Crossguard (variant-shaped)
   switch (weaponStyle) {
-    case "broadsword":
+    case "broadsword": {
       drawBroadswordGuard(ctx, size, swordScale, zoom, theme, trimColor);
       break;
-    case "longsword":
+    }
+    case "longsword": {
       drawLongswordGuard(ctx, size, swordScale, zoom, theme, trimColor);
       break;
-    case "bastardsword":
+    }
+    case "bastardsword": {
       drawBastardswordGuard(ctx, size, swordScale, zoom, theme, trimColor);
       break;
+    }
   }
 
   // Blade (variant-shaped)
@@ -1445,25 +1720,34 @@ function drawKnightWeapon(
     ctx.shadowBlur = (15 + attackIntensity * 10) * zoom;
   }
   switch (weaponStyle) {
-    case "broadsword":
+    case "broadsword": {
       drawBroadswordBlade(ctx, size, swordScale, zoom);
       break;
-    case "longsword":
+    }
+    case "longsword": {
       drawLongswordBlade(ctx, size, swordScale, zoom);
       break;
-    case "bastardsword":
+    }
+    case "bastardsword": {
       drawBastardswordBlade(ctx, size, swordScale, zoom);
       break;
+    }
   }
   ctx.shadowBlur = 0;
 
   // Blade runes (all variants)
   const runeGlow = 0.3 + Math.sin(time * 4) * 0.15 + attackIntensity * 0.5;
   ctx.fillStyle = `${theme.bladeRunes}${runeGlow})`;
-  const runeCount = weaponStyle === "longsword" ? 6 : weaponStyle === "bastardsword" ? 4 : 5;
+  const runeCount =
+    weaponStyle === "longsword" ? 6 : weaponStyle === "bastardsword" ? 4 : 5;
   for (let i = 0; i < runeCount; i++) {
     const runeY = -size * 0.08 * swordScale - i * size * 0.12 * swordScale;
-    ctx.fillRect(-size * 0.016 * swordScale, runeY, size * 0.032 * swordScale, size * 0.055 * swordScale);
+    ctx.fillRect(
+      -size * 0.016 * swordScale,
+      runeY,
+      size * 0.032 * swordScale,
+      size * 0.055 * swordScale
+    );
   }
 
   // Swing trail (all variants)
@@ -1488,8 +1772,11 @@ function drawKnightWeapon(
 
 function drawBroadswordGuard(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
-  theme: import("./knightThemes").KnightTheme, _trimColor: string,
+  size: number,
+  swordScale: number,
+  zoom: number,
+  theme: import("./knightThemes").KnightTheme,
+  _trimColor: string
 ) {
   // Wide straight crossguard with ball ends
   ctx.fillStyle = theme.crossguardMain;
@@ -1504,39 +1791,98 @@ function drawBroadswordGuard(
   ctx.fill();
   ctx.fillStyle = theme.crossguardAccent;
   ctx.beginPath();
-  ctx.arc(-size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = `${theme.gemColor}0.8)`;
   ctx.beginPath();
-  ctx.arc(-size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.018 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.018 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.018 * swordScale,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.018 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
 function drawLongswordGuard(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
-  theme: import("./knightThemes").KnightTheme, trimColor: string,
+  size: number,
+  swordScale: number,
+  zoom: number,
+  theme: import("./knightThemes").KnightTheme,
+  trimColor: string
 ) {
   // Downswept crossguard with elongated quillons
   ctx.fillStyle = theme.crossguardMain;
   ctx.beginPath();
   ctx.moveTo(-size * 0.19 * swordScale, size * 0.075 * swordScale);
-  ctx.quadraticCurveTo(-size * 0.14 * swordScale, size * 0.105 * swordScale, -size * 0.04 * swordScale, size * 0.1 * swordScale);
+  ctx.quadraticCurveTo(
+    -size * 0.14 * swordScale,
+    size * 0.105 * swordScale,
+    -size * 0.04 * swordScale,
+    size * 0.1 * swordScale
+  );
   ctx.lineTo(size * 0.04 * swordScale, size * 0.1 * swordScale);
-  ctx.quadraticCurveTo(size * 0.14 * swordScale, size * 0.105 * swordScale, size * 0.19 * swordScale, size * 0.075 * swordScale);
+  ctx.quadraticCurveTo(
+    size * 0.14 * swordScale,
+    size * 0.105 * swordScale,
+    size * 0.19 * swordScale,
+    size * 0.075 * swordScale
+  );
   ctx.lineTo(size * 0.18 * swordScale, size * 0.09 * swordScale);
-  ctx.quadraticCurveTo(size * 0.12 * swordScale, size * 0.115 * swordScale, size * 0.04 * swordScale, size * 0.11 * swordScale);
+  ctx.quadraticCurveTo(
+    size * 0.12 * swordScale,
+    size * 0.115 * swordScale,
+    size * 0.04 * swordScale,
+    size * 0.11 * swordScale
+  );
   ctx.lineTo(-size * 0.04 * swordScale, size * 0.11 * swordScale);
-  ctx.quadraticCurveTo(-size * 0.12 * swordScale, size * 0.115 * swordScale, -size * 0.18 * swordScale, size * 0.09 * swordScale);
+  ctx.quadraticCurveTo(
+    -size * 0.12 * swordScale,
+    size * 0.115 * swordScale,
+    -size * 0.18 * swordScale,
+    size * 0.09 * swordScale
+  );
   ctx.closePath();
   ctx.fill();
   // Quillon tips
   ctx.fillStyle = trimColor;
   ctx.beginPath();
-  ctx.arc(-size * 0.19 * swordScale, size * 0.078 * swordScale, size * 0.02 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.19 * swordScale, size * 0.078 * swordScale, size * 0.02 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.19 * swordScale,
+    size * 0.078 * swordScale,
+    size * 0.02 * swordScale,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    size * 0.19 * swordScale,
+    size * 0.078 * swordScale,
+    size * 0.02 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Ricasso highlight
   ctx.strokeStyle = theme.crossguardAccent;
@@ -1549,8 +1895,11 @@ function drawLongswordGuard(
 
 function drawBastardswordGuard(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
-  theme: import("./knightThemes").KnightTheme, trimColor: string,
+  size: number,
+  swordScale: number,
+  zoom: number,
+  theme: import("./knightThemes").KnightTheme,
+  trimColor: string
 ) {
   // Ring-guard crossguard with finger loop
   ctx.fillStyle = theme.crossguardMain;
@@ -1567,18 +1916,44 @@ function drawBastardswordGuard(
   ctx.strokeStyle = trimColor;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.ellipse(size * 0.06 * swordScale, size * 0.06 * swordScale, size * 0.035 * swordScale, size * 0.05 * swordScale, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.06 * swordScale,
+    size * 0.06 * swordScale,
+    size * 0.035 * swordScale,
+    size * 0.05 * swordScale,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
   // Guard gems
   ctx.fillStyle = `${theme.gemColor}0.85)`;
   ctx.beginPath();
-  ctx.arc(0, size * 0.095 * swordScale, size * 0.022 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    0,
+    size * 0.095 * swordScale,
+    size * 0.022 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Guard end accents
   ctx.fillStyle = theme.crossguardAccent;
   ctx.beginPath();
-  ctx.arc(-size * 0.14 * swordScale, size * 0.097 * swordScale, size * 0.025 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.14 * swordScale, size * 0.097 * swordScale, size * 0.025 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.14 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.025 * swordScale,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    size * 0.14 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.025 * swordScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
@@ -1586,7 +1961,9 @@ function drawBastardswordGuard(
 
 function drawBroadswordBlade(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
+  size: number,
+  swordScale: number,
+  zoom: number
 ) {
   // Wide straight blade tapering to a pointed tip
   const bladeW = size * 0.07 * swordScale;
@@ -1635,7 +2012,9 @@ function drawBroadswordBlade(
 
 function drawLongswordBlade(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
+  size: number,
+  swordScale: number,
+  zoom: number
 ) {
   // Narrow, long blade with gentle taper — elegant and precise
   const bladeW = size * 0.05 * swordScale;
@@ -1689,7 +2068,9 @@ function drawLongswordBlade(
 
 function drawBastardswordBlade(
   ctx: CanvasRenderingContext2D,
-  size: number, swordScale: number, zoom: number,
+  size: number,
+  swordScale: number,
+  zoom: number
 ) {
   // Wide blade that flares slightly before tapering — powerful cleaving shape
   const bladeW = size * 0.065 * swordScale;
@@ -1754,7 +2135,7 @@ function drawKnightCape(
   breathe: number,
   capeWave: number,
   theme: KnightTheme,
-  gear: KnightGearVariant,
+  gear: KnightGearVariant
 ) {
   const capeWave2 = capeWave * 0.7;
 
@@ -1763,7 +2144,7 @@ function drawKnightCape(
     x,
     y - size * 0.18,
     x,
-    y + size * 0.65,
+    y + size * 0.65
   );
   capeGrad.addColorStop(0, theme.capeLight);
   capeGrad.addColorStop(0.35, theme.capeMid);
@@ -1778,27 +2159,27 @@ function drawKnightCape(
     x - size * 0.32 + capeWave * 3,
     y + size * 0.15,
     x - size * 0.28 + capeWave * 5,
-    y + size * 0.58,
+    y + size * 0.58
   );
   // Bottom edge — wider and wavy
   ctx.quadraticCurveTo(
     x - size * 0.1 + capeWave2 * 3,
     y + size * 0.66 + capeWave2 * 2,
     x + capeWave2 * 2,
-    y + size * 0.62,
+    y + size * 0.62
   );
   ctx.quadraticCurveTo(
     x + size * 0.12 + capeWave2 * 2,
     y + size * 0.65 + capeWave2 * 1.5,
     x + size * 0.28 + capeWave * 4,
-    y + size * 0.56,
+    y + size * 0.56
   );
   // Right edge flows back up
   ctx.quadraticCurveTo(
     x + size * 0.32 + capeWave * 2.5,
     y + size * 0.12,
     x + size * 0.2,
-    y - size * 0.15 + breathe,
+    y - size * 0.15 + breathe
   );
   ctx.closePath();
   ctx.fill();
@@ -1811,19 +2192,19 @@ function drawKnightCape(
     x - size * 0.2 + capeWave * 2,
     y + size * 0.2,
     x - size * 0.16 + capeWave * 3.5,
-    y + size * 0.5,
+    y + size * 0.5
   );
   ctx.quadraticCurveTo(
     x + capeWave2 * 1.5,
     y + size * 0.55,
     x + size * 0.16 + capeWave * 3,
-    y + size * 0.48,
+    y + size * 0.48
   );
   ctx.quadraticCurveTo(
     x + size * 0.2 + capeWave * 1.5,
     y + size * 0.18,
     x + size * 0.12,
-    y - size * 0.08 + breathe,
+    y - size * 0.08 + breathe
   );
   ctx.closePath();
   ctx.fill();
@@ -1837,18 +2218,18 @@ function drawKnightCape(
     x - size * 0.04 + capeWave * 1.5,
     y + size * 0.25,
     x - size * 0.02 + capeWave * 2,
-    y + size * 0.52,
+    y + size * 0.52
   );
   ctx.lineTo(x + size * 0.04 + capeWave * 1.5, y + size * 0.5);
   ctx.quadraticCurveTo(
     x + size * 0.05 + capeWave,
     y + size * 0.22,
     x + size * 0.03,
-    y - size * 0.06 + breathe,
+    y - size * 0.06 + breathe
   );
   ctx.closePath();
   ctx.fill();
-  ctx.globalAlpha = 1.0;
+  ctx.globalAlpha = 1;
 
   // Bottom trim stripe
   ctx.strokeStyle = gear.trimHighlight;
@@ -1860,9 +2241,8 @@ function drawKnightCape(
     x + capeWave2 * 2,
     y + size * 0.64 + capeWave2 * 1.8,
     x + size * 0.27 + capeWave * 3.8,
-    y + size * 0.54,
+    y + size * 0.54
   );
   ctx.stroke();
-  ctx.globalAlpha = 1.0;
+  ctx.globalAlpha = 1;
 }
-

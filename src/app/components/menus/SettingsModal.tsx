@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useCallback } from "react";
 import {
   X,
   Monitor,
@@ -45,9 +44,8 @@ import {
   Gamepad2,
   Keyboard,
 } from "lucide-react";
-import { OrnateFrame } from "../ui/primitives/OrnateFrame";
-import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
-import { BaseModal } from "../ui/primitives/BaseModal";
+import React, { useState, useCallback } from "react";
+
 import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 import type {
   GameSettings,
@@ -67,6 +65,15 @@ import type {
   ColorblindMode,
   UIScale,
 } from "../../constants/settings";
+import { BaseModal } from "../ui/primitives/BaseModal";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import {
+  PANEL,
+  GOLD,
+  OVERLAY,
+  panelGradient,
+  dividerGradient,
+} from "../ui/system/theme";
 
 // =============================================================================
 // REUSABLE SETTING CONTROLS
@@ -84,7 +91,10 @@ function SegmentedControl<T extends string>({
   onChange,
 }: SegmentedControlProps<T>) {
   return (
-    <div className="flex flex-wrap gap-1 p-0.5 rounded-lg" style={{ background: PANEL.bgDeep }}>
+    <div
+      className="flex flex-wrap gap-1 p-0.5 rounded-lg"
+      style={{ background: PANEL.bgDeep }}
+    >
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -96,8 +106,8 @@ function SegmentedControl<T extends string>({
               background: active
                 ? `linear-gradient(180deg, ${GOLD.accentBorder50}, ${GOLD.accentBorder35})`
                 : "transparent",
-              color: active ? "#1a1207" : "rgba(253,230,138,0.6)",
               border: active ? "none" : "1px solid transparent",
+              color: active ? "#1a1207" : "rgba(253,230,138,0.6)",
               fontWeight: active ? 700 : 500,
             }}
           >
@@ -135,7 +145,7 @@ function SliderControl({
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onChange={(e) => onChange(Number.parseFloat(e.target.value))}
         className="flex-1 h-2 rounded-full appearance-none cursor-pointer"
         style={{
           background: `linear-gradient(90deg, rgba(251,191,36,0.7) 0%, rgba(251,191,36,0.7) ${pct}%, rgba(60,50,30,0.6) ${pct}%, rgba(60,50,30,0.6) 100%)`,
@@ -168,9 +178,9 @@ function ToggleControl({ value, onChange }: ToggleControlProps) {
       <div
         className="absolute top-0.5 w-5 h-5 rounded-full transition-all"
         style={{
-          left: value ? "calc(100% - 22px)" : "2px",
           background: value ? "#fbbf24" : "rgba(180,140,60,0.4)",
           boxShadow: value ? "0 0 6px rgba(251,191,36,0.4)" : "none",
+          left: value ? "calc(100% - 22px)" : "2px",
         }}
       />
     </button>
@@ -185,20 +195,32 @@ interface SettingRowProps {
   children: React.ReactNode;
 }
 
-function SettingRow({ icon, label, description, tag, children }: SettingRowProps) {
+function SettingRow({
+  icon,
+  label,
+  description,
+  tag,
+  children,
+}: SettingRowProps) {
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 py-3 px-3 sm:px-4 rounded-lg transition-colors hover:bg-white/[0.02] ${tag === "coming-soon" ? "opacity-50 pointer-events-none" : ""}`}>
+    <div
+      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 py-3 px-3 sm:px-4 rounded-lg transition-colors hover:bg-white/[0.02] ${tag === "coming-soon" ? "opacity-50 pointer-events-none" : ""}`}
+    >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="text-amber-500/70 flex-shrink-0">{icon}</div>
         <div className="min-w-0">
           <div className="text-sm font-medium text-amber-200 flex items-center gap-2">
             {label}
             {tag === "coming-soon" && (
-              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400/80 border border-zinc-600/30">Soon</span>
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400/80 border border-zinc-600/30">
+                Soon
+              </span>
             )}
           </div>
           {description && (
-            <div className="text-xs text-amber-200/40 mt-0.5">{description}</div>
+            <div className="text-xs text-amber-200/40 mt-0.5">
+              {description}
+            </div>
           )}
         </div>
       </div>
@@ -244,12 +266,22 @@ function DevModeSection({
   return (
     <>
       <div className="flex items-center gap-2 mb-2.5">
-        <span style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}>
+        <span
+          style={{
+            color: devUnlocked
+              ? "rgba(74,222,128,0.8)"
+              : "rgba(253,230,138,0.35)",
+          }}
+        >
           {devUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
         </span>
         <span
           className="text-xs font-medium"
-          style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}
+          style={{
+            color: devUnlocked
+              ? "rgba(74,222,128,0.8)"
+              : "rgba(253,230,138,0.35)",
+          }}
         >
           Developer
         </span>
@@ -273,7 +305,9 @@ function DevModeSection({
             value={devPassword}
             onChange={(e) => onDevPasswordChange(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onDevPasswordSubmit();
+              if (e.key === "Enter") {
+                onDevPasswordSubmit();
+              }
             }}
             placeholder="Password"
             className="w-full px-2 py-1.5 rounded text-xs"
@@ -315,77 +349,125 @@ function GraphicsPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Shadows & Lighting" />
-      <SettingRow icon={<Sun size={16} />} label="Shadow Quality" description="Higher quality uses larger blur radii">
+      <SettingRow
+        icon={<Sun size={16} />}
+        label="Shadow Quality"
+        description="Higher quality uses larger blur radii"
+      >
         <SegmentedControl<ShadowQuality>
           value={g.shadowQuality}
           options={[
-            { value: "off", label: "Off" },
-            { value: "low", label: "Low" },
-            { value: "medium", label: "Med" },
-            { value: "high", label: "High" },
+            { label: "Off", value: "off" },
+            { label: "Low", value: "low" },
+            { label: "Med", value: "medium" },
+            { label: "High", value: "high" },
           ]}
           onChange={(v) => update({ shadowQuality: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Sun size={16} />} label="God Rays" description="Volumetric light beams">
-        <ToggleControl value={g.showGodRays} onChange={(v) => update({ showGodRays: v })} />
+      <SettingRow
+        icon={<Sun size={16} />}
+        label="God Rays"
+        description="Volumetric light beams"
+      >
+        <ToggleControl
+          value={g.showGodRays}
+          onChange={(v) => update({ showGodRays: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Sparkles size={16} />} label="Screen Glow" description="Ambient glow effects">
-        <ToggleControl value={g.showScreenGlow} onChange={(v) => update({ showScreenGlow: v })} />
+      <SettingRow
+        icon={<Sparkles size={16} />}
+        label="Screen Glow"
+        description="Ambient glow effects"
+      >
+        <ToggleControl
+          value={g.showScreenGlow}
+          onChange={(v) => update({ showScreenGlow: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Particles & Effects" />
-      <SettingRow icon={<Sparkles size={16} />} label="Particle Density" description="Number of particles spawned">
+      <SettingRow
+        icon={<Sparkles size={16} />}
+        label="Particle Density"
+        description="Number of particles spawned"
+      >
         <SegmentedControl<ParticleDensity>
           value={g.particleDensity}
           options={[
-            { value: "off", label: "Off" },
-            { value: "reduced", label: "Low" },
-            { value: "full", label: "Full" },
-            { value: "extra", label: "Extra" },
+            { label: "Off", value: "off" },
+            { label: "Low", value: "reduced" },
+            { label: "Full", value: "full" },
+            { label: "Extra", value: "extra" },
           ]}
           onChange={(v) => update({ particleDensity: v })}
         />
       </SettingRow>
 
       <SectionDivider label="Atmosphere" />
-      <SettingRow icon={<Cloud size={16} />} label="Fog Quality" description="Fog bank complexity">
+      <SettingRow
+        icon={<Cloud size={16} />}
+        label="Fog Quality"
+        description="Fog bank complexity"
+      >
         <SegmentedControl<FogQuality>
           value={g.fogQuality}
           options={[
-            { value: "off", label: "Off" },
-            { value: "reduced", label: "Low" },
-            { value: "full", label: "Full" },
+            { label: "Off", value: "off" },
+            { label: "Low", value: "reduced" },
+            { label: "Full", value: "full" },
           ]}
           onChange={(v) => update({ fogQuality: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Palette size={16} />} label="Gradient Quality" description="Gradient color stops">
+      <SettingRow
+        icon={<Palette size={16} />}
+        label="Gradient Quality"
+        description="Gradient color stops"
+      >
         <SegmentedControl<GradientQuality>
           value={g.gradientQuality}
           options={[
-            { value: "simplified", label: "Simple" },
-            { value: "full", label: "Full" },
+            { label: "Simple", value: "simplified" },
+            { label: "Full", value: "full" },
           ]}
           onChange={(v) => update({ gradientQuality: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Wind size={16} />} label="Environment Effects" description="Ambient wind, leaves, pollen">
+      <SettingRow
+        icon={<Wind size={16} />}
+        label="Environment Effects"
+        description="Ambient wind, leaves, pollen"
+      >
         <SegmentedControl<EnvironmentEffects>
           value={g.environmentEffects}
           options={[
-            { value: "off", label: "Off" },
-            { value: "reduced", label: "Low" },
-            { value: "full", label: "Full" },
+            { label: "Off", value: "off" },
+            { label: "Low", value: "reduced" },
+            { label: "Full", value: "full" },
           ]}
           onChange={(v) => update({ environmentEffects: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Sparkles size={16} />} label="Aurora" description="Northern lights effect (winter maps)">
-        <ToggleControl value={g.showAurora} onChange={(v) => update({ showAurora: v })} />
+      <SettingRow
+        icon={<Sparkles size={16} />}
+        label="Aurora"
+        description="Northern lights effect (winter maps)"
+      >
+        <ToggleControl
+          value={g.showAurora}
+          onChange={(v) => update({ showAurora: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Layers size={16} />} label="Anti-Aliasing" description="Smooth edges on canvas">
-        <ToggleControl value={g.antiAliasing} onChange={(v) => update({ antiAliasing: v })} />
+      <SettingRow
+        icon={<Layers size={16} />}
+        label="Anti-Aliasing"
+        description="Smooth edges on canvas"
+      >
+        <ToggleControl
+          value={g.antiAliasing}
+          onChange={(v) => update({ antiAliasing: v })}
+        />
       </SettingRow>
     </>
   );
@@ -397,24 +479,32 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
     updateCategory("landscaping", patch);
 
   const densityOptions: { value: DecorationDensity; label: string }[] = [
-    { value: "minimal", label: "Min" },
-    { value: "sparse", label: "Sparse" },
-    { value: "normal", label: "Normal" },
-    { value: "dense", label: "Dense" },
-    { value: "lush", label: "Lush" },
+    { label: "Min", value: "minimal" },
+    { label: "Sparse", value: "sparse" },
+    { label: "Normal", value: "normal" },
+    { label: "Dense", value: "dense" },
+    { label: "Lush", value: "lush" },
   ];
 
   return (
     <>
       <SectionDivider label="Vegetation" />
-      <SettingRow icon={<Trees size={16} />} label="Decoration Density" description="Overall number of decorations placed on the map">
+      <SettingRow
+        icon={<Trees size={16} />}
+        label="Decoration Density"
+        description="Overall number of decorations placed on the map"
+      >
         <SegmentedControl<DecorationDensity>
           value={l.decorationDensity}
           options={densityOptions}
           onChange={(v) => update({ decorationDensity: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Trees size={16} />} label="Tree Clusters" description="Number and size of tree clusters">
+      <SettingRow
+        icon={<Trees size={16} />}
+        label="Tree Clusters"
+        description="Number and size of tree clusters"
+      >
         <SegmentedControl<DecorationDensity>
           value={l.treeClusterDensity}
           options={densityOptions}
@@ -423,7 +513,11 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Structures & Villages" />
-      <SettingRow icon={<Mountain size={16} />} label="Village Density" description="Number of village clusters">
+      <SettingRow
+        icon={<Mountain size={16} />}
+        label="Village Density"
+        description="Number of village clusters"
+      >
         <SegmentedControl<DecorationDensity>
           value={l.villageDensity}
           options={densityOptions}
@@ -432,42 +526,71 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Battlefield" />
-      <SettingRow icon={<Swords size={16} />} label="Battle Debris" description="Craters, arrows, skeletons">
+      <SettingRow
+        icon={<Swords size={16} />}
+        label="Battle Debris"
+        description="Craters, arrows, skeletons"
+      >
         <SegmentedControl<BattleDebrisDensity>
           value={l.battleDebrisDensity}
           options={[
-            { value: "none", label: "None" },
-            { value: "low", label: "Low" },
-            { value: "medium", label: "Med" },
-            { value: "high", label: "High" },
+            { label: "None", value: "none" },
+            { label: "Low", value: "low" },
+            { label: "Med", value: "medium" },
+            { label: "High", value: "high" },
           ]}
           onChange={(v) => update({ battleDebrisDensity: v })}
         />
       </SettingRow>
 
       <SectionDivider label="Scaling" />
-      <SettingRow icon={<Maximize size={16} />} label="Decoration Scale" description="Size range of placed decorations">
+      <SettingRow
+        icon={<Maximize size={16} />}
+        label="Decoration Scale"
+        description="Size range of placed decorations"
+      >
         <SegmentedControl<DecorationScale>
           value={l.decorationScale}
           options={[
-            { value: "small", label: "Small" },
-            { value: "normal", label: "Normal" },
-            { value: "large", label: "Large" },
-            { value: "mixed", label: "Mixed" },
+            { label: "Small", value: "small" },
+            { label: "Normal", value: "normal" },
+            { label: "Large", value: "large" },
+            { label: "Mixed", value: "mixed" },
           ]}
           onChange={(v) => update({ decorationScale: v })}
         />
       </SettingRow>
 
       <SectionDivider label="Toggles" />
-      <SettingRow icon={<Layers size={16} />} label="Path Decorations" description="Cracks, tufts, surface details on roads">
-        <ToggleControl value={l.showPathDecorations} onChange={(v) => update({ showPathDecorations: v })} />
+      <SettingRow
+        icon={<Layers size={16} />}
+        label="Path Decorations"
+        description="Cracks, tufts, surface details on roads"
+      >
+        <ToggleControl
+          value={l.showPathDecorations}
+          onChange={(v) => update({ showPathDecorations: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Mountain size={16} />} label="Landmarks" description="Major structures (pyramids, castles, etc.)">
-        <ToggleControl value={l.showLandmarks} onChange={(v) => update({ showLandmarks: v })} />
+      <SettingRow
+        icon={<Mountain size={16} />}
+        label="Landmarks"
+        description="Major structures (pyramids, castles, etc.)"
+      >
+        <ToggleControl
+          value={l.showLandmarks}
+          onChange={(v) => update({ showLandmarks: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Cloud size={16} />} label="Water Effects" description="Fountains, pools, water features">
-        <ToggleControl value={l.showWaterEffects} onChange={(v) => update({ showWaterEffects: v })} />
+      <SettingRow
+        icon={<Cloud size={16} />}
+        label="Water Effects"
+        description="Fountains, pools, water features"
+      >
+        <ToggleControl
+          value={l.showWaterEffects}
+          onChange={(v) => update({ showWaterEffects: v })}
+        />
       </SettingRow>
     </>
   );
@@ -481,21 +604,31 @@ function AnimationPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Quality" />
-      <SettingRow icon={<Activity size={16} />} label="Animation Intensity" description="Overall animation detail level" tag="coming-soon">
+      <SettingRow
+        icon={<Activity size={16} />}
+        label="Animation Intensity"
+        description="Overall animation detail level"
+        tag="coming-soon"
+      >
         <SegmentedControl<AnimationIntensity>
           value={a.animationIntensity}
           options={[
-            { value: "off", label: "Off" },
-            { value: "reduced", label: "Low" },
-            { value: "normal", label: "Normal" },
-            { value: "enhanced", label: "Enhanced" },
+            { label: "Off", value: "off" },
+            { label: "Low", value: "reduced" },
+            { label: "Normal", value: "normal" },
+            { label: "Enhanced", value: "enhanced" },
           ]}
           onChange={(v) => update({ animationIntensity: v })}
         />
       </SettingRow>
 
       <SectionDivider label="Screen Effects" />
-      <SettingRow icon={<Vibrate size={16} />} label="Screen Shake" description="Intensity of camera shake on impacts" tag="coming-soon">
+      <SettingRow
+        icon={<Vibrate size={16} />}
+        label="Screen Shake"
+        description="Intensity of camera shake on impacts"
+        tag="coming-soon"
+      >
         <SliderControl
           value={a.screenShakeIntensity}
           min={0}
@@ -507,17 +640,47 @@ function AnimationPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Toggles" />
-      <SettingRow icon={<Skull size={16} />} label="Death Animations" description="Play animations when enemies die">
-        <ToggleControl value={a.deathAnimations} onChange={(v) => update({ deathAnimations: v })} />
+      <SettingRow
+        icon={<Skull size={16} />}
+        label="Death Animations"
+        description="Play animations when enemies die"
+      >
+        <ToggleControl
+          value={a.deathAnimations}
+          onChange={(v) => update({ deathAnimations: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Crosshair size={16} />} label="Projectile Trails" description="Visual trails on projectiles">
-        <ToggleControl value={a.projectileTrails} onChange={(v) => update({ projectileTrails: v })} />
+      <SettingRow
+        icon={<Crosshair size={16} />}
+        label="Projectile Trails"
+        description="Visual trails on projectiles"
+      >
+        <ToggleControl
+          value={a.projectileTrails}
+          onChange={(v) => update({ projectileTrails: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Shield size={16} />} label="Tower Animations" description="Tower idle and attack animations" tag="coming-soon">
-        <ToggleControl value={a.towerAnimations} onChange={(v) => update({ towerAnimations: v })} />
+      <SettingRow
+        icon={<Shield size={16} />}
+        label="Tower Animations"
+        description="Tower idle and attack animations"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={a.towerAnimations}
+          onChange={(v) => update({ towerAnimations: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Activity size={16} />} label="Idle Animations" description="Subtle idle movement on decorations" tag="coming-soon">
-        <ToggleControl value={a.idleAnimations} onChange={(v) => update({ idleAnimations: v })} />
+      <SettingRow
+        icon={<Activity size={16} />}
+        label="Idle Animations"
+        description="Subtle idle movement on decorations"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={a.idleAnimations}
+          onChange={(v) => update({ idleAnimations: v })}
+        />
       </SettingRow>
     </>
   );
@@ -531,21 +694,29 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Zoom" />
-      <SettingRow icon={<ZoomIn size={16} />} label="Default Zoom" description="Initial zoom level when entering a map">
+      <SettingRow
+        icon={<ZoomIn size={16} />}
+        label="Default Zoom"
+        description="Initial zoom level when entering a map"
+      >
         <SliderControl
           value={c.defaultZoom}
           min={0.5}
-          max={2.0}
+          max={2}
           step={0.05}
           onChange={(v) => update({ defaultZoom: v })}
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<ZoomIn size={16} />} label="Zoom Sensitivity" description="How fast zooming responds to scroll">
+      <SettingRow
+        icon={<ZoomIn size={16} />}
+        label="Zoom Sensitivity"
+        description="How fast zooming responds to scroll"
+      >
         <SliderControl
           value={c.zoomSensitivity}
           min={0.3}
-          max={2.0}
+          max={2}
           step={0.1}
           onChange={(v) => update({ zoomSensitivity: v })}
           formatLabel={(v) => `${Math.round(v * 100)}%`}
@@ -553,25 +724,45 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Panning" />
-      <SettingRow icon={<MousePointer size={16} />} label="Edge Pan Speed" description="Camera speed when hovering edges" tag="coming-soon">
+      <SettingRow
+        icon={<MousePointer size={16} />}
+        label="Edge Pan Speed"
+        description="Camera speed when hovering edges"
+        tag="coming-soon"
+      >
         <SegmentedControl<CameraEdgePan>
           value={c.edgePanSpeed}
           options={[
-            { value: "off", label: "Off" },
-            { value: "slow", label: "Slow" },
-            { value: "normal", label: "Normal" },
-            { value: "fast", label: "Fast" },
+            { label: "Off", value: "off" },
+            { label: "Slow", value: "slow" },
+            { label: "Normal", value: "normal" },
+            { label: "Fast", value: "fast" },
           ]}
           onChange={(v) => update({ edgePanSpeed: v })}
         />
       </SettingRow>
 
       <SectionDivider label="Behavior" />
-      <SettingRow icon={<Move size={16} />} label="Smooth Camera" description="Interpolate camera movement" tag="coming-soon">
-        <ToggleControl value={c.smoothCamera} onChange={(v) => update({ smoothCamera: v })} />
+      <SettingRow
+        icon={<Move size={16} />}
+        label="Smooth Camera"
+        description="Interpolate camera movement"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={c.smoothCamera}
+          onChange={(v) => update({ smoothCamera: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Target size={16} />} label="Zoom to Cursor" description="Zoom towards mouse position">
-        <ToggleControl value={c.zoomToCursor} onChange={(v) => update({ zoomToCursor: v })} />
+      <SettingRow
+        icon={<Target size={16} />}
+        label="Zoom to Cursor"
+        description="Zoom towards mouse position"
+      >
+        <ToggleControl
+          value={c.zoomToCursor}
+          onChange={(v) => update({ zoomToCursor: v })}
+        />
       </SettingRow>
     </>
   );
@@ -585,72 +776,164 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="HUD" />
-      <SettingRow icon={<Activity size={16} />} label="FPS Counter" description="Show frames per second">
-        <ToggleControl value={u.showFpsCounter} onChange={(v) => update({ showFpsCounter: v })} />
+      <SettingRow
+        icon={<Activity size={16} />}
+        label="FPS Counter"
+        description="Show frames per second"
+      >
+        <ToggleControl
+          value={u.showFpsCounter}
+          onChange={(v) => update({ showFpsCounter: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Clock size={16} />} label="Game Timer" description="Show elapsed time below the HUD">
-        <ToggleControl value={u.showGameTimer} onChange={(v) => update({ showGameTimer: v })} />
+      <SettingRow
+        icon={<Clock size={16} />}
+        label="Game Timer"
+        description="Show elapsed time below the HUD"
+      >
+        <ToggleControl
+          value={u.showGameTimer}
+          onChange={(v) => update({ showGameTimer: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<PanelTop size={16} />} label="Performance Overlay" description="Show detailed performance stats" tag="coming-soon">
-        <ToggleControl value={u.showPerformanceOverlay} onChange={(v) => update({ showPerformanceOverlay: v })} />
+      <SettingRow
+        icon={<PanelTop size={16} />}
+        label="Performance Overlay"
+        description="Show detailed performance stats"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={u.showPerformanceOverlay}
+          onChange={(v) => update({ showPerformanceOverlay: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Combat Feedback" />
-      <SettingRow icon={<Swords size={16} />} label="Damage Numbers" description="Floating damage values">
+      <SettingRow
+        icon={<Swords size={16} />}
+        label="Damage Numbers"
+        description="Floating damage values"
+      >
         <SegmentedControl<DamageNumberStyle>
           value={u.damageNumbers}
           options={[
-            { value: "off", label: "Off" },
-            { value: "simple", label: "Simple" },
-            { value: "animated", label: "Animated" },
+            { label: "Off", value: "off" },
+            { label: "Simple", value: "simple" },
+            { label: "Animated", value: "animated" },
           ]}
           onChange={(v) => update({ damageNumbers: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Heart size={16} />} label="Health Bars" description="Show enemy health bars">
-        <ToggleControl value={u.showHealthBars} onChange={(v) => update({ showHealthBars: v })} />
+      <SettingRow
+        icon={<Heart size={16} />}
+        label="Health Bars"
+        description="Show enemy health bars"
+      >
+        <ToggleControl
+          value={u.showHealthBars}
+          onChange={(v) => update({ showHealthBars: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Tower Indicators" />
-      <SettingRow icon={<Radio size={16} />} label="Range Indicators" description="Show tower range on hover">
-        <ToggleControl value={u.showRangeIndicators} onChange={(v) => update({ showRangeIndicators: v })} />
+      <SettingRow
+        icon={<Radio size={16} />}
+        label="Range Indicators"
+        description="Show tower range on hover"
+      >
+        <ToggleControl
+          value={u.showRangeIndicators}
+          onChange={(v) => update({ showRangeIndicators: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Target size={16} />} label="Tower Radii" description="Show radius circles during placement">
-        <ToggleControl value={u.showTowerRadii} onChange={(v) => update({ showTowerRadii: v })} />
+      <SettingRow
+        icon={<Target size={16} />}
+        label="Tower Radii"
+        description="Show radius circles during placement"
+      >
+        <ToggleControl
+          value={u.showTowerRadii}
+          onChange={(v) => update({ showTowerRadii: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Star size={16} />} label="Tower Badges" description="Show level stars and upgrade path badges on towers">
-        <ToggleControl value={u.showTowerBadges} onChange={(v) => update({ showTowerBadges: v })} />
+      <SettingRow
+        icon={<Star size={16} />}
+        label="Tower Badges"
+        description="Show level stars and upgrade path badges on towers"
+      >
+        <ToggleControl
+          value={u.showTowerBadges}
+          onChange={(v) => update({ showTowerBadges: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Overlays" />
-      <SettingRow icon={<Gamepad2 size={16} />} label="Camera D-Pad" description="Show on-screen camera movement controls">
-        <ToggleControl value={u.showCameraDpad} onChange={(v) => update({ showCameraDpad: v })} />
+      <SettingRow
+        icon={<Gamepad2 size={16} />}
+        label="Camera D-Pad"
+        description="Show on-screen camera movement controls"
+      >
+        <ToggleControl
+          value={u.showCameraDpad}
+          onChange={(v) => update({ showCameraDpad: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<Keyboard size={16} />} label="Controls Reference" description="Show keyboard shortcut reference panel">
-        <ToggleControl value={u.showControlsReference} onChange={(v) => update({ showControlsReference: v })} />
+      <SettingRow
+        icon={<Keyboard size={16} />}
+        label="Controls Reference"
+        description="Show keyboard shortcut reference panel"
+      >
+        <ToggleControl
+          value={u.showControlsReference}
+          onChange={(v) => update({ showControlsReference: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Gameplay" />
-      <SettingRow icon={<Layers size={16} />} label="Wave Preview" description="Show upcoming wave composition">
-        <ToggleControl value={u.showWavePreview} onChange={(v) => update({ showWavePreview: v })} />
+      <SettingRow
+        icon={<Layers size={16} />}
+        label="Wave Preview"
+        description="Show upcoming wave composition"
+      >
+        <ToggleControl
+          value={u.showWavePreview}
+          onChange={(v) => update({ showWavePreview: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<FastForward size={16} />} label="Auto-Send Waves" description="Automatically start next wave when timer expires">
-        <ToggleControl value={u.autoSendWaves} onChange={(v) => update({ autoSendWaves: v })} />
+      <SettingRow
+        icon={<FastForward size={16} />}
+        label="Auto-Send Waves"
+        description="Automatically start next wave when timer expires"
+      >
+        <ToggleControl
+          value={u.autoSendWaves}
+          onChange={(v) => update({ autoSendWaves: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Interface Scale" />
-      <SettingRow icon={<Maximize size={16} />} label="UI Scale" description="Size of HUD elements" tag="coming-soon">
+      <SettingRow
+        icon={<Maximize size={16} />}
+        label="UI Scale"
+        description="Size of HUD elements"
+        tag="coming-soon"
+      >
         <SegmentedControl<UIScale>
           value={u.uiScale}
           options={[
-            { value: "compact", label: "Compact" },
-            { value: "normal", label: "Normal" },
-            { value: "large", label: "Large" },
+            { label: "Compact", value: "compact" },
+            { label: "Normal", value: "normal" },
+            { label: "Large", value: "large" },
           ]}
           onChange={(v) => update({ uiScale: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Clock size={16} />} label="Tooltip Delay" description="Milliseconds before tooltips appear" tag="coming-soon">
+      <SettingRow
+        icon={<Clock size={16} />}
+        label="Tooltip Delay"
+        description="Milliseconds before tooltips appear"
+        tag="coming-soon"
+      >
         <SliderControl
           value={u.tooltipDelay}
           min={0}
@@ -672,7 +955,12 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Volume" />
-      <SettingRow icon={<Volume2 size={16} />} label="Master Volume" description="Overall audio level" tag="coming-soon">
+      <SettingRow
+        icon={<Volume2 size={16} />}
+        label="Master Volume"
+        description="Overall audio level"
+        tag="coming-soon"
+      >
         <SliderControl
           value={au.masterVolume}
           min={0}
@@ -682,7 +970,12 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Zap size={16} />} label="SFX Volume" description="Sound effects (attacks, abilities)" tag="coming-soon">
+      <SettingRow
+        icon={<Zap size={16} />}
+        label="SFX Volume"
+        description="Sound effects (attacks, abilities)"
+        tag="coming-soon"
+      >
         <SliderControl
           value={au.sfxVolume}
           min={0}
@@ -692,7 +985,12 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Headphones size={16} />} label="Music Volume" description="Background music" tag="coming-soon">
+      <SettingRow
+        icon={<Headphones size={16} />}
+        label="Music Volume"
+        description="Background music"
+        tag="coming-soon"
+      >
         <SliderControl
           value={au.musicVolume}
           min={0}
@@ -702,7 +1000,12 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Wind size={16} />} label="Ambient Volume" description="Environmental sounds (wind, water)" tag="coming-soon">
+      <SettingRow
+        icon={<Wind size={16} />}
+        label="Ambient Volume"
+        description="Environmental sounds (wind, water)"
+        tag="coming-soon"
+      >
         <SliderControl
           value={au.ambientVolume}
           min={0}
@@ -714,8 +1017,16 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Behavior" />
-      <SettingRow icon={<VolumeX size={16} />} label="Mute When Unfocused" description="Silence audio when tab is inactive" tag="coming-soon">
-        <ToggleControl value={au.muteWhenUnfocused} onChange={(v) => update({ muteWhenUnfocused: v })} />
+      <SettingRow
+        icon={<VolumeX size={16} />}
+        label="Mute When Unfocused"
+        description="Silence audio when tab is inactive"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={au.muteWhenUnfocused}
+          onChange={(v) => update({ muteWhenUnfocused: v })}
+        />
       </SettingRow>
     </>
   );
@@ -729,33 +1040,70 @@ function AccessibilityPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Vision" />
-      <SettingRow icon={<Eye size={16} />} label="Colorblind Mode" description="Adjust colors for color vision deficiency" tag="coming-soon">
+      <SettingRow
+        icon={<Eye size={16} />}
+        label="Colorblind Mode"
+        description="Adjust colors for color vision deficiency"
+        tag="coming-soon"
+      >
         <SegmentedControl<ColorblindMode>
           value={acc.colorblindMode}
           options={[
-            { value: "off", label: "Off" },
-            { value: "protanopia", label: "Protan" },
-            { value: "deuteranopia", label: "Deuter" },
-            { value: "tritanopia", label: "Tritan" },
+            { label: "Off", value: "off" },
+            { label: "Protan", value: "protanopia" },
+            { label: "Deuter", value: "deuteranopia" },
+            { label: "Tritan", value: "tritanopia" },
           ]}
           onChange={(v) => update({ colorblindMode: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Contrast size={16} />} label="High Contrast UI" description="Increase contrast on UI elements" tag="coming-soon">
-        <ToggleControl value={acc.highContrastUI} onChange={(v) => update({ highContrastUI: v })} />
+      <SettingRow
+        icon={<Contrast size={16} />}
+        label="High Contrast UI"
+        description="Increase contrast on UI elements"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={acc.highContrastUI}
+          onChange={(v) => update({ highContrastUI: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Motion" />
-      <SettingRow icon={<Accessibility size={16} />} label="Reduced Motion" description="Minimize animations and movement" tag="coming-soon">
-        <ToggleControl value={acc.reducedMotion} onChange={(v) => update({ reducedMotion: v })} />
+      <SettingRow
+        icon={<Accessibility size={16} />}
+        label="Reduced Motion"
+        description="Minimize animations and movement"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={acc.reducedMotion}
+          onChange={(v) => update({ reducedMotion: v })}
+        />
       </SettingRow>
 
       <SectionDivider label="Readability" />
-      <SettingRow icon={<Type size={16} />} label="Large Text" description="Increase text size throughout UI" tag="coming-soon">
-        <ToggleControl value={acc.largeText} onChange={(v) => update({ largeText: v })} />
+      <SettingRow
+        icon={<Type size={16} />}
+        label="Large Text"
+        description="Increase text size throughout UI"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={acc.largeText}
+          onChange={(v) => update({ largeText: v })}
+        />
       </SettingRow>
-      <SettingRow icon={<AlertCircle size={16} />} label="Screen Reader Hints" description="Additional ARIA labels for assistive tech" tag="coming-soon">
-        <ToggleControl value={acc.screenReaderHints} onChange={(v) => update({ screenReaderHints: v })} />
+      <SettingRow
+        icon={<AlertCircle size={16} />}
+        label="Screen Reader Hints"
+        description="Additional ARIA labels for assistive tech"
+        tag="coming-soon"
+      >
+        <ToggleControl
+          value={acc.screenReaderHints}
+          onChange={(v) => update({ screenReaderHints: v })}
+        />
       </SettingRow>
     </>
   );
@@ -773,26 +1121,70 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: "graphics", label: "Graphics", icon: <Monitor size={18} />, panel: GraphicsPanel },
-  { id: "landscaping", label: "Landscaping", icon: <Trees size={18} />, panel: LandscapingPanel },
-  { id: "animation", label: "Animation", icon: <Sparkles size={18} />, panel: AnimationPanel },
-  { id: "camera", label: "Camera", icon: <Move size={18} />, panel: CameraPanel },
-  { id: "ui", label: "Interface", icon: <LayoutDashboard size={18} />, panel: UIPanel },
-  { id: "audio", label: "Audio", icon: <Volume2 size={18} />, panel: AudioPanel },
-  { id: "accessibility", label: "Accessibility", icon: <Eye size={18} />, panel: AccessibilityPanel },
+  {
+    icon: <Monitor size={18} />,
+    id: "graphics",
+    label: "Graphics",
+    panel: GraphicsPanel,
+  },
+  {
+    icon: <Trees size={18} />,
+    id: "landscaping",
+    label: "Landscaping",
+    panel: LandscapingPanel,
+  },
+  {
+    icon: <Sparkles size={18} />,
+    id: "animation",
+    label: "Animation",
+    panel: AnimationPanel,
+  },
+  {
+    icon: <Move size={18} />,
+    id: "camera",
+    label: "Camera",
+    panel: CameraPanel,
+  },
+  {
+    icon: <LayoutDashboard size={18} />,
+    id: "ui",
+    label: "Interface",
+    panel: UIPanel,
+  },
+  {
+    icon: <Volume2 size={18} />,
+    id: "audio",
+    label: "Audio",
+    panel: AudioPanel,
+  },
+  {
+    icon: <Eye size={18} />,
+    id: "accessibility",
+    label: "Accessibility",
+    panel: AccessibilityPanel,
+  },
 ];
 
 // =============================================================================
 // PRESET SELECTOR
 // =============================================================================
 
-const PRESET_BUTTONS: { value: QualityPreset; label: string; desc: string }[] = [
-  { value: "potato", label: "Potato", desc: "Bare minimum for low-end devices" },
-  { value: "low", label: "Low", desc: "Reduced effects for better FPS" },
-  { value: "medium", label: "Medium", desc: "Balanced visuals and performance" },
-  { value: "high", label: "High", desc: "Full quality (default)" },
-  { value: "ultra", label: "Ultra", desc: "Maximum detail everywhere" },
-];
+const PRESET_BUTTONS: { value: QualityPreset; label: string; desc: string }[] =
+  [
+    {
+      desc: "Bare minimum for low-end devices",
+      label: "Potato",
+      value: "potato",
+    },
+    { desc: "Reduced effects for better FPS", label: "Low", value: "low" },
+    {
+      desc: "Balanced visuals and performance",
+      label: "Medium",
+      value: "medium",
+    },
+    { desc: "Full quality (default)", label: "High", value: "high" },
+    { desc: "Maximum detail everywhere", label: "Ultra", value: "ultra" },
+  ];
 
 // =============================================================================
 // SETTINGS MODAL
@@ -814,7 +1206,9 @@ interface SettingsModalProps {
 const DEV_PASSWORD = "princetonpowerlifting";
 
 function readDevModeFromStorage(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
   try {
     return window.localStorage.getItem(DEV_MODE_STORAGE_KEY) === "1";
   } catch {
@@ -823,14 +1217,18 @@ function readDevModeFromStorage(): boolean {
 }
 
 function writeDevModeToStorage(enabled: boolean): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   try {
     if (enabled) {
       window.localStorage.setItem(DEV_MODE_STORAGE_KEY, "1");
     } else {
       window.localStorage.removeItem(DEV_MODE_STORAGE_KEY);
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -848,7 +1246,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [devPassword, setDevPassword] = useState("");
   const [devUnlocked, setDevUnlocked] = useState(readDevModeFromStorage);
   const [devPasswordError, setDevPasswordError] = useState(false);
-
 
   const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const PanelComponent = activeTabDef.panel;
@@ -891,7 +1288,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [onDevModeChange]);
 
   return (
-    <BaseModal isOpen onClose={onClose} zClass="z-[1500]" backdropBg={OVERLAY.black60} usePortal>
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      zClass="z-[1500]"
+      backdropBg={OVERLAY.black60}
+      usePortal
+    >
       <div
         className="relative w-full max-w-4xl max-h-[90dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{
@@ -900,7 +1303,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
         }}
       >
-        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={48}
+        <OrnateFrame
+          className="relative w-full h-full overflow-hidden flex flex-col"
+          cornerSize={48}
           showSideBorders={false}
         >
           {/* Header */}
@@ -930,7 +1335,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   <Zap size={14} />
                   <span className="hidden sm:inline">Presets</span>
-                  <ChevronDown size={14} className={`transition-transform ${showPresets ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform ${showPresets ? "rotate-180" : ""}`}
+                  />
                 </button>
                 {showPresets && (
                   <div
@@ -964,13 +1372,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={handleResetAll}
                 className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                 style={{
-                  background: confirmReset ? "rgba(180,60,60,0.3)" : PANEL.bgDeep,
+                  background: confirmReset
+                    ? "rgba(180,60,60,0.3)"
+                    : PANEL.bgDeep,
                   border: `1px solid ${confirmReset ? "rgba(180,60,60,0.5)" : GOLD.innerBorder12}`,
-                  color: confirmReset ? "rgba(255,150,150,0.9)" : "rgba(253,230,138,0.6)",
+                  color: confirmReset
+                    ? "rgba(255,150,150,0.9)"
+                    : "rgba(253,230,138,0.6)",
                 }}
               >
                 <RotateCcw size={14} />
-                <span className="hidden sm:inline">{confirmReset ? "Confirm?" : "Reset All"}</span>
+                <span className="hidden sm:inline">
+                  {confirmReset ? "Confirm?" : "Reset All"}
+                </span>
               </button>
 
               {/* Close */}
@@ -985,7 +1399,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0" style={{ background: PANEL.bgDark }}>
+          <div
+            className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0"
+            style={{ background: PANEL.bgDark }}
+          >
             {/* Mobile horizontal tabs */}
             <div
               className="md:hidden overflow-x-auto flex-shrink-0 border-b scrollbar-none"
@@ -1003,12 +1420,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       onClick={() => setActiveTab(tab.id)}
                       className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
                       style={{
-                        background: active ? "rgba(180,140,60,0.15)" : "transparent",
-                        borderBottom: active ? "2px solid rgba(251,191,36,0.6)" : "2px solid transparent",
-                        color: active ? "rgba(253,230,138,0.9)" : "rgba(253,230,138,0.45)",
+                        background: active
+                          ? "rgba(180,140,60,0.15)"
+                          : "transparent",
+                        borderBottom: active
+                          ? "2px solid rgba(251,191,36,0.6)"
+                          : "2px solid transparent",
+                        color: active
+                          ? "rgba(253,230,138,0.9)"
+                          : "rgba(253,230,138,0.45)",
                       }}
                     >
-                      <span className={active ? "text-amber-400" : "text-amber-600/50"}>
+                      <span
+                        className={
+                          active ? "text-amber-400" : "text-amber-600/50"
+                        }
+                      >
                         {tab.icon}
                       </span>
                       {tab.label}
@@ -1039,11 +1466,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           background: active
                             ? `linear-gradient(90deg, rgba(180,140,60,0.15), transparent)`
                             : "transparent",
-                          borderRight: active ? `2px solid rgba(251,191,36,0.6)` : "2px solid transparent",
-                          color: active ? "rgba(253,230,138,0.9)" : "rgba(253,230,138,0.45)",
+                          borderRight: active
+                            ? `2px solid rgba(251,191,36,0.6)`
+                            : "2px solid transparent",
+                          color: active
+                            ? "rgba(253,230,138,0.9)"
+                            : "rgba(253,230,138,0.45)",
                         }}
                       >
-                        <span className={active ? "text-amber-400" : "text-amber-600/50"}>
+                        <span
+                          className={
+                            active ? "text-amber-400" : "text-amber-600/50"
+                          }
+                        >
                           {tab.icon}
                         </span>
                         <span className="text-sm font-medium">{tab.label}</span>
@@ -1080,7 +1515,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-400 hidden md:inline">{activeTabDef.icon}</span>
+                  <span className="text-amber-400 hidden md:inline">
+                    {activeTabDef.icon}
+                  </span>
                   <h3 className="text-sm sm:text-base font-semibold text-amber-200">
                     {activeTabDef.label}
                   </h3>
@@ -1130,7 +1567,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               borderColor: GOLD.innerBorder08,
             }}
           >
-            <div className="text-center text-[11px] sm:text-xs" style={{ color: "rgba(253,230,138,0.3)" }}>
+            <div
+              className="text-center text-[11px] sm:text-xs"
+              style={{ color: "rgba(253,230,138,0.3)" }}
+            >
               All changes take effect immediately
             </div>
           </div>

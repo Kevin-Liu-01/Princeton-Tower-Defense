@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
 import { Swords, Target, Gauge } from "lucide-react";
-import type { Hero, Position } from "../../../types";
+import React from "react";
+
 import { HERO_DATA } from "../../../constants";
+import type { Hero, Position } from "../../../types";
 import { PANEL, GOLD, panelGradient } from "../system/theme";
 
 interface HeroHoverTooltipProps {
@@ -33,17 +34,26 @@ export const HeroHoverTooltip: React.FC<HeroHoverTooltipProps> = ({
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: tooltipX,
-        top: tooltipY,
-        zIndex: 250,
-        width: tooltipWidth,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
+        left: tooltipX,
+        top: tooltipY,
+        width: tooltipWidth,
+        zIndex: 250,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-      <div className="px-3 py-1.5 relative z-10" style={{ background: PANEL.bgWarmMid, borderBottom: `1px solid ${GOLD.border25}` }}>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
         <div className="font-bold text-amber-200 text-sm">{heroData.name}</div>
         <div className="text-xs text-red-300">
           HP: {Math.floor(hero.hp)}/{hero.maxHp}

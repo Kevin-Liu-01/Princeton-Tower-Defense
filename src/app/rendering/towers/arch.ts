@@ -1,10 +1,10 @@
-import type { Tower, Position } from "../../types";
 import {
   ISO_PRISM_W_FACTOR,
   ISO_PRISM_D_FACTOR,
   ISO_Y_RATIO,
 } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
+import type { Tower, Position } from "../../types";
 import {
   drawIsoOctPrism,
   drawIsoCylinder,
@@ -18,7 +18,7 @@ export function renderArchTower(
   tower: Tower,
   zoom: number,
   time: number,
-  colors: { base: string; dark: string; light: string; accent: string },
+  colors: { base: string; dark: string; light: string; accent: string }
 ) {
   void colors;
 
@@ -33,24 +33,25 @@ export function renderArchTower(
   const isShockwave = tower.level === 4 && tower.upgrade === "A";
   const isSymphony = tower.level === 4 && tower.upgrade === "B";
 
-  const uc = <T>(a: T, b: T, def: T): T => (isShockwave ? a : isSymphony ? b : def);
+  const uc = <T>(a: T, b: T, def: T): T =>
+    isShockwave ? a : isSymphony ? b : def;
 
   const st = {
-    t: uc("#4a2a2a", "#3a3a5a", "#5a4a3a"),
-    l: uc("#3a1a1a", "#2a2a4a", "#4a3a2a"),
-    r: uc("#2a0a0a", "#1a1a3a", "#3a2a1a"),
-    lb: uc("#5a3a3a", "#4a4a6a", "#6a5a4a"),
-    rb: uc("#6a4a4a", "#5a5a7a", "#7a6a5a"),
+    cap: uc("#8a6a6a", "#7a7a9a", "#9a8a7a"),
     d1: uc("#1a0a0a", "#1a1a2a", "#2a1a0a"),
     d2: uc("#0a0000", "#0a0a1a", "#1a0a00"),
+    l: uc("#3a1a1a", "#2a2a4a", "#4a3a2a"),
+    lb: uc("#5a3a3a", "#4a4a6a", "#6a5a4a"),
+    r: uc("#2a0a0a", "#1a1a3a", "#3a2a1a"),
+    rb: uc("#6a4a4a", "#5a5a7a", "#7a6a5a"),
     seam: uc("#7a5a5a", "#6a6a8a", "#8a7a6a"),
-    cap: uc("#8a6a6a", "#7a7a9a", "#9a8a7a"),
+    t: uc("#4a2a2a", "#3a3a5a", "#5a4a3a"),
   };
   const fn = {
-    t: uc("#584040", "#505068", "#786858"),
     l: uc("#483030", "#404058", "#685848"),
-    r: uc("#382020", "#303048", "#584838"),
     lb: uc("#685050", "#606078", "#887868"),
+    r: uc("#382020", "#303048", "#584838"),
+    t: uc("#584040", "#505068", "#786858"),
   };
   const rf = {
     a: uc("#987060", "#7888a8", "#a89878"),
@@ -153,7 +154,7 @@ export function renderArchTower(
     st.r,
     st.d1,
     st.d2,
-    zoom,
+    zoom
   );
 
   // Middle step — dressed stone
@@ -167,7 +168,7 @@ export function renderArchTower(
     st.t,
     st.l,
     st.r,
-    zoom,
+    zoom
   );
 
   // Upper step — polished foundation
@@ -181,7 +182,7 @@ export function renderArchTower(
     fn.t,
     fn.l,
     fn.r,
-    zoom,
+    zoom
   );
 
   // Gold trim along upper step front edge
@@ -209,7 +210,7 @@ export function renderArchTower(
     runeRY,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -224,7 +225,7 @@ export function renderArchTower(
     runeRY * 0.7,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -249,10 +250,8 @@ export function renderArchTower(
   ];
   for (let corner = 0; corner < 4; corner++) {
     const bp = buttressPositions[corner];
-    const cx =
-      screenPos.x + bp.sx * (subBuildingWidth * 0.42) * zoom;
-    const cy =
-      screenPos.y + 14 * zoom + bp.sy * (baseDepth + 20) * zoom * 0.18;
+    const cx = screenPos.x + bp.sx * (subBuildingWidth * 0.42) * zoom;
+    const cy = screenPos.y + 14 * zoom + bp.sy * (baseDepth + 20) * zoom * 0.18;
 
     // Buttress as octagonal prism
     drawIsoOctPrism(
@@ -265,7 +264,7 @@ export function renderArchTower(
       st.seam,
       st.lb,
       st.t,
-      zoom,
+      zoom
     );
 
     // Buttress pyramid cap
@@ -316,13 +315,16 @@ export function renderArchTower(
     rf.a,
     rf.b,
     rf.c,
-    zoom,
+    zoom
   );
 
   // ========== BASE RAILING (3D isometric ring) ==========
   const archBalY = screenPos.y + 4 * zoom + subBounce;
   const archBalRX =
-    (subBuildingWidth - 4 + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR * 0.85;
+    (subBuildingWidth - 4 + pillarSpread * 2) *
+    zoom *
+    ISO_PRISM_W_FACTOR *
+    0.85;
   const archBalRY =
     (baseDepth + 24 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR * 0.85;
   const archBalH = 5 * zoom;
@@ -336,12 +338,12 @@ export function renderArchTower(
     32,
     16,
     {
-      rail: fn.t,
-      topRail: rf.a,
       backPanel: `rgba(${rfbRgb}, 0.35)`,
       frontPanel: `rgba(${rfbRgb}, 0.25)`,
+      rail: fn.t,
+      topRail: rf.a,
     },
-    zoom,
+    zoom
   );
 
   // === DETAILED STONE MASONRY ON SUB-BUILDING FACES ===
@@ -372,7 +374,9 @@ export function renderArchTower(
     const stagger = row % 2 === 0 ? 0 : 0.5;
     for (let col = 1; col < stoneCols; col++) {
       const s = (col + stagger) / stoneCols;
-      if (s >= 1) continue;
+      if (s >= 1) {
+        continue;
+      }
       const jx = sbBaseX - sbHalfW + s * sbHalfW;
       const jyOff = s * sbDepthOff;
       ctx.beginPath();
@@ -396,7 +400,9 @@ export function renderArchTower(
     const stagger = row % 2 === 0 ? 0.5 : 0;
     for (let col = 1; col < stoneCols; col++) {
       const s = (col + stagger) / stoneCols;
-      if (s >= 1) continue;
+      if (s >= 1) {
+        continue;
+      }
       const jx = sbBaseX + s * sbHalfW;
       const jyOff = sbDepthOff - s * sbDepthOff;
       ctx.beginPath();
@@ -557,7 +563,7 @@ export function renderArchTower(
     sbBaseX - sbHalfW,
     sbBaseY - sbH,
     sbBaseX,
-    sbBaseY,
+    sbBaseY
   );
   lwGrad.addColorStop(0, "rgba(40, 30, 20, 0.12)");
   lwGrad.addColorStop(0.4, "rgba(40, 30, 20, 0.05)");
@@ -573,11 +579,11 @@ export function renderArchTower(
 
   // --- Moss/weathering at base (improved with lichen patches) ---
   const mossPatches = [
-    { x: -1.2, s: 3.0 },
-    { x: -0.3, s: 2.2 },
-    { x: 0.5, s: 2.8 },
-    { x: 1.1, s: 2.0 },
-    { x: -0.7, s: 1.5 },
+    { s: 3, x: -1.2 },
+    { s: 2.2, x: -0.3 },
+    { s: 2.8, x: 0.5 },
+    { s: 2, x: 1.1 },
+    { s: 1.5, x: -0.7 },
   ];
   for (let i = 0; i < mossPatches.length; i++) {
     const mp = mossPatches[i];
@@ -593,7 +599,7 @@ export function renderArchTower(
       1 * zoom,
       i * 0.4,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Lighter moss
@@ -606,7 +612,7 @@ export function renderArchTower(
       0.7 * zoom,
       i * 0.4,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -622,7 +628,7 @@ export function renderArchTower(
       ivX + Math.sin(iv * 2.3) * 3 * zoom,
       sbBaseY - sbH * 0.3,
       ivX - 1 * zoom,
-      sbBaseY - sbH * 0.5,
+      sbBaseY - sbH * 0.5
     );
     ctx.stroke();
   }
@@ -645,8 +651,8 @@ export function renderArchTower(
   const windowGlowBase = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5;
   const windowColors = {
     frame: st.t,
-    void: `${mainColor} ${windowGlowBase * 0.9})`,
     sill: st.t,
+    void: `${mainColor} ${windowGlowBase * 0.9})`,
   };
   for (let row = 0; row < 2; row++) {
     const cy =
@@ -661,7 +667,7 @@ export function renderArchTower(
       zoom,
       mainColor,
       windowGlowBase,
-      windowColors,
+      windowColors
     );
     drawIsoGothicWindow(
       ctx,
@@ -673,7 +679,7 @@ export function renderArchTower(
       zoom,
       mainColor,
       windowGlowBase,
-      windowColors,
+      windowColors
     );
   }
 
@@ -723,7 +729,7 @@ export function renderArchTower(
         (4 + ringPhase * 6) * zoom,
         0.3 * side,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -751,7 +757,7 @@ export function renderArchTower(
       pipeMidX + 1 * zoom,
       pipeMidY + 1 * zoom,
       pipeEndX + 1 * zoom,
-      pipeEndY + 1 * zoom,
+      pipeEndY + 1 * zoom
     );
     ctx.stroke();
 
@@ -769,13 +775,13 @@ export function renderArchTower(
     ctx.beginPath();
     ctx.moveTo(
       pipeStartX + subShift * 0.3 - 0.8 * zoom,
-      pipeStartY - 0.8 * zoom,
+      pipeStartY - 0.8 * zoom
     );
     ctx.quadraticCurveTo(
       pipeMidX - 0.8 * zoom,
       pipeMidY - 0.8 * zoom,
       pipeEndX - 0.8 * zoom,
-      pipeEndY - 0.8 * zoom,
+      pipeEndY - 0.8 * zoom
     );
     ctx.stroke();
 
@@ -851,7 +857,7 @@ export function renderArchTower(
     pl.c,
     pl.h,
     pl.i,
-    zoom,
+    zoom
   );
 
   // Arcane circle on platform
@@ -866,7 +872,7 @@ export function renderArchTower(
     (baseDepth + 14) * zoom * 0.18,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -966,7 +972,7 @@ export function renderArchTower(
     rf.e,
     rf.f,
     rf.g,
-    zoom,
+    zoom
   );
 
   // Left pillar shaft dimensions
@@ -989,7 +995,7 @@ export function renderArchTower(
     pl.a,
     pl.b,
     pl.c,
-    zoom,
+    zoom
   );
 
   // Square-to-round transition torus molding
@@ -1004,7 +1010,7 @@ export function renderArchTower(
       dark: pl.f,
       light: pl.g,
       top: pl.d,
-    },
+    }
   );
 
   // Upper shaft (cylinder connecting to arch)
@@ -1015,7 +1021,7 @@ export function renderArchTower(
     shaftBaseY - lowerShaftH - transH,
     upperCylRx,
     upperShaftH,
-    { body: pl.b, dark: pl.c, light: pl.e, top: pl.e },
+    { body: pl.b, dark: pl.c, light: pl.e, top: pl.e }
   );
 
   // Stone band lines on lower shaft (isometric chevron)
@@ -1042,7 +1048,7 @@ export function renderArchTower(
       upperCylRx * ISO_Y_RATIO,
       0,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.stroke();
   }
@@ -1148,7 +1154,7 @@ export function renderArchTower(
     rf.e,
     rf.f,
     rf.g,
-    zoom,
+    zoom
   );
 
   // Right pillar shaft
@@ -1165,7 +1171,7 @@ export function renderArchTower(
     pl.a,
     pl.b,
     pl.c,
-    zoom,
+    zoom
   );
 
   // Square-to-round transition torus molding
@@ -1180,7 +1186,7 @@ export function renderArchTower(
       dark: pl.f,
       light: pl.g,
       top: pl.d,
-    },
+    }
   );
 
   // Upper shaft (cylinder connecting to arch)
@@ -1190,7 +1196,7 @@ export function renderArchTower(
     shaftBaseY - lowerShaftH - transH,
     upperCylRx,
     upperShaftH,
-    { body: pl.b, dark: pl.c, light: pl.e, top: pl.e },
+    { body: pl.b, dark: pl.c, light: pl.e, top: pl.e }
   );
 
   // Stone band lines on right lower shaft (isometric chevron)
@@ -1217,7 +1223,7 @@ export function renderArchTower(
       upperCylRx * ISO_Y_RATIO,
       0,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.stroke();
   }
@@ -1270,7 +1276,7 @@ export function renderArchTower(
     ctx.fillText(
       pillarRunes[(i + 2) % 4],
       pillarXR - pillarBounce * 0.5,
-      runeY,
+      runeY
     );
   }
   ctx.shadowBlur = 0;
@@ -1325,7 +1331,7 @@ export function renderArchTower(
         1.5 * zoom,
         0.46,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -1336,7 +1342,7 @@ export function renderArchTower(
         1.5 * zoom,
         -0.46,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1378,7 +1384,7 @@ export function renderArchTower(
         3 * zoom,
         time * 2 + side,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1395,7 +1401,7 @@ export function renderArchTower(
       st.lb,
       st.t,
       st.l,
-      zoom,
+      zoom
     );
 
     // Altar isometric dimensions
@@ -1409,19 +1415,43 @@ export function renderArchTower(
     ctx.lineWidth = 0.6 * zoom;
     const ri = 0.15;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - altarHW * (1 - ri), altarTopY + altarH * 0.15 + altarHD * ri);
-    ctx.lineTo(screenPos.x - altarHW * ri, altarTopY + altarH * 0.15 + altarHD * (1 - ri));
-    ctx.lineTo(screenPos.x - altarHW * ri, altarY - altarH * 0.15 + altarHD * (1 - ri));
-    ctx.lineTo(screenPos.x - altarHW * (1 - ri), altarY - altarH * 0.15 + altarHD * ri);
+    ctx.moveTo(
+      screenPos.x - altarHW * (1 - ri),
+      altarTopY + altarH * 0.15 + altarHD * ri
+    );
+    ctx.lineTo(
+      screenPos.x - altarHW * ri,
+      altarTopY + altarH * 0.15 + altarHD * (1 - ri)
+    );
+    ctx.lineTo(
+      screenPos.x - altarHW * ri,
+      altarY - altarH * 0.15 + altarHD * (1 - ri)
+    );
+    ctx.lineTo(
+      screenPos.x - altarHW * (1 - ri),
+      altarY - altarH * 0.15 + altarHD * ri
+    );
     ctx.closePath();
     ctx.stroke();
 
     // Carved relief on altar right face (isometric quad inset)
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + altarHW * ri, altarTopY + altarH * 0.15 + altarHD * (1 - ri));
-    ctx.lineTo(screenPos.x + altarHW * (1 - ri), altarTopY + altarH * 0.15 + altarHD * ri);
-    ctx.lineTo(screenPos.x + altarHW * (1 - ri), altarY - altarH * 0.15 + altarHD * ri);
-    ctx.lineTo(screenPos.x + altarHW * ri, altarY - altarH * 0.15 + altarHD * (1 - ri));
+    ctx.moveTo(
+      screenPos.x + altarHW * ri,
+      altarTopY + altarH * 0.15 + altarHD * (1 - ri)
+    );
+    ctx.lineTo(
+      screenPos.x + altarHW * (1 - ri),
+      altarTopY + altarH * 0.15 + altarHD * ri
+    );
+    ctx.lineTo(
+      screenPos.x + altarHW * (1 - ri),
+      altarY - altarH * 0.15 + altarHD * ri
+    );
+    ctx.lineTo(
+      screenPos.x + altarHW * ri,
+      altarY - altarH * 0.15 + altarHD * (1 - ri)
+    );
     ctx.closePath();
     ctx.stroke();
 
@@ -1502,7 +1532,7 @@ export function renderArchTower(
       0,
       tomeX,
       tomeY,
-      8 * zoom,
+      8 * zoom
     );
     tomeAuraGrad.addColorStop(0, `rgba(${glowColor}, ${tomeGlow * 0.15})`);
     tomeAuraGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
@@ -1533,7 +1563,7 @@ export function renderArchTower(
             -lineW * 0.5,
             -2.5 * zoom + line * 1.8 * zoom,
             lineW,
-            0.5 * zoom,
+            0.5 * zoom
           );
         }
         // Glowing rune on page
@@ -1567,8 +1597,11 @@ export function renderArchTower(
           screenPos.y -
           50 * zoom +
           Math.sin(trailAngle) * wispRadius * 0.3 * zoom;
-        if (t === 0) ctx.moveTo(trailX, trailY);
-        else ctx.lineTo(trailX, trailY);
+        if (t === 0) {
+          ctx.moveTo(trailX, trailY);
+        } else {
+          ctx.lineTo(trailX, trailY);
+        }
       }
       ctx.stroke();
 
@@ -1596,7 +1629,7 @@ export function renderArchTower(
       ctx.moveTo(crackX, crackY);
       ctx.lineTo(
         crackX + Math.cos(crackAngle) * crackLen,
-        crackY + Math.sin(crackAngle) * crackLen * 0.4,
+        crackY + Math.sin(crackAngle) * crackLen * 0.4
       );
       ctx.stroke();
     }
@@ -1665,8 +1698,11 @@ export function renderArchTower(
     const angle = Math.PI * (1 - t);
     const ox = archMidX + archVibrate + Math.cos(angle) * outerR;
     const oy = archBaseY - Math.sin(angle) * outerR * archForeshorten;
-    if (i === 0) ctx.moveTo(ox, oy);
-    else ctx.lineTo(ox, oy);
+    if (i === 0) {
+      ctx.moveTo(ox, oy);
+    } else {
+      ctx.lineTo(ox, oy);
+    }
   }
   for (let i = archCurveSteps; i >= 0; i--) {
     const t = i / archCurveSteps;
@@ -1687,8 +1723,11 @@ export function renderArchTower(
     const angle = Math.PI * (1 - t);
     const ox = archMidX + archVibrate + Math.cos(angle) * outerR;
     const oy = archBaseY - Math.sin(angle) * outerR * archForeshorten;
-    if (i === 0) ctx.moveTo(ox, oy);
-    else ctx.lineTo(ox, oy);
+    if (i === 0) {
+      ctx.moveTo(ox, oy);
+    } else {
+      ctx.lineTo(ox, oy);
+    }
   }
   ctx.stroke();
 
@@ -1701,8 +1740,11 @@ export function renderArchTower(
     const angle = Math.PI * (1 - t);
     const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
     const iy = archBaseY - Math.sin(angle) * innerR * archForeshorten;
-    if (i === 0) ctx.moveTo(ix, iy);
-    else ctx.lineTo(ix, iy);
+    if (i === 0) {
+      ctx.moveTo(ix, iy);
+    } else {
+      ctx.lineTo(ix, iy);
+    }
   }
   ctx.stroke();
 
@@ -1716,8 +1758,11 @@ export function renderArchTower(
     const ox = archMidX + archVibrate + Math.cos(angle) * (outerR + 1 * zoom);
     const oy =
       archBaseY - Math.sin(angle) * (outerR + 1 * zoom) * archForeshorten;
-    if (i === 0) ctx.moveTo(ox, oy);
-    else ctx.lineTo(ox, oy);
+    if (i === 0) {
+      ctx.moveTo(ox, oy);
+    } else {
+      ctx.lineTo(ox, oy);
+    }
   }
   ctx.stroke();
 
@@ -1734,19 +1779,19 @@ export function renderArchTower(
     ctx.beginPath();
     ctx.moveTo(
       archMidX + archVibrate + Math.cos(a0) * outerR,
-      archBaseY - Math.sin(a0) * outerR * 0.7,
+      archBaseY - Math.sin(a0) * outerR * 0.7
     );
     ctx.lineTo(
       archMidX + archVibrate + Math.cos(a1) * outerR,
-      archBaseY - Math.sin(a1) * outerR * 0.7,
+      archBaseY - Math.sin(a1) * outerR * 0.7
     );
     ctx.lineTo(
       archMidX + archVibrate + Math.cos(a1) * innerR,
-      archBaseY - Math.sin(a1) * innerR * 0.7,
+      archBaseY - Math.sin(a1) * innerR * 0.7
     );
     ctx.lineTo(
       archMidX + archVibrate + Math.cos(a0) * innerR,
-      archBaseY - Math.sin(a0) * innerR * 0.7,
+      archBaseY - Math.sin(a0) * innerR * 0.7
     );
     ctx.closePath();
     ctx.fill();
@@ -1759,11 +1804,11 @@ export function renderArchTower(
     ctx.beginPath();
     ctx.moveTo(
       archMidX + archVibrate + Math.cos(a0) * outerR,
-      archBaseY - Math.sin(a0) * outerR * 0.7,
+      archBaseY - Math.sin(a0) * outerR * 0.7
     );
     ctx.lineTo(
       archMidX + archVibrate + Math.cos(a0) * innerR,
-      archBaseY - Math.sin(a0) * innerR * 0.7,
+      archBaseY - Math.sin(a0) * innerR * 0.7
     );
     ctx.stroke();
   }
@@ -1796,8 +1841,11 @@ export function renderArchTower(
     const angle = Math.PI * (1 - t);
     const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
     const iy = archBaseY - Math.sin(angle) * innerR * 0.7;
-    if (i === 0) ctx.moveTo(ix, iy);
-    else ctx.lineTo(ix, iy);
+    if (i === 0) {
+      ctx.moveTo(ix, iy);
+    } else {
+      ctx.lineTo(ix, iy);
+    }
   }
   ctx.stroke();
 
@@ -1844,7 +1892,7 @@ export function renderArchTower(
     0,
     screenPos.x + archVibrate,
     keystoneY - 9 * zoom,
-    (6 + attackPulse * 3) * zoom,
+    (6 + attackPulse * 3) * zoom
   );
   coreGrad.addColorStop(0, `rgba(255, 255, 255, ${conduitGlow})`);
   coreGrad.addColorStop(0.3, `rgba(${glowColor}, ${conduitGlow})`);
@@ -1857,7 +1905,7 @@ export function renderArchTower(
     keystoneY - 9 * zoom,
     (6 + attackPulse * 3) * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1890,7 +1938,7 @@ export function renderArchTower(
       ringRadius * (0.35 + ringTilt * 0.15),
       time * (0.8 + ring * 0.3) + ringPhaseOff,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -1929,8 +1977,11 @@ export function renderArchTower(
       const toothR = t % 2 === 0 ? gearRadius : gearRadius * 0.75;
       const tx = gearX + Math.cos(toothAngle) * toothR;
       const ty = gearY + Math.sin(toothAngle) * toothR * 0.5;
-      if (t === 0) ctx.moveTo(tx, ty);
-      else ctx.lineTo(tx, ty);
+      if (t === 0) {
+        ctx.moveTo(tx, ty);
+      } else {
+        ctx.lineTo(tx, ty);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -1948,7 +1999,7 @@ export function renderArchTower(
       ctx.moveTo(gearX, gearY);
       ctx.lineTo(
         gearX + Math.cos(spokeAngle) * gearRadius * 0.7,
-        gearY + Math.sin(spokeAngle) * gearRadius * 0.35,
+        gearY + Math.sin(spokeAngle) * gearRadius * 0.35
       );
       ctx.stroke();
     }
@@ -2066,7 +2117,7 @@ export function renderArchTower(
     0,
     screenPos.x,
     portalCenterY,
-    portalSizeY,
+    portalSizeY
   );
   portalGrad.addColorStop(0, `rgba(${glowColor}, ${glowIntensity * 0.5})`);
   portalGrad.addColorStop(0.5, `rgba(${glowColor}, ${glowIntensity * 0.25})`);
@@ -2080,7 +2131,7 @@ export function renderArchTower(
     portalSizeY,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2100,7 +2151,7 @@ export function renderArchTower(
       portalSizeY * depthScale * 0.8,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2121,7 +2172,7 @@ export function renderArchTower(
         portalSizeY * rippleScale,
         ripple * 0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -2143,8 +2194,11 @@ export function renderArchTower(
       const y =
         portalCenterY + Math.sin(angle) * radius * (portalSizeY / portalSizeX);
 
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
     ctx.stroke();
   }
@@ -2175,7 +2229,7 @@ export function renderArchTower(
     0,
     screenPos.x,
     portalCenterY,
-    coreSize * 2,
+    coreSize * 2
   );
   coreGrad2.addColorStop(0, `rgba(255, 255, 255, ${0.8 + attackPulse * 0.2})`);
   coreGrad2.addColorStop(0.3, `rgba(${glowColor}, ${0.6 + attackPulse * 0.3})`);
@@ -2200,7 +2254,7 @@ export function renderArchTower(
   // Sound/energy waves
   const waveCount = tower.level + 3;
   for (let i = 0; i < waveCount; i++) {
-    const wavePhase = ((time * 2 + i * 0.25) % 1 + 1) % 1;
+    const wavePhase = (((time * 2 + i * 0.25) % 1) + 1) % 1;
     const waveRadius = 10 + wavePhase * 55;
     const waveAlpha =
       0.6 * (1 - wavePhase) * (glowIntensity + attackPulse * 0.5);
@@ -2215,7 +2269,7 @@ export function renderArchTower(
       waveRadius * zoom * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2245,7 +2299,7 @@ export function renderArchTower(
       (12 + burstPhase * 22) * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2283,7 +2337,7 @@ export function renderArchTower(
       ctx.moveTo(noteX, noteY);
       ctx.lineTo(
         noteX + Math.cos(noteAngle + Math.PI) * 10 * zoom,
-        noteY + Math.sin(noteAngle + Math.PI) * 5 * zoom,
+        noteY + Math.sin(noteAngle + Math.PI) * 5 * zoom
       );
       ctx.stroke();
     }
@@ -2399,8 +2453,11 @@ export function renderArchTower(
         for (let seg = 0; seg <= 6; seg++) {
           const sx = bpX - pw * 0.8 + (seg / 6) * pw * 1.6;
           const sy = bY + Math.sin(seg * 1.5 + time * 4) * 1.5 * zoom;
-          if (seg === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
+          if (seg === 0) {
+            ctx.moveTo(sx, sy);
+          } else {
+            ctx.lineTo(sx, sy);
+          }
         }
         ctx.stroke();
       }
@@ -2443,7 +2500,7 @@ export function renderArchTower(
             ringRadius * 0.4 * zoom,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
         }
@@ -2482,8 +2539,11 @@ export function renderArchTower(
         const hAngle = (h / 6) * Math.PI * 2 - Math.PI / 6;
         const hx = ampX + Math.cos(hAngle) * hR;
         const hy = ampY + Math.sin(hAngle) * hR * 0.55;
-        if (h === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (h === 0) {
+          ctx.moveTo(hx, hy);
+        } else {
+          ctx.lineTo(hx, hy);
+        }
       }
       ctx.closePath();
       ctx.fill();
@@ -2529,8 +2589,11 @@ export function renderArchTower(
         const hAngle = (h / 6) * Math.PI * 2 - Math.PI / 6;
         const hx = ampX + Math.cos(hAngle) * hR * 0.6;
         const hy = ampY + Math.sin(hAngle) * hR * 0.6 * 0.55;
-        if (h === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (h === 0) {
+          ctx.moveTo(hx, hy);
+        } else {
+          ctx.lineTo(hx, hy);
+        }
       }
       ctx.closePath();
       ctx.stroke();
@@ -2544,7 +2607,7 @@ export function renderArchTower(
         ctx.moveTo(ampX, ampY);
         ctx.lineTo(
           ampX + Math.cos(hAngle) * hR * 0.85,
-          ampY + Math.sin(hAngle) * hR * 0.85 * 0.55,
+          ampY + Math.sin(hAngle) * hR * 0.85 * 0.55
         );
         ctx.stroke();
       }
@@ -2560,8 +2623,11 @@ export function renderArchTower(
         const hAngle = (h / 6) * Math.PI * 2 - Math.PI / 6;
         const hx = ampX + Math.cos(hAngle) * lensR;
         const hy = ampY + Math.sin(hAngle) * lensR * 0.55;
-        if (h === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (h === 0) {
+          ctx.moveTo(hx, hy);
+        } else {
+          ctx.lineTo(hx, hy);
+        }
       }
       ctx.closePath();
       ctx.fill();
@@ -2589,7 +2655,7 @@ export function renderArchTower(
           hR * 0.12 * ring,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -2613,8 +2679,11 @@ export function renderArchTower(
             pillarBottomY -
             pillarHeight * zoom * (0.1 + t * 0.7) -
             pillarBounce;
-          if (seg === 0) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
+          if (seg === 0) {
+            ctx.moveTo(sx, sy);
+          } else {
+            ctx.lineTo(sx, sy);
+          }
         }
         ctx.stroke();
       }
@@ -2669,8 +2738,11 @@ export function renderArchTower(
           portalCenterY -
           5 * zoom +
           Math.sin(t * Math.PI * 4 + time * 5 + wave) * 6 * zoom;
-        if (i === 0) ctx.moveTo(waveX, waveY);
-        else ctx.lineTo(waveX, waveY);
+        if (i === 0) {
+          ctx.moveTo(waveX, waveY);
+        } else {
+          ctx.lineTo(waveX, waveY);
+        }
       }
       ctx.stroke();
     }
@@ -2683,7 +2755,7 @@ export function renderArchTower(
       0,
       screenPos.x,
       portalCenterY,
-      50 * zoom,
+      50 * zoom
     );
     auraGrad.addColorStop(0, `rgba(100, 200, 255, ${auraGlow * 0.5})`);
     auraGrad.addColorStop(0.5, `rgba(100, 200, 255, ${auraGlow * 0.2})`);
@@ -2697,7 +2769,7 @@ export function renderArchTower(
       35 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2718,7 +2790,7 @@ export function renderArchTower(
         (10 + beamPhase * 30) * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -2739,7 +2811,7 @@ export function renderArchTower(
           ringRadius * 0.5 * zoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -2788,7 +2860,7 @@ export function renderArchTower(
       cresRY + 1.2 * zoom,
       0,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.stroke();
     ctx.beginPath();
@@ -2799,7 +2871,7 @@ export function renderArchTower(
       cresRY - 1.2 * zoom,
       0,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.stroke();
 
@@ -2829,7 +2901,7 @@ export function renderArchTower(
           cresRY,
           0,
           startAngle,
-          endAngle,
+          endAngle
         );
         ctx.stroke();
 
@@ -2846,7 +2918,7 @@ export function renderArchTower(
           cresRY,
           0,
           startAngle,
-          endAngle,
+          endAngle
         );
         ctx.stroke();
 
@@ -2861,7 +2933,7 @@ export function renderArchTower(
           cresRY,
           0,
           startAngle,
-          endAngle,
+          endAngle
         );
         ctx.stroke();
         ctx.shadowBlur = 0;
@@ -2880,7 +2952,7 @@ export function renderArchTower(
           crystalW * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -2920,7 +2992,7 @@ export function renderArchTower(
           nodeX,
           nodeY,
           nodeX,
-          nodeY - beamH,
+          nodeY - beamH
         );
         beamGrad.addColorStop(0, `rgba(${glowColor}, ${glow * 0.4})`);
         beamGrad.addColorStop(0.4, `rgba(${glowColor}, ${glow * 0.15})`);
@@ -2947,7 +3019,7 @@ export function renderArchTower(
             pY,
             pSize,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -2964,7 +3036,7 @@ export function renderArchTower(
           cresRY,
           0,
           startAngle,
-          endAngle,
+          endAngle
         );
         ctx.stroke();
 
@@ -3014,7 +3086,7 @@ export function renderArchTower(
         0,
         screenPos.x,
         cresY,
-        cresRX * 1.25,
+        cresRX * 1.25
       );
       poolGrad.addColorStop(0, `rgba(${glowColor}, ${poolAlpha * 0.35})`);
       poolGrad.addColorStop(0.5, `rgba(${glowColor}, ${poolAlpha * 0.12})`);
@@ -3028,7 +3100,7 @@ export function renderArchTower(
         cresRY * 1.25,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3038,7 +3110,7 @@ export function renderArchTower(
         screenPos.x,
         screenPos.y + 20 * zoom,
         screenPos.x,
-        screenPos.y - 55 * zoom,
+        screenPos.y - 55 * zoom
       );
       bodyGrad.addColorStop(0, `rgba(${glowColor}, ${bodyAlpha})`);
       bodyGrad.addColorStop(0.35, `rgba(${glowColor}, ${bodyAlpha * 0.4})`);
@@ -3052,7 +3124,7 @@ export function renderArchTower(
         55 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -3074,7 +3146,7 @@ export function renderArchTower(
         10 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -3090,7 +3162,7 @@ export function renderArchTower(
         8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -3113,7 +3185,7 @@ export function renderArchTower(
             ewY,
             (1.8 + Math.sin(time * 4 + ew) * 0.6) * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           ctx.shadowBlur = 0;

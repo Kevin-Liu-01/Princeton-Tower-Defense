@@ -10,8 +10,8 @@ export function hexToRgba(hex: string, alpha: number): string {
   const stripped = hex.trim().replace("#", "");
   const fullHex =
     stripped.length === 3
-      ? stripped.split("").map((c) => `${c}${c}`).join("")
+      ? [...stripped].map((c) => `${c}${c}`).join("")
       : stripped;
-  const value = parseInt(fullHex, 16);
+  const value = Number.parseInt(fullHex, 16);
   return `rgba(${(value >> 16) & 255},${(value >> 8) & 255},${value & 255},${alpha})`;
 }

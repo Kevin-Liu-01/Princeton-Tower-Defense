@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+
 import type {
   DecorationCategory,
   HazardType,
@@ -12,7 +13,6 @@ import type {
   SelectionTarget,
   ToolMode,
 } from "../types";
-import { isoToGridFloat } from "../utils/isoMath";
 import {
   isInsideMap,
   normalizeMapPoint,
@@ -21,6 +21,7 @@ import {
   PATH_MARGIN_TILES,
   clamp,
 } from "../utils/gridUtils";
+import { isoToGridFloat } from "../utils/isoMath";
 import {
   findSelectionNearPoint,
   removeSelection,
@@ -56,7 +57,7 @@ export function useCreatorBoard(
   selectedObjectiveType: SpecialTowerType,
   selectedTowerType: TowerType,
   draftActions: CreatorDraftActions,
-  camera: CreatorCameraState,
+  camera: CreatorCameraState
 ): CreatorBoardState {
   const boardRef = useRef<SVGSVGElement>(null);
   const [selection, setSelection] = useState<SelectionTarget | null>(null);
@@ -79,8 +80,12 @@ export function useCreatorBoard(
 
   const updateHoverPoint = useCallback((point: GridPoint | null): void => {
     setHoverPoint((prev) => {
-      if (!prev && !point) return prev;
-      if (samePoint(prev, point)) return prev;
+      if (!prev && !point) {
+        return prev;
+      }
+      if (samePoint(prev, point)) {
+        return prev;
+      }
       return point;
     });
   }, []);
@@ -88,12 +93,19 @@ export function useCreatorBoard(
   const getGridPointFromClient = useCallback(
     (clientX: number, clientY: number): GridPoint | null => {
       const metrics = getBoardRenderMetrics(boardRef.current);
-      if (!metrics) return null;
+      if (!metrics) {
+        return null;
+      }
       const { rect, renderWidth, renderHeight, offsetX, offsetY } = metrics;
 
       const localX = clientX - rect.left - offsetX;
       const localY = clientY - rect.top - offsetY;
-      if (localX < 0 || localX > renderWidth || localY < 0 || localY > renderHeight) {
+      if (
+        localX < 0 ||
+        localX > renderWidth ||
+        localY < 0 ||
+        localY > renderHeight
+      ) {
         return null;
       }
 
@@ -129,11 +141,15 @@ export function useCreatorBoard(
           return { ...prev, secondaryPath: [...prev.secondaryPath, pathPoint] };
         }
         if (tool === "hero_spawn") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return { ...prev, heroSpawn: mapPoint };
         }
         if (tool === "special_tower") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return {
             ...prev,
             specialTowers: [
@@ -143,7 +159,9 @@ export function useCreatorBoard(
           };
         }
         if (tool === "tower") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return {
             ...prev,
             placedTowers: [
@@ -153,38 +171,51 @@ export function useCreatorBoard(
           };
         }
         if (tool === "decoration") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return {
             ...prev,
             decorations: [
               ...prev.decorations,
-              { type: selectedDecorationType, pos: mapPoint, variant: 0 },
+              { pos: mapPoint, type: selectedDecorationType, variant: 0 },
             ],
           };
         }
         if (tool === "landmark") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return {
             ...prev,
             decorations: [
               ...prev.decorations,
-              { type: selectedLandmarkType, pos: mapPoint, variant: 0, size: 1.6 },
+              {
+                pos: mapPoint,
+                size: 1.6,
+                type: selectedLandmarkType,
+                variant: 0,
+              },
             ],
           };
         }
         if (tool === "hazard") {
-          if (!isInsideMap(point)) return prev;
+          if (!isInsideMap(point)) {
+            return prev;
+          }
           return {
             ...prev,
             hazards: [
               ...prev.hazards,
-              { type: selectedHazardType, pos: mapPoint, radius: 1.5 },
+              { pos: mapPoint, radius: 1.5, type: selectedHazardType },
             ],
           };
         }
         if (tool === "erase") {
           const target = findSelectionNearPoint(pathPoint, prev, 3.6);
-          if (!target) return prev;
+          if (!target) {
+            return prev;
+          }
           return removeSelection(prev, target);
         }
         return prev;
@@ -192,7 +223,9 @@ export function useCreatorBoard(
 
       if (tool === "select") {
         const currentDraft = draftRef.current;
-        if (!currentDraft) return;
+        if (!currentDraft) {
+          return;
+        }
         const pathPoint2 = normalizePathPoint(point);
         const target = findSelectionNearPoint(pathPoint2, currentDraft, 2.3);
         setSelection(target);
@@ -201,14 +234,20 @@ export function useCreatorBoard(
       if (tool === "special_tower") {
         const currentDraft = draftRef.current;
         if (currentDraft) {
-          setSelection({ kind: "special_tower", index: currentDraft.specialTowers.length - 1 });
+          setSelection({
+            index: currentDraft.specialTowers.length - 1,
+            kind: "special_tower",
+          });
         }
         return;
       }
       if (tool === "tower") {
         const currentDraft = draftRef.current;
         if (currentDraft) {
-          setSelection({ kind: "tower", index: currentDraft.placedTowers.length - 1 });
+          setSelection({
+            index: currentDraft.placedTowers.length - 1,
+            kind: "tower",
+          });
         }
         return;
       }
@@ -216,7 +255,17 @@ export function useCreatorBoard(
         setSelection({ kind: "hero_spawn" });
       }
     },
-    [tool, selectedDecorationType, selectedLandmarkType, selectedHazardType, selectedObjectiveType, selectedTowerType, draftRef, applyDraftUpdate, clearMessages]
+    [
+      tool,
+      selectedDecorationType,
+      selectedLandmarkType,
+      selectedHazardType,
+      selectedObjectiveType,
+      selectedTowerType,
+      draftRef,
+      applyDraftUpdate,
+      clearMessages,
+    ]
   );
 
   const handleBoardPointerDown = useCallback(
@@ -234,15 +283,21 @@ export function useCreatorBoard(
         return;
       }
 
-      if (event.button !== 0) return;
+      if (event.button !== 0) {
+        return;
+      }
 
       const point = getGridPointFromClient(event.clientX, event.clientY);
-      if (!point) return;
+      if (!point) {
+        return;
+      }
       updateHoverPoint(point);
 
       if (tool === "select") {
         const currentDraft = draftRef.current;
-        if (!currentDraft) return;
+        if (!currentDraft) {
+          return;
+        }
         const target = findSelectionNearPoint(point, currentDraft, 2.3);
         setSelection(target);
         return;
@@ -250,14 +305,24 @@ export function useCreatorBoard(
 
       placeAtPoint(point);
     },
-    [tool, camera.pan, setCameraDrag, getGridPointFromClient, updateHoverPoint, draftRef, placeAtPoint]
+    [
+      tool,
+      camera.pan,
+      setCameraDrag,
+      getGridPointFromClient,
+      updateHoverPoint,
+      draftRef,
+      placeAtPoint,
+    ]
   );
 
   const handleBoardPointerMove = useCallback(
     (event: React.PointerEvent<SVGSVGElement>): void => {
       if (cameraDrag && event.pointerId === cameraDrag.pointerId) {
         const metrics = getBoardRenderMetrics(boardRef.current);
-        if (!metrics) return;
+        if (!metrics) {
+          return;
+        }
         const deltaX = event.clientX - cameraDrag.startClientX;
         const deltaY = event.clientY - cameraDrag.startClientY;
         const panDeltaX = -(deltaX / metrics.renderWidth) * viewBoxWidth;
@@ -271,11 +336,25 @@ export function useCreatorBoard(
 
       const point = getGridPointFromClient(event.clientX, event.clientY);
       updateHoverPoint(point);
-      if (!dragTarget || !point) return;
+      if (!dragTarget || !point) {
+        return;
+      }
 
-      applyDraftUpdate((prev) => applySelectionPointUpdate(prev, dragTarget, point));
+      applyDraftUpdate((prev) =>
+        applySelectionPointUpdate(prev, dragTarget, point)
+      );
     },
-    [cameraDrag, dragTarget, viewBoxWidth, viewBoxHeight, getBoardRenderMetrics, setPan, getGridPointFromClient, updateHoverPoint, applyDraftUpdate]
+    [
+      cameraDrag,
+      dragTarget,
+      viewBoxWidth,
+      viewBoxHeight,
+      getBoardRenderMetrics,
+      setPan,
+      getGridPointFromClient,
+      updateHoverPoint,
+      applyDraftUpdate,
+    ]
   );
 
   const handleBoardPointerUp = useCallback(
@@ -299,7 +378,9 @@ export function useCreatorBoard(
     (event: React.WheelEvent<SVGSVGElement>): void => {
       event.preventDefault();
       const zoomDelta = event.deltaY > 0 ? -0.08 : 0.08;
-      setZoom((prev) => clamp(Number((prev + zoomDelta).toFixed(2)), 0.55, 2.5));
+      setZoom((prev) =>
+        clamp(Number((prev + zoomDelta).toFixed(2)), 0.55, 2.5)
+      );
     },
     [setZoom]
   );
@@ -309,11 +390,17 @@ export function useCreatorBoard(
       event.preventDefault();
       setIsBoardDragOver(false);
       const point = getGridPointFromClient(event.clientX, event.clientY);
-      if (!point) return;
+      if (!point) {
+        return;
+      }
       updateHoverPoint(point);
 
-      const rawPayload = event.dataTransfer.getData("application/princeton-td-asset");
-      if (!rawPayload) return;
+      const rawPayload = event.dataTransfer.getData(
+        "application/princeton-td-asset"
+      );
+      if (!rawPayload) {
+        return;
+      }
 
       let payload: PaletteDragPayload | null = null;
       try {
@@ -321,18 +408,26 @@ export function useCreatorBoard(
       } catch {
         payload = null;
       }
-      if (!payload) return;
+      if (!payload) {
+        return;
+      }
 
       clearMessages();
       applyDraftUpdate((prev) => {
-        if (!isInsideMap(point)) return prev;
+        if (!isInsideMap(point)) {
+          return prev;
+        }
         const mapPoint = normalizeMapPoint(point);
         if (payload.kind === "decoration") {
           return {
             ...prev,
             decorations: [
               ...prev.decorations,
-              { type: payload.value as DecorationCategory, pos: mapPoint, variant: 0 },
+              {
+                pos: mapPoint,
+                type: payload.value as DecorationCategory,
+                variant: 0,
+              },
             ],
           };
         }
@@ -342,10 +437,10 @@ export function useCreatorBoard(
             decorations: [
               ...prev.decorations,
               {
-                type: payload.value as DecorationCategory,
                 pos: mapPoint,
-                variant: 0,
                 size: 1.6,
+                type: payload.value as DecorationCategory,
+                variant: 0,
               },
             ],
           };
@@ -372,7 +467,7 @@ export function useCreatorBoard(
           ...prev,
           hazards: [
             ...prev.hazards,
-            { type: payload.value as HazardType, pos: mapPoint, radius: 1.5 },
+            { pos: mapPoint, radius: 1.5, type: payload.value as HazardType },
           ],
         };
       });
@@ -380,22 +475,36 @@ export function useCreatorBoard(
       if (payload.kind === "objective") {
         const currentDraft = draftRef.current;
         if (currentDraft) {
-          setSelection({ kind: "special_tower", index: currentDraft.specialTowers.length - 1 });
+          setSelection({
+            index: currentDraft.specialTowers.length - 1,
+            kind: "special_tower",
+          });
         }
       } else if (payload.kind === "tower") {
         const currentDraft = draftRef.current;
         if (currentDraft) {
-          setSelection({ kind: "tower", index: currentDraft.placedTowers.length - 1 });
+          setSelection({
+            index: currentDraft.placedTowers.length - 1,
+            kind: "tower",
+          });
         }
       }
     },
-    [getGridPointFromClient, updateHoverPoint, clearMessages, applyDraftUpdate, draftRef]
+    [
+      getGridPointFromClient,
+      updateHoverPoint,
+      clearMessages,
+      applyDraftUpdate,
+      draftRef,
+    ]
   );
 
   const handleBoardDragOver = useCallback(
     (event: React.DragEvent<SVGSVGElement>): void => {
       event.preventDefault();
-      if (!isBoardDragOver) setIsBoardDragOver(true);
+      if (!isBoardDragOver) {
+        setIsBoardDragOver(true);
+      }
       const point = getGridPointFromClient(event.clientX, event.clientY);
       updateHoverPoint(point);
     },
@@ -421,20 +530,20 @@ export function useCreatorBoard(
 
   return {
     boardRef,
-    selection,
-    setSelection,
+    clearSelection,
     dragTarget,
-    hoverPoint,
-    isBoardDragOver,
+    handleBoardDragLeave,
+    handleBoardDragOver,
     handleBoardPointerDown,
+    handleBoardPointerLeave,
     handleBoardPointerMove,
     handleBoardPointerUp,
-    handleBoardPointerLeave,
     handleBoardWheel,
     handleDropOnBoard,
-    handleBoardDragOver,
-    handleBoardDragLeave,
+    hoverPoint,
+    isBoardDragOver,
+    selection,
+    setSelection,
     startDragTarget,
-    clearSelection,
   };
 }

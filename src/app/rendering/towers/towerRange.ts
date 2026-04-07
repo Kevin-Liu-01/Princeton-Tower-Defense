@@ -1,6 +1,14 @@
-import type { Tower, DraggingTower, Position, TowerType } from "../../types";
-import { TILE_SIZE, TOWER_DATA, TOWER_COLORS, LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "../../constants";
+import {
+  TILE_SIZE,
+  TOWER_DATA,
+  TOWER_COLORS,
+  LEVEL_2_RANGE_MULT,
+  LEVEL_3_RANGE_MULT,
+  LEVEL_4_RANGE_MULT,
+} from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
+import { getGameSettings } from "../../hooks/useSettings";
+import type { Tower, DraggingTower, Position, TowerType } from "../../types";
 import {
   gridToWorld,
   worldToScreen,
@@ -8,16 +16,15 @@ import {
   isValidBuildPosition,
   isoTileDiamondHalfH,
 } from "../../utils";
-import { drawGroundTransition } from "./towerHelpers";
 import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
-import { getGameSettings } from "../../hooks/useSettings";
-import { renderCannonTower } from "./cannon";
-import { renderLibraryTower } from "./library";
-import { renderLabTower } from "./lab";
 import { renderArchTower } from "./arch";
+import { renderCannonTower } from "./cannon";
 import { renderClubTower } from "./club";
-import { renderStationTower } from "./station";
+import { renderLabTower } from "./lab";
+import { renderLibraryTower } from "./library";
 import { renderMortarTower } from "./mortar";
+import { renderStationTower } from "./station";
+import { drawGroundTransition } from "./towerHelpers";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,
@@ -26,9 +33,11 @@ export function renderStationRange(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
-  if (!tower.isHovered && !tower.selected) return;
+  if (!tower.isHovered && !tower.selected) {
+    return;
+  }
 
   const baseRange = tower.spawnRange || 180;
   const rangeBoost = tower.rangeBoost || 1;
@@ -42,18 +51,18 @@ export function renderStationRange(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   screenPos.y -= isoTileDiamondHalfH(zoom);
 
   renderRangeReticle(ctx, {
-    x: screenPos.x,
-    y: screenPos.y,
-    range,
-    zoom,
-    state: tower.isHovered ? "hovered" : "normal",
     color: isBoosted ? RETICLE_COLORS.cyan : RETICLE_COLORS.orange,
     dashed: true,
+    range,
+    state: tower.isHovered ? "hovered" : "normal",
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom,
   });
 }
 
@@ -64,10 +73,12 @@ export function renderTowerRange(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   const tData = TOWER_DATA[tower.type];
-  if (tData.range <= 0) return;
+  if (tData.range <= 0) {
+    return;
+  }
   const zoom = cameraZoom || 1;
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreen(
@@ -76,15 +87,20 @@ export function renderTowerRange(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   screenPos.y -= isoTileDiamondHalfH(zoom);
 
-  let range = tData.range;
-  if (tower.level === 2) range *= LEVEL_2_RANGE_MULT;
+  let { range } = tData;
+  if (tower.level === 2) {
+    range *= LEVEL_2_RANGE_MULT;
+  }
   if (tower.level === 3) {
-    if (tower.type === "library" && tower.upgrade === "B") range *= LEVEL_4_RANGE_MULT;
-    else range *= LEVEL_3_RANGE_MULT;
+    if (tower.type === "library" && tower.upgrade === "B") {
+      range *= LEVEL_4_RANGE_MULT;
+    } else {
+      range *= LEVEL_3_RANGE_MULT;
+    }
   }
   if (tower.level >= 4 && tower.upgrade) {
     const towerStats = TOWER_STATS[tower.type];
@@ -99,12 +115,14 @@ export function renderTowerRange(
 
   const hasRangeBuff = (tower.rangeBoost || 1) > 1;
 
-  let rangeMod = 1.0;
+  let rangeMod = 1;
   let hasRangeDebuff = false;
   const now = Date.now();
   if (tower.debuffs && tower.debuffs.length > 0) {
     for (const debuff of tower.debuffs) {
-      if (now >= debuff.until) continue;
+      if (now >= debuff.until) {
+        continue;
+      }
       if (debuff.type === "blind") {
         rangeMod *= 1 - debuff.intensity;
         hasRangeDebuff = true;
@@ -114,19 +132,19 @@ export function renderTowerRange(
   range *= rangeMod;
 
   const state = hasRangeDebuff
-    ? "debuffed" as const
+    ? ("debuffed" as const)
     : hasRangeBuff
-      ? "buffed" as const
+      ? ("buffed" as const)
       : tower.isHovered
-        ? "hovered" as const
-        : "normal" as const;
+        ? ("hovered" as const)
+        : ("normal" as const);
 
   renderRangeReticle(ctx, {
+    range,
+    state,
     x: screenPos.x,
     y: screenPos.y,
-    range,
     zoom: cameraZoom || 1,
-    state,
   });
 }
 // ============================================================================
@@ -137,7 +155,10 @@ let _previewCanvas: HTMLCanvasElement | null = null;
 let _previewCtx: CanvasRenderingContext2D | null = null;
 const PREVIEW_CANVAS_SIZE = 600;
 
-function getPreviewCtx(): { ctx: CanvasRenderingContext2D; canvas: HTMLCanvasElement } {
+function getPreviewCtx(): {
+  ctx: CanvasRenderingContext2D;
+  canvas: HTMLCanvasElement;
+} {
   if (!_previewCanvas) {
     _previewCanvas = document.createElement("canvas");
     _previewCanvas.width = PREVIEW_CANVAS_SIZE;
@@ -145,7 +166,7 @@ function getPreviewCtx(): { ctx: CanvasRenderingContext2D; canvas: HTMLCanvasEle
     _previewCtx = _previewCanvas.getContext("2d")!;
   }
   _previewCtx!.clearRect(0, 0, PREVIEW_CANVAS_SIZE, PREVIEW_CANVAS_SIZE);
-  return { ctx: _previewCtx!, canvas: _previewCanvas };
+  return { canvas: _previewCanvas, ctx: _previewCtx! };
 }
 
 function renderTowerOnCtx(
@@ -153,40 +174,76 @@ function renderTowerOnCtx(
   screenPos: Position,
   type: TowerType,
   zoom: number,
-  time: number,
+  time: number
 ): void {
   const tower: Tower = {
     id: "__preview__",
-    type,
-    pos: { x: 0, y: 0 },
-    level: 1,
     lastAttack: 0,
-    rotation: type === "cannon" ? Math.PI * 0.75 : type === "mortar" ? -Math.PI * 0.5 : 0,
+    level: 1,
+    pos: { x: 0, y: 0 },
+    rotation:
+      type === "cannon"
+        ? Math.PI * 0.75
+        : type === "mortar"
+          ? -Math.PI * 0.5
+          : 0,
+    type,
   };
   const colors = TOWER_COLORS[type];
 
   switch (type) {
-    case "cannon":
-      renderCannonTower(ctx, screenPos, tower, zoom, time, colors, [], "", 0, 0, 1);
+    case "cannon": {
+      renderCannonTower(
+        ctx,
+        screenPos,
+        tower,
+        zoom,
+        time,
+        colors,
+        [],
+        "",
+        0,
+        0,
+        1
+      );
       break;
-    case "library":
+    }
+    case "library": {
       renderLibraryTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "lab":
-      renderLabTower(ctx, screenPos, tower, zoom, time, colors, [], "", 0, 0, 1);
+    }
+    case "lab": {
+      renderLabTower(
+        ctx,
+        screenPos,
+        tower,
+        zoom,
+        time,
+        colors,
+        [],
+        "",
+        0,
+        0,
+        1
+      );
       break;
-    case "arch":
+    }
+    case "arch": {
       renderArchTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "club":
+    }
+    case "club": {
       renderClubTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "station":
+    }
+    case "station": {
       renderStationTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "mortar":
+    }
+    case "mortar": {
       renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
       break;
+    }
   }
 }
 
@@ -202,7 +259,7 @@ export function renderTowerPreview(
   gridHeight: number = 10,
   cameraOffset?: Position,
   cameraZoom?: number,
-  blockedPositions?: Set<string>,
+  blockedPositions?: Set<string>
 ) {
   const zoom = cameraZoom || 1;
   const width = canvasWidth / dpr;
@@ -225,7 +282,7 @@ export function renderTowerPreview(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   screenPos.y -= isoTileDiamondHalfH(zoom);
 
@@ -238,7 +295,7 @@ export function renderTowerPreview(
     gridHeight,
     40,
     blockedPositions,
-    dragging.type,
+    dragging.type
   );
 
   // Single base indicator at the anchor cell (footprint logic is handled by validation)
@@ -253,7 +310,7 @@ export function renderTowerPreview(
     16 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -269,7 +326,7 @@ export function renderTowerPreview(
     16 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -278,7 +335,13 @@ export function renderTowerPreview(
   const center = PREVIEW_CANVAS_SIZE / 2;
   const time = Date.now() / 1000;
 
-  renderTowerOnCtx(tCtx, { x: center, y: center }, dragging.type as TowerType, zoom, time);
+  renderTowerOnCtx(
+    tCtx,
+    { x: center, y: center },
+    dragging.type as TowerType,
+    zoom,
+    time
+  );
 
   // Tint the entire drawn content green or red
   tCtx.globalCompositeOperation = "source-atop";
@@ -296,29 +359,29 @@ export function renderTowerPreview(
     const tData = TOWER_DATA[dragging.type];
     if (tData.range > 0) {
       renderRangeReticle(ctx, {
+        color: isValid ? RETICLE_COLORS.blue : RETICLE_COLORS.red,
+        dashed: true,
+        fillAlpha: 0,
+        range: tData.range,
+        state: "preview",
+        strokeAlpha: 0.6,
         x: screenPos.x,
         y: screenPos.y,
-        range: tData.range,
         zoom,
-        state: "preview",
-        color: isValid ? RETICLE_COLORS.blue : RETICLE_COLORS.red,
-        fillAlpha: 0,
-        strokeAlpha: 0.6,
-        dashed: true,
       });
     }
 
     if (dragging.type === "station" && tData.spawnRange) {
       renderRangeReticle(ctx, {
+        color: isValid ? RETICLE_COLORS.gold : RETICLE_COLORS.red,
+        dashed: true,
+        fillAlpha: 0,
+        range: tData.spawnRange,
+        state: "preview",
+        strokeAlpha: 0.5,
         x: screenPos.x,
         y: screenPos.y,
-        range: tData.spawnRange,
         zoom,
-        state: "preview",
-        color: isValid ? RETICLE_COLORS.gold : RETICLE_COLORS.red,
-        fillAlpha: 0,
-        strokeAlpha: 0.5,
-        dashed: true,
       });
     }
   }
@@ -332,7 +395,7 @@ export function renderTowerGroundTransition(
   dpr: number,
   selectedMap: string,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreenRounded(
@@ -341,7 +404,7 @@ export function renderTowerGroundTransition(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;

@@ -2,11 +2,11 @@
 
 import React, { useMemo, useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { GameState, Enemy, Position, DeathCause } from "../../types";
-import { LEVEL_DATA } from "../../constants";
+
 import { DevConfigMenu } from "../../components/ui/DevConfigMenu";
+import { LEVEL_DATA } from "../../constants";
+import type { GameState, Enemy, Position, DeathCause } from "../../types";
 import type { GameProgress } from "../useLocalStorage";
-import type { DevPerfSnapshot } from "./gameLoop";
 import {
   lockLevelImpl,
   unlockAllLevelsImpl,
@@ -20,6 +20,7 @@ import {
   killAllEnemiesImpl,
   instantLoseImpl,
 } from "./devMenuCallbacks";
+import type { DevPerfSnapshot } from "./gameLoop";
 
 export interface DevMenuSetupDeps {
   isDevMode: boolean;
@@ -41,7 +42,12 @@ export interface DevMenuSetupDeps {
   setLives: Dispatch<SetStateAction<number>>;
   clearAllTimers: () => void;
   clearEnemies: () => void;
-  onEnemyKill: (enemy: Enemy, pos: Position, particleCount: number, deathCause: DeathCause) => void;
+  onEnemyKill: (
+    enemy: Enemy,
+    pos: Position,
+    particleCount: number,
+    deathCause: DeathCause
+  ) => void;
   unlockLevel: (id: string) => void;
   setHoveredWaveBubblePathKey: Dispatch<SetStateAction<string | null>>;
   setWaveInProgress: Dispatch<SetStateAction<boolean>>;
@@ -57,15 +63,32 @@ export interface DevMenuSetupResult {
 
 export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
   const {
-    isDevMode, gameState, battleOutcome, progress,
-    devPerfEnabled, setDevPerfEnabled, devPerfSnapshot,
-    photoModeEnabled, setPhotoModeEnabled,
-    currentWave, totalWaves, waveInProgress,
-    enemies, selectedMap,
-    setProgress, addPawPoints, setLives,
-    clearAllTimers, clearEnemies, onEnemyKill, unlockLevel,
-    setHoveredWaveBubblePathKey, setWaveInProgress,
-    setNextWaveTimer, setCurrentWave, setIsDevModeUnlocked,
+    isDevMode,
+    gameState,
+    battleOutcome,
+    progress,
+    devPerfEnabled,
+    setDevPerfEnabled,
+    devPerfSnapshot,
+    photoModeEnabled,
+    setPhotoModeEnabled,
+    currentWave,
+    totalWaves,
+    waveInProgress,
+    enemies,
+    selectedMap,
+    setProgress,
+    addPawPoints,
+    setLives,
+    clearAllTimers,
+    clearEnemies,
+    onEnemyKill,
+    unlockLevel,
+    setHoveredWaveBubblePathKey,
+    setWaveInProgress,
+    setNextWaveTimer,
+    setCurrentWave,
+    setIsDevModeUnlocked,
   } = deps;
 
   const devLevelOptions = useMemo(
@@ -73,69 +96,117 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
       Object.entries(LEVEL_DATA)
         .map(([id, levelData]) => ({ id, name: levelData?.name ?? id }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [],
+    []
   );
 
   const unlockAllLevels = useCallback(
-    () => unlockAllLevelsImpl(setProgress), [setProgress],
+    () => unlockAllLevelsImpl(setProgress),
+    [setProgress]
   );
   const lockLevel = useCallback(
-    (levelId: string) => lockLevelImpl(setProgress, levelId), [setProgress],
+    (levelId: string) => lockLevelImpl(setProgress, levelId),
+    [setProgress]
   );
   const setLevelStars = useCallback(
-    (levelId: string, stars: number) => setLevelStarsImpl(setProgress, levelId, stars), [setProgress],
+    (levelId: string, stars: number) =>
+      setLevelStarsImpl(setProgress, levelId, stars),
+    [setProgress]
   );
   const replaceProgress = useCallback(
-    (candidate: unknown) => replaceProgressImpl(setProgress, candidate), [setProgress],
+    (candidate: unknown) => replaceProgressImpl(setProgress, candidate),
+    [setProgress]
   );
   const grantPawPoints = useCallback(
-    (amount: number) => grantPawPointsImpl(addPawPoints, amount), [addPawPoints],
+    (amount: number) => grantPawPointsImpl(addPawPoints, amount),
+    [addPawPoints]
   );
   const adjustLives = useCallback(
-    (delta: number) => adjustLivesImpl(setLives, delta), [],
+    (delta: number) => adjustLivesImpl(setLives, delta),
+    []
   );
   const instantVictory = useCallback(
-    () => instantVictoryImpl({
-      gameState, battleOutcome, totalWaves, clearAllTimers,
-      setHoveredWaveBubblePathKey, setWaveInProgress, setNextWaveTimer,
-      setCurrentWave, clearEnemies,
-    }),
-    [gameState, battleOutcome, clearAllTimers, clearEnemies, totalWaves],
+    () =>
+      instantVictoryImpl({
+        battleOutcome,
+        clearAllTimers,
+        clearEnemies,
+        gameState,
+        setCurrentWave,
+        setHoveredWaveBubblePathKey,
+        setNextWaveTimer,
+        setWaveInProgress,
+        totalWaves,
+      }),
+    [gameState, battleOutcome, clearAllTimers, clearEnemies, totalWaves]
   );
   const skipWave = useCallback(
-    () => skipWaveImpl({
-      gameState, battleOutcome, currentWave, totalWaves,
-      clearAllTimers, clearEnemies, setWaveInProgress,
-      setCurrentWave, setNextWaveTimer,
-    }),
-    [gameState, battleOutcome, currentWave, totalWaves, clearAllTimers, clearEnemies],
+    () =>
+      skipWaveImpl({
+        battleOutcome,
+        clearAllTimers,
+        clearEnemies,
+        currentWave,
+        gameState,
+        setCurrentWave,
+        setNextWaveTimer,
+        setWaveInProgress,
+        totalWaves,
+      }),
+    [
+      gameState,
+      battleOutcome,
+      currentWave,
+      totalWaves,
+      clearAllTimers,
+      clearEnemies,
+    ]
   );
   const skipToWave = useCallback(
-    (targetWave: number) => skipToWaveImpl({
-      gameState, battleOutcome, totalWaves,
-      clearAllTimers, clearEnemies, setWaveInProgress,
-      setCurrentWave, setNextWaveTimer,
-    }, targetWave),
-    [gameState, battleOutcome, totalWaves, clearAllTimers, clearEnemies],
+    (targetWave: number) =>
+      skipToWaveImpl(
+        {
+          battleOutcome,
+          clearAllTimers,
+          clearEnemies,
+          gameState,
+          setCurrentWave,
+          setNextWaveTimer,
+          setWaveInProgress,
+          totalWaves,
+        },
+        targetWave
+      ),
+    [gameState, battleOutcome, totalWaves, clearAllTimers, clearEnemies]
   );
   const killAllEnemies = useCallback(
-    () => killAllEnemiesImpl({
-      gameState, battleOutcome, enemies, selectedMap,
-      onEnemyKill, clearEnemies,
-    }),
-    [gameState, battleOutcome, enemies, selectedMap, onEnemyKill, clearEnemies],
+    () =>
+      killAllEnemiesImpl({
+        battleOutcome,
+        clearEnemies,
+        enemies,
+        gameState,
+        onEnemyKill,
+        selectedMap,
+      }),
+    [gameState, battleOutcome, enemies, selectedMap, onEnemyKill, clearEnemies]
   );
   const instantLose = useCallback(
-    () => instantLoseImpl({
-      gameState, battleOutcome, clearAllTimers,
-      setHoveredWaveBubblePathKey, setWaveInProgress,
-      setNextWaveTimer, setLives,
-    }),
-    [gameState, battleOutcome, clearAllTimers],
+    () =>
+      instantLoseImpl({
+        battleOutcome,
+        clearAllTimers,
+        gameState,
+        setHoveredWaveBubblePathKey,
+        setLives,
+        setNextWaveTimer,
+        setWaveInProgress,
+      }),
+    [gameState, battleOutcome, clearAllTimers]
   );
 
   const handleDevModeChange = useCallback(
-    (enabled: boolean) => setIsDevModeUnlocked(enabled), [],
+    (enabled: boolean) => setIsDevModeUnlocked(enabled),
+    []
   );
 
   const devConfigMenu = isDevMode ? (

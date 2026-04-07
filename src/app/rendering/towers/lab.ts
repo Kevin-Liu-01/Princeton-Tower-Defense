@@ -1,12 +1,16 @@
-import type { Tower, Enemy, Position } from "../../types";
 import { ISO_PRISM_D_FACTOR } from "../../constants";
-import { drawIsometricPrism, drawIsoOctPrism, drawIsometricRailing } from "./towerHelpers";
+import type { Tower, Enemy, Position } from "../../types";
 import { drawIsoFlushVent, traceIsoFlushRect } from "../isoFlush";
 import {
   renderTeslaCoil,
   renderFocusedBeam,
   renderChainLightning,
 } from "./tesla";
+import {
+  drawIsometricPrism,
+  drawIsoOctPrism,
+  drawIsometricRailing,
+} from "./towerHelpers";
 
 export function renderLabTower(
   ctx: CanvasRenderingContext2D,
@@ -21,7 +25,7 @@ export function renderLabTower(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   ctx.save();
   // Shift tower up to center on placement position
@@ -38,39 +42,39 @@ export function renderLabTower(
   const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
 
   const fnd1 = {
-    top: uc("#3a2a1a", "#302845", "#1a2a3a"),
     left: uc("#302218", "#28203a", "#122230"),
-    right: uc("#281a0a", "#201832", "#0a1a28"),
     leftBack: uc("#3d2d1d", "#332b48", "#1d2d3d"),
+    right: uc("#281a0a", "#201832", "#0a1a28"),
     rightBack: uc("#352515", "#2b2340", "#152535"),
+    top: uc("#3a2a1a", "#302845", "#1a2a3a"),
   };
   const fnd2 = {
-    top: uc("#45351a", "#3a3050", "#1a3545"),
     left: uc("#3d2d14", "#322848", "#142d3d"),
-    right: uc("#35250e", "#2a2040", "#0e2535"),
     leftBack: uc("#48381d", "#3d3353", "#1d3848"),
+    right: uc("#35250e", "#2a2040", "#0e2535"),
     rightBack: uc("#403017", "#352b4b", "#173040"),
+    top: uc("#45351a", "#3a3050", "#1a3545"),
   };
   const fnd3 = {
-    top: uc("#4f3a1a", "#40355a", "#1a3a4f"),
     left: uc("#403015", "#382d50", "#153040"),
-    right: uc("#352510", "#302548", "#102535"),
     leftBack: uc("#55401d", "#43385d", "#1d4055"),
+    right: uc("#352510", "#302548", "#102535"),
     rightBack: uc("#483518", "#3b3055", "#183548"),
+    top: uc("#4f3a1a", "#40355a", "#1a3a4f"),
   };
   const bodyC = {
-    top: uc("#9b7a4d", "#8878b8", "#4d7a9b"),
     left: uc("#856a3a", "#7868a8", "#3a6585"),
-    right: uc("#7b5a2d", "#685898", "#2d5a7b"),
     leftBack: uc("#95754a", "#8575b5", "#4a7595"),
+    right: uc("#7b5a2d", "#685898", "#2d5a7b"),
     rightBack: uc("#88683d", "#7565a5", "#3d6888"),
+    top: uc("#9b7a4d", "#8878b8", "#4d7a9b"),
   };
   const railRgb = uc("123, 90, 45", "110, 85, 150", "45, 90, 123");
   const railC = {
-    rail: uc("#8a6a2a", "#7a58a8", "#2a6a8a"),
-    topRail: uc("#aa8a3a", "#9a78c0", "#3a8aaa"),
     backPanel: `rgba(${railRgb}, 0.35)`,
     frontPanel: `rgba(${railRgb}, 0.25)`,
+    rail: uc("#8a6a2a", "#7a58a8", "#2a6a8a"),
+    topRail: uc("#aa8a3a", "#9a78c0", "#3a8aaa"),
   };
   const energy1 = uc("#ffaa00", "#b080ff", "#00ccff");
   const energy2 = uc("#ffcc00", "#c8a0ff", "#00ffff");
@@ -87,22 +91,22 @@ export function renderLabTower(
 
   // Structural metal palette
   const sm = {
-    darkest: uc("#4d3a2d", "#3d2868", "#2d4a6a"),
-    dark: uc("#5a4a3a", "#4a3878", "#3a5a7a"),
-    mid: uc("#6a5a3a", "#5a4888", "#3a6a8a"),
-    main: uc("#8a7a5a", "#7a68a8", "#5a8aaa"),
     alt: uc("#7a6a4a", "#6a5898", "#4a7a9a"),
-    light: uc("#9a8a6a", "#8a78b8", "#6a9aba"),
-    lighter: uc("#aa9a7a", "#9a88c8", "#7aaaba"),
     bolt: uc("#8a7a6a", "#7a68a8", "#6a8aaa"),
     boltDk: uc("#6a5a4a", "#5a4888", "#4a6a8a"),
-    boltMd: uc("#7a6a5a", "#6a5898", "#5a7a9a"),
     boltLt: uc("#9a8a70", "#8a78a8", "#7a9ab0"),
-    xbrace: uc("#706040", "#604080", "#4a7090"),
-    rod: uc("#ccaa88", "#a898cc", "#8ab8cc"),
+    boltMd: uc("#7a6a5a", "#6a5898", "#5a7a9a"),
+    dark: uc("#5a4a3a", "#4a3878", "#3a5a7a"),
+    darkest: uc("#4d3a2d", "#3d2868", "#2d4a6a"),
     insRod: uc("#a09070", "#8a78a8", "#7aa0b0"),
     jbox: uc("#5a4a2a", "#3a2870", "#2a5a7a"),
     jboxAlt: uc("#55452a", "#352868", "#2a5a75"),
+    light: uc("#9a8a6a", "#8a78b8", "#6a9aba"),
+    lighter: uc("#aa9a7a", "#9a88c8", "#7aaaba"),
+    main: uc("#8a7a5a", "#7a68a8", "#5a8aaa"),
+    mid: uc("#6a5a3a", "#5a4888", "#3a6a8a"),
+    rod: uc("#ccaa88", "#a898cc", "#8ab8cc"),
+    xbrace: uc("#706040", "#604080", "#4a7090"),
   };
   const seamRgb = uc("70, 55, 30", "50, 30, 70", "30, 70, 100");
   const seamHiRgb = uc("160, 130, 80", "130, 100, 180", "100, 160, 200");
@@ -114,13 +118,13 @@ export function renderLabTower(
   const beaconLens = uc("255, 220, 150", "220, 200, 255", "150, 230, 255");
   const radC = {
     dark: uc("#3a2a1a", "#2a1840", "#153d5a"),
+    fin: uc("70, 55, 30", "50, 30, 70", "30, 80, 120"),
     mid: uc("#4a3a1a", "#3a284a", "#1a4a6a"),
     top: uc("#5a4a2a", "#3a2870", "#2a5a7a"),
-    fin: uc("70, 55, 30", "50, 30, 70", "30, 80, 120"),
   };
   const ventC = {
-    frame: uc("#352a1a", "#251840", "#1a3545"),
     bg: uc("#201a0a", "#150828", "#0a2030"),
+    frame: uc("#352a1a", "#251840", "#1a3545"),
     slat: uc("#55452a", "#3a2860", "#2a5a75"),
   };
 
@@ -138,7 +142,7 @@ export function renderLabTower(
     fnd1.top,
     fnd1.left,
     fnd1.right,
-    zoom,
+    zoom
   );
 
   // Middle step — reinforced platform
@@ -152,7 +156,7 @@ export function renderLabTower(
     fnd2.top,
     fnd2.left,
     fnd2.right,
-    zoom,
+    zoom
   );
 
   // Upper step — main platform with hazard trim
@@ -166,7 +170,7 @@ export function renderLabTower(
     fnd3.top,
     fnd3.left,
     fnd3.right,
-    zoom,
+    zoom
   );
 
   // Cyan edge glow on upper step
@@ -251,7 +255,7 @@ export function renderLabTower(
     baseWidth,
     baseHeight - 6,
     bodyC,
-    zoom,
+    zoom
   );
 
   // ========== BASE RAILING (3D isometric ring wrapping the base) ==========
@@ -265,7 +269,7 @@ export function renderLabTower(
     32,
     16,
     railC,
-    zoom,
+    zoom
   );
 
   // ========== FACE DETAILS (panel seams, rivets, weathering) ==========
@@ -358,7 +362,7 @@ export function renderLabTower(
     screenPos.x - w * 0.5,
     screenPos.y + 2 * zoom,
     screenPos.x - w * 0.5,
-    bodyTopY,
+    bodyTopY
   );
   leftLabWeather.addColorStop(0, "rgba(0, 0, 0, 0.12)");
   leftLabWeather.addColorStop(0.4, "rgba(0, 0, 0, 0.03)");
@@ -383,11 +387,11 @@ export function renderLabTower(
     ctx.moveTo(strutX + side * 0.5 * zoom, strutBotY + 0.5 * zoom);
     ctx.lineTo(
       strutX + side * 2 * zoom + 0.5 * zoom,
-      strutBotY + d * 0.12 + 0.5 * zoom,
+      strutBotY + d * 0.12 + 0.5 * zoom
     );
     ctx.lineTo(
       strutX + side * 2 * zoom + 0.5 * zoom,
-      strutTopY + d * 0.12 + 0.5 * zoom,
+      strutTopY + d * 0.12 + 0.5 * zoom
     );
     ctx.lineTo(strutX + side * 0.5 * zoom, strutTopY + 0.5 * zoom);
     ctx.closePath();
@@ -419,7 +423,7 @@ export function renderLabTower(
         1 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -463,7 +467,7 @@ export function renderLabTower(
       ringRadius * 0.4 * zoom,
       ringRotation + ring * 0.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -524,11 +528,11 @@ export function renderLabTower(
       ctx.beginPath();
       ctx.moveTo(
         clX + Math.cos(pAngle) * 2.2 * zoom,
-        clY + Math.sin(pAngle) * 2.2 * zoom,
+        clY + Math.sin(pAngle) * 2.2 * zoom
       );
       ctx.lineTo(
         clX - Math.cos(pAngle) * 2.2 * zoom,
-        clY - Math.sin(pAngle) * 2.2 * zoom,
+        clY - Math.sin(pAngle) * 2.2 * zoom
       );
       ctx.stroke();
     }
@@ -617,7 +621,7 @@ export function renderLabTower(
       by: number,
       thickness: number,
       color: string,
-      highlightAlpha: number,
+      highlightAlpha: number
     ) => {
       ctx.strokeStyle = "rgba(0,0,0,0.25)";
       ctx.lineWidth = (thickness + 1.2) * zoom;
@@ -645,7 +649,7 @@ export function renderLabTower(
       bx: number,
       by: number,
       radius: number,
-      glow: boolean,
+      glow: boolean
     ) => {
       ctx.fillStyle = sm.bolt;
       ctx.beginPath();
@@ -683,7 +687,7 @@ export function renderLabTower(
       labPostTop[3].y,
       2.2,
       sm.dark,
-      0,
+      0
     );
     drawLabBeam(
       labPostBase[0].x,
@@ -692,7 +696,7 @@ export function renderLabTower(
       labPostTop[0].y,
       2.2,
       sm.dark,
-      0.03,
+      0.03
     );
 
     // Back X-braces
@@ -717,7 +721,7 @@ export function renderLabTower(
       labPostTop[1].y,
       2.8,
       sm.main,
-      0.08,
+      0.08
     );
     drawLabBeam(
       labPostBase[2].x,
@@ -726,7 +730,7 @@ export function renderLabTower(
       labPostTop[2].y,
       2.5,
       sm.alt,
-      0.06,
+      0.06
     );
 
     // --- Front horizontal beams (edges 0->1 and 1->2) ---
@@ -770,7 +774,7 @@ export function renderLabTower(
           jx,
           jy,
           isFront ? 2.2 : 1.5,
-          isFront && frac > 0 && frac < 1,
+          isFront && frac > 0 && frac < 1
         );
       }
     }
@@ -796,7 +800,7 @@ export function renderLabTower(
         (cLStart.x + cLEnd.x) / 2,
         (cLStart.y + cLEnd.y) / 2 + sag,
         cLEnd.x,
-        cLEnd.y,
+        cLEnd.y
       );
       ctx.stroke();
 
@@ -819,7 +823,7 @@ export function renderLabTower(
         (cRStart.x + cREnd.x) / 2,
         (cRStart.y + cREnd.y) / 2 + sag,
         cREnd.x,
-        cREnd.y,
+        cREnd.y
       );
       ctx.stroke();
 
@@ -831,12 +835,12 @@ export function renderLabTower(
 
     // --- Capacitor banks mounted at scaffolding joints ---
     const capPositions = [
-      { post: 0, frac: 0.35, face: -1 },
-      { post: 2, frac: 0.35, face: 1 },
+      { face: -1, frac: 0.35, post: 0 },
+      { face: 1, frac: 0.35, post: 2 },
       ...(tower.level >= 3
         ? [
-            { post: 0, frac: 0.65, face: -1 },
-            { post: 2, frac: 0.65, face: 1 },
+            { face: -1, frac: 0.65, post: 0 },
+            { face: 1, frac: 0.65, post: 2 },
           ]
         : []),
     ];
@@ -891,7 +895,7 @@ export function renderLabTower(
         capD * 0.7,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -903,7 +907,7 @@ export function renderLabTower(
         capY - capHt - capD * 0.2,
         1 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -912,7 +916,7 @@ export function renderLabTower(
         capY - capHt - capD * 0.2,
         1 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -943,7 +947,7 @@ export function renderLabTower(
         4 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -961,7 +965,7 @@ export function renderLabTower(
           mcRadius * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.closePath();
         ctx.fill();
@@ -974,7 +978,7 @@ export function renderLabTower(
           mcRadius * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.closePath();
         ctx.fill();
@@ -1036,7 +1040,7 @@ export function renderLabTower(
           mcRadius * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.closePath();
         ctx.fill();
@@ -1044,7 +1048,7 @@ export function renderLabTower(
           coilX - mcRadius,
           mcY,
           coilX + mcRadius,
-          mcY,
+          mcY
         );
         sGrad.addColorStop(0, "rgb(120, 75, 35)");
         sGrad.addColorStop(0.3, "rgb(180, 120, 55)");
@@ -1066,7 +1070,7 @@ export function renderLabTower(
           mcRadius * 0.4,
           0,
           0.15,
-          Math.PI - 0.15,
+          Math.PI - 0.15
         );
         ctx.stroke();
       }
@@ -1083,7 +1087,7 @@ export function renderLabTower(
         0,
         coilX,
         miniOrbY,
-        5 * zoom,
+        5 * zoom
       );
       miniOrbGrad.addColorStop(0, "#ffffff");
       miniOrbGrad.addColorStop(0.4, orbMid);
@@ -1119,11 +1123,9 @@ export function renderLabTower(
         const arcEndX = coilX + Math.cos(arcAngle) * arcLen;
         const arcEndY = miniOrbY + Math.sin(arcAngle) * arcLen * 0.5;
         const arcMidX =
-          (coilX + arcEndX) / 2 +
-          Math.sin(time * 15 + arc * 3.7) * 4 * zoom;
+          (coilX + arcEndX) / 2 + Math.sin(time * 15 + arc * 3.7) * 4 * zoom;
         const arcMidY =
-          (miniOrbY + arcEndY) / 2 +
-          Math.cos(time * 12 + arc * 2.3) * 2 * zoom;
+          (miniOrbY + arcEndY) / 2 + Math.cos(time * 12 + arc * 2.3) * 2 * zoom;
         ctx.lineTo(arcMidX, arcMidY);
         ctx.lineTo(arcEndX, arcEndY);
         ctx.stroke();
@@ -1171,7 +1173,7 @@ export function renderLabTower(
         screenPos.x - w * 0.75,
         wireBaseY + wireSag * 0.6,
         screenPos.x - w * 0.5,
-        wireBaseY + d * 0.15,
+        wireBaseY + d * 0.15
       );
       ctx.stroke();
 
@@ -1184,7 +1186,7 @@ export function renderLabTower(
         screenPos.x + w * 0.75,
         wireBaseY + wireSag * 0.6,
         screenPos.x + w * 0.5,
-        wireBaseY + d * 0.15,
+        wireBaseY + d * 0.15
       );
       ctx.stroke();
     }
@@ -1203,7 +1205,7 @@ export function renderLabTower(
           1.5 * zoom,
           side * 0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = sm.main;
@@ -1228,7 +1230,7 @@ export function renderLabTower(
         ringRadius * 0.35,
         ringAngle,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1278,7 +1280,7 @@ export function renderLabTower(
         screenPos.y - h * 0.29,
         2.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1306,7 +1308,7 @@ export function renderLabTower(
         pX - 1 * zoom,
         pY - 8 * zoom - pistonExt,
         2 * zoom,
-        pistonExt + 2 * zoom,
+        pistonExt + 2 * zoom
       );
       ctx.fillStyle = sm.main;
       ctx.beginPath();
@@ -1317,7 +1319,7 @@ export function renderLabTower(
         1.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       if (l4AttackPulse > 0.15) {
@@ -1330,7 +1332,7 @@ export function renderLabTower(
             pY - 9 * zoom - pistonExt - vy,
             (1.2 + v * 0.3) * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -1364,7 +1366,7 @@ export function renderLabTower(
           discR * 0.2,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.stroke();
         if (dd < 3) {
@@ -1373,7 +1375,7 @@ export function renderLabTower(
             insX - 0.4 * zoom,
             discY + discR * 0.3,
             0.8 * zoom,
-            2.2 * zoom,
+            2.2 * zoom
           );
         }
       }
@@ -1395,7 +1397,7 @@ export function renderLabTower(
         dX,
         dY + 0.8 * zoom,
         dX + 5.5 * zoom,
-        dY + 3.5 * zoom - swing,
+        dY + 3.5 * zoom - swing
       );
       ctx.stroke();
       for (const ws of [-1, 1]) {
@@ -1447,7 +1449,7 @@ export function renderLabTower(
           screenPos.x + side * w * 0.7,
           wireY + sag + vibrate,
           screenPos.x + side * w * 0.4,
-          wireY,
+          wireY
         );
         ctx.stroke();
       }
@@ -1474,7 +1476,7 @@ export function renderLabTower(
       discRadius * 0.4 * zoom,
       discAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1503,7 +1505,7 @@ export function renderLabTower(
       screenPos.x - w * 0.5,
       lineY + d * 0.1 - 1.5 * zoom,
       screenPos.x - w * 0.82,
-      lineY - d * 0.18,
+      lineY - d * 0.18
     );
     ctx.stroke();
 
@@ -1514,7 +1516,7 @@ export function renderLabTower(
       screenPos.x + w * 0.5,
       lineY + d * 0.1 - 1.5 * zoom,
       screenPos.x + w * 0.82,
-      lineY - d * 0.18,
+      lineY - d * 0.18
     );
     ctx.stroke();
 
@@ -1524,13 +1526,13 @@ export function renderLabTower(
       screenPos.x - w * 0.85 - 1.5 * zoom,
       lineY - d * 0.2 - 1 * zoom,
       3 * zoom,
-      2 * zoom,
+      2 * zoom
     );
     ctx.fillRect(
       screenPos.x + w * 0.82 - 1.5 * zoom,
       lineY - d * 0.2 - 1 * zoom,
       3 * zoom,
-      2 * zoom,
+      2 * zoom
     );
   }
 
@@ -1604,7 +1606,7 @@ export function renderLabTower(
       radHt * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1616,8 +1618,8 @@ export function renderLabTower(
       const ventX = screenPos.x + side * w * 0.55;
       const face = side === -1 ? ("left" as const) : ("right" as const);
       drawIsoFlushVent(ctx, ventX, ventY, 5, 3, face, zoom, {
-        frameColor: ventC.frame,
         bgColor: ventC.bg,
+        frameColor: ventC.frame,
         slatColor: ventC.slat,
         slats: 3,
       });
@@ -1719,7 +1721,7 @@ export function renderLabTower(
         traceX0 - 1.5 * zoom,
         padY - 0.8 * zoom,
         3 * zoom,
-        1.6 * zoom,
+        1.6 * zoom
       );
     }
   }
@@ -1744,7 +1746,7 @@ export function renderLabTower(
     dispX - dispW * 0.5 + 1.5 * zoom,
     dispY + 1.5 * zoom,
     dispW - 3 * zoom,
-    dispH - 3 * zoom,
+    dispH - 3 * zoom
   );
 
   // Screen content — scrolling hex data
@@ -1758,14 +1760,14 @@ export function renderLabTower(
     let hexStr = "";
     for (let ch = 0; ch < 4; ch++) {
       const idx = Math.floor(
-        (Math.sin(time * 4 + row * 2.3 + ch * 1.7) * 0.5 + 0.5) * 16,
+        (Math.sin(time * 4 + row * 2.3 + ch * 1.7) * 0.5 + 0.5) * 16
       );
       hexStr += hexChars[idx % 16];
     }
     ctx.fillText(
       hexStr,
       dispX - dispW * 0.4,
-      dispY + 2.5 * zoom + row * 3 * zoom,
+      dispY + 2.5 * zoom + row * 3 * zoom
     );
   }
 
@@ -1777,8 +1779,11 @@ export function renderLabTower(
     const waveX = dispX - dispW * 0.4 + i * 1.1 * zoom;
     const waveY =
       dispY + dispH * 0.75 + Math.sin(time * 8 + i * 0.9) * 1.5 * zoom;
-    if (i === 0) ctx.moveTo(waveX, waveY);
-    else ctx.lineTo(waveX, waveY);
+    if (i === 0) {
+      ctx.moveTo(waveX, waveY);
+    } else {
+      ctx.lineTo(waveX, waveY);
+    }
   }
   ctx.stroke();
 
@@ -1791,8 +1796,8 @@ export function renderLabTower(
 
   // ========== HAZARD BEACON LIGHTS ==========
   const beaconPositions = [
-    { x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1, phase: 0 },
-    { x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.1, phase: 0.3 },
+    { phase: 0, x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1 },
+    { phase: 0.3, x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.1 },
   ];
   for (const bp of beaconPositions) {
     // Beacon mount
@@ -1842,7 +1847,7 @@ export function renderLabTower(
     16,
     labTopRailColors,
     zoom,
-    "back",
+    "back"
   );
 
   if (tower.level === 4 && tower.upgrade === "A") {
@@ -1859,7 +1864,7 @@ export function renderLabTower(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   } else if (tower.level === 4 && tower.upgrade === "B") {
     renderChainLightning(ctx, screenPos, topY, tower, zoom, time);
@@ -1877,7 +1882,7 @@ export function renderLabTower(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   }
 
@@ -1895,7 +1900,7 @@ export function renderLabTower(
       16,
       labTopRailColors,
       zoom,
-      "front",
+      "front"
     );
   }
 

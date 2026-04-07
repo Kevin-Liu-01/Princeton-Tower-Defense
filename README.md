@@ -24,12 +24,12 @@ Everything -- towers, enemies, terrain, effects, UI overlays -- is drawn and ani
 
 <div align="center">
 
-| | | |
-|:---:|:---:|:---:|
-| ![Grounds](public/images/new/gameplay_grounds.png) | ![Swamp](public/images/new/gameplay_swamp.png) | ![Desert](public/images/new/gameplay_desert.png) |
-| *Princeton Grounds - Grassland* | *Murky Marshes - Swamp* | *Sahara Sands - Desert* |
-| ![Winter](public/images/new/gameplay_winter.png) | ![Volcanic](public/images/new/gameplay_volcano.png) | ![All Towers](public/images/new/all_towers.png) |
-| *Frozen Frontier - Winter* | *Volcanic Depths - Lava* | *All 7 Campus Towers* |
+|                                                    |                                                     |                                                  |
+| :------------------------------------------------: | :-------------------------------------------------: | :----------------------------------------------: |
+| ![Grounds](public/images/new/gameplay_grounds.png) |   ![Swamp](public/images/new/gameplay_swamp.png)    | ![Desert](public/images/new/gameplay_desert.png) |
+|          _Princeton Grounds - Grassland_           |               _Murky Marshes - Swamp_               |             _Sahara Sands - Desert_              |
+|  ![Winter](public/images/new/gameplay_winter.png)  | ![Volcanic](public/images/new/gameplay_volcano.png) | ![All Towers](public/images/new/all_towers.png)  |
+|             _Frozen Frontier - Winter_             |              _Volcanic Depths - Lava_               |              _All 7 Campus Towers_               |
 
 </div>
 
@@ -37,19 +37,19 @@ Everything -- towers, enemies, terrain, effects, UI overlays -- is drawn and ani
 
 ## Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 14, React 18 |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS |
-| **Rendering** | HTML5 Canvas 2D (custom, no game engine) |
-| **UI Components** | Radix Themes |
-| **Animation** | Framer Motion, `requestAnimationFrame` game loop with delta-time |
-| **Icons** | Lucide React |
-| **3D Elements** | Three.js via React Three Fiber + Drei |
-| **Analytics** | Vercel Analytics |
-| **State** | React hooks + localStorage persistence (no external state library) |
-| **Hosting** | Vercel |
+| Layer             | Technology                                                         |
+| :---------------- | :----------------------------------------------------------------- |
+| **Framework**     | Next.js 14, React 18                                               |
+| **Language**      | TypeScript                                                         |
+| **Styling**       | Tailwind CSS                                                       |
+| **Rendering**     | HTML5 Canvas 2D (custom, no game engine)                           |
+| **UI Components** | Radix Themes                                                       |
+| **Animation**     | Framer Motion, `requestAnimationFrame` game loop with delta-time   |
+| **Icons**         | Lucide React                                                       |
+| **3D Elements**   | Three.js via React Three Fiber + Drei                              |
+| **Analytics**     | Vercel Analytics                                                   |
+| **State**         | React hooks + localStorage persistence (no external state library) |
+| **Hosting**       | Vercel                                                             |
 
 ---
 
@@ -93,8 +93,8 @@ pnpm lint
 
 ## Environment Variables
 
-| Variable | Description |
-| :--- | :--- |
+| Variable                  | Description                                                                   |
+| :------------------------ | :---------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_TD_DEV_PERF` | Set to `"1"` to enable the dev performance overlay (toggle with Ctrl+Shift+P) |
 
 This is the only environment variable. The game runs without any `.env` configuration.
@@ -209,27 +209,27 @@ The world map is rendered with `worldMapCanvasRenderer.ts`, backed by extracted 
 
 Each tower has a distinct role and two final upgrade paths that change its behavior.
 
-| Tower | Role | Upgrade Paths |
-| :--- | :--- | :--- |
-| **Nassau Cannon** | Heavy artillery | Gatling Gun / Flamethrower |
-| **Firestone Library** | Slow + control | EQ Smasher / Blizzard |
-| **E-Quad Lab** | Chain magic DPS | Focused Beam / Chain Lightning |
-| **Blair Arch** | Sonic crescendo | Shockwave Siren / Symphony Hall |
-| **Eating Club** | Economy | Investment Bank / Recruitment Center |
-| **Dinky Station** | Troop summons | Centaur Archers / Heavy Cavalry |
-| **Palmer Mortar** | Siege AoE | Missile Battery / Ember Foundry |
+| Tower                 | Role            | Upgrade Paths                        |
+| :-------------------- | :-------------- | :----------------------------------- |
+| **Nassau Cannon**     | Heavy artillery | Gatling Gun / Flamethrower           |
+| **Firestone Library** | Slow + control  | EQ Smasher / Blizzard                |
+| **E-Quad Lab**        | Chain magic DPS | Focused Beam / Chain Lightning       |
+| **Blair Arch**        | Sonic crescendo | Shockwave Siren / Symphony Hall      |
+| **Eating Club**       | Economy         | Investment Bank / Recruitment Center |
+| **Dinky Station**     | Troop summons   | Centaur Archers / Heavy Cavalry      |
+| **Palmer Mortar**     | Siege AoE       | Missile Battery / Ember Foundry      |
 
 ### 9 Playable Heroes
 
-| Hero | Style | Ability |
-| :--- | :--- | :--- |
-| **Princeton Tiger** | Melee brawler | *Mighty Roar* -- AoE stun + fear |
-| **Acapella Tenor** | Ranged support | *High Note* -- sonic blast + ally heal |
-| **Mathey Knight** | Tank | *Fortress Shield* -- invincibility + taunt |
-| **Rocky Raccoon** | Ranged artillery | *Boulder Bash* -- massive AoE damage |
-| **F. Scott** | Buffer | *Inspiration Cheer* -- tower damage/range boost |
-| **General Mercer** | Commander | *Rally Knights* -- summon 3 armored knights |
-| **BSE Engineer** | Utility | *Deploy Turret* -- automated defense turret |
+| Hero                | Style            | Ability                                         |
+| :------------------ | :--------------- | :---------------------------------------------- |
+| **Princeton Tiger** | Melee brawler    | _Mighty Roar_ -- AoE stun + fear                |
+| **Acapella Tenor**  | Ranged support   | _High Note_ -- sonic blast + ally heal          |
+| **Mathey Knight**   | Tank             | _Fortress Shield_ -- invincibility + taunt      |
+| **Rocky Raccoon**   | Ranged artillery | _Boulder Bash_ -- massive AoE damage            |
+| **F. Scott**        | Buffer           | _Inspiration Cheer_ -- tower damage/range boost |
+| **General Mercer**  | Commander        | _Rally Knights_ -- summon 3 armored knights     |
+| **BSE Engineer**    | Utility          | _Deploy Turret_ -- automated defense turret     |
 
 ### Spells, Hazards, and Challenge Rules
 

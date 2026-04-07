@@ -1,10 +1,8 @@
 import { useCallback, useState } from "react";
+
 import type { BoardRenderMetrics } from "../types";
-import {
-  ISO_VIEWBOX_WIDTH,
-  ISO_VIEWBOX_HEIGHT,
-} from "../utils/isoMath";
 import { clamp } from "../utils/gridUtils";
+import { ISO_VIEWBOX_WIDTH, ISO_VIEWBOX_HEIGHT } from "../utils/isoMath";
 
 export interface CreatorCameraState {
   zoom: number;
@@ -22,17 +20,22 @@ export interface CreatorCameraState {
   } | null;
   setZoom: React.Dispatch<React.SetStateAction<number>>;
   setPan: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
-  setCameraDrag: React.Dispatch<React.SetStateAction<CreatorCameraState["cameraDrag"]>>;
+  setCameraDrag: React.Dispatch<
+    React.SetStateAction<CreatorCameraState["cameraDrag"]>
+  >;
   zoomIn: () => void;
   zoomOut: () => void;
   resetCamera: () => void;
-  getBoardRenderMetrics: (board: SVGSVGElement | null) => BoardRenderMetrics | null;
+  getBoardRenderMetrics: (
+    board: SVGSVGElement | null
+  ) => BoardRenderMetrics | null;
 }
 
 export function useCreatorCamera(): CreatorCameraState {
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [cameraDrag, setCameraDrag] = useState<CreatorCameraState["cameraDrag"]>(null);
+  const [cameraDrag, setCameraDrag] =
+    useState<CreatorCameraState["cameraDrag"]>(null);
 
   const viewBoxWidth = ISO_VIEWBOX_WIDTH / zoom;
   const viewBoxHeight = ISO_VIEWBOX_HEIGHT / zoom;
@@ -55,7 +58,9 @@ export function useCreatorCamera(): CreatorCameraState {
 
   const getBoardRenderMetrics = useCallback(
     (board: SVGSVGElement | null): BoardRenderMetrics | null => {
-      if (!board) return null;
+      if (!board) {
+        return null;
+      }
       const rect = board.getBoundingClientRect();
       const rectRatio = rect.width / rect.height;
       const viewRatio = viewBoxWidth / viewBoxHeight;
@@ -64,41 +69,41 @@ export function useCreatorCamera(): CreatorCameraState {
         const renderHeight = rect.height;
         const renderWidth = renderHeight * viewRatio;
         return {
-          rect,
-          renderWidth,
-          renderHeight,
           offsetX: (rect.width - renderWidth) / 2,
           offsetY: 0,
+          rect,
+          renderHeight,
+          renderWidth,
         };
       }
 
       const renderWidth = rect.width;
       const renderHeight = renderWidth / viewRatio;
       return {
-        rect,
-        renderWidth,
-        renderHeight,
         offsetX: 0,
         offsetY: (rect.height - renderHeight) / 2,
+        rect,
+        renderHeight,
+        renderWidth,
       };
     },
     [viewBoxWidth, viewBoxHeight]
   );
 
   return {
-    zoom,
+    cameraDrag,
+    getBoardRenderMetrics,
     pan,
+    resetCamera,
+    setCameraDrag,
+    setPan,
+    setZoom,
+    viewBoxHeight,
+    viewBoxWidth,
     viewBoxX,
     viewBoxY,
-    viewBoxWidth,
-    viewBoxHeight,
-    cameraDrag,
-    setZoom,
-    setPan,
-    setCameraDrag,
+    zoom,
     zoomIn,
     zoomOut,
-    resetCamera,
-    getBoardRenderMetrics,
   };
 }

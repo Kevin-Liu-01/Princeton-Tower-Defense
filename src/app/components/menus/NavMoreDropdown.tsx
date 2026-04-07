@@ -1,6 +1,4 @@
 "use client";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
 import {
   MoreHorizontal,
   Info,
@@ -11,8 +9,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+
 import { SITE_URL, GITHUB_URL, AUTHOR_URL } from "../../seo/constants";
+import { GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
 
 const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
   `@kevskgs made a fire free browser TD game with 26 levels, 9 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`
@@ -37,17 +38,22 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
+    null
+  );
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
         triggerRef.current?.contains(target) ||
         menuRef.current?.contains(target)
-      )
+      ) {
         return;
+      }
       setOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -55,16 +61,20 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
   }, [open]);
 
   const updatePosition = useCallback(() => {
-    if (!triggerRef.current) return;
+    if (!triggerRef.current) {
+      return;
+    }
     const rect = triggerRef.current.getBoundingClientRect();
     setMenuPos({
-      top: rect.bottom + 8,
       right: window.innerWidth - rect.right,
+      top: rect.bottom + 8,
     });
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     updatePosition();
     window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
@@ -81,8 +91,8 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
 
   const items: (DropdownItem | "divider")[] = [
     {
-      label: "Credits",
       icon: Info,
+      label: "Credits",
       onClick: () => {
         onShowCredits();
         close();
@@ -90,99 +100,102 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
     },
     "divider",
     {
-      label: "GitHub",
-      icon: Github,
       href: GITHUB_URL,
+      icon: Github,
+      label: "GitHub",
     },
     {
-      label: "Share on X",
-      icon: Share2,
       href: SHARE_URL,
+      icon: Share2,
+      label: "Share on X",
     },
     {
-      label: "Report Bug",
-      icon: Bug,
       href: `${GITHUB_URL}/issues`,
+      icon: Bug,
+      label: "Report Bug",
     },
     "divider",
     {
-      label: "More Games",
-      icon: Gamepad2,
       href: AUTHOR_URL,
+      icon: Gamepad2,
+      label: "More Games",
     },
   ];
 
   const menu = open
     ? createPortal(
-      <div
-        ref={menuRef}
-        className="fixed w-48 rounded-xl overflow-hidden shadow-2xl"
-        style={{
-          top: menuPos?.top ?? 0,
-          right: menuPos?.right ?? 0,
-          zIndex: 9999,
-          visibility: menuPos ? "visible" : "hidden",
-          background: panelGradient,
-          border: `1.5px solid ${GOLD.border30}`,
-          boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 ${OVERLAY.white06}`,
-        }}
-      >
         <div
-          className="absolute inset-[2px] rounded-[10px] pointer-events-none"
-          style={{ border: `1px solid ${GOLD.innerBorder08}` }}
-        />
-        <div className="py-1">
-          {items.map((item, i) => {
-            if (item === "divider") {
-              return (
-                <div
-                  key={`d-${i}`}
-                  className="h-px mx-3 my-1"
-                  style={{ background: `rgba(180,140,60,0.18)` }}
-                />
-              );
-            }
+          ref={menuRef}
+          className="fixed w-48 rounded-xl overflow-hidden shadow-2xl"
+          style={{
+            background: panelGradient,
+            border: `1.5px solid ${GOLD.border30}`,
+            boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 ${OVERLAY.white06}`,
+            right: menuPos?.right ?? 0,
+            top: menuPos?.top ?? 0,
+            visibility: menuPos ? "visible" : "hidden",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+            style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+          />
+          <div className="py-1">
+            {items.map((item, i) => {
+              if (item === "divider") {
+                return (
+                  <div
+                    key={`d-${i}`}
+                    className="h-px mx-3 my-1"
+                    style={{ background: `rgba(180,140,60,0.18)` }}
+                  />
+                );
+              }
 
-            const Icon = item.icon;
-            const sharedCls =
-              "relative z-10 flex items-center gap-2.5 w-full px-3.5 py-2 transition-all duration-150 hover:bg-amber-600/15 text-left";
+              const Icon = item.icon;
+              const sharedCls =
+                "relative z-10 flex items-center gap-2.5 w-full px-3.5 py-2 transition-all duration-150 hover:bg-amber-600/15 text-left";
 
-            if (item.href) {
+              if (item.href) {
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={sharedCls}
+                    onClick={close}
+                  >
+                    <Icon size={14} className="text-amber-400 shrink-0" />
+                    <span className="text-xs text-amber-200/80 font-semibold tracking-wide flex-1">
+                      {item.label}
+                    </span>
+                    <ExternalLink
+                      size={10}
+                      className="text-amber-500/40 shrink-0"
+                    />
+                  </a>
+                );
+              }
+
               return (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={item.onClick}
                   className={sharedCls}
-                  onClick={close}
                 >
                   <Icon size={14} className="text-amber-400 shrink-0" />
-                  <span className="text-xs text-amber-200/80 font-semibold tracking-wide flex-1">
+                  <span className="text-xs text-amber-200/80 font-semibold tracking-wide">
                     {item.label}
                   </span>
-                  <ExternalLink size={10} className="text-amber-500/40 shrink-0" />
-                </a>
+                </button>
               );
-            }
-
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className={sharedCls}
-              >
-                <Icon size={14} className="text-amber-400 shrink-0" />
-                <span className="text-xs text-amber-200/80 font-semibold tracking-wide">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>,
-      document.body,
-    )
+            })}
+          </div>
+        </div>,
+        document.body
+      )
     : null;
 
   return (
@@ -190,7 +203,9 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
       <button
         ref={triggerRef}
         onClick={() => {
-          if (!open) updatePosition();
+          if (!open) {
+            updatePosition();
+          }
           setOpen((prev) => !prev);
         }}
         className="relative flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"

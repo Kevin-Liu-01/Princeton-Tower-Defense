@@ -10,7 +10,7 @@ function isoGroundDiamond(
   cx: number,
   cy: number,
   iW: number,
-  iD: number,
+  iD: number
 ): void {
   ctx.moveTo(cx, cy - iD);
   ctx.lineTo(cx + iW, cy);
@@ -26,7 +26,7 @@ function ridgeTentFaces(
   cy: number,
   ridgeHalfLen: number,
   halfWidth: number,
-  tentH: number,
+  tentH: number
 ): {
   ridgeA: [number, number];
   ridgeB: [number, number];
@@ -41,12 +41,12 @@ function ridgeTentFaces(
   const wID = halfWidth * ISO_SIN;
 
   return {
-    ridgeA: [cx - rIW, cy - rID - tentH],
-    ridgeB: [cx + rIW, cy + rID - tentH],
-    frontA: [cx - rIW - wIW, cy - rID + wID],
-    frontB: [cx + rIW - wIW, cy + rID + wID],
     backA: [cx - rIW + wIW, cy - rID - wID],
     backB: [cx + rIW + wIW, cy + rID - wID],
+    frontA: [cx - rIW - wIW, cy - rID + wID],
+    frontB: [cx + rIW - wIW, cy + rID + wID],
+    ridgeA: [cx - rIW, cy - rID - tentH],
+    ridgeB: [cx + rIW, cy + rID - tentH],
   };
 }
 
@@ -56,7 +56,7 @@ function drawFabricFold(
   y1: number,
   x2: number,
   y2: number,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
   ctx.beginPath();
@@ -73,7 +73,7 @@ function drawMilitaryTent(
   ty: number,
   s: number,
   decorTime: number,
-  decorX: number,
+  decorX: number
 ): void {
   const ridgeHL = 12 * s;
   const halfW = 10 * s;
@@ -84,7 +84,7 @@ function drawMilitaryTent(
     ty,
     ridgeHL,
     halfW,
-    tentH,
+    tentH
   );
 
   // Ground cloth (iso diamond extending slightly beyond tent)
@@ -97,7 +97,12 @@ function drawMilitaryTent(
   ctx.fill();
 
   // Back slope (further from viewer, draw first)
-  const backG = ctx.createLinearGradient(backA[0], backA[1], ridgeA[0], ridgeA[1]);
+  const backG = ctx.createLinearGradient(
+    backA[0],
+    backA[1],
+    ridgeA[0],
+    ridgeA[1]
+  );
   backG.addColorStop(0, "#3A3020");
   backG.addColorStop(0.6, "#4A4030");
   backG.addColorStop(1, "#504535");
@@ -122,7 +127,12 @@ function drawMilitaryTent(
   }
 
   // Front slope (closer to viewer, draw on top)
-  const frontG = ctx.createLinearGradient(ridgeA[0], ridgeA[1], frontA[0], frontA[1]);
+  const frontG = ctx.createLinearGradient(
+    ridgeA[0],
+    ridgeA[1],
+    frontA[0],
+    frontA[1]
+  );
   frontG.addColorStop(0, "#6B5A40");
   frontG.addColorStop(0.4, "#5A4A35");
   frontG.addColorStop(1, "#48402C");
@@ -168,7 +178,7 @@ function drawMilitaryTent(
     ridgeB[0],
     ridgeB[1],
     (frontB[0] + backB[0]) / 2,
-    (frontB[1] + backB[1]) / 2,
+    (frontB[1] + backB[1]) / 2
   );
   gableG.addColorStop(0, "#6A5A3E");
   gableG.addColorStop(1, "#5A4830");
@@ -187,15 +197,15 @@ function drawMilitaryTent(
   ctx.beginPath();
   ctx.moveTo(
     ridgeB[0] + (entMidX - ridgeB[0]) * 0.35,
-    ridgeB[1] + (entMidY - ridgeB[1]) * 0.35,
+    ridgeB[1] + (entMidY - ridgeB[1]) * 0.35
   );
   ctx.lineTo(
     frontB[0] + (backB[0] - frontB[0]) * 0.2,
-    frontB[1] + (backB[1] - frontB[1]) * 0.2,
+    frontB[1] + (backB[1] - frontB[1]) * 0.2
   );
   ctx.lineTo(
     frontB[0] + (backB[0] - frontB[0]) * 0.8,
-    frontB[1] + (backB[1] - frontB[1]) * 0.8,
+    frontB[1] + (backB[1] - frontB[1]) * 0.8
   );
   ctx.closePath();
   ctx.fill();
@@ -205,15 +215,15 @@ function drawMilitaryTent(
   ctx.beginPath();
   ctx.moveTo(
     frontB[0] + (backB[0] - frontB[0]) * 0.15,
-    frontB[1] + (backB[1] - frontB[1]) * 0.15,
+    frontB[1] + (backB[1] - frontB[1]) * 0.15
   );
   ctx.lineTo(
     ridgeB[0] + (entMidX - ridgeB[0]) * 0.4,
-    ridgeB[1] + (entMidY - ridgeB[1]) * 0.4,
+    ridgeB[1] + (entMidY - ridgeB[1]) * 0.4
   );
   ctx.lineTo(
     frontB[0] + (backB[0] - frontB[0]) * 0.05 + 3 * s,
-    frontB[1] + (backB[1] - frontB[1]) * 0.05 + 1 * s,
+    frontB[1] + (backB[1] - frontB[1]) * 0.05 + 1 * s
   );
   ctx.closePath();
   ctx.fill();
@@ -278,7 +288,7 @@ function drawMarketStall(
   ctx: CanvasRenderingContext2D,
   tx: number,
   ty: number,
-  s: number,
+  s: number
 ): void {
   const stallSize = 16 * s;
   const stallH = 18 * s;
@@ -306,7 +316,7 @@ function drawMarketStall(
       stallH,
       "#6D5A42",
       "#4E3A28",
-      "#5D4A35",
+      "#5D4A35"
     );
   }
 
@@ -373,19 +383,37 @@ function drawMarketStall(
   ctx.fillStyle = stripe2;
   const stripeCount = 4;
   for (let si = 0; si < stripeCount; si++) {
-    if (si % 2 !== 0) continue;
+    if (si % 2 !== 0) {
+      continue;
+    }
     const t0 = si / stripeCount;
     const t1 = (si + 1) / stripeCount;
 
     const topL0x = tx + (tx - cIW - tx) * (1 - t0);
-    const topL0y = canopyY - cID + (canopyY - (canopyY - cID)) * t0 + (canopyY - (canopyY - cID)) * t0;
+    const topL0y =
+      canopyY -
+      cID +
+      (canopyY - (canopyY - cID)) * t0 +
+      (canopyY - (canopyY - cID)) * t0;
     const topL1x = tx + (tx - cIW - tx) * (1 - t1);
-    const topL1y = canopyY - cID + (canopyY - (canopyY - cID)) * t1 + (canopyY - (canopyY - cID)) * t1;
+    const topL1y =
+      canopyY -
+      cID +
+      (canopyY - (canopyY - cID)) * t1 +
+      (canopyY - (canopyY - cID)) * t1;
 
     const botL0x = tx + (tx + cIW - tx) * (1 - t0);
-    const botL0y = canopyY + cID + (canopyY - (canopyY + cID)) * t0 + (canopyY - (canopyY + cID)) * t0;
+    const botL0y =
+      canopyY +
+      cID +
+      (canopyY - (canopyY + cID)) * t0 +
+      (canopyY - (canopyY + cID)) * t0;
     const botL1x = tx + (tx + cIW - tx) * (1 - t1);
-    const botL1y = canopyY + cID + (canopyY - (canopyY + cID)) * t1 + (canopyY - (canopyY + cID)) * t1;
+    const botL1y =
+      canopyY +
+      cID +
+      (canopyY - (canopyY + cID)) * t1 +
+      (canopyY - (canopyY + cID)) * t1;
 
     ctx.beginPath();
     ctx.moveTo(topL0x, topL0y);
@@ -407,7 +435,7 @@ function drawMarketStall(
       stallH,
       "#6D5A42",
       "#4E3A28",
-      "#5D4A35",
+      "#5D4A35"
     );
   }
 
@@ -423,7 +451,7 @@ function drawMarketStall(
     tableH,
     "#795548",
     "#5D4037",
-    "#4E342E",
+    "#4E342E"
   );
 
   // Goods on table
@@ -441,7 +469,7 @@ function drawMarketStall(
     2.5 * s * ISO_Y_RATIO,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#6A4A2A";
@@ -453,7 +481,7 @@ function drawMarketStall(
     2.5 * s * ISO_Y_RATIO,
     0,
     Math.PI,
-    0,
+    0
   );
   ctx.lineTo(tx - tIW * 0.4 - 2.5 * s, tableTop);
   ctx.ellipse(
@@ -464,7 +492,7 @@ function drawMarketStall(
     0,
     Math.PI,
     Math.PI * 2,
-    true,
+    true
   );
   ctx.closePath();
   ctx.fill();
@@ -509,7 +537,7 @@ function drawMarketStall(
     1.5 * s,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = "#5A4A2A";
@@ -526,7 +554,7 @@ function drawYurt(
   ctx: CanvasRenderingContext2D,
   tx: number,
   ty: number,
-  s: number,
+  s: number
 ): void {
   const yR = 13 * s;
   const wallH = 11 * s;
@@ -553,7 +581,9 @@ function drawYurt(
   ctx.lineWidth = 0.7 * s;
   for (let seg = 0; seg < 7; seg++) {
     const angle = 0.2 + seg * 0.4;
-    if (angle > Math.PI - 0.2) break;
+    if (angle > Math.PI - 0.2) {
+      break;
+    }
     const sx = tx + Math.cos(angle) * yRX;
     const sy = ty + Math.sin(angle) * yRY;
     const topSy = sy - wallH;
@@ -570,7 +600,16 @@ function drawYurt(
   ctx.beginPath();
   ctx.ellipse(tx, bandY - bandH, yRX + 0.5 * s, yRY + 0.3 * s, 0, 0, Math.PI);
   ctx.lineTo(tx - yRX - 0.5 * s, bandY);
-  ctx.ellipse(tx, bandY, yRX + 0.5 * s, yRY + 0.3 * s, 0, Math.PI, Math.PI * 2, true);
+  ctx.ellipse(
+    tx,
+    bandY,
+    yRX + 0.5 * s,
+    yRY + 0.3 * s,
+    0,
+    Math.PI,
+    Math.PI * 2,
+    true
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -584,8 +623,11 @@ function drawYurt(
     const zx = tx + Math.cos(angle) * (yRX + 0.5 * s);
     const zy = bandY - bandH * 0.5 + Math.sin(angle) * (yRY + 0.3 * s);
     const zigOffset = z % 2 === 0 ? -bandH * 0.35 : bandH * 0.35;
-    if (z === 0) ctx.moveTo(zx, zy + zigOffset);
-    else ctx.lineTo(zx, zy + zigOffset);
+    if (z === 0) {
+      ctx.moveTo(zx, zy + zigOffset);
+    } else {
+      ctx.lineTo(zx, zy + zigOffset);
+    }
   }
   ctx.stroke();
 
@@ -594,7 +636,9 @@ function drawYurt(
   ctx.lineWidth = 0.8 * s;
   for (let d = 0; d < 4; d++) {
     const da = 0.5 + d * 0.55;
-    if (da > Math.PI - 0.3) break;
+    if (da > Math.PI - 0.3) {
+      break;
+    }
     const dx = tx + Math.cos(da) * (yRX + 0.5 * s);
     const dy = bandY - bandH * 0.5 + Math.sin(da) * (yRY + 0.3 * s);
     const dSize = 2 * s;
@@ -618,7 +662,7 @@ function drawYurt(
     0,
     tx,
     domeBase,
-    yR * 1.1,
+    yR * 1.1
   );
   domeG.addColorStop(0, "#A1887F");
   domeG.addColorStop(0.4, "#8D6E63");
@@ -627,17 +671,12 @@ function drawYurt(
   ctx.fillStyle = domeG;
   ctx.beginPath();
   ctx.ellipse(tx, domeBase, yRX + 2 * s, yRY + 1 * s, 0, Math.PI, Math.PI * 2);
-  ctx.quadraticCurveTo(
-    tx + yRX * 0.6,
-    domePeak - domeH * 0.15,
-    tx,
-    domePeak,
-  );
+  ctx.quadraticCurveTo(tx + yRX * 0.6, domePeak - domeH * 0.15, tx, domePeak);
   ctx.quadraticCurveTo(
     tx - yRX * 0.6,
     domePeak - domeH * 0.15,
     tx - yRX - 2 * s,
-    domeBase,
+    domeBase
   );
   ctx.closePath();
   ctx.fill();
@@ -647,17 +686,21 @@ function drawYurt(
   ctx.lineWidth = 0.6 * s;
   for (let lat = 0; lat < 5; lat++) {
     const angle = 0.3 + lat * 0.5;
-    if (angle > Math.PI - 0.3) break;
+    if (angle > Math.PI - 0.3) {
+      break;
+    }
     const baseX = tx + Math.cos(angle) * (yRX + 2 * s);
     const baseYp = domeBase + Math.sin(angle) * (yRY + 1 * s);
-    if (baseYp < domeBase) continue;
+    if (baseYp < domeBase) {
+      continue;
+    }
     ctx.beginPath();
     ctx.moveTo(baseX, baseYp);
     ctx.quadraticCurveTo(
       (baseX + tx) / 2,
       domePeak + domeH * 0.3,
       tx,
-      domePeak,
+      domePeak
     );
     ctx.stroke();
   }
@@ -675,22 +718,54 @@ function drawYurt(
   // Smoke hole at top (iso ellipse)
   ctx.fillStyle = "#3E2E22";
   ctx.beginPath();
-  ctx.ellipse(tx, domePeak + 1 * s, 3.5 * s, 3.5 * s * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    tx,
+    domePeak + 1 * s,
+    3.5 * s,
+    3.5 * s * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = "#5D4037";
   ctx.beginPath();
-  ctx.ellipse(tx, domePeak + 0.5 * s, 4 * s, 4 * s * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    tx,
+    domePeak + 0.5 * s,
+    4 * s,
+    4 * s * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = "#3E2E22";
   ctx.beginPath();
-  ctx.ellipse(tx, domePeak + 1 * s, 3 * s, 3 * s * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    tx,
+    domePeak + 1 * s,
+    3 * s,
+    3 * s * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Crown ring around smoke hole
   ctx.strokeStyle = "#4A3A2A";
   ctx.lineWidth = 1.2 * s;
   ctx.beginPath();
-  ctx.ellipse(tx, domePeak + 0.5 * s, 4.5 * s, 4.5 * s * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    tx,
+    domePeak + 0.5 * s,
+    4.5 * s,
+    4.5 * s * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // Door flap — proper iso-aligned rectangle on the right side
@@ -706,7 +781,12 @@ function drawYurt(
   ctx.moveTo(doorBaseX - doorW * 0.5, doorBaseY);
   ctx.lineTo(doorBaseX + doorW * 0.5, doorBaseY);
   ctx.lineTo(doorTopX + doorW * 0.3, doorTopY);
-  ctx.quadraticCurveTo(doorTopX, doorTopY - 2 * s, doorTopX - doorW * 0.3, doorTopY);
+  ctx.quadraticCurveTo(
+    doorTopX,
+    doorTopY - 2 * s,
+    doorTopX - doorW * 0.3,
+    doorTopY
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -716,7 +796,12 @@ function drawYurt(
   ctx.moveTo(doorBaseX - doorW * 0.35, doorBaseY);
   ctx.lineTo(doorBaseX + doorW * 0.35, doorBaseY);
   ctx.lineTo(doorTopX + doorW * 0.15, doorTopY + 2 * s);
-  ctx.quadraticCurveTo(doorTopX, doorTopY, doorTopX - doorW * 0.15, doorTopY + 2 * s);
+  ctx.quadraticCurveTo(
+    doorTopX,
+    doorTopY,
+    doorTopX - doorW * 0.15,
+    doorTopY + 2 * s
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -730,7 +815,7 @@ function drawYurt(
     wallH * 0.3,
     0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -743,7 +828,7 @@ function drawMysticalPavilion(
   ty: number,
   s: number,
   decorTime: number,
-  decorX: number,
+  decorX: number
 ): void {
   const pavSize = 14 * s;
   const pavH = 22 * s;
@@ -770,7 +855,7 @@ function drawMysticalPavilion(
       pavH,
       "#4A3A2A",
       "#2A2018",
-      "#3A2E22",
+      "#3A2E22"
     );
     // Gold band at top
     drawIsometricPrism(
@@ -782,7 +867,7 @@ function drawMysticalPavilion(
       1.5 * s,
       "#B0A070",
       "#8A7050",
-      "#9A8060",
+      "#9A8060"
     );
     // Gold band at bottom
     drawIsometricPrism(
@@ -794,7 +879,7 @@ function drawMysticalPavilion(
       2 * s,
       "#B0A070",
       "#8A7050",
-      "#9A8060",
+      "#9A8060"
     );
   }
 
@@ -929,7 +1014,7 @@ function drawMysticalPavilion(
       pavH,
       "#4A3A2A",
       "#2A2018",
-      "#3A2E22",
+      "#3A2E22"
     );
     drawIsometricPrism(
       ctx,
@@ -940,7 +1025,7 @@ function drawMysticalPavilion(
       1.5 * s,
       "#B0A070",
       "#8A7050",
-      "#9A8060",
+      "#9A8060"
     );
     drawIsometricPrism(
       ctx,
@@ -951,7 +1036,7 @@ function drawMysticalPavilion(
       2 * s,
       "#B0A070",
       "#8A7050",
-      "#9A8060",
+      "#9A8060"
     );
   }
 
@@ -1003,7 +1088,7 @@ export function drawTent(
   variant: number,
   decorTime: number,
   decorX: number,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
   const tv = variant % 4;
 
@@ -1012,17 +1097,21 @@ export function drawTent(
   }
 
   switch (tv) {
-    case 0:
+    case 0: {
       drawMilitaryTent(ctx, x, y, s, decorTime, decorX);
       break;
-    case 1:
+    }
+    case 1: {
       drawMarketStall(ctx, x, y, s);
       break;
-    case 2:
+    }
+    case 2: {
       drawYurt(ctx, x, y, s);
       break;
-    case 3:
+    }
+    case 3: {
       drawMysticalPavilion(ctx, x, y, s, decorTime, decorX);
       break;
+    }
   }
 }

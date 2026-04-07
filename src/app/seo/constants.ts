@@ -232,58 +232,58 @@ export const SPELL_NAMES = [
 ] as const;
 
 export const GAME_STATS = {
-  levels: 26,
-  towers: 7,
-  heroes: 9,
-  spells: 6,
-  regions: 5,
   enemyTypes: 100,
+  heroes: 9,
+  levels: 26,
+  regions: 5,
+  spells: 6,
+  towers: 7,
   upgradePaths: 2,
 } as const;
 
 export const OG_IMAGES = {
-  primary: {
-    url: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
-    width: 1200,
-    height: 630,
-    alt: "Princeton Tower Defense gameplay - isometric campus map with towers defending against waves of enemies near Nassau Hall",
-  },
   desert: {
+    alt: "Princeton Tower Defense desert region - Sahara Sands with pyramid and oasis levels",
+    height: 630,
     url: `${SITE_URL}/images/new/gameplay_desert_ui.png`,
     width: 1200,
-    height: 630,
-    alt: "Princeton Tower Defense desert region - Sahara Sands with pyramid and oasis levels",
-  },
-  winter: {
-    url: `${SITE_URL}/images/new/gameplay_winter_ui.png`,
-    width: 1200,
-    height: 630,
-    alt: "Princeton Tower Defense winter region - Frozen Frontier with glacier and fortress levels",
-  },
-  volcano: {
-    url: `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
-    width: 1200,
-    height: 630,
-    alt: "Princeton Tower Defense volcanic region - Volcanic Depths with lava fields and caldera levels",
-  },
-  swamp: {
-    url: `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
-    width: 1200,
-    height: 630,
-    alt: "Princeton Tower Defense swamp region - Murky Marshes with bog and sunken temple levels",
   },
   homepage: {
+    alt: "Princeton Tower Defense main menu with world map showing 5 themed regions",
+    height: 630,
     url: `${SITE_URL}/images/promo/homepage.png`,
     width: 1200,
+  },
+  primary: {
+    alt: "Princeton Tower Defense gameplay - isometric campus map with towers defending against waves of enemies near Nassau Hall",
     height: 630,
-    alt: "Princeton Tower Defense main menu with world map showing 5 themed regions",
+    url: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
+    width: 1200,
+  },
+  swamp: {
+    alt: "Princeton Tower Defense swamp region - Murky Marshes with bog and sunken temple levels",
+    height: 630,
+    url: `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
+    width: 1200,
+  },
+  volcano: {
+    alt: "Princeton Tower Defense volcanic region - Volcanic Depths with lava fields and caldera levels",
+    height: 630,
+    url: `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
+    width: 1200,
+  },
+  winter: {
+    alt: "Princeton Tower Defense winter region - Frozen Frontier with glacier and fortress levels",
+    height: 630,
+    url: `${SITE_URL}/images/new/gameplay_winter_ui.png`,
+    width: 1200,
   },
 } as const;
 
 export const REGION_OG_IMAGE: Record<string, keyof typeof OG_IMAGES> = {
+  desert: "desert",
   grassland: "primary",
   swamp: "swamp",
-  desert: "desert",
-  winter: "winter",
   volcanic: "volcano",
+  winter: "winter",
 } as const;

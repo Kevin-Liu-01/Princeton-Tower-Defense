@@ -1,18 +1,24 @@
 "use client";
-import React, { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
+
 import { useImagePreloader } from "../../hooks/useImagePreloader";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
+import { LandingCreditsModal } from "./LandingCreditsModal";
 import { SectionReveal } from "./SectionReveal";
-import { HeroSection } from "./sections/HeroSection";
-import { MapSectionDivider } from "./sections/mapElements";
-
-import { GameplayShowcase } from "./sections/GameplayShowcase";
-import { TowerShowcase } from "./sections/TowerShowcase";
-import { HeroRoster } from "./sections/HeroRoster";
-import { EnemyBestiary } from "./sections/EnemyBestiary";
 import { BattlePreview } from "./sections/BattlePreview";
 import { BottomCTA } from "./sections/BottomCTA";
-import { LandingCreditsModal } from "./LandingCreditsModal";
+import { EnemyBestiary } from "./sections/EnemyBestiary";
+import { GameplayShowcase } from "./sections/GameplayShowcase";
+import { HeroRoster } from "./sections/HeroRoster";
+import { HeroSection } from "./sections/HeroSection";
+import { MapSectionDivider } from "./sections/mapElements";
+import { TowerShowcase } from "./sections/TowerShowcase";
 
 const T = LANDING_THEME;
 
@@ -29,7 +35,9 @@ export function LandingPage({ onPlay }: LandingPageProps) {
   useImagePreloader(landingImages);
 
   const handlePlay = useCallback(() => {
-    if (exiting) return;
+    if (exiting) {
+      return;
+    }
     setExiting(true);
     setTimeout(onPlay, 700);
   }, [exiting, onPlay]);
@@ -39,7 +47,9 @@ export function LandingPage({ onPlay }: LandingPageProps) {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !exiting && !showCredits) handlePlay();
+      if (e.key === "Enter" && !exiting && !showCredits) {
+        handlePlay();
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -56,7 +66,11 @@ export function LandingPage({ onPlay }: LandingPageProps) {
         transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
       }}
     >
-      <HeroSection onPlay={handlePlay} exiting={exiting} onCredits={handleOpenCredits} />
+      <HeroSection
+        onPlay={handlePlay}
+        exiting={exiting}
+        onCredits={handleOpenCredits}
+      />
 
       <SectionReveal scrollRoot={scrollRef} delay={100}>
         <GameplayShowcase />

@@ -23,13 +23,17 @@ export function clearParticleGlowCache(): void {
 
 function getOrCreateGlowSprite(color: string): HTMLCanvasElement {
   let sprite = glowCache.get(color);
-  if (sprite) return sprite;
+  if (sprite) {
+    return sprite;
+  }
 
   sprite = document.createElement("canvas");
   sprite.width = SPRITE_SIZE;
   sprite.height = SPRITE_SIZE;
   const sCtx = sprite.getContext("2d");
-  if (!sCtx) return sprite;
+  if (!sCtx) {
+    return sprite;
+  }
 
   sCtx.shadowColor = color;
   sCtx.shadowBlur = SPRITE_BLUR_RADIUS;
@@ -54,10 +58,12 @@ export function drawGlowEffect(
   x: number,
   y: number,
   color: string,
-  baseBlur: number,
+  baseBlur: number
 ): void {
   const effective = getEffectiveShadowBlur(baseBlur);
-  if (effective < 0.5) return;
+  if (effective < 0.5) {
+    return;
+  }
 
   const sprite = getOrCreateGlowSprite(color);
   const scale = effective / SPRITE_BLUR_RADIUS;

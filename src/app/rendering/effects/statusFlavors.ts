@@ -1,5 +1,5 @@
-import type { Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { Position } from "../../types";
 
 const TAU = Math.PI * 2;
 
@@ -12,7 +12,7 @@ function drawIsometricEllipse(
   x: number,
   y: number,
   rx: number,
-  ry: number,
+  ry: number
 ): void {
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry * ISO_Y_RATIO, 0, 0, TAU);
@@ -27,7 +27,7 @@ export function renderCocoonStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   const wrap = (now * 0.003) % TAU;
@@ -43,7 +43,9 @@ export function renderCocoonStun(
     const phase = wrap + i * 0.78;
     const yOff = ((phase * 0.3) % 1) * s * 2 - s;
     const rx = s * 0.55 * (1 - Math.abs(yOff) / (s * 1.2));
-    if (rx < 1) continue;
+    if (rx < 1) {
+      continue;
+    }
     const threadAlpha = alpha * 0.5 * (1 - Math.abs(yOff) / (s * 1.2));
     ctx.strokeStyle = `rgba(245, 240, 230, ${threadAlpha})`;
     ctx.beginPath();
@@ -60,7 +62,12 @@ export function renderCocoonStun(
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(sx + Math.sin(now * 0.003 + i) * s * 0.2, sy + s * 0.4, sx, sy + s * 0.6);
+    ctx.quadraticCurveTo(
+      sx + Math.sin(now * 0.003 + i) * s * 0.2,
+      sy + s * 0.4,
+      sx,
+      sy + s * 0.6
+    );
     ctx.stroke();
   }
 }
@@ -70,7 +77,7 @@ export function renderCocoonSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Web patch on the ground slowing movement
@@ -86,7 +93,7 @@ export function renderCocoonSlow(
     ctx.stroke();
   }
   // Concentric web rings
-  for (let r = 0.3; r <= 1.0; r += 0.35) {
+  for (let r = 0.3; r <= 1; r += 0.35) {
     ctx.strokeStyle = `rgba(210, 205, 190, ${alpha * 0.2 * (1.1 - r)})`;
     drawIsometricEllipse(ctx, pos.x, pos.y, s * r, s * r);
     ctx.stroke();
@@ -98,7 +105,7 @@ export function renderCocoonPoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Venom drip from above
@@ -119,7 +126,7 @@ export function renderCocoonBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Acid burn — greenish-yellow corrosive drip
@@ -150,7 +157,7 @@ export function renderVineStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   const sway = Math.sin(now * 0.002) * 0.1;
@@ -197,7 +204,7 @@ export function renderVineSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Root tangle on ground
@@ -212,7 +219,7 @@ export function renderVineSlow(
       pos.x + Math.cos(angle + 0.4) * len * 0.6,
       pos.y + Math.sin(angle + 0.4) * len * 0.3 * ISO_Y_RATIO,
       pos.x + Math.cos(angle) * len,
-      pos.y + Math.sin(angle) * len * ISO_Y_RATIO,
+      pos.y + Math.sin(angle) * len * ISO_Y_RATIO
     );
     ctx.stroke();
   }
@@ -223,7 +230,7 @@ export function renderVineBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Thorn bleed — red thorn pricks
@@ -243,7 +250,7 @@ export function renderVinePoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Spore cloud
@@ -269,11 +276,18 @@ export function renderMireStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Mud grip — thick mud rising around the unit
-  const grad = ctx.createRadialGradient(pos.x, pos.y + s * 0.1, 0, pos.x, pos.y + s * 0.1, s);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y + s * 0.1,
+    0,
+    pos.x,
+    pos.y + s * 0.1,
+    s
+  );
   grad.addColorStop(0, `rgba(80, 65, 40, ${alpha * 0.35})`);
   grad.addColorStop(0.6, `rgba(60, 50, 30, ${alpha * 0.2})`);
   grad.addColorStop(1, "rgba(50, 40, 25, 0)");
@@ -292,7 +306,7 @@ export function renderMireStun(
       pos.x + Math.cos(a + 0.3) * s * 0.35,
       pos.y - s * 0.3,
       pos.x + Math.cos(a + 0.6) * s * 0.2,
-      pos.y - s * 0.6,
+      pos.y - s * 0.6
     );
     ctx.stroke();
   }
@@ -303,7 +317,7 @@ export function renderMireSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Bubbling mud pool
@@ -332,12 +346,19 @@ export function renderMirePoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Toxic miasma cloud
   const pulse = Math.sin(now * 0.003) * 0.15 + 0.85;
-  const grad = ctx.createRadialGradient(pos.x, pos.y - s * 0.3, 0, pos.x, pos.y - s * 0.3, s * 0.9);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y - s * 0.3,
+    0,
+    pos.x,
+    pos.y - s * 0.3,
+    s * 0.9
+  );
   grad.addColorStop(0, `rgba(80, 160, 40, ${alpha * 0.25 * pulse})`);
   grad.addColorStop(0.5, `rgba(60, 140, 30, ${alpha * 0.12})`);
   grad.addColorStop(1, "rgba(40, 120, 20, 0)");
@@ -363,7 +384,7 @@ export function renderMireBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Swamp acid — brownish-green corrosion
@@ -382,7 +403,8 @@ export function renderMireBurn(
       pos.x + Math.sin(i * 2.3) * s * 0.3,
       pos.y - seed * s * 1.1,
       1.8 * zoom,
-      0, TAU,
+      0,
+      TAU
     );
     ctx.fill();
   }
@@ -397,18 +419,29 @@ export function renderSandStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Petrification — unit turning to stone from bottom up
   const petrifyHeight = s * 1.6;
-  const grad = ctx.createLinearGradient(pos.x, pos.y + s * 0.2, pos.x, pos.y - petrifyHeight);
+  const grad = ctx.createLinearGradient(
+    pos.x,
+    pos.y + s * 0.2,
+    pos.x,
+    pos.y - petrifyHeight
+  );
   grad.addColorStop(0, `rgba(160, 150, 130, ${alpha * 0.5})`);
   grad.addColorStop(0.5, `rgba(140, 130, 120, ${alpha * 0.25})`);
   grad.addColorStop(1, `rgba(130, 120, 110, 0)`);
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.roundRect(pos.x - s * 0.4, pos.y - petrifyHeight, s * 0.8, petrifyHeight + s * 0.2, 3 * zoom);
+  ctx.roundRect(
+    pos.x - s * 0.4,
+    pos.y - petrifyHeight,
+    s * 0.8,
+    petrifyHeight + s * 0.2,
+    3 * zoom
+  );
   ctx.fill();
 
   // Stone crack lines
@@ -430,7 +463,7 @@ export function renderSandSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Swirling sand vortex around feet
@@ -458,7 +491,7 @@ export function renderSandBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Heat shimmer
@@ -489,7 +522,7 @@ export function renderSandPoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   renderMirePoison(ctx, pos, zoom, alpha, now);
 }
@@ -503,11 +536,18 @@ export function renderFrostStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Frozen solid — ice shell around unit
-  const iceGrad = ctx.createRadialGradient(pos.x, pos.y - s * 0.3, 0, pos.x, pos.y - s * 0.3, s * 1.1);
+  const iceGrad = ctx.createRadialGradient(
+    pos.x,
+    pos.y - s * 0.3,
+    0,
+    pos.x,
+    pos.y - s * 0.3,
+    s * 1.1
+  );
   iceGrad.addColorStop(0, `rgba(180, 220, 255, ${alpha * 0.3})`);
   iceGrad.addColorStop(0.5, `rgba(120, 180, 240, ${alpha * 0.15})`);
   iceGrad.addColorStop(1, "rgba(80, 140, 220, 0)");
@@ -547,7 +587,7 @@ export function renderFrostSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   const pulse = Math.sin(now * 0.003) * 0.2 + 0.8;
@@ -578,7 +618,10 @@ export function renderFrostSlow(
     const mx = pos.x + Math.cos(angle) * len * mid;
     const my = pos.y + Math.sin(angle) * len * ISO_Y_RATIO * mid;
     ctx.moveTo(mx, my);
-    ctx.lineTo(mx + Math.cos(angle + 0.8) * len * 0.3, my + Math.sin(angle + 0.8) * len * 0.15);
+    ctx.lineTo(
+      mx + Math.cos(angle + 0.8) * len * 0.3,
+      my + Math.sin(angle + 0.8) * len * 0.15
+    );
     ctx.stroke();
   }
 
@@ -608,13 +651,13 @@ export function renderFrostBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Frostbite — icy blue particles rising
   for (let i = 0; i < 5; i++) {
     const seed = (now * 0.003 + i * 1.2) % 1;
-    const fx = pos.x + Math.sin(now * 0.005 + i * 2.0) * s * 0.5;
+    const fx = pos.x + Math.sin(now * 0.005 + i * 2) * s * 0.5;
     const fy = pos.y - seed * s * 1.3;
     const fSize = (2 + i * 0.3) * zoom * (1 - seed * 0.5);
     ctx.fillStyle = `rgba(160, 200, 255, ${alpha * 0.5 * (1 - seed)})`;
@@ -629,7 +672,7 @@ export function renderFrostPoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   renderFrostBurn(ctx, pos, zoom, alpha, now);
 }
@@ -643,7 +686,7 @@ export function renderMagmaBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   const flicker = Math.sin(now * 0.01) * 0.15 + 0.85;
@@ -667,7 +710,7 @@ export function renderMagmaBurn(
     const len = s * (0.5 + Math.sin(i * 2.3) * 0.2);
     ctx.lineTo(
       pos.x + Math.cos(angle) * len,
-      pos.y + Math.sin(angle) * len * ISO_Y_RATIO,
+      pos.y + Math.sin(angle) * len * ISO_Y_RATIO
     );
     ctx.stroke();
   }
@@ -690,7 +733,7 @@ export function renderMagmaStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Ember cage — ring of flame pillars
@@ -719,7 +762,7 @@ export function renderMagmaSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Lava puddle
@@ -735,7 +778,8 @@ export function renderMagmaSlow(
   for (let i = 0; i < 3; i++) {
     const seed = (now * 0.002 + i * 1.5) % 1;
     const bx = pos.x + Math.sin(i * 2.5 + now * 0.001) * s * 0.4;
-    const by = pos.y + Math.sin(i * 1.3) * s * 0.2 * ISO_Y_RATIO - seed * s * 0.2;
+    const by =
+      pos.y + Math.sin(i * 1.3) * s * 0.2 * ISO_Y_RATIO - seed * s * 0.2;
     ctx.fillStyle = `rgba(255, 120, 30, ${alpha * 0.4 * (1 - seed)})`;
     ctx.beginPath();
     ctx.arc(bx, by, (2 + i * 0.5) * zoom, 0, TAU);
@@ -748,7 +792,7 @@ export function renderMagmaPoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   renderMagmaBurn(ctx, pos, zoom, alpha, now);
 }
@@ -762,7 +806,7 @@ export function renderNecroticStun(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Dark tendrils coiling around the unit
@@ -785,10 +829,7 @@ export function renderNecroticStun(
       const t = j / 5;
       const spiralA = baseA + t * Math.PI + Math.sin(phase) * 0.3;
       const r = s * 0.4 * (1 - t * 0.2);
-      ctx.lineTo(
-        pos.x + Math.cos(spiralA) * r,
-        pos.y + s * 0.15 - t * s * 1.4,
-      );
+      ctx.lineTo(pos.x + Math.cos(spiralA) * r, pos.y + s * 0.15 - t * s * 1.4);
     }
     ctx.stroke();
   }
@@ -810,7 +851,7 @@ export function renderNecroticSlow(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Spectral chains orbiting
@@ -844,7 +885,7 @@ export function renderNecroticBurn(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Soul siphon — purple flame-like wisps rising
@@ -858,7 +899,7 @@ export function renderNecroticBurn(
 
   for (let i = 0; i < 5; i++) {
     const seed = (now * 0.003 + i * 1.3) % 1;
-    const wx = pos.x + Math.sin(now * 0.005 + i * 2.0) * s * 0.4;
+    const wx = pos.x + Math.sin(now * 0.005 + i * 2) * s * 0.4;
     const wy = pos.y - seed * s * 1.4;
     const wSize = (2 + i * 0.3) * zoom * (1 - seed * 0.5);
     ctx.fillStyle = `rgba(180, 100, 255, ${alpha * 0.5 * (1 - seed)})`;
@@ -875,14 +916,14 @@ export function renderNecroticPoison(
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ): void {
   const s = 15 * zoom;
   // Necrotic decay — dark green-purple corruption
   for (let i = 0; i < 5; i++) {
     const seed = (now * 0.002 + i * 0.9) % 1;
     const dx = pos.x + Math.sin(i * 2.1 + now * 0.001) * s * 0.5;
-    const dy = pos.y - seed * s * 1.0;
+    const dy = pos.y - seed * s * 1;
     ctx.fillStyle = `rgba(100, 60, 140, ${alpha * 0.4 * (1 - seed)})`;
     ctx.beginPath();
     ctx.arc(dx, dy, (2 + i * 0.4) * zoom, 0, TAU);
@@ -899,61 +940,69 @@ type FlavorRenderer = (
   pos: Position,
   zoom: number,
   alpha: number,
-  now: number,
+  now: number
 ) => void;
 
 const STUN_FLAVORS: Record<string, FlavorRenderer> = {
   cocoon: renderCocoonStun,
-  vine: renderVineStun,
-  mire: renderMireStun,
-  sand: renderSandStun,
   frost: renderFrostStun,
   magma: renderMagmaStun,
+  mire: renderMireStun,
   necrotic: renderNecroticStun,
+  sand: renderSandStun,
+  vine: renderVineStun,
 };
 
 const BURN_FLAVORS: Record<string, FlavorRenderer> = {
   cocoon: renderCocoonBurn,
-  vine: renderVineBurn,
-  mire: renderMireBurn,
-  sand: renderSandBurn,
   frost: renderFrostBurn,
   magma: renderMagmaBurn,
+  mire: renderMireBurn,
   necrotic: renderNecroticBurn,
+  sand: renderSandBurn,
+  vine: renderVineBurn,
 };
 
 const SLOW_FLAVORS: Record<string, FlavorRenderer> = {
   cocoon: renderCocoonSlow,
-  vine: renderVineSlow,
-  mire: renderMireSlow,
-  sand: renderSandSlow,
   frost: renderFrostSlow,
   magma: renderMagmaSlow,
+  mire: renderMireSlow,
   necrotic: renderNecroticSlow,
+  sand: renderSandSlow,
+  vine: renderVineSlow,
 };
 
 const POISON_FLAVORS: Record<string, FlavorRenderer> = {
   cocoon: renderCocoonPoison,
-  vine: renderVinePoison,
-  mire: renderMirePoison,
-  sand: renderSandPoison,
   frost: renderFrostPoison,
   magma: renderMagmaPoison,
+  mire: renderMirePoison,
   necrotic: renderNecroticPoison,
+  sand: renderSandPoison,
+  vine: renderVinePoison,
 };
 
-export function getFlavoredStunRenderer(flavor?: string): FlavorRenderer | null {
+export function getFlavoredStunRenderer(
+  flavor?: string
+): FlavorRenderer | null {
   return (flavor && STUN_FLAVORS[flavor]) || null;
 }
 
-export function getFlavoredBurnRenderer(flavor?: string): FlavorRenderer | null {
+export function getFlavoredBurnRenderer(
+  flavor?: string
+): FlavorRenderer | null {
   return (flavor && BURN_FLAVORS[flavor]) || null;
 }
 
-export function getFlavoredSlowRenderer(flavor?: string): FlavorRenderer | null {
+export function getFlavoredSlowRenderer(
+  flavor?: string
+): FlavorRenderer | null {
   return (flavor && SLOW_FLAVORS[flavor]) || null;
 }
 
-export function getFlavoredPoisonRenderer(flavor?: string): FlavorRenderer | null {
+export function getFlavoredPoisonRenderer(
+  flavor?: string
+): FlavorRenderer | null {
   return (flavor && POISON_FLAVORS[flavor]) || null;
 }

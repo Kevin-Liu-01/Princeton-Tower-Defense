@@ -1,25 +1,4 @@
-import type {
-  Position,
-  Tower,
-  Enemy,
-  EnemyType,
-  Hero,
-  Troop,
-  Spell,
-  Projectile,
-  Effect,
-  EffectType,
-  Particle,
-  ParticleType,
-  TowerType,
-  TroopType,
-  GameState,
-  LevelStars,
-  SpecialTower,
-  DeathCause,
-  EnemyAbilityType,
-} from "../../types";
-import { type GameEventLogAPI } from "../useGameEventLog";
+import { calculateCategoryRatings } from "../../components/menus/VictoryScreen";
 import {
   TILE_SIZE,
   GRID_WIDTH,
@@ -83,30 +62,16 @@ import {
   SUMMON_CHANNEL_DURATION,
   SUMMON_MINION_FADE_DURATION,
 } from "../../constants";
-import {
-  gridToWorld,
-  gridToWorldPath,
-  screenToWorld,
-  distance,
-  distanceSq,
-  generateId,
-  getPathSegmentLength,
-  findClosestPathPoint,
-  getMortarBarrelOrigin,
-} from "../../utils";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
+import { EnemyMutationBatch } from "../../game/enemyMutationBatch";
+import { acquireEnemy } from "../../game/entityPool";
 import {
-  clampLaneOffset,
-  clampLaneIndex,
-  getNearestLaneIndex,
-  ENEMY_LANE_OFFSETS,
-  ENEMY_CENTER_LANE_INDEX,
-  ENEMY_SPAWN_LANE_JITTER,
-  ENEMY_REPULSION_PROGRESS_RADIUS,
-  ENEMY_REPULSION_LATERAL_STRENGTH,
-  ENEMY_FORMATION_PULL_STRENGTH,
-  ENEMY_LANE_SHIFT_MS,
-} from "../../game/spatial";
+  calculateHazardEffects,
+  applyHazardEffect,
+  calculateFriendlyHazardEffects,
+  applyHazardEffectToTroop,
+  applyHazardEffectToHero,
+} from "../../game/hazards";
 import {
   findClosestRoadPoint,
   getBarracksOwnerId,
@@ -120,36 +85,14 @@ import {
   isEnemyReachableAlongPath,
 } from "../../game/movement";
 import {
-  getPrioritizedEnemiesInRange,
-  getClosestEnemyInRange,
-  getChainTargets,
-  getTroopCellKey,
-  findNearestTroopInRange,
-  getVaultImpactPos,
-  type VaultEntry,
-  createEnemyPosCache,
-  buildEnemySpatialHash,
-} from "../../game/spatial";
-import {
-  applyEnemyAbilities,
-  buildAbilityCooldowns,
-  addOrRefreshDebuff,
-  getEnemyDamageTaken,
-} from "../../game/status";
-import {
   CAMPAIGN_LEVEL_UNLOCKS,
   REGION_CAMPAIGN_LEVELS,
   REGION_CHALLENGE_UNLOCKS,
   CHALLENGE_LEVEL_UNLOCKS,
   isRegionCleared,
-  type RegionKey,
 } from "../../game/progression";
-import { calculateCategoryRatings } from "../../components/menus/VictoryScreen";
-import { insertionSortBy } from "../../rendering/utils/insertionSort";
-import { calculateHazardEffects, applyHazardEffect, calculateFriendlyHazardEffects, applyHazardEffectToTroop, applyHazardEffectToHero } from "../../game/hazards";
-import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
-import { EnemyMutationBatch } from "../../game/enemyMutationBatch";
-import { acquireEnemy } from "../../game/entityPool";
+import type { RegionKey } from "../../game/progression";
+import { isSandboxLevel, ensureSandboxWaves } from "../../game/sandboxWaves";
 import {
   TROOP_RESPAWN_TIME,
   TROOP_SEPARATION_DIST,
@@ -172,9 +115,76 @@ import {
   getVaultHpMap,
   vaultPosKey,
 } from "../../game/setup";
-import { isSandboxLevel, ensureSandboxWaves } from "../../game/sandboxWaves";
+import {
+  clampLaneOffset,
+  clampLaneIndex,
+  getNearestLaneIndex,
+  ENEMY_LANE_OFFSETS,
+  ENEMY_CENTER_LANE_INDEX,
+  ENEMY_SPAWN_LANE_JITTER,
+  ENEMY_REPULSION_PROGRESS_RADIUS,
+  ENEMY_REPULSION_LATERAL_STRENGTH,
+  ENEMY_FORMATION_PULL_STRENGTH,
+  ENEMY_LANE_SHIFT_MS,
+} from "../../game/spatial";
+import {
+  getPrioritizedEnemiesInRange,
+  getClosestEnemyInRange,
+  getChainTargets,
+  getTroopCellKey,
+  findNearestTroopInRange,
+  getVaultImpactPos,
+  createEnemyPosCache,
+  buildEnemySpatialHash,
+} from "../../game/spatial";
+import type { VaultEntry } from "../../game/spatial";
+import {
+  applyEnemyAbilities,
+  buildAbilityCooldowns,
+  addOrRefreshDebuff,
+  getEnemyDamageTaken,
+} from "../../game/status";
 import { updateParticlePool, enforceParticleCap } from "../../rendering";
-import { getSentinelBoltColor, SENTINEL_CRYSTAL_Y_OFFSET, SUNFORGE_GEM_Y_OFFSET } from "../../rendering/towers/sentinelTheme";
+import {
+  getSentinelBoltColor,
+  SENTINEL_CRYSTAL_Y_OFFSET,
+  SUNFORGE_GEM_Y_OFFSET,
+} from "../../rendering/towers/sentinelTheme";
+import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
+import { insertionSortBy } from "../../rendering/utils/insertionSort";
+import type {
+  Position,
+  Tower,
+  Enemy,
+  EnemyType,
+  Hero,
+  Troop,
+  Spell,
+  Projectile,
+  Effect,
+  EffectType,
+  Particle,
+  ParticleType,
+  TowerType,
+  TroopType,
+  GameState,
+  LevelStars,
+  SpecialTower,
+  DeathCause,
+  EnemyAbilityType,
+} from "../../types";
+import {
+  gridToWorld,
+  gridToWorldPath,
+  screenToWorld,
+  distance,
+  distanceSq,
+  generateId,
+  getPathSegmentLength,
+  findClosestPathPoint,
+  getMortarBarrelOrigin,
+} from "../../utils";
+import type { GameEventLogAPI } from "../useGameEventLog";
 import { getGameSettings } from "../useSettings";
 import { isDefined, FRIENDLY_SEPARATION_MULT } from "./runtimeConfig";
 
@@ -226,19 +236,37 @@ export interface UpdateGameParams {
   setLives: SetStateFn<number>;
   setSpecialTowerHp: SetStateFn<Record<string, number>>;
   setVaultFlash: SetStateFn<Record<string, number>>;
-  setLeakedBountyEvents: SetStateFn<Array<{ id: string; amount: number }>>;
-  setEatingClubIncomeEvents: SetStateFn<Array<{ id: string; amount: number }>>;
+  setLeakedBountyEvents: SetStateFn<{ id: string; amount: number }[]>;
+  setEatingClubIncomeEvents: SetStateFn<{ id: string; amount: number }[]>;
 
   // === Callbacks ===
   startWave: () => void;
   addParticles: (pos: Position, type: ParticleType, count: number) => void;
   clearAllTimers: () => void;
-  updateLevelStats: (map: string, time: number, lives: number, won: boolean) => void;
+  updateLevelStats: (
+    map: string,
+    time: number,
+    lives: number,
+    won: boolean
+  ) => void;
   updateLevelStars: (map: string, stars: number) => void;
   unlockLevel: (level: string) => void;
-  awardBounty: (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => void;
-  killHero: (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number) => Hero;
-  onEnemyKill: (enemy: Enemy, pos: Position, particleCount?: number, deathCause?: DeathCause) => void;
+  awardBounty: (
+    baseBounty: number,
+    hasGoldAura: boolean,
+    sourceId?: string
+  ) => void;
+  killHero: (
+    fallenHero: Hero,
+    respawnTimerMs: number,
+    lastCombatTime?: number
+  ) => Hero;
+  onEnemyKill: (
+    enemy: Enemy,
+    pos: Position,
+    particleCount?: number,
+    deathCause?: DeathCause
+  ) => void;
   onTroopDeath: (troop: Troop, pos: Position) => void;
   addPawPoints: (amount: number) => void;
   addEffectEntities: (effects: Effect[]) => void;
@@ -261,7 +289,16 @@ export interface UpdateGameParams {
   lastSunforgeBarrageRef: { current: Map<string, number> };
   sunforgeAimRef: { current: Map<string, Position> };
   lastBarracksSpawnRef: { current: Map<string, number> };
-  entityCountsRef: { current: { projectiles: number; enemies: number; effects: number; towers: number; troops: number; particles: number } };
+  entityCountsRef: {
+    current: {
+      projectiles: number;
+      enemies: number;
+      effects: number;
+      towers: number;
+      troops: number;
+      particles: number;
+    };
+  };
   projectileUpdateAccumulator: { current: number };
   effectsUpdateAccumulator: { current: number };
   particleUpdateAccumulator: { current: number };
@@ -276,7 +313,10 @@ export interface UpdateGameParams {
 const MAX_PARTICLES = 300;
 const MAX_EFFECTS = 80;
 
-export function updateGameTick(params: UpdateGameParams, deltaTime: number): void {
+export function updateGameTick(
+  params: UpdateGameParams,
+  deltaTime: number
+): void {
   const {
     gameSpeed,
     selectedMap,
@@ -382,7 +422,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   ) {
     gameEndHandledRef.current = true;
 
-    const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
+    const finalTime = Math.floor(
+      (Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000
+    );
     setTimeSpent(finalTime);
 
     clearAllTimers();
@@ -394,7 +436,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     if (!isFreeplay) {
       updateLevelStats(selectedMap, finalTime, lives, false);
     }
-    gameEventLogRef.current.log("defeat", `Defeat on ${selectedMap} — ${lives} lives remaining, ${finalTime}s elapsed`, { map: selectedMap, livesLeft: lives, time: finalTime, freeplay: isFreeplay });
+    gameEventLogRef.current.log(
+      "defeat",
+      `Defeat on ${selectedMap} — ${lives} lives remaining, ${finalTime}s elapsed`,
+      {
+        freeplay: isFreeplay,
+        livesLeft: lives,
+        map: selectedMap,
+        time: finalTime,
+      }
+    );
     setBattleOutcome("defeat");
   }
   if (
@@ -408,13 +459,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   ) {
     gameEndHandledRef.current = true;
 
-    const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
+    const finalTime = Math.floor(
+      (Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000
+    );
     setTimeSpent(finalTime);
 
     const { overall: stars } = calculateCategoryRatings(
       finalTime,
       lives,
-      totalWaves,
+      totalWaves
     );
     setStarsEarned(stars);
 
@@ -423,7 +476,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setHoveredWaveBubblePathKey(null);
     setNextWaveTimer(0);
     setGameSpeed(0);
-    gameEventLogRef.current.log("victory", `Victory on ${selectedMap}! ${lives} lives remaining`, { map: selectedMap, livesLeft: lives, freeplay: isFreeplay });
+    gameEventLogRef.current.log(
+      "victory",
+      `Victory on ${selectedMap}! ${lives} lives remaining`,
+      { freeplay: isFreeplay, livesLeft: lives, map: selectedMap }
+    );
     setBattleOutcome("victory");
 
     if (!isFreeplay) {
@@ -440,16 +497,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         ...levelStars,
         [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
       };
-      (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
-        RegionKey
-      >).forEach((regionKey) => {
-        if (!isRegionCleared(regionKey, projectedLevelStars)) return;
-        REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
-          if (!unlockedMaps.includes(challengeLevel)) {
-            unlockLevel(challengeLevel);
+      (Object.keys(REGION_CAMPAIGN_LEVELS) as RegionKey[]).forEach(
+        (regionKey) => {
+          if (!isRegionCleared(regionKey, projectedLevelStars)) {
+            return;
           }
-        });
-      });
+          REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
+            if (!unlockedMaps.includes(challengeLevel)) {
+              unlockLevel(challengeLevel);
+            }
+          });
+        }
+      );
 
       const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
       if (
@@ -491,10 +550,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   );
   const vaultEntries: VaultEntry[] = specialTowers
     .filter((tower) => tower.type === "vault")
-    .map((tower) => ({ worldPos: gridToWorld(tower.pos), key: vaultPosKey(tower.pos) }));
+    .map((tower) => ({
+      key: vaultPosKey(tower.pos),
+      worldPos: gridToWorld(tower.pos),
+    }));
   // Wave timer - check outside setState to avoid race conditions
   // Freeze the timer while tutorial or encounter overlays are active
-  if (!waveInProgress && currentWave < levelWaves.length && !tutorialBlockingRef.current) {
+  if (
+    !waveInProgress &&
+    currentWave < levelWaves.length &&
+    !tutorialBlockingRef.current
+  ) {
     const autoSend = getGameSettings().ui.autoSendWaves;
     const shouldStartWave = nextWaveTimer - deltaTime <= 0;
     if (shouldStartWave && autoSend) {
@@ -510,7 +576,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   const getEnemyPosCached = enemyPosCache.getPos;
   const getEnemyAimPosCached = enemyPosCache.getAimPos;
 
-  const enemiesByProgress = enemies.slice();
+  const enemiesByProgress = [...enemies];
   insertionSortBy(enemiesByProgress, (e) => -(e.pathIndex + e.progress));
 
   const enemyHash = buildEnemySpatialHash(enemies, getEnemyPosCached);
@@ -532,21 +598,33 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     origin: Position,
     range: number,
     limit?: number,
-    predicate?: (e: Enemy) => boolean,
+    predicate?: (e: Enemy) => boolean
   ) =>
-    getPrioritizedEnemiesInRange(origin, range, enemiesByProgress, getEnemyPosCached, limit, predicate);
+    getPrioritizedEnemiesInRange(
+      origin,
+      range,
+      enemiesByProgress,
+      getEnemyPosCached,
+      limit,
+      predicate
+    );
   const getClosestEnemy = (
     origin: Position,
     range: number,
-    predicate?: (e: Enemy) => boolean,
-  ) =>
-    enemyHash.getClosest(origin, range, predicate);
+    predicate?: (e: Enemy) => boolean
+  ) => enemyHash.getClosest(origin, range, predicate);
   const getNearestTroop = (
     origin: Position,
     range: number,
-    predicate?: (t: Troop) => boolean,
+    predicate?: (t: Troop) => boolean
   ) =>
-    findNearestTroopInRange(origin, range, troopBuckets, troopCellSize, predicate);
+    findNearestTroopInRange(
+      origin,
+      range,
+      troopBuckets,
+      troopCellSize,
+      predicate
+    );
   const getClosestVault = (enemyPos: Position, maxDistance: number) =>
     getVaultImpactPos(enemyPos, vaultEntries, maxDistance);
 
@@ -556,12 +634,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // =========================================================================
   setTowers((prev) =>
     prev.map((t) => {
-      if (t.type === "club") return t; // Clubs don't receive buffs
+      if (t.type === "club") {
+        return t;
+      } // Clubs don't receive buffs
 
       const tWorldPos = gridToWorld(t.pos);
 
       // Calculate RANGE buffs (multiplicative stacking)
-      let rangeMultiplier = 1.0;
+      let rangeMultiplier = 1;
 
       // F. Scott's Inspiration buff check (used for both range and damage)
       const isScottActive = t.boostEnd ? now < t.boostEnd : false;
@@ -581,7 +661,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
       // Investment Bank range buff (from nearby level 4A clubs)
       prev.forEach((club) => {
-        if (club.type === "club" && club.level === 4 && club.upgrade === "A" && club.id !== t.id) {
+        if (
+          club.type === "club" &&
+          club.level === 4 &&
+          club.upgrade === "A" &&
+          club.id !== t.id
+        ) {
           const clubPos = gridToWorld(club.pos);
           if (distance(tWorldPos, clubPos) <= INVESTMENT_BANK_BUFF_RANGE) {
             rangeMultiplier *= INVESTMENT_BANK_RANGE_BUFF;
@@ -592,7 +677,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       rangeMultiplier = Math.min(rangeMultiplier, RANGE_BUFF_CAP);
 
       // Calculate DAMAGE buffs (multiplicative stacking)
-      let damageMultiplier = 1.0;
+      let damageMultiplier = 1;
 
       // F. Scott's Inspiration damage buff (time-limited)
       if (isScottActive && t.isBuffed) {
@@ -601,7 +686,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
       // Recruitment Center damage buff (from nearby level 4B clubs)
       prev.forEach((club) => {
-        if (club.type === "club" && club.level === 4 && club.upgrade === "B" && club.id !== t.id) {
+        if (
+          club.type === "club" &&
+          club.level === 4 &&
+          club.upgrade === "B" &&
+          club.id !== t.id
+        ) {
           const clubPos = gridToWorld(club.pos);
           if (distance(tWorldPos, clubPos) <= RECRUITMENT_CENTER_BUFF_RANGE) {
             damageMultiplier *= RECRUITMENT_CENTER_DAMAGE_BUFF;
@@ -612,19 +702,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       damageMultiplier = Math.min(damageMultiplier, DAMAGE_BUFF_CAP);
 
       // Calculate ATTACK SPEED buffs (multiplicative stacking)
-      let attackSpeedMultiplier = 1.0;
+      let attackSpeedMultiplier = 1;
       for (const relay of chronoRelays) {
         const relayPos = gridToWorld(relay.pos);
         if (distance(tWorldPos, relayPos) < CHRONO_RELAY_BUFF_RANGE) {
           attackSpeedMultiplier *= CHRONO_RELAY_SPEED_BUFF;
         }
       }
-      attackSpeedMultiplier = Math.min(attackSpeedMultiplier, ATTACK_SPEED_BUFF_CAP);
+      attackSpeedMultiplier = Math.min(
+        attackSpeedMultiplier,
+        ATTACK_SPEED_BUFF_CAP
+      );
 
       const hasAnyBuff =
-        rangeMultiplier > 1.0 ||
-        damageMultiplier > 1.0 ||
-        attackSpeedMultiplier > 1.0;
+        rangeMultiplier > 1 ||
+        damageMultiplier > 1 ||
+        attackSpeedMultiplier > 1;
 
       return {
         ...t,
@@ -644,19 +737,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   const levelDataForHazards = LEVEL_DATA[selectedMap];
   const hazards = levelDataForHazards?.hazards;
   if (hazards && hazards.length > 0) {
-
     // Calculate hazard effects using the imported function
-    const { effects: hazardEffects, particles: hazardParticles } = calculateHazardEffects(
-      hazards,
-      enemies,
-      deltaTime,
-      (enemy) => getEnemyPosCached(enemy)
-    );
+    const { effects: hazardEffects, particles: hazardParticles } =
+      calculateHazardEffects(hazards, enemies, deltaTime, (enemy) =>
+        getEnemyPosCached(enemy)
+      );
 
     if (hazardEffects.size > 0) {
       for (const [id, effect] of hazardEffects) {
         enemyBatch.transform(id, (e) =>
-          applyHazardEffect(e, effect, ENEMY_DATA[e.type].speed),
+          applyHazardEffect(e, effect, ENEMY_DATA[e.type].speed)
         );
       }
 
@@ -676,14 +766,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       hazards,
       troops,
       hero,
-      deltaTime,
+      deltaTime
     );
 
     if (friendlyResult.troopEffects.size > 0) {
       setTroops((prev) =>
         prev.map((t) => {
           const effect = friendlyResult.troopEffects.get(t.id);
-          if (!effect) return t;
+          if (!effect) {
+            return t;
+          }
           return applyHazardEffectToTroop(t, effect);
         })
       );
@@ -697,7 +789,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
     if (friendlyResult.heroEffect) {
       setHero((prev) => {
-        if (!prev) return null;
+        if (!prev) {
+          return null;
+        }
         return applyHazardEffectToHero(prev, friendlyResult.heroEffect!);
       });
       if (friendlyResult.heroEffect.fireParticlePos) {
@@ -705,7 +799,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       }
     }
 
-    friendlyResult.particles.forEach((p) => addParticles(p.pos, p.type, p.count));
+    friendlyResult.particles.forEach((p) =>
+      addParticles(p.pos, p.type, p.count)
+    );
   }
 
   // =========================================================================
@@ -727,10 +823,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         setHero((prev) =>
           prev
             ? {
-              ...prev,
-              hp: Math.min(prev.maxHp, prev.hp + healAmount),
-              healFlash: Date.now(),
-            }
+                ...prev,
+                healFlash: Date.now(),
+                hp: Math.min(prev.maxHp, prev.hp + healAmount),
+              }
             : null
         );
         addParticles(hero.pos, "heal", 10);
@@ -742,11 +838,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const isInShrineRange = shrineWorldPositions.some(
           (pos) => distance(troop.pos, pos) < healRadius
         );
-        if (!isInShrineRange || troop.isHexGhost) return troop;
+        if (!isInShrineRange || troop.isHexGhost) {
+          return troop;
+        }
         return {
           ...troop,
-          hp: Math.min(troop.maxHp, troop.hp + healAmount),
           healFlash: Date.now(),
+          hp: Math.min(troop.maxHp, troop.hp + healAmount),
         };
       })
     );
@@ -757,9 +855,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         {
           id: generateId("shrine"),
           pos,
-          type: "arcaneField",
           progress: 0,
           size: healRadius,
+          type: "arcaneField",
         },
       ]);
     });
@@ -776,7 +874,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // B2. SENTINEL NEXUS: Locked-coordinate lightning strike.
   if (sentinelNexuses.length > 0) {
     const baseStrikeIntervalMs = SENTINEL_NEXUS_STATS.strikeIntervalMs;
-    const strikeIntervalMs = gameSpeed > 0 ? baseStrikeIntervalMs / gameSpeed : baseStrikeIntervalMs;
+    const strikeIntervalMs =
+      gameSpeed > 0 ? baseStrikeIntervalMs / gameSpeed : baseStrikeIntervalMs;
     const strikeRadius = SENTINEL_NEXUS_STATS.radius;
     const strikeDamage = SENTINEL_NEXUS_STATS.damage;
     const sentinelKeys = new Set<string>();
@@ -809,47 +908,60 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     for (const nexus of sentinelNexuses) {
       const strikeKey = getSpecialTowerKey(nexus);
       const lastStrike = lastSentinelStrikeRef.current.get(strikeKey) ?? 0;
-      if (now - lastStrike < strikeIntervalMs) continue;
-      if (!specialTowerWarmedUp) continue;
+      if (now - lastStrike < strikeIntervalMs) {
+        continue;
+      }
+      if (!specialTowerWarmedUp) {
+        continue;
+      }
 
       const targetPos = nextTargets[strikeKey];
-      if (!targetPos) continue;
+      if (!targetPos) {
+        continue;
+      }
 
       lastSentinelStrikeRef.current.set(strikeKey, now);
       const nexusWorldPos = gridToWorld(nexus.pos);
       const mapTheme = LEVEL_DATA[selectedMap]?.theme;
       strikeEffects.push({
+        color: getSentinelBoltColor(mapTheme),
+        duration: 240,
         id: generateId("sentinel_strike"),
+        intensity: 1.55,
         pos: nexusWorldPos,
-        type: "lightning",
         progress: 0,
         size: distance(nexusWorldPos, targetPos),
-        targetPos,
-        intensity: 1.55,
-        duration: 240,
-        color: getSentinelBoltColor(mapTheme),
         sourceYOffset: SENTINEL_CRYSTAL_Y_OFFSET,
+        targetPos,
+        type: "lightning",
       });
       strikeEffects.push({
+        duration: 560,
         id: generateId("sentinel_impact"),
         pos: targetPos,
-        type: "sentinel_impact",
         progress: 0,
         size: strikeRadius,
-        duration: 560,
+        type: "sentinel_impact",
       });
       addParticles(targetPos, "spark", 18);
       addParticles(targetPos, "light", 8);
       addParticles(nexusWorldPos, "light", 6);
 
       for (const enemy of enemies) {
-        if (enemy.dead || enemy.hp <= 0) continue;
+        if (enemy.dead || enemy.hp <= 0) {
+          continue;
+        }
         const enemyPos = getEnemyPosCached(enemy);
         const distToStrike = distance(enemyPos, targetPos);
-        if (distToStrike > strikeRadius) continue;
+        if (distToStrike > strikeRadius) {
+          continue;
+        }
         const falloff = Math.max(0.45, 1 - distToStrike / strikeRadius);
         const damage = strikeDamage * falloff;
-        pendingDamage.set(enemy.id, (pendingDamage.get(enemy.id) ?? 0) + damage);
+        pendingDamage.set(
+          enemy.id,
+          (pendingDamage.get(enemy.id) ?? 0) + damage
+        );
       }
     }
 
@@ -858,7 +970,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         prev
           .map((enemy) => {
             const incoming = pendingDamage.get(enemy.id);
-            if (!incoming) return enemy;
+            if (!incoming) {
+              return enemy;
+            }
             const enemyPos = getEnemyPosCached(enemy);
             const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming);
             if (hp <= 0) {
@@ -867,10 +981,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             }
             return {
               ...enemy,
-              hp,
               damageFlash: SENTINEL_NEXUS_STATS.damageFlash,
-              stunUntil: Math.max(enemy.stunUntil || 0, now + SENTINEL_NEXUS_STATS.stunDuration),
+              hp,
               lastDamageTaken: now,
+              stunUntil: Math.max(
+                enemy.stunUntil || 0,
+                now + SENTINEL_NEXUS_STATS.stunDuration
+              ),
             };
           })
           .filter(isDefined)
@@ -900,11 +1017,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     sunforgeAimRef.current.clear();
   }
   if (sunforgeOrreries.length > 0 && enemies.length > 0) {
-    const { barrageIntervalMs, clusterScanRadius, strikeRadius, directDamage, burnDps, burnDurationMs, stunDuration: sunforgeStunMs } = SUNFORGE_ORRERY_STATS;
+    const {
+      barrageIntervalMs,
+      clusterScanRadius,
+      strikeRadius,
+      directDamage,
+      burnDps,
+      burnDurationMs,
+      stunDuration: sunforgeStunMs,
+    } = SUNFORGE_ORRERY_STATS;
     const sunforgeKeys = new Set<string>();
     const pendingDamage = new Map<
       string,
-      { damage: number; burnDamage: number; burnUntil: number; stunUntil: number }
+      {
+        damage: number;
+        burnDamage: number;
+        burnUntil: number;
+        stunUntil: number;
+      }
     >();
     const strikeEffects: Effect[] = [];
 
@@ -915,8 +1045,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       // Stride-sample pivots to keep cost O(n * n/stride) instead of O(n²)
       let bestTarget: Position | null = null;
       let bestScore = -Infinity;
-      const aliveEnemies = enemiesByProgress.filter(e => !e.dead && e.hp > 0);
-      const pivotStride = aliveEnemies.length > 40 ? Math.ceil(aliveEnemies.length / 40) : 1;
+      const aliveEnemies = enemiesByProgress.filter((e) => !e.dead && e.hp > 0);
+      const pivotStride =
+        aliveEnemies.length > 40 ? Math.ceil(aliveEnemies.length / 40) : 1;
       const clusterScanRadiusSq = clusterScanRadius * clusterScanRadius;
       for (let pi = 0; pi < aliveEnemies.length; pi += pivotStride) {
         const pivotEnemy = aliveEnemies[pi];
@@ -927,10 +1058,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const dx = pivotPos.x - candidatePos.x;
           const dy = pivotPos.y - candidatePos.y;
           const dSq = dx * dx + dy * dy;
-          if (dSq > clusterScanRadiusSq) continue;
+          if (dSq > clusterScanRadiusSq) {
+            continue;
+          }
           const dist = Math.sqrt(dSq);
           const proximityWeight = 1 - dist / clusterScanRadius;
-          const progressWeight = 1 + (candidate.pathIndex + candidate.progress) * 0.06;
+          const progressWeight =
+            1 + (candidate.pathIndex + candidate.progress) * 0.06;
           score += 1 + proximityWeight * 1.35 + progressWeight * 0.22;
         }
         if (score > bestScore) {
@@ -944,28 +1078,40 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       }
 
       const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
-      if (now - lastBarrage < barrageIntervalMs) continue;
-      if (!specialTowerWarmedUp) continue;
-      if (!bestTarget) continue;
+      if (now - lastBarrage < barrageIntervalMs) {
+        continue;
+      }
+      if (!specialTowerWarmedUp) {
+        continue;
+      }
+      if (!bestTarget) {
+        continue;
+      }
       const fireTarget = bestTarget;
       lastSunforgeBarrageRef.current.set(key, now);
 
       const orreryWorldPos = gridToWorld(orrery.pos);
-      const spinPhase = now * 0.0012 + orrery.pos.x * 0.17 + orrery.pos.y * 0.09;
+      const spinPhase =
+        now * 0.0012 + orrery.pos.x * 0.17 + orrery.pos.y * 0.09;
       const sfVolley = SUNFORGE_ORRERY_STATS.volleyOffsets;
       const volleyOffsets = [
-        { x: 0, y: 0, multiplier: sfVolley[0].multiplier, radiusScale: sfVolley[0].radiusScale },
         {
-          x: Math.cos(spinPhase) * 70,
-          y: Math.sin(spinPhase * 1.2) * 42,
-          multiplier: sfVolley[1].multiplier,
-          radiusScale: sfVolley[1].radiusScale,
+          multiplier: sfVolley[0].multiplier,
+          radiusScale: sfVolley[0].radiusScale,
+          x: 0,
+          y: 0,
         },
         {
-          x: Math.cos(spinPhase + Math.PI * 0.78) * 68,
-          y: Math.sin(spinPhase * 1.28 + Math.PI * 0.52) * 40,
+          multiplier: sfVolley[1].multiplier,
+          radiusScale: sfVolley[1].radiusScale,
+          x: Math.cos(spinPhase) * 70,
+          y: Math.sin(spinPhase * 1.2) * 42,
+        },
+        {
           multiplier: sfVolley[2].multiplier,
           radiusScale: sfVolley[2].radiusScale,
+          x: Math.cos(spinPhase + Math.PI * 0.78) * 68,
+          y: Math.sin(spinPhase * 1.28 + Math.PI * 0.52) * 40,
         },
       ];
 
@@ -990,42 +1136,46 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const volleyDamage = directDamage * offset.multiplier;
 
         strikeEffects.push({
+          duration: 260,
           id: generateId("sunforge_beam"),
+          intensity: 1.25 + volleyIndex * 0.12,
           pos: orreryWorldPos,
-          type: "sunforge_beam",
           progress: 0,
           size: distance(orreryWorldPos, targetPos),
-          targetPos,
-          intensity: 1.25 + volleyIndex * 0.12,
-          duration: 260,
           sourceYOffset: SUNFORGE_GEM_Y_OFFSET,
+          targetPos,
+          type: "sunforge_beam",
         });
         strikeEffects.push({
+          duration: 640,
           id: generateId("sunforge_impact"),
+          intensity: 1 + volleyIndex * 0.08,
           pos: targetPos,
-          type: "sunforge_impact",
           progress: 0,
           size: volleyRadius,
-          intensity: 1.0 + volleyIndex * 0.08,
-          duration: 640,
+          type: "sunforge_impact",
         });
         addParticles(targetPos, "fire", 16 - volleyIndex * 2);
         addParticles(targetPos, "spark", 12 - volleyIndex);
         addParticles(targetPos, "light", 6);
 
         for (const enemy of enemies) {
-          if (enemy.dead || enemy.hp <= 0) continue;
+          if (enemy.dead || enemy.hp <= 0) {
+            continue;
+          }
           const enemyPos = getEnemyPosCached(enemy);
           const distToBlast = distance(enemyPos, targetPos);
-          if (distToBlast > volleyRadius) continue;
+          if (distToBlast > volleyRadius) {
+            continue;
+          }
           const falloff = Math.max(0.35, 1 - distToBlast / volleyRadius);
           const hitDamage = volleyDamage * falloff;
           const burnDamage = burnDps * Math.max(0.25, falloff * 0.8);
           const existing = pendingDamage.get(enemy.id);
           const update = existing ?? {
-            damage: 0,
             burnDamage: 0,
             burnUntil: now + burnDurationMs,
+            damage: 0,
             stunUntil: now + sunforgeStunMs,
           };
           update.damage += hitDamage;
@@ -1043,7 +1193,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         prev
           .map((enemy) => {
             const incoming = pendingDamage.get(enemy.id);
-            if (!incoming) return enemy;
+            if (!incoming) {
+              return enemy;
+            }
             const enemyPos = getEnemyPosCached(enemy);
             const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming.damage);
             if (hp <= 0) {
@@ -1052,13 +1204,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             }
             return {
               ...enemy,
-              hp,
-              damageFlash: SUNFORGE_ORRERY_STATS.damageFlash,
-              burning: true,
               burnDamage: Math.max(enemy.burnDamage || 0, incoming.burnDamage),
               burnUntil: Math.max(enemy.burnUntil || 0, incoming.burnUntil),
-              stunUntil: Math.max(enemy.stunUntil || 0, incoming.stunUntil),
+              burning: true,
+              damageFlash: SUNFORGE_ORRERY_STATS.damageFlash,
+              hp,
               lastDamageTaken: now,
+              stunUntil: Math.max(enemy.stunUntil || 0, incoming.stunUntil),
             };
           })
           .filter(isDefined)
@@ -1099,21 +1251,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const bTroops = troops.filter((t) => t.ownerId === bOwnerId);
       const lastSpawn = spawnTimings.get(bOwnerId) ?? 0;
 
-      const spawnCycle = now % 12000;
+      const spawnCycle = now % 12_000;
       const isInSpawnWindow = spawnCycle < 1500;
-      const wasInSpawnWindow =
-        lastSpawn > 0 && (lastSpawn % 12000) < 1500;
+      const wasInSpawnWindow = lastSpawn > 0 && lastSpawn % 12_000 < 1500;
 
       const justEnteredSpawnWindow =
         isInSpawnWindow &&
-        (lastSpawn === 0 || !wasInSpawnWindow || now - lastSpawn > 10500);
+        (lastSpawn === 0 || !wasInSpawnWindow || now - lastSpawn > 10_500);
 
       if (justEnteredSpawnWindow && bTroops.length < 3) {
         spawnTimings.set(bOwnerId, now);
 
         const existingRallyTroop = bTroops.find((t) => t.userTargetPos);
         const rallyPoint =
-          existingRallyTroop?.userTargetPos || findClosestRoadPoint(bWorldPos, activeWaveSpawnPaths, selectedMap);
+          existingRallyTroop?.userTargetPos ||
+          findClosestRoadPoint(bWorldPos, activeWaveSpawnPaths, selectedMap);
 
         const occupiedSlots = new Set(bTroops.map((t) => t.spawnSlot ?? 0));
         const availableSlot =
@@ -1128,31 +1280,31 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         };
 
         const newTroop: Troop = {
-          id: generateId("barracks_unit"),
-          ownerId: bOwnerId,
-          ownerType: "barracks",
-          type: "knight",
-          knightVariant: Math.floor(Math.random() * 3),
-          pos: { ...bWorldPos },
-          hp: TROOP_DATA.knight.hp,
-          maxHp: TROOP_DATA.knight.hp,
-          moving: true,
-          targetPos,
-          userTargetPos: targetPos,
-          lastAttack: 0,
-          rotation: Math.atan2(
-            targetPos.y - bWorldPos.y,
-            targetPos.x - bWorldPos.x,
-          ),
+          attackAnim: 0,
           facingRight: getFacingRightFromDelta(
             targetPos.x - bWorldPos.x,
-            targetPos.y - bWorldPos.y,
+            targetPos.y - bWorldPos.y
           ),
-          attackAnim: 0,
+          hp: TROOP_DATA.knight.hp,
+          id: generateId("barracks_unit"),
+          knightVariant: Math.floor(Math.random() * 3),
+          lastAttack: 0,
+          maxHp: TROOP_DATA.knight.hp,
+          moveRadius: BARRACKS_TROOP_RANGE,
+          moving: true,
+          ownerId: bOwnerId,
+          ownerType: "barracks",
+          pos: { ...bWorldPos },
+          rotation: Math.atan2(
+            targetPos.y - bWorldPos.y,
+            targetPos.x - bWorldPos.x
+          ),
           selected: false,
           spawnPoint: rallyPoint,
-          moveRadius: BARRACKS_TROOP_RANGE,
           spawnSlot: availableSlot,
+          targetPos,
+          type: "knight",
+          userTargetPos: targetPos,
         };
 
         setTroops((prev) => {
@@ -1165,7 +1317,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           });
 
           const updated = prev.map((troop) => {
-            if (troop.ownerId !== bOwnerId) return troop;
+            if (troop.ownerId !== bOwnerId) {
+              return troop;
+            }
             const newFormation = getFormationOffsets(futureCount);
             const formationIndex = troopIdToFormationIndex.get(troop.id) ?? 0;
             const offset = newFormation[formationIndex] || { x: 0, y: 0 };
@@ -1173,17 +1327,19 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               x: rallyPoint.x + offset.x,
               y: rallyPoint.y + offset.y,
             };
-            if (troop.engaging) return troop;
+            if (troop.engaging) {
+              return troop;
+            }
             return {
               ...troop,
-              targetPos: newTarget,
-              moving: true,
-              userTargetPos: newTarget,
-              spawnPoint: rallyPoint,
               facingRight: getFacingRightFromDelta(
                 newTarget.x - troop.pos.x,
-                newTarget.y - troop.pos.y,
+                newTarget.y - troop.pos.y
               ),
+              moving: true,
+              spawnPoint: rallyPoint,
+              targetPos: newTarget,
+              userTargetPos: newTarget,
             };
           });
           return [...updated, newTroop];
@@ -1194,15 +1350,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   }
 
   // D. VAULT: targetable objective (per-vault HP).
-  const anyVaultAlive = vaultEntries.some((v) => (specialTowerHp[v.key] ?? 0) > 0);
+  const anyVaultAlive = vaultEntries.some(
+    (v) => (specialTowerHp[v.key] ?? 0) > 0
+  );
   if (vaultEntries.length > 0 && anyVaultAlive) {
-    const vaultEnemyUpdates = new Map<string, { inCombat: true; lastTroopAttack: number; facingRight: boolean }>();
+    const vaultEnemyUpdates = new Map<
+      string,
+      { inCombat: true; lastTroopAttack: number; facingRight: boolean }
+    >();
     enemies.forEach((enemy) => {
       const enemyPos = getEnemyPosCached(enemy);
       const vaultHit = getClosestVault(enemyPos, 60);
-      if (!vaultHit) return;
+      if (!vaultHit) {
+        return;
+      }
       const vaultHp = specialTowerHp[vaultHit.key] ?? 0;
-      if (vaultHp <= 0) return;
+      if (vaultHp <= 0) {
+        return;
+      }
       const effectiveEnemyAttackInterval =
         gameSpeed > 0 ? 1000 / gameSpeed : 1000;
       if (
@@ -1215,7 +1380,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const dmg = 20;
       setSpecialTowerHp((prev) => {
         const cur = prev[vaultHit.key] ?? 0;
-        if (cur <= 0) return prev;
+        if (cur <= 0) {
+          return prev;
+        }
         const newVal = Math.max(0, cur - dmg);
         if (newVal <= 0) {
           setLives((life) => Math.max(0, life - 5));
@@ -1224,13 +1391,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         return { ...prev, [vaultHit.key]: newVal };
       });
       vaultEnemyUpdates.set(enemy.id, {
-        inCombat: true,
-        lastTroopAttack: now,
         facingRight: getFacingRightFromDelta(
           vaultHit.worldPos.x - enemyPos.x,
           vaultHit.worldPos.y - enemyPos.y,
-          enemy.facingRight,
+          enemy.facingRight
         ),
+        inCombat: true,
+        lastTroopAttack: now,
       });
     });
     for (const [id, update] of vaultEnemyUpdates) {
@@ -1265,10 +1432,19 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       .map((enemy) => {
         // Fade in newly-summoned minions
         if (enemy.spawnProgress < 1) {
-          enemy = { ...enemy, spawnProgress: Math.min(1, enemy.spawnProgress + deltaTime / SUMMON_MINION_FADE_DURATION) };
+          enemy = {
+            ...enemy,
+            spawnProgress: Math.min(
+              1,
+              enemy.spawnProgress + deltaTime / SUMMON_MINION_FADE_DURATION
+            ),
+          };
         }
-        if (enemy.frozen || now < enemy.stunUntil) return enemy;
-        const enemyPos = enemyPosById.get(enemy.id) ?? getEnemyPosWithPath(enemy, selectedMap);
+        if (enemy.frozen || now < enemy.stunUntil) {
+          return enemy;
+        }
+        const enemyPos =
+          enemyPosById.get(enemy.id) ?? getEnemyPosWithPath(enemy, selectedMap);
 
         // 1. TAUNT LOGIC (Highest Priority)
         // If the enemy is taunted, they ignore the path and troops to hit the hero
@@ -1276,15 +1452,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const distToHero = distance(enemyPos, hero.pos);
           if (distToHero < 80) {
             // Slightly larger engagement for taunt - skip attacks when paused
-            const effectiveEnemyAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-            if (!isPaused && now - (enemy.lastHeroAttack || 0) > effectiveEnemyAttackInterval) {
-              const tauntAbilities = hero.shieldActive ? null : applyEnemyAbilities(enemy, 'hero', now);
+            const effectiveEnemyAttackInterval =
+              gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+            if (
+              !isPaused &&
+              now - (enemy.lastHeroAttack || 0) > effectiveEnemyAttackInterval
+            ) {
+              const tauntAbilities = hero.shieldActive
+                ? null
+                : applyEnemyAbilities(enemy, "hero", now);
               if (hero.shieldActive) {
                 addParticles(hero.pos, "spark", 5);
               } else {
                 setHero((h) => {
-                  if (!h) return null;
-                  const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
+                  if (!h) {
+                    return null;
+                  }
+                  const updated = {
+                    ...h,
+                    hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage),
+                    lastCombatTime: Date.now(),
+                  };
 
                   if (tauntAbilities) {
                     if (tauntAbilities.burn) {
@@ -1304,7 +1492,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                     if (tauntAbilities.poison) {
                       updated.poisoned = true;
                       updated.poisonDamage = tauntAbilities.poison.damage;
-                      updated.poisonUntil = now + tauntAbilities.poison.duration;
+                      updated.poisonUntil =
+                        now + tauntAbilities.poison.duration;
                       updated.poisonFlavor = tauntAbilities.flavor;
                       updated.poisonSourceId = tauntAbilities.sourceId;
                     }
@@ -1321,52 +1510,62 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               }
               return {
                 ...enemy,
-                inCombat: true,
+                abilityCooldowns: tauntAbilities
+                  ? buildAbilityCooldowns(
+                      enemy.abilityCooldowns,
+                      tauntAbilities.activatedTypes,
+                      now
+                    )
+                  : enemy.abilityCooldowns,
                 combatTarget: hero.id,
-                lastHeroAttack: now,
-                lastAbilityUse: tauntAbilities ? now : enemy.lastAbilityUse,
-                lastAbilityType: tauntAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
-                abilityCooldowns: tauntAbilities ? buildAbilityCooldowns(enemy.abilityCooldowns, tauntAbilities.activatedTypes, now) : enemy.abilityCooldowns,
                 facingRight: getFacingRightFromDelta(
                   hero.pos.x - enemyPos.x,
                   hero.pos.y - enemyPos.y,
-                  enemy.facingRight,
+                  enemy.facingRight
                 ),
+                inCombat: true,
+                lastAbilityType:
+                  tauntAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
+                lastAbilityUse: tauntAbilities ? now : enemy.lastAbilityUse,
+                lastHeroAttack: now,
               };
             }
             return {
               ...enemy,
-              inCombat: true,
               combatTarget: hero.id,
               facingRight: getFacingRightFromDelta(
                 hero.pos.x - enemyPos.x,
                 hero.pos.y - enemyPos.y,
-                enemy.facingRight,
+                enemy.facingRight
               ),
+              inCombat: true,
             };
-          } else {
-            // TAUNTED MOVEMENT: Enemy moves toward hero instead of following path
-            const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-            const moveSpeed = enemy.speed * speedMult * deltaTime * HERO_COMBAT_STATS.tauntMoveSpeedMult;
-            const dx = hero.pos.x - enemyPos.x;
-            const dy = hero.pos.y - enemyPos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-              const moveX = (dx / dist) * moveSpeed;
-              const moveY = (dy / dist) * moveSpeed;
-              // Update enemy position by adjusting progress along current path segment
-              // This is a workaround since enemies use path-based positioning
-              // We'll store an offset that gets applied in getEnemyPosWithPath
-              return {
-                ...enemy,
-                tauntOffset: {
-                  x: (enemy.tauntOffset?.x || 0) + moveX,
-                  y: (enemy.tauntOffset?.y || 0) + moveY,
-                },
-                inCombat: false,
-                facingRight: getFacingRightFromDelta(dx, dy, enemy.facingRight),
-              };
-            }
+          }
+          // TAUNTED MOVEMENT: Enemy moves toward hero instead of following path
+          const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
+          const moveSpeed =
+            enemy.speed *
+            speedMult *
+            deltaTime *
+            HERO_COMBAT_STATS.tauntMoveSpeedMult;
+          const dx = hero.pos.x - enemyPos.x;
+          const dy = hero.pos.y - enemyPos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 0) {
+            const moveX = (dx / dist) * moveSpeed;
+            const moveY = (dy / dist) * moveSpeed;
+            // Update enemy position by adjusting progress along current path segment
+            // This is a workaround since enemies use path-based positioning
+            // We'll store an offset that gets applied in getEnemyPosWithPath
+            return {
+              ...enemy,
+              facingRight: getFacingRightFromDelta(dx, dy, enemy.facingRight),
+              inCombat: false,
+              tauntOffset: {
+                x: (enemy.tauntOffset?.x || 0) + moveX,
+                y: (enemy.tauntOffset?.y || 0) + moveY,
+              },
+            };
           }
         }
 
@@ -1374,11 +1573,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (vaultEntries.length > 0 && anyVaultAlive) {
           const vaultHit = getClosestVault(enemyPos, 70);
           if (vaultHit && (specialTowerHp[vaultHit.key] ?? 0) > 0) {
-            const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-            if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
+            const effectiveVaultAttackInterval =
+              gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+            if (
+              !isPaused &&
+              now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval
+            ) {
               setSpecialTowerHp((prev) => {
                 const cur = prev[vaultHit.key] ?? 0;
-                if (cur <= 0) return prev;
+                if (cur <= 0) {
+                  return prev;
+                }
                 const newVal = Math.max(0, cur - 25);
                 if (newVal <= 0) {
                   setLives((l) => Math.max(0, l - 5));
@@ -1390,48 +1595,62 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               addParticles(vaultHit.worldPos, "smoke", 3);
               return {
                 ...enemy,
-                inCombat: true,
                 combatTarget: "vault_objective",
-                lastTroopAttack: now,
                 facingRight: getFacingRightFromDelta(
                   vaultHit.worldPos.x - enemyPos.x,
                   vaultHit.worldPos.y - enemyPos.y,
-                  enemy.facingRight,
+                  enemy.facingRight
                 ),
+                inCombat: true,
+                lastTroopAttack: now,
               };
             }
             return {
               ...enemy,
-              inCombat: true,
               combatTarget: "vault_objective",
               facingRight: getFacingRightFromDelta(
                 vaultHit.worldPos.x - enemyPos.x,
                 vaultHit.worldPos.y - enemyPos.y,
-                enemy.facingRight,
+                enemy.facingRight
               ),
+              inCombat: true,
             };
           }
         }
         // Hero Combat Check - skip attacks when paused
         // Flying heroes (nassau) cannot block ground enemies; ground enemies walk past them
-        const heroIsFlying1 = hero ? (HERO_DATA[hero.type].isFlying ?? false) : false;
+        const heroIsFlying1 = hero
+          ? (HERO_DATA[hero.type].isFlying ?? false)
+          : false;
         const nearbyHero =
           hero &&
-            !hero.dead &&
-            distance(enemyPos, hero.pos) < 60 &&
-            !ENEMY_DATA[enemy.type].flying &&
-            !heroIsFlying1
+          !hero.dead &&
+          distance(enemyPos, hero.pos) < 60 &&
+          !ENEMY_DATA[enemy.type].flying &&
+          !heroIsFlying1
             ? hero
             : null;
         if (nearbyHero) {
           // Scale enemy attack interval with game speed
-          const effectiveHeroAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-          if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval) {
-            const heroAbilities = nearbyHero.shieldActive ? null : applyEnemyAbilities(enemy, 'hero', now);
+          const effectiveHeroAttackInterval =
+            gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+          if (
+            !isPaused &&
+            now - enemy.lastHeroAttack > effectiveHeroAttackInterval
+          ) {
+            const heroAbilities = nearbyHero.shieldActive
+              ? null
+              : applyEnemyAbilities(enemy, "hero", now);
             if (!nearbyHero.shieldActive) {
               setHero((h) => {
-                if (!h) return null;
-                const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
+                if (!h) {
+                  return null;
+                }
+                const updated = {
+                  ...h,
+                  hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage),
+                  lastCombatTime: Date.now(),
+                };
 
                 if (heroAbilities) {
                   if (heroAbilities.burn) {
@@ -1469,25 +1688,29 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 nearbyHero.pos.y - enemyPos.y,
                 nearbyHero.pos.x - enemyPos.x
               );
-              const effectType: EffectType =
-                ["golem", "juggernaut", "dean", "trustee"].includes(enemy.type)
-                  ? "melee_smash"
-                  : ["berserker", "shadow_knight"].includes(enemy.type)
-                    ? "melee_slash"
-                    : "melee_swipe";
+              const effectType: EffectType = [
+                "golem",
+                "juggernaut",
+                "dean",
+                "trustee",
+              ].includes(enemy.type)
+                ? "melee_smash"
+                : ["berserker", "shadow_knight"].includes(enemy.type)
+                  ? "melee_slash"
+                  : "melee_swipe";
               setEffects((ef) => [
                 ...ef,
                 {
+                  attackerType: "enemy",
                   id: generateId("eff"),
                   pos: {
                     x: (enemyPos.x + nearbyHero.pos.x) / 2,
                     y: (enemyPos.y + nearbyHero.pos.y) / 2,
                   },
-                  type: effectType,
                   progress: 0,
                   size: 40,
                   slashAngle: attackAngle,
-                  attackerType: "enemy",
+                  type: effectType,
                 },
               ]);
             } else {
@@ -1495,29 +1718,36 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             }
             return {
               ...enemy,
-              inCombat: true,
+              abilityCooldowns: heroAbilities
+                ? buildAbilityCooldowns(
+                    enemy.abilityCooldowns,
+                    heroAbilities.activatedTypes,
+                    now
+                  )
+                : enemy.abilityCooldowns,
               combatTarget: nearbyHero.id,
-              lastHeroAttack: now,
-              lastAbilityUse: heroAbilities ? now : enemy.lastAbilityUse,
-              lastAbilityType: heroAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
-              abilityCooldowns: heroAbilities ? buildAbilityCooldowns(enemy.abilityCooldowns, heroAbilities.activatedTypes, now) : enemy.abilityCooldowns,
               facingRight: getFacingRightFromDelta(
                 nearbyHero.pos.x - enemyPos.x,
                 nearbyHero.pos.y - enemyPos.y,
-                enemy.facingRight,
+                enemy.facingRight
               ),
+              inCombat: true,
+              lastAbilityType:
+                heroAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
+              lastAbilityUse: heroAbilities ? now : enemy.lastAbilityUse,
+              lastHeroAttack: now,
             };
           }
 
           return {
             ...enemy,
-            inCombat: true,
             combatTarget: nearbyHero.id,
             facingRight: getFacingRightFromDelta(
               nearbyHero.pos.x - enemyPos.x,
               nearbyHero.pos.y - enemyPos.y,
-              enemy.facingRight,
+              enemy.facingRight
             ),
+            inCombat: true,
           };
         }
 
@@ -1530,13 +1760,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (nearbyTroop) {
           return {
             ...enemy,
-            inCombat: true,
             combatTarget: nearbyTroop.id,
             facingRight: getFacingRightFromDelta(
               nearbyTroop.pos.x - enemyPos.x,
               nearbyTroop.pos.y - enemyPos.y,
-              enemy.facingRight,
+              enemy.facingRight
             ),
+            inCombat: true,
           };
         }
 
@@ -1544,7 +1774,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (!enemy.inCombat && !enemy.summoning) {
           const pathKey = enemy.pathKey || selectedMap;
           const path = MAP_PATHS[pathKey];
-          if (!path || path.length < 2) return { ...enemy, inCombat: false };
+          if (!path || path.length < 2) {
+            return { ...enemy, inCombat: false };
+          }
           const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
           const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
           const worldAdvance =
@@ -1577,11 +1809,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               addPawPoints(leakedBounty);
               const leakEventId = `leaked-${Date.now()}-${enemy.id}`;
               setLeakedBountyEvents((prev) => {
-                if (prev.some(e => e.id === leakEventId)) return prev;
-                return [...prev, { id: leakEventId, amount: leakedBounty }];
+                if (prev.some((e) => e.id === leakEventId)) {
+                  return prev;
+                }
+                return [...prev, { amount: leakedBounty, id: leakEventId }];
               });
 
-              gameEventLogRef.current.log("enemy_leaked", `${eData.name || enemy.type} reached the end (-${liveCost} life, +${leakedBounty} PP)`, { enemyType: enemy.type, liveCost, bounty: leakedBounty });
+              gameEventLogRef.current.log(
+                "enemy_leaked",
+                `${eData.name || enemy.type} reached the end (-${liveCost} life, +${leakedBounty} PP)`,
+                { bounty: leakedBounty, enemyType: enemy.type, liveCost }
+              );
             }
             return null;
           }
@@ -1592,15 +1830,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
           return {
             ...enemy,
+            facingRight: getFacingRightFromDelta(
+              segEnd.x - segStart.x,
+              segEnd.y - segStart.y,
+              enemy.facingRight
+            ),
             pathIndex: nextPathIndex,
             progress: Math.max(
               0,
               Math.min(0.999, segmentDistance / currentSegmentLength)
-            ),
-            facingRight: getFacingRightFromDelta(
-              segEnd.x - segStart.x,
-              segEnd.y - segStart.y,
-              enemy.facingRight,
             ),
           };
         }
@@ -1613,9 +1851,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   if (hero && !hero.dead) {
     let clearTaunts = false;
     if (hero.hp <= 0) {
-      setHero((prev) =>
-        prev ? killHero(prev, HERO_RESPAWN_TIME) : null
-      );
+      setHero((prev) => (prev ? killHero(prev, HERO_RESPAWN_TIME) : null));
       clearTaunts = true;
     }
     if (hero.shieldActive && now > (hero.shieldEnd || 0)) {
@@ -1624,12 +1860,23 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     }
     if (clearTaunts) {
       setEnemies((prev) =>
-        prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
+        prev.map((e) => ({
+          ...e,
+          tauntOffset: undefined,
+          tauntTarget: undefined,
+          taunted: false,
+        }))
       );
     }
     // Ability Transform Expiration (Blue Inferno, etc.) — Ivy uses toggle, not timed expiry
-    if (hero.abilityActive && hero.type !== "ivy" && now > (hero.abilityEnd || 0)) {
-      setHero((prev) => (prev ? { ...prev, abilityActive: false, abilityEnd: undefined } : null));
+    if (
+      hero.abilityActive &&
+      hero.type !== "ivy" &&
+      now > (hero.abilityEnd || 0)
+    ) {
+      setHero((prev) =>
+        prev ? { ...prev, abilityActive: false, abilityEnd: undefined } : null
+      );
     }
 
     // Ivy Warden healing aura — heals nearby troops when in Warden form
@@ -1643,14 +1890,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const healAmt = HERO_COMBAT_STATS.ivyWardenHealAmount;
       setTroops((prev) =>
         prev.map((troop) => {
-          if (!troop.type || troop.hp >= troop.maxHp) return troop;
-          if (distance(hero.pos, troop.pos) > healRadius) return troop;
+          if (!troop.type || troop.hp >= troop.maxHp) {
+            return troop;
+          }
+          if (distance(hero.pos, troop.pos) > healRadius) {
+            return troop;
+          }
           return {
             ...troop,
-            hp: Math.min(troop.maxHp, troop.hp + healAmt),
             healFlash: now,
+            hp: Math.min(troop.maxHp, troop.hp + healAmt),
           };
-        }),
+        })
       );
     }
   }
@@ -1658,17 +1909,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // Hero respawn timer
   if (hero && hero.dead && hero.respawnTimer > 0) {
     setHero((prev) => {
-      if (!prev) return null;
+      if (!prev) {
+        return null;
+      }
       const newTimer = prev.respawnTimer - deltaTime;
       if (newTimer <= 0) {
         const levelSettings = LEVEL_DATA[selectedMap];
         const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
         const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS.poe ?? [];
-        if (path.length === 0) return { ...prev, respawnTimer: 0 };
+        if (path.length === 0) {
+          return { ...prev, respawnTimer: 0 };
+        }
         // Respawn at end of path (same as initial spawn)
-        const defaultRespawnNode = path[Math.max(0, path.length - 4)] ?? path[path.length - 1];
+        const defaultRespawnNode =
+          path[Math.max(0, path.length - 4)] ?? path.at(-1);
         const respawnNode = levelSettings?.heroSpawn ?? defaultRespawnNode;
-        if (!respawnNode) return { ...prev, respawnTimer: 0 };
+        if (!respawnNode) {
+          return { ...prev, respawnTimer: 0 };
+        }
         const startPos = gridToWorldPath(respawnNode);
         return {
           ...prev,
@@ -1685,10 +1943,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   }
 
   // First pass: Calculate troop damage from enemies - skip when paused
-  const troopDamage: { [id: string]: number } = {};
-  const enemiesAttackingTroops: { [enemyId: string]: string } = {};
-  const troopAbilityEffects: {
-    [troopId: string]: {
+  const troopDamage: Record<string, number> = {};
+  const enemiesAttackingTroops: Record<string, string> = {};
+  const troopAbilityEffects: Record<
+    string,
+    {
       burn?: { damage: number; until: number };
       slow?: { intensity: number; until: number };
       poison?: { damage: number; until: number };
@@ -1696,49 +1955,71 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       flavor?: string;
       sourceId?: string;
     }
-  } = {};
-  const troopCombatAbilityUpdates: { [enemyId: string]: {
-    lastAbilityUse: number;
-    lastAbilityType: EnemyAbilityType;
-    abilityCooldowns: Record<string, number>;
-    lastTroopAttack?: number;
-  } } = {};
+  > = {};
+  const troopCombatAbilityUpdates: Record<
+    string,
+    {
+      lastAbilityUse: number;
+      lastAbilityType: EnemyAbilityType;
+      abilityCooldowns: Record<string, number>;
+      lastTroopAttack?: number;
+    }
+  > = {};
 
   if (!isPaused) {
     // Scale enemy attack interval with game speed
-    const effectiveTroopAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+    const effectiveTroopAttackInterval =
+      gameSpeed > 0 ? 1000 / gameSpeed : 1000;
     enemies.forEach((enemy) => {
-      if (enemy.frozen || now < enemy.stunUntil) return;
+      if (enemy.frozen || now < enemy.stunUntil) {
+        return;
+      }
       const eData = ENEMY_DATA[enemy.type];
       // Skip flying enemies and breakthrough enemies (they don't stop for troops)
-      if (eData.flying || eData.breakthrough) return;
-      if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) return;
+      if (eData.flying || eData.breakthrough) {
+        return;
+      }
+      if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) {
+        return;
+      }
 
       const enemyPos = getEnemyPosCached(enemy);
 
       // Check if hero is nearby (hero takes combat priority over troops)
       const heroNearby =
         hero && !hero.dead && distance(enemyPos, hero.pos) < 60;
-      if (heroNearby) return; // Hero will handle this enemy
+      if (heroNearby) {
+        return;
+      } // Hero will handle this enemy
 
       // Check for nearby troop
       const nearbyTroop = getNearestTroop(enemyPos, 60);
       if (nearbyTroop) {
         const damage = eData.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE;
-        troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
+        troopDamage[nearbyTroop.id] =
+          (troopDamage[nearbyTroop.id] || 0) + damage;
         enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
-        const troopAbils = applyEnemyAbilities(enemy, 'troop', now);
+        const troopAbils = applyEnemyAbilities(enemy, "troop", now);
         if (troopAbils) {
           const existing = troopAbilityEffects[nearbyTroop.id] || {};
           if (troopAbils.burn) {
-            existing.burn = { damage: troopAbils.burn.damage, until: now + troopAbils.burn.duration };
+            existing.burn = {
+              damage: troopAbils.burn.damage,
+              until: now + troopAbils.burn.duration,
+            };
           }
           if (troopAbils.slow) {
-            existing.slow = { intensity: troopAbils.slow.intensity, until: now + troopAbils.slow.duration };
+            existing.slow = {
+              intensity: troopAbils.slow.intensity,
+              until: now + troopAbils.slow.duration,
+            };
           }
           if (troopAbils.poison) {
-            existing.poison = { damage: troopAbils.poison.damage, until: now + troopAbils.poison.duration };
+            existing.poison = {
+              damage: troopAbils.poison.damage,
+              until: now + troopAbils.poison.duration,
+            };
           }
           if (troopAbils.stun) {
             existing.stun = { until: now + troopAbils.stun.duration };
@@ -1748,9 +2029,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           troopAbilityEffects[nearbyTroop.id] = existing;
 
           troopCombatAbilityUpdates[enemy.id] = {
-            lastAbilityUse: now,
+            abilityCooldowns: buildAbilityCooldowns(
+              enemy.abilityCooldowns,
+              troopAbils.activatedTypes,
+              now
+            ),
             lastAbilityType: troopAbils.activatedTypes[0],
-            abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, troopAbils.activatedTypes, now),
+            lastAbilityUse: now,
           };
         }
       }
@@ -1758,13 +2043,25 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
     // Flying enemies with targetsTroops can attack troops while passing by (without stopping)
     enemies.forEach((enemy) => {
-      if (enemy.frozen || now < enemy.stunUntil) return;
+      if (enemy.frozen || now < enemy.stunUntil) {
+        return;
+      }
       const flyingData = ENEMY_DATA[enemy.type];
-      if (!flyingData.flying || !flyingData.targetsTroops || flyingData.isRanged) return;
+      if (
+        !flyingData.flying ||
+        !flyingData.targetsTroops ||
+        flyingData.isRanged
+      ) {
+        return;
+      }
 
-      const attackSpeed = flyingData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED;
-      const effectiveAttackInterval = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
-      if (now - enemy.lastTroopAttack <= effectiveAttackInterval) return;
+      const attackSpeed =
+        flyingData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED;
+      const effectiveAttackInterval =
+        gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
+      if (now - enemy.lastTroopAttack <= effectiveAttackInterval) {
+        return;
+      }
 
       const enemyPos = getEnemyPosCached(enemy);
 
@@ -1772,20 +2069,30 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const nearbyTroop = getNearestTroop(enemyPos, attackRange);
       if (nearbyTroop) {
         const damage = flyingData.troopDamage || DEFAULT_ENEMY_TROOP_DAMAGE;
-        troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
+        troopDamage[nearbyTroop.id] =
+          (troopDamage[nearbyTroop.id] || 0) + damage;
         enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
-        const flyAbils = applyEnemyAbilities(enemy, 'troop', now);
+        const flyAbils = applyEnemyAbilities(enemy, "troop", now);
         if (flyAbils) {
           const existing = troopAbilityEffects[nearbyTroop.id] || {};
           if (flyAbils.burn) {
-            existing.burn = { damage: flyAbils.burn.damage, until: now + flyAbils.burn.duration };
+            existing.burn = {
+              damage: flyAbils.burn.damage,
+              until: now + flyAbils.burn.duration,
+            };
           }
           if (flyAbils.slow) {
-            existing.slow = { intensity: flyAbils.slow.intensity, until: now + flyAbils.slow.duration };
+            existing.slow = {
+              intensity: flyAbils.slow.intensity,
+              until: now + flyAbils.slow.duration,
+            };
           }
           if (flyAbils.poison) {
-            existing.poison = { damage: flyAbils.poison.damage, until: now + flyAbils.poison.duration };
+            existing.poison = {
+              damage: flyAbils.poison.damage,
+              until: now + flyAbils.poison.duration,
+            };
           }
           if (flyAbils.stun) {
             existing.stun = { until: now + flyAbils.stun.duration };
@@ -1795,29 +2102,33 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           troopAbilityEffects[nearbyTroop.id] = existing;
 
           troopCombatAbilityUpdates[enemy.id] = {
-            lastAbilityUse: now,
+            abilityCooldowns: buildAbilityCooldowns(
+              enemy.abilityCooldowns,
+              flyAbils.activatedTypes,
+              now
+            ),
             lastAbilityType: flyAbils.activatedTypes[0],
-            abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, flyAbils.activatedTypes, now),
+            lastAbilityUse: now,
             lastTroopAttack: now,
           };
         } else {
           troopCombatAbilityUpdates[enemy.id] = {
-            ...(troopCombatAbilityUpdates[enemy.id] || {}),
+            ...troopCombatAbilityUpdates[enemy.id],
             lastTroopAttack: now,
-          } as typeof troopCombatAbilityUpdates[string];
+          } as (typeof troopCombatAbilityUpdates)[string];
         }
       }
     });
   } // End of !isPaused check for enemy attacks on troops
 
   // Calculate which troops will die based on damage
-  const deathsToQueue: Array<{
+  const deathsToQueue: {
     ownerId: string;
     slot: number;
     respawnPos: Position;
     troopType: string;
     troopId: string;
-  }> = [];
+  }[] = [];
   const troopsThatWillDie = new Set<string>();
 
   for (const troop of troops) {
@@ -1829,19 +2140,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
         deathsToQueue.push({
           ownerId: troop.ownerId,
-          slot: troop.spawnSlot ?? 0,
           respawnPos: troop.userTargetPos || troop.spawnPoint || troop.pos,
-          troopType: troop.type || "footsoldier",
+          slot: troop.spawnSlot ?? 0,
           troopId: troop.id,
+          troopType: troop.type || "footsoldier",
         });
       }
     }
   }
 
   // Apply troop damage, status effects, and remove dead troops
-  if (Object.keys(troopDamage).length > 0 || Object.keys(troopAbilityEffects).length > 0) {
-    setTroops((prevTroops) => {
-      return prevTroops
+  if (
+    Object.keys(troopDamage).length > 0 ||
+    Object.keys(troopAbilityEffects).length > 0
+  ) {
+    setTroops((prevTroops) =>
+      prevTroops
         .filter((troop) => !troopsThatWillDie.has(troop.id))
         .map((troop) => {
           const damage = troopDamage[troop.id] || 0;
@@ -1886,8 +2200,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           }
 
           return updatedTroop;
-        });
-    });
+        })
+    );
   }
 
   // Queue respawns on towers
@@ -1905,23 +2219,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setTowers((prevTowers) =>
       prevTowers.map((t) => {
         const deaths = deathsByOwner.get(t.id);
-        if (!deaths || deaths.length === 0) return t;
+        if (!deaths || deaths.length === 0) {
+          return t;
+        }
 
         const existing = t.pendingRespawns || [];
         const newRespawns = deaths.filter(
           (d) => !existing.some((e) => e.slot === d.slot)
         );
 
-        if (newRespawns.length === 0) return t;
+        if (newRespawns.length === 0) {
+          return t;
+        }
 
         return {
           ...t,
           pendingRespawns: [
             ...existing,
             ...newRespawns.map((d) => ({
+              respawnPos: d.respawnPos,
               slot: d.slot,
               timer: TROOP_RESPAWN_TIME,
-              respawnPos: d.respawnPos,
               troopType: d.troopType,
             })),
           ],
@@ -1939,7 +2257,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (enemy.burning && enemy.burnUntil && now < enemy.burnUntil) {
             const burnDmg = getEnemyDamageTaken(
               enemy,
-              ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000,
+              ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) /
+                1000,
               "fire"
             );
             const newHp = enemy.hp - burnDmg;
@@ -1953,7 +2272,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             enemy.burnUntil &&
             now >= enemy.burnUntil
           ) {
-            enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
+            enemy = { ...enemy, burnDamage: 0, burnUntil: 0, burning: false };
           }
         }
         if (
@@ -1965,9 +2284,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           enemy = {
             ...enemy,
             hexWard: false,
-            hexWardUntil: 0,
-            hexWardDamageAmp: 0,
             hexWardBlocksHealing: false,
+            hexWardDamageAmp: 0,
+            hexWardUntil: 0,
           };
         }
         // Regenerating enemies heal 1.5% max HP/sec when not in combat
@@ -1980,11 +2299,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           !enemy.hexWardBlocksHealing &&
           now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS
         ) {
-          const regenAmount = (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
-          enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
+          const regenAmount =
+            (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
+          enemy = {
+            ...enemy,
+            hp: Math.min(enemy.maxHp, enemy.hp + regenAmount),
+          };
         }
         // Clear frozen state when stun duration expires (skip when paused)
-        if (!isPaused && enemy.frozen && enemy.stunUntil && now >= enemy.stunUntil) {
+        if (
+          !isPaused &&
+          enemy.frozen &&
+          enemy.stunUntil &&
+          now >= enemy.stunUntil
+        ) {
           enemy = { ...enemy, frozen: false };
         }
         if (enemy.frozen || now < enemy.stunUntil) {
@@ -1997,11 +2325,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const decayedSlow = Math.max(0, enemy.slowEffect - deltaTime / 5000);
           return {
             ...enemy,
+            damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
             slowEffect: decayedSlow,
+            slowIntensity: enemy.slowEffect,
             slowSource: decayedSlow > 0 ? enemy.slowSource : undefined,
             slowed: enemy.slowEffect > 0,
-            slowIntensity: enemy.slowEffect,
-            damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
           };
         }
         const enemyPosForCombat = getEnemyPosCached(enemy);
@@ -2009,17 +2337,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         // Flying enemies can only melee with a flying hero (nassau)
         // Flying heroes cannot block ground enemies — only flying vs flying combat
         const enemyIsFlying = ENEMY_DATA[enemy.type].flying;
-        const heroIsFlying2 = HERO_DATA[hero?.type ?? "tiger"].isFlying ?? false;
-        const heroCanMelee = hero && !hero.dead && distance(enemyPosForCombat, hero.pos) < 60;
-        const flyingMeleeAllowed = enemyIsFlying ? heroIsFlying2 : !heroIsFlying2;
+        const heroIsFlying2 =
+          HERO_DATA[hero?.type ?? "tiger"].isFlying ?? false;
+        const heroCanMelee =
+          hero && !hero.dead && distance(enemyPosForCombat, hero.pos) < 60;
+        const flyingMeleeAllowed = enemyIsFlying
+          ? heroIsFlying2
+          : !heroIsFlying2;
         const nearbyHero = heroCanMelee && flyingMeleeAllowed ? hero : null;
         if (nearbyHero) {
           // Scale enemy attack interval with game speed - skip when paused
-          const effectiveHeroAttackInterval2 = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-          if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval2) {
+          const effectiveHeroAttackInterval2 =
+            gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+          if (
+            !isPaused &&
+            now - enemy.lastHeroAttack > effectiveHeroAttackInterval2
+          ) {
             setHero((prevHero) => {
-              if (!prevHero || prevHero.dead) return prevHero;
-              const heroDamage = ENEMY_DATA[enemy.type].troopDamage ?? DEFAULT_ENEMY_HERO_DAMAGE;
+              if (!prevHero || prevHero.dead) {
+                return prevHero;
+              }
+              const heroDamage =
+                ENEMY_DATA[enemy.type].troopDamage ?? DEFAULT_ENEMY_HERO_DAMAGE;
               const newHp = prevHero.hp - heroDamage;
               if (newHp <= 0) {
                 return killHero(prevHero, HERO_RESPAWN_TIME);
@@ -2028,27 +2367,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             });
             return {
               ...enemy,
-              inCombat: true,
               combatTarget: nearbyHero.id,
-              lastHeroAttack: now,
               damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               facingRight: getFacingRightFromDelta(
                 nearbyHero.pos.x - enemyPosForCombat.x,
                 nearbyHero.pos.y - enemyPosForCombat.y,
-                enemy.facingRight,
+                enemy.facingRight
               ),
+              inCombat: true,
+              lastHeroAttack: now,
             };
           }
           return {
             ...enemy,
-            inCombat: true,
             combatTarget: nearbyHero.id,
             damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
             facingRight: getFacingRightFromDelta(
               nearbyHero.pos.x - enemyPosForCombat.x,
               nearbyHero.pos.y - enemyPosForCombat.y,
-              enemy.facingRight,
+              enemy.facingRight
             ),
+            inCombat: true,
           };
         }
         // Check for nearby troop combat (damage already applied above)
@@ -2065,30 +2404,30 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const troopFacing = getFacingRightFromDelta(
             nearbyTroop.pos.x - enemyPosForCombat.x,
             nearbyTroop.pos.y - enemyPosForCombat.y,
-            enemy.facingRight,
+            enemy.facingRight
           );
           if (attackedThisFrame) {
             const abilityPatch = troopCombatAbilityUpdates[enemy.id];
             return {
               ...enemy,
-              inCombat: true,
               combatTarget: nearbyTroop.id,
-              lastTroopAttack: now,
               damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               facingRight: troopFacing,
+              inCombat: true,
+              lastTroopAttack: now,
               ...(abilityPatch && {
-                lastAbilityUse: abilityPatch.lastAbilityUse,
-                lastAbilityType: abilityPatch.lastAbilityType,
                 abilityCooldowns: abilityPatch.abilityCooldowns,
+                lastAbilityType: abilityPatch.lastAbilityType,
+                lastAbilityUse: abilityPatch.lastAbilityUse,
               }),
             };
           }
           return {
             ...enemy,
-            inCombat: true,
             combatTarget: nearbyTroop.id,
             damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
             facingRight: troopFacing,
+            inCombat: true,
           };
         }
         if (enemy.inCombat && !nearbyTroop && !nearbyHero) {
@@ -2096,19 +2435,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (!ENEMY_DATA[enemy.type].isRanged) {
             return {
               ...enemy,
-              inCombat: false,
               combatTarget: undefined,
               damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+              inCombat: false,
             };
           }
         }
         // Ranged enemy attacks - they stop and attack when target in range
         const enemyData = ENEMY_DATA[enemy.type];
-        if (
-          enemyData.isRanged &&
-          enemyData.range &&
-          enemyData.attackSpeed
-        ) {
+        if (enemyData.isRanged && enemyData.range && enemyData.attackSpeed) {
           const enemyPos = enemyPosForCombat;
           // Check for targets in range (hero and troops)
           let rangedTarget: {
@@ -2121,7 +2456,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             !hero.dead &&
             distance(enemyPos, hero.pos) <= enemyData.range
           ) {
-            rangedTarget = { type: "hero", pos: hero.pos, id: hero.id };
+            rangedTarget = { id: hero.id, pos: hero.pos, type: "hero" };
           } else {
             const targetTroop = getNearestTroop(
               enemyPos,
@@ -2129,9 +2464,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             );
             if (targetTroop) {
               rangedTarget = {
-                type: "troop",
-                pos: targetTroop.pos,
                 id: targetTroop.id,
+                pos: targetTroop.pos,
+                type: "troop",
               };
             }
           }
@@ -2140,58 +2475,90 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (rangedTarget) {
             enemy = {
               ...enemy,
-              inCombat: true,
               combatTarget: rangedTarget.id,
               facingRight: getFacingRightFromDelta(
                 rangedTarget.pos.x - enemyPos.x,
                 rangedTarget.pos.y - enemyPos.y,
-                enemy.facingRight,
+                enemy.facingRight
               ),
+              inCombat: true,
             };
 
             // Scale ranged enemy attack speed with game speed - skip when paused
-            const effectiveRangedAttackSpeed = gameSpeed > 0 ? enemyData.attackSpeed / gameSpeed : enemyData.attackSpeed;
-            if (!isPaused && now - enemy.lastRangedAttack > effectiveRangedAttackSpeed) {
+            const effectiveRangedAttackSpeed =
+              gameSpeed > 0
+                ? enemyData.attackSpeed / gameSpeed
+                : enemyData.attackSpeed;
+            if (
+              !isPaused &&
+              now - enemy.lastRangedAttack > effectiveRangedAttackSpeed
+            ) {
               // Create projectile with enemy-specific type
               const projType = (() => {
                 switch (enemy.type) {
-                  case "mage":
+                  case "mage": {
                     return "fireball";
-                  case "warlock":
+                  }
+                  case "warlock": {
                     return "magicBolt";
-                  case "hexer":
+                  }
+                  case "hexer": {
                     return "poisonBolt";
-                  case "necromancer":
+                  }
+                  case "necromancer": {
                     return "darkBolt";
-                  case "catapult":
+                  }
+                  case "catapult": {
                     return "rock";
-                  case "crossbowman":
+                  }
+                  case "crossbowman": {
                     return "bolt";
-                  case "harpy":
+                  }
+                  case "harpy": {
                     return "arrow";
-                  case "wyvern":
+                  }
+                  case "wyvern": {
                     return "wyvernBolt";
-                  case "frostling":
+                  }
+                  case "frostling": {
                     return "frostBolt";
-                  case "infernal":
+                  }
+                  case "infernal": {
                     return "infernalFire";
-                  case "banshee":
+                  }
+                  case "banshee": {
                     return "bansheeScream";
-                  case "dragon":
+                  }
+                  case "dragon": {
                     return "fireball";
-                  default:
+                  }
+                  default: {
                     return "arrow";
+                  }
                 }
               })();
 
               // Determine if this is an AoE attack
-              const isAoEAttack = ["catapult", "dragon", "infernal", "wyvern"].includes(enemy.type);
+              const isAoEAttack = [
+                "catapult",
+                "dragon",
+                "infernal",
+                "wyvern",
+              ].includes(enemy.type);
               const aoeRadius = isAoEAttack
-                ? (enemy.type === "dragon" ? 80 : enemy.type === "wyvern" ? 70 : enemy.type === "catapult" ? 60 : 50)
+                ? enemy.type === "dragon"
+                  ? 80
+                  : enemy.type === "wyvern"
+                    ? 70
+                    : enemy.type === "catapult"
+                      ? 60
+                      : 50
                 : 0;
 
               // Calculate arc height for projectiles that should arc
-              const arcHeight = ["rock", "fireball"].includes(projType) ? 50 : 0;
+              const arcHeight = ["rock", "fireball"].includes(projType)
+                ? 50
+                : 0;
 
               // Flying enemies shoot from above — projectile starts elevated and descends
               const elevation = enemyData.flying ? 30 : 0;
@@ -2199,29 +2566,31 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               setProjectiles((proj) => [
                 ...proj,
                 {
-                  id: generateId("eproj"),
+                  aoeRadius,
+                  arcHeight,
+                  damage:
+                    enemyData.projectileDamage ||
+                    DEFAULT_ENEMY_PROJECTILE_DAMAGE,
+                  elevation,
                   from: { x: enemyPos.x, y: enemyPos.y - 15 },
-                  to: rangedTarget!.pos,
+                  id: generateId("eproj"),
+                  isAoE: isAoEAttack,
                   progress: 0,
-                  type: projType,
                   rotation: Math.atan2(
                     rangedTarget!.pos.y - enemyPos.y,
                     rangedTarget!.pos.x - enemyPos.x
                   ),
-                  damage: enemyData.projectileDamage || DEFAULT_ENEMY_PROJECTILE_DAMAGE,
-                  targetType: rangedTarget!.type,
-                  targetId: rangedTarget!.id,
-                  arcHeight: arcHeight,
-                  elevation: elevation,
-                  isAoE: isAoEAttack,
-                  aoeRadius: aoeRadius,
                   scale: enemy.type === "dragon" ? 1.5 : undefined,
+                  targetId: rangedTarget!.id,
+                  targetType: rangedTarget!.type,
+                  to: rangedTarget!.pos,
+                  type: projType,
                 },
               ]);
               return {
                 ...enemy,
-                lastRangedAttack: now,
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                lastRangedAttack: now,
                 // Don't move - attacking from range
               };
             }
@@ -2234,14 +2603,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           }
           // Ranged enemy lost its target — clear combat state
           if (enemy.inCombat) {
-            enemy = { ...enemy, inCombat: false, combatTarget: undefined };
+            enemy = { ...enemy, combatTarget: undefined, inCombat: false };
           }
         }
         // Update slowed visual indicator
         const slowedVisual = enemy.slowEffect > 0;
         const slowIntensity = enemy.slowEffect;
         const decayedSlow = Math.max(0, enemy.slowEffect - deltaTime / 5000);
-        const decayedSlowSource = decayedSlow > 0 ? enemy.slowSource : undefined;
+        const decayedSlowSource =
+          decayedSlow > 0 ? enemy.slowSource : undefined;
         // Move enemy along path - normalize speed by segment length for consistent world-space speed
         if (!enemy.inCombat) {
           // Use enemy's pathKey for dual-path support
@@ -2250,17 +2620,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (!path || path.length < 2) {
             return {
               ...enemy,
+              damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               slowEffect: decayedSlow,
+              slowIntensity,
               slowSource: decayedSlowSource,
               slowed: slowedVisual,
-              slowIntensity: slowIntensity,
-              damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
             };
           }
           const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
           const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
           const worldAdvance =
-            (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) / 1000;
+            (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) /
+            1000;
           let nextPathIndex = enemy.pathIndex;
           let currentSegmentLength = Math.max(1, segmentLength);
           let segmentDistance =
@@ -2284,7 +2655,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const segEnd = path[segIdx + 1] || segStart;
           const facingRight = getFacingRightFromDelta(
             segEnd.x - segStart.x,
-            segEnd.y - segStart.y,
+            segEnd.y - segStart.y
           );
 
           if (nextPathIndex >= path.length - 1) {
@@ -2292,31 +2663,35 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               handledEnemyIdsRef.current.add(enemy.id);
               const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
               setLives((l) => Math.max(0, l - liveCost));
-              gameEventLogRef.current.log("enemy_leaked", `${ENEMY_DATA[enemy.type].name || enemy.type} (flying) reached the end (-${liveCost} life)`, { enemyType: enemy.type, liveCost });
+              gameEventLogRef.current.log(
+                "enemy_leaked",
+                `${ENEMY_DATA[enemy.type].name || enemy.type} (flying) reached the end (-${liveCost} life)`,
+                { enemyType: enemy.type, liveCost }
+              );
             }
             return null;
           }
 
           return {
             ...enemy,
+            damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+            facingRight,
             pathIndex: nextPathIndex,
             progress: Math.max(
               0,
               Math.min(0.999, segmentDistance / currentSegmentLength)
             ),
             slowEffect: decayedSlow,
+            slowIntensity,
             slowSource: decayedSlowSource,
             slowed: slowedVisual,
-            slowIntensity: slowIntensity,
-            damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
-            facingRight,
           };
         }
         return {
           ...enemy,
-          slowed: slowedVisual,
-          slowIntensity: slowIntensity,
           damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+          slowIntensity,
+          slowed: slowedVisual,
         };
       })
       .filter(isDefined)
@@ -2331,16 +2706,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   );
   for (const id of flyingAbilityIds) {
     const update = troopCombatAbilityUpdates[id];
-    if (!update) continue;
+    if (!update) {
+      continue;
+    }
     enemyBatch.transform(id, (enemy) => {
-      if (!ENEMY_DATA[enemy.type].flying) return enemy;
+      if (!ENEMY_DATA[enemy.type].flying) {
+        return enemy;
+      }
       return {
         ...enemy,
-        ...(update.lastTroopAttack !== undefined && { lastTroopAttack: update.lastTroopAttack }),
+        ...(update.lastTroopAttack !== undefined && {
+          lastTroopAttack: update.lastTroopAttack,
+        }),
         ...(update.lastAbilityUse && {
-          lastAbilityUse: update.lastAbilityUse,
-          lastAbilityType: update.lastAbilityType,
           abilityCooldowns: update.abilityCooldowns,
+          lastAbilityType: update.lastAbilityType,
+          lastAbilityUse: update.lastAbilityUse,
         }),
       };
     });
@@ -2349,9 +2730,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // laterally instead of hard blocking. Enemies always move forward at
   // their natural speed; only the lateral (perpendicular) offset changes.
   setEnemies((prev) => {
-    if (prev.length <= 1) return prev;
+    if (prev.length <= 1) {
+      return prev;
+    }
 
-    type LaneEntry = {
+    interface LaneEntry {
       index: number;
       pathKey: string;
       isFlying: boolean;
@@ -2359,7 +2742,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       laneOffset: number;
       formationOffset: number;
       bucketPos: number;
-    };
+    }
 
     const layerBuckets = new Map<string, LaneEntry[]>();
     const entries: LaneEntry[] = new Array(prev.length);
@@ -2374,24 +2757,29 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           : ENEMY_CENTER_LANE_INDEX
       );
       const entry: LaneEntry = {
-        index: i,
-        pathKey,
-        isFlying,
-        progressMetric: enemy.pathIndex + enemy.progress,
-        laneOffset: enemy.laneOffset,
-        formationOffset: ENEMY_LANE_OFFSETS[preferredLane] ?? 0,
         bucketPos: 0,
+        formationOffset: ENEMY_LANE_OFFSETS[preferredLane] ?? 0,
+        index: i,
+        isFlying,
+        laneOffset: enemy.laneOffset,
+        pathKey,
+        progressMetric: enemy.pathIndex + enemy.progress,
       };
       entries[i] = entry;
       const layerKey = `${pathKey}:${isFlying ? "f" : "g"}`;
       const bucket = layerBuckets.get(layerKey);
-      if (bucket) bucket.push(entry);
-      else layerBuckets.set(layerKey, [entry]);
+      if (bucket) {
+        bucket.push(entry);
+      } else {
+        layerBuckets.set(layerKey, [entry]);
+      }
     }
 
     layerBuckets.forEach((bucket) => {
       bucket.sort((a, b) => a.progressMetric - b.progressMetric);
-      for (let bi = 0; bi < bucket.length; bi++) bucket[bi].bucketPos = bi;
+      for (let bi = 0; bi < bucket.length; bi++) {
+        bucket[bi].bucketPos = bi;
+      }
     });
 
     let hasChanges = false;
@@ -2402,12 +2790,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         enemy.taunted ||
         enemy.frozen ||
         now < enemy.stunUntil
-      )
+      ) {
         return enemy;
+      }
 
       const layerKey = `${entry.pathKey}:${entry.isFlying ? "f" : "g"}`;
       const bucket = layerBuckets.get(layerKey);
-      if (!bucket || bucket.length <= 1) return enemy;
+      if (!bucket || bucket.length <= 1) {
+        return enemy;
+      }
 
       let lateralPush = 0;
       const myProgress = entry.progressMetric;
@@ -2415,7 +2806,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       for (let j = bp - 1; j >= 0; j--) {
         const other = bucket[j];
         const progressDist = myProgress - other.progressMetric;
-        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) break;
+        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) {
+          break;
+        }
 
         const lateralDiff = entry.laneOffset - other.laneOffset;
         const absLateral = Math.abs(lateralDiff);
@@ -2436,7 +2829,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       for (let j = bp + 1; j < bucket.length; j++) {
         const other = bucket[j];
         const progressDist = other.progressMetric - myProgress;
-        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) break;
+        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) {
+          break;
+        }
 
         const lateralDiff = entry.laneOffset - other.laneOffset;
         const absLateral = Math.abs(lateralDiff);
@@ -2478,8 +2873,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         hasChanges = true;
         return {
           ...enemy,
-          laneOffset: nextLaneOffset,
           formationLane: preferredLane,
+          laneOffset: nextLaneOffset,
         };
       }
       return enemy;
@@ -2494,12 +2889,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     let hasChanges = false;
     const updated = prev.map((enemy) => {
       const eData = ENEMY_DATA[enemy.type];
-      if (!eData.traits?.includes("summoner")) return enemy;
+      if (!eData.traits?.includes("summoner")) {
+        return enemy;
+      }
 
       // Cancel channel if interrupted by combat, freeze, or stun
-      if (enemy.summoning && (enemy.inCombat || enemy.frozen || now < enemy.stunUntil)) {
+      if (
+        enemy.summoning &&
+        (enemy.inCombat || enemy.frozen || now < enemy.stunUntil)
+      ) {
         hasChanges = true;
-        return { ...enemy, summoning: false, summonStartTime: undefined };
+        return { ...enemy, summonStartTime: undefined, summoning: false };
       }
 
       // Phase 2: channeling complete — spawn minions
@@ -2511,38 +2911,44 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const count = eData.summonCount || 1;
           for (let i = 0; i < count; i++) {
             const minion = acquireEnemy({
-              id: generateId("minion"),
-              type: minionType,
-              pathIndex: Math.max(0, enemy.pathIndex - 1),
-              progress: enemy.progress,
-              hp: minionData.hp,
-              maxHp: minionData.hp,
-              speed: minionData.speed,
-              slowEffect: 0,
-              stunUntil: 0,
-              frozen: false,
               damageFlash: 0,
-              inCombat: false,
-              lastTroopAttack: 0,
-              lastHeroAttack: 0,
-              lastRangedAttack: 0,
-              spawnProgress: 0,
-              laneOffset: clampLaneOffset(
-                enemy.laneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER * 2
-              ),
               formationLane:
                 typeof enemy.formationLane === "number"
                   ? clampLaneIndex(enemy.formationLane + (i % 2 === 0 ? 1 : -1))
                   : getNearestLaneIndex(enemy.laneOffset),
-              slowed: false,
-              slowIntensity: 0,
+              frozen: false,
+              hp: minionData.hp,
+              id: generateId("minion"),
+              inCombat: false,
+              laneOffset: clampLaneOffset(
+                enemy.laneOffset +
+                  (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER * 2
+              ),
+              lastHeroAttack: 0,
+              lastRangedAttack: 0,
+              lastTroopAttack: 0,
+              maxHp: minionData.hp,
+              pathIndex: Math.max(0, enemy.pathIndex - 1),
               pathKey: enemy.pathKey,
+              progress: enemy.progress,
+              slowEffect: 0,
+              slowIntensity: 0,
+              slowed: false,
+              spawnProgress: 0,
+              speed: minionData.speed,
+              stunUntil: 0,
+              type: minionType,
             });
             summoned.push(minion);
           }
           addParticles(getEnemyPosCached(enemy), "summon", 8);
           hasChanges = true;
-          return { ...enemy, summoning: false, summonStartTime: undefined, lastSummon: now };
+          return {
+            ...enemy,
+            lastSummon: now,
+            summonStartTime: undefined,
+            summoning: false,
+          };
         }
         // Still channeling — emit periodic particles
         if (elapsed % 400 < deltaTime) {
@@ -2552,13 +2958,19 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       }
 
       // Phase 1: check if ready to begin channeling
-      if (enemy.lastSummon && now - enemy.lastSummon < SUMMON_COOLDOWN) return enemy;
-      if (enemy.inCombat || enemy.frozen || now < enemy.stunUntil) return enemy;
+      if (enemy.lastSummon && now - enemy.lastSummon < SUMMON_COOLDOWN) {
+        return enemy;
+      }
+      if (enemy.inCombat || enemy.frozen || now < enemy.stunUntil) {
+        return enemy;
+      }
       hasChanges = true;
       addParticles(getEnemyPosCached(enemy), "summon", 4);
-      return { ...enemy, summoning: true, summonStartTime: now };
+      return { ...enemy, summonStartTime: now, summoning: true };
     });
-    if (!hasChanges && summoned.length === 0) return prev;
+    if (!hasChanges && summoned.length === 0) {
+      return prev;
+    }
     return summoned.length > 0 ? [...updated, ...summoned] : updated;
   });
 
@@ -2579,23 +2991,30 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // Update hero movement - with sight-based engagement
   if (hero && !hero.dead) {
     setHero((prev) => {
-      if (!prev || prev.dead) return prev;
+      if (!prev || prev.dead) {
+        return prev;
+      }
 
       if (prev.stunned && prev.stunUntil && now < prev.stunUntil) {
-        return { ...prev, moving: false, moveWaypoints: undefined, aggroTarget: undefined };
+        return {
+          ...prev,
+          aggroTarget: undefined,
+          moveWaypoints: undefined,
+          moving: false,
+        };
       }
 
       const heroData = HERO_DATA[prev.type];
       const slowMultiplier =
         prev.slowed && prev.slowIntensity ? 1 - prev.slowIntensity : 1;
       const isIvyColossusMove = prev.type === "ivy" && prev.abilityActive;
-      const baseSpeed = isIvyColossusMove ? HERO_COMBAT_STATS.ivyColossusSpeed : heroData.speed;
+      const baseSpeed = isIvyColossusMove
+        ? HERO_COMBAT_STATS.ivyColossusSpeed
+        : heroData.speed;
       const speed = baseSpeed * slowMultiplier;
-      const isRanged = isIvyColossusMove ? false : (heroData.isRanged || false);
+      const isRanged = isIvyColossusMove ? false : heroData.isRanged || false;
       const attackRange = heroData.range;
-      const sightRange = isRanged
-        ? HERO_RANGED_SIGHT_RANGE
-        : HERO_SIGHT_RANGE;
+      const sightRange = isRanged ? HERO_RANGED_SIGHT_RANGE : HERO_SIGHT_RANGE;
 
       const heroIsFlying = HERO_DATA[prev.type].isFlying ?? false;
       const heroTargetPredicate = heroIsFlying
@@ -2603,20 +3022,29 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         : (enemy: Enemy) => !ENEMY_DATA[enemy.type].flying;
 
       const heroReachablePredicate = (enemy: Enemy): boolean => {
-        if (heroTargetPredicate && !heroTargetPredicate(enemy)) return false;
+        if (heroTargetPredicate && !heroTargetPredicate(enemy)) {
+          return false;
+        }
         const ePos = getEnemyPosCached(enemy);
         const d = distance(prev.pos, ePos);
-        if (d < PATH_REACHABILITY_MIN_EUCLIDEAN) return true;
-        if (ENEMY_DATA[enemy.type].flying) return true;
+        if (d < PATH_REACHABILITY_MIN_EUCLIDEAN) {
+          return true;
+        }
+        if (ENEMY_DATA[enemy.type].flying) {
+          return true;
+        }
         return isEnemyReachableAlongPath(
-          prev.pos, ePos, selectedMap, d * PATH_REACHABILITY_RATIO,
+          prev.pos,
+          ePos,
+          selectedMap,
+          d * PATH_REACHABILITY_RATIO
         );
       };
 
       let closestEnemy = getClosestEnemy(
         prev.pos,
         sightRange,
-        heroReachablePredicate,
+        heroReachablePredicate
       );
       let closestDist = closestEnemy
         ? distance(prev.pos, getEnemyPosCached(closestEnemy))
@@ -2627,11 +3055,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (!closestEnemy && !prev.moving) {
         const troopAllies = troops
           .filter((t) => !t.dead)
-          .map((t) => ({ pos: t.pos, engaging: !!t.engaging }));
+          .map((t) => ({ engaging: !!t.engaging, pos: t.pos }));
 
         const alertResult = findAllyAlertTarget(
-          prev.pos, troopAllies, enemies, getEnemyPosCached,
-          sightRange + ALLY_ALERT_RANGE, heroReachablePredicate,
+          prev.pos,
+          troopAllies,
+          enemies,
+          getEnemyPosCached,
+          sightRange + ALLY_ALERT_RANGE,
+          heroReachablePredicate
         );
         if (alertResult) {
           closestEnemy = alertResult.enemy;
@@ -2646,37 +3078,37 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (prev.moving && prev.targetPos) {
         const step = stepTowardTarget({
           current: prev.pos,
-          target: prev.targetPos,
-          speed,
           deltaTime,
+          speed,
           stopDistance: 5,
+          target: prev.targetPos,
         });
 
         if (step.reached) {
           return {
             ...prev,
-            pos: prev.targetPos,
-            moving: false,
-            targetPos: undefined,
-            homePos: prev.targetPos,
             aggroTarget: undefined,
-            returning: false,
-            rotation: step.rotation,
             facingRight: getFacingRightFromDelta(
               prev.targetPos.x - prev.pos.x,
               prev.targetPos.y - prev.pos.y,
-              prev.facingRight ?? true,
+              prev.facingRight ?? true
             ),
+            homePos: prev.targetPos,
+            moving: false,
+            pos: prev.targetPos,
+            returning: false,
+            rotation: step.rotation,
+            targetPos: undefined,
           };
         }
         return {
           ...prev,
-          pos: step.pos,
-          rotation: step.rotation,
+          aggroTarget: undefined,
           facingRight: step.facingRight,
           homePos: prev.targetPos,
-          aggroTarget: undefined,
+          pos: step.pos,
           returning: false,
+          rotation: step.rotation,
         };
       }
 
@@ -2707,28 +3139,33 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               : MELEE_RANGE;
             const step = stepTowardTarget({
               current: prev.pos,
-              target: enemyPos,
-              speed,
               deltaTime,
+              speed,
               stopDistance: targetDist,
+              target: enemyPos,
             });
 
             if (!step.reached) {
               let heroChasePos = step.pos;
-              const heroPathCheck = findClosestPathPoint(heroChasePos, selectedMap);
+              const heroPathCheck = findClosestPathPoint(
+                heroChasePos,
+                selectedMap
+              );
               if (heroPathCheck) {
                 heroChasePos = constrainToNearPath(
-                  heroChasePos, heroPathCheck.point,
-                  heroPathCheck.distance, MAX_HERO_PATH_DISTANCE,
+                  heroChasePos,
+                  heroPathCheck.point,
+                  heroPathCheck.distance,
+                  MAX_HERO_PATH_DISTANCE
                 );
               }
               return {
                 ...prev,
-                pos: heroChasePos,
-                rotation: step.rotation,
-                facingRight: step.facingRight,
                 aggroTarget: closestEnemy.id,
+                facingRight: step.facingRight,
+                pos: heroChasePos,
                 returning: false,
+                rotation: step.rotation,
               };
             }
           }
@@ -2738,68 +3175,81 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const dy = enemyPos.y - prev.pos.y;
           return {
             ...prev,
-            rotation: Math.atan2(dy, dx),
-            facingRight: getFacingRightFromDelta(dx, dy, prev.facingRight ?? true),
             aggroTarget: closestEnemy.id,
+            facingRight: getFacingRightFromDelta(
+              dx,
+              dy,
+              prev.facingRight ?? true
+            ),
             returning: false,
-          };
-        } else {
-          // Within attack range - face enemy but don't move
-          const dx = enemyPos.x - prev.pos.x;
-          const dy = enemyPos.y - prev.pos.y;
-          return {
-            ...prev,
             rotation: Math.atan2(dy, dx),
-            facingRight: getFacingRightFromDelta(dx, dy, prev.facingRight ?? true),
-            aggroTarget: closestEnemy.id,
-            returning: false,
           };
         }
+        // Within attack range - face enemy but don't move
+        const dx = enemyPos.x - prev.pos.x;
+        const dy = enemyPos.y - prev.pos.y;
+        return {
+          ...prev,
+          aggroTarget: closestEnemy.id,
+          facingRight: getFacingRightFromDelta(
+            dx,
+            dy,
+            prev.facingRight ?? true
+          ),
+          returning: false,
+          rotation: Math.atan2(dy, dx),
+        };
       } else if (homePos) {
         // No enemy in sight - return home (heroes take direct routes)
         const step = stepTowardTarget({
           current: prev.pos,
-          target: homePos,
-          speed,
           deltaTime,
+          speed,
           stopDistance: 8,
+          target: homePos,
         });
 
         if (!step.reached) {
           return {
             ...prev,
-            pos: step.pos,
-            rotation: step.rotation,
+            aggroTarget: undefined,
             facingRight: step.facingRight,
-            aggroTarget: undefined,
+            pos: step.pos,
             returning: true,
-          };
-        } else {
-          return {
-            ...prev,
-            aggroTarget: undefined,
-            returning: false,
-            moving: false,
+            rotation: step.rotation,
           };
         }
+        return {
+          ...prev,
+          aggroTarget: undefined,
+          moving: false,
+          returning: false,
+        };
       }
 
       return prev;
     });
     // Apply unified separation force to hero (suppress when settled at home)
     setHero((prev) => {
-      if (!prev || prev.dead) return prev;
+      if (!prev || prev.dead) {
+        return prev;
+      }
       const heroHome = prev.homePos || prev.pos;
-      const heroSettled = !prev.aggroTarget && !prev.moving
-        && distance(prev.pos, heroHome) < UNIT_SETTLE_DISTANCE;
-      if (heroSettled) return prev;
+      const heroSettled =
+        !prev.aggroTarget &&
+        !prev.moving &&
+        distance(prev.pos, heroHome) < UNIT_SETTLE_DISTANCE;
+      if (heroSettled) {
+        return prev;
+      }
 
       const force = friendlySeparation.get(prev.id);
       if (
         !force ||
         (Math.abs(force.x) < 0.0001 && Math.abs(force.y) < 0.0001)
-      )
+      ) {
         return prev;
+      }
       return {
         ...prev,
         pos: {
@@ -2810,371 +3260,413 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     });
   }
   // Update troop movement - with sight-based engagement
-  const dotDeaths: Array<{
+  const dotDeaths: {
     ownerId: string;
     slot: number;
     respawnPos: Position;
     troopType: string;
     troopId: string;
     pos: Position;
-  }> = [];
-  setTroops((prev) => {
-    // Update positions with sight-based engagement
-    return prev.filter((troop) => {
-      if (!troop.type) return true;
-      if (troop.hp > 0) return true;
-      raiseHexWardGhostFromTroopDeath(troop, troop.pos);
-      onTroopDeath(troop, troop.pos);
-      if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
-        dotDeaths.push({
-          ownerId: troop.ownerId,
-          slot: troop.spawnSlot ?? 0,
-          respawnPos: troop.userTargetPos || troop.spawnPoint || troop.pos,
-          troopType: troop.type || "footsoldier",
-          troopId: troop.id,
-          pos: troop.pos,
-        });
-      }
-      return false;
-    }).map((troop) => {
-      const updated = { ...troop };
-      if (!troop.type) return updated;
-      const troopData = TROOP_DATA[troop.type];
-      if (!troopData) return updated;
-
-      // ========== PROCESS STATUS EFFECTS ==========
-      // Skip expiry and DoT when paused so effects freeze in place
-      if (!isPaused) {
-        const currentTime = Date.now();
-        if (updated.burnUntil && currentTime > updated.burnUntil) {
-          updated.burning = false;
-          updated.burnDamage = undefined;
-          updated.burnUntil = undefined;
-          updated.burnFlavor = undefined;
-          updated.burnSourceId = undefined;
+  }[] = [];
+  setTroops((prev) =>
+    prev
+      .filter((troop) => {
+        if (!troop.type) {
+          return true;
         }
-        if (updated.slowUntil && currentTime > updated.slowUntil) {
-          updated.slowed = false;
-          updated.slowIntensity = undefined;
-          updated.slowUntil = undefined;
-          updated.slowFlavor = undefined;
-          updated.slowSourceId = undefined;
+        if (troop.hp > 0) {
+          return true;
         }
-        if (updated.poisonUntil && currentTime > updated.poisonUntil) {
-          updated.poisoned = false;
-          updated.poisonDamage = undefined;
-          updated.poisonUntil = undefined;
-          updated.poisonFlavor = undefined;
-          updated.poisonSourceId = undefined;
+        raiseHexWardGhostFromTroopDeath(troop, troop.pos);
+        onTroopDeath(troop, troop.pos);
+        if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
+          dotDeaths.push({
+            ownerId: troop.ownerId,
+            pos: troop.pos,
+            respawnPos: troop.userTargetPos || troop.spawnPoint || troop.pos,
+            slot: troop.spawnSlot ?? 0,
+            troopId: troop.id,
+            troopType: troop.type || "footsoldier",
+          });
         }
-        if (updated.stunUntil && currentTime > updated.stunUntil) {
-          updated.stunned = false;
-          updated.stunUntil = undefined;
-          updated.stunFlavor = undefined;
-          updated.stunSourceId = undefined;
+        return false;
+      })
+      .map((troop) => {
+        const updated = { ...troop };
+        if (!troop.type) {
+          return updated;
+        }
+        const troopData = TROOP_DATA[troop.type];
+        if (!troopData) {
+          return updated;
         }
 
-        const dotTick = deltaTime / 1000;
-        if (updated.burning && updated.burnDamage) {
-          updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
-        }
-        if (updated.poisoned && updated.poisonDamage) {
-          updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
-        }
-        if (updated.isHexGhost) {
-          if (updated.hexGhostDecayPerSecond) {
+        // ========== PROCESS STATUS EFFECTS ==========
+        // Skip expiry and DoT when paused so effects freeze in place
+        if (!isPaused) {
+          const currentTime = Date.now();
+          if (updated.burnUntil && currentTime > updated.burnUntil) {
+            updated.burning = false;
+            updated.burnDamage = undefined;
+            updated.burnUntil = undefined;
+            updated.burnFlavor = undefined;
+            updated.burnSourceId = undefined;
+          }
+          if (updated.slowUntil && currentTime > updated.slowUntil) {
+            updated.slowed = false;
+            updated.slowIntensity = undefined;
+            updated.slowUntil = undefined;
+            updated.slowFlavor = undefined;
+            updated.slowSourceId = undefined;
+          }
+          if (updated.poisonUntil && currentTime > updated.poisonUntil) {
+            updated.poisoned = false;
+            updated.poisonDamage = undefined;
+            updated.poisonUntil = undefined;
+            updated.poisonFlavor = undefined;
+            updated.poisonSourceId = undefined;
+          }
+          if (updated.stunUntil && currentTime > updated.stunUntil) {
+            updated.stunned = false;
+            updated.stunUntil = undefined;
+            updated.stunFlavor = undefined;
+            updated.stunSourceId = undefined;
+          }
+
+          const dotTick = deltaTime / 1000;
+          if (updated.burning && updated.burnDamage) {
+            updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
+          }
+          if (updated.poisoned && updated.poisonDamage) {
             updated.hp = Math.max(
               0,
-              updated.hp - updated.hexGhostDecayPerSecond * dotTick
+              updated.hp - updated.poisonDamage * dotTick
             );
           }
-          if (
-            updated.hexGhostExpireTime &&
-            currentTime >= updated.hexGhostExpireTime
-          ) {
-            updated.hp = 0;
-          }
-        }
-      }
-
-      // If stunned, skip movement/engagement
-      if (updated.stunned && updated.stunUntil && Date.now() < updated.stunUntil) {
-        // Stunned - can't move or attack, just stand there
-        updated.engaging = false;
-        updated.moving = false;
-        return updated;
-      }
-
-      const isRanged = troop.overrideIsRanged ?? troopData.isRanged;
-      const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
-      const attackRange = isRanged
-        ? troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE
-        : MELEE_RANGE;
-      const sightRange = isRanged
-        ? TROOP_RANGED_SIGHT_RANGE
-        : TROOP_SIGHT_RANGE;
-
-      const canHitFlying =
-        troop.overrideCanTargetFlying ?? troopData.canTargetFlying ?? false;
-      let enemiesInSightCount = 0;
-      let closestEnemy: Enemy | null = null;
-      let closestDist = Infinity;
-      for (const enemy of enemies) {
-        if (!canHitFlying && ENEMY_DATA[enemy.type].flying) continue;
-        const enemyPos = getEnemyPosCached(enemy);
-        const dist = distance(troop.pos, enemyPos);
-        if (dist > sightRange) continue;
-        enemiesInSightCount += 1;
-        if (dist < closestDist) {
-          // Skip enemies that are close in Euclidean distance but unreachable
-          // along the path (e.g. across a U-bend)
-          if (
-            dist >= PATH_REACHABILITY_MIN_EUCLIDEAN &&
-            !ENEMY_DATA[enemy.type].flying &&
-            !isEnemyReachableAlongPath(
-              troop.pos, enemyPos, selectedMap,
-              dist * PATH_REACHABILITY_RATIO,
-            )
-          ) {
-            continue;
-          }
-          closestDist = dist;
-          closestEnemy = enemy;
-        }
-      }
-
-      // Ally alert: if no enemy in direct sight and not player-moving,
-      // check if nearby allies are in combat and join the fight
-      if (!closestEnemy && !troop.moving) {
-        const flyingFilter = canHitFlying
-          ? undefined
-          : (e: Enemy) => !ENEMY_DATA[e.type].flying;
-
-        const allies: { pos: Position; engaging: boolean }[] = [];
-        for (const other of prev) {
-          if (other.id === troop.id || other.dead) continue;
-          allies.push({ pos: other.pos, engaging: !!other.engaging });
-        }
-        if (hero && !hero.dead) {
-          allies.push({ pos: hero.pos, engaging: !!hero.aggroTarget });
-        }
-
-        const alertResult = findAllyAlertTarget(
-          troop.pos, allies, enemies, getEnemyPosCached,
-          sightRange + ALLY_ALERT_RANGE, flyingFilter,
-        );
-        if (alertResult) {
-          const alertEnemyPos = getEnemyPosCached(alertResult.enemy);
-          const alertFlying = ENEMY_DATA[alertResult.enemy.type].flying;
-          if (
-            alertFlying ||
-            alertResult.dist < PATH_REACHABILITY_MIN_EUCLIDEAN ||
-            isEnemyReachableAlongPath(
-              troop.pos, alertEnemyPos, selectedMap,
-              alertResult.dist * PATH_REACHABILITY_RATIO,
-            )
-          ) {
-            closestEnemy = alertResult.enemy;
-            closestDist = alertResult.dist;
-          }
-        }
-      }
-
-      // Determine home position (where the troop should return to)
-      const homePos = troop.userTargetPos || troop.spawnPoint;
-      const maxChaseRange = troop.moveRadius || HERO_SUMMON_RANGE;
-
-      // Skip engagement logic if player has commanded this troop to move
-      // This allows troops to disengage from combat and follow orders
-      if (closestEnemy && !troop.moving) {
-        // Enemy in sight - engage!
-        const enemyPos = getEnemyPosCached(closestEnemy);
-
-        // Check if chasing would take us too far from home
-        const distFromHome = homePos ? distance(updated.pos, homePos) : 0;
-        const wouldBeTooFar = distFromHome >= maxChaseRange;
-
-        // Ranged units: stop at attack range and throw projectiles
-        // Melee units: get close to attack
-        // Ranged units go melee if enemy is too close
-        const effectiveAttackRange =
-          isRanged && closestDist > MELEE_RANGE ? attackRange : MELEE_RANGE;
-
-        // Stationary units (turrets) never move - they just rotate to face enemies
-        if (isStationary) {
-          // Just face the enemy but don't move
-          const dx = enemyPos.x - troop.pos.x;
-          const dy = enemyPos.y - troop.pos.y;
-          updated.rotation = Math.atan2(dy, dx);
-          updated.facingRight = getFacingRightFromDelta(
-            dx,
-            dy,
-            troop.facingRight ?? true,
-          );
-          updated.engaging = closestDist <= attackRange;
-        } else if (closestDist > effectiveAttackRange && !wouldBeTooFar) {
-          // Enemy in sight but out of attack range - move toward it
-          // Move toward enemy, but stop at attack range
-          const targetDist = effectiveAttackRange - 10; // Stop a bit before attack range
-          const baseSpeed = 2.0; // Slightly faster when engaging
-          const slowMult =
-            updated.slowed && updated.slowIntensity
-              ? 1 - updated.slowIntensity
-              : 1;
-          const moveStep = stepTowardTarget({
-            current: troop.pos,
-            target: enemyPos,
-            speed: baseSpeed * slowMult,
-            deltaTime,
-            stopDistance: targetDist,
-          });
-
-          if (!moveStep.reached) {
-            let chasePos = clampPositionToRadius(
-              moveStep.pos, homePos, maxChaseRange,
-            );
-            const chasePathCheck = findClosestPathPoint(chasePos, selectedMap);
-            if (chasePathCheck) {
-              chasePos = constrainToNearPath(
-                chasePos, chasePathCheck.point,
-                chasePathCheck.distance, MAX_TROOP_PATH_DISTANCE,
+          if (updated.isHexGhost) {
+            if (updated.hexGhostDecayPerSecond) {
+              updated.hp = Math.max(
+                0,
+                updated.hp - updated.hexGhostDecayPerSecond * dotTick
               );
             }
-            updated.pos = chasePos;
-            updated.rotation = moveStep.rotation;
-            updated.facingRight = moveStep.facingRight;
+            if (
+              updated.hexGhostExpireTime &&
+              currentTime >= updated.hexGhostExpireTime
+            ) {
+              updated.hp = 0;
+            }
+          }
+        }
+
+        // If stunned, skip movement/engagement
+        if (
+          updated.stunned &&
+          updated.stunUntil &&
+          Date.now() < updated.stunUntil
+        ) {
+          // Stunned - can't move or attack, just stand there
+          updated.engaging = false;
+          updated.moving = false;
+          return updated;
+        }
+
+        const isRanged = troop.overrideIsRanged ?? troopData.isRanged;
+        const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
+        const attackRange = isRanged
+          ? (troop.overrideRange ??
+            troopData.range ??
+            DEFAULT_TROOP_RANGED_RANGE)
+          : MELEE_RANGE;
+        const sightRange = isRanged
+          ? TROOP_RANGED_SIGHT_RANGE
+          : TROOP_SIGHT_RANGE;
+
+        const canHitFlying =
+          troop.overrideCanTargetFlying ?? troopData.canTargetFlying ?? false;
+        let enemiesInSightCount = 0;
+        let closestEnemy: Enemy | null = null;
+        let closestDist = Infinity;
+        for (const enemy of enemies) {
+          if (!canHitFlying && ENEMY_DATA[enemy.type].flying) {
+            continue;
+          }
+          const enemyPos = getEnemyPosCached(enemy);
+          const dist = distance(troop.pos, enemyPos);
+          if (dist > sightRange) {
+            continue;
+          }
+          enemiesInSightCount += 1;
+          if (dist < closestDist) {
+            // Skip enemies that are close in Euclidean distance but unreachable
+            // along the path (e.g. across a U-bend)
+            if (
+              dist >= PATH_REACHABILITY_MIN_EUCLIDEAN &&
+              !ENEMY_DATA[enemy.type].flying &&
+              !isEnemyReachableAlongPath(
+                troop.pos,
+                enemyPos,
+                selectedMap,
+                dist * PATH_REACHABILITY_RATIO
+              )
+            ) {
+              continue;
+            }
+            closestDist = dist;
+            closestEnemy = enemy;
+          }
+        }
+
+        // Ally alert: if no enemy in direct sight and not player-moving,
+        // check if nearby allies are in combat and join the fight
+        if (!closestEnemy && !troop.moving) {
+          const flyingFilter = canHitFlying
+            ? undefined
+            : (e: Enemy) => !ENEMY_DATA[e.type].flying;
+
+          const allies: { pos: Position; engaging: boolean }[] = [];
+          for (const other of prev) {
+            if (other.id === troop.id || other.dead) {
+              continue;
+            }
+            allies.push({ engaging: !!other.engaging, pos: other.pos });
+          }
+          if (hero && !hero.dead) {
+            allies.push({ engaging: !!hero.aggroTarget, pos: hero.pos });
+          }
+
+          const alertResult = findAllyAlertTarget(
+            troop.pos,
+            allies,
+            enemies,
+            getEnemyPosCached,
+            sightRange + ALLY_ALERT_RANGE,
+            flyingFilter
+          );
+          if (alertResult) {
+            const alertEnemyPos = getEnemyPosCached(alertResult.enemy);
+            const alertFlying = ENEMY_DATA[alertResult.enemy.type].flying;
+            if (
+              alertFlying ||
+              alertResult.dist < PATH_REACHABILITY_MIN_EUCLIDEAN ||
+              isEnemyReachableAlongPath(
+                troop.pos,
+                alertEnemyPos,
+                selectedMap,
+                alertResult.dist * PATH_REACHABILITY_RATIO
+              )
+            ) {
+              closestEnemy = alertResult.enemy;
+              closestDist = alertResult.dist;
+            }
+          }
+        }
+
+        // Determine home position (where the troop should return to)
+        const homePos = troop.userTargetPos || troop.spawnPoint;
+        const maxChaseRange = troop.moveRadius || HERO_SUMMON_RANGE;
+
+        // Skip engagement logic if player has commanded this troop to move
+        // This allows troops to disengage from combat and follow orders
+        if (closestEnemy && !troop.moving) {
+          // Enemy in sight - engage!
+          const enemyPos = getEnemyPosCached(closestEnemy);
+
+          // Check if chasing would take us too far from home
+          const distFromHome = homePos ? distance(updated.pos, homePos) : 0;
+          const wouldBeTooFar = distFromHome >= maxChaseRange;
+
+          // Ranged units: stop at attack range and throw projectiles
+          // Melee units: get close to attack
+          // Ranged units go melee if enemy is too close
+          const effectiveAttackRange =
+            isRanged && closestDist > MELEE_RANGE ? attackRange : MELEE_RANGE;
+
+          // Stationary units (turrets) never move - they just rotate to face enemies
+          if (isStationary) {
+            // Just face the enemy but don't move
+            const dx = enemyPos.x - troop.pos.x;
+            const dy = enemyPos.y - troop.pos.y;
+            updated.rotation = Math.atan2(dy, dx);
+            updated.facingRight = getFacingRightFromDelta(
+              dx,
+              dy,
+              troop.facingRight ?? true
+            );
+            updated.engaging = closestDist <= attackRange;
+          } else if (closestDist > effectiveAttackRange && !wouldBeTooFar) {
+            // Enemy in sight but out of attack range - move toward it
+            // Move toward enemy, but stop at attack range
+            const targetDist = effectiveAttackRange - 10; // Stop a bit before attack range
+            const baseSpeed = 2; // Slightly faster when engaging
+            const slowMult =
+              updated.slowed && updated.slowIntensity
+                ? 1 - updated.slowIntensity
+                : 1;
+            const moveStep = stepTowardTarget({
+              current: troop.pos,
+              deltaTime,
+              speed: baseSpeed * slowMult,
+              stopDistance: targetDist,
+              target: enemyPos,
+            });
+
+            if (!moveStep.reached) {
+              let chasePos = clampPositionToRadius(
+                moveStep.pos,
+                homePos,
+                maxChaseRange
+              );
+              const chasePathCheck = findClosestPathPoint(
+                chasePos,
+                selectedMap
+              );
+              if (chasePathCheck) {
+                chasePos = constrainToNearPath(
+                  chasePos,
+                  chasePathCheck.point,
+                  chasePathCheck.distance,
+                  MAX_TROOP_PATH_DISTANCE
+                );
+              }
+              updated.pos = chasePos;
+              updated.rotation = moveStep.rotation;
+              updated.facingRight = moveStep.facingRight;
+              updated.engaging = true;
+            }
+          } else if (closestDist <= effectiveAttackRange) {
+            // Within attack range - face enemy but don't move
+            const dx = enemyPos.x - troop.pos.x;
+            const dy = enemyPos.y - troop.pos.y;
+            updated.rotation = Math.atan2(dy, dx);
+            updated.facingRight = getFacingRightFromDelta(
+              dx,
+              dy,
+              troop.facingRight ?? true
+            );
             updated.engaging = true;
+          } else {
+            // Too far from home to chase - face enemy but stay put
+            const dx = enemyPos.x - troop.pos.x;
+            const dy = enemyPos.y - troop.pos.y;
+            updated.rotation = Math.atan2(dy, dx);
+            updated.facingRight = getFacingRightFromDelta(
+              dx,
+              dy,
+              troop.facingRight ?? true
+            );
+            updated.engaging = false; // Will return home
           }
-        } else if (closestDist <= effectiveAttackRange) {
-          // Within attack range - face enemy but don't move
-          const dx = enemyPos.x - troop.pos.x;
-          const dy = enemyPos.y - troop.pos.y;
-          updated.rotation = Math.atan2(dy, dx);
-          updated.facingRight = getFacingRightFromDelta(
-            dx,
-            dy,
-            troop.facingRight ?? true,
-          );
-          updated.engaging = true;
         } else {
-          // Too far from home to chase - face enemy but stay put
-          const dx = enemyPos.x - troop.pos.x;
-          const dy = enemyPos.y - troop.pos.y;
-          updated.rotation = Math.atan2(dy, dx);
-          updated.facingRight = getFacingRightFromDelta(
-            dx,
-            dy,
-            troop.facingRight ?? true,
-          );
-          updated.engaging = false; // Will return home
-        }
-      } else {
-        // No enemy in sight OR player commanded movement - disengage
-        updated.engaging = false;
+          // No enemy in sight OR player commanded movement - disengage
+          updated.engaging = false;
 
-        // Only return home if not being moved by player and not stationary
-        if (homePos && !isStationary && !troop.moving) {
-          const baseReturnSpeed = 1.5;
-          const slowMult =
-            updated.slowed && updated.slowIntensity
-              ? 1 - updated.slowIntensity
-              : 1;
-          const returnStep = stepTowardTarget({
-            current: troop.pos,
-            target: homePos,
-            speed: baseReturnSpeed * slowMult,
-            deltaTime,
-            stopDistance: 8,
-          });
+          // Only return home if not being moved by player and not stationary
+          if (homePos && !isStationary && !troop.moving) {
+            const baseReturnSpeed = 1.5;
+            const slowMult =
+              updated.slowed && updated.slowIntensity
+                ? 1 - updated.slowIntensity
+                : 1;
+            const returnStep = stepTowardTarget({
+              current: troop.pos,
+              deltaTime,
+              speed: baseReturnSpeed * slowMult,
+              stopDistance: 8,
+              target: homePos,
+            });
 
-          if (!returnStep.reached) {
-            updated.pos = returnStep.pos;
-            updated.rotation = returnStep.rotation;
-            updated.facingRight = returnStep.facingRight;
+            if (!returnStep.reached) {
+              updated.pos = returnStep.pos;
+              updated.rotation = returnStep.rotation;
+              updated.facingRight = returnStep.facingRight;
+            }
           }
         }
-      }
 
-      const troopSettled = !closestEnemy && !troop.moving && homePos
-        && distance(updated.pos, homePos) < UNIT_SETTLE_DISTANCE;
+        const troopSettled =
+          !closestEnemy &&
+          !troop.moving &&
+          homePos &&
+          distance(updated.pos, homePos) < UNIT_SETTLE_DISTANCE;
 
-      if (!troopSettled && !isStationary && !troop.moving) {
-        const force = friendlySeparation.get(troop.id);
-        if (force) {
-          updated.pos = {
-            x: updated.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
-            y: updated.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
-          };
+        if (!troopSettled && !isStationary && !troop.moving) {
+          const force = friendlySeparation.get(troop.id);
+          if (force) {
+            updated.pos = {
+              x: updated.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
+              y: updated.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
+            };
+          }
         }
-      }
 
-      if (homePos && !isStationary && !troop.moving) {
-        const leash = maxChaseRange;
-        updated.pos = clampPositionToRadius(updated.pos, homePos, leash);
-      }
-
-      // HP regeneration - regenerate 2% max HP per second when out of combat for 3+ seconds
-      const inCombat = enemiesInSightCount > 0 || updated.engaging;
-      const now = Date.now();
-      // Update lastCombatTime if in combat
-      if (inCombat) {
-        updated.lastCombatTime = now;
-        updated.healFlash = undefined;
-      }
-
-      const timeSinceCombat = now - (updated.lastCombatTime || 0);
-      if (
-        !updated.isHexGhost &&
-        !inCombat &&
-        troop.hp < troop.maxHp &&
-        timeSinceCombat >= TROOP_HEAL_DELAY_MS
-      ) {
-        updated.hp = Math.min(
-          troop.maxHp,
-          troop.hp + (troop.maxHp * TROOP_HEAL_RATE * deltaTime) / 1000
-        );
-        // Show healing aura while regenerating (only set once to avoid constant state updates)
-        if (!updated.healFlash || now - updated.healFlash > 800) {
-          updated.healFlash = now;
+        if (homePos && !isStationary && !troop.moving) {
+          const leash = maxChaseRange;
+          updated.pos = clampPositionToRadius(updated.pos, homePos, leash);
         }
-      }
 
-      // Handle player-commanded movement (overrides engagement, but not for stationary)
-      // Troops take direct routes (like heroes) to avoid jerkiness from off-path stations.
-      if (troop.moving && troop.targetPos && !isStationary) {
-        const moveStep = stepTowardTarget({
-          current: updated.pos,
-          target: troop.targetPos,
-          speed: DEFAULT_TROOP_MOVE_SPEED,
-          deltaTime,
-          stopDistance: 5,
-        });
-        if (moveStep.reached) {
+        // HP regeneration - regenerate 2% max HP per second when out of combat for 3+ seconds
+        const inCombat = enemiesInSightCount > 0 || updated.engaging;
+        const now = Date.now();
+        // Update lastCombatTime if in combat
+        if (inCombat) {
+          updated.lastCombatTime = now;
+          updated.healFlash = undefined;
+        }
+
+        const timeSinceCombat = now - (updated.lastCombatTime || 0);
+        if (
+          !updated.isHexGhost &&
+          !inCombat &&
+          troop.hp < troop.maxHp &&
+          timeSinceCombat >= TROOP_HEAL_DELAY_MS
+        ) {
+          updated.hp = Math.min(
+            troop.maxHp,
+            troop.hp + (troop.maxHp * TROOP_HEAL_RATE * deltaTime) / 1000
+          );
+          // Show healing aura while regenerating (only set once to avoid constant state updates)
+          if (!updated.healFlash || now - updated.healFlash > 800) {
+            updated.healFlash = now;
+          }
+        }
+
+        // Handle player-commanded movement (overrides engagement, but not for stationary)
+        // Troops take direct routes (like heroes) to avoid jerkiness from off-path stations.
+        if (troop.moving && troop.targetPos && !isStationary) {
+          const moveStep = stepTowardTarget({
+            current: updated.pos,
+            deltaTime,
+            speed: DEFAULT_TROOP_MOVE_SPEED,
+            stopDistance: 5,
+            target: troop.targetPos,
+          });
+          if (moveStep.reached) {
+            return {
+              ...updated,
+              facingRight: getFacingRightFromDelta(
+                troop.targetPos.x - updated.pos.x,
+                troop.targetPos.y - updated.pos.y,
+                troop.facingRight ?? true
+              ),
+              moving: false,
+              pos: troop.targetPos,
+              rotation: moveStep.rotation,
+              targetPos: undefined,
+              userTargetPos: troop.targetPos,
+            };
+          }
           return {
             ...updated,
-            pos: troop.targetPos,
-            moving: false,
-            targetPos: undefined,
-            userTargetPos: troop.targetPos,
+            facingRight: moveStep.facingRight,
+            pos: moveStep.pos,
             rotation: moveStep.rotation,
-            facingRight: getFacingRightFromDelta(
-              troop.targetPos.x - updated.pos.x,
-              troop.targetPos.y - updated.pos.y,
-              troop.facingRight ?? true,
-            ),
           };
         }
-        return {
-          ...updated,
-          pos: moveStep.pos,
-          rotation: moveStep.rotation,
-          facingRight: moveStep.facingRight,
-        };
-      }
 
-      return updated;
-    });
-  });
+        return updated;
+      })
+  );
   // Queue respawns for troops killed by DoT (burn/poison)
   if (dotDeaths.length > 0) {
     const dotDeathsByOwner = new Map<string, (typeof dotDeaths)[number][]>();
@@ -3189,20 +3681,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setTowers((prevTowers) =>
       prevTowers.map((t) => {
         const deaths = dotDeathsByOwner.get(t.id);
-        if (!deaths || deaths.length === 0) return t;
+        if (!deaths || deaths.length === 0) {
+          return t;
+        }
         const existing = t.pendingRespawns || [];
         const newRespawns = deaths.filter(
           (d) => !existing.some((e) => e.slot === d.slot)
         );
-        if (newRespawns.length === 0) return t;
+        if (newRespawns.length === 0) {
+          return t;
+        }
         return {
           ...t,
           pendingRespawns: [
             ...existing,
             ...newRespawns.map((d) => ({
+              respawnPos: d.respawnPos,
               slot: d.slot,
               timer: TROOP_RESPAWN_TIME,
-              respawnPos: d.respawnPos,
               troopType: d.troopType,
             })),
           ],
@@ -3214,7 +3710,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // Skip expiry and DoT when paused so effects freeze in place
   if (hero && !hero.dead && !isPaused) {
     setHero((prev) => {
-      if (!prev || prev.dead) return prev;
+      if (!prev || prev.dead) {
+        return prev;
+      }
       const updated = { ...prev };
 
       if (updated.burnUntil && now > updated.burnUntil) {
@@ -3265,144 +3763,183 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
     const inCombat =
       enemies.some(
-        (e) =>
-          distance(hero.pos, getEnemyPosCached(e)) <= HERO_COMBAT_RADIUS
-      ) || enemies.some((e) => e.combatTarget === hero.id) || (hero.attackAnim > 0);
+        (e) => distance(hero.pos, getEnemyPosCached(e)) <= HERO_COMBAT_RADIUS
+      ) ||
+      enemies.some((e) => e.combatTarget === hero.id) ||
+      hero.attackAnim > 0;
 
     if (inCombat) {
-      setHero((prev) => prev ? { ...prev, lastCombatTime: now, healFlash: undefined } : null);
+      setHero((prev) =>
+        prev ? { ...prev, healFlash: undefined, lastCombatTime: now } : null
+      );
     } else {
       setHero((prev) => {
-        if (!prev || prev.dead || prev.hp >= prev.maxHp) return prev;
+        if (!prev || prev.dead || prev.hp >= prev.maxHp) {
+          return prev;
+        }
         const timeSinceCombat = now - (prev.lastCombatTime || 0);
-        if (timeSinceCombat < HERO_HEAL_DELAY_MS) return prev;
+        if (timeSinceCombat < HERO_HEAL_DELAY_MS) {
+          return prev;
+        }
         const needsNewHealFlash = !prev.healFlash || now - prev.healFlash > 800;
         return {
           ...prev,
+          healFlash: needsNewHealFlash ? now : prev.healFlash,
           hp: Math.min(
             prev.maxHp,
             prev.hp + (prev.maxHp * HERO_HEAL_RATE * deltaTime) / 1000
           ),
-          healFlash: needsNewHealFlash ? now : prev.healFlash,
         };
       });
     }
   }
   // ========== PROCESS TOWER DEBUFFS FROM ENEMIES ==========
   // Collect enemy ability mutations to apply via setEnemies (avoid direct mutation)
-  const towerDebuffEnemyUpdates = new Map<string, {
-    lastAbilityUse: number;
-    lastAbilityType: EnemyAbilityType;
-    activatedTypes: EnemyAbilityType[];
-  }>();
-
-  setTowers((prevTowers) => prevTowers.map((tower) => {
-    const towerWorldPos = gridToWorld(tower.pos);
-    const updated = { ...tower };
-
-    // Clear expired debuffs (skip when paused so effects freeze)
-    if (!isPaused) {
-      if (updated.debuffs && updated.debuffs.length > 0) {
-        updated.debuffs = updated.debuffs.filter((d) => now < d.until);
-      }
-      if (updated.disabledUntil && now > updated.disabledUntil) {
-        updated.disabled = false;
-        updated.disabledUntil = undefined;
-      }
+  const towerDebuffEnemyUpdates = new Map<
+    string,
+    {
+      lastAbilityUse: number;
+      lastAbilityType: EnemyAbilityType;
+      activatedTypes: EnemyAbilityType[];
     }
+  >();
 
-    // Check for enemies with tower debuff abilities nearby
-    for (const enemy of enemies) {
-      const eData = ENEMY_DATA[enemy.type];
-      if (!eData.abilities) continue;
+  setTowers((prevTowers) =>
+    prevTowers.map((tower) => {
+      const towerWorldPos = gridToWorld(tower.pos);
+      const updated = { ...tower };
 
-      const enemyPos = getEnemyPosCached(enemy);
-      const dSqToTower = distanceSq(enemyPos, towerWorldPos);
+      // Clear expired debuffs (skip when paused so effects freeze)
+      if (!isPaused) {
+        if (updated.debuffs && updated.debuffs.length > 0) {
+          updated.debuffs = updated.debuffs.filter((d) => now < d.until);
+        }
+        if (updated.disabledUntil && now > updated.disabledUntil) {
+          updated.disabled = false;
+          updated.disabledUntil = undefined;
+        }
+      }
 
-      for (const ability of eData.abilities) {
-        if (!ability.type.startsWith('tower_')) continue;
+      // Check for enemies with tower debuff abilities nearby
+      for (const enemy of enemies) {
+        const eData = ENEMY_DATA[enemy.type];
+        if (!eData.abilities) {
+          continue;
+        }
 
-        const abilityRange = ability.radius || 80;
-        if (dSqToTower > abilityRange * abilityRange) continue;
+        const enemyPos = getEnemyPosCached(enemy);
+        const dSqToTower = distanceSq(enemyPos, towerWorldPos);
 
-        // Use per-type cooldowns instead of global lastAbilityUse
-        const abilityCooldown = ability.cooldown || 3000;
-        const cooldowns = enemy.abilityCooldowns || {};
-        const priorUpdates = towerDebuffEnemyUpdates.get(enemy.id);
-        const lastUse = priorUpdates?.activatedTypes.includes(ability.type)
-          ? now
-          : cooldowns[ability.type] || 0;
-        if (now - lastUse < abilityCooldown) continue;
+        for (const ability of eData.abilities) {
+          if (!ability.type.startsWith("tower_")) {
+            continue;
+          }
 
-        const chance = ability.chance || 0.15;
-        if (Math.random() > chance) continue;
+          const abilityRange = ability.radius || 80;
+          if (dSqToTower > abilityRange * abilityRange) {
+            continue;
+          }
 
-        const duration = ability.duration || 2000;
-        const intensity = ability.intensity || 0.25;
+          // Use per-type cooldowns instead of global lastAbilityUse
+          const abilityCooldown = ability.cooldown || 3000;
+          const cooldowns = enemy.abilityCooldowns || {};
+          const priorUpdates = towerDebuffEnemyUpdates.get(enemy.id);
+          const lastUse = priorUpdates?.activatedTypes.includes(ability.type)
+            ? now
+            : cooldowns[ability.type] || 0;
+          if (now - lastUse < abilityCooldown) {
+            continue;
+          }
 
-        const applyDebuff = (debuffType: 'slow' | 'weaken' | 'blind') => {
-          updated.debuffs = addOrRefreshDebuff(
-            updated.debuffs || [], debuffType, intensity, now + duration, enemy.id, now
-          );
-        };
+          const chance = ability.chance || 0.15;
+          if (Math.random() > chance) {
+            continue;
+          }
 
-        switch (ability.type) {
-          case 'tower_slow':
-            applyDebuff('slow');
-            break;
-          case 'tower_weaken':
-            applyDebuff('weaken');
-            break;
-          case 'tower_blind':
-            applyDebuff('blind');
-            break;
-          case 'tower_disable': {
-            updated.disabled = true;
-            updated.disabledUntil = now + duration;
-            updated.debuffs = updated.debuffs || [];
-            updated.debuffs = updated.debuffs.filter(d =>
-              d.until > now && d.type !== 'disable'
+          const duration = ability.duration || 2000;
+          const intensity = ability.intensity || 0.25;
+
+          const applyDebuff = (debuffType: "slow" | "weaken" | "blind") => {
+            updated.debuffs = addOrRefreshDebuff(
+              updated.debuffs || [],
+              debuffType,
+              intensity,
+              now + duration,
+              enemy.id,
+              now
             );
-            const flavor = ability.name.toLowerCase().includes('freeze') ? 'freeze' as const
-              : ability.name.toLowerCase().includes('gaze') || ability.name.toLowerCase().includes('stone') ? 'petrify' as const
-                : ability.name.toLowerCase().includes('hold') || ability.name.toLowerCase().includes('admin') ? 'hold' as const
-                  : 'stun' as const;
-            updated.debuffs.push({
-              type: 'disable',
-              intensity: 1,
-              until: now + duration,
-              sourceId: enemy.id,
-              disableFlavor: flavor,
-              abilityName: ability.name,
+          };
+
+          switch (ability.type) {
+            case "tower_slow": {
+              applyDebuff("slow");
+              break;
+            }
+            case "tower_weaken": {
+              applyDebuff("weaken");
+              break;
+            }
+            case "tower_blind": {
+              applyDebuff("blind");
+              break;
+            }
+            case "tower_disable": {
+              updated.disabled = true;
+              updated.disabledUntil = now + duration;
+              updated.debuffs = updated.debuffs || [];
+              updated.debuffs = updated.debuffs.filter(
+                (d) => d.until > now && d.type !== "disable"
+              );
+              const flavor = ability.name.toLowerCase().includes("freeze")
+                ? ("freeze" as const)
+                : ability.name.toLowerCase().includes("gaze") ||
+                    ability.name.toLowerCase().includes("stone")
+                  ? ("petrify" as const)
+                  : ability.name.toLowerCase().includes("hold") ||
+                      ability.name.toLowerCase().includes("admin")
+                    ? ("hold" as const)
+                    : ("stun" as const);
+              updated.debuffs.push({
+                abilityName: ability.name,
+                disableFlavor: flavor,
+                intensity: 1,
+                sourceId: enemy.id,
+                type: "disable",
+                until: now + duration,
+              });
+              break;
+            }
+          }
+
+          // Collect mutation instead of mutating directly
+          const existing = towerDebuffEnemyUpdates.get(enemy.id);
+          if (existing) {
+            existing.lastAbilityType = ability.type;
+            existing.activatedTypes.push(ability.type);
+          } else {
+            towerDebuffEnemyUpdates.set(enemy.id, {
+              activatedTypes: [ability.type],
+              lastAbilityType: ability.type,
+              lastAbilityUse: now,
             });
-            break;
           }
         }
-
-        // Collect mutation instead of mutating directly
-        const existing = towerDebuffEnemyUpdates.get(enemy.id);
-        if (existing) {
-          existing.lastAbilityType = ability.type;
-          existing.activatedTypes.push(ability.type);
-        } else {
-          towerDebuffEnemyUpdates.set(enemy.id, {
-            lastAbilityUse: now,
-            lastAbilityType: ability.type,
-            activatedTypes: [ability.type],
-          });
-        }
       }
-    }
 
-    return updated;
-  }));
+      return updated;
+    })
+  );
 
   for (const [id, update] of towerDebuffEnemyUpdates) {
     enemyBatch.transform(id, (enemy) => ({
       ...enemy,
-      lastAbilityUse: update.lastAbilityUse,
+      abilityCooldowns: buildAbilityCooldowns(
+        enemy.abilityCooldowns,
+        update.activatedTypes,
+        now
+      ),
       lastAbilityType: update.lastAbilityType,
-      abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, update.activatedTypes, now),
+      lastAbilityUse: update.lastAbilityUse,
     }));
   }
 
@@ -3415,10 +3952,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     );
   };
 
-  type EnemyMutation = {
+  interface EnemyMutation {
     enemyId: string;
     mutate: (enemy: Enemy) => Enemy | null;
-  };
+  }
   const queuedTowerEnemyMutations: EnemyMutation[] = [];
   const queueTowerEnemyMutation = (
     enemyId: string,
@@ -3442,23 +3979,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const towerWorldPos = gridToWorld(tower.pos);
 
       // Calculate debuff modifiers
-      let attackSpeedMod = 1.0;
-      let damageMod = 1.0;
-      let rangeMod = 1.0;
+      let attackSpeedMod = 1;
+      let damageMod = 1;
+      let rangeMod = 1;
 
       if (tower.debuffs && tower.debuffs.length > 0) {
         for (const debuff of tower.debuffs) {
-          if (now >= debuff.until) continue;
+          if (now >= debuff.until) {
+            continue;
+          }
           switch (debuff.type) {
-            case 'slow':
-              attackSpeedMod *= (1 - debuff.intensity);
+            case "slow": {
+              attackSpeedMod *= 1 - debuff.intensity;
               break;
-            case 'weaken':
-              damageMod *= (1 - debuff.intensity);
+            }
+            case "weaken": {
+              damageMod *= 1 - debuff.intensity;
               break;
-            case 'blind':
-              rangeMod *= (1 - debuff.intensity);
+            }
+            case "blind": {
+              rangeMod *= 1 - debuff.intensity;
               break;
+            }
           }
         }
       }
@@ -3476,7 +4018,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         tower.damageBoost || 1
       );
       const finalRange = towerStats.range * rangeMod;
-      const finalDamageMult = (tower.damageBoost || 1.0) * damageMod;
+      const finalDamageMult = (tower.damageBoost || 1) * damageMod;
 
       if (tower.type === "club") {
         // ENHANCED CLUB TOWER - More useful income generator
@@ -3509,7 +4051,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   : 20;
 
         // Scale income interval with game speed (faster at higher speeds)
-        const effectiveIncomeInterval = gameSpeed > 0 ? incomeInterval / gameSpeed : incomeInterval;
+        const effectiveIncomeInterval =
+          gameSpeed > 0 ? incomeInterval / gameSpeed : incomeInterval;
         if (now - tower.lastAttack > effectiveIncomeInterval) {
           // Base income
           let amount = baseAmount;
@@ -3521,7 +4064,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
           addPawPoints(amount);
           // Add eating club income event for HUD animation
-          setEatingClubIncomeEvents((prev) => [...prev, { id: `${tower.id}-${now}`, amount }]);
+          setEatingClubIncomeEvents((prev) => [
+            ...prev,
+            { amount, id: `${tower.id}-${now}` },
+          ]);
           addParticles(gridToWorld(tower.pos), "gold", 20);
 
           // Level 3+ Grand Club: Create gold particle fountain effect
@@ -3556,19 +4102,30 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         // Scale library damage intervals with game speed
         const libraryDamageInterval = gameSpeed > 0 ? 500 / gameSpeed : 500;
-        const shouldApplyArcaneDamage = tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
+        const shouldApplyArcaneDamage =
+          tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
         // Blizzard freeze: 25% chance every 2 seconds (scaled with game speed, uses separate timer)
         const blizzardFreezeInterval = gameSpeed > 0 ? 2000 / gameSpeed : 2000;
         const lastFreezeCheck = tower.lastFreezeCheck || 0;
-        const shouldCheckBlizzardFreeze = tower.level === 4 && tower.upgrade === "B" && now - lastFreezeCheck > blizzardFreezeInterval;
-        const shouldApplyBlizzardFreeze = shouldCheckBlizzardFreeze && Math.random() < 0.25;
-        const shouldApplyEarthquakeDamage = tower.level === 4 && tower.upgrade === "A" && now - tower.lastAttack > libraryDamageInterval;
+        const shouldCheckBlizzardFreeze =
+          tower.level === 4 &&
+          tower.upgrade === "B" &&
+          now - lastFreezeCheck > blizzardFreezeInterval;
+        const shouldApplyBlizzardFreeze =
+          shouldCheckBlizzardFreeze && Math.random() < 0.25;
+        const shouldApplyEarthquakeDamage =
+          tower.level === 4 &&
+          tower.upgrade === "A" &&
+          now - tower.lastAttack > libraryDamageInterval;
         const arcaneDamage = 8 * finalDamageMult;
         const earthquakeDamage = 35;
 
         // Collect enemy IDs affected by this tower for batched update
         const affectedEnemyIds = new Set<string>();
-        const enemyDistances = new Map<string, { dist: number; pos: Position }>();
+        const enemyDistances = new Map<
+          string,
+          { dist: number; pos: Position }
+        >();
 
         for (const e of enemies) {
           const enemyPos = getEnemyPosCached(e);
@@ -3590,7 +4147,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           setEnemies((prev) =>
             prev
               .map((enemy) => {
-                if (!affectedEnemyIds.has(enemy.id)) return enemy;
+                if (!affectedEnemyIds.has(enemy.id)) {
+                  return enemy;
+                }
                 const info = enemyDistances.get(enemy.id)!;
 
                 const newEnemy = { ...enemy };
@@ -3616,13 +4175,34 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   appliedDamage = true;
                   if (newEnemy.hp <= 0) {
                     const baseBounty = ENEMY_DATA[enemy.type].bounty;
-                    const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                    const goldBonus = enemy.goldAura
+                      ? Math.floor(baseBounty * 0.5)
+                      : 0;
                     bountyEarned += baseBounty + goldBonus;
                     bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                     sparkPositions.push(info.pos);
                     const eDeathData = ENEMY_DATA[enemy.type];
-                    const arcaneRegionColors = REGION_THEMES[LEVEL_DATA[selectedMap]?.theme || "grassland"]?.ground;
-                    setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 1500, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying, deathCause: "default" as const, regionGroundColors: arcaneRegionColors }]);
+                    const arcaneRegionColors =
+                      REGION_THEMES[
+                        LEVEL_DATA[selectedMap]?.theme || "grassland"
+                      ]?.ground;
+                    setEffects((prev) => [
+                      ...prev,
+                      {
+                        color: eDeathData.color,
+                        deathCause: "default" as const,
+                        duration: 1500,
+                        enemySize: eDeathData.size,
+                        enemyType: enemy.type,
+                        id: generateId("fx"),
+                        isFlying: eDeathData.flying,
+                        pos: info.pos,
+                        progress: 0,
+                        regionGroundColors: arcaneRegionColors,
+                        size: eDeathData.size,
+                        type: "enemy_death" as const,
+                      },
+                    ]);
                     return null;
                   }
                 }
@@ -3639,13 +4219,34 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   appliedDamage = true;
                   if (newEnemy.hp <= 0) {
                     const baseBounty = ENEMY_DATA[enemy.type].bounty;
-                    const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                    const goldBonus = enemy.goldAura
+                      ? Math.floor(baseBounty * 0.5)
+                      : 0;
                     bountyEarned += baseBounty + goldBonus;
                     bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                     particlePositions.push(info.pos);
                     const eDeathData2 = ENEMY_DATA[enemy.type];
-                    const quakeRegionColors = REGION_THEMES[LEVEL_DATA[selectedMap]?.theme || "grassland"]?.ground;
-                    setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 1500, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying, deathCause: "default" as const, regionGroundColors: quakeRegionColors }]);
+                    const quakeRegionColors =
+                      REGION_THEMES[
+                        LEVEL_DATA[selectedMap]?.theme || "grassland"
+                      ]?.ground;
+                    setEffects((prev) => [
+                      ...prev,
+                      {
+                        color: eDeathData2.color,
+                        deathCause: "default" as const,
+                        duration: 1500,
+                        enemySize: eDeathData2.size,
+                        enemyType: enemy.type,
+                        id: generateId("fx"),
+                        isFlying: eDeathData2.flying,
+                        pos: info.pos,
+                        progress: 0,
+                        regionGroundColors: quakeRegionColors,
+                        size: eDeathData2.size,
+                        type: "enemy_death" as const,
+                      },
+                    ]);
                     return null;
                   }
                 }
@@ -3666,9 +4267,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         // Continuous slow field visual effect
         if (
           enemies.some(
-            (e) =>
-              distance(towerWorldPos, getEnemyPosCached(e)) <=
-              finalRange
+            (e) => distance(towerWorldPos, getEnemyPosCached(e)) <= finalRange
           )
         ) {
           const effectType =
@@ -3697,19 +4296,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               ...ef,
               {
                 id: generateId("field"),
+                intensity: tower.level >= 3 ? 1 : tower.level === 2 ? 0.7 : 0.5,
                 pos: towerWorldPos,
-                type: effectType,
                 progress: 0,
                 size: finalRange,
                 towerId: tower.id,
-                intensity:
-                  tower.level >= 3 ? 1 : tower.level === 2 ? 0.7 : 0.5,
+                type: effectType,
               },
             ];
           });
         }
         // Update tower timers
-        const shouldUpdateLastAttack = (appliedSlow || appliedDamage) && now - tower.lastAttack > libraryDamageInterval;
+        const shouldUpdateLastAttack =
+          (appliedSlow || appliedDamage) &&
+          now - tower.lastAttack > libraryDamageInterval;
         const shouldUpdateFreezeCheck = shouldCheckBlizzardFreeze;
         if (shouldUpdateLastAttack || shouldUpdateFreezeCheck) {
           queueTowerPatch(tower.id, {
@@ -3732,13 +4332,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         // Find rally point from existing troops or use road near station
         const existingRallyTroop = stationTroops.find((t) => t.userTargetPos);
         const rallyPoint =
-          existingRallyTroop?.userTargetPos || findClosestRoadPoint(stationPos, activeWaveSpawnPaths, selectedMap);
+          existingRallyTroop?.userTargetPos ||
+          findClosestRoadPoint(stationPos, activeWaveSpawnPaths, selectedMap);
 
         for (const r of pendingRespawns) {
           const newTimer = r.timer - deltaTime;
-          if (newTimer <= 0 && stationTroops.length + troopsToSpawn.length < MAX_STATION_TROOPS) {
-            const futureCount =
-              stationTroops.length + troopsToSpawn.length + 1;
+          if (
+            newTimer <= 0 &&
+            stationTroops.length + troopsToSpawn.length < MAX_STATION_TROOPS
+          ) {
+            const futureCount = stationTroops.length + troopsToSpawn.length + 1;
             const formationOffsets = getFormationOffsets(futureCount);
             const slotOffset = formationOffsets[r.slot] || { x: 0, y: 0 };
 
@@ -3748,7 +4351,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             };
 
             const troopHP =
-              TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp || DEFAULT_TROOP_HP;
+              TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp ||
+              DEFAULT_TROOP_HP;
             troopsToSpawn.push({
               id: generateId("troop"),
               ownerId: tower.id,
@@ -3757,21 +4361,23 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               hp: troopHP,
               maxHp: troopHP,
               moving: true, // Walk to target
-              targetPos: targetPos,
+              targetPos,
               lastAttack: 0,
               type: r.troopType as TroopType,
               rotation: Math.atan2(
                 targetPos.y - stationPos.y,
-                targetPos.x - stationPos.x,
+                targetPos.x - stationPos.x
               ),
               facingRight: getFacingRightFromDelta(
                 targetPos.x - stationPos.x,
-                targetPos.y - stationPos.y,
+                targetPos.y - stationPos.y
               ),
               attackAnim: 0,
               selected: false,
               spawnPoint: rallyPoint,
-              moveRadius: (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) * (tower.rangeBoost || 1),
+              moveRadius:
+                (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) *
+                (tower.rangeBoost || 1),
               spawnSlot: r.slot,
               userTargetPos: targetPos,
             });
@@ -3788,7 +4394,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           addTroopEntities(troopsToSpawn);
         }
 
-        const totalOccupied = stationTroops.length + troopsToSpawn.length + remainingRespawns.length;
+        const totalOccupied =
+          stationTroops.length +
+          troopsToSpawn.length +
+          remainingRespawns.length;
         const canSpawn = totalOccupied < MAX_STATION_TROOPS;
 
         const occupiedSlots = new Set([
@@ -3807,12 +4416,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const newProgress = currentProgress + deltaTime / 3000;
 
           // Check if train just arrived at platform
-          const arrivedAtPlatform =
-            currentProgress < 0.3 && newProgress >= 0.3;
+          const arrivedAtPlatform = currentProgress < 0.3 && newProgress >= 0.3;
 
           // Scale station spawn interval with game speed
           const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
-          if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval && !isInResetTransition) {
+          if (
+            arrivedAtPlatform &&
+            now - tower.lastAttack > stationSpawnInterval &&
+            !isInResetTransition
+          ) {
             // Spawn troop at station, it will walk to formation position
             const stationPos = gridToWorld(tower.pos);
 
@@ -3821,7 +4433,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               (t) => t.userTargetPos
             );
             const rallyPoint =
-              existingRallyTroop?.userTargetPos || findClosestRoadPoint(stationPos, activeWaveSpawnPaths, selectedMap);
+              existingRallyTroop?.userTargetPos ||
+              findClosestRoadPoint(
+                stationPos,
+                activeWaveSpawnPaths,
+                selectedMap
+              );
 
             const futureCount = stationTroops.length + troopsToSpawn.length + 1;
             const formationOffsets = getFormationOffsets(futureCount);
@@ -3857,21 +4474,23 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               hp: troopHP,
               maxHp: troopHP,
               moving: true, // Walk to target
-              targetPos: targetPos,
+              targetPos,
               lastAttack: 0,
               type: troopType,
               rotation: Math.atan2(
                 targetPos.y - stationPos.y,
-                targetPos.x - stationPos.x,
+                targetPos.x - stationPos.x
               ),
               facingRight: getFacingRightFromDelta(
                 targetPos.x - stationPos.x,
-                targetPos.y - stationPos.y,
+                targetPos.y - stationPos.y
               ),
               attackAnim: 0,
               selected: false,
               spawnPoint: rallyPoint,
-              moveRadius: (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) * (tower.rangeBoost || 1),
+              moveRadius:
+                (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) *
+                (tower.rangeBoost || 1),
               spawnSlot: availableSlot,
               userTargetPos: targetPos,
             };
@@ -3879,7 +4498,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             // Also update existing troops to reposition in new formation
             setTroops((prev) => {
               // Get current troops for this tower to create sequential formation indices
-              const currentTowerTroops = prev.filter((t) => t.ownerId === tower.id);
+              const currentTowerTroops = prev.filter(
+                (t) => t.ownerId === tower.id
+              );
               const troopIdToFormationIndex = new Map<string, number>();
               currentTowerTroops.forEach((t, idx) => {
                 troopIdToFormationIndex.set(t.id, idx);
@@ -3899,13 +4520,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   if (!t.engaging) {
                     return {
                       ...t,
-                      targetPos: newTarget,
-                      moving: true,
-                      userTargetPos: newTarget,
                       facingRight: getFacingRightFromDelta(
                         newTarget.x - t.pos.x,
-                        newTarget.y - t.pos.y,
+                        newTarget.y - t.pos.y
                       ),
+                      moving: true,
+                      targetPos: newTarget,
+                      userTargetPos: newTarget,
                     };
                   }
                 }
@@ -3916,23 +4537,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             addParticles(stationPos, "spark", 10);
 
             queueTowerPatch(tower.id, {
+              currentTroopCount:
+                stationTroops.length + troopsToSpawn.length + 1,
               lastAttack: now,
-              trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
-              currentTroopCount: stationTroops.length + troopsToSpawn.length + 1,
               pendingRespawns: remainingRespawns,
+              trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
             });
           } else {
             queueTowerPatch(tower.id, {
-              trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
               currentTroopCount: stationTroops.length + troopsToSpawn.length,
               pendingRespawns: remainingRespawns,
+              trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
             });
           }
         } else {
           queueTowerPatch(tower.id, {
-            trainAnimProgress: 0.35,
             currentTroopCount: stationTroops.length + troopsToSpawn.length,
             pendingRespawns: remainingRespawns,
+            trainAnimProgress: 0.35,
           });
         }
       } else if (tower.type === "cannon") {
@@ -3943,10 +4565,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const isFlamethrower = tower.level === 4 && tower.upgrade === "B";
 
         // Get all valid enemies in range for targeting
-        const validEnemies = getEnemiesInRange(
-          towerWorldPos,
-          finalRange
-        );
+        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
 
         // Continuously track target even when not firing
         if (validEnemies.length > 0) {
@@ -3955,7 +4574,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const trackDx = trackTargetPos.x - towerWorldPos.x;
           const trackDy = trackTargetPos.y - towerWorldPos.y;
           // Account for isometric projection: screen direction
-          const trackRotation = Math.atan2(trackDx + trackDy, trackDx - trackDy);
+          const trackRotation = Math.atan2(
+            trackDx + trackDy,
+            trackDx - trackDy
+          );
 
           // Update rotation to track enemy continuously
           queueTowerPatch(tower.id, {
@@ -3964,13 +4586,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           });
         }
 
-        const cannonStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+        const cannonStats = calculateTowerStats(
+          tower.type,
+          tower.level,
+          tower.upgrade
+        );
         const attackCooldown = cannonStats.attackSpeed;
         const effectiveAttackCooldown =
           gameSpeed > 0
             ? attackCooldown / gameSpeed / attackSpeedMultiplier
             : attackCooldown;
-        if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
+        if (
+          now - tower.lastAttack > effectiveAttackCooldown &&
+          validEnemies.length > 0
+        ) {
           const target = validEnemies[0];
           const targetPos = getEnemyPosCached(target);
           const targetAimPos = getEnemyAimPosCached(target);
@@ -3980,12 +4609,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             emitDamageNumber(targetPos, actualDmg, "tower");
             const newHp = enemy.hp - actualDmg;
             if (newHp <= 0) {
-              onEnemyKill(enemy, targetPos, 12, isFlamethrower ? "fire" : "default");
+              onEnemyKill(
+                enemy,
+                targetPos,
+                12,
+                isFlamethrower ? "fire" : "default"
+              );
               return null;
             }
             const updates: Partial<Enemy> = {
-              hp: newHp,
               damageFlash: DAMAGE_FLASH_SHORT_MS,
+              hp: newHp,
             };
             if (isFlamethrower) {
               const flameStats = TOWER_STATS.cannon.upgrades.B.stats;
@@ -4027,7 +4661,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       } else if (tower.type === "lab") {
         // All levels chain; L4A (Focused Beam) is the only non-chain path
         const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
-        const labStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+        const labStats = calculateTowerStats(
+          tower.type,
+          tower.level,
+          tower.upgrade
+        );
         const attackCooldown = labStats.attackSpeed;
         const effectiveLabCooldown =
           gameSpeed > 0
@@ -4038,17 +4676,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const lockOnDecayTime = labStats.lockOnDecayTime || 600;
         const currentLockOnStacks = tower.lockOnStacks || 0;
         if (isFocusedBeam && currentLockOnStacks > 0) {
-          const effectiveDecay = gameSpeed > 0 ? lockOnDecayTime / gameSpeed : lockOnDecayTime;
+          const effectiveDecay =
+            gameSpeed > 0 ? lockOnDecayTime / gameSpeed : lockOnDecayTime;
           if (now - tower.lastAttack > effectiveDecay) {
-            queueTowerPatch(tower.id, { lockOnStacks: 0, lockedTarget: undefined });
+            queueTowerPatch(tower.id, {
+              lockOnStacks: 0,
+              lockedTarget: undefined,
+            });
           }
         }
 
         if (now - tower.lastAttack > effectiveLabCooldown) {
-          const validEnemies = getEnemiesInRange(
-            towerWorldPos,
-            finalRange
-          );
+          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetAimPos = getEnemyAimPosCached(target);
@@ -4073,12 +4712,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             const shouldChain = !isFocusedBeam && numChainTargets > 1;
             const chainTargets = shouldChain
               ? getChainTargets(
-                target,
-                numChainTargets,
-                chainRange,
-                enemies,
-                getEnemyPosCached
-              )
+                  target,
+                  numChainTargets,
+                  chainRange,
+                  enemies,
+                  getEnemyPosCached
+                )
               : [target];
             const chainDamage = shouldChain ? damage * 0.7 : damage;
             chainTargets.forEach((chainTarget) => {
@@ -4090,7 +4729,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "lightning");
                   return null;
                 }
-                return { ...enemy, hp: newHp, damageFlash: DAMAGE_FLASH_MS };
+                return { ...enemy, damageFlash: DAMAGE_FLASH_MS, hp: newHp };
               });
             });
             const dx = targetAimPos.x - towerWorldPos.x;
@@ -4142,18 +4781,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                     ? towerWorldPos
                     : getEnemyAimPosCached(visualChainTargets[i - 1]);
                 queuedTowerEffects.push({
+                  color:
+                    tower.level === 4 && tower.upgrade === "B"
+                      ? "violet"
+                      : undefined,
+                  duration: lightningFxDuration,
                   id: generateId("chain"),
+                  intensity:
+                    Math.max(0.1, 1 - i * 0.15) * lightningIntensityScale,
                   pos: fromPos,
-                  type: "chain",
                   progress: 0,
                   size: distance(fromPos, chainPos),
                   targetPos: chainPos,
-                  intensity: Math.max(0.1, (1 - i * 0.15)) * lightningIntensityScale,
-                  duration: lightningFxDuration,
                   towerId: i === 0 ? tower.id : undefined,
                   towerLevel: tower.level,
                   towerUpgrade: tower.upgrade,
-                  color: tower.level === 4 && tower.upgrade === "B" ? "violet" : undefined,
+                  type: "chain",
                 });
               });
             } else {
@@ -4161,19 +4804,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 ? lockOnStacks / (labStats.lockOnMaxStacks || 20)
                 : 0;
               queuedTowerEffects.push({
+                color: isFocusedBeam ? "yellow" : undefined,
+                duration: lightningFxDuration,
                 id: generateId("zap"),
+                intensity:
+                  (isFocusedBeam ? 0.5 + lockOnRatio * 0.5 : 1) *
+                  lightningIntensityScale,
                 pos: towerWorldPos,
-                type: isFocusedBeam ? "beam" : "lightning",
                 progress: 0,
                 size: distance(towerWorldPos, targetAimPos),
                 targetPos: targetAimPos,
-                intensity:
-                  (isFocusedBeam ? 0.5 + lockOnRatio * 0.5 : 1) * lightningIntensityScale,
-                duration: lightningFxDuration,
                 towerId: tower.id,
                 towerLevel: tower.level,
                 towerUpgrade: tower.upgrade,
-                color: isFocusedBeam ? "yellow" : undefined,
+                type: isFocusedBeam ? "beam" : "lightning",
               });
             }
             const sparkCount = isLevel4
@@ -4194,7 +4838,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         // Arch tower - sonic attacks
         // Crescendo mechanic: builds stacks on consecutive attacks
         const isShockwave = tower.level === 4 && tower.upgrade === "A";
-        const archStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+        const archStats = calculateTowerStats(
+          tower.type,
+          tower.level,
+          tower.upgrade
+        );
         const maxStacks = archStats.crescendoMaxStacks || 4;
         const speedMult = archStats.crescendoSpeedMult || 0.92;
         const damageMult = archStats.crescendoDamageMult || 0.05;
@@ -4202,12 +4850,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const currentStacks = tower.crescendoStacks || 0;
 
         // Decay: gradually lose stacks one at a time when idle
-        const effectiveDecay = gameSpeed > 0 ? decayTime / gameSpeed : decayTime;
+        const effectiveDecay =
+          gameSpeed > 0 ? decayTime / gameSpeed : decayTime;
         if (currentStacks > 0 && now - tower.lastAttack > effectiveDecay) {
           const decayInterval = effectiveDecay / maxStacks;
           const decayStartTime = tower.lastAttack + effectiveDecay;
           const lastDecay =
-            tower.lastCrescendoDecay && tower.lastCrescendoDecay >= decayStartTime
+            tower.lastCrescendoDecay &&
+            tower.lastCrescendoDecay >= decayStartTime
               ? tower.lastCrescendoDecay
               : decayStartTime - decayInterval;
           if (now - lastDecay >= decayInterval) {
@@ -4219,21 +4869,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
 
         // Crescendo-adjusted cooldown: base * speedMult^stacks
-        const crescendoCooldown = archStats.attackSpeed * Math.pow(speedMult, currentStacks);
+        const crescendoCooldown =
+          archStats.attackSpeed * speedMult ** currentStacks;
         const effectiveArcherSpeed =
           gameSpeed > 0
             ? crescendoCooldown / gameSpeed / attackSpeedMultiplier
             : crescendoCooldown;
         if (now - tower.lastAttack > effectiveArcherSpeed) {
-          const validEnemies = getEnemiesInRange(
-            towerWorldPos,
-            finalRange
-          );
+          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetAimPos = getEnemyAimPosCached(target);
             // Crescendo-adjusted damage: base * (1 + damageMult * stacks)
-            const damage = archStats.damage * (1 + damageMult * currentStacks) * finalDamageMult;
+            const damage =
+              archStats.damage *
+              (1 + damageMult * currentStacks) *
+              finalDamageMult;
             queueTowerEnemyMutation(target.id, (enemy) => {
               const targetEnemyPos = getEnemyPosCached(enemy);
               const actualDmg = getEnemyDamageTaken(enemy, damage);
@@ -4244,8 +4895,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 return null;
               }
               const updates: Partial<Enemy> = {
-                hp: newHp,
                 damageFlash: DAMAGE_FLASH_MS,
+                hp: newHp,
               };
               if (isShockwave && Math.random() < (archStats.stunChance ?? 0)) {
                 updates.stunUntil = now + (archStats.stunDuration ?? 1000);
@@ -4257,35 +4908,35 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             const dy = targetAimPos.y - towerWorldPos.y;
             const rotation = Math.atan2(dy, dx);
             queueTowerPatch(tower.id, {
+              crescendoStacks: nextStacks,
               lastAttack: now,
               rotation,
               target: target.id,
-              crescendoStacks: nextStacks,
             });
             const crescendoRatio = nextStacks / maxStacks;
             queuedTowerEffects.push({
               id: generateId("sonic"),
+              intensity: 0.5 + crescendoRatio * 0.5,
               pos: towerWorldPos,
-              type: "sonic",
               progress: 0,
               size: finalRange,
-              intensity: 0.5 + crescendoRatio * 0.5,
+              type: "sonic",
             });
             const targetPos = getEnemyAimPosCached(target);
             const noteCount = 3 + Math.floor(crescendoRatio * 4);
             for (let n = 0; n < noteCount; n++) {
               queuedTowerEffects.push({
                 id: generateId("note"),
+                intensity: 0.5 + crescendoRatio * 0.5,
+                noteIndex: n,
                 pos: towerWorldPos,
-                type: "music_notes",
                 progress: 0,
                 size: distance(towerWorldPos, targetPos),
                 targetPos,
-                intensity: 0.5 + crescendoRatio * 0.5,
                 towerId: tower.id,
                 towerLevel: tower.level,
                 towerUpgrade: tower.upgrade,
-                noteIndex: n,
+                type: "music_notes",
               });
             }
           }
@@ -4294,27 +4945,48 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const isMissileBattery = tower.level === 4 && tower.upgrade === "A";
         const isEmberFoundry = tower.level === 4 && tower.upgrade === "B";
 
-        const mortarStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+        const mortarStats = calculateTowerStats(
+          tower.type,
+          tower.level,
+          tower.upgrade
+        );
         const attackCooldown = mortarStats.attackSpeed;
         const effectiveAttackCooldown =
           gameSpeed > 0
             ? attackCooldown / gameSpeed / attackSpeedMultiplier
             : attackCooldown;
 
-        const splashRadius = mortarStats.splashRadius || mortarStats.range * 0.33;
+        const splashRadius =
+          mortarStats.splashRadius || mortarStats.range * 0.33;
         const damage = mortarStats.damage * finalDamageMult;
 
         // Missile Battery: defaults to auto-aim; manual uses stored position
-        if (isMissileBattery && missileMortarTargetingIdRef.current === tower.id) {
+        if (
+          isMissileBattery &&
+          missileMortarTargetingIdRef.current === tower.id
+        ) {
           const cursorScreen = mousePosRef.current;
           if (cursorScreen.x > 0 && cursorScreen.y > 0) {
             const { width: cW, height: cH, dpr: cDpr } = getCanvasDimensions();
-            const cursorWorld = screenToWorld(cursorScreen, cW, cH, cDpr, cameraOffset, cameraZoom);
+            const cursorWorld = screenToWorld(
+              cursorScreen,
+              cW,
+              cH,
+              cDpr,
+              cameraOffset,
+              cameraZoom
+            );
             const cDx = cursorWorld.x - towerWorldPos.x;
             const cDy = cursorWorld.y - towerWorldPos.y;
-            queueTowerPatch(tower.id, { rotation: Math.atan2(cDx + cDy, cDx - cDy) });
+            queueTowerPatch(tower.id, {
+              rotation: Math.atan2(cDx + cDy, cDx - cDy),
+            });
           }
-        } else if (isMissileBattery && tower.mortarAutoAim === false && tower.mortarTarget) {
+        } else if (
+          isMissileBattery &&
+          tower.mortarAutoAim === false &&
+          tower.mortarTarget
+        ) {
           const missileTarget = tower.mortarTarget;
           const tDx = missileTarget.x - towerWorldPos.x;
           const tDy = missileTarget.y - towerWorldPos.y;
@@ -4323,11 +4995,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
           if (now - tower.lastAttack > effectiveAttackCooldown) {
             const missileCount = 6;
-            const barrelOrigin = getMortarBarrelOrigin(towerWorldPos, missileTarget, tower.level, tower.upgrade);
+            const barrelOrigin = getMortarBarrelOrigin(
+              towerWorldPos,
+              missileTarget,
+              tower.level,
+              tower.upgrade
+            );
             const impactRadius = splashRadius * 0.6;
             const podStaggerMs = 150;
             for (let i = 0; i < missileCount; i++) {
-              const circleAngle = (i / missileCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+              const circleAngle =
+                (i / missileCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
               const radiusJitter = impactRadius * (0.4 + Math.random() * 0.6);
               const targetPos = {
                 x: missileTarget.x + Math.cos(circleAngle) * radiusJitter,
@@ -4337,22 +5015,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               const dy = targetPos.y - towerWorldPos.y;
               const rotation = Math.atan2(dy, dx);
               queuedTowerProjectiles.push({
-                id: generateId("msl"),
-                from: barrelOrigin.from,
-                to: targetPos,
-                progress: 0,
-                type: "missile",
-                rotation,
-                arcHeight: 130 + i * 15,
-                elevation: barrelOrigin.elevation,
-                damage: damage * 0.35,
-                targetType: "enemy",
-                isAoE: true,
                 aoeRadius: splashRadius * 0.75,
-                speed: 0.16 + i * 0.02,
+                arcHeight: 130 + i * 15,
                 color: "#ff2200",
-                trailColor: "#ffaa00",
+                damage: damage * 0.35,
+                elevation: barrelOrigin.elevation,
+                from: barrelOrigin.from,
+                id: generateId("msl"),
+                isAoE: true,
+                progress: 0,
+                rotation,
                 spawnDelay: i * podStaggerMs,
+                speed: 0.16 + i * 0.02,
+                targetType: "enemy",
+                to: targetPos,
+                trailColor: "#ffaa00",
+                type: "missile",
               });
             }
             queueTowerPatch(tower.id, { lastAttack: now });
@@ -4363,19 +5041,32 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (autoEnemies.length > 0) {
             const autoTarget = autoEnemies[0];
             const autoPos = getEnemyAimPosCached(autoTarget);
-            missileAutoAimRef.current.set(tower.id, { x: autoPos.x, y: autoPos.y });
+            missileAutoAimRef.current.set(tower.id, {
+              x: autoPos.x,
+              y: autoPos.y,
+            });
             const aDx = autoPos.x - towerWorldPos.x;
             const aDy = autoPos.y - towerWorldPos.y;
             const aRot = Math.atan2(aDx + aDy, aDx - aDy);
-            queueTowerPatch(tower.id, { rotation: aRot, targetId: autoTarget.id });
+            queueTowerPatch(tower.id, {
+              rotation: aRot,
+              targetId: autoTarget.id,
+            });
 
             if (now - tower.lastAttack > effectiveAttackCooldown) {
               const missileCount = 6;
-              const barrelOrigin = getMortarBarrelOrigin(towerWorldPos, autoPos, tower.level, tower.upgrade);
+              const barrelOrigin = getMortarBarrelOrigin(
+                towerWorldPos,
+                autoPos,
+                tower.level,
+                tower.upgrade
+              );
               const impactRadius = splashRadius * 0.6;
               const podStaggerMs = 150;
               for (let i = 0; i < missileCount; i++) {
-                const circleAngle = (i / missileCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+                const circleAngle =
+                  (i / missileCount) * Math.PI * 2 +
+                  (Math.random() - 0.5) * 0.6;
                 const radiusJitter = impactRadius * (0.4 + Math.random() * 0.6);
                 const targetPos = {
                   x: autoPos.x + Math.cos(circleAngle) * radiusJitter,
@@ -4385,22 +5076,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 const dy = targetPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
                 queuedTowerProjectiles.push({
-                  id: generateId("msl"),
-                  from: barrelOrigin.from,
-                  to: targetPos,
-                  progress: 0,
-                  type: "missile",
-                  rotation,
-                  arcHeight: 130 + i * 15,
-                  elevation: barrelOrigin.elevation,
-                  damage: damage * 0.35,
-                  targetType: "enemy",
-                  isAoE: true,
                   aoeRadius: splashRadius * 0.75,
-                  speed: 0.16 + i * 0.02,
+                  arcHeight: 130 + i * 15,
                   color: "#ff2200",
-                  trailColor: "#ffaa00",
+                  damage: damage * 0.35,
+                  elevation: barrelOrigin.elevation,
+                  from: barrelOrigin.from,
+                  id: generateId("msl"),
+                  isAoE: true,
+                  progress: 0,
+                  rotation,
                   spawnDelay: i * podStaggerMs,
+                  speed: 0.16 + i * 0.02,
+                  targetType: "enemy",
+                  to: targetPos,
+                  trailColor: "#ffaa00",
+                  type: "missile",
                 });
               }
               queueTowerPatch(tower.id, { lastAttack: now });
@@ -4424,42 +5115,56 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             const trackTargetPos = getEnemyAimPosCached(trackTarget);
             const trackDx = trackTargetPos.x - towerWorldPos.x;
             const trackDy = trackTargetPos.y - towerWorldPos.y;
-            const trackRotation = Math.atan2(trackDx + trackDy, trackDx - trackDy);
+            const trackRotation = Math.atan2(
+              trackDx + trackDy,
+              trackDx - trackDy
+            );
             queueTowerPatch(tower.id, {
               rotation: trackRotation,
               targetId: trackTarget.id,
             });
           }
 
-          if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
+          if (
+            now - tower.lastAttack > effectiveAttackCooldown &&
+            validEnemies.length > 0
+          ) {
             if (isEmberFoundry) {
               const emberTarget = validEnemies[0];
               const emberAimPos = getEnemyAimPosCached(emberTarget);
-              const emberBarrel = getMortarBarrelOrigin(towerWorldPos, emberAimPos, tower.level, tower.upgrade);
+              const emberBarrel = getMortarBarrelOrigin(
+                towerWorldPos,
+                emberAimPos,
+                tower.level,
+                tower.upgrade
+              );
               const spread = 35;
               for (let i = 0; i < 3; i++) {
                 const offsetX = (Math.random() - 0.5) * spread * 2;
                 const offsetY = (Math.random() - 0.5) * spread * 2;
-                const targetPos = { x: emberAimPos.x + offsetX, y: emberAimPos.y + offsetY };
+                const targetPos = {
+                  x: emberAimPos.x + offsetX,
+                  y: emberAimPos.y + offsetY,
+                };
                 const dx = targetPos.x - towerWorldPos.x;
                 const dy = targetPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
                 queuedTowerProjectiles.push({
-                  id: generateId("emb"),
-                  from: emberBarrel.from,
-                  to: targetPos,
-                  progress: 0,
-                  type: "ember",
-                  rotation,
-                  arcHeight: 100 + i * 15,
-                  elevation: emberBarrel.elevation,
-                  damage: damage * 0.55,
-                  targetType: "enemy",
-                  isAoE: true,
                   aoeRadius: splashRadius * 0.8,
-                  speed: 0.22 + i * 0.03,
+                  arcHeight: 100 + i * 15,
                   color: "#ff4400",
+                  damage: damage * 0.55,
+                  elevation: emberBarrel.elevation,
+                  from: emberBarrel.from,
+                  id: generateId("emb"),
+                  isAoE: true,
+                  progress: 0,
+                  rotation,
+                  speed: 0.22 + i * 0.03,
+                  targetType: "enemy",
+                  to: targetPos,
                   trailColor: "#ff8800",
+                  type: "ember",
                 });
               }
               queueTowerPatch(tower.id, { lastAttack: now });
@@ -4468,35 +5173,40 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               // Base mortar: single high-arc explosive shell
               const target = validEnemies[0];
               const targetAimPos = getEnemyAimPosCached(target);
-              const shellBarrel = getMortarBarrelOrigin(towerWorldPos, targetAimPos, tower.level, tower.upgrade);
+              const shellBarrel = getMortarBarrelOrigin(
+                towerWorldPos,
+                targetAimPos,
+                tower.level,
+                tower.upgrade
+              );
               const dx = targetAimPos.x - towerWorldPos.x;
               const dy = targetAimPos.y - towerWorldPos.y;
               const rotation = Math.atan2(dx + dy, dx - dy);
               queuedTowerProjectiles.push({
-                id: generateId("mrt"),
-                from: shellBarrel.from,
-                to: targetAimPos,
-                progress: 0,
-                type: "mortarShell",
-                rotation,
-                arcHeight: 120,
-                elevation: shellBarrel.elevation,
-                damage,
-                targetType: "enemy",
-                isAoE: true,
                 aoeRadius: splashRadius,
+                arcHeight: 120,
+                damage,
+                elevation: shellBarrel.elevation,
+                from: shellBarrel.from,
+                id: generateId("mrt"),
+                isAoE: true,
+                progress: 0,
+                rotation,
                 speed: 0.3,
+                targetType: "enemy",
+                to: targetAimPos,
+                type: "mortarShell",
               });
               queueTowerPatch(tower.id, { lastAttack: now });
               queuedTowerEffects.push({
                 id: generateId("mrt"),
                 pos: shellBarrel.from,
-                type: "mortar_launch",
                 progress: 0,
+                rotation,
                 size: 40,
                 towerId: tower.id,
                 towerLevel: tower.level,
-                rotation,
+                type: "mortar_launch",
               });
               addParticles(shellBarrel.from, "smoke", 4);
             }
@@ -4505,20 +5215,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       } else if (
         towerData.attackSpeed > 0 &&
         now - tower.lastAttack >
-        (gameSpeed > 0
-          ? towerData.attackSpeed / gameSpeed / attackSpeedMultiplier
-          : towerData.attackSpeed)
+          (gameSpeed > 0
+            ? towerData.attackSpeed / gameSpeed / attackSpeedMultiplier
+            : towerData.attackSpeed)
       ) {
         // Generic tower attack (fallback)
-        const validEnemies = getEnemiesInRange(
-          towerWorldPos,
-          finalRange
-        );
+        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
         if (validEnemies.length > 0) {
           const target = validEnemies[0];
           const targetPos = getEnemyPosCached(target);
           const targetAimPos = getEnemyAimPosCached(target);
-          const genericStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+          const genericStats = calculateTowerStats(
+            tower.type,
+            tower.level,
+            tower.upgrade
+          );
           const damage = genericStats.damage * finalDamageMult;
           queueTowerEnemyMutation(target.id, (enemy) => {
             const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
@@ -4526,7 +5237,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               onEnemyKill(enemy, targetPos, 12);
               return null;
             }
-            return { ...enemy, hp: newHp, damageFlash: DAMAGE_FLASH_MS };
+            return { ...enemy, damageFlash: DAMAGE_FLASH_MS, hp: newHp };
           });
           const dx = targetAimPos.x - towerWorldPos.x;
           const dy = targetAimPos.y - towerWorldPos.y;
@@ -4537,12 +5248,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             target: target.id,
           });
           queuedTowerProjectiles.push({
-            id: generateId("proj"),
             from: towerWorldPos,
-            to: targetAimPos,
+            id: generateId("proj"),
             progress: 0,
-            type: tower.type,
             rotation,
+            to: targetAimPos,
+            type: tower.type,
           });
           addParticles(towerWorldPos, "smoke", 3);
         }
@@ -4555,11 +5266,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const enemyById = new Map(prev.map((enemy) => [enemy.id, enemy]));
       for (const mutation of queuedTowerEnemyMutations) {
         const current = enemyById.get(mutation.enemyId);
-        if (!current) continue;
+        if (!current) {
+          continue;
+        }
         const updated = mutation.mutate(current);
         if (updated) {
-          enemyById.set(mutation.enemyId,
-            updated.hp < current.hp ? { ...updated, lastDamageTaken: now } : updated
+          enemyById.set(
+            mutation.enemyId,
+            updated.hp < current.hp
+              ? { ...updated, lastDamageTaken: now }
+              : updated
           );
         } else {
           enemyById.delete(mutation.enemyId);
@@ -4568,7 +5284,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const nextEnemies: Enemy[] = [];
       for (const enemy of prev) {
         const updated = enemyById.get(enemy.id);
-        if (updated) nextEnemies.push(updated);
+        if (updated) {
+          nextEnemies.push(updated);
+        }
       }
       return nextEnemies;
     });
@@ -4589,12 +5307,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   }
 
   // Hero attacks - skip when paused or stunned
-  if (!isPaused && hero && !hero.dead && !hero.stunned && hero.attackAnim === 0) {
+  if (
+    !isPaused &&
+    hero &&
+    !hero.dead &&
+    !hero.stunned &&
+    hero.attackAnim === 0
+  ) {
     const heroData = HERO_DATA[hero.type];
     const isNassauBlueInferno = hero.type === "nassau" && hero.abilityActive;
     const isIvyColossus = hero.type === "ivy" && hero.abilityActive;
-    const isNassauMelee = hero.type === "nassau" && !isNassauBlueInferno &&
-      getEnemiesInRange(hero.pos, HERO_COMBAT_STATS.nassauMeleeRange).length > 0;
+    const isNassauMelee =
+      hero.type === "nassau" &&
+      !isNassauBlueInferno &&
+      getEnemiesInRange(hero.pos, HERO_COMBAT_STATS.nassauMeleeRange).length >
+        0;
     const heroAttackSpeed = isNassauMelee
       ? HERO_COMBAT_STATS.nassauMeleeAttackSpeed
       : isNassauBlueInferno
@@ -4602,14 +5329,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         : isIvyColossus
           ? HERO_COMBAT_STATS.ivyColossusAttackSpeed
           : heroData.attackSpeed;
-    const heroRange = isIvyColossus ? HERO_COMBAT_STATS.ivyColossusAoeRadius : heroData.range;
+    const heroRange = isIvyColossus
+      ? HERO_COMBAT_STATS.ivyColossusAoeRadius
+      : heroData.range;
     // Scale hero attack speed with game speed
-    const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroAttackSpeed / gameSpeed : heroAttackSpeed;
+    const effectiveHeroAttackSpeed =
+      gameSpeed > 0 ? heroAttackSpeed / gameSpeed : heroAttackSpeed;
     if (now - hero.lastAttack > effectiveHeroAttackSpeed) {
-      const validEnemies = getEnemiesInRange(
-        hero.pos,
-        heroRange
-      );
+      const validEnemies = getEnemiesInRange(hero.pos, heroRange);
       if (validEnemies.length > 0) {
         const target = validEnemies[0];
         const targetPos = getEnemyPosCached(target);
@@ -4619,10 +5346,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const rotation = Math.atan2(dy, dx);
 
         // Determine attack type based on hero
-        const isAoEHero = hero.type === "mathey" || hero.type === "scott" || hero.type === "ivy";
+        const isAoEHero =
+          hero.type === "mathey" ||
+          hero.type === "scott" ||
+          hero.type === "ivy";
         const isMultiTargetHero = hero.type === "tenor";
         const isProjectileAoEHero = hero.type === "nassau" && !isNassauMelee;
-        const aoeDamageRadius = hero.type === "mathey" ? HERO_COMBAT_STATS.matheyAoeRadius : hero.type === "scott" ? HERO_COMBAT_STATS.scottAoeRadius : hero.type === "ivy" ? HERO_COMBAT_STATS.ivyAoeRadius : 0;
+        const aoeDamageRadius =
+          hero.type === "mathey"
+            ? HERO_COMBAT_STATS.matheyAoeRadius
+            : hero.type === "scott"
+              ? HERO_COMBAT_STATS.scottAoeRadius
+              : hero.type === "ivy"
+                ? HERO_COMBAT_STATS.ivyAoeRadius
+                : 0;
         const maxTargets = hero.type === "tenor" ? 3 : 1;
 
         // Get targets for multi-target heroes (Tenor hits up to 3)
@@ -4632,72 +5369,110 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         // Nassau fireball: damage is delayed to projectile impact (skip instant damage)
         // Nassau melee: instant talon damage when enemies are close
-        const effectiveHeroDamage = isNassauMelee ? HERO_COMBAT_STATS.nassauMeleeDamage : heroData.damage;
+        const effectiveHeroDamage = isNassauMelee
+          ? HERO_COMBAT_STATS.nassauMeleeDamage
+          : heroData.damage;
         if (!isProjectileAoEHero) {
-        // Apply damage to all targets
-        setEnemies((prev) => {
-          let updatedEnemies: Array<Enemy | null> = [...prev];
-          const killedEnemyIds: string[] = [];
+          // Apply damage to all targets
+          setEnemies((prev) => {
+            let updatedEnemies: (Enemy | null)[] = [...prev];
+            const killedEnemyIds: string[] = [];
 
-          // Primary target damage
-          for (const attackTarget of attackTargets) {
-            const attackTargetPos = getEnemyPosCached(attackTarget);
+            // Primary target damage
+            for (const attackTarget of attackTargets) {
+              const attackTargetPos = getEnemyPosCached(attackTarget);
 
-            updatedEnemies = updatedEnemies.map((e) => {
-              if (!e) return e;
-              if (e.id === attackTarget.id) {
-                const actualDmg = getEnemyDamageTaken(e, effectiveHeroDamage);
-                emitDamageNumber(attackTargetPos, actualDmg, "hero");
-                const newHp = e.hp - actualDmg;
-                if (newHp <= 0) {
-                  killedEnemyIds.push(e.id);
-                  onEnemyKill(e, attackTargetPos, 10);
-                  if (hero.type === "scott") addPawPoints(1);
-                  return null;
+              updatedEnemies = updatedEnemies.map((e) => {
+                if (!e) {
+                  return e;
                 }
-                return { ...e, hp: newHp, damageFlash: 200, lastDamageTaken: now };
-              }
-              return e;
-            });
-          }
-
-          // AoE damage for Mathey Knight and F. Scott
-          if (isAoEHero && aoeDamageRadius > 0) {
-            const aoeDamage = Math.floor(heroData.damage * HERO_COMBAT_STATS.heroAoeDamageMult);
-            updatedEnemies = updatedEnemies.map((e) => {
-              if (!e || killedEnemyIds.includes(e.id)) return e;
-              if (attackTargets.some(t => t.id === e.id)) return e; // Already hit as primary
-
-              const enemyPos = getEnemyPosCached(e);
-              const distToTarget = distance(targetPos, enemyPos);
-
-              if (distToTarget <= aoeDamageRadius) {
-                const newHp = e.hp - getEnemyDamageTaken(e, aoeDamage);
-                if (newHp <= 0) {
-                  onEnemyKill(e, enemyPos);
-                  return null;
+                if (e.id === attackTarget.id) {
+                  const actualDmg = getEnemyDamageTaken(e, effectiveHeroDamage);
+                  emitDamageNumber(attackTargetPos, actualDmg, "hero");
+                  const newHp = e.hp - actualDmg;
+                  if (newHp <= 0) {
+                    killedEnemyIds.push(e.id);
+                    onEnemyKill(e, attackTargetPos, 10);
+                    if (hero.type === "scott") {
+                      addPawPoints(1);
+                    }
+                    return null;
+                  }
+                  return {
+                    ...e,
+                    damageFlash: 200,
+                    hp: newHp,
+                    lastDamageTaken: now,
+                  };
                 }
-                return { ...e, hp: newHp, damageFlash: 150, lastDamageTaken: now };
-              }
-              return e;
-            });
-          }
+                return e;
+              });
+            }
 
-          return updatedEnemies.filter(isDefined);
-        });
+            // AoE damage for Mathey Knight and F. Scott
+            if (isAoEHero && aoeDamageRadius > 0) {
+              const aoeDamage = Math.floor(
+                heroData.damage * HERO_COMBAT_STATS.heroAoeDamageMult
+              );
+              updatedEnemies = updatedEnemies.map((e) => {
+                if (!e || killedEnemyIds.includes(e.id)) {
+                  return e;
+                }
+                if (attackTargets.some((t) => t.id === e.id)) {
+                  return e;
+                } // Already hit as primary
+
+                const enemyPos = getEnemyPosCached(e);
+                const distToTarget = distance(targetPos, enemyPos);
+
+                if (distToTarget <= aoeDamageRadius) {
+                  const newHp = e.hp - getEnemyDamageTaken(e, aoeDamage);
+                  if (newHp <= 0) {
+                    onEnemyKill(e, enemyPos);
+                    return null;
+                  }
+                  return {
+                    ...e,
+                    damageFlash: 150,
+                    hp: newHp,
+                    lastDamageTaken: now,
+                  };
+                }
+                return e;
+              });
+            }
+
+            return updatedEnemies.filter(isDefined);
+          });
         } // end !isProjectileAoEHero
 
         // Create hero-specific attack effects
         const heroEffectType: EffectType = (() => {
           switch (hero.type) {
-            case "tiger": return "tiger_slash";
-            case "mathey": return "knight_cleave";
-            case "scott": return "scott_quill";
-            case "tenor": return "sonic_blast";
-            case "rocky": return "rock_impact";
-            case "nassau": return isNassauMelee ? "phoenix_talon" : "phoenix_inferno";
-            case "ivy": return "vine_lash";
-            default: return "impact_hit";
+            case "tiger": {
+              return "tiger_slash";
+            }
+            case "mathey": {
+              return "knight_cleave";
+            }
+            case "scott": {
+              return "scott_quill";
+            }
+            case "tenor": {
+              return "sonic_blast";
+            }
+            case "rocky": {
+              return "rock_impact";
+            }
+            case "nassau": {
+              return isNassauMelee ? "phoenix_talon" : "phoenix_inferno";
+            }
+            case "ivy": {
+              return "vine_lash";
+            }
+            default: {
+              return "impact_hit";
+            }
           }
         })();
 
@@ -4706,14 +5481,19 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           setEffects((ef) => [
             ...ef,
             {
+              attackerType: "hero",
               id: generateId("eff"),
-              pos: isAoEHero ? targetPos : { x: (hero.pos.x + targetPos.x) / 2, y: (hero.pos.y + targetPos.y) / 2 },
-              type: heroEffectType,
+              pos: isAoEHero
+                ? targetPos
+                : {
+                    x: (hero.pos.x + targetPos.x) / 2,
+                    y: (hero.pos.y + targetPos.y) / 2,
+                  },
               progress: 0,
               size: isAoEHero ? aoeDamageRadius : 50,
               slashAngle: rotation,
               sourceId: hero.id,
-              attackerType: "hero",
+              type: heroEffectType,
             },
           ]);
         }
@@ -4725,27 +5505,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             setEffects((ef) => [
               ...ef,
               {
+                color: "139, 92, 246",
                 id: generateId("eff"),
                 pos: extraAimPos,
-                type: "impact_hit",
                 progress: 0,
                 size: 30,
-                color: "139, 92, 246",
+                type: "impact_hit",
               },
             ]);
             // Add projectile to extra targets
             setProjectiles((prev) => [
               ...prev,
               {
-                id: generateId("proj"),
                 from: hero.pos,
-                to: extraAimPos,
+                id: generateId("proj"),
                 progress: 0,
-                type: "sonicWave",
                 rotation: Math.atan2(
                   extraAimPos.y - hero.pos.y,
                   extraAimPos.x - hero.pos.x
                 ),
+                to: extraAimPos,
+                type: "sonicWave",
               },
             ]);
           });
@@ -4753,7 +5533,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         setHero((prev) =>
           prev
-            ? { ...prev, lastAttack: now, lastCombatTime: now, rotation, attackAnim: 300 }
+            ? {
+                ...prev,
+                attackAnim: 300,
+                lastAttack: now,
+                lastCombatTime: now,
+                rotation,
+              }
             : null
         );
 
@@ -4763,25 +5549,25 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           setProjectiles((prev) => [
             ...prev,
             {
-              id: generateId("proj"),
-              from: hero.pos,
-              to: targetAimPos,
-              progress: 0,
-              type: blueActive ? "phoenixFlameBlue" : "phoenixFlame",
-              rotation,
-              arcHeight: blueActive ? 25 : 55,
-              speed: blueActive ? 1.2 : 0.4,
-              isAoE: true,
               aoeRadius: blueActive
                 ? HERO_COMBAT_STATS.nassauBlueFireballAoeRadius
                 : HERO_COMBAT_STATS.nassauFireballAoeRadius,
+              arcHeight: blueActive ? 25 : 55,
+              color: blueActive ? "#3b82f6" : "#e67e22",
               damage: blueActive
                 ? HERO_COMBAT_STATS.nassauBlueFireballDamage
                 : heroData.damage,
+              from: hero.pos,
+              id: generateId("proj"),
+              isAoE: true,
+              progress: 0,
+              rotation,
+              scale: blueActive ? 1 : 1.4,
+              speed: blueActive ? 1.2 : 0.4,
               targetType: "enemy",
-              color: blueActive ? "#3b82f6" : "#e67e22",
+              to: targetAimPos,
               trailColor: blueActive ? "#60a5fa" : "#ff6600",
-              scale: blueActive ? 1.0 : 1.4,
+              type: blueActive ? "phoenixFlameBlue" : "phoenixFlame",
             },
           ]);
         }
@@ -4792,10 +5578,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             const colossusDmg = HERO_COMBAT_STATS.ivyColossusDamage;
             const colossusRadius = HERO_COMBAT_STATS.ivyColossusAoeRadius;
             setEnemies((prev) => {
-              const updated: Array<Enemy | null> = prev.map((e) => {
-                if (!e || e.dead) return e;
+              const updated: (Enemy | null)[] = prev.map((e) => {
+                if (!e || e.dead) {
+                  return e;
+                }
                 const ePos = getEnemyPosCached(e);
-                if (distance(hero.pos, ePos) > colossusRadius) return e;
+                if (distance(hero.pos, ePos) > colossusRadius) {
+                  return e;
+                }
                 const actualDmg = getEnemyDamageTaken(e, colossusDmg);
                 emitDamageNumber(ePos, actualDmg, "hero");
                 const newHp = e.hp - actualDmg;
@@ -4803,21 +5593,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   onEnemyKill(e, ePos, 12);
                   return null;
                 }
-                return { ...e, hp: newHp, damageFlash: 250, stunUntil: Math.max(e.stunUntil, now + 400), lastDamageTaken: now };
+                return {
+                  ...e,
+                  damageFlash: 250,
+                  hp: newHp,
+                  lastDamageTaken: now,
+                  stunUntil: Math.max(e.stunUntil, now + 400),
+                };
               });
               return updated.filter(isDefined);
             });
             setEffects((ef) => [
               ...ef,
               {
+                attackerType: "hero",
+                color: "#059669",
                 id: generateId("colossus-smash"),
                 pos: hero.pos,
-                type: "ground_crack",
                 progress: 0,
                 size: colossusRadius,
-                color: "#059669",
                 sourceId: hero.id,
-                attackerType: "hero",
+                type: "ground_crack",
               },
             ]);
             addParticles(hero.pos, "glow", 8);
@@ -4825,50 +5621,69 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             setProjectiles((prev) => [
               ...prev,
               {
-                id: generateId("proj"),
+                color: "#059669",
                 from: hero.pos,
-                to: targetAimPos,
+                id: generateId("proj"),
                 progress: 0,
-                type: "vineBarb",
                 rotation,
                 speed: 2.5,
-                color: "#059669",
+                to: targetAimPos,
                 trailColor: "#34d399",
+                type: "vineBarb",
               },
             ]);
           }
         }
 
         // Create projectile for other ranged heroes (skip nassau melee — talon strikes have no projectile)
-        if (!isProjectileAoEHero && hero.type !== "ivy" && !isNassauMelee && (heroData.isRanged || heroData.range > 80)) {
+        if (
+          !isProjectileAoEHero &&
+          hero.type !== "ivy" &&
+          !isNassauMelee &&
+          (heroData.isRanged || heroData.range > 80)
+        ) {
           const projType = (() => {
             switch (hero.type) {
-              case "tenor": return "sonicWave";
-              case "rocky": return "rock";
-              case "scott": return "magicBolt";
-              default: return "hero";
+              case "tenor": {
+                return "sonicWave";
+              }
+              case "rocky": {
+                return "rock";
+              }
+              case "scott": {
+                return "magicBolt";
+              }
+              default: {
+                return "hero";
+              }
             }
           })();
 
           const projColor = (() => {
             switch (hero.type) {
-              case "scott": return "#c9a227";
-              case "tenor": return "#a855f7";
-              default: return undefined;
+              case "scott": {
+                return "#c9a227";
+              }
+              case "tenor": {
+                return "#a855f7";
+              }
+              default: {
+                return;
+              }
             }
           })();
 
           setProjectiles((prev) => [
             ...prev,
             {
-              id: generateId("proj"),
-              from: hero.pos,
-              to: targetAimPos,
-              progress: 0,
-              type: projType,
-              rotation,
               arcHeight: hero.type === "rocky" ? 60 : 0,
               color: projColor,
+              from: hero.pos,
+              id: generateId("proj"),
+              progress: 0,
+              rotation,
+              to: targetAimPos,
+              type: projType,
             },
           ]);
         }
@@ -4896,18 +5711,27 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // Troop attacks - with ranged support for centaurs and turrets - skip when paused
   if (!isPaused) {
     troops.forEach((troop) => {
-      if (!troop.type) return;
-      if (troop.stunned && troop.stunUntil && now < troop.stunUntil) return;
+      if (!troop.type) {
+        return;
+      }
+      if (troop.stunned && troop.stunUntil && now < troop.stunUntil) {
+        return;
+      }
       const troopData = TROOP_DATA[troop.type];
-      if (!troopData) return;
+      if (!troopData) {
+        return;
+      }
       const isRanged = troop.overrideIsRanged ?? troopData.isRanged ?? false;
       const attackRange = isRanged
-        ? troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE
+        ? (troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE)
         : DEFAULT_TROOP_MELEE_RANGE;
       const attackCooldown =
-        troop.overrideAttackSpeed ?? troopData.attackSpeed ?? DEFAULT_TROOP_ATTACK_SPEED;
+        troop.overrideAttackSpeed ??
+        troopData.attackSpeed ??
+        DEFAULT_TROOP_ATTACK_SPEED;
       // Scale troop attack cooldown with game speed
-      const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+      const effectiveTroopCooldown =
+        gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
       const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
       if (
         (troop.attackAnim ?? 0) === 0 &&
@@ -4925,7 +5749,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const target = validEnemies[0];
           const targetPos = getEnemyPosCached(target);
           const targetAimPos = getEnemyAimPosCached(target);
-          const troopDamage = troop.overrideDamage ?? troopData.damage ?? DEFAULT_TROOP_DAMAGE;
+          const troopDamage =
+            troop.overrideDamage ?? troopData.damage ?? DEFAULT_TROOP_DAMAGE;
           const dx = targetAimPos.x - troop.pos.x;
           const dy = targetAimPos.y - troop.pos.y;
           const rotation = Math.atan2(dy, dx);
@@ -4947,29 +5772,31 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               onEnemyKill(enemy, targetPos);
               return null;
             }
-            return { ...enemy, hp: newHp, damageFlash: 200 };
+            return { ...enemy, damageFlash: 200, hp: newHp };
           });
 
           // Add melee attack visual effect for non-ranged troops
           if (!useRangedAttack) {
-            const troopEffectType: EffectType =
-              isReinforcementLancer
-                ? "impact_hit"
-                : troop.type === "knight" ||
+            const troopEffectType: EffectType = isReinforcementLancer
+              ? "impact_hit"
+              : troop.type === "knight" ||
                   troop.type === "reinforcement" ||
                   troop.type === "cavalry"
-                  ? "melee_slash"
-                  : troop.type === "armored" || troop.type === "elite"
-                    ? "melee_swipe"
-                    : "impact_hit";
+                ? "melee_slash"
+                : troop.type === "armored" || troop.type === "elite"
+                  ? "melee_swipe"
+                  : "impact_hit";
             queuedTroopEffects.push({
+              attackerType: "troop",
               id: generateId("eff"),
-              pos: { x: (troop.pos.x + targetPos.x) / 2, y: (troop.pos.y + targetPos.y) / 2 },
-              type: troopEffectType,
+              pos: {
+                x: (troop.pos.x + targetPos.x) / 2,
+                y: (troop.pos.y + targetPos.y) / 2,
+              },
               progress: 0,
               size: 35,
               slashAngle: rotation,
-              attackerType: "troop",
+              type: troopEffectType,
             });
           }
           if (useRangedAttack) {
@@ -4990,24 +5817,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                     : { x: 0, y: -12 }
                   : { x: 0, y: 0 };
             queuedTroopProjectiles.push({
-              id: generateId("proj"),
+              color: isReinforcementLancer ? "#d6c07f" : undefined,
               from: {
                 x: troop.pos.x + spawnOffset.x,
                 y: troop.pos.y + spawnOffset.y,
               },
-              to: targetAimPos,
+              id: generateId("proj"),
               progress: 0,
-              type: projType,
               rotation,
               scale: isReinforcementLancer ? 1.1 : undefined,
-              color: isReinforcementLancer ? "#d6c07f" : undefined,
+              to: targetAimPos,
               trailColor: isReinforcementLancer ? "#f4e3aa" : undefined,
+              type: projType,
             });
           }
           queuedTroopPatches.set(troop.id, {
+            attackAnim: useRangedAttack ? 400 : 300,
             lastAttack: now,
             lastCombatTime: now,
-            attackAnim: useRangedAttack ? 400 : 300,
             rotation,
             targetEnemy: target.id,
           });
@@ -5020,11 +5847,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const enemyById = new Map(prev.map((enemy) => [enemy.id, enemy]));
       for (const mutation of queuedTroopEnemyMutations) {
         const current = enemyById.get(mutation.enemyId);
-        if (!current) continue;
+        if (!current) {
+          continue;
+        }
         const updated = mutation.mutate(current);
         if (updated) {
-          enemyById.set(mutation.enemyId,
-            updated.hp < current.hp ? { ...updated, lastDamageTaken: now } : updated
+          enemyById.set(
+            mutation.enemyId,
+            updated.hp < current.hp
+              ? { ...updated, lastDamageTaken: now }
+              : updated
           );
         } else {
           enemyById.delete(mutation.enemyId);
@@ -5033,7 +5865,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const nextEnemies: Enemy[] = [];
       for (const enemy of prev) {
         const updated = enemyById.get(enemy.id);
-        if (updated) nextEnemies.push(updated);
+        if (updated) {
+          nextEnemies.push(updated);
+        }
       }
       return nextEnemies;
     });
@@ -5073,7 +5907,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     prev.map((t) => {
       if (t.type === "station") {
         const troopCount = troopCountByOwner.get(t.id) ?? 0;
-        if (t.currentTroopCount === troopCount) return t;
+        if (t.currentTroopCount === troopCount) {
+          return t;
+        }
         return { ...t, currentTroopCount: troopCount };
       }
       return t;
@@ -5084,17 +5920,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setHero((prev) =>
       prev
         ? {
-          ...prev,
-          abilityCooldown: Math.max(0, prev.abilityCooldown - deltaTime),
-          abilityReady: prev.abilityCooldown - deltaTime <= 0,
-        }
+            ...prev,
+            abilityCooldown: Math.max(0, prev.abilityCooldown - deltaTime),
+            abilityReady: prev.abilityCooldown - deltaTime <= 0,
+          }
         : null
     );
   }
   // Update projectiles with a throttled simulation step and batched impact handling.
   projectileUpdateAccumulator.current += deltaTime;
   const projectilePressure =
-    entityCountsRef.current.projectiles + entityCountsRef.current.enemies * 0.35;
+    entityCountsRef.current.projectiles +
+    entityCountsRef.current.enemies * 0.35;
   const projectileUpdateInterval =
     projectilePressure > 260
       ? 42
@@ -5108,7 +5945,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     projectileUpdateAccumulator.current = 0;
 
     setProjectiles((prev) => {
-      if (prev.length === 0) return prev;
+      if (prev.length === 0) {
+        return prev;
+      }
 
       const nextProjectiles: Projectile[] = [];
       const completingProjectiles: Projectile[] = [];
@@ -5116,9 +5955,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       for (const proj of prev) {
         if (proj.spawnDelay && proj.spawnDelay > 0) {
           const remaining = proj.spawnDelay - projectileDelta;
-          nextProjectiles.push(remaining > 0
-            ? { ...proj, spawnDelay: remaining }
-            : { ...proj, spawnDelay: 0 });
+          nextProjectiles.push(
+            remaining > 0
+              ? { ...proj, spawnDelay: remaining }
+              : { ...proj, spawnDelay: 0 }
+          );
           continue;
         }
         const progressStep = baseProgressStep * (proj.speed ?? 1);
@@ -5134,19 +5975,36 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
       }
 
-      if (completingProjectiles.length === 0) return nextProjectiles;
+      if (completingProjectiles.length === 0) {
+        return nextProjectiles;
+      }
 
       const nowMs = Date.now();
       let heroDamageTotal = 0;
       let shouldDeflectOnHero = false;
       const directTroopDamage = new Map<string, number>();
-      const aoeEvents: Array<{ center: Position; radius: number; damage: number }> = [];
-      const mortarAoEEvents: Array<{ center: Position; radius: number; damage: number; isBurning: boolean }> = [];
-      const queuedImpactParticles: Array<{ pos: Position; type: string }> = [];
+      const aoeEvents: {
+        center: Position;
+        radius: number;
+        damage: number;
+      }[] = [];
+      const mortarAoEEvents: {
+        center: Position;
+        radius: number;
+        damage: number;
+        isBurning: boolean;
+      }[] = [];
+      const queuedImpactParticles: { pos: Position; type: string }[] = [];
       const queuedImpactEffects: Effect[] = [];
 
       for (const proj of completingProjectiles) {
-        if (proj.targetType === "hero" && proj.targetId && hero && hero.id === proj.targetId && !hero.dead) {
+        if (
+          proj.targetType === "hero" &&
+          proj.targetId &&
+          hero &&
+          hero.id === proj.targetId &&
+          !hero.dead
+        ) {
           if (hero.shieldActive) {
             shouldDeflectOnHero = true;
             continue;
@@ -5155,10 +6013,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           queuedImpactEffects.push({
             id: generateId("eff"),
             pos: proj.to,
-            type: getImpactEffect(proj.type),
             progress: 0,
-            size: 35,
             rotation: proj.rotation,
+            size: 35,
+            type: getImpactEffect(proj.type),
           });
           if (proj.isAoE && proj.aoeRadius) {
             const aoeEffectType: EffectType =
@@ -5166,14 +6024,16 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             queuedImpactEffects.push({
               id: generateId("eff"),
               pos: proj.to,
-              type: aoeEffectType,
               progress: 0,
               size: proj.aoeRadius || 50,
+              type: aoeEffectType,
             });
             aoeEvents.push({
               center: proj.to,
+              damage: Math.floor(
+                (proj.damage || DEFAULT_PROJECTILE_DAMAGE) * 0.5
+              ),
               radius: proj.aoeRadius,
-              damage: Math.floor((proj.damage || DEFAULT_PROJECTILE_DAMAGE) * 0.5),
             });
           }
           continue;
@@ -5182,52 +6042,71 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (proj.targetType === "troop" && proj.targetId) {
           directTroopDamage.set(
             proj.targetId,
-            (directTroopDamage.get(proj.targetId) ?? 0) + (proj.damage || DEFAULT_PROJECTILE_DAMAGE)
+            (directTroopDamage.get(proj.targetId) ?? 0) +
+              (proj.damage || DEFAULT_PROJECTILE_DAMAGE)
           );
           queuedImpactEffects.push({
             id: generateId("eff"),
             pos: proj.to,
-            type: getImpactEffect(proj.type),
             progress: 0,
-            size: 30,
             rotation: proj.rotation,
+            size: 30,
+            type: getImpactEffect(proj.type),
           });
         }
 
         // AoE projectiles targeting enemies (mortars, hero fireballs) - batch processing
-        if (proj.targetType === "enemy" && proj.isAoE && proj.aoeRadius && proj.damage) {
-          const isPhoenixFireball = proj.type === "phoenixFlame" || proj.type === "phoenixFlameBlue";
+        if (
+          proj.targetType === "enemy" &&
+          proj.isAoE &&
+          proj.aoeRadius &&
+          proj.damage
+        ) {
+          const isPhoenixFireball =
+            proj.type === "phoenixFlame" || proj.type === "phoenixFlameBlue";
           const impactEffectType: EffectType = isPhoenixFireball
             ? "fire_nova"
-            : proj.type === "ember" ? "ember_impact" : "mortar_impact";
+            : proj.type === "ember"
+              ? "ember_impact"
+              : "mortar_impact";
           queuedImpactEffects.push({
+            color: proj.type === "phoenixFlameBlue" ? "#3b82f6" : undefined,
+            duration: isPhoenixFireball
+              ? 700
+              : proj.type === "ember"
+                ? 900
+                : 800,
             id: generateId("eff"),
             pos: proj.to,
-            type: impactEffectType,
             progress: 0,
             size: proj.aoeRadius,
-            duration: isPhoenixFireball ? 700 : proj.type === "ember" ? 900 : 800,
-            color: proj.type === "phoenixFlameBlue" ? "#3b82f6" : undefined,
+            type: impactEffectType,
           });
           mortarAoEEvents.push({
             center: proj.to,
-            radius: proj.aoeRadius,
             damage: proj.damage,
             isBurning: proj.type === "ember" || isPhoenixFireball,
+            radius: proj.aoeRadius,
           });
           queuedImpactParticles.push({
             pos: proj.to,
-            type: isPhoenixFireball ? "spark" : proj.type === "ember" ? "fire" : "explosion",
+            type: isPhoenixFireball
+              ? "spark"
+              : proj.type === "ember"
+                ? "fire"
+                : "explosion",
           });
         }
       }
 
       if (heroDamageTotal > 0) {
         setHero((prevHero) => {
-          if (!prevHero || prevHero.dead) return prevHero;
+          if (!prevHero || prevHero.dead) {
+            return prevHero;
+          }
           const newHp = prevHero.hp - heroDamageTotal;
           if (newHp <= 0) {
-            return killHero(prevHero, 15000, nowMs);
+            return killHero(prevHero, 15_000, nowMs);
           }
           return { ...prevHero, hp: newHp, lastCombatTime: nowMs };
         });
@@ -5247,7 +6126,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   }
                 }
               }
-              if (totalDamage <= 0) return troop;
+              if (totalDamage <= 0) {
+                return troop;
+              }
               const newHp = troop.hp - totalDamage;
               if (newHp <= 0) {
                 onTroopDeath(troop, troop.pos);
@@ -5272,7 +6153,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               if (dist <= aoe.radius) {
                 const falloff = 1 - (dist / aoe.radius) * 0.4;
                 totalDamage += getEnemyDamageTaken(enemy, aoe.damage * falloff);
-                if (aoe.isBurning) shouldBurn = true;
+                if (aoe.isBurning) {
+                  shouldBurn = true;
+                }
               }
             }
             if (totalDamage <= 0) {
@@ -5285,7 +6168,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               onEnemyKill(enemy, enemyPos, 12, shouldBurn ? "fire" : "default");
               continue;
             }
-            const updates: Partial<Enemy> = { hp: newHp, damageFlash: 200, lastDamageTaken: nowMs };
+            const updates: Partial<Enemy> = {
+              damageFlash: 200,
+              hp: newHp,
+              lastDamageTaken: nowMs,
+            };
             if (shouldBurn) {
               const emberStats = TOWER_STATS.mortar.upgrades.B.stats;
               updates.burning = true;
@@ -5318,16 +6205,22 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   }
   // Update effects - with hard cap (throttled to reduce state updates)
   effectsUpdateAccumulator.current += deltaTime;
-  if (effectsUpdateAccumulator.current >= 32) { // Update every ~32ms instead of every frame
+  if (effectsUpdateAccumulator.current >= 32) {
+    // Update every ~32ms instead of every frame
     const accumulatedDelta = effectsUpdateAccumulator.current;
     effectsUpdateAccumulator.current = 0;
 
     setEffects((prev) => {
-      if (prev.length === 0) return prev;
+      if (prev.length === 0) {
+        return prev;
+      }
 
       const updated = prev
         .map((eff) => {
-          const next = { ...eff, progress: eff.progress + accumulatedDelta / (eff.duration || 500) };
+          const next = {
+            ...eff,
+            progress: eff.progress + accumulatedDelta / (eff.duration || 500),
+          };
           if (next.type === "fortress_shield" && hero && !hero.dead) {
             next.pos = { ...hero.pos };
           }

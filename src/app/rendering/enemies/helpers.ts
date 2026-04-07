@@ -18,7 +18,7 @@ export function drawRadialAura(
   cx: number,
   cy: number,
   radius: number,
-  stops: GradientStop[],
+  stops: GradientStop[]
 ): void {
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
   for (const s of stops) {
@@ -49,7 +49,7 @@ export function drawFaceCircle(
   gradRadius: number,
   stops: GradientStop[],
   drawRx?: number,
-  drawRy?: number,
+  drawRy?: number
 ): void {
   const grad = ctx.createRadialGradient(cx, headY, 0, cx, headY, gradRadius);
   for (const s of stops) {
@@ -81,7 +81,7 @@ export function drawPairedCircles(
   cy: number,
   spacing: number,
   radius: number,
-  fillStyle: string,
+  fillStyle: string
 ): void {
   ctx.fillStyle = fillStyle;
   ctx.beginPath();
@@ -104,7 +104,7 @@ export function drawEyes(
     color: string;
     yOffset?: number;
     xOffset?: number;
-  }[],
+  }[]
 ): void {
   for (const layer of layers) {
     const ly = cy + (layer.yOffset ?? 0);
@@ -149,7 +149,7 @@ export function drawRobeBody(
     time: number;
     speed: number;
     altAmplitude?: number;
-  },
+  }
 ): void {
   ctx.beginPath();
   ctx.moveTo(cx - bottomW, bottomY);
@@ -160,7 +160,8 @@ export function drawRobeBody(
       const jagX = cx - bottomW + i * step;
       const jagY =
         bottomY +
-        Math.sin(jaggedEdge.time * jaggedEdge.speed + i * 1.1) * jaggedEdge.amplitude +
+        Math.sin(jaggedEdge.time * jaggedEdge.speed + i * 1.1) *
+          jaggedEdge.amplitude +
         (i % 2) * (jaggedEdge.altAmplitude ?? jaggedEdge.amplitude * 0.8);
       ctx.lineTo(jagX, jagY);
     }
@@ -187,7 +188,7 @@ export function setHorizontalGradient(
   ctx: CanvasRenderingContext2D,
   cx: number,
   halfWidth: number,
-  stops: GradientStop[],
+  stops: GradientStop[]
 ): void {
   const grad = ctx.createLinearGradient(cx - halfWidth, 0, cx + halfWidth, 0);
   for (const s of stops) {
@@ -203,7 +204,7 @@ export function setVerticalGradient(
   ctx: CanvasRenderingContext2D,
   y1: number,
   y2: number,
-  stops: GradientStop[],
+  stops: GradientStop[]
 ): void {
   const grad = ctx.createLinearGradient(0, y1, 0, y2);
   for (const s of stops) {

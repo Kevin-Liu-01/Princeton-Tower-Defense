@@ -13,7 +13,7 @@ function drawDivineCommandRings(
   size: number,
   zoom: number,
   time: number,
-  commandPose: number,
+  commandPose: number
 ) {
   // back = top of ellipse (behind hero), front = bottom (in front of hero)
   const startAngle = half === "back" ? Math.PI : 0;
@@ -28,29 +28,45 @@ function drawDivineCommandRings(
     ctx.shadowColor = "#ffcc00";
     ctx.shadowBlur = 8 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, ringCenterY, ringRadius, ringRadius * 0.45, 0, startAngle, endAngle);
+    ctx.ellipse(
+      x,
+      ringCenterY,
+      ringRadius,
+      ringRadius * 0.45,
+      0,
+      startAngle,
+      endAngle
+    );
     ctx.stroke();
     ctx.shadowBlur = 0;
 
     ctx.strokeStyle = `rgba(255, 100, 50, ${ringAlpha * 0.8})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, ringCenterY, ringRadius * 0.92, ringRadius * 0.42, 0, startAngle, endAngle);
+    ctx.ellipse(
+      x,
+      ringCenterY,
+      ringRadius * 0.92,
+      ringRadius * 0.42,
+      0,
+      startAngle,
+      endAngle
+    );
     ctx.stroke();
   }
 
   // Spark particles and flame pillars only on the matching half
   for (let spark = 0; spark < 16; spark++) {
-    const sparkAngle =
-      (time * 5 + (spark * Math.PI * 2) / 16) % (Math.PI * 2);
+    const sparkAngle = (time * 5 + (spark * Math.PI * 2) / 16) % (Math.PI * 2);
     const inBack = sparkAngle > Math.PI;
-    if ((half === "back") !== inBack) continue;
+    if ((half === "back") !== inBack) {
+      continue;
+    }
 
     const sparkDist = size * (0.65 + commandPose * 0.5);
     const sparkX = x + Math.cos(sparkAngle) * sparkDist;
     const sparkY = ringCenterY + Math.sin(sparkAngle) * sparkDist * 0.45;
-    const sparkAlpha =
-      commandPose * (0.8 + Math.sin(time * 10 + spark) * 0.2);
+    const sparkAlpha = commandPose * (0.8 + Math.sin(time * 10 + spark) * 0.2);
 
     ctx.fillStyle =
       spark % 3 === 0
@@ -68,9 +84,12 @@ function drawDivineCommandRings(
 
   for (let pillar = 0; pillar < 6; pillar++) {
     const pillarAngle = (pillar * Math.PI) / 3 + time * 2;
-    const normalised = ((pillarAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const normalised =
+      ((pillarAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
     const inBack = normalised > Math.PI;
-    if ((half === "back") !== inBack) continue;
+    if ((half === "back") !== inBack) {
+      continue;
+    }
 
     const pillarDist = size * (0.5 + commandPose * 0.3);
     const pillarX = x + Math.cos(pillarAngle) * pillarDist;
@@ -102,7 +121,7 @@ function drawDragonSkirtArmor(
   isAttacking: boolean,
   attackIntensity: number,
   gemPulse: number,
-  flamePulse: number,
+  flamePulse: number
 ) {
   const skirtTop = y + size * 0.28;
   const bandCount = 5;
@@ -120,7 +139,7 @@ function drawDragonSkirtArmor(
     skirtTop,
     totalHeight,
     gapHalf,
-    gemPulse,
+    gemPulse
   );
 
   for (let side = -1; side <= 1; side += 2) {
@@ -140,7 +159,7 @@ function drawDragonSkirtArmor(
       gemPulse,
       isAttacking,
       attackIntensity,
-      flamePulse,
+      flamePulse
     );
   }
 
@@ -164,7 +183,7 @@ function drawTassetSide(
   gemPulse: number,
   _isAttacking: boolean,
   _attackIntensity: number,
-  _flamePulse: number,
+  _flamePulse: number
 ) {
   const shear = size * -0.1;
 
@@ -178,7 +197,9 @@ function drawTassetSide(
     const innerGap = gapHalf + band * size * 0.008;
     const sway =
       Math.sin(time * 1.5 + band * 0.7 + side * 0.4) *
-      size * 0.003 * (band + 1);
+      size *
+      0.003 *
+      (band + 1);
 
     const innerX = x + side * innerGap + sway;
     const outerX = x + side * outerW + sway;
@@ -193,7 +214,12 @@ function drawTassetSide(
     };
 
     // Blue-steel plate fill
-    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    const plateG = ctx.createLinearGradient(
+      innerX,
+      innerTopY,
+      outerX,
+      outerBotY
+    );
     if (side === -1) {
       plateG.addColorStop(0, "#4e5260");
       plateG.addColorStop(0.2, "#474b58");
@@ -227,7 +253,7 @@ function drawTassetSide(
 
     // Gold trim on bottom edge (angled)
     ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(innerX - side * size * 0.002, innerBotY);
     ctx.lineTo(outerX + side * size * 0.004, outerBotY);
@@ -250,8 +276,16 @@ function drawTassetSide(
     // Gold rivet near outer edge
     const rivetT = 0.75;
     const rivetX = innerX + rivetT * (outerX - innerX);
-    const rivetY = innerTopY + rivetT * (outerTopY - innerTopY) + bandHeight * 0.45;
-    const rg = ctx.createRadialGradient(rivetX - size * 0.002, rivetY - size * 0.002, 0, rivetX, rivetY, size * 0.008);
+    const rivetY =
+      innerTopY + rivetT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002,
+      rivetY - size * 0.002,
+      0,
+      rivetX,
+      rivetY,
+      size * 0.008
+    );
     rg.addColorStop(0, "#daa520");
     rg.addColorStop(0.5, "#b89025");
     rg.addColorStop(1, "#5a4508");
@@ -266,8 +300,16 @@ function drawTassetSide(
     // Inner rivet
     const rivetT2 = 0.3;
     const rivetX2 = innerX + rivetT2 * (outerX - innerX);
-    const rivetY2 = innerTopY + rivetT2 * (outerTopY - innerTopY) + bandHeight * 0.45;
-    const rg2 = ctx.createRadialGradient(rivetX2 - size * 0.001, rivetY2 - size * 0.001, 0, rivetX2, rivetY2, size * 0.006);
+    const rivetY2 =
+      innerTopY + rivetT2 * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg2 = ctx.createRadialGradient(
+      rivetX2 - size * 0.001,
+      rivetY2 - size * 0.001,
+      0,
+      rivetX2,
+      rivetY2,
+      size * 0.006
+    );
     rg2.addColorStop(0, "#daa520");
     rg2.addColorStop(0.5, "#a07818");
     rg2.addColorStop(1, "#5a4508");
@@ -311,7 +353,7 @@ function drawCenterBanner(
   skirtTop: number,
   totalHeight: number,
   gapHalf: number,
-  gemPulse: number,
+  gemPulse: number
 ) {
   const bannerTop = skirtTop + size * 0.04;
   const bannerBottom = skirtTop + totalHeight * 0.92;
@@ -335,7 +377,7 @@ function drawCenterBanner(
     x + bannerHalfW * 0.9 + wave2,
     bannerTop + (bannerBottom - bannerTop) * 0.65,
     x + bannerHalfW * 0.85,
-    bannerBottom,
+    bannerBottom
   );
   ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
   ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
@@ -346,7 +388,7 @@ function drawCenterBanner(
     x - bannerHalfW - wave,
     bannerTop + (bannerBottom - bannerTop) * 0.35,
     x - bannerHalfW,
-    bannerTop,
+    bannerTop
   );
   ctx.closePath();
   ctx.fill();
@@ -422,7 +464,7 @@ function drawGoldChain(
   skirtTop: number,
   gapHalf: number,
   gemPulse: number,
-  time: number,
+  time: number
 ) {
   const chainY = skirtTop + size * 0.025;
   const leftAnchor = x - gapHalf + size * 0.01;
@@ -442,7 +484,7 @@ function drawGoldChain(
       0,
       lx,
       ly,
-      size * 0.012,
+      size * 0.012
     );
     linkGrad.addColorStop(0, "#ffe080");
     linkGrad.addColorStop(0.5, "#daa520");
@@ -490,7 +532,7 @@ function drawSkirtBelt(
   size: number,
   zoom: number,
   skirtTop: number,
-  gemPulse: number,
+  gemPulse: number
 ) {
   const beltHalfW = size * 0.43;
   const beltThick = size * 0.048;
@@ -500,7 +542,7 @@ function drawSkirtBelt(
     x - beltHalfW,
     skirtTop,
     x + beltHalfW,
-    skirtTop,
+    skirtTop
   );
   beltGrad.addColorStop(0, "#805010");
   beltGrad.addColorStop(0.2, "#c9a227");
@@ -529,11 +571,11 @@ function drawSkirtBelt(
   ctx.beginPath();
   ctx.moveTo(
     x - beltHalfW + size * 0.01,
-    skirtTop - beltThick * 0.5 + size * 0.004,
+    skirtTop - beltThick * 0.5 + size * 0.004
   );
   ctx.lineTo(
     x + beltHalfW - size * 0.01,
-    skirtTop - beltThick * 0.5 + size * 0.004,
+    skirtTop - beltThick * 0.5 + size * 0.004
   );
   ctx.stroke();
 
@@ -549,7 +591,9 @@ function drawSkirtBelt(
   ctx.clip();
   // Etched diamond pattern
   for (let d = -4; d <= 4; d++) {
-    if (d === 0) continue;
+    if (d === 0) {
+      continue;
+    }
     const dx = x + d * size * 0.08;
     const dy = skirtTop;
     ctx.strokeStyle = "rgba(96, 64, 8, 0.35)";
@@ -594,7 +638,7 @@ function drawSkirtBelt(
     skirtTop + vDip * 0.35 - size * 0.008,
     size * 0.013,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -611,7 +655,7 @@ function drawArmorChain(
   time: number,
   gemPulse: number,
   sag: number,
-  linkCount: number,
+  linkCount: number
 ) {
   const midX = (x1 + x2) * 0.5;
   const midY = (y1 + y2) * 0.5;
@@ -636,7 +680,14 @@ function drawArmorChain(
     const lx = x1 + t * dx + perpX * sagAmt * sagT;
     const ly = y1 + t * dy + perpY * sagAmt * sagT;
 
-    const lg = ctx.createRadialGradient(lx - size * 0.002, ly - size * 0.002, 0, lx, ly, size * 0.01);
+    const lg = ctx.createRadialGradient(
+      lx - size * 0.002,
+      ly - size * 0.002,
+      0,
+      lx,
+      ly,
+      size * 0.01
+    );
     lg.addColorStop(0, "#ffe080");
     lg.addColorStop(0.5, "#daa520");
     lg.addColorStop(1, "#805010");
@@ -674,7 +725,7 @@ export function drawCaptainHero(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   // LEGENDARY DRAGONLORD GENERAL - Epic Fantasy War Commander with Divine Fire
   const breathe = Math.sin(time * 2) * 2;
@@ -699,7 +750,7 @@ export function drawCaptainHero(
       size * (0.05 + layerOffset),
       x,
       y,
-      size * (1.1 + layerOffset * 0.25),
+      size * (1.1 + layerOffset * 0.25)
     );
     const layerAlpha = (auraBase - auraLayer * 0.05) * divineGlow;
     auraGrad.addColorStop(0, `rgba(255, 200, 100, ${layerAlpha * 0.7})`);
@@ -712,11 +763,11 @@ export function drawCaptainHero(
     ctx.ellipse(
       x,
       y,
-      size * (1.0 + layerOffset * 0.18),
+      size * (1 + layerOffset * 0.18),
       size * (0.65 + layerOffset * 0.12),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -774,7 +825,16 @@ export function drawCaptainHero(
 
   // === DIVINE COMMAND BACK HALF (behind hero) ===
   if (isAttacking) {
-    drawDivineCommandRings(ctx, "back", x, y + size * 0.45, size, zoom, time, commandPose);
+    drawDivineCommandRings(
+      ctx,
+      "back",
+      x,
+      y + size * 0.45,
+      size,
+      zoom,
+      time,
+      commandPose
+    );
   }
 
   // === LEGENDARY FLAME CAPE ===
@@ -788,7 +848,12 @@ export function drawCaptainHero(
   ctx.fill();
 
   // Cape inner glow layer (warm fire ambient)
-  const capeGlowGrad = ctx.createLinearGradient(x, y - size * 0.2, x, y + size * 0.7);
+  const capeGlowGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.2,
+    x,
+    y + size * 0.7
+  );
   capeGlowGrad.addColorStop(0, "rgba(255, 120, 40, 0.25)");
   capeGlowGrad.addColorStop(0.4, "rgba(180, 40, 20, 0.15)");
   capeGlowGrad.addColorStop(1, "rgba(80, 10, 10, 0.08)");
@@ -796,21 +861,32 @@ export function drawCaptainHero(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.42, y - size * 0.2);
   ctx.bezierCurveTo(
-    x - size * 1.0 - capeWave * size, y + size * 0.2,
-    x - size * 0.95 - capeWave2 * size, y + size * 0.5,
-    x - size * 0.8, y + size * 0.72,
+    x - size * 1 - capeWave * size,
+    y + size * 0.2,
+    x - size * 0.95 - capeWave2 * size,
+    y + size * 0.5,
+    x - size * 0.8,
+    y + size * 0.72
   );
   ctx.lineTo(x + size * 0.8, y + size * 0.72);
   ctx.bezierCurveTo(
-    x + size * 0.95 + capeWave2 * size, y + size * 0.5,
-    x + size * 1.0 + capeWave * size, y + size * 0.2,
-    x + size * 0.42, y - size * 0.2,
+    x + size * 0.95 + capeWave2 * size,
+    y + size * 0.5,
+    x + size * 1 + capeWave * size,
+    y + size * 0.2,
+    x + size * 0.42,
+    y - size * 0.2
   );
   ctx.closePath();
   ctx.fill();
 
   // Cape main body — rich dark crimson with cross-gradient for depth
-  const capeGrad = ctx.createLinearGradient(x - size * 0.95, y, x + size * 0.95, y);
+  const capeGrad = ctx.createLinearGradient(
+    x - size * 0.95,
+    y,
+    x + size * 0.95,
+    y
+  );
   capeGrad.addColorStop(0, "#2a0303");
   capeGrad.addColorStop(0.12, "#4a0606");
   capeGrad.addColorStop(0.3, "#7a0e0e");
@@ -820,39 +896,56 @@ export function drawCaptainHero(
   capeGrad.addColorStop(1, "#2a0303");
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.40, y - size * 0.22);
+  ctx.moveTo(x - size * 0.4, y - size * 0.22);
   ctx.bezierCurveTo(
-    x - size * 0.95 - capeWave * size, y + size * 0.15,
-    x - size * 0.88 - capeWave2 * size, y + size * 0.48,
-    x - size * 0.74, y + size * 0.68,
+    x - size * 0.95 - capeWave * size,
+    y + size * 0.15,
+    x - size * 0.88 - capeWave2 * size,
+    y + size * 0.48,
+    x - size * 0.74,
+    y + size * 0.68
   );
   ctx.lineTo(x + size * 0.74, y + size * 0.68);
   ctx.bezierCurveTo(
-    x + size * 0.88 + capeWave2 * size, y + size * 0.48,
-    x + size * 0.95 + capeWave * size, y + size * 0.15,
-    x + size * 0.40, y - size * 0.22,
+    x + size * 0.88 + capeWave2 * size,
+    y + size * 0.48,
+    x + size * 0.95 + capeWave * size,
+    y + size * 0.15,
+    x + size * 0.4,
+    y - size * 0.22
   );
   ctx.closePath();
   ctx.fill();
 
   // Vertical depth shading (darker at bottom)
-  const capeVGrad = ctx.createLinearGradient(x, y - size * 0.2, x, y + size * 0.7);
+  const capeVGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.2,
+    x,
+    y + size * 0.7
+  );
   capeVGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
   capeVGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.15)");
   capeVGrad.addColorStop(1, "rgba(0, 0, 0, 0.3)");
   ctx.fillStyle = capeVGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.40, y - size * 0.22);
+  ctx.moveTo(x - size * 0.4, y - size * 0.22);
   ctx.bezierCurveTo(
-    x - size * 0.95 - capeWave * size, y + size * 0.15,
-    x - size * 0.88 - capeWave2 * size, y + size * 0.48,
-    x - size * 0.74, y + size * 0.68,
+    x - size * 0.95 - capeWave * size,
+    y + size * 0.15,
+    x - size * 0.88 - capeWave2 * size,
+    y + size * 0.48,
+    x - size * 0.74,
+    y + size * 0.68
   );
   ctx.lineTo(x + size * 0.74, y + size * 0.68);
   ctx.bezierCurveTo(
-    x + size * 0.88 + capeWave2 * size, y + size * 0.48,
-    x + size * 0.95 + capeWave * size, y + size * 0.15,
-    x + size * 0.40, y - size * 0.22,
+    x + size * 0.88 + capeWave2 * size,
+    y + size * 0.48,
+    x + size * 0.95 + capeWave * size,
+    y + size * 0.15,
+    x + size * 0.4,
+    y - size * 0.22
   );
   ctx.closePath();
   ctx.fill();
@@ -863,13 +956,16 @@ export function drawCaptainHero(
     const foldX = x + fold * size * 0.16;
     const foldWave = Math.sin(time * 2.5 + fold * 1.2) * size * 0.01;
     ctx.strokeStyle = fold < 0 ? "#000" : "#aa6060";
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(foldX, y - size * 0.1);
     ctx.bezierCurveTo(
-      foldX + foldWave, y + size * 0.15,
-      foldX - foldWave, y + size * 0.4,
-      foldX + fold * size * 0.03, y + size * 0.65,
+      foldX + foldWave,
+      y + size * 0.15,
+      foldX - foldWave,
+      y + size * 0.4,
+      foldX + fold * size * 0.03,
+      y + size * 0.65
     );
     ctx.stroke();
   }
@@ -885,8 +981,12 @@ export function drawCaptainHero(
   for (let flame = 0; flame < 20; flame++) {
     const flameX = x - size * 0.74 + flame * size * 0.074;
     const flameWave = Math.sin(time * 6 + flame * 0.8) * size * 0.035;
-    const flameHeight = Math.sin(time * 5 + flame * 0.5) * size * 0.018 + size * 0.02;
-    ctx.lineTo(flameX + size * 0.037, y + size * 0.68 + flameHeight + flameWave);
+    const flameHeight =
+      Math.sin(time * 5 + flame * 0.5) * size * 0.018 + size * 0.02;
+    ctx.lineTo(
+      flameX + size * 0.037,
+      y + size * 0.68 + flameHeight + flameWave
+    );
     ctx.lineTo(flameX + size * 0.074, y + size * 0.68);
   }
   ctx.stroke();
@@ -894,43 +994,75 @@ export function drawCaptainHero(
 
   // Cape gold dragon embroidery (more ornate)
   ctx.strokeStyle = "#9a7a18";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.globalAlpha = 0.5;
   ctx.beginPath();
   ctx.moveTo(x, y + size * 0.08);
-  ctx.quadraticCurveTo(x - size * 0.22, y + size * 0.2, x - size * 0.15, y + size * 0.35);
-  ctx.quadraticCurveTo(x - size * 0.3, y + size * 0.4, x - size * 0.22, y + size * 0.5);
+  ctx.quadraticCurveTo(
+    x - size * 0.22,
+    y + size * 0.2,
+    x - size * 0.15,
+    y + size * 0.35
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.3,
+    y + size * 0.4,
+    x - size * 0.22,
+    y + size * 0.5
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x, y + size * 0.08);
-  ctx.quadraticCurveTo(x + size * 0.22, y + size * 0.2, x + size * 0.15, y + size * 0.35);
-  ctx.quadraticCurveTo(x + size * 0.3, y + size * 0.4, x + size * 0.22, y + size * 0.5);
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    y + size * 0.2,
+    x + size * 0.15,
+    y + size * 0.35
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.3,
+    y + size * 0.4,
+    x + size * 0.22,
+    y + size * 0.5
+  );
   ctx.stroke();
   // Scrollwork arcs
   for (let side = -1; side <= 1; side += 2) {
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.12, y + size * 0.25, size * 0.05, 0, Math.PI * 1.2);
+    ctx.arc(
+      x + side * size * 0.12,
+      y + size * 0.25,
+      size * 0.05,
+      0,
+      Math.PI * 1.2
+    );
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
   // Cape gold edge trim (deeper gold)
   ctx.strokeStyle = "#9a7a18";
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.74, y + size * 0.66);
   ctx.bezierCurveTo(
-    x - size * 0.88 - capeWave2 * size, y + size * 0.46,
-    x - size * 0.95 - capeWave * size, y + size * 0.13,
-    x - size * 0.40, y - size * 0.24,
+    x - size * 0.88 - capeWave2 * size,
+    y + size * 0.46,
+    x - size * 0.95 - capeWave * size,
+    y + size * 0.13,
+    x - size * 0.4,
+    y - size * 0.24
   );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.74, y + size * 0.66);
   ctx.bezierCurveTo(
-    x + size * 0.88 + capeWave2 * size, y + size * 0.46,
-    x + size * 0.95 + capeWave * size, y + size * 0.13,
-    x + size * 0.40, y - size * 0.24,
+    x + size * 0.88 + capeWave2 * size,
+    y + size * 0.46,
+    x + size * 0.95 + capeWave * size,
+    y + size * 0.13,
+    x + size * 0.4,
+    y - size * 0.24
   );
   ctx.stroke();
 
@@ -949,7 +1081,12 @@ export function drawCaptainHero(
     };
 
     // Base fill — burnished dark steel with blue-steel undertones
-    const armorG = ctx.createLinearGradient(x - size * 0.5, y - size * 0.35, x + size * 0.35, y + size * 0.5);
+    const armorG = ctx.createLinearGradient(
+      x - size * 0.5,
+      y - size * 0.35,
+      x + size * 0.35,
+      y + size * 0.5
+    );
     armorG.addColorStop(0, "#2e3036");
     armorG.addColorStop(0.15, "#3c3e46");
     armorG.addColorStop(0.35, "#484c56");
@@ -962,8 +1099,12 @@ export function drawCaptainHero(
 
     // Specular highlight on upper-left chest (cool steel)
     const specAG = ctx.createRadialGradient(
-      x - size * 0.12, y - size * 0.2, 0,
-      x - size * 0.1, y - size * 0.15, size * 0.25,
+      x - size * 0.12,
+      y - size * 0.2,
+      0,
+      x - size * 0.1,
+      y - size * 0.15,
+      size * 0.25
     );
     specAG.addColorStop(0, "rgba(145, 150, 175, 0.22)");
     specAG.addColorStop(0.5, "rgba(90, 95, 115, 0.09)");
@@ -975,7 +1116,7 @@ export function drawCaptainHero(
     // Samurai-style horizontal plate armor (do) — overlapping bands
     const doPlates = 6;
     const doTopY = y - size * 0.26;
-    const doBottomY = y + size * 0.50;
+    const doBottomY = y + size * 0.5;
     const doStep = (doBottomY - doTopY) / doPlates;
     const doPlateH = doStep * 1.12;
 
@@ -989,7 +1130,12 @@ export function drawCaptainHero(
       const narrowT = pi / (doPlates - 1);
       const doW = size * (0.52 - narrowT * 0.06);
 
-      const dpG = ctx.createLinearGradient(x - doW, doTopPlateY, x + doW, doBotY);
+      const dpG = ctx.createLinearGradient(
+        x - doW,
+        doTopPlateY,
+        x + doW,
+        doBotY
+      );
       dpG.addColorStop(0, "#4e5260");
       dpG.addColorStop(0.15, "#474b58");
       dpG.addColorStop(0.4, "#3e4250");
@@ -1000,7 +1146,12 @@ export function drawCaptainHero(
       ctx.rect(x - doW, doTopPlateY, doW * 2, doPlateH);
       ctx.fill();
 
-      const dpSpec = ctx.createLinearGradient(x, doTopPlateY, x, doTopPlateY + doPlateH * 0.4);
+      const dpSpec = ctx.createLinearGradient(
+        x,
+        doTopPlateY,
+        x,
+        doTopPlateY + doPlateH * 0.4
+      );
       dpSpec.addColorStop(0, `rgba(145, 150, 175, ${0.14 - pi * 0.01})`);
       dpSpec.addColorStop(0.5, `rgba(100, 105, 125, ${0.06 - pi * 0.005})`);
       dpSpec.addColorStop(1, "rgba(60, 65, 80, 0)");
@@ -1017,7 +1168,7 @@ export function drawCaptainHero(
       ctx.stroke();
 
       ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(x - doW + size * 0.01, doBotY - size * 0.002);
       ctx.lineTo(x + doW - size * 0.01, doBotY - size * 0.002);
@@ -1046,7 +1197,14 @@ export function drawCaptainHero(
       for (let re = -1; re <= 1; re += 2) {
         const rvX = x + re * (doW - size * 0.04);
         const rvY = doMidY;
-        const rvG = ctx.createRadialGradient(rvX - size * 0.002, rvY - size * 0.002, 0, rvX, rvY, size * 0.008);
+        const rvG = ctx.createRadialGradient(
+          rvX - size * 0.002,
+          rvY - size * 0.002,
+          0,
+          rvX,
+          rvY,
+          size * 0.008
+        );
         rvG.addColorStop(0, "#daa520");
         rvG.addColorStop(0.5, "#b89025");
         rvG.addColorStop(1, "#5a4508");
@@ -1066,7 +1224,15 @@ export function drawCaptainHero(
           const scX = x + (scT - 0.5) * doW * 1.6;
           ctx.fillStyle = `rgba(55, 58, 66, ${0.22 + pi * 0.03})`;
           ctx.beginPath();
-          ctx.ellipse(scX, doMidY, size * 0.028, size * 0.015, 0, 0, Math.PI * 2);
+          ctx.ellipse(
+            scX,
+            doMidY,
+            size * 0.028,
+            size * 0.015,
+            0,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
           ctx.strokeStyle = `rgba(154, 122, 24, ${0.1 + pi * 0.02})`;
           ctx.lineWidth = 0.3 * zoom;
@@ -1087,7 +1253,12 @@ export function drawCaptainHero(
     // Crimson V-accent with glow
     ctx.shadowColor = "#ff3333";
     ctx.shadowBlur = 6 * zoom * gemPulse;
-    const vAccG = ctx.createLinearGradient(x - size * 0.4, y - size * 0.2, x, y + size * 0.2);
+    const vAccG = ctx.createLinearGradient(
+      x - size * 0.4,
+      y - size * 0.2,
+      x,
+      y + size * 0.2
+    );
     vAccG.addColorStop(0, "#8b1515");
     vAccG.addColorStop(0.3, "#cc2020");
     vAccG.addColorStop(0.5, "#dc2626");
@@ -1103,7 +1274,7 @@ export function drawCaptainHero(
     ctx.shadowBlur = 0;
     // Inner gold V-highlight
     ctx.strokeStyle = `rgba(218, 168, 32, ${0.35 + gemPulse * 0.15})`;
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.36, y - size * 0.17);
     ctx.lineTo(x, y + size * 0.16);
@@ -1125,7 +1296,12 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(x - size * 0.36, y - size * 0.215);
     ctx.quadraticCurveTo(x - size * 0.1, y - size * 0.275, x, y - size * 0.345);
-    ctx.quadraticCurveTo(x + size * 0.1, y - size * 0.275, x + size * 0.36, y - size * 0.215);
+    ctx.quadraticCurveTo(
+      x + size * 0.1,
+      y - size * 0.275,
+      x + size * 0.36,
+      y - size * 0.215
+    );
     ctx.stroke();
     // Main bright gold line
     ctx.strokeStyle = "#c9a227";
@@ -1133,7 +1309,12 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(x - size * 0.35, y - size * 0.22);
     ctx.quadraticCurveTo(x - size * 0.1, y - size * 0.28, x, y - size * 0.35);
-    ctx.quadraticCurveTo(x + size * 0.1, y - size * 0.28, x + size * 0.35, y - size * 0.22);
+    ctx.quadraticCurveTo(
+      x + size * 0.1,
+      y - size * 0.28,
+      x + size * 0.35,
+      y - size * 0.22
+    );
     ctx.stroke();
     // Inner gold accent
     ctx.strokeStyle = `rgba(218, 168, 32, ${0.45 + gemPulse * 0.1})`;
@@ -1141,7 +1322,12 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(x - size * 0.33, y - size * 0.205);
     ctx.quadraticCurveTo(x - size * 0.09, y - size * 0.265, x, y - size * 0.33);
-    ctx.quadraticCurveTo(x + size * 0.09, y - size * 0.265, x + size * 0.33, y - size * 0.205);
+    ctx.quadraticCurveTo(
+      x + size * 0.09,
+      y - size * 0.265,
+      x + size * 0.33,
+      y - size * 0.205
+    );
     ctx.stroke();
     // Shimmer highlight
     ctx.strokeStyle = `rgba(255, 230, 130, ${0.18 + gemPulse * 0.08})`;
@@ -1149,7 +1335,12 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(x - size * 0.3, y - size * 0.21);
     ctx.quadraticCurveTo(x - size * 0.08, y - size * 0.26, x, y - size * 0.32);
-    ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.26, x + size * 0.3, y - size * 0.21);
+    ctx.quadraticCurveTo(
+      x + size * 0.08,
+      y - size * 0.26,
+      x + size * 0.3,
+      y - size * 0.21
+    );
     ctx.stroke();
     // Gold necklace pendants / diamond studs along neckline
     for (let nd = 0; nd < 5; nd++) {
@@ -1170,7 +1361,7 @@ export function drawCaptainHero(
     for (let side = -1; side <= 1; side += 2) {
       // Dark gold outer edge
       ctx.strokeStyle = "#6a4a08";
-      ctx.lineWidth = 2.0 * zoom;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.moveTo(x + side * size * 0.32, y - size * 0.3);
       ctx.lineTo(x + side * size * 0.48, y - size * 0.05);
@@ -1242,7 +1433,13 @@ export function drawCaptainHero(
         ctx.strokeStyle = `rgba(200, 160, 40, ${0.18 + sw * 0.04 + gemPulse * 0.05})`;
         ctx.lineWidth = 0.5 * zoom;
         ctx.beginPath();
-        ctx.arc(x + swOff, fgMidY, size * 0.03 + sw * size * 0.01, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.arc(
+          x + swOff,
+          fgMidY,
+          size * 0.03 + sw * size * 0.01,
+          Math.PI * 0.15,
+          Math.PI * 0.85
+        );
         ctx.stroke();
       }
     }
@@ -1265,7 +1462,7 @@ export function drawCaptainHero(
 
     // Armor border — black for contrast, gold inner trim, bright gold outer
     ctx.strokeStyle = "#0e0e0e";
-    ctx.lineWidth = 3.0 * zoom;
+    ctx.lineWidth = 3 * zoom;
     drawArmorPath();
     ctx.stroke();
     ctx.strokeStyle = "#c9a227";
@@ -1283,30 +1480,54 @@ export function drawCaptainHero(
       const emY = y - size * 0.02;
 
       // Outer gold mandorla (larger backing)
-      const outerEmbG = ctx.createRadialGradient(emX, emY - size * 0.02, 0, emX, emY, size * 0.12);
+      const outerEmbG = ctx.createRadialGradient(
+        emX,
+        emY - size * 0.02,
+        0,
+        emX,
+        emY,
+        size * 0.12
+      );
       outerEmbG.addColorStop(0, "rgba(180, 140, 30, 0.35)");
       outerEmbG.addColorStop(0.5, "rgba(140, 110, 20, 0.2)");
       outerEmbG.addColorStop(1, "rgba(90, 70, 10, 0)");
       ctx.fillStyle = outerEmbG;
       ctx.beginPath();
       ctx.moveTo(emX, emY - size * 0.13);
-      ctx.bezierCurveTo(emX - size * 0.1, emY - size * 0.08, emX - size * 0.09, emY + size * 0.06, emX - size * 0.05, emY + size * 0.12);
+      ctx.bezierCurveTo(
+        emX - size * 0.1,
+        emY - size * 0.08,
+        emX - size * 0.09,
+        emY + size * 0.06,
+        emX - size * 0.05,
+        emY + size * 0.12
+      );
       ctx.lineTo(emX, emY + size * 0.08);
       ctx.lineTo(emX + size * 0.05, emY + size * 0.12);
-      ctx.bezierCurveTo(emX + size * 0.09, emY + size * 0.06, emX + size * 0.1, emY - size * 0.08, emX, emY - size * 0.13);
+      ctx.bezierCurveTo(
+        emX + size * 0.09,
+        emY + size * 0.06,
+        emX + size * 0.1,
+        emY - size * 0.08,
+        emX,
+        emY - size * 0.13
+      );
       ctx.closePath();
       ctx.fill();
 
       // Gold wing extensions from emblem
       for (let side = -1; side <= 1; side += 2) {
         ctx.strokeStyle = `rgba(200, 160, 40, ${0.4 + gemPulse * 0.1})`;
-        ctx.lineWidth = 1.0 * zoom;
+        ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(emX + side * size * 0.04, emY - size * 0.06);
         ctx.bezierCurveTo(
-          emX + side * size * 0.1, emY - size * 0.1,
-          emX + side * size * 0.14, emY - size * 0.06,
-          emX + side * size * 0.12, emY - size * 0.01,
+          emX + side * size * 0.1,
+          emY - size * 0.1,
+          emX + side * size * 0.14,
+          emY - size * 0.06,
+          emX + side * size * 0.12,
+          emY - size * 0.01
         );
         ctx.stroke();
         ctx.strokeStyle = `rgba(154, 122, 24, ${0.3 + gemPulse * 0.08})`;
@@ -1314,15 +1535,25 @@ export function drawCaptainHero(
         ctx.beginPath();
         ctx.moveTo(emX + side * size * 0.035, emY - size * 0.04);
         ctx.bezierCurveTo(
-          emX + side * size * 0.08, emY - size * 0.07,
-          emX + side * size * 0.11, emY - size * 0.04,
-          emX + side * size * 0.1, emY + size * 0.01,
+          emX + side * size * 0.08,
+          emY - size * 0.07,
+          emX + side * size * 0.11,
+          emY - size * 0.04,
+          emX + side * size * 0.1,
+          emY + size * 0.01
         );
         ctx.stroke();
       }
 
       // Emblem backing plate
-      const embG = ctx.createRadialGradient(emX, emY - size * 0.02, 0, emX, emY, size * 0.08);
+      const embG = ctx.createRadialGradient(
+        emX,
+        emY - size * 0.02,
+        0,
+        emX,
+        emY,
+        size * 0.08
+      );
       embG.addColorStop(0, "#d4a82c");
       embG.addColorStop(0.3, "#b89025");
       embG.addColorStop(0.6, "#8a6a15");
@@ -1330,10 +1561,24 @@ export function drawCaptainHero(
       ctx.fillStyle = embG;
       ctx.beginPath();
       ctx.moveTo(emX, emY - size * 0.1);
-      ctx.bezierCurveTo(emX - size * 0.08, emY - size * 0.06, emX - size * 0.07, emY + size * 0.04, emX - size * 0.04, emY + size * 0.09);
+      ctx.bezierCurveTo(
+        emX - size * 0.08,
+        emY - size * 0.06,
+        emX - size * 0.07,
+        emY + size * 0.04,
+        emX - size * 0.04,
+        emY + size * 0.09
+      );
       ctx.lineTo(emX, emY + size * 0.06);
       ctx.lineTo(emX + size * 0.04, emY + size * 0.09);
-      ctx.bezierCurveTo(emX + size * 0.07, emY + size * 0.04, emX + size * 0.08, emY - size * 0.06, emX, emY - size * 0.1);
+      ctx.bezierCurveTo(
+        emX + size * 0.07,
+        emY + size * 0.04,
+        emX + size * 0.08,
+        emY - size * 0.06,
+        emX,
+        emY - size * 0.1
+      );
       ctx.closePath();
       ctx.fill();
       // Double gold border
@@ -1354,7 +1599,7 @@ export function drawCaptainHero(
         const px2 = emX + Math.cos(prongAngle) * prongOuter;
         const py2 = emY + Math.sin(prongAngle) * prongOuter;
         ctx.strokeStyle = `rgba(200, 160, 40, ${0.5 + gemPulse * 0.15})`;
-        ctx.lineWidth = 1.0 * zoom;
+        ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(px1, py1);
         ctx.lineTo(px2, py2);
@@ -1366,7 +1611,14 @@ export function drawCaptainHero(
       }
 
       // Center ruby gem (larger, more vibrant)
-      const gemG2 = ctx.createRadialGradient(emX - size * 0.008, emY - size * 0.008, 0, emX, emY, size * 0.035);
+      const gemG2 = ctx.createRadialGradient(
+        emX - size * 0.008,
+        emY - size * 0.008,
+        0,
+        emX,
+        emY,
+        size * 0.035
+      );
       gemG2.addColorStop(0, "#ff6666");
       gemG2.addColorStop(0.3, "#ee3333");
       gemG2.addColorStop(0.6, "#dc2626");
@@ -1379,7 +1631,7 @@ export function drawCaptainHero(
       ctx.fill();
       // Gold ring around gem
       ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(emX, emY, size * 0.035, 0, Math.PI * 2);
@@ -1387,7 +1639,15 @@ export function drawCaptainHero(
       // Gem highlight
       ctx.fillStyle = "rgba(255, 200, 200, 0.6)";
       ctx.beginPath();
-      ctx.ellipse(emX - size * 0.008, emY - size * 0.008, size * 0.013, size * 0.008, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(
+        emX - size * 0.008,
+        emY - size * 0.008,
+        size * 0.013,
+        size * 0.008,
+        -0.3,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -1397,7 +1657,12 @@ export function drawCaptainHero(
       const beltY = y + size * 0.42;
       const beltW = size * 0.4;
       const beltH = size * 0.04;
-      const beltG = ctx.createLinearGradient(x - beltW, beltY, x + beltW, beltY);
+      const beltG = ctx.createLinearGradient(
+        x - beltW,
+        beltY,
+        x + beltW,
+        beltY
+      );
       beltG.addColorStop(0, "#5a4008");
       beltG.addColorStop(0.15, "#7a5a10");
       beltG.addColorStop(0.3, "#9a7a1a");
@@ -1408,9 +1673,19 @@ export function drawCaptainHero(
       ctx.fillStyle = beltG;
       ctx.beginPath();
       ctx.moveTo(x - beltW, beltY - beltH * 0.5);
-      ctx.quadraticCurveTo(x, beltY - beltH * 0.65, x + beltW, beltY - beltH * 0.5);
+      ctx.quadraticCurveTo(
+        x,
+        beltY - beltH * 0.65,
+        x + beltW,
+        beltY - beltH * 0.5
+      );
       ctx.lineTo(x + beltW, beltY + beltH * 0.5);
-      ctx.quadraticCurveTo(x, beltY + beltH * 0.35, x - beltW, beltY + beltH * 0.5);
+      ctx.quadraticCurveTo(
+        x,
+        beltY + beltH * 0.35,
+        x - beltW,
+        beltY + beltH * 0.5
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#5a4008";
@@ -1421,7 +1696,12 @@ export function drawCaptainHero(
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
       ctx.moveTo(x - beltW * 0.9, beltY - beltH * 0.3);
-      ctx.quadraticCurveTo(x, beltY - beltH * 0.45, x + beltW * 0.9, beltY - beltH * 0.3);
+      ctx.quadraticCurveTo(
+        x,
+        beltY - beltH * 0.45,
+        x + beltW * 0.9,
+        beltY - beltH * 0.3
+      );
       ctx.stroke();
       // Belt notch engravings
       for (let bn = 0; bn < 7; bn++) {
@@ -1439,7 +1719,14 @@ export function drawCaptainHero(
     for (let r = -2; r <= 2; r++) {
       const rx = x + r * size * 0.13;
       const ry = y + size * 0.42;
-      const rvG = ctx.createRadialGradient(rx - size * 0.002, ry - size * 0.002, 0, rx, ry, size * 0.01);
+      const rvG = ctx.createRadialGradient(
+        rx - size * 0.002,
+        ry - size * 0.002,
+        0,
+        rx,
+        ry,
+        size * 0.01
+      );
       rvG.addColorStop(0, "#daa520");
       rvG.addColorStop(0.4, "#b89025");
       rvG.addColorStop(0.7, "#7a5a10");
@@ -1465,7 +1752,7 @@ export function drawCaptainHero(
     isAttacking,
     attackPhase,
     gemPulse,
-    flamePulse,
+    flamePulse
   );
 
   // === ANGULAR DRAGON PAULDRONS (matched to Mathey placement) ===
@@ -1473,12 +1760,20 @@ export function drawCaptainHero(
     const pX = x + side * size * 0.55;
     const pY = y - size * 0.18;
     const pW = size * 0.28;
-    const pH = size * 0.20;
+    const pH = size * 0.2;
 
     // Shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
     ctx.beginPath();
-    ctx.ellipse(pX + size * 0.015, pY + size * 0.04, pW * 1.05, pH * 0.7, side * 0.25, 0, Math.PI * 2);
+    ctx.ellipse(
+      pX + size * 0.015,
+      pY + size * 0.04,
+      pW * 1.05,
+      pH * 0.7,
+      side * 0.25,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Angular pauldron path — pointed outward spike with ridged top and layered bottom
@@ -1494,24 +1789,40 @@ export function drawCaptainHero(
       ctx.lineTo(pX + side * pW * 1.1, pY - pH * 0.05);
       // Lower outer edge curves back under
       ctx.quadraticCurveTo(
-        pX + side * pW * 1.0, pY + pH * 0.55,
-        pX + side * pW * 0.6, pY + pH * 0.8,
+        pX + side * pW * 1,
+        pY + pH * 0.55,
+        pX + side * pW * 0.6,
+        pY + pH * 0.8
       );
       // Bottom edge — segmented scallop
-      ctx.quadraticCurveTo(pX + side * pW * 0.2, pY + pH * 0.95, pX, pY + pH * 0.75);
-      ctx.quadraticCurveTo(pX - side * pW * 0.2, pY + pH * 0.85, pX - side * pW * 0.5, pY + pH * 0.6);
+      ctx.quadraticCurveTo(
+        pX + side * pW * 0.2,
+        pY + pH * 0.95,
+        pX,
+        pY + pH * 0.75
+      );
+      ctx.quadraticCurveTo(
+        pX - side * pW * 0.2,
+        pY + pH * 0.85,
+        pX - side * pW * 0.5,
+        pY + pH * 0.6
+      );
       // Inner edge back up
       ctx.quadraticCurveTo(
-        pX - side * pW * 0.7, pY + pH * 0.1,
-        pX - side * pW * 0.55, pY - pH * 0.85,
+        pX - side * pW * 0.7,
+        pY + pH * 0.1,
+        pX - side * pW * 0.55,
+        pY - pH * 0.85
       );
       ctx.closePath();
     };
 
     // Blue-steel fill
     const pG = ctx.createLinearGradient(
-      pX - side * pW * 0.5, pY - pH,
-      pX + side * pW * 1.0, pY + pH * 0.8,
+      pX - side * pW * 0.5,
+      pY - pH,
+      pX + side * pW * 1,
+      pY + pH * 0.8
     );
     if (side === -1) {
       pG.addColorStop(0, "#6a6e78");
@@ -1535,8 +1846,12 @@ export function drawCaptainHero(
     drawPauldronPath();
     ctx.clip();
     const specG = ctx.createRadialGradient(
-      pX - side * pW * 0.1, pY - pH * 0.6, 0,
-      pX + side * pW * 0.2, pY, pW * 1.2,
+      pX - side * pW * 0.1,
+      pY - pH * 0.6,
+      0,
+      pX + side * pW * 0.2,
+      pY,
+      pW * 1.2
     );
     specG.addColorStop(0, "rgba(180, 185, 200, 0.32)");
     specG.addColorStop(0.2, "rgba(140, 145, 165, 0.15)");
@@ -1550,13 +1865,23 @@ export function drawCaptainHero(
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(pX - side * pW * 0.1, pY - pH * 1.05);
-    ctx.quadraticCurveTo(pX + side * pW * 0.5, pY - pH * 0.55, pX + side * pW * 1.08, pY - pH * 0.03);
+    ctx.quadraticCurveTo(
+      pX + side * pW * 0.5,
+      pY - pH * 0.55,
+      pX + side * pW * 1.08,
+      pY - pH * 0.03
+    );
     ctx.stroke();
     ctx.strokeStyle = "rgba(20, 20, 28, 0.35)";
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
     ctx.moveTo(pX - side * pW * 0.1, pY - pH * 0.95);
-    ctx.quadraticCurveTo(pX + side * pW * 0.5, pY - pH * 0.45, pX + side * pW * 1.06, pY + pH * 0.05);
+    ctx.quadraticCurveTo(
+      pX + side * pW * 0.5,
+      pY - pH * 0.45,
+      pX + side * pW * 1.06,
+      pY + pH * 0.05
+    );
     ctx.stroke();
 
     // Horizontal segment lines across the body (layered plate look)
@@ -1568,13 +1893,23 @@ export function drawCaptainHero(
       ctx.lineWidth = 0.9 * zoom;
       ctx.beginPath();
       ctx.moveTo(segInner, segY);
-      ctx.quadraticCurveTo(pX + side * pW * 0.2, segY + pH * 0.04, segOuter, segY + pH * 0.08);
+      ctx.quadraticCurveTo(
+        pX + side * pW * 0.2,
+        segY + pH * 0.04,
+        segOuter,
+        segY + pH * 0.08
+      );
       ctx.stroke();
       ctx.strokeStyle = `rgba(100, 105, 120, ${0.18 + seg * 0.03})`;
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
       ctx.moveTo(segInner, segY - size * 0.003);
-      ctx.quadraticCurveTo(pX + side * pW * 0.2, segY + pH * 0.035, segOuter, segY + pH * 0.075);
+      ctx.quadraticCurveTo(
+        pX + side * pW * 0.2,
+        segY + pH * 0.035,
+        segOuter,
+        segY + pH * 0.075
+      );
       ctx.stroke();
     }
 
@@ -1585,7 +1920,13 @@ export function drawCaptainHero(
       ctx.strokeStyle = `rgba(180, 140, 28, ${0.2 + sw * 0.06 + gemPulse * 0.05})`;
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.arc(swCx, swCy, size * (0.04 + sw * 0.015), side > 0 ? 0.3 : Math.PI + 0.3, side > 0 ? Math.PI - 0.3 : Math.PI * 2 - 0.3);
+      ctx.arc(
+        swCx,
+        swCy,
+        size * (0.04 + sw * 0.015),
+        side > 0 ? 0.3 : Math.PI + 0.3,
+        side > 0 ? Math.PI - 0.3 : Math.PI * 2 - 0.3
+      );
       ctx.stroke();
     }
     ctx.restore();
@@ -1614,7 +1955,14 @@ export function drawCaptainHero(
       [pX + side * pW * 0.15, pY - pH * 0.95],
     ];
     for (const [rvX, rvY] of rivetPositions) {
-      const rvG = ctx.createRadialGradient(rvX - size * 0.002, rvY - size * 0.002, 0, rvX, rvY, size * 0.007);
+      const rvG = ctx.createRadialGradient(
+        rvX - size * 0.002,
+        rvY - size * 0.002,
+        0,
+        rvX,
+        rvY,
+        size * 0.007
+      );
       rvG.addColorStop(0, "#daa520");
       rvG.addColorStop(0.5, "#b89025");
       rvG.addColorStop(1, "#5a4508");
@@ -1639,12 +1987,15 @@ export function drawCaptainHero(
         ctx.strokeStyle = `rgba(180, 140, 28, ${0.3 + gemPulse * 0.08})`;
         ctx.lineWidth = 0.6 * zoom;
         ctx.beginPath();
-        ctx.moveTo(gemX + Math.cos(flAngle) * flStartR, gemY + Math.sin(flAngle) * flStartR);
+        ctx.moveTo(
+          gemX + Math.cos(flAngle) * flStartR,
+          gemY + Math.sin(flAngle) * flStartR
+        );
         ctx.quadraticCurveTo(
           gemX + Math.cos(flAngle + 0.15) * flEndR * 1.1,
           gemY + Math.sin(flAngle + 0.15) * flEndR * 1.1,
           gemX + Math.cos(flAngle + 0.3) * flEndR,
-          gemY + Math.sin(flAngle + 0.3) * flEndR,
+          gemY + Math.sin(flAngle + 0.3) * flEndR
         );
         ctx.stroke();
       }
@@ -1660,7 +2011,14 @@ export function drawCaptainHero(
       ctx.arc(gemX, gemY, size * 0.028, 0, Math.PI * 2);
       ctx.stroke();
 
-      const gemGr = ctx.createRadialGradient(gemX - size * 0.005, gemY - size * 0.005, 0, gemX, gemY, size * 0.025);
+      const gemGr = ctx.createRadialGradient(
+        gemX - size * 0.005,
+        gemY - size * 0.005,
+        0,
+        gemX,
+        gemY,
+        size * 0.025
+      );
       gemGr.addColorStop(0, "#ff6666");
       gemGr.addColorStop(0.3, "#ee3333");
       gemGr.addColorStop(0.6, "#dc2626");
@@ -1675,7 +2033,15 @@ export function drawCaptainHero(
 
       ctx.fillStyle = "rgba(255, 200, 200, 0.55)";
       ctx.beginPath();
-      ctx.ellipse(gemX - size * 0.006, gemY - size * 0.006, size * 0.008, size * 0.006, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(
+        gemX - size * 0.006,
+        gemY - size * 0.006,
+        size * 0.008,
+        size * 0.006,
+        -0.3,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -1685,23 +2051,47 @@ export function drawCaptainHero(
     // Pauldron-to-chest chains (2 per side, hanging from each shoulder dome down to the breastplate)
     for (let side = -1; side <= 1; side += 2) {
       const shoulderX = x + side * size * 0.56;
-      const shoulderY = y - size * 0.10;
+      const shoulderY = y - size * 0.1;
 
-      drawArmorChain(ctx,
-        shoulderX, shoulderY,
-        x + side * size * 0.18, y + size * 0.1,
-        size, zoom, time, gemPulse, size * 0.06, 8,
+      drawArmorChain(
+        ctx,
+        shoulderX,
+        shoulderY,
+        x + side * size * 0.18,
+        y + size * 0.1,
+        size,
+        zoom,
+        time,
+        gemPulse,
+        size * 0.06,
+        8
       );
-      drawArmorChain(ctx,
-        shoulderX - side * size * 0.06, shoulderY + size * 0.06,
-        x + side * size * 0.12, y + size * 0.22,
-        size, zoom, time + 0.5, gemPulse, size * 0.05, 7,
+      drawArmorChain(
+        ctx,
+        shoulderX - side * size * 0.06,
+        shoulderY + size * 0.06,
+        x + side * size * 0.12,
+        y + size * 0.22,
+        size,
+        zoom,
+        time + 0.5,
+        gemPulse,
+        size * 0.05,
+        7
       );
       // Pauldron-to-upper-arm chain
-      drawArmorChain(ctx,
-        shoulderX + side * size * 0.08, shoulderY + size * 0.1,
-        x + side * size * 0.45, y + size * 0.12,
-        size, zoom, time + 1.0, gemPulse, size * 0.04, 5,
+      drawArmorChain(
+        ctx,
+        shoulderX + side * size * 0.08,
+        shoulderY + size * 0.1,
+        x + side * size * 0.45,
+        y + size * 0.12,
+        size,
+        zoom,
+        time + 1,
+        gemPulse,
+        size * 0.04,
+        5
       );
     }
 
@@ -1710,42 +2100,90 @@ export function drawCaptainHero(
       const tierY = y - size * 0.08 + tier * size * 0.14;
       const spread = size * (0.28 - tier * 0.04);
       const sagAmt = size * (0.025 + tier * 0.008);
-      drawArmorChain(ctx,
-        x - spread, tierY,
-        x + spread, tierY,
-        size, zoom, time + tier * 0.3, gemPulse, sagAmt, 6 + tier,
+      drawArmorChain(
+        ctx,
+        x - spread,
+        tierY,
+        x + spread,
+        tierY,
+        size,
+        zoom,
+        time + tier * 0.3,
+        gemPulse,
+        sagAmt,
+        6 + tier
       );
     }
 
     // V-shaped chest chain (center decorative drape)
-    drawArmorChain(ctx,
-      x - size * 0.22, y - size * 0.18,
-      x, y + size * 0.12,
-      size, zoom, time + 0.7, gemPulse, size * 0.03, 6,
+    drawArmorChain(
+      ctx,
+      x - size * 0.22,
+      y - size * 0.18,
+      x,
+      y + size * 0.12,
+      size,
+      zoom,
+      time + 0.7,
+      gemPulse,
+      size * 0.03,
+      6
     );
-    drawArmorChain(ctx,
-      x + size * 0.22, y - size * 0.18,
-      x, y + size * 0.12,
-      size, zoom, time + 0.7, gemPulse, size * -0.03, 6,
+    drawArmorChain(
+      ctx,
+      x + size * 0.22,
+      y - size * 0.18,
+      x,
+      y + size * 0.12,
+      size,
+      zoom,
+      time + 0.7,
+      gemPulse,
+      size * -0.03,
+      6
     );
 
     // Waist/belt chains (looped across the skirt top)
-    drawArmorChain(ctx,
-      x - size * 0.35, y + size * 0.42,
-      x - size * 0.05, y + size * 0.44,
-      size, zoom, time + 1.2, gemPulse, size * 0.035, 6,
+    drawArmorChain(
+      ctx,
+      x - size * 0.35,
+      y + size * 0.42,
+      x - size * 0.05,
+      y + size * 0.44,
+      size,
+      zoom,
+      time + 1.2,
+      gemPulse,
+      size * 0.035,
+      6
     );
-    drawArmorChain(ctx,
-      x + size * 0.05, y + size * 0.44,
-      x + size * 0.35, y + size * 0.42,
-      size, zoom, time + 1.2, gemPulse, size * 0.035, 6,
+    drawArmorChain(
+      ctx,
+      x + size * 0.05,
+      y + size * 0.44,
+      x + size * 0.35,
+      y + size * 0.42,
+      size,
+      zoom,
+      time + 1.2,
+      gemPulse,
+      size * 0.035,
+      6
     );
 
     // Cross-body diagonal chain (left shoulder area to right hip)
-    drawArmorChain(ctx,
-      x - size * 0.25, y - size * 0.12,
-      x + size * 0.2, y + size * 0.35,
-      size, zoom, time + 1.8, gemPulse, size * 0.04, 10,
+    drawArmorChain(
+      ctx,
+      x - size * 0.25,
+      y - size * 0.12,
+      x + size * 0.2,
+      y + size * 0.35,
+      size,
+      zoom,
+      time + 1.8,
+      gemPulse,
+      size * 0.04,
+      10
     );
   }
 
@@ -1764,7 +2202,7 @@ export function drawCaptainHero(
       swordBaseAngleR,
       Math.PI / 2,
       isAttacking ? 1.35 : 0.8,
-      WEAPON_LIMITS.rightMelee,
+      WEAPON_LIMITS.rightMelee
     );
     const gripWX = swordOriginX - Math.sin(swordAngleR) * swordGripLocalY;
     const gripWY = swordOriginY + Math.cos(swordAngleR) * swordGripLocalY;
@@ -1792,7 +2230,7 @@ export function drawCaptainHero(
       -size * 0.055,
       rUpperLen + size * 0.02,
       size * 0.11,
-      size * 0.025,
+      size * 0.025
     );
     ctx.fill();
     // Black border then gold
@@ -1810,7 +2248,7 @@ export function drawCaptainHero(
       -size * 0.055,
       rUpperLen + size * 0.02,
       size * 0.11,
-      size * 0.025,
+      size * 0.025
     );
     ctx.clip();
     for (let sc = 0; sc < 3; sc++) {
@@ -1859,7 +2297,7 @@ export function drawCaptainHero(
       0,
       rElbowX,
       rElbowY,
-      size * 0.06,
+      size * 0.06
     );
     elbowCopG.addColorStop(0, "#6a6e76");
     elbowCopG.addColorStop(0.5, "#3c4048");
@@ -1931,11 +2369,21 @@ export function drawCaptainHero(
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(rForeLen * 0.2, -size * 0.03);
-    ctx.quadraticCurveTo(rForeLen * 0.5, size * 0.01, rForeLen * 0.8, -size * 0.03);
+    ctx.quadraticCurveTo(
+      rForeLen * 0.5,
+      size * 0.01,
+      rForeLen * 0.8,
+      -size * 0.03
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(rForeLen * 0.2, size * 0.03);
-    ctx.quadraticCurveTo(rForeLen * 0.5, -size * 0.01, rForeLen * 0.8, size * 0.03);
+    ctx.quadraticCurveTo(
+      rForeLen * 0.5,
+      -size * 0.01,
+      rForeLen * 0.8,
+      size * 0.03
+    );
     ctx.stroke();
     // Scale dots
     for (let sd = 0; sd < 3; sd++) {
@@ -1975,7 +2423,7 @@ export function drawCaptainHero(
       0,
       gripWX,
       gripWY,
-      size * 0.055,
+      size * 0.055
     );
     gauntG.addColorStop(0, "#585c64");
     gauntG.addColorStop(0.5, "#353840");
@@ -2004,7 +2452,9 @@ export function drawCaptainHero(
       ctx.arc(
         gripWX + Math.cos(gsA) * size * 0.01,
         gripWY + Math.sin(gsA) * size * 0.01,
-        size * 0.025, gsA - 0.8, gsA + 0.8,
+        size * 0.025,
+        gsA - 0.8,
+        gsA + 0.8
       );
       ctx.stroke();
     }
@@ -2029,7 +2479,7 @@ export function drawCaptainHero(
     const lShoulderX = x - size * 0.55;
     const lShoulderY = y - size * 0.08;
     const flagOriginX = x - size * 0.75;
-    const flagOriginY = y + size * 0.10;
+    const flagOriginY = y + size * 0.1;
     const flagRotation = -0.15;
     const flagGripLocalY = -size * 0.25;
     const gripFX = flagOriginX - Math.sin(flagRotation) * flagGripLocalY;
@@ -2058,7 +2508,7 @@ export function drawCaptainHero(
       -size * 0.055,
       lUpperLen + size * 0.02,
       size * 0.11,
-      size * 0.025,
+      size * 0.025
     );
     ctx.fill();
     // Black border then gold
@@ -2076,7 +2526,7 @@ export function drawCaptainHero(
       -size * 0.055,
       lUpperLen + size * 0.02,
       size * 0.11,
-      size * 0.025,
+      size * 0.025
     );
     ctx.clip();
     for (let sc = 0; sc < 3; sc++) {
@@ -2123,7 +2573,7 @@ export function drawCaptainHero(
       0,
       lElbowX,
       lElbowY,
-      size * 0.06,
+      size * 0.06
     );
     lElbG.addColorStop(0, "#6a6e76");
     lElbG.addColorStop(0.5, "#3c4048");
@@ -2195,11 +2645,21 @@ export function drawCaptainHero(
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(lForeLen * 0.2, -size * 0.03);
-    ctx.quadraticCurveTo(lForeLen * 0.5, size * 0.01, lForeLen * 0.8, -size * 0.03);
+    ctx.quadraticCurveTo(
+      lForeLen * 0.5,
+      size * 0.01,
+      lForeLen * 0.8,
+      -size * 0.03
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(lForeLen * 0.2, size * 0.03);
-    ctx.quadraticCurveTo(lForeLen * 0.5, -size * 0.01, lForeLen * 0.8, size * 0.03);
+    ctx.quadraticCurveTo(
+      lForeLen * 0.5,
+      -size * 0.01,
+      lForeLen * 0.8,
+      size * 0.03
+    );
     ctx.stroke();
     for (let sd = 0; sd < 3; sd++) {
       ctx.fillStyle = "rgba(154, 122, 24, 0.15)";
@@ -2238,7 +2698,7 @@ export function drawCaptainHero(
       0,
       gripFX,
       gripFY,
-      size * 0.055,
+      size * 0.055
     );
     lGauntG.addColorStop(0, "#585c64");
     lGauntG.addColorStop(0.5, "#353840");
@@ -2267,7 +2727,9 @@ export function drawCaptainHero(
       ctx.arc(
         gripFX + Math.cos(gsA) * size * 0.01,
         gripFY + Math.sin(gsA) * size * 0.01,
-        size * 0.025, gsA - 0.8, gsA + 0.8,
+        size * 0.025,
+        gsA - 0.8,
+        gsA + 0.8
       );
       ctx.stroke();
     }
@@ -2296,7 +2758,7 @@ export function drawCaptainHero(
     swordBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.35 : 0.8,
-    WEAPON_LIMITS.rightMelee,
+    WEAPON_LIMITS.rightMelee
   );
   ctx.save();
   ctx.translate(x + size * 0.68, y + size * 0.08);
@@ -2307,9 +2769,19 @@ export function drawCaptainHero(
     ctx.shadowColor = "#ff4400";
     ctx.shadowBlur = 20 * zoom * (0.7 + attackIntensity * 0.3);
     // Outer glow haze
-    const auraG = ctx.createRadialGradient(0, -size * 0.5, 0, 0, -size * 0.5, size * 0.2);
+    const auraG = ctx.createRadialGradient(
+      0,
+      -size * 0.5,
+      0,
+      0,
+      -size * 0.5,
+      size * 0.2
+    );
     auraG.addColorStop(0, `rgba(255, 80, 20, ${0.12 + attackIntensity * 0.1})`);
-    auraG.addColorStop(0.6, `rgba(255, 50, 10, ${0.05 + attackIntensity * 0.05})`);
+    auraG.addColorStop(
+      0.6,
+      `rgba(255, 50, 10, ${0.05 + attackIntensity * 0.05})`
+    );
     auraG.addColorStop(1, "rgba(255, 30, 0, 0)");
     ctx.fillStyle = auraG;
     ctx.beginPath();
@@ -2327,7 +2799,15 @@ export function drawCaptainHero(
       const a = 0.35 + Math.sin(time * 6 + flame) * 0.15;
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
       ctx.beginPath();
-      ctx.ellipse(flameX, flameY, flameW, flameH, Math.sin(time * 5 + flame) * 0.3, 0, Math.PI * 2);
+      ctx.ellipse(
+        flameX,
+        flameY,
+        flameW,
+        flameH,
+        Math.sin(time * 5 + flame) * 0.3,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
     ctx.shadowBlur = 0;
@@ -2339,10 +2819,38 @@ export function drawCaptainHero(
     const drawBladePath = () => {
       ctx.beginPath();
       ctx.moveTo(-size * 0.065, 0);
-      ctx.bezierCurveTo(-size * 0.072, -size * 0.25, -size * 0.078, -size * 0.55, -size * 0.075, -size * 0.78);
-      ctx.bezierCurveTo(-size * 0.07, -size * 0.88, -size * 0.04, -size * 0.98, 0, -size * 1.12);
-      ctx.bezierCurveTo(size * 0.04, -size * 0.98, size * 0.07, -size * 0.88, size * 0.075, -size * 0.78);
-      ctx.bezierCurveTo(size * 0.078, -size * 0.55, size * 0.072, -size * 0.25, size * 0.065, 0);
+      ctx.bezierCurveTo(
+        -size * 0.072,
+        -size * 0.25,
+        -size * 0.078,
+        -size * 0.55,
+        -size * 0.075,
+        -size * 0.78
+      );
+      ctx.bezierCurveTo(
+        -size * 0.07,
+        -size * 0.88,
+        -size * 0.04,
+        -size * 0.98,
+        0,
+        -size * 1.12
+      );
+      ctx.bezierCurveTo(
+        size * 0.04,
+        -size * 0.98,
+        size * 0.07,
+        -size * 0.88,
+        size * 0.075,
+        -size * 0.78
+      );
+      ctx.bezierCurveTo(
+        size * 0.078,
+        -size * 0.55,
+        size * 0.072,
+        -size * 0.25,
+        size * 0.065,
+        0
+      );
       ctx.closePath();
     };
 
@@ -2383,8 +2891,22 @@ export function drawCaptainHero(
     ctx.shadowBlur = 12 * zoom * flamePulse;
     ctx.beginPath();
     ctx.moveTo(-size * 0.065, -size * 0.02);
-    ctx.bezierCurveTo(-size * 0.072, -size * 0.25, -size * 0.078, -size * 0.55, -size * 0.075, -size * 0.78);
-    ctx.bezierCurveTo(-size * 0.07, -size * 0.88, -size * 0.04, -size * 0.98, 0, -size * 1.12);
+    ctx.bezierCurveTo(
+      -size * 0.072,
+      -size * 0.25,
+      -size * 0.078,
+      -size * 0.55,
+      -size * 0.075,
+      -size * 0.78
+    );
+    ctx.bezierCurveTo(
+      -size * 0.07,
+      -size * 0.88,
+      -size * 0.04,
+      -size * 0.98,
+      0,
+      -size * 1.12
+    );
     ctx.stroke();
     // Right edge (cooler)
     ctx.strokeStyle = `rgba(255, 140, 60, ${0.35 + flamePulse * 0.2})`;
@@ -2392,8 +2914,22 @@ export function drawCaptainHero(
     ctx.shadowBlur = 8 * zoom * flamePulse;
     ctx.beginPath();
     ctx.moveTo(0, -size * 1.12);
-    ctx.bezierCurveTo(size * 0.04, -size * 0.98, size * 0.07, -size * 0.88, size * 0.075, -size * 0.78);
-    ctx.bezierCurveTo(size * 0.078, -size * 0.55, size * 0.072, -size * 0.25, size * 0.065, -size * 0.02);
+    ctx.bezierCurveTo(
+      size * 0.04,
+      -size * 0.98,
+      size * 0.07,
+      -size * 0.88,
+      size * 0.075,
+      -size * 0.78
+    );
+    ctx.bezierCurveTo(
+      size * 0.078,
+      -size * 0.55,
+      size * 0.072,
+      -size * 0.25,
+      size * 0.065,
+      -size * 0.02
+    );
     ctx.stroke();
     ctx.shadowBlur = 0;
 
@@ -2402,7 +2938,8 @@ export function drawCaptainHero(
     ctx.shadowBlur = 5 * zoom;
     for (let rune = 0; rune < 7; rune++) {
       const ry = -size * 0.1 - rune * size * 0.12;
-      const runeAlpha = 0.55 + attackIntensity * 0.35 + Math.sin(time * 4 + rune * 0.9) * 0.1;
+      const runeAlpha =
+        0.55 + attackIntensity * 0.35 + Math.sin(time * 4 + rune * 0.9) * 0.1;
       ctx.fillStyle = `rgba(255, 100, 50, ${runeAlpha})`;
       if (rune % 2 === 0) {
         // Diamond rune
@@ -2415,8 +2952,18 @@ export function drawCaptainHero(
         ctx.fill();
       } else {
         // Cross rune
-        ctx.fillRect(-size * 0.012, ry - size * 0.003, size * 0.024, size * 0.006);
-        ctx.fillRect(-size * 0.003, ry - size * 0.015, size * 0.006, size * 0.03);
+        ctx.fillRect(
+          -size * 0.012,
+          ry - size * 0.003,
+          size * 0.024,
+          size * 0.006
+        );
+        ctx.fillRect(
+          -size * 0.003,
+          ry - size * 0.015,
+          size * 0.006,
+          size * 0.03
+        );
       }
     }
     ctx.shadowBlur = 0;
@@ -2426,7 +2973,14 @@ export function drawCaptainHero(
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(-size * 0.03, -size * 0.05);
-    ctx.bezierCurveTo(-size * 0.035, -size * 0.4, -size * 0.03, -size * 0.75, -size * 0.015, -size * 0.95);
+    ctx.bezierCurveTo(
+      -size * 0.035,
+      -size * 0.4,
+      -size * 0.03,
+      -size * 0.75,
+      -size * 0.015,
+      -size * 0.95
+    );
     ctx.stroke();
 
     // Blade black border
@@ -2446,7 +3000,12 @@ export function drawCaptainHero(
 
     for (let side = -1; side <= 1; side += 2) {
       // Dragon wing quillon
-      const gG = ctx.createLinearGradient(0, -size * 0.06, side * size * 0.26, size * 0.01);
+      const gG = ctx.createLinearGradient(
+        0,
+        -size * 0.06,
+        side * size * 0.26,
+        size * 0.01
+      );
       gG.addColorStop(0, "#c9a227");
       gG.addColorStop(0.3, "#f0d040");
       gG.addColorStop(0.5, "#ffe060");
@@ -2456,26 +3015,38 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(side * size * 0.06, -size * 0.05);
       ctx.bezierCurveTo(
-        side * size * 0.12, -size * 0.08,
-        side * size * 0.2, -size * 0.07,
-        side * size * 0.26, -size * 0.04,
+        side * size * 0.12,
+        -size * 0.08,
+        side * size * 0.2,
+        -size * 0.07,
+        side * size * 0.26,
+        -size * 0.04
       );
       // Wing tip curls up
       ctx.bezierCurveTo(
-        side * size * 0.27, -size * 0.06,
-        side * size * 0.28, -size * 0.09,
-        side * size * 0.25, -size * 0.12,
+        side * size * 0.27,
+        -size * 0.06,
+        side * size * 0.28,
+        -size * 0.09,
+        side * size * 0.25,
+        -size * 0.12
       );
       // Back edge sweeps down
       ctx.bezierCurveTo(
-        side * size * 0.22, -size * 0.06,
-        side * size * 0.16, 0,
-        side * size * 0.1, size * 0.03,
+        side * size * 0.22,
+        -size * 0.06,
+        side * size * 0.16,
+        0,
+        side * size * 0.1,
+        size * 0.03
       );
       ctx.bezierCurveTo(
-        side * size * 0.08, size * 0.04,
-        side * size * 0.06, size * 0.04,
-        side * size * 0.04, size * 0.03,
+        side * size * 0.08,
+        size * 0.04,
+        side * size * 0.06,
+        size * 0.04,
+        side * size * 0.04,
+        size * 0.03
       );
       ctx.closePath();
       ctx.fill();
@@ -2487,8 +3058,10 @@ export function drawCaptainHero(
         ctx.beginPath();
         ctx.moveTo(side * size * (0.08 + v * 0.04), -size * 0.05);
         ctx.quadraticCurveTo(
-          side * size * (0.12 + v * 0.04), -size * 0.01,
-          side * size * (0.08 + v * 0.02), size * 0.02,
+          side * size * (0.12 + v * 0.04),
+          -size * 0.01,
+          side * size * (0.08 + v * 0.02),
+          size * 0.02
         );
         ctx.stroke();
       }
@@ -2499,14 +3072,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(side * size * 0.06, -size * 0.05);
       ctx.bezierCurveTo(
-        side * size * 0.12, -size * 0.08,
-        side * size * 0.2, -size * 0.07,
-        side * size * 0.26, -size * 0.04,
+        side * size * 0.12,
+        -size * 0.08,
+        side * size * 0.2,
+        -size * 0.07,
+        side * size * 0.26,
+        -size * 0.04
       );
       ctx.bezierCurveTo(
-        side * size * 0.27, -size * 0.06,
-        side * size * 0.28, -size * 0.09,
-        side * size * 0.25, -size * 0.12,
+        side * size * 0.27,
+        -size * 0.06,
+        side * size * 0.28,
+        -size * 0.09,
+        side * size * 0.25,
+        -size * 0.12
       );
       ctx.stroke();
 
@@ -2518,7 +3097,14 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.ellipse(gemX, gemY, size * 0.022, size * 0.016, 0, 0, Math.PI * 2);
       ctx.stroke();
-      const eyeG = ctx.createRadialGradient(gemX - size * 0.005, gemY - size * 0.005, 0, gemX, gemY, size * 0.02);
+      const eyeG = ctx.createRadialGradient(
+        gemX - size * 0.005,
+        gemY - size * 0.005,
+        0,
+        gemX,
+        gemY,
+        size * 0.02
+      );
       eyeG.addColorStop(0, "#ff6666");
       eyeG.addColorStop(0.5, "#dc2626");
       eyeG.addColorStop(1, "#8b1515");
@@ -2537,7 +3123,14 @@ export function drawCaptainHero(
     }
 
     // Center guard plate
-    const centerG = ctx.createRadialGradient(0, -size * 0.01, 0, 0, -size * 0.01, size * 0.06);
+    const centerG = ctx.createRadialGradient(
+      0,
+      -size * 0.01,
+      0,
+      0,
+      -size * 0.01,
+      size * 0.06
+    );
     centerG.addColorStop(0, "#ffe060");
     centerG.addColorStop(0.4, "#daa520");
     centerG.addColorStop(0.8, "#8a6a15");
@@ -2550,7 +3143,14 @@ export function drawCaptainHero(
     ctx.lineWidth = 0.8 * zoom;
     ctx.stroke();
     // Center ruby
-    const cRG = ctx.createRadialGradient(-size * 0.003, -size * 0.015, 0, 0, -size * 0.01, size * 0.018);
+    const cRG = ctx.createRadialGradient(
+      -size * 0.003,
+      -size * 0.015,
+      0,
+      0,
+      -size * 0.01,
+      size * 0.018
+    );
     cRG.addColorStop(0, "#ff7777");
     cRG.addColorStop(0.5, "#dc2626");
     cRG.addColorStop(1, "#6b0505");
@@ -2576,7 +3176,13 @@ export function drawCaptainHero(
     hiltG.addColorStop(1, "#1a0805");
     ctx.fillStyle = hiltG;
     ctx.beginPath();
-    ctx.roundRect(-size * 0.035, size * 0.02, size * 0.07, size * 0.25, size * 0.008);
+    ctx.roundRect(
+      -size * 0.035,
+      size * 0.02,
+      size * 0.07,
+      size * 0.25,
+      size * 0.008
+    );
     ctx.fill();
     ctx.strokeStyle = "#0a0505";
     ctx.lineWidth = 0.8 * zoom;
@@ -2585,7 +3191,12 @@ export function drawCaptainHero(
     // Gold wire wrapping
     for (let wrap = 0; wrap < 8; wrap++) {
       const wy = size * 0.035 + wrap * size * 0.028;
-      const wrapG = ctx.createLinearGradient(-size * 0.035, wy, size * 0.035, wy);
+      const wrapG = ctx.createLinearGradient(
+        -size * 0.035,
+        wy,
+        size * 0.035,
+        wy
+      );
       wrapG.addColorStop(0, "#6a4a08");
       wrapG.addColorStop(0.5, "#daa520");
       wrapG.addColorStop(1, "#6a4a08");
@@ -2599,24 +3210,46 @@ export function drawCaptainHero(
 
     // Mid-hilt gold ring
     const ringY = size * 0.14;
-    const ringG = ctx.createLinearGradient(-size * 0.04, ringY, size * 0.04, ringY);
+    const ringG = ctx.createLinearGradient(
+      -size * 0.04,
+      ringY,
+      size * 0.04,
+      ringY
+    );
     ringG.addColorStop(0, "#7a5a10");
     ringG.addColorStop(0.3, "#c9a227");
     ringG.addColorStop(0.5, "#f0d040");
     ringG.addColorStop(0.7, "#c9a227");
     ringG.addColorStop(1, "#7a5a10");
     ctx.fillStyle = ringG;
-    ctx.fillRect(-size * 0.042, ringY - size * 0.008, size * 0.084, size * 0.016);
+    ctx.fillRect(
+      -size * 0.042,
+      ringY - size * 0.008,
+      size * 0.084,
+      size * 0.016
+    );
     ctx.strokeStyle = "#5a4008";
     ctx.lineWidth = 0.5 * zoom;
-    ctx.strokeRect(-size * 0.042, ringY - size * 0.008, size * 0.084, size * 0.016);
+    ctx.strokeRect(
+      -size * 0.042,
+      ringY - size * 0.008,
+      size * 0.084,
+      size * 0.016
+    );
   }
 
   // --- POMMEL (dragon head) ---
   {
     const pomY = size * 0.28;
     // Pommel body with gradient
-    const pomG = ctx.createRadialGradient(0, pomY + size * 0.04, 0, 0, pomY + size * 0.04, size * 0.07);
+    const pomG = ctx.createRadialGradient(
+      0,
+      pomY + size * 0.04,
+      0,
+      0,
+      pomY + size * 0.04,
+      size * 0.07
+    );
     pomG.addColorStop(0, "#f0d040");
     pomG.addColorStop(0.3, "#daa520");
     pomG.addColorStop(0.6, "#b08a20");
@@ -2624,10 +3257,38 @@ export function drawCaptainHero(
     ctx.fillStyle = pomG;
     ctx.beginPath();
     ctx.moveTo(0, pomY);
-    ctx.bezierCurveTo(-size * 0.04, pomY, -size * 0.07, pomY + size * 0.02, -size * 0.07, pomY + size * 0.05);
-    ctx.bezierCurveTo(-size * 0.07, pomY + size * 0.08, -size * 0.04, pomY + size * 0.11, 0, pomY + size * 0.12);
-    ctx.bezierCurveTo(size * 0.04, pomY + size * 0.11, size * 0.07, pomY + size * 0.08, size * 0.07, pomY + size * 0.05);
-    ctx.bezierCurveTo(size * 0.07, pomY + size * 0.02, size * 0.04, pomY, 0, pomY);
+    ctx.bezierCurveTo(
+      -size * 0.04,
+      pomY,
+      -size * 0.07,
+      pomY + size * 0.02,
+      -size * 0.07,
+      pomY + size * 0.05
+    );
+    ctx.bezierCurveTo(
+      -size * 0.07,
+      pomY + size * 0.08,
+      -size * 0.04,
+      pomY + size * 0.11,
+      0,
+      pomY + size * 0.12
+    );
+    ctx.bezierCurveTo(
+      size * 0.04,
+      pomY + size * 0.11,
+      size * 0.07,
+      pomY + size * 0.08,
+      size * 0.07,
+      pomY + size * 0.05
+    );
+    ctx.bezierCurveTo(
+      size * 0.07,
+      pomY + size * 0.02,
+      size * 0.04,
+      pomY,
+      0,
+      pomY
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#3a2808";
@@ -2640,19 +3301,37 @@ export function drawCaptainHero(
     // Nostrils
     for (let side = -1; side <= 1; side += 2) {
       ctx.beginPath();
-      ctx.arc(side * size * 0.015, pomY + size * 0.035, size * 0.006, 0, Math.PI * 2);
+      ctx.arc(
+        side * size * 0.015,
+        pomY + size * 0.035,
+        size * 0.006,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
     }
     // Brow ridges
     for (let side = -1; side <= 1; side += 2) {
       ctx.beginPath();
       ctx.moveTo(side * size * 0.005, pomY + size * 0.055);
-      ctx.quadraticCurveTo(side * size * 0.03, pomY + size * 0.04, side * size * 0.04, pomY + size * 0.06);
+      ctx.quadraticCurveTo(
+        side * size * 0.03,
+        pomY + size * 0.04,
+        side * size * 0.04,
+        pomY + size * 0.06
+      );
       ctx.stroke();
     }
 
     // Center ruby eye
-    const pomRG = ctx.createRadialGradient(-size * 0.003, pomY + size * 0.055, 0, 0, pomY + size * 0.06, size * 0.02);
+    const pomRG = ctx.createRadialGradient(
+      -size * 0.003,
+      pomY + size * 0.055,
+      0,
+      0,
+      pomY + size * 0.06,
+      size * 0.02
+    );
     pomRG.addColorStop(0, "#ff7777");
     pomRG.addColorStop(0.4, "#dc2626");
     pomRG.addColorStop(1, "#6b0505");
@@ -2666,7 +3345,15 @@ export function drawCaptainHero(
     ctx.fillStyle = "rgba(255, 200, 200, 0.4)";
     ctx.shadowBlur = 0;
     ctx.beginPath();
-    ctx.ellipse(-size * 0.005, pomY + size * 0.055, size * 0.007, size * 0.005, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      -size * 0.005,
+      pomY + size * 0.055,
+      size * 0.007,
+      size * 0.005,
+      -0.3,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -2674,7 +3361,7 @@ export function drawCaptainHero(
 
   // === LEGENDARY WAR STANDARD (Facing Left) ===
   ctx.save();
-  ctx.translate(x - size * 0.75, y + size * 0.10);
+  ctx.translate(x - size * 0.75, y + size * 0.1);
   ctx.rotate(-0.15);
 
   // --- POLE (ornate dark wood with gold fittings) ---
@@ -2693,7 +3380,13 @@ export function drawCaptainHero(
     poleG.addColorStop(1, "#2a0c04");
     ctx.fillStyle = poleG;
     ctx.beginPath();
-    ctx.roundRect(-poleW * 0.5, poleTop, poleW, poleBot - poleTop, size * 0.006);
+    ctx.roundRect(
+      -poleW * 0.5,
+      poleTop,
+      poleW,
+      poleBot - poleTop,
+      size * 0.006
+    );
     ctx.fill();
     ctx.strokeStyle = "#1a0804";
     ctx.lineWidth = 0.6 * zoom;
@@ -2706,12 +3399,24 @@ export function drawCaptainHero(
       const gx = -poleW * 0.3 + g * poleW * 0.12;
       ctx.beginPath();
       ctx.moveTo(gx, poleTop + size * 0.02);
-      ctx.bezierCurveTo(gx + size * 0.003, poleTop + (poleBot - poleTop) * 0.3, gx - size * 0.003, poleTop + (poleBot - poleTop) * 0.7, gx, poleBot - size * 0.02);
+      ctx.bezierCurveTo(
+        gx + size * 0.003,
+        poleTop + (poleBot - poleTop) * 0.3,
+        gx - size * 0.003,
+        poleTop + (poleBot - poleTop) * 0.7,
+        gx,
+        poleBot - size * 0.02
+      );
       ctx.stroke();
     }
 
     // Gold ferrule rings (wider, more ornate)
-    const ringPositions = [poleTop + size * 0.02, poleTop + size * 0.22, poleTop + size * 0.46, poleTop + size * 0.7];
+    const ringPositions = [
+      poleTop + size * 0.02,
+      poleTop + size * 0.22,
+      poleTop + size * 0.46,
+      poleTop + size * 0.7,
+    ];
     for (const ry of ringPositions) {
       const rG = ctx.createLinearGradient(-poleW * 0.65, ry, poleW * 0.65, ry);
       rG.addColorStop(0, "#6a4a08");
@@ -2743,8 +3448,12 @@ export function drawCaptainHero(
 
     // Orb body
     const orbG = ctx.createRadialGradient(
-      -orbR * 0.3, orbY - orbR * 0.3, 0,
-      0, orbY, orbR,
+      -orbR * 0.3,
+      orbY - orbR * 0.3,
+      0,
+      0,
+      orbY,
+      orbR
     );
     orbG.addColorStop(0, "#ffe070");
     orbG.addColorStop(0.3, "#f0d040");
@@ -2774,8 +3483,12 @@ export function drawCaptainHero(
 
     // Ruby gem in orb center
     const gemG = ctx.createRadialGradient(
-      -size * 0.003, orbY - size * 0.003, 0,
-      0, orbY, size * 0.016,
+      -size * 0.003,
+      orbY - size * 0.003,
+      0,
+      0,
+      orbY,
+      size * 0.016
     );
     gemG.addColorStop(0, "#ff7777");
     gemG.addColorStop(0.5, "#dc2626");
@@ -2818,7 +3531,7 @@ export function drawCaptainHero(
         -size * 0.34 - tw * 0.22,
         -size * 0.55,
         -size * 0.42 - tw * 0.25,
-        -size * 0.4,
+        -size * 0.4
       );
       // Bottom edge with pointed tail — CP1 continues leftward from junction
       ctx.bezierCurveTo(
@@ -2827,7 +3540,7 @@ export function drawCaptainHero(
         -size * 0.48 - tw * 0.22,
         -size * 0.28,
         -size * 0.48 - tw * 0.18,
-        -size * 0.22,
+        -size * 0.22
       );
       // Swallowtail notch
       ctx.lineTo(-size * 0.38 - tw * 0.18, -size * 0.28);
@@ -2838,7 +3551,7 @@ export function drawCaptainHero(
         -size * 0.18 - tw * 0.1,
         -size * 0.18,
         -size * 0.025,
-        -size * 0.13,
+        -size * 0.13
       );
       ctx.closePath();
     };
@@ -2852,7 +3565,12 @@ export function drawCaptainHero(
     ctx.restore();
 
     // Banner base fabric — rich crimson gradient
-    const bannerG = ctx.createLinearGradient(-size * 0.025, -size * 0.5, -size * 0.42, -size * 0.5);
+    const bannerG = ctx.createLinearGradient(
+      -size * 0.025,
+      -size * 0.5,
+      -size * 0.42,
+      -size * 0.5
+    );
     bannerG.addColorStop(0, "#7a0c0c");
     bannerG.addColorStop(0.15, "#a81515");
     bannerG.addColorStop(0.35, "#cc2020");
@@ -2871,7 +3589,10 @@ export function drawCaptainHero(
       const foldT = fold / 4;
       const foldX = -size * 0.025 + (-size * 0.42 + size * 0.025) * foldT;
       const foldAlpha = 0.08 + Math.sin(time * 3 + fold * 1.5) * 0.03;
-      ctx.fillStyle = fold % 2 === 0 ? `rgba(0, 0, 0, ${foldAlpha})` : `rgba(255, 255, 255, ${foldAlpha * 0.5})`;
+      ctx.fillStyle =
+        fold % 2 === 0
+          ? `rgba(0, 0, 0, ${foldAlpha})`
+          : `rgba(255, 255, 255, ${foldAlpha * 0.5})`;
       ctx.fillRect(foldX - size * 0.03, -size * 0.85, size * 0.03, size * 0.8);
     }
     ctx.restore();
@@ -2904,7 +3625,7 @@ export function drawCaptainHero(
       -size * 0.3 - tw2 * 0.2,
       -size * 0.52,
       -size * 0.38,
-      -size * 0.38,
+      -size * 0.38
     );
     ctx.stroke();
     ctx.beginPath();
@@ -2915,7 +3636,7 @@ export function drawCaptainHero(
       -size * 0.26 - tw2 * 0.15,
       -size * 0.27,
       -size * 0.34,
-      -size * 0.26,
+      -size * 0.26
     );
     ctx.stroke();
     ctx.restore();
@@ -2925,7 +3646,14 @@ export function drawCaptainHero(
       const emX = -size * 0.2 - tipWave * size * 0.18;
       const emY = -size * 0.48;
       // Gold circle backdrop
-      const circG = ctx.createRadialGradient(emX - size * 0.005, emY - size * 0.005, 0, emX, emY, size * 0.08);
+      const circG = ctx.createRadialGradient(
+        emX - size * 0.005,
+        emY - size * 0.005,
+        0,
+        emX,
+        emY,
+        size * 0.08
+      );
       circG.addColorStop(0, "#f0d040");
       circG.addColorStop(0.4, "#daa520");
       circG.addColorStop(0.7, "#b08a20");
@@ -2950,17 +3678,59 @@ export function drawCaptainHero(
       // Head
       ctx.moveTo(emX, emY - size * 0.045);
       // Right wing
-      ctx.bezierCurveTo(emX + size * 0.01, emY - size * 0.04, emX + size * 0.035, emY - size * 0.035, emX + size * 0.04, emY - size * 0.02);
-      ctx.bezierCurveTo(emX + size * 0.045, emY - size * 0.01, emX + size * 0.035, emY + size * 0.005, emX + size * 0.025, emY + size * 0.01);
+      ctx.bezierCurveTo(
+        emX + size * 0.01,
+        emY - size * 0.04,
+        emX + size * 0.035,
+        emY - size * 0.035,
+        emX + size * 0.04,
+        emY - size * 0.02
+      );
+      ctx.bezierCurveTo(
+        emX + size * 0.045,
+        emY - size * 0.01,
+        emX + size * 0.035,
+        emY + size * 0.005,
+        emX + size * 0.025,
+        emY + size * 0.01
+      );
       // Right body
       ctx.lineTo(emX + size * 0.015, emY + size * 0.025);
       // Tail
-      ctx.bezierCurveTo(emX + size * 0.02, emY + size * 0.04, emX + size * 0.005, emY + size * 0.045, emX, emY + size * 0.04);
+      ctx.bezierCurveTo(
+        emX + size * 0.02,
+        emY + size * 0.04,
+        emX + size * 0.005,
+        emY + size * 0.045,
+        emX,
+        emY + size * 0.04
+      );
       // Left side mirror
-      ctx.bezierCurveTo(emX - size * 0.005, emY + size * 0.045, emX - size * 0.02, emY + size * 0.04, emX - size * 0.015, emY + size * 0.025);
+      ctx.bezierCurveTo(
+        emX - size * 0.005,
+        emY + size * 0.045,
+        emX - size * 0.02,
+        emY + size * 0.04,
+        emX - size * 0.015,
+        emY + size * 0.025
+      );
       ctx.lineTo(emX - size * 0.025, emY + size * 0.01);
-      ctx.bezierCurveTo(emX - size * 0.035, emY + size * 0.005, emX - size * 0.045, emY - size * 0.01, emX - size * 0.04, emY - size * 0.02);
-      ctx.bezierCurveTo(emX - size * 0.035, emY - size * 0.035, emX - size * 0.01, emY - size * 0.04, emX, emY - size * 0.045);
+      ctx.bezierCurveTo(
+        emX - size * 0.035,
+        emY + size * 0.005,
+        emX - size * 0.045,
+        emY - size * 0.01,
+        emX - size * 0.04,
+        emY - size * 0.02
+      );
+      ctx.bezierCurveTo(
+        emX - size * 0.035,
+        emY - size * 0.035,
+        emX - size * 0.01,
+        emY - size * 0.04,
+        emX,
+        emY - size * 0.045
+      );
       ctx.closePath();
       ctx.fill();
 
@@ -2989,13 +3759,23 @@ export function drawCaptainHero(
       ctx.fillStyle = `rgba(255, 100, 40, ${0.5 + Math.sin(time * 7 + fringe) * 0.15})`;
       ctx.beginPath();
       ctx.moveTo(fx - size * 0.01, fy);
-      ctx.quadraticCurveTo(fx + fWave, fy + tongueH + size * 0.015, fx + size * 0.005, fy);
+      ctx.quadraticCurveTo(
+        fx + fWave,
+        fy + tongueH + size * 0.015,
+        fx + size * 0.005,
+        fy
+      );
       ctx.fill();
       // Inner yellow core
       ctx.fillStyle = `rgba(255, 200, 60, ${0.4 + Math.sin(time * 8 + fringe * 0.7) * 0.1})`;
       ctx.beginPath();
       ctx.moveTo(fx - size * 0.005, fy);
-      ctx.quadraticCurveTo(fx + fWave * 0.5, fy + tongueH, fx + size * 0.003, fy);
+      ctx.quadraticCurveTo(
+        fx + fWave * 0.5,
+        fy + tongueH,
+        fx + size * 0.003,
+        fy
+      );
       ctx.fill();
     }
     ctx.shadowBlur = 0;
@@ -3009,16 +3789,34 @@ export function drawCaptainHero(
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(-size * 0.025, tY);
-      ctx.quadraticCurveTo(-size * 0.04 + tSway, tY + size * 0.04, -size * 0.035 + tSway, tY + size * 0.07);
+      ctx.quadraticCurveTo(
+        -size * 0.04 + tSway,
+        tY + size * 0.04,
+        -size * 0.035 + tSway,
+        tY + size * 0.07
+      );
       ctx.stroke();
       // Tassel knot
-      const tkG = ctx.createRadialGradient(-size * 0.035 + tSway, tY + size * 0.07, 0, -size * 0.035 + tSway, tY + size * 0.07, size * 0.012);
+      const tkG = ctx.createRadialGradient(
+        -size * 0.035 + tSway,
+        tY + size * 0.07,
+        0,
+        -size * 0.035 + tSway,
+        tY + size * 0.07,
+        size * 0.012
+      );
       tkG.addColorStop(0, "#f0d040");
       tkG.addColorStop(0.6, "#c9a227");
       tkG.addColorStop(1, "#7a5a10");
       ctx.fillStyle = tkG;
       ctx.beginPath();
-      ctx.arc(-size * 0.035 + tSway, tY + size * 0.07, size * 0.012, 0, Math.PI * 2);
+      ctx.arc(
+        -size * 0.035 + tSway,
+        tY + size * 0.07,
+        size * 0.012,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       // Tassel threads
       ctx.strokeStyle = "#daa520";
@@ -3027,7 +3825,10 @@ export function drawCaptainHero(
         const thSway = Math.sin(time * 4 + th * 0.8 + t) * size * 0.005;
         ctx.beginPath();
         ctx.moveTo(-size * 0.035 + tSway + th * size * 0.005, tY + size * 0.08);
-        ctx.lineTo(-size * 0.035 + tSway + th * size * 0.008 + thSway, tY + size * 0.11);
+        ctx.lineTo(
+          -size * 0.035 + tSway + th * size * 0.008 + thSway,
+          tY + size * 0.11
+        );
         ctx.stroke();
       }
     }
@@ -3046,9 +3847,12 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(wingBaseX, wingBaseY + size * 0.008);
     ctx.bezierCurveTo(
-      wingBaseX + wingSpread * 0.4, wingBaseY - wingRise * 0.3 + size * 0.008,
-      wingBaseX + wingSpread * 0.8, wingBaseY - wingRise * 0.8 + size * 0.008,
-      wingBaseX + wingSpread, wingBaseY - wingRise + size * 0.008,
+      wingBaseX + wingSpread * 0.4,
+      wingBaseY - wingRise * 0.3 + size * 0.008,
+      wingBaseX + wingSpread * 0.8,
+      wingBaseY - wingRise * 0.8 + size * 0.008,
+      wingBaseX + wingSpread,
+      wingBaseY - wingRise + size * 0.008
     );
     ctx.lineTo(wingBaseX + wingSpread * 0.7, wingBaseY + size * 0.03);
     ctx.lineTo(wingBaseX + wingSpread * 0.3, wingBaseY + size * 0.04);
@@ -3057,7 +3861,12 @@ export function drawCaptainHero(
 
     // Primary feather (top, longest)
     {
-      const fG = ctx.createLinearGradient(wingBaseX, wingBaseY, wingBaseX + wingSpread, wingBaseY - wingRise);
+      const fG = ctx.createLinearGradient(
+        wingBaseX,
+        wingBaseY,
+        wingBaseX + wingSpread,
+        wingBaseY - wingRise
+      );
       fG.addColorStop(0, "#7a5a10");
       fG.addColorStop(0.2, "#b08a20");
       fG.addColorStop(0.45, "#daa520");
@@ -3068,14 +3877,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(wingBaseX, wingBaseY - size * 0.01);
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.3, wingBaseY - wingRise * 0.5,
-        wingBaseX + wingSpread * 0.7, wingBaseY - wingRise * 0.9,
-        wingBaseX + wingSpread, wingBaseY - wingRise,
+        wingBaseX + wingSpread * 0.3,
+        wingBaseY - wingRise * 0.5,
+        wingBaseX + wingSpread * 0.7,
+        wingBaseY - wingRise * 0.9,
+        wingBaseX + wingSpread,
+        wingBaseY - wingRise
       );
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.85, wingBaseY - wingRise * 0.7,
-        wingBaseX + wingSpread * 0.5, wingBaseY - wingRise * 0.3,
-        wingBaseX, wingBaseY + size * 0.005,
+        wingBaseX + wingSpread * 0.85,
+        wingBaseY - wingRise * 0.7,
+        wingBaseX + wingSpread * 0.5,
+        wingBaseY - wingRise * 0.3,
+        wingBaseX,
+        wingBaseY + size * 0.005
       );
       ctx.closePath();
       ctx.fill();
@@ -3086,7 +3901,12 @@ export function drawCaptainHero(
 
     // Secondary feather (middle)
     {
-      const f2G = ctx.createLinearGradient(wingBaseX, wingBaseY, wingBaseX + wingSpread * 0.7, wingBaseY - wingRise * 0.5);
+      const f2G = ctx.createLinearGradient(
+        wingBaseX,
+        wingBaseY,
+        wingBaseX + wingSpread * 0.7,
+        wingBaseY - wingRise * 0.5
+      );
       f2G.addColorStop(0, "#6a4a08");
       f2G.addColorStop(0.3, "#9a7a18");
       f2G.addColorStop(0.6, "#c9a227");
@@ -3095,14 +3915,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(wingBaseX, wingBaseY + size * 0.008);
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.25, wingBaseY - wingRise * 0.15,
-        wingBaseX + wingSpread * 0.5, wingBaseY - wingRise * 0.4,
-        wingBaseX + wingSpread * 0.7, wingBaseY - wingRise * 0.5,
+        wingBaseX + wingSpread * 0.25,
+        wingBaseY - wingRise * 0.15,
+        wingBaseX + wingSpread * 0.5,
+        wingBaseY - wingRise * 0.4,
+        wingBaseX + wingSpread * 0.7,
+        wingBaseY - wingRise * 0.5
       );
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.55, wingBaseY - wingRise * 0.25,
-        wingBaseX + wingSpread * 0.28, wingBaseY - wingRise * 0.03,
-        wingBaseX, wingBaseY + size * 0.02,
+        wingBaseX + wingSpread * 0.55,
+        wingBaseY - wingRise * 0.25,
+        wingBaseX + wingSpread * 0.28,
+        wingBaseY - wingRise * 0.03,
+        wingBaseX,
+        wingBaseY + size * 0.02
       );
       ctx.closePath();
       ctx.fill();
@@ -3113,7 +3939,12 @@ export function drawCaptainHero(
 
     // Tertiary feather (bottom, shortest)
     {
-      const f3G = ctx.createLinearGradient(wingBaseX, wingBaseY, wingBaseX + wingSpread * 0.45, wingBaseY - wingRise * 0.15);
+      const f3G = ctx.createLinearGradient(
+        wingBaseX,
+        wingBaseY,
+        wingBaseX + wingSpread * 0.45,
+        wingBaseY - wingRise * 0.15
+      );
       f3G.addColorStop(0, "#5a4008");
       f3G.addColorStop(0.4, "#8a6a15");
       f3G.addColorStop(1, "#7a5a10");
@@ -3121,14 +3952,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(wingBaseX, wingBaseY + size * 0.022);
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.18, wingBaseY + size * 0.005,
-        wingBaseX + wingSpread * 0.35, wingBaseY - wingRise * 0.1,
-        wingBaseX + wingSpread * 0.45, wingBaseY - wingRise * 0.15,
+        wingBaseX + wingSpread * 0.18,
+        wingBaseY + size * 0.005,
+        wingBaseX + wingSpread * 0.35,
+        wingBaseY - wingRise * 0.1,
+        wingBaseX + wingSpread * 0.45,
+        wingBaseY - wingRise * 0.15
       );
       ctx.bezierCurveTo(
-        wingBaseX + wingSpread * 0.35, wingBaseY - wingRise * 0.02,
-        wingBaseX + wingSpread * 0.18, wingBaseY + size * 0.02,
-        wingBaseX, wingBaseY + size * 0.035,
+        wingBaseX + wingSpread * 0.35,
+        wingBaseY - wingRise * 0.02,
+        wingBaseX + wingSpread * 0.18,
+        wingBaseY + size * 0.02,
+        wingBaseX,
+        wingBaseY + size * 0.035
       );
       ctx.closePath();
       ctx.fill();
@@ -3143,17 +3980,23 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(wingBaseX + side * size * 0.008, wingBaseY - size * 0.003);
     ctx.bezierCurveTo(
-      wingBaseX + wingSpread * 0.35, wingBaseY - wingRise * 0.45,
-      wingBaseX + wingSpread * 0.7, wingBaseY - wingRise * 0.8,
-      wingBaseX + wingSpread * 0.95, wingBaseY - wingRise * 0.95,
+      wingBaseX + wingSpread * 0.35,
+      wingBaseY - wingRise * 0.45,
+      wingBaseX + wingSpread * 0.7,
+      wingBaseY - wingRise * 0.8,
+      wingBaseX + wingSpread * 0.95,
+      wingBaseY - wingRise * 0.95
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(wingBaseX + side * size * 0.008, wingBaseY + size * 0.012);
     ctx.bezierCurveTo(
-      wingBaseX + wingSpread * 0.25, wingBaseY - wingRise * 0.12,
-      wingBaseX + wingSpread * 0.45, wingBaseY - wingRise * 0.35,
-      wingBaseX + wingSpread * 0.65, wingBaseY - wingRise * 0.45,
+      wingBaseX + wingSpread * 0.25,
+      wingBaseY - wingRise * 0.12,
+      wingBaseX + wingSpread * 0.45,
+      wingBaseY - wingRise * 0.35,
+      wingBaseX + wingSpread * 0.65,
+      wingBaseY - wingRise * 0.45
     );
     ctx.stroke();
   }
@@ -3162,7 +4005,7 @@ export function drawCaptainHero(
   {
     const helmCX = x;
     const helmCY = y - size * 0.52;
-    const helmW = size * 0.30;
+    const helmW = size * 0.3;
     const helmTop = helmCY - size * 0.32;
     const helmBot = helmCY + size * 0.26;
     const helmBrowY = helmCY - size * 0.08;
@@ -3200,11 +4043,24 @@ export function drawCaptainHero(
     // Ambient shadow beneath helm
     ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
     ctx.beginPath();
-    ctx.ellipse(helmCX, helmBot + size * 0.03, helmW * 0.9, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      helmCX,
+      helmBot + size * 0.03,
+      helmW * 0.9,
+      size * 0.06,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Main helm fill — burnished dark steel with blue-steel undertones
-    const helmG = ctx.createLinearGradient(helmCX - helmW, helmTop, helmCX + helmW * 0.3, helmBot);
+    const helmG = ctx.createLinearGradient(
+      helmCX - helmW,
+      helmTop,
+      helmCX + helmW * 0.3,
+      helmBot
+    );
     helmG.addColorStop(0, "#707580");
     helmG.addColorStop(0.08, "#5e6270");
     helmG.addColorStop(0.2, "#4e5260");
@@ -3218,11 +4074,21 @@ export function drawCaptainHero(
 
     // Warm fire reflection on top of dome (from plume above)
     const fireReflG = ctx.createRadialGradient(
-      helmCX, helmTop + size * 0.04, 0,
-      helmCX, helmTop + size * 0.08, size * 0.25,
+      helmCX,
+      helmTop + size * 0.04,
+      0,
+      helmCX,
+      helmTop + size * 0.08,
+      size * 0.25
     );
-    fireReflG.addColorStop(0, `rgba(255, 120, 40, ${0.12 + flamePulse * 0.06})`);
-    fireReflG.addColorStop(0.3, `rgba(220, 80, 20, ${0.06 + flamePulse * 0.03})`);
+    fireReflG.addColorStop(
+      0,
+      `rgba(255, 120, 40, ${0.12 + flamePulse * 0.06})`
+    );
+    fireReflG.addColorStop(
+      0.3,
+      `rgba(220, 80, 20, ${0.06 + flamePulse * 0.03})`
+    );
     fireReflG.addColorStop(0.6, "rgba(180, 50, 10, 0.02)");
     fireReflG.addColorStop(1, "rgba(100, 20, 5, 0)");
     ctx.fillStyle = fireReflG;
@@ -3231,8 +4097,12 @@ export function drawCaptainHero(
 
     // Primary specular highlight — upper-left (cool steel reflection)
     const specG = ctx.createRadialGradient(
-      helmCX - size * 0.1, helmTop + size * 0.07, 0,
-      helmCX - size * 0.08, helmTop + size * 0.1, size * 0.18,
+      helmCX - size * 0.1,
+      helmTop + size * 0.07,
+      0,
+      helmCX - size * 0.08,
+      helmTop + size * 0.1,
+      size * 0.18
     );
     specG.addColorStop(0, "rgba(190, 195, 215, 0.38)");
     specG.addColorStop(0.25, "rgba(140, 148, 170, 0.18)");
@@ -3244,8 +4114,10 @@ export function drawCaptainHero(
 
     // Secondary specular — rim light on right edge
     const rimG = ctx.createLinearGradient(
-      helmCX + helmW * 0.7, helmTop,
-      helmCX + helmW * 1.15, helmBot * 0.6 + helmTop * 0.4,
+      helmCX + helmW * 0.7,
+      helmTop,
+      helmCX + helmW * 1.15,
+      helmBot * 0.6 + helmTop * 0.4
     );
     rimG.addColorStop(0, "rgba(160, 170, 205, 0.16)");
     rimG.addColorStop(0.35, "rgba(120, 130, 165, 0.08)");
@@ -3255,7 +4127,12 @@ export function drawCaptainHero(
     ctx.fill();
 
     // Ambient occlusion at bottom of dome
-    const aoG = ctx.createLinearGradient(helmCX, helmBot - size * 0.1, helmCX, helmBot);
+    const aoG = ctx.createLinearGradient(
+      helmCX,
+      helmBot - size * 0.1,
+      helmCX,
+      helmBot
+    );
     aoG.addColorStop(0, "rgba(0, 0, 0, 0)");
     aoG.addColorStop(0.6, "rgba(0, 0, 5, 0.08)");
     aoG.addColorStop(1, "rgba(0, 0, 5, 0.18)");
@@ -3287,7 +4164,12 @@ export function drawCaptainHero(
         ctx.beginPath();
         ctx.moveTo(sx - sw, sy - sh * 0.3);
         ctx.quadraticCurveTo(sx - sw * 0.8, sy + sh * 0.8, sx, sy + sh);
-        ctx.quadraticCurveTo(sx + sw * 0.8, sy + sh * 0.8, sx + sw, sy - sh * 0.3);
+        ctx.quadraticCurveTo(
+          sx + sw * 0.8,
+          sy + sh * 0.8,
+          sx + sw,
+          sy - sh * 0.3
+        );
         ctx.closePath();
         ctx.fill();
 
@@ -3304,14 +4186,24 @@ export function drawCaptainHero(
         ctx.lineWidth = 0.4 * zoom;
         ctx.beginPath();
         ctx.moveTo(sx - sw * 0.65, sy + sh * 0.35);
-        ctx.quadraticCurveTo(sx, sy + sh * 1.05, sx + sw * 0.65, sy + sh * 0.35);
+        ctx.quadraticCurveTo(
+          sx,
+          sy + sh * 1.05,
+          sx + sw * 0.65,
+          sy + sh * 0.35
+        );
         ctx.stroke();
       }
     }
     ctx.restore();
 
     // Central crest ridge — raised segmented spine from crown to brow
-    const ridgeG = ctx.createLinearGradient(helmCX - size * 0.03, helmCY, helmCX + size * 0.03, helmCY);
+    const ridgeG = ctx.createLinearGradient(
+      helmCX - size * 0.03,
+      helmCY,
+      helmCX + size * 0.03,
+      helmCY
+    );
     ridgeG.addColorStop(0, "#252530");
     ridgeG.addColorStop(0.2, "#3e3e4a");
     ridgeG.addColorStop(0.35, "#52525e");
@@ -3323,15 +4215,21 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(helmCX - size * 0.024, helmTop - size * 0.015);
     ctx.bezierCurveTo(
-      helmCX - size * 0.034, helmTop + size * 0.12,
-      helmCX - size * 0.038, helmBrowY - size * 0.06,
-      helmCX - size * 0.034, helmBrowY + size * 0.025,
+      helmCX - size * 0.034,
+      helmTop + size * 0.12,
+      helmCX - size * 0.038,
+      helmBrowY - size * 0.06,
+      helmCX - size * 0.034,
+      helmBrowY + size * 0.025
     );
     ctx.lineTo(helmCX + size * 0.034, helmBrowY + size * 0.025);
     ctx.bezierCurveTo(
-      helmCX + size * 0.038, helmBrowY - size * 0.06,
-      helmCX + size * 0.034, helmTop + size * 0.12,
-      helmCX + size * 0.024, helmTop - size * 0.015,
+      helmCX + size * 0.038,
+      helmBrowY - size * 0.06,
+      helmCX + size * 0.034,
+      helmTop + size * 0.12,
+      helmCX + size * 0.024,
+      helmTop - size * 0.015
     );
     ctx.closePath();
     ctx.fill();
@@ -3366,15 +4264,23 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(helmCX, helmTop + size * 0.01);
     ctx.bezierCurveTo(
-      helmCX, helmTop + size * 0.1,
-      helmCX, helmBrowY - size * 0.08,
-      helmCX, helmBrowY + size * 0.01,
+      helmCX,
+      helmTop + size * 0.1,
+      helmCX,
+      helmBrowY - size * 0.08,
+      helmCX,
+      helmBrowY + size * 0.01
     );
     ctx.stroke();
     ctx.shadowBlur = 0;
 
     // Brow plate (thickened band across the brow, separating dome from face)
-    const browG = ctx.createLinearGradient(helmCX - helmW, helmBrowY, helmCX + helmW, helmBrowY);
+    const browG = ctx.createLinearGradient(
+      helmCX - helmW,
+      helmBrowY,
+      helmCX + helmW,
+      helmBrowY
+    );
     browG.addColorStop(0, "#3a3e46");
     browG.addColorStop(0.2, "#4e525a");
     browG.addColorStop(0.5, "#585c64");
@@ -3382,10 +4288,20 @@ export function drawCaptainHero(
     browG.addColorStop(1, "#3a3e46");
     ctx.fillStyle = browG;
     ctx.beginPath();
-    ctx.moveTo(helmCX - helmW * 1.0, helmBrowY - size * 0.025);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.04, helmCX + helmW * 1.0, helmBrowY - size * 0.025);
-    ctx.lineTo(helmCX + helmW * 1.0, helmBrowY + size * 0.025);
-    ctx.quadraticCurveTo(helmCX, helmBrowY + size * 0.01, helmCX - helmW * 1.0, helmBrowY + size * 0.025);
+    ctx.moveTo(helmCX - helmW * 1, helmBrowY - size * 0.025);
+    ctx.quadraticCurveTo(
+      helmCX,
+      helmBrowY - size * 0.04,
+      helmCX + helmW * 1,
+      helmBrowY - size * 0.025
+    );
+    ctx.lineTo(helmCX + helmW * 1, helmBrowY + size * 0.025);
+    ctx.quadraticCurveTo(
+      helmCX,
+      helmBrowY + size * 0.01,
+      helmCX - helmW * 1,
+      helmBrowY + size * 0.025
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#6a5010";
@@ -3393,7 +4309,12 @@ export function drawCaptainHero(
     ctx.stroke();
 
     // Gold crown band on the brow plate — ornate with rune engravings
-    const bandG = ctx.createLinearGradient(helmCX - helmW, helmBrowY, helmCX + helmW, helmBrowY);
+    const bandG = ctx.createLinearGradient(
+      helmCX - helmW,
+      helmBrowY,
+      helmCX + helmW,
+      helmBrowY
+    );
     bandG.addColorStop(0, "#5a4008");
     bandG.addColorStop(0.1, "#7a5a10");
     bandG.addColorStop(0.2, "#9a7a1a");
@@ -3406,9 +4327,19 @@ export function drawCaptainHero(
     ctx.fillStyle = bandG;
     ctx.beginPath();
     ctx.moveTo(helmCX - helmW * 0.95, helmBrowY - size * 0.014);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.028, helmCX + helmW * 0.95, helmBrowY - size * 0.014);
+    ctx.quadraticCurveTo(
+      helmCX,
+      helmBrowY - size * 0.028,
+      helmCX + helmW * 0.95,
+      helmBrowY - size * 0.014
+    );
     ctx.lineTo(helmCX + helmW * 0.95, helmBrowY + size * 0.014);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.002, helmCX - helmW * 0.95, helmBrowY + size * 0.014);
+    ctx.quadraticCurveTo(
+      helmCX,
+      helmBrowY - size * 0.002,
+      helmCX - helmW * 0.95,
+      helmBrowY + size * 0.014
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#6a4a08";
@@ -3444,7 +4375,12 @@ export function drawCaptainHero(
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(helmCX - helmW * 0.85, helmBrowY - size * 0.01);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.022, helmCX + helmW * 0.85, helmBrowY - size * 0.01);
+    ctx.quadraticCurveTo(
+      helmCX,
+      helmBrowY - size * 0.022,
+      helmCX + helmW * 0.85,
+      helmBrowY - size * 0.01
+    );
     ctx.stroke();
 
     // Dramatic curved dragon horns rising from crown
@@ -3460,21 +4396,32 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(hornBaseX - side * hornThick, hornBaseY + size * 0.008);
       ctx.bezierCurveTo(
-        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
-        hornTipX - side * size * 0.05, hornTipY + size * 0.07,
-        hornTipX + side * size * 0.01, hornTipY + size * 0.012,
+        hornBaseX + side * size * 0.04,
+        hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05,
+        hornTipY + size * 0.07,
+        hornTipX + side * size * 0.01,
+        hornTipY + size * 0.012
       );
       ctx.lineTo(hornTipX - side * size * 0.005, hornTipY + size * 0.022);
       ctx.bezierCurveTo(
-        hornTipX - side * size * 0.07, hornTipY + size * 0.09,
-        hornBaseX + side * size * 0.02, hornBaseY - size * 0.04,
-        hornBaseX + side * hornThick, hornBaseY + size * 0.008,
+        hornTipX - side * size * 0.07,
+        hornTipY + size * 0.09,
+        hornBaseX + side * size * 0.02,
+        hornBaseY - size * 0.04,
+        hornBaseX + side * hornThick,
+        hornBaseY + size * 0.008
       );
       ctx.closePath();
       ctx.fill();
 
       // Horn body — dark bone with warm tones
-      const hornG = ctx.createLinearGradient(hornBaseX, hornBaseY, hornTipX, hornTipY);
+      const hornG = ctx.createLinearGradient(
+        hornBaseX,
+        hornBaseY,
+        hornTipX,
+        hornTipY
+      );
       hornG.addColorStop(0, "#5a4a2a");
       hornG.addColorStop(0.15, "#7a6a3a");
       hornG.addColorStop(0.3, "#9a8a4a");
@@ -3486,14 +4433,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(hornBaseX - side * hornThick, hornBaseY);
       ctx.bezierCurveTo(
-        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
-        hornTipX - side * size * 0.05, hornTipY + size * 0.06,
-        hornTipX, hornTipY,
+        hornBaseX + side * size * 0.04,
+        hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05,
+        hornTipY + size * 0.06,
+        hornTipX,
+        hornTipY
       );
       ctx.bezierCurveTo(
-        hornTipX - side * size * 0.02, hornTipY + size * 0.018,
-        hornTipX - side * size * 0.07, hornTipY + size * 0.07,
-        hornBaseX + side * hornThick, hornBaseY,
+        hornTipX - side * size * 0.02,
+        hornTipY + size * 0.018,
+        hornTipX - side * size * 0.07,
+        hornTipY + size * 0.07,
+        hornBaseX + side * hornThick,
+        hornBaseY
       );
       ctx.closePath();
       ctx.fill();
@@ -3502,14 +4455,25 @@ export function drawCaptainHero(
       for (let seg = 0; seg < 5; seg++) {
         const t = 0.15 + seg * 0.16;
         const segX = hornBaseX + (hornTipX - hornBaseX) * t;
-        const segY = hornBaseY + (hornTipY - hornBaseY) * t + size * 0.015 * Math.sin(t * Math.PI);
+        const segY =
+          hornBaseY +
+          (hornTipY - hornBaseY) * t +
+          size * 0.015 * Math.sin(t * Math.PI);
         const segW = hornThick * (1.15 - t * 0.55);
-        const segAngle = Math.atan2(hornTipY - hornBaseY, (hornTipX - hornBaseX) * side) + Math.PI * 0.5;
+        const segAngle =
+          Math.atan2(hornTipY - hornBaseY, (hornTipX - hornBaseX) * side) +
+          Math.PI * 0.5;
         ctx.strokeStyle = `rgba(55, 45, 22, ${0.5 - seg * 0.06})`;
         ctx.lineWidth = 0.8 * zoom;
         ctx.beginPath();
-        ctx.moveTo(segX - Math.cos(segAngle) * segW, segY - Math.sin(segAngle) * segW);
-        ctx.lineTo(segX + Math.cos(segAngle) * segW, segY + Math.sin(segAngle) * segW);
+        ctx.moveTo(
+          segX - Math.cos(segAngle) * segW,
+          segY - Math.sin(segAngle) * segW
+        );
+        ctx.lineTo(
+          segX + Math.cos(segAngle) * segW,
+          segY + Math.sin(segAngle) * segW
+        );
         ctx.stroke();
       }
 
@@ -3519,9 +4483,12 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(hornBaseX, hornBaseY - size * 0.006);
       ctx.bezierCurveTo(
-        hornBaseX + side * size * 0.03, hornBaseY - size * 0.08,
-        hornTipX - side * size * 0.04, hornTipY + size * 0.05,
-        hornTipX - side * size * 0.005, hornTipY + size * 0.004,
+        hornBaseX + side * size * 0.03,
+        hornBaseY - size * 0.08,
+        hornTipX - side * size * 0.04,
+        hornTipY + size * 0.05,
+        hornTipX - side * size * 0.005,
+        hornTipY + size * 0.004
       );
       ctx.stroke();
 
@@ -3540,14 +4507,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(hornBaseX - side * hornThick, hornBaseY);
       ctx.bezierCurveTo(
-        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
-        hornTipX - side * size * 0.05, hornTipY + size * 0.06,
-        hornTipX, hornTipY,
+        hornBaseX + side * size * 0.04,
+        hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05,
+        hornTipY + size * 0.06,
+        hornTipX,
+        hornTipY
       );
       ctx.bezierCurveTo(
-        hornTipX - side * size * 0.02, hornTipY + size * 0.018,
-        hornTipX - side * size * 0.07, hornTipY + size * 0.07,
-        hornBaseX + side * hornThick, hornBaseY,
+        hornTipX - side * size * 0.02,
+        hornTipY + size * 0.018,
+        hornTipX - side * size * 0.07,
+        hornTipY + size * 0.07,
+        hornBaseX + side * hornThick,
+        hornBaseY
       );
       ctx.closePath();
       ctx.stroke();
@@ -3560,7 +4533,12 @@ export function drawCaptainHero(
       const spikeTipY = helmTop - size * 0.19;
       const spikeW = size * 0.024;
 
-      const spikeG = ctx.createLinearGradient(spikeX - spikeW, spikeBaseY, spikeX + spikeW, spikeTipY);
+      const spikeG = ctx.createLinearGradient(
+        spikeX - spikeW,
+        spikeBaseY,
+        spikeX + spikeW,
+        spikeTipY
+      );
       spikeG.addColorStop(0, "#7a5a10");
       spikeG.addColorStop(0.2, "#9a7a1a");
       spikeG.addColorStop(0.4, "#b89025");
@@ -3571,14 +4549,20 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(spikeX - spikeW, spikeBaseY);
       ctx.bezierCurveTo(
-        spikeX - spikeW * 0.6, spikeBaseY - size * 0.1,
-        spikeX - spikeW * 0.2, spikeTipY + size * 0.02,
-        spikeX, spikeTipY,
+        spikeX - spikeW * 0.6,
+        spikeBaseY - size * 0.1,
+        spikeX - spikeW * 0.2,
+        spikeTipY + size * 0.02,
+        spikeX,
+        spikeTipY
       );
       ctx.bezierCurveTo(
-        spikeX + spikeW * 0.2, spikeTipY + size * 0.02,
-        spikeX + spikeW * 0.6, spikeBaseY - size * 0.1,
-        spikeX + spikeW, spikeBaseY,
+        spikeX + spikeW * 0.2,
+        spikeTipY + size * 0.02,
+        spikeX + spikeW * 0.6,
+        spikeBaseY - size * 0.1,
+        spikeX + spikeW,
+        spikeBaseY
       );
       ctx.closePath();
       ctx.fill();
@@ -3603,7 +4587,14 @@ export function drawCaptainHero(
       const embS = size * 0.045;
 
       // Hexagonal backing plate
-      const embBG = ctx.createRadialGradient(embX, embY, 0, embX, embY, embS * 1.3);
+      const embBG = ctx.createRadialGradient(
+        embX,
+        embY,
+        0,
+        embX,
+        embY,
+        embS * 1.3
+      );
       embBG.addColorStop(0, "#3a3a42");
       embBG.addColorStop(0.5, "#2a2a32");
       embBG.addColorStop(1, "#1a1a22");
@@ -3618,7 +4609,7 @@ export function drawCaptainHero(
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.stroke();
 
       // Dragon face — iconic V-shaped snout
@@ -3641,15 +4632,34 @@ export function drawCaptainHero(
       ctx.shadowColor = "#ff2200";
       ctx.shadowBlur = 4 * zoom * gemPulse;
       ctx.beginPath();
-      ctx.arc(embX - embS * 0.18, embY - embS * 0.05, size * 0.005, 0, Math.PI * 2);
+      ctx.arc(
+        embX - embS * 0.18,
+        embY - embS * 0.05,
+        size * 0.005,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(embX + embS * 0.18, embY - embS * 0.05, size * 0.005, 0, Math.PI * 2);
+      ctx.arc(
+        embX + embS * 0.18,
+        embY - embS * 0.05,
+        size * 0.005,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.shadowBlur = 0;
 
       // Central gem in emblem mouth
-      const embGemG = ctx.createRadialGradient(embX - size * 0.002, embY + embS * 0.13, 0, embX, embY + embS * 0.15, size * 0.009);
+      const embGemG = ctx.createRadialGradient(
+        embX - size * 0.002,
+        embY + embS * 0.13,
+        0,
+        embX,
+        embY + embS * 0.15,
+        size * 0.009
+      );
       embGemG.addColorStop(0, "#ff4040");
       embGemG.addColorStop(0.5, "#dc2626");
       embGemG.addColorStop(1, "#8a1010");
@@ -3671,12 +4681,19 @@ export function drawCaptainHero(
       const gemY = helmBrowY;
       // Gold bezel setting
       ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.arc(gemX, gemY, size * 0.013, 0, Math.PI * 2);
       ctx.stroke();
       // Ruby gem with radial facets
-      const rubyG = ctx.createRadialGradient(gemX - size * 0.003, gemY - size * 0.003, 0, gemX, gemY, size * 0.011);
+      const rubyG = ctx.createRadialGradient(
+        gemX - size * 0.003,
+        gemY - size * 0.003,
+        0,
+        gemX,
+        gemY,
+        size * 0.011
+      );
       rubyG.addColorStop(0, "#ff4545");
       rubyG.addColorStop(0.35, "#dc2626");
       rubyG.addColorStop(0.7, "#a01818");
@@ -3691,7 +4708,13 @@ export function drawCaptainHero(
       // Specular highlight on gem
       ctx.fillStyle = "rgba(255, 200, 200, 0.5)";
       ctx.beginPath();
-      ctx.arc(gemX - size * 0.003, gemY - size * 0.003, size * 0.004, 0, Math.PI * 2);
+      ctx.arc(
+        gemX - size * 0.003,
+        gemY - size * 0.003,
+        size * 0.004,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
 
@@ -3724,7 +4747,12 @@ export function drawCaptainHero(
       ctx.fill();
 
       // Main fin body with gold gradient
-      const finG = ctx.createLinearGradient(finBaseX, finBaseY, finTipX, finTipY);
+      const finG = ctx.createLinearGradient(
+        finBaseX,
+        finBaseY,
+        finTipX,
+        finTipY
+      );
       finG.addColorStop(0, "#7a5a10");
       finG.addColorStop(0.15, "#b08a20");
       finG.addColorStop(0.35, "#daa520");
@@ -3737,17 +4765,23 @@ export function drawCaptainHero(
       // Inner edge (toward center)
       ctx.moveTo(finBaseX - side * finThick * 0.3, finBaseY);
       ctx.bezierCurveTo(
-        finBaseX + side * size * 0.05, finBaseY - size * 0.1,
-        finTipX - side * size * 0.06, finTipY + size * 0.08,
-        finTipX, finTipY,
+        finBaseX + side * size * 0.05,
+        finBaseY - size * 0.1,
+        finTipX - side * size * 0.06,
+        finTipY + size * 0.08,
+        finTipX,
+        finTipY
       );
       // Tip (sharp point)
       ctx.lineTo(finTipX + side * size * 0.008, finTipY + size * 0.005);
       // Outer edge (away from center)
       ctx.bezierCurveTo(
-        finTipX - side * size * 0.02, finTipY + size * 0.1,
-        finBaseX + side * size * 0.08, finBaseY - size * 0.05,
-        finBaseX + side * finThick * 0.8, finBaseY,
+        finTipX - side * size * 0.02,
+        finTipY + size * 0.1,
+        finBaseX + side * size * 0.08,
+        finBaseY - size * 0.05,
+        finBaseX + side * finThick * 0.8,
+        finBaseY
       );
       ctx.closePath();
       ctx.fill();
@@ -3758,9 +4792,12 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(finBaseX, finBaseY - size * 0.003);
       ctx.bezierCurveTo(
-        finBaseX + side * size * 0.06, finBaseY - size * 0.1,
-        finTipX - side * size * 0.05, finTipY + size * 0.08,
-        finTipX, finTipY + size * 0.003,
+        finBaseX + side * size * 0.06,
+        finBaseY - size * 0.1,
+        finTipX - side * size * 0.05,
+        finTipY + size * 0.08,
+        finTipX,
+        finTipY + size * 0.003
       );
       ctx.stroke();
 
@@ -3770,15 +4807,21 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(finBaseX - side * finThick * 0.3, finBaseY);
       ctx.bezierCurveTo(
-        finBaseX + side * size * 0.05, finBaseY - size * 0.1,
-        finTipX - side * size * 0.06, finTipY + size * 0.08,
-        finTipX, finTipY,
+        finBaseX + side * size * 0.05,
+        finBaseY - size * 0.1,
+        finTipX - side * size * 0.06,
+        finTipY + size * 0.08,
+        finTipX,
+        finTipY
       );
       ctx.lineTo(finTipX + side * size * 0.008, finTipY + size * 0.005);
       ctx.bezierCurveTo(
-        finTipX - side * size * 0.02, finTipY + size * 0.1,
-        finBaseX + side * size * 0.08, finBaseY - size * 0.05,
-        finBaseX + side * finThick * 0.8, finBaseY,
+        finTipX - side * size * 0.02,
+        finTipY + size * 0.1,
+        finBaseX + side * size * 0.08,
+        finBaseY - size * 0.05,
+        finBaseX + side * finThick * 0.8,
+        finBaseY
       );
       ctx.closePath();
       ctx.stroke();
@@ -3788,7 +4831,13 @@ export function drawCaptainHero(
       ctx.shadowColor = "#ff4444";
       ctx.shadowBlur = 4 * zoom * gemPulse;
       ctx.beginPath();
-      ctx.arc(finBaseX + side * size * 0.02, finBaseY - size * 0.02, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(
+        finBaseX + side * size * 0.02,
+        finBaseY - size * 0.02,
+        size * 0.008,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -3806,7 +4855,12 @@ export function drawCaptainHero(
       const tpW = size * 0.16;
       const tpH = size * 0.14;
 
-      const tpG = ctx.createLinearGradient(tpX - side * tpW * 0.3, tpY - tpH * 0.5, tpX + side * tpW * 0.5, tpY + tpH * 0.3);
+      const tpG = ctx.createLinearGradient(
+        tpX - side * tpW * 0.3,
+        tpY - tpH * 0.5,
+        tpX + side * tpW * 0.5,
+        tpY + tpH * 0.3
+      );
       tpG.addColorStop(0, "#62666e");
       tpG.addColorStop(0.3, "#50545c");
       tpG.addColorStop(0.6, "#3c4048");
@@ -3815,19 +4869,25 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(tpX - side * size * 0.02, tpY - tpH * 0.55);
       ctx.bezierCurveTo(
-        tpX + side * tpW * 0.4, tpY - tpH * 0.6,
-        tpX + side * tpW * 0.7, tpY - tpH * 0.2,
-        tpX + side * tpW * 0.6, tpY + tpH * 0.15,
+        tpX + side * tpW * 0.4,
+        tpY - tpH * 0.6,
+        tpX + side * tpW * 0.7,
+        tpY - tpH * 0.2,
+        tpX + side * tpW * 0.6,
+        tpY + tpH * 0.15
       );
       ctx.bezierCurveTo(
-        tpX + side * tpW * 0.4, tpY + tpH * 0.4,
-        tpX + side * tpW * 0.1, tpY + tpH * 0.35,
-        tpX - side * size * 0.03, tpY + tpH * 0.1,
+        tpX + side * tpW * 0.4,
+        tpY + tpH * 0.4,
+        tpX + side * tpW * 0.1,
+        tpY + tpH * 0.35,
+        tpX - side * size * 0.03,
+        tpY + tpH * 0.1
       );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#7a5a10";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.stroke();
 
       // Gold edge accent
@@ -3836,9 +4896,12 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(tpX - side * size * 0.02, tpY - tpH * 0.55);
       ctx.bezierCurveTo(
-        tpX + side * tpW * 0.4, tpY - tpH * 0.6,
-        tpX + side * tpW * 0.7, tpY - tpH * 0.2,
-        tpX + side * tpW * 0.6, tpY + tpH * 0.15,
+        tpX + side * tpW * 0.4,
+        tpY - tpH * 0.6,
+        tpX + side * tpW * 0.7,
+        tpY - tpH * 0.2,
+        tpX + side * tpW * 0.6,
+        tpY + tpH * 0.15
       );
       ctx.stroke();
 
@@ -3846,7 +4909,13 @@ export function drawCaptainHero(
       ctx.strokeStyle = "rgba(160, 140, 80, 0.25)";
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
-      ctx.arc(tpX + side * tpW * 0.25, tpY - tpH * 0.1, size * 0.02, 0, Math.PI * 2);
+      ctx.arc(
+        tpX + side * tpW * 0.25,
+        tpY - tpH * 0.1,
+        size * 0.02,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
     }
 
@@ -3857,7 +4926,12 @@ export function drawCaptainHero(
       const chkW = size * 0.15;
       const chkH = size * 0.28;
 
-      const chkG = ctx.createLinearGradient(chkX - side * chkW * 0.3, chkY - chkH * 0.4, chkX + side * chkW * 0.5, chkY + chkH * 0.4);
+      const chkG = ctx.createLinearGradient(
+        chkX - side * chkW * 0.3,
+        chkY - chkH * 0.4,
+        chkX + side * chkW * 0.5,
+        chkY + chkH * 0.4
+      );
       chkG.addColorStop(0, "#5a5e68");
       chkG.addColorStop(0.25, "#4a4e58");
       chkG.addColorStop(0.5, "#3a3e48");
@@ -3867,22 +4941,32 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(chkX - side * size * 0.01, chkY - chkH * 0.5);
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.5, chkY - chkH * 0.5,
-        chkX + side * chkW * 0.75, chkY - chkH * 0.15,
-        chkX + side * chkW * 0.7, chkY + chkH * 0.1,
+        chkX + side * chkW * 0.5,
+        chkY - chkH * 0.5,
+        chkX + side * chkW * 0.75,
+        chkY - chkH * 0.15,
+        chkX + side * chkW * 0.7,
+        chkY + chkH * 0.1
       );
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.6, chkY + chkH * 0.4,
-        chkX + side * chkW * 0.2, chkY + chkH * 0.5,
-        chkX - side * size * 0.02, chkY + chkH * 0.35,
+        chkX + side * chkW * 0.6,
+        chkY + chkH * 0.4,
+        chkX + side * chkW * 0.2,
+        chkY + chkH * 0.5,
+        chkX - side * size * 0.02,
+        chkY + chkH * 0.35
       );
       ctx.closePath();
       ctx.fill();
 
       // Specular highlight (cool steel)
       const chkSpec = ctx.createRadialGradient(
-        chkX + side * chkW * 0.15, chkY - chkH * 0.15, 0,
-        chkX + side * chkW * 0.15, chkY - chkH * 0.15, chkW * 0.5,
+        chkX + side * chkW * 0.15,
+        chkY - chkH * 0.15,
+        0,
+        chkX + side * chkW * 0.15,
+        chkY - chkH * 0.15,
+        chkW * 0.5
       );
       chkSpec.addColorStop(0, "rgba(145, 150, 170, 0.22)");
       chkSpec.addColorStop(1, "rgba(60, 65, 80, 0)");
@@ -3895,18 +4979,24 @@ export function drawCaptainHero(
 
       // Gold trim along outer edge
       ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(chkX - side * size * 0.01, chkY - chkH * 0.5);
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.5, chkY - chkH * 0.5,
-        chkX + side * chkW * 0.75, chkY - chkH * 0.15,
-        chkX + side * chkW * 0.7, chkY + chkH * 0.1,
+        chkX + side * chkW * 0.5,
+        chkY - chkH * 0.5,
+        chkX + side * chkW * 0.75,
+        chkY - chkH * 0.15,
+        chkX + side * chkW * 0.7,
+        chkY + chkH * 0.1
       );
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.6, chkY + chkH * 0.4,
-        chkX + side * chkW * 0.2, chkY + chkH * 0.5,
-        chkX - side * size * 0.02, chkY + chkH * 0.35,
+        chkX + side * chkW * 0.6,
+        chkY + chkH * 0.4,
+        chkX + side * chkW * 0.2,
+        chkY + chkH * 0.5,
+        chkX - side * size * 0.02,
+        chkY + chkH * 0.35
       );
       ctx.stroke();
 
@@ -3916,9 +5006,12 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(chkX, chkY - chkH * 0.2);
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.4, chkY - chkH * 0.15,
-        chkX + side * chkW * 0.5, chkY + chkH * 0.05,
-        chkX + side * chkW * 0.35, chkY + chkH * 0.25,
+        chkX + side * chkW * 0.4,
+        chkY - chkH * 0.15,
+        chkX + side * chkW * 0.5,
+        chkY + chkH * 0.05,
+        chkX + side * chkW * 0.35,
+        chkY + chkH * 0.25
       );
       ctx.stroke();
       ctx.strokeStyle = "rgba(100, 100, 110, 0.3)";
@@ -3926,9 +5019,12 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(chkX - size * 0.002, chkY - chkH * 0.2 - size * 0.002);
       ctx.bezierCurveTo(
-        chkX + side * chkW * 0.4 - size * 0.002, chkY - chkH * 0.15 - size * 0.002,
-        chkX + side * chkW * 0.5 - size * 0.002, chkY + chkH * 0.05 - size * 0.002,
-        chkX + side * chkW * 0.35 - size * 0.002, chkY + chkH * 0.25 - size * 0.002,
+        chkX + side * chkW * 0.4 - size * 0.002,
+        chkY - chkH * 0.15 - size * 0.002,
+        chkX + side * chkW * 0.5 - size * 0.002,
+        chkY + chkH * 0.05 - size * 0.002,
+        chkX + side * chkW * 0.35 - size * 0.002,
+        chkY + chkH * 0.25 - size * 0.002
       );
       ctx.stroke();
 
@@ -3936,7 +5032,14 @@ export function drawCaptainHero(
       for (let r = 0; r < 2; r++) {
         const rx = chkX + side * chkW * (0.2 + r * 0.2);
         const ry = chkY + (r === 0 ? -chkH * 0.2 : chkH * 0.15);
-        const rvG = ctx.createRadialGradient(rx - size * 0.002, ry - size * 0.002, 0, rx, ry, size * 0.009);
+        const rvG = ctx.createRadialGradient(
+          rx - size * 0.002,
+          ry - size * 0.002,
+          0,
+          rx,
+          ry,
+          size * 0.009
+        );
         rvG.addColorStop(0, "#aaa");
         rvG.addColorStop(0.5, "#666");
         rvG.addColorStop(1, "#2a2a2a");
@@ -3957,7 +5060,12 @@ export function drawCaptainHero(
       const jawW = size * 0.08;
       const jawH = size * 0.1;
 
-      const jawG = ctx.createLinearGradient(jawX, jawY - jawH * 0.5, jawX, jawY + jawH * 0.5);
+      const jawG = ctx.createLinearGradient(
+        jawX,
+        jawY - jawH * 0.5,
+        jawX,
+        jawY + jawH * 0.5
+      );
       jawG.addColorStop(0, "#484c54");
       jawG.addColorStop(0.5, "#343840");
       jawG.addColorStop(1, "#1c1e24");
@@ -3966,9 +5074,12 @@ export function drawCaptainHero(
       ctx.moveTo(jawX - side * jawW * 0.3, jawY - jawH * 0.5);
       ctx.lineTo(jawX + side * jawW * 0.6, jawY - jawH * 0.45);
       ctx.bezierCurveTo(
-        jawX + side * jawW * 0.8, jawY,
-        jawX + side * jawW * 0.4, jawY + jawH * 0.4,
-        jawX, jawY + jawH * 0.5,
+        jawX + side * jawW * 0.8,
+        jawY,
+        jawX + side * jawW * 0.4,
+        jawY + jawH * 0.4,
+        jawX,
+        jawY + jawH * 0.5
       );
       ctx.lineTo(jawX - side * jawW * 0.4, jawY + jawH * 0.2);
       ctx.closePath();
@@ -3980,7 +5091,13 @@ export function drawCaptainHero(
       // Gold tip
       ctx.fillStyle = "#b09030";
       ctx.beginPath();
-      ctx.arc(jawX + side * jawW * 0.1, jawY + jawH * 0.42, size * 0.006, 0, Math.PI * 2);
+      ctx.arc(
+        jawX + side * jawW * 0.1,
+        jawY + jawH * 0.42,
+        size * 0.006,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
 
@@ -3990,7 +5107,14 @@ export function drawCaptainHero(
       const earY = helmCY + size * 0.02;
       const earR = size * 0.04;
 
-      const earG = ctx.createRadialGradient(earX - side * earR * 0.3, earY - earR * 0.3, 0, earX, earY, earR);
+      const earG = ctx.createRadialGradient(
+        earX - side * earR * 0.3,
+        earY - earR * 0.3,
+        0,
+        earX,
+        earY,
+        earR
+      );
       earG.addColorStop(0, "#5a5e66");
       earG.addColorStop(0.5, "#3c4048");
       earG.addColorStop(1, "#20222a");
@@ -3999,7 +5123,7 @@ export function drawCaptainHero(
       ctx.arc(earX, earY, earR, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "#7a5a10";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.stroke();
 
       // Gold ring and center
@@ -4035,38 +5159,62 @@ export function drawCaptainHero(
       ctx.moveTo(x - visorW, visorCY - visorH * 0.12);
       // Top edge: angry V — sweeps up to wings, dips at center
       ctx.bezierCurveTo(
-        x - visorW * 0.65, visorCY - visorH * 0.52,
-        x - visorW * 0.3, visorCY - visorH * 0.38,
-        x, visorCY - visorH * 0.22,
+        x - visorW * 0.65,
+        visorCY - visorH * 0.52,
+        x - visorW * 0.3,
+        visorCY - visorH * 0.38,
+        x,
+        visorCY - visorH * 0.22
       );
       ctx.bezierCurveTo(
-        x + visorW * 0.3, visorCY - visorH * 0.38,
-        x + visorW * 0.65, visorCY - visorH * 0.52,
-        x + visorW, visorCY - visorH * 0.12,
+        x + visorW * 0.3,
+        visorCY - visorH * 0.38,
+        x + visorW * 0.65,
+        visorCY - visorH * 0.52,
+        x + visorW,
+        visorCY - visorH * 0.12
       );
       // Right side down
       ctx.bezierCurveTo(
-        x + visorW * 0.92, visorCY + visorH * 0.1,
-        x + visorW * 0.55, visorCY + visorH * 0.35,
-        x + visorW * 0.25, visorCY + visorH * 0.42,
+        x + visorW * 0.92,
+        visorCY + visorH * 0.1,
+        x + visorW * 0.55,
+        visorCY + visorH * 0.35,
+        x + visorW * 0.25,
+        visorCY + visorH * 0.42
       );
       // Chin point
-      ctx.quadraticCurveTo(x, visorCY + visorH * 0.52, x - visorW * 0.25, visorCY + visorH * 0.42);
+      ctx.quadraticCurveTo(
+        x,
+        visorCY + visorH * 0.52,
+        x - visorW * 0.25,
+        visorCY + visorH * 0.42
+      );
       // Left side up
       ctx.bezierCurveTo(
-        x - visorW * 0.55, visorCY + visorH * 0.35,
-        x - visorW * 0.92, visorCY + visorH * 0.1,
-        x - visorW, visorCY - visorH * 0.12,
+        x - visorW * 0.55,
+        visorCY + visorH * 0.35,
+        x - visorW * 0.92,
+        visorCY + visorH * 0.1,
+        x - visorW,
+        visorCY - visorH * 0.12
       );
       ctx.closePath();
     };
 
     // Deep hellfire void behind everything
-    const visorGlow = isAttacking ? 1.0 : 0.82;
+    const visorGlow = isAttacking ? 1 : 0.82;
     ctx.fillStyle = `rgba(60, 4, 2, ${visorGlow})`;
     drawVisorPath();
     ctx.fill();
-    const voidG = ctx.createRadialGradient(x, visorCY, 0, x, visorCY, size * 0.2);
+    const voidG = ctx.createRadialGradient(
+      x,
+      visorCY,
+      0,
+      x,
+      visorCY,
+      size * 0.2
+    );
     voidG.addColorStop(0, `rgba(160, 25, 8, ${visorGlow * 0.85})`);
     voidG.addColorStop(0.35, `rgba(110, 14, 4, ${visorGlow * 0.65})`);
     voidG.addColorStop(0.7, `rgba(60, 6, 2, ${visorGlow * 0.4})`);
@@ -4100,20 +5248,28 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(eyeX + side * eyeW * 0.5, eyeY - eyeH * 0.8);
       ctx.bezierCurveTo(
-        eyeX + side * eyeW * 1.5, eyeY - eyeH * 1.5,
-        eyeX + side * eyeW * 2.2, eyeY - eyeH * 0.6,
-        eyeX + side * eyeW * 2.8, eyeY - eyeH * 1.2,
+        eyeX + side * eyeW * 1.5,
+        eyeY - eyeH * 1.5,
+        eyeX + side * eyeW * 2.2,
+        eyeY - eyeH * 0.6,
+        eyeX + side * eyeW * 2.8,
+        eyeY - eyeH * 1.2
       );
       ctx.bezierCurveTo(
-        eyeX + side * eyeW * 2.0, eyeY + eyeH * 0.5,
-        eyeX + side * eyeW * 1.3, eyeY + eyeH * 1.0,
-        eyeX + side * eyeW * 0.5, eyeY + eyeH * 0.8,
+        eyeX + side * eyeW * 2,
+        eyeY + eyeH * 0.5,
+        eyeX + side * eyeW * 1.3,
+        eyeY + eyeH * 1,
+        eyeX + side * eyeW * 0.5,
+        eyeY + eyeH * 0.8
       );
       ctx.closePath();
       ctx.fill();
 
       // Angular eye slit (diamond shape, not ellipse)
-      ctx.fillStyle = isAttacking ? "#ff4020" : `rgba(255, 48, 22, ${0.95 + eyeFlicker})`;
+      ctx.fillStyle = isAttacking
+        ? "#ff4020"
+        : `rgba(255, 48, 22, ${0.95 + eyeFlicker})`;
       ctx.shadowColor = "#ff2200";
       ctx.shadowBlur = isAttacking ? 26 * zoom : 18 * zoom;
       ctx.beginPath();
@@ -4166,7 +5322,7 @@ export function drawCaptainHero(
         ctx.stroke();
 
         ctx.strokeStyle = "#3e4048";
-        ctx.lineWidth = 1.0 * zoom;
+        ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(slashX - slashLean, slashTopY);
         ctx.lineTo(slashX + slashLean, slashBotY);
@@ -4189,7 +5345,12 @@ export function drawCaptainHero(
       const noseW = size * 0.018;
 
       // Nose guard body — tapers to a point at bottom
-      const noseG = ctx.createLinearGradient(x - noseW, visorCY, x + noseW, visorCY);
+      const noseG = ctx.createLinearGradient(
+        x - noseW,
+        visorCY,
+        x + noseW,
+        visorCY
+      );
       noseG.addColorStop(0, "#1a1b20");
       noseG.addColorStop(0.3, "#3a3c46");
       noseG.addColorStop(0.5, "#4a4d58");
@@ -4229,14 +5390,39 @@ export function drawCaptainHero(
       const eyeAngle = side * -0.15;
       const eyeFlicker = Math.sin(time * 8 + side * 1.5) * 0.06;
       ctx.globalCompositeOperation = "screen";
-      const glowG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.09);
-      glowG.addColorStop(0, isAttacking ? `rgba(255, 90, 35, 0.85)` : `rgba(255, 70, 25, ${0.7 + eyeFlicker})`);
-      glowG.addColorStop(0.3, isAttacking ? "rgba(255, 50, 15, 0.55)" : `rgba(255, 40, 12, ${0.38 + eyeFlicker})`);
+      const glowG = ctx.createRadialGradient(
+        eyeX,
+        eyeY,
+        0,
+        eyeX,
+        eyeY,
+        size * 0.09
+      );
+      glowG.addColorStop(
+        0,
+        isAttacking
+          ? `rgba(255, 90, 35, 0.85)`
+          : `rgba(255, 70, 25, ${0.7 + eyeFlicker})`
+      );
+      glowG.addColorStop(
+        0.3,
+        isAttacking
+          ? "rgba(255, 50, 15, 0.55)"
+          : `rgba(255, 40, 12, ${0.38 + eyeFlicker})`
+      );
       glowG.addColorStop(0.7, "rgba(255, 20, 5, 0.08)");
       glowG.addColorStop(1, "rgba(255, 10, 2, 0)");
       ctx.fillStyle = glowG;
       ctx.beginPath();
-      ctx.ellipse(eyeX, eyeY, size * 0.1, size * 0.045, eyeAngle, 0, Math.PI * 2);
+      ctx.ellipse(
+        eyeX,
+        eyeY,
+        size * 0.1,
+        size * 0.045,
+        eyeAngle,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.globalCompositeOperation = "source-over";
     }
@@ -4245,7 +5431,12 @@ export function drawCaptainHero(
     // Prominent brow ridge overhanging the visor top
     {
       const browRidgeY = visorCY - visorH * 0.35;
-      const browG = ctx.createLinearGradient(x - visorW, browRidgeY, x + visorW, browRidgeY);
+      const browG = ctx.createLinearGradient(
+        x - visorW,
+        browRidgeY,
+        x + visorW,
+        browRidgeY
+      );
       browG.addColorStop(0, "#3a3d48");
       browG.addColorStop(0.2, "#4a4e5a");
       browG.addColorStop(0.5, "#55596a");
@@ -4255,17 +5446,28 @@ export function drawCaptainHero(
       ctx.beginPath();
       ctx.moveTo(x - visorW * 0.95, browRidgeY + size * 0.005);
       ctx.bezierCurveTo(
-        x - visorW * 0.5, browRidgeY - size * 0.025,
-        x - visorW * 0.15, browRidgeY - size * 0.01,
-        x, browRidgeY + size * 0.008,
+        x - visorW * 0.5,
+        browRidgeY - size * 0.025,
+        x - visorW * 0.15,
+        browRidgeY - size * 0.01,
+        x,
+        browRidgeY + size * 0.008
       );
       ctx.bezierCurveTo(
-        x + visorW * 0.15, browRidgeY - size * 0.01,
-        x + visorW * 0.5, browRidgeY - size * 0.025,
-        x + visorW * 0.95, browRidgeY + size * 0.005,
+        x + visorW * 0.15,
+        browRidgeY - size * 0.01,
+        x + visorW * 0.5,
+        browRidgeY - size * 0.025,
+        x + visorW * 0.95,
+        browRidgeY + size * 0.005
       );
       ctx.lineTo(x + visorW * 0.95, browRidgeY + size * 0.018);
-      ctx.quadraticCurveTo(x, browRidgeY + size * 0.025, x - visorW * 0.95, browRidgeY + size * 0.018);
+      ctx.quadraticCurveTo(
+        x,
+        browRidgeY + size * 0.025,
+        x - visorW * 0.95,
+        browRidgeY + size * 0.018
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#2a2c34";
@@ -4274,7 +5476,12 @@ export function drawCaptainHero(
     }
 
     // Gold visor frame — heavy, ornate
-    const frameG = ctx.createLinearGradient(x - visorW, visorCY - visorH * 0.5, x + visorW, visorCY + visorH * 0.5);
+    const frameG = ctx.createLinearGradient(
+      x - visorW,
+      visorCY - visorH * 0.5,
+      x + visorW,
+      visorCY + visorH * 0.5
+    );
     frameG.addColorStop(0, "#5a4008");
     frameG.addColorStop(0.15, "#8a6a15");
     frameG.addColorStop(0.3, "#b08a20");
@@ -4298,12 +5505,18 @@ export function drawCaptainHero(
     const fangHeights = [0.022, 0.03, 0.038, 0.03, 0.022];
     for (let f = 0; f < fangPositions.length; f++) {
       const fangX = x + fangPositions[f] * visorW * 1.4;
-      const fangTopY = visorCY + visorH * 0.38 + Math.abs(fangPositions[f]) * visorH * 0.25;
+      const fangTopY =
+        visorCY + visorH * 0.38 + Math.abs(fangPositions[f]) * visorH * 0.25;
       const fangH = size * fangHeights[f];
       const fangW = size * 0.01;
       const fangCurve = fangPositions[f] * size * 0.005;
 
-      const fangG = ctx.createLinearGradient(fangX, fangTopY, fangX, fangTopY + fangH);
+      const fangG = ctx.createLinearGradient(
+        fangX,
+        fangTopY,
+        fangX,
+        fangTopY + fangH
+      );
       fangG.addColorStop(0, "#4a4d58");
       fangG.addColorStop(0.3, "#3a3d46");
       fangG.addColorStop(0.6, "#2a2c34");
@@ -4311,8 +5524,18 @@ export function drawCaptainHero(
       ctx.fillStyle = fangG;
       ctx.beginPath();
       ctx.moveTo(fangX - fangW, fangTopY);
-      ctx.quadraticCurveTo(fangX + fangCurve - fangW * 0.3, fangTopY + fangH * 0.7, fangX + fangCurve, fangTopY + fangH);
-      ctx.quadraticCurveTo(fangX + fangCurve + fangW * 0.3, fangTopY + fangH * 0.7, fangX + fangW, fangTopY);
+      ctx.quadraticCurveTo(
+        fangX + fangCurve - fangW * 0.3,
+        fangTopY + fangH * 0.7,
+        fangX + fangCurve,
+        fangTopY + fangH
+      );
+      ctx.quadraticCurveTo(
+        fangX + fangCurve + fangW * 0.3,
+        fangTopY + fangH * 0.7,
+        fangX + fangW,
+        fangTopY
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "rgba(80, 85, 100, 0.3)";
@@ -4326,7 +5549,15 @@ export function drawCaptainHero(
       const hy = visorCY + visorH * 0.55 + Math.abs(hole) * size * 0.008;
       ctx.fillStyle = "#08080a";
       ctx.beginPath();
-      ctx.ellipse(hx, hy, size * 0.006, size * 0.003, hole * 0.15, 0, Math.PI * 2);
+      ctx.ellipse(
+        hx,
+        hy,
+        size * 0.006,
+        size * 0.003,
+        hole * 0.15,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -4338,11 +5569,11 @@ export function drawCaptainHero(
     const flameHeight = size * 0.55;
     const flameWidth = size * 0.32;
 
-    const flameFlicker = Math.sin(time * 6.0) * 0.04;
+    const flameFlicker = Math.sin(time * 6) * 0.04;
     const flameSway =
       Math.sin(time * 3.2) * size * 0.03 +
       (isAttacking ? commandPose * size * 0.05 : 0);
-    const flameStretch = 1.0 + Math.sin(time * 4.5) * 0.08 + flamePulse * 0.12;
+    const flameStretch = 1 + Math.sin(time * 4.5) * 0.08 + flamePulse * 0.12;
     const tipX = flameBaseX + flameSway;
     const tipY = flameBaseY - flameHeight * flameStretch;
 
@@ -4353,7 +5584,7 @@ export function drawCaptainHero(
       0,
       flameBaseX,
       flameBaseY - flameHeight * 0.4,
-      flameHeight * 0.7,
+      flameHeight * 0.7
     );
     auraG.addColorStop(0, `rgba(255, 80, 20, ${0.15 + flamePulse * 0.08})`);
     auraG.addColorStop(0.5, `rgba(200, 30, 10, ${0.06 + flamePulse * 0.04})`);
@@ -4365,7 +5596,7 @@ export function drawCaptainHero(
       flameBaseY - flameHeight * 0.4,
       flameHeight * 0.7,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -4379,7 +5610,7 @@ export function drawCaptainHero(
       tipX - flameWidth * 0.5,
       tipY + flameHeight * 0.15,
       tipX + size * 0.02,
-      tipY + size * 0.02,
+      tipY + size * 0.02
     );
     ctx.bezierCurveTo(
       tipX + flameWidth * 0.6,
@@ -4387,7 +5618,7 @@ export function drawCaptainHero(
       flameBaseX + flameWidth * 1.2 + flameSway * 0.3,
       flameBaseY - flameHeight * 0.3,
       flameBaseX + flameWidth * 0.85,
-      flameBaseY,
+      flameBaseY
     );
     ctx.closePath();
     ctx.fill();
@@ -4403,20 +5634,20 @@ export function drawCaptainHero(
     ctx.beginPath();
     ctx.moveTo(flameBaseX - flameWidth * 0.75, flameBaseY);
     ctx.bezierCurveTo(
-      flameBaseX - flameWidth * 1.0 + flameSway * 0.3,
+      flameBaseX - flameWidth * 1 + flameSway * 0.3,
       flameBaseY - flameHeight * 0.4,
       tipX - flameWidth * 0.45,
       tipY + flameHeight * 0.12,
       tipX,
-      tipY,
+      tipY
     );
     ctx.bezierCurveTo(
       tipX + flameWidth * 0.45,
       tipY + flameHeight * 0.12,
-      flameBaseX + flameWidth * 1.0 + flameSway * 0.3,
+      flameBaseX + flameWidth * 1 + flameSway * 0.3,
       flameBaseY - flameHeight * 0.4,
       flameBaseX + flameWidth * 0.75,
-      flameBaseY,
+      flameBaseY
     );
     ctx.closePath();
     ctx.fill();
@@ -4440,7 +5671,7 @@ export function drawCaptainHero(
       tipX - flameWidth * 0.35 + flameFlicker * size,
       tipY + flameHeight * 0.08,
       tipX,
-      tipY + size * 0.01,
+      tipY + size * 0.01
     );
     ctx.bezierCurveTo(
       tipX + flameWidth * 0.35 - flameFlicker * size,
@@ -4448,7 +5679,7 @@ export function drawCaptainHero(
       flameBaseX + flameWidth * 0.85 + flameSway * 0.4,
       flameBaseY - flameHeight * 0.38,
       flameBaseX + flameWidth * 0.6,
-      flameBaseY,
+      flameBaseY
     );
     ctx.closePath();
     ctx.fill();
@@ -4458,7 +5689,7 @@ export function drawCaptainHero(
       flameBaseX,
       flameBaseY,
       tipX,
-      tipY - flameHeight * 0.1,
+      tipY - flameHeight * 0.1
     );
     coreG.addColorStop(0, "rgba(255, 220, 120, 0.0)");
     coreG.addColorStop(0.1, "rgba(255, 200, 80, 0.5)");
@@ -4475,7 +5706,7 @@ export function drawCaptainHero(
       tipX - flameWidth * 0.15,
       tipY + flameHeight * 0.18,
       tipX,
-      tipY + flameHeight * 0.08,
+      tipY + flameHeight * 0.08
     );
     ctx.bezierCurveTo(
       tipX + flameWidth * 0.15,
@@ -4483,7 +5714,7 @@ export function drawCaptainHero(
       flameBaseX + flameWidth * 0.4 + flameSway * 0.5,
       flameBaseY - flameHeight * 0.35,
       flameBaseX + flameWidth * 0.25,
-      flameBaseY - size * 0.02,
+      flameBaseY - size * 0.02
     );
     ctx.closePath();
     ctx.fill();
@@ -4501,9 +5732,9 @@ export function drawCaptainHero(
     ];
     for (let t = 0; t < 14; t++) {
       const tNorm = t / 13;
-      const tPhase = time * (4.0 + t * 0.5) + t * 0.9;
-      const tWobble = Math.sin(tPhase) * (2.0 + tNorm * 4.0);
-      const tAlpha = 0.2 + Math.sin(time * 3.0 + t * 0.6) * 0.1;
+      const tPhase = time * (4 + t * 0.5) + t * 0.9;
+      const tWobble = Math.sin(tPhase) * (2 + tNorm * 4);
+      const tAlpha = 0.2 + Math.sin(time * 3 + t * 0.6) * 0.1;
       const tSpread = (tNorm - 0.5) * flameWidth * 2.2;
       const tStartX = flameBaseX + tSpread * 0.5;
       const tStartY = flameBaseY - size * 0.02;
@@ -4517,7 +5748,7 @@ export function drawCaptainHero(
 
       ctx.strokeStyle = tongueColors[t % tongueColors.length];
       ctx.globalAlpha = tAlpha;
-      ctx.lineWidth = (1.0 + (1 - Math.abs(tNorm - 0.5) * 2) * 1.5) * zoom;
+      ctx.lineWidth = (1 + (1 - Math.abs(tNorm - 0.5) * 2) * 1.5) * zoom;
       ctx.shadowColor = "#ff4400";
       ctx.shadowBlur = 4 * zoom;
       ctx.beginPath();
@@ -4528,7 +5759,7 @@ export function drawCaptainHero(
         tEndX - size * 0.03,
         tEndY - size * 0.02,
         tEndX,
-        tEndY,
+        tEndY
       );
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -4537,7 +5768,7 @@ export function drawCaptainHero(
 
     // Bright tip wisps (white-hot flickers at the top)
     for (let w = 0; w < 8; w++) {
-      const wPhase = Math.sin(time * 9.0 + w * 1.3);
+      const wPhase = Math.sin(time * 9 + w * 1.3);
       const wAlpha = 0.3 + wPhase * 0.15;
       const wSpread = (w / 7 - 0.5) * flameWidth * 1.2;
       const wX = tipX + wSpread + flameSway * 0.2;
@@ -4553,7 +5784,7 @@ export function drawCaptainHero(
         wX + wPhase * size * 0.03 + flameSway * 0.3,
         wY - size * 0.06,
         wX + wPhase * size * 0.05 + flameSway * 0.4,
-        wY - size * 0.1,
+        wY - size * 0.1
       );
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -4586,7 +5817,7 @@ export function drawCaptainHero(
       0,
       flameBaseX,
       flameBaseY,
-      size * 0.18,
+      size * 0.18
     );
     rootG.addColorStop(0, `rgba(255, 140, 40, ${0.45 + flamePulse * 0.2})`);
     rootG.addColorStop(0.4, `rgba(255, 60, 20, ${0.2 + flamePulse * 0.1})`);
@@ -4601,7 +5832,7 @@ export function drawCaptainHero(
       flameBaseX - size * 0.06,
       flameBaseY,
       flameBaseX + size * 0.06,
-      flameBaseY,
+      flameBaseY
     );
     mountG.addColorStop(0, "#6a5020");
     mountG.addColorStop(0.25, "#b09030");
@@ -4615,7 +5846,7 @@ export function drawCaptainHero(
       flameBaseY - size * 0.012,
       size * 0.12,
       size * 0.028,
-      size * 0.006,
+      size * 0.006
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(255, 230, 160, 0.35)";
@@ -4634,7 +5865,16 @@ export function drawCaptainHero(
 
   // === DIVINE COMMAND FRONT HALF (in front of hero) ===
   if (isAttacking) {
-    drawDivineCommandRings(ctx, "front", x, y + size * 0.45, size, zoom, time, commandPose);
+    drawDivineCommandRings(
+      ctx,
+      "front",
+      x,
+      y + size * 0.45,
+      size,
+      zoom,
+      time,
+      commandPose
+    );
   }
 
   ctx.restore();

@@ -1,6 +1,7 @@
 // Princeton Tower Defense - Effects Rendering Module
 // Renders visual effects, projectiles, and particles
 
+import { ISO_Y_RATIO } from "../../constants";
 import type {
   Effect,
   Projectile,
@@ -12,8 +13,8 @@ import type {
   Hero,
 } from "../../types";
 import { worldToScreen } from "../../utils";
-import { ISO_Y_RATIO } from "../../constants";
-import { drawLightningBolt, drawExplosion, type LightningColorScheme } from "../helpers";
+import { drawLightningBolt, drawExplosion } from "../helpers";
+import type { LightningColorScheme } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import { statusEffectAlpha } from "./constants";
 import { renderEnemyDeath } from "./deathAnimations";
@@ -25,8 +26,19 @@ import {
 } from "./statusFlavors";
 
 // Re-export fog effects
-export { drawRoadEndFog, computeFogCounts, type RgbColor, type DrawRoadEndFogParams } from "./fog";
-export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig, type InspectUnitType, type InspectRenderPass } from "./inspectIndicator";
+export {
+  drawRoadEndFog,
+  computeFogCounts,
+  type RgbColor,
+  type DrawRoadEndFogParams,
+} from "./fog";
+export {
+  renderInspectIndicator,
+  renderUnitInspectIndicator,
+  type InspectIndicatorConfig,
+  type InspectUnitType,
+  type InspectRenderPass,
+} from "./inspectIndicator";
 
 // ============================================================================
 // EFFECT RENDERING
@@ -42,7 +54,7 @@ export function renderEffect(
   towers: Tower[],
   selectedMap: string,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     effect.pos,
@@ -50,23 +62,24 @@ export function renderEffect(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
-  const progress = effect.progress;
+  const { progress } = effect;
   const alpha = 1 - progress;
 
   ctx.save();
 
   switch (effect.type) {
-    case "explosion":
+    case "explosion": {
       drawExplosion(ctx, screenPos.x, screenPos.y, effect.size, progress, zoom);
       break;
+    }
 
     case "lightning":
     case "zap":
     case "beam":
-    case "chain":
+    case "chain": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -74,13 +87,20 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         const intensity = effect.intensity || 1;
         const boltColor: LightningColorScheme =
           (effect.color as LightningColorScheme) ||
           (effect.type === "beam" ? "yellow" : "blue");
-        const colors: Record<string, string> = { blue: "150, 255, 255", yellow: "255, 255, 150", red: "255, 150, 130", teal: "120, 255, 210", green: "180, 240, 120", violet: "180, 190, 255" };
+        const colors: Record<string, string> = {
+          blue: "150, 255, 255",
+          green: "180, 240, 120",
+          red: "255, 150, 130",
+          teal: "120, 255, 210",
+          violet: "180, 190, 255",
+          yellow: "255, 255, 150",
+        };
         drawLightningBolt(
           ctx,
           screenPos.x,
@@ -90,7 +110,7 @@ export function renderEffect(
           intensity,
           zoom,
           alpha,
-          boltColor,
+          boltColor
         );
 
         // Impact spark
@@ -101,13 +121,14 @@ export function renderEffect(
           targetScreen.y,
           8 * zoom * intensity,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
+    }
 
-    case "sonic":
+    case "sonic": {
       // Sound wave rings
       ctx.strokeStyle = `rgba(50, 200, 100, ${alpha * 0.6})`;
       ctx.lineWidth = 2 * zoom;
@@ -125,15 +146,16 @@ export function renderEffect(
             ringRadius * ISO_Y_RATIO,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
         }
       }
       break;
+    }
 
     case "slowField":
-    case "freezeField":
+    case "freezeField": {
       const fieldColor =
         effect.type === "freezeField" ? "100, 200, 255" : "100, 150, 200";
       const fieldRadius = effect.size * zoom * 0.5;
@@ -146,15 +168,16 @@ export function renderEffect(
         fieldRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = `rgba(${fieldColor}, ${alpha * 0.5})`;
       ctx.lineWidth = 2 * zoom;
       ctx.stroke();
       break;
+    }
 
-    case "arcaneField":
+    case "arcaneField": {
       const arcaneRadius = effect.size * zoom * 0.5;
       const arcaneGrad = ctx.createRadialGradient(
         screenPos.x,
@@ -162,7 +185,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        arcaneRadius,
+        arcaneRadius
       );
       arcaneGrad.addColorStop(0, `rgba(150, 100, 255, ${alpha * 0.3})`);
       arcaneGrad.addColorStop(0.7, `rgba(100, 50, 200, ${alpha * 0.2})`);
@@ -176,12 +199,13 @@ export function renderEffect(
         arcaneRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       break;
+    }
 
-    case "music_notes":
+    case "music_notes": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -189,7 +213,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         const noteIndex = effect.noteIndex || 0;
         const symbols = ["♪", "♫", "♬", "♩", "𝄞"];
@@ -209,10 +233,11 @@ export function renderEffect(
         ctx.fillText(symbols[noteIndex % 5], noteX, noteY);
       }
       break;
+    }
 
     case "cannon_shot":
     case "bullet_stream":
-    case "flame_burst":
+    case "flame_burst": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -220,7 +245,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
 
         if (effect.type === "flame_burst") {
@@ -238,19 +263,25 @@ export function renderEffect(
           ctx.shadowBlur = 18 * zoom;
           for (let fi = 0; fi < 8; fi++) {
             const ft = Math.min(1, progress * 1.2 + fi * 0.04);
-            if (ft <= 0 || ft >= 1) continue;
+            if (ft <= 0 || ft >= 1) {
+              continue;
+            }
             const wobble =
               Math.sin(fNow / 45 + fi * 1.5) * 6 * zoom * (0.3 + ft * 0.7);
             const spread = 1 + ft * 1.5;
             const fx = screenPos.x + fDir.x * ft + fPerpN.x * wobble * spread;
-            const fy = screenPos.y + fDir.y * ft + fPerpN.y * wobble * spread * 0.5;
+            const fy =
+              screenPos.y + fDir.y * ft + fPerpN.y * wobble * spread * 0.5;
             const fr = (7 + ft * 5) * zoom * spread * 0.5;
             const fg = Math.floor(255 - ft * 170);
             const fb = Math.floor(80 - ft * 70);
             const fa = alpha * (1 - ft * 0.6);
             const fGr = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
             fGr.addColorStop(0, `rgba(255, ${fg}, ${fb}, ${fa})`);
-            fGr.addColorStop(0.5, `rgba(255, ${Math.max(0, fg - 80)}, 0, ${fa * 0.5})`);
+            fGr.addColorStop(
+              0.5,
+              `rgba(255, ${Math.max(0, fg - 80)}, 0, ${fa * 0.5})`
+            );
             fGr.addColorStop(1, `rgba(180, 20, 0, 0)`);
             ctx.fillStyle = fGr;
             ctx.beginPath();
@@ -263,7 +294,9 @@ export function renderEffect(
           ctx.shadowBlur = 10 * zoom;
           for (let ci = 0; ci < 5; ci++) {
             const ct = Math.min(1, progress * 1.2 + ci * 0.05);
-            if (ct <= 0 || ct >= 0.6) continue;
+            if (ct <= 0 || ct >= 0.6) {
+              continue;
+            }
             const cWob = Math.sin(fNow / 35 + ci * 2) * 2 * zoom * ct;
             const cx = screenPos.x + fDir.x * ct + fPerpN.x * cWob;
             const cy = screenPos.y + fDir.y * ct + fPerpN.y * cWob * 0.5;
@@ -286,14 +319,15 @@ export function renderEffect(
           ctx.moveTo(screenPos.x, screenPos.y);
           ctx.lineTo(
             screenPos.x + (targetScreen.x - screenPos.x) * (1 - progress),
-            screenPos.y + (targetScreen.y - screenPos.y) * (1 - progress),
+            screenPos.y + (targetScreen.y - screenPos.y) * (1 - progress)
           );
           ctx.stroke();
         }
       }
       break;
+    }
 
-    case "roar_wave":
+    case "roar_wave": {
       // Circular expanding wave
       const waveRadius = progress * 150 * zoom;
       ctx.strokeStyle = `rgba(255, 150, 50, ${alpha * 0.6})`;
@@ -306,15 +340,16 @@ export function renderEffect(
         waveRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       break;
+    }
 
     case "meteor_strike":
     case "meteor_incoming":
     case "meteor_falling":
-    case "meteor_impact":
+    case "meteor_impact": {
       if (effect.type === "meteor_incoming") {
         // Incoming indicator (legacy)
         ctx.strokeStyle = `rgba(255, 100, 50, ${0.5 + Math.sin(Date.now() / 100) * 0.3})`;
@@ -328,7 +363,7 @@ export function renderEffect(
           15 * zoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.setLineDash([]);
@@ -340,7 +375,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
 
         // Calculate meteor position along fall path (top right to target)
@@ -366,7 +401,7 @@ export function renderEffect(
           warningSize * 0.6,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.setLineDash([]);
@@ -382,7 +417,7 @@ export function renderEffect(
           warningSize * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -395,16 +430,16 @@ export function renderEffect(
           0,
           targetScreen.x,
           targetScreen.y,
-          groundGlowRadius,
+          groundGlowRadius
         );
         groundGlow.addColorStop(0, `rgba(255, 200, 100, ${groundGlowAlpha})`);
         groundGlow.addColorStop(
           0.3,
-          `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`,
+          `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`
         );
         groundGlow.addColorStop(
           0.6,
-          `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`,
+          `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`
         );
         groundGlow.addColorStop(1, "rgba(200, 30, 0, 0)");
         ctx.fillStyle = groundGlow;
@@ -416,14 +451,14 @@ export function renderEffect(
           groundGlowRadius * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
         // ========== METEOR TRAIL ==========
         const trailAngle = Math.atan2(
           targetScreen.y - screenPos.y,
-          targetScreen.x - screenPos.x,
+          targetScreen.x - screenPos.x
         );
 
         // Outermost smoke/heat trail
@@ -446,7 +481,7 @@ export function renderEffect(
           outerStartX,
           outerStartY,
           meteorX,
-          meteorY,
+          meteorY
         );
         outerTrailGrad.addColorStop(0, "rgba(255, 80, 0, 0)");
         outerTrailGrad.addColorStop(0.4, `rgba(255, 100, 20, ${alpha * 0.3})`);
@@ -467,7 +502,7 @@ export function renderEffect(
           coreStartX,
           coreStartY,
           meteorX,
-          meteorY,
+          meteorY
         );
         coreTrailGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
         coreTrailGrad.addColorStop(0.3, `rgba(255, 200, 100, ${alpha * 0.5})`);
@@ -488,7 +523,7 @@ export function renderEffect(
           innerStartX,
           innerStartY,
           meteorX,
-          meteorY,
+          meteorY
         );
         innerTrailGrad.addColorStop(0, "rgba(255, 255, 200, 0)");
         innerTrailGrad.addColorStop(0.5, `rgba(255, 255, 230, ${alpha * 0.6})`);
@@ -532,7 +567,7 @@ export function renderEffect(
           0,
           meteorX,
           meteorY,
-          meteorSize * 3,
+          meteorSize * 3
         );
         hugeGlow.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.4})`);
         hugeGlow.addColorStop(0.4, `rgba(255, 100, 30, ${alpha * 0.2})`);
@@ -549,7 +584,7 @@ export function renderEffect(
           0,
           meteorX,
           meteorY,
-          meteorSize * 2,
+          meteorSize * 2
         );
         meteorGlow.addColorStop(0, `rgba(255, 255, 230, ${alpha})`);
         meteorGlow.addColorStop(0.2, `rgba(255, 230, 150, ${alpha})`);
@@ -572,7 +607,7 @@ export function renderEffect(
           0,
           0,
           0,
-          meteorSize * 1.2,
+          meteorSize * 1.2
         );
         rockGrad.addColorStop(0, `rgba(180, 140, 100, ${alpha})`);
         rockGrad.addColorStop(0.3, `rgba(120, 80, 50, ${alpha})`);
@@ -605,7 +640,7 @@ export function renderEffect(
           ctx.moveTo(0, 0);
           ctx.lineTo(
             Math.cos(crackAngle) * meteorSize * 0.6,
-            Math.sin(crackAngle) * meteorSize * 0.6,
+            Math.sin(crackAngle) * meteorSize * 0.6
           );
           ctx.stroke();
         }
@@ -614,9 +649,9 @@ export function renderEffect(
 
         // Hot molten spots on meteor
         const hotSpots = [
-          { x: -0.3, y: -0.4, size: 0.3 },
-          { x: 0.25, y: -0.2, size: 0.2 },
-          { x: -0.15, y: 0.35, size: 0.25 },
+          { size: 0.3, x: -0.3, y: -0.4 },
+          { size: 0.2, x: 0.25, y: -0.2 },
+          { size: 0.25, x: -0.15, y: 0.35 },
         ];
         for (const spot of hotSpots) {
           const spotX = meteorX + spot.x * meteorSize;
@@ -627,7 +662,7 @@ export function renderEffect(
             0,
             spotX,
             spotY,
-            spot.size * meteorSize,
+            spot.size * meteorSize
           );
           spotGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
           spotGrad.addColorStop(0.5, `rgba(255, 200, 100, ${alpha * 0.7})`);
@@ -654,7 +689,7 @@ export function renderEffect(
             0,
             emberX,
             emberY,
-            5 * zoom,
+            5 * zoom
           );
           emberGlow.addColorStop(0, `rgba(255, 255, 200, ${alpha * 0.9})`);
           emberGlow.addColorStop(0.5, `rgba(255, 180, 50, ${alpha * 0.5})`);
@@ -694,7 +729,7 @@ export function renderEffect(
           shockRadius * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -711,7 +746,7 @@ export function renderEffect(
           shock2Radius * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -723,7 +758,7 @@ export function renderEffect(
           0,
           screenPos.x,
           screenPos.y,
-          scorchRadius,
+          scorchRadius
         );
         scorchGrad.addColorStop(0, `rgba(30, 20, 10, ${alpha * 0.6})`);
         scorchGrad.addColorStop(0.5, `rgba(50, 30, 15, ${alpha * 0.4})`);
@@ -737,7 +772,7 @@ export function renderEffect(
           scorchRadius * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -748,7 +783,7 @@ export function renderEffect(
           0,
           screenPos.x,
           screenPos.y,
-          impactRadius,
+          impactRadius
         );
         fireGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
         fireGrad.addColorStop(0.1, `rgba(255, 255, 200, ${alpha})`);
@@ -766,7 +801,7 @@ export function renderEffect(
           impactRadius * 0.6,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -777,7 +812,7 @@ export function renderEffect(
           screenPos.x,
           screenPos.y,
           screenPos.x,
-          screenPos.y - columnHeight,
+          screenPos.y - columnHeight
         );
         columnGrad.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.8})`);
         columnGrad.addColorStop(0.3, `rgba(255, 130, 30, ${alpha * 0.6})`);
@@ -792,7 +827,7 @@ export function renderEffect(
           columnHeight * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -830,7 +865,7 @@ export function renderEffect(
           0,
           screenPos.x,
           screenPos.y,
-          coreRadius,
+          coreRadius
         );
         coreGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
         coreGrad.addColorStop(0.5, `rgba(255, 255, 200, ${alpha * 0.8})`);
@@ -841,26 +876,29 @@ export function renderEffect(
         ctx.fill();
       }
       break;
+    }
 
     case "freeze_wave": {
       const fzR = (effect.size || 120) * zoom * progress;
       const fzTime = Date.now() / 1000;
-      const fzEase = 1 - Math.pow(1 - progress, 3);
+      const fzEase = 1 - (1 - progress) ** 3;
 
       ctx.save();
 
       // ── FROSTED SCREEN OVERLAY ──
-      const screenFrostA = Math.pow(alpha, 1.5) * 0.18;
+      const screenFrostA = alpha ** 1.5 * 0.18;
       if (screenFrostA > 0.005) {
         ctx.fillStyle = `rgba(180, 220, 255, ${screenFrostA})`;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
         const vigStrength = alpha * 0.45;
         const vigGrad = ctx.createRadialGradient(
-          canvasWidth * 0.5, canvasHeight * 0.5,
+          canvasWidth * 0.5,
+          canvasHeight * 0.5,
           Math.min(canvasWidth, canvasHeight) * 0.25,
-          canvasWidth * 0.5, canvasHeight * 0.5,
-          Math.max(canvasWidth, canvasHeight) * 0.75,
+          canvasWidth * 0.5,
+          canvasHeight * 0.5,
+          Math.max(canvasWidth, canvasHeight) * 0.75
         );
         vigGrad.addColorStop(0, "rgba(160, 210, 245, 0)");
         vigGrad.addColorStop(0.5, `rgba(140, 200, 240, ${vigStrength * 0.25})`);
@@ -879,45 +917,73 @@ export function renderEffect(
           ];
           for (let ci = 0; ci < corners.length; ci++) {
             const corner = corners[ci];
-            const cornerR = Math.min(canvasWidth, canvasHeight) * (0.15 + fzEase * 0.15);
+            const cornerR =
+              Math.min(canvasWidth, canvasHeight) * (0.15 + fzEase * 0.15);
             const cGrad = ctx.createRadialGradient(
-              corner.x, corner.y, 0,
-              corner.x, corner.y, cornerR,
+              corner.x,
+              corner.y,
+              0,
+              corner.x,
+              corner.y,
+              cornerR
             );
             cGrad.addColorStop(0, `rgba(200, 235, 255, ${edgeFrostA * 0.7})`);
             cGrad.addColorStop(0.4, `rgba(170, 215, 245, ${edgeFrostA * 0.4})`);
             cGrad.addColorStop(1, "rgba(140, 200, 240, 0)");
             ctx.fillStyle = cGrad;
             ctx.fillRect(
-              corner.x - cornerR, corner.y - cornerR,
-              cornerR * 2, cornerR * 2,
+              corner.x - cornerR,
+              corner.y - cornerR,
+              cornerR * 2,
+              cornerR * 2
             );
 
             for (let v = 0; v < 4; v++) {
-              const baseAngle = Math.atan2(canvasHeight * 0.5 - corner.y, canvasWidth * 0.5 - corner.x);
-              const vAngle = baseAngle + (Math.sin(ci * 17 + v * 7) * 0.5) * 1.2;
-              const vLen = cornerR * (0.6 + Math.sin(ci * 23 + v * 13) * 0.2 + 0.2);
+              const baseAngle = Math.atan2(
+                canvasHeight * 0.5 - corner.y,
+                canvasWidth * 0.5 - corner.x
+              );
+              const vAngle = baseAngle + Math.sin(ci * 17 + v * 7) * 0.5 * 1.2;
+              const vLen =
+                cornerR * (0.6 + Math.sin(ci * 23 + v * 13) * 0.2 + 0.2);
 
               ctx.strokeStyle = `rgba(210, 240, 255, ${edgeFrostA * 0.6})`;
               ctx.lineWidth = (1.5 - v * 0.3) * zoom;
               ctx.beginPath();
               ctx.moveTo(corner.x, corner.y);
               ctx.quadraticCurveTo(
-                corner.x + Math.cos(vAngle) * vLen * 0.5 + Math.sin(ci * 31 + v * 19) * 15,
-                corner.y + Math.sin(vAngle) * vLen * 0.5 + Math.sin(ci * 37 + v * 23) * 15,
+                corner.x +
+                  Math.cos(vAngle) * vLen * 0.5 +
+                  Math.sin(ci * 31 + v * 19) * 15,
+                corner.y +
+                  Math.sin(vAngle) * vLen * 0.5 +
+                  Math.sin(ci * 37 + v * 23) * 15,
                 corner.x + Math.cos(vAngle) * vLen,
-                corner.y + Math.sin(vAngle) * vLen,
+                corner.y + Math.sin(vAngle) * vLen
               );
               ctx.stroke();
             }
           }
 
           for (let f = 0; f < 8; f++) {
-            const fx = Math.sin(f * 53 + 0.3) * 0.5 * canvasWidth + canvasWidth * 0.5;
-            const fy = Math.sin(f * 59 + 0.7) * canvasHeight * 0.08 + canvasHeight * 0.04;
+            const fx =
+              Math.sin(f * 53 + 0.3) * 0.5 * canvasWidth + canvasWidth * 0.5;
+            const fy =
+              Math.sin(f * 59 + 0.7) * canvasHeight * 0.08 +
+              canvasHeight * 0.04;
             const fSize = (2 + Math.sin(f * 61) * 1.5 + 1.5) * zoom;
-            const fleckGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fSize * 3);
-            fleckGrad.addColorStop(0, `rgba(255, 255, 255, ${edgeFrostA * 0.5})`);
+            const fleckGrad = ctx.createRadialGradient(
+              fx,
+              fy,
+              0,
+              fx,
+              fy,
+              fSize * 3
+            );
+            fleckGrad.addColorStop(
+              0,
+              `rgba(255, 255, 255, ${edgeFrostA * 0.5})`
+            );
             fleckGrad.addColorStop(1, "rgba(200, 240, 255, 0)");
             ctx.fillStyle = fleckGrad;
             ctx.beginPath();
@@ -931,20 +997,36 @@ export function renderEffect(
 
       const haloR = fzR * 1.2;
       const haloGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, fzR * 0.7,
-        screenPos.x, screenPos.y, haloR,
+        screenPos.x,
+        screenPos.y,
+        fzR * 0.7,
+        screenPos.x,
+        screenPos.y,
+        haloR
       );
       haloGrad.addColorStop(0, "rgba(120, 200, 255, 0)");
       haloGrad.addColorStop(0.5, `rgba(100, 180, 240, ${alpha * 0.1})`);
       haloGrad.addColorStop(1, "rgba(80, 160, 220, 0)");
       ctx.fillStyle = haloGrad;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, haloR, haloR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        haloR,
+        haloR * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       const fzGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, fzR,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        fzR
       );
       fzGrad.addColorStop(0, `rgba(230, 248, 255, ${alpha * 0.4})`);
       fzGrad.addColorStop(0.15, `rgba(200, 235, 255, ${alpha * 0.35})`);
@@ -953,15 +1035,27 @@ export function renderEffect(
       fzGrad.addColorStop(1, "rgba(60, 140, 220, 0)");
       ctx.fillStyle = fzGrad;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        fzR,
+        fzR * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
-      const flashA = Math.pow(alpha, 2) * 0.6;
+      const flashA = alpha ** 2 * 0.6;
       if (flashA > 0.01) {
         const flashR = fzR * 0.3;
         const flashGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, flashR,
+          screenPos.x,
+          screenPos.y,
+          0,
+          screenPos.x,
+          screenPos.y,
+          flashR
         );
         flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashA})`);
         flashGrad.addColorStop(0.3, `rgba(220, 245, 255, ${flashA * 0.7})`);
@@ -969,7 +1063,15 @@ export function renderEffect(
         flashGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
         ctx.fillStyle = flashGrad;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, flashR, flashR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          flashR,
+          flashR * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
 
@@ -979,7 +1081,15 @@ export function renderEffect(
       ctx.strokeStyle = `rgba(200, 240, 255, ${alpha * 0.85})`;
       ctx.lineWidth = (4 + (1 - progress) * 2) * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        fzR,
+        fzR * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
 
       ctx.shadowBlur = 12 * zoom;
@@ -987,7 +1097,15 @@ export function renderEffect(
       ctx.lineWidth = 2 * zoom;
       const ring2R = fzR * 0.8;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, ring2R, ring2R * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        ring2R,
+        ring2R * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
 
       ctx.shadowBlur = 6 * zoom;
@@ -996,7 +1114,15 @@ export function renderEffect(
       ctx.setLineDash([6 * zoom, 4 * zoom]);
       const ring3R = fzR * 0.55;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, ring3R, ring3R * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        ring3R,
+        ring3R * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
@@ -1017,14 +1143,18 @@ export function renderEffect(
           screenPos.x + Math.cos(vAngle) * vLen * 0.5 + jitter1,
           screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO * 0.5 + jitter2,
           screenPos.x + Math.cos(vAngle) * vLen,
-          screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO,
+          screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO
         );
         ctx.stroke();
 
         for (let sb = 0; sb < 2; sb++) {
           const brT = 0.35 + sb * 0.35;
-          const brX = screenPos.x + Math.cos(vAngle) * vLen * brT + jitter1 * brT;
-          const brY = screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO * brT + jitter2 * brT;
+          const brX =
+            screenPos.x + Math.cos(vAngle) * vLen * brT + jitter1 * brT;
+          const brY =
+            screenPos.y +
+            Math.sin(vAngle) * vLen * ISO_Y_RATIO * brT +
+            jitter2 * brT;
           const brAngle = vAngle + (sb === 0 ? 0.5 : -0.5);
           const brLen = vLen * 0.2;
 
@@ -1034,7 +1164,7 @@ export function renderEffect(
           ctx.moveTo(brX, brY);
           ctx.lineTo(
             brX + Math.cos(brAngle) * brLen,
-            brY + Math.sin(brAngle) * brLen * ISO_Y_RATIO,
+            brY + Math.sin(brAngle) * brLen * ISO_Y_RATIO
           );
           ctx.stroke();
         }
@@ -1108,7 +1238,7 @@ export function renderEffect(
           ctx.moveTo(sx, sy);
           ctx.lineTo(
             sx + Math.cos(aAngle) * armLen,
-            sy + Math.sin(aAngle) * armLen * ISO_Y_RATIO,
+            sy + Math.sin(aAngle) * armLen * ISO_Y_RATIO
           );
           ctx.stroke();
 
@@ -1121,11 +1251,17 @@ export function renderEffect(
             const bA2 = aAngle - Math.PI * 0.3;
             ctx.beginPath();
             ctx.moveTo(bx, by);
-            ctx.lineTo(bx + Math.cos(bA1) * brLen, by + Math.sin(bA1) * brLen * ISO_Y_RATIO);
+            ctx.lineTo(
+              bx + Math.cos(bA1) * brLen,
+              by + Math.sin(bA1) * brLen * ISO_Y_RATIO
+            );
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(bx, by);
-            ctx.lineTo(bx + Math.cos(bA2) * brLen, by + Math.sin(bA2) * brLen * ISO_Y_RATIO);
+            ctx.lineTo(
+              bx + Math.cos(bA2) * brLen,
+              by + Math.sin(bA2) * brLen * ISO_Y_RATIO
+            );
             ctx.stroke();
           }
         }
@@ -1166,7 +1302,8 @@ export function renderEffect(
         const mDist = (Math.sin(m * 3.9 + 0.3) * 0.3 + 0.35) * fzR;
         const mx = screenPos.x + Math.cos(mAngle) * mDist;
         const mBaseY = screenPos.y + Math.sin(mAngle) * mDist * ISO_Y_RATIO;
-        const mRise = progress * 20 * zoom * (0.5 + Math.sin(m * 2.7) * 0.25 + 0.25);
+        const mRise =
+          progress * 20 * zoom * (0.5 + Math.sin(m * 2.7) * 0.25 + 0.25);
         const my = mBaseY - mRise;
         const mistA = alpha * 0.25 * (1 - progress * 0.7);
         const mistR = (4 + Math.sin(m * 5.1) * 3 + 3) * zoom;
@@ -1184,8 +1321,8 @@ export function renderEffect(
       break;
     }
 
-    case "hex_ward_aura":
-      const hexRadius = (effect.size * (0.45 + progress * 0.55)) * zoom;
+    case "hex_ward_aura": {
+      const hexRadius = effect.size * (0.45 + progress * 0.55) * zoom;
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
       ctx.rotate(progress * Math.PI * 1.6);
@@ -1196,8 +1333,11 @@ export function renderEffect(
         const angle = -Math.PI / 2 + (i * Math.PI) / 3;
         const px = Math.cos(angle) * hexRadius;
         const py = Math.sin(angle) * hexRadius * ISO_Y_RATIO;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.stroke();
 
@@ -1213,10 +1353,15 @@ export function renderEffect(
       ctx.font = `bold ${Math.max(12, hexRadius * 0.2)}px serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("⌬", screenPos.x, screenPos.y - hexRadius * 0.85 * ISO_Y_RATIO);
+      ctx.fillText(
+        "⌬",
+        screenPos.x,
+        screenPos.y - hexRadius * 0.85 * ISO_Y_RATIO
+      );
       break;
+    }
 
-    case "inspiration":
+    case "inspiration": {
       // Buff aura
       const inspireRadius = effect.size * zoom;
       ctx.strokeStyle = `rgba(255, 215, 0, ${alpha * 0.5})`;
@@ -1230,7 +1375,7 @@ export function renderEffect(
         inspireRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1249,12 +1394,13 @@ export function renderEffect(
         ctx.fill();
       }
       break;
+    }
 
     // ========================================================================
     // PHYSICAL ATTACK EFFECTS - Slashes, impacts, swipes
     // ========================================================================
 
-    case "melee_slash":
+    case "melee_slash": {
       // Sword/claw slash arc effect
       const slashAngle = effect.slashAngle || 0;
       const slashWidth = effect.slashWidth || Math.PI * 0.6;
@@ -1297,14 +1443,15 @@ export function renderEffect(
         Math.sin(tipAngle2) * slashRadius,
         sparkleSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       ctx.restore();
       break;
+    }
 
-    case "melee_smash":
+    case "melee_smash": {
       // Heavy ground pound effect
       const smashProgress = progress;
       const smashRadius = effect.size * zoom;
@@ -1323,11 +1470,11 @@ export function renderEffect(
         ctx.moveTo(screenPos.x, screenPos.y);
         ctx.lineTo(
           screenPos.x + Math.cos(crackAngle + jitter1) * crackLen * 0.5,
-          screenPos.y + Math.sin(crackAngle + jitter1) * crackLen * 0.3,
+          screenPos.y + Math.sin(crackAngle + jitter1) * crackLen * 0.3
         );
         ctx.lineTo(
           screenPos.x + Math.cos(crackAngle + jitter2) * crackLen,
-          screenPos.y + Math.sin(crackAngle + jitter2) * crackLen * 0.5,
+          screenPos.y + Math.sin(crackAngle + jitter2) * crackLen * 0.5
         );
         ctx.stroke();
       }
@@ -1339,7 +1486,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        smashRadius,
+        smashRadius
       );
       dustGrad.addColorStop(0, `rgba(180, 150, 100, ${alpha * 0.4})`);
       dustGrad.addColorStop(0.5, `rgba(150, 120, 80, ${alpha * 0.2})`);
@@ -1353,7 +1500,7 @@ export function renderEffect(
         smashRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1366,8 +1513,9 @@ export function renderEffect(
         ctx.fill();
       }
       break;
+    }
 
-    case "melee_swipe":
+    case "melee_swipe": {
       // Quick claw swipe - three parallel marks
       const swipeAngle = effect.slashAngle || 0;
       const swipeLen = effect.size * zoom * (0.4 + progress * 0.6);
@@ -1390,7 +1538,7 @@ export function renderEffect(
           -swipeLen * 0.5,
           0,
           swipeLen * 0.5,
-          0,
+          0
         );
         clawGrad.addColorStop(0, `rgba(255, 100, 100, 0)`);
         clawGrad.addColorStop(0.2, `rgba(255, 150, 150, ${clawAlpha})`);
@@ -1409,8 +1557,9 @@ export function renderEffect(
 
       ctx.restore();
       break;
+    }
 
-    case "impact_hit":
+    case "impact_hit": {
       // Generic hit impact - star burst
       const hitSize = effect.size * zoom;
       const hitAlpha = alpha;
@@ -1423,7 +1572,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        hitSize * (0.5 + progress * 0.5),
+        hitSize * (0.5 + progress * 0.5)
       );
       hitGrad.addColorStop(0, `rgba(${hitColor}, ${hitAlpha})`);
       hitGrad.addColorStop(0.3, `rgba(${hitColor}, ${hitAlpha * 0.6})`);
@@ -1435,7 +1584,7 @@ export function renderEffect(
         screenPos.y,
         hitSize * (0.5 + progress * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1448,17 +1597,18 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(
           screenPos.x + Math.cos(rayAngle) * hitSize * 0.2,
-          screenPos.y + Math.sin(rayAngle) * hitSize * 0.2,
+          screenPos.y + Math.sin(rayAngle) * hitSize * 0.2
         );
         ctx.lineTo(
           screenPos.x + Math.cos(rayAngle) * rayLen,
-          screenPos.y + Math.sin(rayAngle) * rayLen,
+          screenPos.y + Math.sin(rayAngle) * rayLen
         );
         ctx.stroke();
       }
       break;
+    }
 
-    case "ground_crack":
+    case "ground_crack": {
       // Ground crack from heavy attack
       const crackSize = effect.size * zoom;
       const crackAlpha = alpha * 0.9;
@@ -1475,8 +1625,8 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(screenPos.x, screenPos.y);
 
-        let x = screenPos.x;
-        let y = screenPos.y;
+        let { x } = screenPos;
+        let { y } = screenPos;
         const segments = 3 + Math.floor(Math.random() * 2);
         for (let j = 0; j < segments; j++) {
           const segAngle = baseAngle + (Math.random() - 0.5) * 0.5;
@@ -1488,8 +1638,9 @@ export function renderEffect(
         ctx.stroke();
       }
       break;
+    }
 
-    case "dust_cloud":
+    case "dust_cloud": {
       // Dust particles rising from impact
       const dustSize = effect.size * zoom;
       const dustAlpha = alpha * 0.6;
@@ -1508,17 +1659,18 @@ export function renderEffect(
           screenPos.y + Math.sin(angle) * dist * ISO_Y_RATIO - rise,
           pSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
+    }
 
     // ========================================================================
     // AOE ATTACK EFFECTS
     // ========================================================================
 
-    case "aoe_ring":
+    case "aoe_ring": {
       // Expanding damage ring
       const ringRadius = effect.size * zoom * (0.2 + progress * 0.8);
       const ringColor = effect.color || "255, 100, 100";
@@ -1535,7 +1687,7 @@ export function renderEffect(
         ringRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -1546,7 +1698,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        ringRadius,
+        ringRadius
       );
       aoeFill.addColorStop(0, `rgba(${ringColor}, ${ringAlpha * 0.3})`);
       aoeFill.addColorStop(0.7, `rgba(${ringColor}, ${ringAlpha * 0.1})`);
@@ -1560,20 +1712,23 @@ export function renderEffect(
         ringRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       break;
+    }
 
-    case "shockwave":
+    case "shockwave": {
       // Ground shockwave - multiple expanding rings
       for (let wave = 0; wave < 3; wave++) {
         const waveDelay = wave * 0.15;
         const waveProgress = Math.max(
           0,
-          (progress - waveDelay) / (1 - waveDelay),
+          (progress - waveDelay) / (1 - waveDelay)
         );
-        if (waveProgress <= 0) continue;
+        if (waveProgress <= 0) {
+          continue;
+        }
 
         const waveRadius = effect.size * zoom * waveProgress;
         const waveAlpha = alpha * (1 - waveProgress) * 0.6;
@@ -1588,13 +1743,14 @@ export function renderEffect(
           waveRadius * 0.4,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
       break;
+    }
 
-    case "magic_burst":
+    case "magic_burst": {
       // Magic AoE burst - purple energy
       const burstRadius = effect.size * zoom * (0.3 + progress * 0.7);
       const burstAlpha = alpha * 0.9;
@@ -1606,7 +1762,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        burstRadius,
+        burstRadius
       );
       magicGrad.addColorStop(0, `rgba(200, 150, 255, ${burstAlpha * 0.5})`);
       magicGrad.addColorStop(0.5, `rgba(150, 100, 200, ${burstAlpha * 0.3})`);
@@ -1620,7 +1776,7 @@ export function renderEffect(
         burstRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1635,13 +1791,14 @@ export function renderEffect(
           screenPos.y + Math.sin(pAngle) * pDist * ISO_Y_RATIO,
           3 * zoom * (1 - progress * 0.5),
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
+    }
 
-    case "fire_nova":
+    case "fire_nova": {
       // Fire explosion ring
       const fireRadius = effect.size * zoom * (0.2 + progress * 0.8);
       const fireAlpha = alpha;
@@ -1653,7 +1810,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        fireRadius,
+        fireRadius
       );
       fireGrad.addColorStop(0, `rgba(255, 255, 200, ${fireAlpha * 0.6})`);
       fireGrad.addColorStop(0.3, `rgba(255, 200, 50, ${fireAlpha * 0.4})`);
@@ -1668,7 +1825,7 @@ export function renderEffect(
         fireRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1683,12 +1840,13 @@ export function renderEffect(
         fireRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       break;
+    }
 
-    case "ice_nova":
+    case "ice_nova": {
       // Ice explosion ring
       const iceRadius = effect.size * zoom * (0.2 + progress * 0.8);
       const iceAlpha = alpha;
@@ -1700,7 +1858,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        iceRadius,
+        iceRadius
       );
       iceGrad.addColorStop(0, `rgba(255, 255, 255, ${iceAlpha * 0.6})`);
       iceGrad.addColorStop(0.3, `rgba(200, 230, 255, ${iceAlpha * 0.4})`);
@@ -1715,7 +1873,7 @@ export function renderEffect(
         iceRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1736,8 +1894,9 @@ export function renderEffect(
         ctx.fill();
       }
       break;
+    }
 
-    case "dark_nova":
+    case "dark_nova": {
       // Dark magic burst
       const darkRadius = effect.size * zoom * (0.2 + progress * 0.8);
       const darkAlpha = alpha;
@@ -1749,7 +1908,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        darkRadius,
+        darkRadius
       );
       darkGrad.addColorStop(0, `rgba(100, 0, 150, ${darkAlpha * 0.5})`);
       darkGrad.addColorStop(0.4, `rgba(60, 0, 100, ${darkAlpha * 0.4})`);
@@ -1764,7 +1923,7 @@ export function renderEffect(
         darkRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1779,17 +1938,18 @@ export function renderEffect(
           screenPos.x + Math.cos(tAngle + 0.3) * darkRadius * 0.6,
           screenPos.y + Math.sin(tAngle + 0.3) * darkRadius * 0.3,
           screenPos.x + Math.cos(tAngle) * darkRadius,
-          screenPos.y + Math.sin(tAngle) * darkRadius * ISO_Y_RATIO,
+          screenPos.y + Math.sin(tAngle) * darkRadius * ISO_Y_RATIO
         );
         ctx.stroke();
       }
       break;
+    }
 
     // ========================================================================
     // PROJECTILE IMPACT EFFECTS
     // ========================================================================
 
-    case "arrow_hit":
+    case "arrow_hit": {
       // Arrow stuck in ground
       const arrowAngle = effect.rotation || -Math.PI / 4;
       const arrowAlpha = alpha;
@@ -1814,8 +1974,9 @@ export function renderEffect(
 
       ctx.restore();
       break;
+    }
 
-    case "magic_impact":
+    case "magic_impact": {
       // Magic projectile impact sparkles
       const magicSize = effect.size * zoom;
       const magicAlpha = alpha;
@@ -1828,12 +1989,12 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        magicSize,
+        magicSize
       );
       magicImpactGrad.addColorStop(0, `rgba(255, 255, 255, ${magicAlpha})`);
       magicImpactGrad.addColorStop(
         0.3,
-        `rgba(${magicColor}, ${magicAlpha * 0.7})`,
+        `rgba(${magicColor}, ${magicAlpha * 0.7})`
       );
       magicImpactGrad.addColorStop(1, `rgba(${magicColor}, 0)`);
       ctx.fillStyle = magicImpactGrad;
@@ -1843,7 +2004,7 @@ export function renderEffect(
         screenPos.y,
         magicSize * (0.5 + progress * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1858,13 +2019,14 @@ export function renderEffect(
           screenPos.y + Math.sin(sAngle) * sDist * ISO_Y_RATIO,
           2 * zoom * (1 - progress),
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
+    }
 
-    case "fire_impact":
+    case "fire_impact": {
       // Fireball explosion
       const fireImpactRadius = effect.size * zoom * (0.3 + progress * 0.7);
       const fireImpactAlpha = alpha;
@@ -1876,16 +2038,16 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        fireImpactRadius,
+        fireImpactRadius
       );
       fireImpactGrad.addColorStop(0, `rgba(255, 255, 200, ${fireImpactAlpha})`);
       fireImpactGrad.addColorStop(
         0.2,
-        `rgba(255, 200, 50, ${fireImpactAlpha * 0.9})`,
+        `rgba(255, 200, 50, ${fireImpactAlpha * 0.9})`
       );
       fireImpactGrad.addColorStop(
         0.5,
-        `rgba(255, 100, 0, ${fireImpactAlpha * 0.6})`,
+        `rgba(255, 100, 0, ${fireImpactAlpha * 0.6})`
       );
       fireImpactGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
       ctx.fillStyle = fireImpactGrad;
@@ -1905,13 +2067,14 @@ export function renderEffect(
           screenPos.y + Math.sin(eAngle) * eDist * ISO_Y_RATIO - eRise,
           3 * zoom * (1 - progress * 0.5),
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
+    }
 
-    case "rock_impact":
+    case "rock_impact": {
       // Boulder crash - debris and dust
       const rockSize = effect.size * zoom;
       const rockAlpha = alpha;
@@ -1926,7 +2089,7 @@ export function renderEffect(
         rockSize * 0.3,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1944,7 +2107,7 @@ export function renderEffect(
           screenPos.y + Math.sin(dAngle) * dDist * ISO_Y_RATIO - dRise,
           dSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1959,12 +2122,13 @@ export function renderEffect(
         rockSize * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       break;
+    }
 
-    case "poison_splash":
+    case "poison_splash": {
       // Poison splatter
       const poisonRadius = effect.size * zoom;
       const poisonAlpha = alpha;
@@ -1976,7 +2140,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        poisonRadius,
+        poisonRadius
       );
       poisonGrad.addColorStop(0, `rgba(100, 200, 50, ${poisonAlpha * 0.6})`);
       poisonGrad.addColorStop(0.5, `rgba(80, 180, 30, ${poisonAlpha * 0.4})`);
@@ -1990,7 +2154,7 @@ export function renderEffect(
         poisonRadius * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2008,8 +2172,9 @@ export function renderEffect(
         ctx.fill();
       }
       break;
+    }
 
-    case "frost_impact":
+    case "frost_impact": {
       // Ice shatter effect
       const frostRadius = effect.size * zoom;
       const frostAlpha = alpha;
@@ -2021,7 +2186,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        frostRadius,
+        frostRadius
       );
       frostGrad.addColorStop(0, `rgba(255, 255, 255, ${frostAlpha * 0.8})`);
       frostGrad.addColorStop(0.4, `rgba(200, 230, 255, ${frostAlpha * 0.5})`);
@@ -2033,7 +2198,7 @@ export function renderEffect(
         screenPos.y,
         frostRadius * (0.5 + progress * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2059,12 +2224,13 @@ export function renderEffect(
         ctx.restore();
       }
       break;
+    }
 
     // ========================================================================
     // HERO SPECIAL EFFECTS
     // ========================================================================
 
-    case "tiger_slash":
+    case "tiger_slash": {
       // Tiger claw attack - triple slash marks
       const tigerAngle = effect.slashAngle || 0;
       const tigerSize = effect.size * zoom;
@@ -2105,8 +2271,9 @@ export function renderEffect(
 
       ctx.restore();
       break;
+    }
 
-    case "knight_cleave":
+    case "knight_cleave": {
       // Mathey Knight sword swing - heavy sweeping arc
       const knightAngle = effect.slashAngle || 0;
       const knightSize = effect.size * zoom;
@@ -2149,8 +2316,9 @@ export function renderEffect(
       clearShadow(ctx);
       ctx.restore();
       break;
+    }
 
-    case "scott_quill":
+    case "scott_quill": {
       // F Scott pen/quill attack - ink splash and literary flourish
       const scottSize = effect.size * zoom;
       const scottAlpha = alpha;
@@ -2162,7 +2330,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        scottSize,
+        scottSize
       );
       inkGrad.addColorStop(0, `rgba(20, 184, 166, ${scottAlpha * 0.6})`);
       inkGrad.addColorStop(0.5, `rgba(13, 148, 136, ${scottAlpha * 0.4})`);
@@ -2174,7 +2342,7 @@ export function renderEffect(
         screenPos.y,
         scottSize * (0.4 + progress * 0.6),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2189,12 +2357,15 @@ export function renderEffect(
         const wDist = scottSize * (0.4 + progress * 0.5);
         const wx = screenPos.x + Math.cos(wAngle) * wDist;
         const wy =
-          screenPos.y + Math.sin(wAngle) * wDist * ISO_Y_RATIO - progress * 10 * zoom;
+          screenPos.y +
+          Math.sin(wAngle) * wDist * ISO_Y_RATIO -
+          progress * 10 * zoom;
         ctx.fillText(words[i], wx, wy);
       }
       break;
+    }
 
-    case "sonic_blast":
+    case "sonic_blast": {
       // Tenor multi-target sonic attack
       const sonicSize = effect.size * zoom;
       const sonicAlpha = alpha;
@@ -2204,9 +2375,11 @@ export function renderEffect(
         const ringDelay = ring * 0.1;
         const ringProgress = Math.max(
           0,
-          (progress - ringDelay) / (1 - ringDelay),
+          (progress - ringDelay) / (1 - ringDelay)
         );
-        if (ringProgress <= 0) continue;
+        if (ringProgress <= 0) {
+          continue;
+        }
 
         const ringRadius = sonicSize * ringProgress;
         const ringAlphaVal = sonicAlpha * (1 - ringProgress) * 0.7;
@@ -2221,7 +2394,7 @@ export function renderEffect(
           ringRadius * 0.4,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -2233,7 +2406,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        sonicSize * 0.3,
+        sonicSize * 0.3
       );
       burstGrad.addColorStop(0, `rgba(200, 180, 255, ${sonicAlpha})`);
       burstGrad.addColorStop(0.5, `rgba(139, 92, 246, ${sonicAlpha * 0.5})`);
@@ -2245,7 +2418,7 @@ export function renderEffect(
         screenPos.y,
         sonicSize * 0.3 * (1 - progress * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2261,10 +2434,11 @@ export function renderEffect(
         ctx.fillText(
           notes[i],
           screenPos.x + Math.cos(nAngle) * nDist,
-          screenPos.y + Math.sin(nAngle) * nDist * 0.4,
+          screenPos.y + Math.sin(nAngle) * nDist * 0.4
         );
       }
       break;
+    }
 
     case "phoenix_talon": {
       // Nassau phoenix melee talon strike — dual fiery claw arcs with ember sparks
@@ -2351,7 +2525,7 @@ export function renderEffect(
         towerSlowSize * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -2365,7 +2539,7 @@ export function renderEffect(
         screenPos.x + Math.cos(clockAngle) * towerSlowSize * 0.4,
         screenPos.y -
           towerSlowSize * 0.2 +
-          Math.sin(clockAngle) * towerSlowSize * 0.2,
+          Math.sin(clockAngle) * towerSlowSize * 0.2
       );
       ctx.stroke();
 
@@ -2375,7 +2549,9 @@ export function renderEffect(
       ctx.moveTo(screenPos.x, screenPos.y - towerSlowSize * 0.2);
       ctx.lineTo(
         screenPos.x + Math.cos(clockAngle2) * towerSlowSize * 0.25,
-        screenPos.y - towerSlowSize * 0.2 + Math.sin(clockAngle2) * towerSlowSize * 0.12,
+        screenPos.y -
+          towerSlowSize * 0.2 +
+          Math.sin(clockAngle2) * towerSlowSize * 0.12
       );
       ctx.stroke();
       break;
@@ -2393,11 +2569,11 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        towerWeakenSize,
+        towerWeakenSize
       );
       towerWeakenGrad.addColorStop(
         0,
-        `rgba(239, 68, 68, ${alpha * 0.3 * towerWeakenPulse})`,
+        `rgba(239, 68, 68, ${alpha * 0.3 * towerWeakenPulse})`
       );
       towerWeakenGrad.addColorStop(0.5, `rgba(185, 28, 28, ${alpha * 0.2})`);
       towerWeakenGrad.addColorStop(1, "rgba(127, 29, 29, 0)");
@@ -2410,12 +2586,15 @@ export function renderEffect(
         towerWeakenSize * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // Pulsing downward chevrons drawn with lines
-      const chevronY = screenPos.y - towerWeakenSize * 0.5 - Math.sin(Date.now() / 200) * 4 * zoom;
+      const chevronY =
+        screenPos.y -
+        towerWeakenSize * 0.5 -
+        Math.sin(Date.now() / 200) * 4 * zoom;
       ctx.strokeStyle = `rgba(252, 165, 165, ${alpha * 0.8 * towerWeakenPulse})`;
       ctx.lineWidth = 2.5 * zoom;
       ctx.lineCap = "round";
@@ -2446,11 +2625,11 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        towerBlindSize * 1.2,
+        towerBlindSize * 1.2
       );
       towerBlindGrad.addColorStop(
         0,
-        `rgba(168, 85, 247, ${alpha * 0.25 * towerBlindPulse})`,
+        `rgba(168, 85, 247, ${alpha * 0.25 * towerBlindPulse})`
       );
       towerBlindGrad.addColorStop(0.6, `rgba(126, 34, 206, ${alpha * 0.15})`);
       towerBlindGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
@@ -2463,7 +2642,7 @@ export function renderEffect(
         towerBlindSize * 0.6,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2502,11 +2681,11 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        towerDisableSize * 1.3,
+        towerDisableSize * 1.3
       );
       towerDisableGrad.addColorStop(
         0,
-        `rgba(225, 29, 72, ${alpha * 0.4 * towerDisablePulse})`,
+        `rgba(225, 29, 72, ${alpha * 0.4 * towerDisablePulse})`
       );
       towerDisableGrad.addColorStop(0.4, `rgba(190, 18, 60, ${alpha * 0.3})`);
       towerDisableGrad.addColorStop(0.7, `rgba(136, 19, 55, ${alpha * 0.15})`);
@@ -2520,7 +2699,7 @@ export function renderEffect(
         towerDisableSize * 0.65,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2530,19 +2709,19 @@ export function renderEffect(
       ctx.beginPath();
       ctx.moveTo(
         screenPos.x - 10 * zoom,
-        screenPos.y - towerDisableSize * 0.3 - 10 * zoom,
+        screenPos.y - towerDisableSize * 0.3 - 10 * zoom
       );
       ctx.lineTo(
         screenPos.x + 10 * zoom,
-        screenPos.y - towerDisableSize * 0.3 + 10 * zoom,
+        screenPos.y - towerDisableSize * 0.3 + 10 * zoom
       );
       ctx.moveTo(
         screenPos.x + 10 * zoom,
-        screenPos.y - towerDisableSize * 0.3 - 10 * zoom,
+        screenPos.y - towerDisableSize * 0.3 - 10 * zoom
       );
       ctx.lineTo(
         screenPos.x - 10 * zoom,
-        screenPos.y - towerDisableSize * 0.3 + 10 * zoom,
+        screenPos.y - towerDisableSize * 0.3 + 10 * zoom
       );
       ctx.stroke();
 
@@ -2552,7 +2731,7 @@ export function renderEffect(
       ctx.fillText(
         "DISABLED",
         screenPos.x,
-        screenPos.y - towerDisableSize * 0.7,
+        screenPos.y - towerDisableSize * 0.7
       );
       break;
     }
@@ -2579,15 +2758,15 @@ export function renderEffect(
           0,
           fireX,
           fireY,
-          fireSize,
+          fireSize
         );
         fireGradient.addColorStop(
           0,
-          `rgba(255, 255, 150, ${alpha * statusBurnFlicker})`,
+          `rgba(255, 255, 150, ${alpha * statusBurnFlicker})`
         );
         fireGradient.addColorStop(
           0.4,
-          `rgba(255, 150, 50, ${alpha * 0.8 * statusBurnFlicker})`,
+          `rgba(255, 150, 50, ${alpha * 0.8 * statusBurnFlicker})`
         );
         fireGradient.addColorStop(1, "rgba(255, 50, 0, 0)");
         ctx.fillStyle = fireGradient;
@@ -2606,7 +2785,7 @@ export function renderEffect(
         statusBurnSize * 0.25,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       break;
@@ -2624,11 +2803,11 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        statusSlowedSize * 0.8,
+        statusSlowedSize * 0.8
       );
       statusFrostGrad.addColorStop(
         0,
-        `rgba(147, 197, 253, ${alpha * 0.4 * statusFrostPulse})`,
+        `rgba(147, 197, 253, ${alpha * 0.4 * statusFrostPulse})`
       );
       statusFrostGrad.addColorStop(0.5, `rgba(96, 165, 250, ${alpha * 0.2})`);
       statusFrostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
@@ -2641,7 +2820,7 @@ export function renderEffect(
         statusSlowedSize * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2679,11 +2858,11 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        statusPoisonSize * 0.7,
+        statusPoisonSize * 0.7
       );
       statusPoisonGrad.addColorStop(
         0,
-        `rgba(34, 197, 94, ${alpha * 0.35 * statusPoisonPulse})`,
+        `rgba(34, 197, 94, ${alpha * 0.35 * statusPoisonPulse})`
       );
       statusPoisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.2})`);
       statusPoisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
@@ -2696,7 +2875,7 @@ export function renderEffect(
         statusPoisonSize * 0.35,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2719,7 +2898,15 @@ export function renderEffect(
       ctx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.4 * statusPoisonPulse})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, statusPoisonSize * 0.5, statusPoisonSize * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y + 2 * zoom,
+        statusPoisonSize * 0.5,
+        statusPoisonSize * 0.5 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
       break;
     }
@@ -2741,8 +2928,11 @@ export function renderEffect(
           screenPos.y -
           statusStunSize * 0.4 +
           Math.sin(angle + statusStunRotation) * spiralRadius * 0.4;
-        if (angle === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
+        if (angle === 0) {
+          ctx.moveTo(sx, sy);
+        } else {
+          ctx.lineTo(sx, sy);
+        }
       }
       ctx.stroke();
 
@@ -2752,7 +2942,10 @@ export function renderEffect(
         const starAngle = (i / 3) * Math.PI * 2 + statusStunRotation;
         const starDist = statusStunSize * 0.4;
         const sx = screenPos.x + Math.cos(starAngle) * starDist;
-        const sy = screenPos.y - statusStunSize * 0.4 + Math.sin(starAngle) * starDist * 0.4;
+        const sy =
+          screenPos.y -
+          statusStunSize * 0.4 +
+          Math.sin(starAngle) * starDist * 0.4;
         const sSize = 4 * zoom;
 
         ctx.beginPath();
@@ -2775,7 +2968,7 @@ export function renderEffect(
       break;
     }
 
-    default:
+    default: {
       // Generic effect
       ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
       ctx.beginPath();
@@ -2784,9 +2977,10 @@ export function renderEffect(
         screenPos.y,
         effect.size * zoom * (1 - progress * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
+    }
   }
 
   ctx.restore();
@@ -2804,7 +2998,7 @@ function _legacyRenderProjectile(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const zoom = cameraZoom || 1;
   const t = proj.progress;
@@ -2817,12 +3011,17 @@ function _legacyRenderProjectile(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   // Arc and elevation are HEIGHT above the ground — offset screen-Y only
-  const arcOffset = proj.arcHeight ? Math.sin(t * Math.PI) * proj.arcHeight * zoom : 0;
+  const arcOffset = proj.arcHeight
+    ? Math.sin(t * Math.PI) * proj.arcHeight * zoom
+    : 0;
   const elevationFade = proj.elevation ? proj.elevation * (1 - t) * zoom : 0;
-  const screenPos = { x: groundScreenPos.x, y: groundScreenPos.y - arcOffset - elevationFade };
+  const screenPos = {
+    x: groundScreenPos.x,
+    y: groundScreenPos.y - arcOffset - elevationFade,
+  };
 
   ctx.save();
 
@@ -2838,11 +3037,18 @@ function _legacyRenderProjectile(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
-    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight * zoom : 0;
-    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) * zoom : 0;
-    const trailPos = { x: trailGroundPos.x, y: trailGroundPos.y - trailArc - trailElevation };
+    const trailArc = proj.arcHeight
+      ? Math.sin(trailT * Math.PI) * proj.arcHeight * zoom
+      : 0;
+    const trailElevation = proj.elevation
+      ? proj.elevation * (1 - trailT) * zoom
+      : 0;
+    const trailPos = {
+      x: trailGroundPos.x,
+      y: trailGroundPos.y - trailArc - trailElevation,
+    };
 
     const alpha = 0.35 * (1 - i / trailLength);
     ctx.fillStyle = proj.isFlamethrower
@@ -2874,7 +3080,7 @@ function _legacyRenderProjectile(
         0,
         flameOffset,
         flameOffset * 0.5,
-        flameSize,
+        flameSize
       );
       flameGrad.addColorStop(0, "rgba(255, 255, 100, 0.9)");
       flameGrad.addColorStop(0.4, "rgba(200, 120, 0, 0.7)");
@@ -2922,7 +3128,7 @@ function _legacyRenderProjectile(
     setShadowBlur(
       ctx,
       12 * zoom,
-      proj.type === "cannon" ? "#ff6b35" : "#c9a227",
+      proj.type === "cannon" ? "#ff6b35" : "#c9a227"
     );
     const projGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, projSize * zoom);
     if (proj.type === "cannon") {
@@ -2955,7 +3161,7 @@ function _legacyRenderParticle(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     particle.pos,
@@ -2963,7 +3169,7 @@ function _legacyRenderParticle(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const lifeRatio = particle.life / particle.maxLife;
@@ -2975,28 +3181,30 @@ function _legacyRenderParticle(
   ctx.fillStyle = particle.color;
 
   switch (particle.type) {
-    case "spark":
+    case "spark": {
       setShadowBlur(ctx, 5 * zoom, particle.color);
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
       clearShadow(ctx);
       break;
+    }
 
-    case "smoke":
+    case "smoke": {
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size * 1.5, 0, Math.PI * 2);
       ctx.fill();
       break;
+    }
 
-    case "fire":
+    case "fire": {
       const fireGrad = ctx.createRadialGradient(
         screenPos.x,
         screenPos.y,
         0,
         screenPos.x,
         screenPos.y,
-        size,
+        size
       );
       fireGrad.addColorStop(0, "#ffff00");
       fireGrad.addColorStop(0.5, particle.color);
@@ -3006,8 +3214,9 @@ function _legacyRenderParticle(
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
       break;
+    }
 
-    case "ice":
+    case "ice": {
       ctx.fillStyle = `rgba(200, 230, 255, ${alpha})`;
       ctx.beginPath();
       ctx.moveTo(screenPos.x, screenPos.y - size);
@@ -3017,8 +3226,9 @@ function _legacyRenderParticle(
       ctx.closePath();
       ctx.fill();
       break;
+    }
 
-    case "gold":
+    case "gold": {
       ctx.fillStyle = "#c9a227";
       setShadowBlur(ctx, 5 * zoom, "#c9a227");
       ctx.beginPath();
@@ -3026,8 +3236,9 @@ function _legacyRenderParticle(
       ctx.fill();
       clearShadow(ctx);
       break;
+    }
 
-    case "magic":
+    case "magic": {
       ctx.fillStyle = "#8b5cf6";
       setShadowBlur(ctx, 8 * zoom, "#8b5cf6");
       ctx.beginPath();
@@ -3035,11 +3246,13 @@ function _legacyRenderParticle(
       ctx.fill();
       clearShadow(ctx);
       break;
+    }
 
-    default:
+    default: {
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
+    }
   }
 
   ctx.restore();
@@ -3070,7 +3283,7 @@ function drawDebuffStar(
   rotation: number,
   color: DebuffColor,
   alpha: number,
-  broken: boolean = false,
+  broken: boolean = false
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3088,8 +3301,11 @@ function drawDebuffStar(
     const wobble = broken ? Math.sin(i * 1.3) * size * 0.15 : 0;
     const px = Math.cos(angle) * (radius + wobble);
     const py = Math.sin(angle) * (radius + wobble);
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.closePath();
 
@@ -3128,7 +3344,7 @@ function drawSlowIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3159,7 +3375,7 @@ function drawWeakenIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3192,7 +3408,7 @@ function drawBlindIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3212,7 +3428,7 @@ function drawBlindIcon(
   ctx.stroke();
 
   // Diagonal slash through
-  ctx.strokeStyle = rgba({ r: 200, g: 60, b: 60 }, alpha);
+  ctx.strokeStyle = rgba({ b: 60, g: 60, r: 200 }, alpha);
   ctx.lineWidth = size * 0.18;
   ctx.beginPath();
   ctx.moveTo(-size * 0.7, -size * 0.5);
@@ -3228,7 +3444,7 @@ function drawDisableIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3255,7 +3471,7 @@ function drawFreezeIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3282,12 +3498,12 @@ function drawFreezeIcon(
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(
       tipX + Math.cos(angle + 0.6) * branchLen,
-      tipY + Math.sin(angle + 0.6) * branchLen,
+      tipY + Math.sin(angle + 0.6) * branchLen
     );
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(
       tipX + Math.cos(angle - 0.6) * branchLen,
-      tipY + Math.sin(angle - 0.6) * branchLen,
+      tipY + Math.sin(angle - 0.6) * branchLen
     );
     ctx.stroke();
   }
@@ -3301,7 +3517,7 @@ function drawPetrifyIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3337,7 +3553,7 @@ function drawHoldIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3378,7 +3594,7 @@ function drawStunIcon(
   y: number,
   size: number,
   color: DebuffColor,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -3404,16 +3620,18 @@ export function renderTowerDebuffEffects(
   tower: Tower,
   screenPos: Position,
   zoom: number,
-  effectiveNow?: number,
+  effectiveNow?: number
 ): void {
-  if (!tower.debuffs || tower.debuffs.length === 0) return;
+  if (!tower.debuffs || tower.debuffs.length === 0) {
+    return;
+  }
 
   // Guard against invalid position or zoom values
   if (
     !screenPos ||
-    !isFinite(screenPos.x) ||
-    !isFinite(screenPos.y) ||
-    !isFinite(zoom) ||
+    !Number.isFinite(screenPos.x) ||
+    !Number.isFinite(screenPos.y) ||
+    !Number.isFinite(zoom) ||
     zoom <= 0
   ) {
     return;
@@ -3422,7 +3640,9 @@ export function renderTowerDebuffEffects(
   const now = effectiveNow ?? Date.now();
   const activeDebuffs = tower.debuffs.filter((d) => d.until > now);
 
-  if (activeDebuffs.length === 0) return;
+  if (activeDebuffs.length === 0) {
+    return;
+  }
 
   ctx.save();
 
@@ -3439,47 +3659,51 @@ export function renderTowerDebuffEffects(
     let glowColor: DebuffColor;
 
     switch (debuff.type) {
-      case "slow":
-        primaryColor = { r: 100, g: 140, b: 180 }; // Muted cold blue
-        secondaryColor = { r: 60, g: 90, b: 130 };
-        glowColor = { r: 80, g: 120, b: 160 };
+      case "slow": {
+        primaryColor = { b: 180, g: 140, r: 100 }; // Muted cold blue
+        secondaryColor = { b: 130, g: 90, r: 60 };
+        glowColor = { b: 160, g: 120, r: 80 };
         break;
-      case "weaken":
-        primaryColor = { r: 180, g: 80, b: 80 }; // Muted blood red
-        secondaryColor = { r: 130, g: 50, b: 50 };
-        glowColor = { r: 150, g: 60, b: 60 };
+      }
+      case "weaken": {
+        primaryColor = { b: 80, g: 80, r: 180 }; // Muted blood red
+        secondaryColor = { b: 50, g: 50, r: 130 };
+        glowColor = { b: 60, g: 60, r: 150 };
         break;
-      case "blind":
-        primaryColor = { r: 120, g: 80, b: 140 }; // Muted purple
-        secondaryColor = { r: 80, g: 50, b: 100 };
-        glowColor = { r: 100, g: 60, b: 120 };
+      }
+      case "blind": {
+        primaryColor = { b: 140, g: 80, r: 120 }; // Muted purple
+        secondaryColor = { b: 100, g: 50, r: 80 };
+        glowColor = { b: 120, g: 60, r: 100 };
         break;
+      }
       case "disable": {
         const flavor = (debuff as typeof debuff & { disableFlavor?: string })
           .disableFlavor;
         if (flavor === "freeze") {
-          primaryColor = { r: 80, g: 200, b: 230 }; // Icy cyan
-          secondaryColor = { r: 40, g: 120, b: 180 };
-          glowColor = { r: 100, g: 220, b: 255 };
+          primaryColor = { b: 230, g: 200, r: 80 }; // Icy cyan
+          secondaryColor = { b: 180, g: 120, r: 40 };
+          glowColor = { b: 255, g: 220, r: 100 };
         } else if (flavor === "petrify") {
-          primaryColor = { r: 160, g: 150, b: 140 }; // Stone gray
-          secondaryColor = { r: 100, g: 95, b: 88 };
-          glowColor = { r: 130, g: 125, b: 115 };
+          primaryColor = { b: 140, g: 150, r: 160 }; // Stone gray
+          secondaryColor = { b: 88, g: 95, r: 100 };
+          glowColor = { b: 115, g: 125, r: 130 };
         } else if (flavor === "hold") {
-          primaryColor = { r: 220, g: 170, b: 50 }; // Amber/bureaucratic
-          secondaryColor = { r: 160, g: 120, b: 30 };
-          glowColor = { r: 200, g: 150, b: 40 };
+          primaryColor = { b: 50, g: 170, r: 220 }; // Amber/bureaucratic
+          secondaryColor = { b: 30, g: 120, r: 160 };
+          glowColor = { b: 40, g: 150, r: 200 };
         } else {
-          primaryColor = { r: 230, g: 200, b: 50 }; // Yellow stun
-          secondaryColor = { r: 200, g: 160, b: 30 };
-          glowColor = { r: 250, g: 220, b: 80 };
+          primaryColor = { b: 50, g: 200, r: 230 }; // Yellow stun
+          secondaryColor = { b: 30, g: 160, r: 200 };
+          glowColor = { b: 80, g: 220, r: 250 };
         }
         break;
       }
-      default:
-        primaryColor = { r: 100, g: 100, b: 100 };
-        secondaryColor = { r: 70, g: 70, b: 70 };
-        glowColor = { r: 90, g: 90, b: 90 };
+      default: {
+        primaryColor = { b: 100, g: 100, r: 100 };
+        secondaryColor = { b: 70, g: 70, r: 70 };
+        glowColor = { b: 90, g: 90, r: 90 };
+      }
     }
 
     // Dark oppressive aura underneath
@@ -3489,7 +3713,7 @@ export function renderTowerDebuffEffects(
       0,
       screenPos.x,
       screenPos.y,
-      baseSize * zoom * 1.3,
+      baseSize * zoom * 1.3
     );
     auraGrad.addColorStop(0, rgba(secondaryColor, alpha * 0.25));
     auraGrad.addColorStop(0.5, rgba(glowColor, alpha * 0.15));
@@ -3503,7 +3727,7 @@ export function renderTowerDebuffEffects(
       baseSize * zoom * 0.65,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3564,7 +3788,7 @@ export function renderTowerDebuffEffects(
           -chunkSize / 2,
           -chunkSize / 2,
           chunkSize,
-          chunkSize * 0.7,
+          chunkSize * 0.7
         );
         ctx.restore();
       }
@@ -3577,7 +3801,7 @@ export function renderTowerDebuffEffects(
         const sy =
           screenPos.y -
           baseSize * zoom * 0.3 +
-          stripPhase * baseSize * zoom * 1.0;
+          stripPhase * baseSize * zoom * 1;
         const stripAlpha = Math.sin(stripPhase * Math.PI) * alpha * 0.55;
         const stripW = (4 + Math.sin(i) * 1.5) * zoom;
         const stripH = 1.5 * zoom;
@@ -3612,7 +3836,7 @@ export function renderTowerDebuffEffects(
           ctx.lineTo(Math.cos(a) * sparkSize, Math.sin(a) * sparkSize);
           ctx.lineTo(
             Math.cos(a + Math.PI / 4) * sparkSize * 0.3,
-            Math.sin(a + Math.PI / 4) * sparkSize * 0.3,
+            Math.sin(a + Math.PI / 4) * sparkSize * 0.3
           );
         }
         ctx.closePath();
@@ -3647,7 +3871,8 @@ export function renderTowerDebuffEffects(
     for (let i = 0; i < 3; i++) {
       const starAngle = rotationSpeed + (i * Math.PI * 2) / 3;
       const starX = screenPos.x + Math.cos(starAngle) * starRadius;
-      const starY = screenPos.y + Math.sin(starAngle) * starRadius * ISO_Y_RATIO; // Flattened for isometric
+      const starY =
+        screenPos.y + Math.sin(starAngle) * starRadius * ISO_Y_RATIO; // Flattened for isometric
 
       // Pulsing/flickering effect
       const flicker = 0.6 + Math.sin(time * 4 + i * 1.5) * 0.4;
@@ -3660,7 +3885,7 @@ export function renderTowerDebuffEffects(
         starAngle + time * 0.5, // Spin individually too
         primaryColor,
         alpha * flicker,
-        true, // Broken/cracked
+        true // Broken/cracked
       );
     }
 
@@ -3677,7 +3902,7 @@ export function renderTowerDebuffEffects(
       0,
       screenPos.x,
       iconY,
-      circleRadius,
+      circleRadius
     );
     circleBgGrad.addColorStop(0, `rgba(20, 20, 25, ${alpha * 0.85})`);
     circleBgGrad.addColorStop(0.7, `rgba(30, 30, 35, ${alpha * 0.75})`);
@@ -3696,36 +3921,39 @@ export function renderTowerDebuffEffects(
 
     // Draw Lucide-style icon based on debuff type
     switch (debuff.type) {
-      case "slow":
+      case "slow": {
         drawSlowIcon(
           ctx,
           screenPos.x,
           iconY,
           iconSize,
           primaryColor,
-          alpha * iconPulse,
+          alpha * iconPulse
         );
         break;
-      case "weaken":
+      }
+      case "weaken": {
         drawWeakenIcon(
           ctx,
           screenPos.x,
           iconY,
           iconSize,
           primaryColor,
-          alpha * iconPulse,
+          alpha * iconPulse
         );
         break;
-      case "blind":
+      }
+      case "blind": {
         drawBlindIcon(
           ctx,
           screenPos.x,
           iconY,
           iconSize,
           primaryColor,
-          alpha * iconPulse,
+          alpha * iconPulse
         );
         break;
+      }
       case "disable": {
         const dFlavor = (debuff as typeof debuff & { disableFlavor?: string })
           .disableFlavor;
@@ -3736,7 +3964,7 @@ export function renderTowerDebuffEffects(
             iconY,
             iconSize,
             primaryColor,
-            alpha * iconPulse,
+            alpha * iconPulse
           );
         } else if (dFlavor === "petrify") {
           drawPetrifyIcon(
@@ -3745,7 +3973,7 @@ export function renderTowerDebuffEffects(
             iconY,
             iconSize,
             primaryColor,
-            alpha * iconPulse,
+            alpha * iconPulse
           );
         } else if (dFlavor === "hold") {
           drawHoldIcon(
@@ -3754,7 +3982,7 @@ export function renderTowerDebuffEffects(
             iconY,
             iconSize,
             primaryColor,
-            alpha * iconPulse,
+            alpha * iconPulse
           );
         } else {
           drawStunIcon(
@@ -3763,7 +3991,7 @@ export function renderTowerDebuffEffects(
             iconY,
             iconSize,
             primaryColor,
-            alpha * iconPulse,
+            alpha * iconPulse
           );
         }
         break;
@@ -3786,7 +4014,7 @@ export function renderTowerDebuffEffects(
         timerY - pillH / 2,
         pillW,
         pillH,
-        3 * zoom,
+        3 * zoom
       );
       ctx.fill();
 
@@ -3799,7 +4027,7 @@ export function renderTowerDebuffEffects(
         timerY - pillH / 2,
         pillW,
         pillH,
-        3 * zoom,
+        3 * zoom
       );
       ctx.stroke();
 
@@ -3823,7 +4051,7 @@ export function renderTowerDebuffEffects(
       baseSize * zoom * 0.45,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -3841,13 +4069,13 @@ export function renderUnitStatusEffects(
   unit: Troop | Hero,
   screenPos: Position,
   zoom: number,
-  effectiveNow?: number,
+  effectiveNow?: number
 ): void {
   if (
     !screenPos ||
-    !isFinite(screenPos.x) ||
-    !isFinite(screenPos.y) ||
-    !isFinite(zoom) ||
+    !Number.isFinite(screenPos.x) ||
+    !Number.isFinite(screenPos.y) ||
+    !Number.isFinite(zoom) ||
     zoom <= 0
   ) {
     return;
@@ -3871,8 +4099,12 @@ export function renderUnitStatusEffects(
 
       // Outer heat haze glow
       const hazeGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, radius * 0.4,
-        screenPos.x, screenPos.y, radius * 1.3,
+        screenPos.x,
+        screenPos.y,
+        radius * 0.4,
+        screenPos.x,
+        screenPos.y,
+        radius * 1.3
       );
       hazeGrad.addColorStop(0, `rgba(255, 60, 0, ${alpha * 0.08 * flicker})`);
       hazeGrad.addColorStop(1, "rgba(255, 60, 0, 0)");
@@ -3883,8 +4115,12 @@ export function renderUnitStatusEffects(
 
       // Inner orange underglow
       const glowGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, radius,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        radius
       );
       glowGrad.addColorStop(0, `rgba(255, 160, 40, ${alpha * 0.3 * flicker})`);
       glowGrad.addColorStop(0.45, `rgba(255, 90, 10, ${alpha * 0.18})`);
@@ -3897,7 +4133,9 @@ export function renderUnitStatusEffects(
       // Rising flame particles with teardrop shapes
       for (let i = 0; i < 7; i++) {
         const seed = (now * 0.003 + i * 1.37) % 1;
-        const fireX = screenPos.x + Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.55;
+        const fireX =
+          screenPos.x +
+          Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.55;
         const fireY = screenPos.y - seed * baseSize * zoom * 1.6;
         const fireSize = (2.8 + (i % 3)) * zoom * (1 - seed * 0.5);
         const fireAlpha = alpha * (1 - seed * 0.7) * flicker;
@@ -3906,16 +4144,36 @@ export function renderUnitStatusEffects(
         ctx.fillStyle = `rgba(200, ${50 - Math.floor(seed * 30)}, 10, ${fireAlpha * 0.6})`;
         ctx.beginPath();
         ctx.moveTo(fireX, fireY - fireSize * 1.8);
-        ctx.quadraticCurveTo(fireX + fireSize * 1.15, fireY, fireX, fireY + fireSize * 0.5);
-        ctx.quadraticCurveTo(fireX - fireSize * 1.15, fireY, fireX, fireY - fireSize * 1.8);
+        ctx.quadraticCurveTo(
+          fireX + fireSize * 1.15,
+          fireY,
+          fireX,
+          fireY + fireSize * 0.5
+        );
+        ctx.quadraticCurveTo(
+          fireX - fireSize * 1.15,
+          fireY,
+          fireX,
+          fireY - fireSize * 1.8
+        );
         ctx.fill();
 
         // Mid orange-yellow flame layer
         ctx.fillStyle = `rgba(255, ${180 - Math.floor(seed * 120)}, ${60 - Math.floor(seed * 50)}, ${fireAlpha})`;
         ctx.beginPath();
         ctx.moveTo(fireX, fireY - fireSize * 1.5);
-        ctx.quadraticCurveTo(fireX + fireSize, fireY, fireX, fireY + fireSize * 0.5);
-        ctx.quadraticCurveTo(fireX - fireSize, fireY, fireX, fireY - fireSize * 1.5);
+        ctx.quadraticCurveTo(
+          fireX + fireSize,
+          fireY,
+          fireX,
+          fireY + fireSize * 0.5
+        );
+        ctx.quadraticCurveTo(
+          fireX - fireSize,
+          fireY,
+          fireX,
+          fireY - fireSize * 1.5
+        );
         ctx.fill();
 
         // Bright inner core
@@ -3924,8 +4182,18 @@ export function renderUnitStatusEffects(
           ctx.fillStyle = `rgba(255, 240, 160, ${coreAlpha})`;
           ctx.beginPath();
           ctx.moveTo(fireX, fireY - fireSize * 0.9);
-          ctx.quadraticCurveTo(fireX + fireSize * 0.4, fireY, fireX, fireY + fireSize * 0.3);
-          ctx.quadraticCurveTo(fireX - fireSize * 0.4, fireY, fireX, fireY - fireSize * 0.9);
+          ctx.quadraticCurveTo(
+            fireX + fireSize * 0.4,
+            fireY,
+            fireX,
+            fireY + fireSize * 0.3
+          );
+          ctx.quadraticCurveTo(
+            fireX - fireSize * 0.4,
+            fireY,
+            fireX,
+            fireY - fireSize * 0.9
+          );
           ctx.fill();
         }
       }
@@ -3960,10 +4228,17 @@ export function renderUnitStatusEffects(
 
       // Outer cold mist halo
       const mistGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, radius * 0.5,
-        screenPos.x, screenPos.y, radius * 1.3,
+        screenPos.x,
+        screenPos.y,
+        radius * 0.5,
+        screenPos.x,
+        screenPos.y,
+        radius * 1.3
       );
-      mistGrad.addColorStop(0, `rgba(180, 220, 255, ${alpha * 0.1 * frostPulse})`);
+      mistGrad.addColorStop(
+        0,
+        `rgba(180, 220, 255, ${alpha * 0.1 * frostPulse})`
+      );
       mistGrad.addColorStop(1, "rgba(130, 180, 255, 0)");
       ctx.fillStyle = mistGrad;
       ctx.beginPath();
@@ -3972,10 +4247,17 @@ export function renderUnitStatusEffects(
 
       // Inner frost glow
       const frostGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, radius,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        radius
       );
-      frostGrad.addColorStop(0, `rgba(170, 210, 255, ${alpha * 0.35 * frostPulse})`);
+      frostGrad.addColorStop(
+        0,
+        `rgba(170, 210, 255, ${alpha * 0.35 * frostPulse})`
+      );
       frostGrad.addColorStop(0.4, `rgba(120, 180, 250, ${alpha * 0.2})`);
       frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
       ctx.fillStyle = frostGrad;
@@ -3989,7 +4271,10 @@ export function renderUnitStatusEffects(
         const crystalAngle = (i / 5) * Math.PI * 2 + now / 700;
         const crystalDist = baseSize * zoom * 0.8;
         const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
-        const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO - baseSize * zoom * 0.3;
+        const cy =
+          screenPos.y +
+          Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO -
+          baseSize * zoom * 0.3;
         const cSize = (3.5 + Math.sin(now / 200 + i * 1.5) * 0.8) * zoom;
         const sparkle = 0.8 + Math.sin(now / 150 + i * 2.3) * 0.2;
 
@@ -4010,7 +4295,15 @@ export function renderUnitStatusEffects(
       ctx.lineWidth = 1.5 * zoom;
       ctx.setLineDash([3 * zoom, 3 * zoom]);
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        baseSize * zoom * 0.9,
+        baseSize * zoom * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -4042,10 +4335,17 @@ export function renderUnitStatusEffects(
       const poisonPulse = Math.sin(now / 250) * 0.25 + 0.75;
 
       const poisonGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, baseSize * zoom,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        baseSize * zoom
       );
-      poisonGrad.addColorStop(0, `rgba(34, 197, 94, ${alpha * 0.3 * poisonPulse})`);
+      poisonGrad.addColorStop(
+        0,
+        `rgba(34, 197, 94, ${alpha * 0.3 * poisonPulse})`
+      );
       poisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.18})`);
       poisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
       ctx.fillStyle = poisonGrad;
@@ -4055,9 +4355,11 @@ export function renderUnitStatusEffects(
 
       for (let i = 0; i < 4; i++) {
         const bubbleSeed = (now * 0.002 + i * 0.77) % 1;
-        const bubbleX = screenPos.x + Math.sin(now / 200 + i * 2.5) * baseSize * zoom * 0.5;
+        const bubbleX =
+          screenPos.x + Math.sin(now / 200 + i * 2.5) * baseSize * zoom * 0.5;
         const bubbleY = screenPos.y - bubbleSeed * baseSize * zoom * 1.2;
-        const bubbleSize = (1.5 + (i % 2) * 0.8) * zoom * (1 - bubbleSeed * 0.5);
+        const bubbleSize =
+          (1.5 + (i % 2) * 0.8) * zoom * (1 - bubbleSeed * 0.5);
         const bubbleAlpha = alpha * 0.55 * (1 - bubbleSeed);
 
         ctx.fillStyle = `rgba(134, 239, 172, ${bubbleAlpha})`;
@@ -4069,7 +4371,15 @@ export function renderUnitStatusEffects(
       ctx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.35 * poisonPulse})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, baseSize * zoom * 0.7, baseSize * zoom * 0.35, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y + 2 * zoom,
+        baseSize * zoom * 0.7,
+        baseSize * zoom * 0.35,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
     }
   }
@@ -4090,9 +4400,15 @@ export function renderUnitStatusEffects(
       for (let angle = 0; angle < Math.PI * 3; angle += 0.3) {
         const spiralRadius = (angle / (Math.PI * 3)) * baseSize * zoom * 0.6;
         const sx = screenPos.x + Math.cos(angle + rotation) * spiralRadius;
-        const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(angle + rotation) * spiralRadius * 0.4;
-        if (angle === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
+        const sy =
+          screenPos.y -
+          baseSize * zoom * 0.7 +
+          Math.sin(angle + rotation) * spiralRadius * 0.4;
+        if (angle === 0) {
+          ctx.moveTo(sx, sy);
+        } else {
+          ctx.lineTo(sx, sy);
+        }
       }
       ctx.stroke();
 
@@ -4100,7 +4416,10 @@ export function renderUnitStatusEffects(
         const starAngle = (i / 3) * Math.PI * 2 + rotation;
         const starDist = baseSize * zoom * 0.55;
         const sx = screenPos.x + Math.cos(starAngle) * starDist;
-        const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(starAngle) * starDist * 0.3;
+        const sy =
+          screenPos.y -
+          baseSize * zoom * 0.7 +
+          Math.sin(starAngle) * starDist * 0.3;
         const starSize = 3.5 * zoom;
 
         ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.9})`;

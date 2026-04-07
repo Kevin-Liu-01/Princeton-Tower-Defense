@@ -6,7 +6,7 @@ export function traceCatmullRom(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
   ox: number,
-  oy: number,
+  oy: number
 ): void {
   ctx.beginPath();
   ctx.moveTo(pts[0][0] + ox, pts[0][1] + oy);
@@ -27,14 +27,14 @@ export function traceCatmullRom(
       p2[0] - (p3[0] - p1[0]) * SPLINE_TENSION + ox,
       p2[1] - (p3[1] - p1[1]) * SPLINE_TENSION + oy,
       p2[0] + ox,
-      p2[1] + oy,
+      p2[1] + oy
     );
   }
 }
 
 export function samplePoint(
   pts: [number, number][],
-  t: number,
+  t: number
 ): [number, number] {
   const segs = pts.length - 1;
   const raw = Math.max(0, Math.min(segs, t * segs));
@@ -67,10 +67,12 @@ export function samplePoint(
 export function drawEdgeRivets(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
-  seed: number,
+  seed: number
 ): void {
   const totalLen = pts.reduce((sum, p, i) => {
-    if (i === 0) return 0;
+    if (i === 0) {
+      return 0;
+    }
     return sum + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]);
   }, 0);
   const count = Math.max(3, Math.floor(totalLen / 18));
@@ -113,7 +115,7 @@ export function drawGoldenPath(
   pts: [number, number][],
   seed: number,
   isMobile: boolean,
-  time?: number,
+  time?: number
 ): void {
   ctx.save();
   ctx.lineCap = "round";
@@ -184,7 +186,7 @@ export function drawLockedPath(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
   color: string,
-  lineWidth: number,
+  lineWidth: number
 ): void {
   ctx.save();
   ctx.lineCap = "round";

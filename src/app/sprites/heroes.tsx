@@ -1,12 +1,13 @@
 "use client";
 import React, { useRef, useCallback } from "react";
-import type { HeroType } from "../types";
+
 import { HERO_DATA } from "../constants";
-import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import { drawHeroSprite } from "../rendering/heroes";
+import type { HeroType } from "../types";
+import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
 
 export const HERO_COLORS: Record<string, string> = Object.fromEntries(
-  Object.entries(HERO_DATA).map(([k, v]) => [k, v.color]),
+  Object.entries(HERO_DATA).map(([k, v]) => [k, v.color])
 );
 
 const HERO_SPRITE_SCALE: Partial<Record<HeroType, number>> = {
@@ -20,24 +21,36 @@ export const HeroSprite: React.FC<{
 }> = ({ type, size = 48, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scale = HERO_SPRITE_SCALE[type] ?? 1;
-  const canvasW = size * scale;
-  const canvasH = size * scale;
+  const baseW = size * scale;
+  const baseH = size * scale;
+  const canvasW = Math.ceil(baseW * SPRITE_PAD);
+  const canvasH = Math.ceil(baseH * SPRITE_PAD);
 
   const renderHero = useCallback(
     (time: number) => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        return;
+      }
       const ctx = setupSpriteCanvas(canvas, canvasW, canvasH);
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
+
+      const offsetX = (canvasW - baseW) / 2;
+      const offsetY = (canvasH - baseH) / 2;
+      ctx.translate(offsetX, offsetY);
 
       const hData = HERO_DATA[type];
-      if (!hData) return;
+      if (!hData) {
+        return;
+      }
 
       const gameSize = 32;
-      const drawSize = canvasW * 0.55;
+      const drawSize = baseW * 0.55;
       const zoom = Math.max(0.1, drawSize / gameSize);
-      const cx = canvasW / 2;
-      const cy = canvasH * 0.58;
+      const cx = baseW / 2;
+      const cy = baseH * 0.58;
       const t = animated ? time * 0.08 : 0;
 
       ctx.save();
@@ -45,7 +58,7 @@ export const HeroSprite: React.FC<{
       drawHeroSprite(ctx, 0, 0, drawSize, type, hData.color, t, zoom, 0);
       ctx.restore();
     },
-    [type, canvasW, canvasH, animated],
+    [type, baseW, baseH, canvasW, canvasH, animated]
   );
 
   useSpriteTicker(animated, 50, renderHero);
@@ -53,7 +66,7 @@ export const HeroSprite: React.FC<{
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: canvasW, height: canvasH }}
+      style={{ height: canvasH, width: canvasW }}
       aria-label={`${HERO_DATA[type]?.name ?? type} sprite`}
     />
   );

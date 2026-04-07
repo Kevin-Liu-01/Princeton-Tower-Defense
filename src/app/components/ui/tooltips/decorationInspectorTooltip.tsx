@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import { Eye } from "lucide-react";
+import React from "react";
+
 import type { Decoration, Position } from "../../../types";
 import { getDecorationVolumeSpec, worldToGrid } from "../../../utils";
 import { GOLD, PANEL, panelGradient } from "../system/theme";
@@ -14,10 +15,10 @@ interface DecorationInspectorTooltipProps {
 
 const HEIGHT_TAG_COLORS: Record<string, string> = {
   ground: "text-stone-400",
-  short: "text-emerald-400",
-  medium: "text-sky-400",
-  tall: "text-amber-400",
   landmark: "text-purple-400",
+  medium: "text-sky-400",
+  short: "text-emerald-400",
+  tall: "text-amber-400",
 };
 
 const Row: React.FC<{
@@ -27,7 +28,9 @@ const Row: React.FC<{
 }> = ({ label, value, valueClass }) => (
   <div className="flex justify-between text-[10px]">
     <span className="text-amber-500/60 uppercase tracking-wider">{label}</span>
-    <span className={valueClass ?? "text-amber-100/90 font-medium"}>{value}</span>
+    <span className={valueClass ?? "text-amber-100/90 font-medium"}>
+      {value}
+    </span>
   </div>
 );
 
@@ -37,29 +40,40 @@ export const DecorationInspectorTooltip: React.FC<
   const volume = getDecorationVolumeSpec(decoration.type, decoration.heightTag);
   const gridPos = worldToGrid({ x: decoration.x, y: decoration.y });
   const displayName = decoration.type
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-  const coords = getTooltipPosition(position, { width: 220, height: 190 });
+    .replaceAll("_", " ")
+    .replaceAll(/\b\w/g, (char) => char.toUpperCase());
+  const coords = getTooltipPosition(position, { height: 190, width: 220 });
   const tagColor = HEIGHT_TAG_COLORS[volume.heightTag] ?? "text-stone-400";
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 260,
-        width: 220,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}`,
+        left: coords.left,
+        top: coords.top,
+        width: 220,
+        zIndex: 260,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-      <div className="px-3 py-1.5 relative z-10" style={{ background: PANEL.bgWarmMid, borderBottom: `1px solid ${GOLD.border25}` }}>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
         <div className="flex items-center gap-2">
           <Eye className="text-cyan-400" size={14} />
-          <span className="font-bold text-amber-200 text-sm">{displayName}</span>
+          <span className="font-bold text-amber-200 text-sm">
+            {displayName}
+          </span>
         </div>
         <div className="text-[9px] text-amber-500/70 uppercase tracking-wider mt-0.5">
           Decoration Inspector

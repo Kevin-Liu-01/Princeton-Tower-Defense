@@ -1,7 +1,12 @@
 import type { EnemyType } from "../types";
 import { getEnemyLaneOffsets, ENEMY_LANE_OFFSET_LIMIT } from "../utils";
 
-export type EnemyFormationPattern = "echelon" | "line" | "file" | "wedge" | "vee";
+export type EnemyFormationPattern =
+  | "echelon"
+  | "line"
+  | "file"
+  | "wedge"
+  | "vee";
 
 export const ENEMY_LANE_OFFSETS = getEnemyLaneOffsets(5);
 export const ENEMY_CENTER_LANE_INDEX = Math.floor(
@@ -71,11 +76,21 @@ export function pickFormationPattern(
   enemyType: EnemyType,
   groupCount: number
 ): EnemyFormationPattern {
-  if (HEAVY_WEDGE_TYPES.has(enemyType)) return "wedge";
-  if (FAST_VEE_TYPES.has(enemyType)) return "vee";
-  if (SWARM_FILE_TYPES.has(enemyType)) return "file";
-  if (groupCount >= 10) return "line";
-  if (groupCount >= 6) return "echelon";
+  if (HEAVY_WEDGE_TYPES.has(enemyType)) {
+    return "wedge";
+  }
+  if (FAST_VEE_TYPES.has(enemyType)) {
+    return "vee";
+  }
+  if (SWARM_FILE_TYPES.has(enemyType)) {
+    return "file";
+  }
+  if (groupCount >= 10) {
+    return "line";
+  }
+  if (groupCount >= 6) {
+    return "echelon";
+  }
   return "wedge";
 }
 
@@ -90,13 +105,16 @@ export function getFormationLaneIndex(
   const maxSpread = Math.max(1, Math.floor((laneCount - 1) / 2));
   const mirrorLane = (lane: number) => laneCount - 1 - lane;
 
-  if (laneCount <= 1) return 0;
+  if (laneCount <= 1) {
+    return 0;
+  }
 
   let lane = center;
   switch (pattern) {
-    case "file":
+    case "file": {
       lane = center;
       break;
+    }
     case "line": {
       const t = groupCount <= 1 ? 0.5 : spawnIndex / (groupCount - 1);
       lane = Math.round(t * (laneCount - 1));

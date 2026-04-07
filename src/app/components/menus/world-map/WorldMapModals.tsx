@@ -1,10 +1,20 @@
 "use client";
 
 import React from "react";
-import type { CustomLevelDefinition, CustomLevelDraftInput, CustomLevelUpsertResult } from "../../../customLevels/types";
-import type { GameSettings, QualityPreset, SettingsCategory } from "../../../constants/settings";
+
+import type {
+  GameSettings,
+  QualityPreset,
+  SettingsCategory,
+} from "../../../constants/settings";
+import type {
+  CustomLevelDefinition,
+  CustomLevelDraftInput,
+  CustomLevelUpsertResult,
+} from "../../../customLevels/types";
 import { CreatorModal } from "../../creator";
-import { CodexModal, type CodexTabId } from "../CodexModal";
+import { CodexModal } from "../CodexModal";
+import type { CodexTabId } from "../CodexModal";
 import { CreditsModal } from "../CreditsModal";
 import { SettingsModal } from "../SettingsModal";
 
@@ -12,7 +22,7 @@ interface SettingsState {
   settings: GameSettings;
   updateCategory: <K extends SettingsCategory>(
     category: K,
-    patch: Partial<GameSettings[K]>,
+    patch: Partial<GameSettings[K]>
   ) => void;
   applyPreset: (preset: QualityPreset) => void;
   resetToDefaults: () => void;

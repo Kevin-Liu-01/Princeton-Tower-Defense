@@ -1,12 +1,13 @@
 "use client";
-import React from "react";
 import Image from "next/image";
+import React from "react";
+
 import {
   LANDING_THEME,
   HERO_GALLERY,
   SPELL_GALLERY,
-  type CharacterDisplay,
 } from "../landingConstants";
+import type { CharacterDisplay } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
@@ -19,16 +20,18 @@ function HeroPortrait({ hero }: { hero: CharacterDisplay }) {
         <div
           className="absolute -inset-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-400"
           style={{
-            background: `conic-gradient(from 0deg, ${hero.color}33, transparent, ${hero.color}33, transparent, ${hero.color}33)`,
             animation: "landing-spin 6s linear infinite",
+            background: `conic-gradient(from 0deg, ${hero.color}33, transparent, ${hero.color}33, transparent, ${hero.color}33)`,
           }}
         />
         <div
           className="relative w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full overflow-hidden animate-landing-portrait-glow transition-transform duration-300 group-hover:scale-[1.08]"
-          style={{
-            border: `2.5px solid ${hero.color}`,
-            "--glow-color": `${hero.color}55`,
-          } as React.CSSProperties}
+          style={
+            {
+              "--glow-color": `${hero.color}55`,
+              border: `2.5px solid ${hero.color}`,
+            } as React.CSSProperties
+          }
         >
           <Image
             src={hero.image}

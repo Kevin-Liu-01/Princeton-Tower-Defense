@@ -1,40 +1,3 @@
-import type {
-  Position,
-  Tower,
-  Enemy,
-  Hero,
-  Troop,
-  Effect,
-  Particle,
-  TowerType,
-  SpellType,
-  DraggingTower,
-  Decoration,
-  SpecialTower,
-  SpellUpgradeLevels,
-} from "../../types";
-import type { TroopMoveInfo } from "../../utils";
-import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
-import type { WaveStartConfirmState } from "./waveStartBubbles";
-import type { DraggingUnitState } from "./renderScene";
-import type { RuntimeDecoration } from "../../rendering/decorations/decorationHelpers";
-import type { GameEventLogAPI } from "../useGameEventLog";
-import {
-  gridToWorld,
-  worldToScreen,
-  screenToWorld,
-  screenToGrid,
-  distance,
-  isValidBuildPosition,
-  generateId,
-  findClosestPathPoint,
-  findClosestPathPointWithinRadius,
-  getTroopMoveInfo,
-  LANDMARK_DECORATION_TYPES,
-  LANDMARK_HITBOX_Y_OFFSET,
-  getMapDecorationWorldPos,
-  resolveMapDecorationRuntimePlacement,
-} from "../../utils";
 import {
   GRID_WIDTH,
   GRID_HEIGHT,
@@ -52,13 +15,51 @@ import {
   getLevelSpecialTowers,
   getLevelAllowedTowers,
 } from "../../game/setup";
+import type { RuntimeDecoration } from "../../rendering/decorations/decorationHelpers";
+import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
+import type {
+  Position,
+  Tower,
+  Enemy,
+  Hero,
+  Troop,
+  Effect,
+  Particle,
+  TowerType,
+  SpellType,
+  DraggingTower,
+  Decoration,
+  SpecialTower,
+  SpellUpgradeLevels,
+} from "../../types";
+import type { TroopMoveInfo } from "../../utils";
+import {
+  gridToWorld,
+  worldToScreen,
+  screenToWorld,
+  screenToGrid,
+  distance,
+  isValidBuildPosition,
+  generateId,
+  findClosestPathPoint,
+  findClosestPathPointWithinRadius,
+  getTroopMoveInfo,
+  LANDMARK_DECORATION_TYPES,
+  LANDMARK_HITBOX_Y_OFFSET,
+  getMapDecorationWorldPos,
+  resolveMapDecorationRuntimePlacement,
+} from "../../utils";
+import type { GameEventLogAPI } from "../useGameEventLog";
+import { getCachedRect } from "./cachedCanvasRect";
+import type { CachedCanvasRectRef } from "./cachedCanvasRect";
+import { getInspectorHoverResult } from "./inspectorHitTesting";
+import type { DraggingUnitState } from "./renderScene";
+import type { WaveStartConfirmState } from "./waveStartBubbles";
 import {
   findWaveStartBubbleAtPoint,
   isWaveStartConfirmForBubble,
   getHoveredWaveStartBubblePath,
 } from "./waveStartBubbles";
-import { getInspectorHoverResult } from "./inspectorHitTesting";
-import { getCachedRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
 
 // ---------------------------------------------------------------------------
 // Shared parameter interface
@@ -124,7 +125,7 @@ export interface CanvasEventParams {
   getWaveStartBubblesScreenData: (
     w: number,
     h: number,
-    dpr: number,
+    dpr: number
   ) => WaveStartBubbleScreenData[];
   canAffordPawPoints: (amount: number) => boolean;
   spendPawPoints: (amount: number) => boolean;
@@ -135,7 +136,10 @@ export interface CanvasEventParams {
   getSpecialTowerKey: (tower: Pick<SpecialTower, "type" | "pos">) => string;
   clampWorldToMapBounds: (pos: Position) => Position;
   resolveHeroCommandTarget: (pos: Position) => Position | null;
-  resolveTroopCommandTarget: (pos: Position, moveInfo: TroopMoveInfo) => Position | null;
+  resolveTroopCommandTarget: (
+    pos: Position,
+    moveInfo: TroopMoveInfo
+  ) => Position | null;
   issueHeroMoveCommand: (heroId: string, pos: Position) => void;
   issueTroopFormationMoveCommand: (ownerId: string, pos: Position) => void;
   clearUnitMoveInteraction: () => void;
@@ -159,7 +163,9 @@ export interface CanvasEventParams {
   setRepositionPreviewPos: (v: Position | null) => void;
   setTowers: React.Dispatch<React.SetStateAction<Tower[]>>;
   setTroops: React.Dispatch<React.SetStateAction<Troop[]>>;
-  setSpells: React.Dispatch<React.SetStateAction<import("../../types").Spell[]>>;
+  setSpells: React.Dispatch<
+    React.SetStateAction<import("../../types").Spell[]>
+  >;
   setHero: React.Dispatch<React.SetStateAction<Hero | null>>;
   setSelectedTower: (v: string | null) => void;
   setActiveSentinelTargetKey: (v: string | null) => void;
@@ -195,7 +201,7 @@ const MAX_EFFECTS = 80;
 
 export function handlePointerDownImpl(
   p: CanvasEventParams,
-  e: React.PointerEvent<HTMLCanvasElement>,
+  e: React.PointerEvent<HTMLCanvasElement>
 ): void {
   const isTouch = e.pointerType === "touch";
 
@@ -205,7 +211,9 @@ export function handlePointerDownImpl(
   }
 
   const canvas = p.canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
@@ -216,20 +224,33 @@ export function handlePointerDownImpl(
     const towerType = p.draggingTower?.type || p.buildingTower;
     if (towerType) {
       p.setIsBuildDragging(true);
-      p.setDraggingTower({ type: towerType, pos: clickPos });
+      p.setDraggingTower({ pos: clickPos, type: towerType });
     }
     return;
   }
 
-  if (p.placingTroop || p.targetingSpell) return;
+  if (p.placingTroop || p.targetingSpell) {
+    return;
+  }
 
   const waveStartBubbles = p.getWaveStartBubblesScreenData(width, height, dpr);
-  const clickedWaveBubble = findWaveStartBubbleAtPoint(waveStartBubbles, clickPos);
-  if (clickedWaveBubble) return;
+  const clickedWaveBubble = findWaveStartBubbleAtPoint(
+    waveStartBubbles,
+    clickPos
+  );
+  if (clickedWaveBubble) {
+    return;
+  }
 
-  if (p.activeSentinelTargetKey) return;
+  if (p.activeSentinelTargetKey) {
+    return;
+  }
 
-  const isInspecting = p.inspectorActive && p.gameSpeed === 0 && !p.buildingTower && !p.draggingTower;
+  const isInspecting =
+    p.inspectorActive &&
+    p.gameSpeed === 0 &&
+    !p.buildingTower &&
+    !p.draggingTower;
 
   if (isInspecting) {
     p.setIsPanning(true);
@@ -242,32 +263,62 @@ export function handlePointerDownImpl(
     const tower = p.towers.find((t) => t.id === p.selectedTower);
     if (tower) {
       const worldPos = gridToWorld(tower.pos);
-      const screenPos = worldToScreen(worldPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+      const screenPos = worldToScreen(
+        worldPos,
+        width,
+        height,
+        dpr,
+        p.cameraOffset,
+        p.cameraZoom
+      );
       const hitboxRadius = getTowerHitboxRadius(tower, p.cameraZoom);
-      if (distance(clickPos, screenPos) < hitboxRadius) return;
+      if (distance(clickPos, screenPos) < hitboxRadius) {
+        return;
+      }
     }
   }
 
   const clickedTower = p.towers.find((t) => {
     const worldPos = gridToWorld(t.pos);
-    const screenPos = worldToScreen(worldPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const screenPos = worldToScreen(
+      worldPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const hitboxRadius = getTowerHitboxRadius(t, p.cameraZoom);
     return distance(clickPos, screenPos) < hitboxRadius;
   });
 
   let clickedHero = false;
   if (p.hero && !p.hero.dead) {
-    const heroScreen = worldToScreen(p.hero.pos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const heroScreen = worldToScreen(
+      p.hero.pos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     clickedHero = distance(clickPos, heroScreen) < 28;
   }
 
   const clickedTroop = p.troops.find((t) => {
-    const troopScreen = worldToScreen(t.pos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const troopScreen = worldToScreen(
+      t.pos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     return distance(clickPos, troopScreen) < 22;
   });
 
   if (clickedHero && p.hero && !p.hero.dead) {
-    p.setDraggingUnit({ kind: "hero", heroId: p.hero.id });
+    p.setDraggingUnit({ heroId: p.hero.id, kind: "hero" });
     p.setUnitDragStart(clickPos);
     p.setUnitDragMoved(false);
     return;
@@ -276,8 +327,8 @@ export function handlePointerDownImpl(
   if (clickedTroop && !isTouch) {
     p.setDraggingUnit({
       kind: "troop",
-      troopId: clickedTroop.id,
       ownerId: clickedTroop.ownerId,
+      troopId: clickedTroop.id,
     });
     p.setUnitDragStart(clickPos);
     p.setUnitDragMoved(false);
@@ -297,7 +348,7 @@ export function handlePointerDownImpl(
 
 export function handleCanvasClickImpl(
   p: CanvasEventParams,
-  e: React.PointerEvent<HTMLCanvasElement>,
+  e: React.PointerEvent<HTMLCanvasElement>
 ): void {
   const isTouch = e.pointerType === "touch";
 
@@ -307,7 +358,9 @@ export function handleCanvasClickImpl(
   }
 
   const canvas = p.canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
@@ -322,7 +375,8 @@ export function handleCanvasClickImpl(
   if (p.isPanning) {
     const wasPanning =
       p.panStart &&
-      (Math.abs(clickX - p.panStart.x) > 5 || Math.abs(clickY - p.panStart.y) > 5);
+      (Math.abs(clickX - p.panStart.x) > 5 ||
+        Math.abs(clickY - p.panStart.y) > 5);
     p.setIsPanning(false);
     p.setPanStart(null);
     p.setPanStartOffset(null);
@@ -345,7 +399,14 @@ export function handleCanvasClickImpl(
           Math.abs(clickY - p.unitDragStart.y) > 4));
 
     if (movedEnough) {
-      const clickWorldPos = screenToWorld(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+      const clickWorldPos = screenToWorld(
+        clickPos,
+        width,
+        height,
+        dpr,
+        p.cameraOffset,
+        p.cameraZoom
+      );
       const barracksSpecialTowers = getLevelSpecialTowers(p.selectedMap);
 
       if (
@@ -359,10 +420,19 @@ export function handleCanvasClickImpl(
           p.issueHeroMoveCommand(p.draggingUnit.heroId, targetPos);
         }
       } else if (p.draggingUnit.kind === "troop") {
-        const draggedTroop = p.troops.find((t) => t.id === p.draggingUnit!.troopId);
+        const draggedTroop = p.troops.find(
+          (t) => t.id === p.draggingUnit!.troopId
+        );
         if (draggedTroop) {
-          const moveInfo = getTroopMoveInfo(draggedTroop, p.towers, barracksSpecialTowers);
-          const targetPos = p.resolveTroopCommandTarget(clickWorldPos, moveInfo);
+          const moveInfo = getTroopMoveInfo(
+            draggedTroop,
+            p.towers,
+            barracksSpecialTowers
+          );
+          const targetPos = p.resolveTroopCommandTarget(
+            clickWorldPos,
+            moveInfo
+          );
           if (targetPos) {
             p.issueTroopFormationMoveCommand(p.draggingUnit.ownerId, targetPos);
           }
@@ -379,14 +449,17 @@ export function handleCanvasClickImpl(
   }
 
   const waveStartBubbles = p.getWaveStartBubblesScreenData(width, height, dpr);
-  const clickedWaveBubble = findWaveStartBubbleAtPoint(waveStartBubbles, clickPos);
+  const clickedWaveBubble = findWaveStartBubbleAtPoint(
+    waveStartBubbles,
+    clickPos
+  );
 
   if (clickedWaveBubble) {
     const isSecondClickConfirm = isWaveStartConfirmForBubble(
       p.waveStartConfirm,
       clickedWaveBubble,
       p.selectedMap,
-      p.currentWave,
+      p.currentWave
     );
 
     if (isSecondClickConfirm) {
@@ -398,9 +471,9 @@ export function handleCanvasClickImpl(
     } else {
       p.setWaveStartConfirm({
         mapId: p.selectedMap,
-        waveIndex: p.currentWave,
-        pathKey: clickedWaveBubble.pathKey,
         openedAt: Date.now(),
+        pathKey: clickedWaveBubble.pathKey,
+        waveIndex: p.currentWave,
       });
       p.addParticles(clickedWaveBubble.worldPos, "glow", 7);
     }
@@ -420,7 +493,7 @@ export function handleCanvasClickImpl(
         height,
         dpr,
         p.cameraOffset,
-        p.cameraZoom,
+        p.cameraZoom
       );
       const otherTowers = p.towers.filter((t) => t.id !== p.repositioningTower);
       const isValid = isValidBuildPosition(
@@ -431,13 +504,13 @@ export function handleCanvasClickImpl(
         GRID_HEIGHT,
         TOWER_PLACEMENT_BUFFER,
         p.blockedPositions,
-        tower.type,
+        tower.type
       );
       if (isValid) {
         p.setTowers((prev) =>
           prev.map((t) =>
-            t.id === p.repositioningTower ? { ...t, pos: newGridPos } : t,
-          ),
+            t.id === p.repositioningTower ? { ...t, pos: newGridPos } : t
+          )
         );
         p.addParticles(gridToWorld(newGridPos), "spark", 8);
       }
@@ -448,8 +521,20 @@ export function handleCanvasClickImpl(
   }
 
   // ========== INSPECTOR MODE ==========
-  if (p.inspectorActive && p.gameSpeed === 0 && !p.draggingTower && !p.buildingTower) {
-    const worldPos = screenToWorld(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+  if (
+    p.inspectorActive &&
+    p.gameSpeed === 0 &&
+    !p.draggingTower &&
+    !p.buildingTower
+  ) {
+    const worldPos = screenToWorld(
+      clickPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
 
     const FRIENDLY_BIAS = 12;
     let closestType: "enemy" | "troop" | "hero" | null = null;
@@ -484,7 +569,9 @@ export function handleCanvasClickImpl(
     }
 
     for (const troop of p.troops) {
-      if (troop.dead) continue;
+      if (troop.dead) {
+        continue;
+      }
       const dist = distance(worldPos, troop.pos);
       if (dist < 22 + clickRadius && dist - FRIENDLY_BIAS < closestDist) {
         closestDist = dist;
@@ -511,18 +598,28 @@ export function handleCanvasClickImpl(
   // ========== TOWER PLACEMENT ==========
   const towerToPlace =
     p.draggingTower ||
-    (p.buildingTower ? { type: p.buildingTower, pos: clickPos } : null);
+    (p.buildingTower ? { pos: clickPos, type: p.buildingTower } : null);
 
   if (towerToPlace) {
     const allowedTowersForLevel = getLevelAllowedTowers(p.selectedMap);
-    if (allowedTowersForLevel && !allowedTowersForLevel.includes(towerToPlace.type)) {
+    if (
+      allowedTowersForLevel &&
+      !allowedTowersForLevel.includes(towerToPlace.type)
+    ) {
       p.setDraggingTower(null);
       p.setBuildingTower(null);
       p.setIsBuildDragging(false);
       return;
     }
 
-    const gridPos = screenToGrid(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const gridPos = screenToGrid(
+      clickPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const towerCost = TOWER_DATA[towerToPlace.type].cost;
     if (
       p.canAffordPawPoints(towerCost) &&
@@ -534,7 +631,7 @@ export function handleCanvasClickImpl(
         GRID_HEIGHT,
         TOWER_PLACEMENT_BUFFER,
         p.blockedPositions,
-        towerToPlace.type,
+        towerToPlace.type
       )
     ) {
       const defaultRotation =
@@ -545,16 +642,18 @@ export function handleCanvasClickImpl(
             : 0;
       const newTower: Tower = {
         id: generateId("tower"),
-        type: towerToPlace.type,
-        pos: gridPos,
-        level: 1,
         lastAttack: 0,
-        rotation: defaultRotation,
-        spawnRange:
-          towerToPlace.type === "station" ? TOWER_DATA.station.spawnRange : undefined,
+        level: 1,
         occupiedSpawnSlots:
           towerToPlace.type === "station" ? [false, false, false] : undefined,
         pendingRespawns: towerToPlace.type === "station" ? [] : undefined,
+        pos: gridPos,
+        rotation: defaultRotation,
+        spawnRange:
+          towerToPlace.type === "station"
+            ? TOWER_DATA.station.spawnRange
+            : undefined,
+        type: towerToPlace.type,
       };
       if (!p.spendPawPoints(towerCost)) {
         p.setDraggingTower(null);
@@ -567,7 +666,7 @@ export function handleCanvasClickImpl(
       p.gameEventLogRef.current.log(
         "tower_built",
         `Built ${TOWER_DATA[towerToPlace.type].name} for ${towerCost} PP`,
-        { towerType: towerToPlace.type, cost: towerCost },
+        { cost: towerCost, towerType: towerToPlace.type }
       );
     }
     p.setDraggingTower(null);
@@ -577,13 +676,22 @@ export function handleCanvasClickImpl(
   }
 
   if (p.placingTroop) {
-    const worldPos = screenToWorld(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const worldPos = screenToWorld(
+      clickPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const reinforcementStats = getReinforcementSpellStats(
-      p.spellUpgradeLevels.reinforcements,
+      p.spellUpgradeLevels.reinforcements
     );
 
     const pathSnap = findClosestPathPoint(worldPos, p.selectedMap);
-    if (!pathSnap || pathSnap.distance > HERO_PATH_HITBOX_SIZE * 2.5) return;
+    if (!pathSnap || pathSnap.distance > HERO_PATH_HITBOX_SIZE * 2.5) {
+      return;
+    }
     const castCenter = pathSnap.point;
     const castGroupId = generateId("spell");
 
@@ -595,34 +703,37 @@ export function handleCanvasClickImpl(
       { x: 48, y: -4 },
     ].slice(0, reinforcementStats.knightCount);
     const newTroops: Troop[] = troopOffsets.map((offset, i) => {
-      const troopPos = { x: castCenter.x + offset.x, y: castCenter.y + offset.y };
+      const troopPos = {
+        x: castCenter.x + offset.x,
+        y: castCenter.y + offset.y,
+      };
       return {
-        id: generateId("troop"),
-        ownerId: castGroupId,
-        ownerType: "spell" as const,
-        pos: troopPos,
+        attackAnim: 0,
+        facingRight: true,
         hp: reinforcementStats.knightHp,
-        maxHp: reinforcementStats.knightHp,
-        moving: false,
+        id: generateId("troop"),
         lastAttack: 0,
-        type: "reinforcement" as const,
-        overrideDamage: reinforcementStats.knightDamage,
+        maxHp: reinforcementStats.knightHp,
+        moveRadius: reinforcementStats.moveRadius,
+        moving: false,
         overrideAttackSpeed: reinforcementStats.knightAttackSpeedMs,
+        overrideCanTargetFlying: reinforcementStats.rangedUnlocked,
+        overrideDamage: reinforcementStats.knightDamage,
+        overrideHybridMelee: reinforcementStats.rangedUnlocked,
         overrideIsRanged: reinforcementStats.rangedUnlocked,
         overrideRange: reinforcementStats.rangedUnlocked
           ? reinforcementStats.rangedRange
           : undefined,
-        overrideCanTargetFlying: reinforcementStats.rangedUnlocked,
-        overrideHybridMelee: reinforcementStats.rangedUnlocked,
-        visualTier: reinforcementStats.visualTier,
+        ownerId: castGroupId,
+        ownerType: "spell" as const,
+        pos: troopPos,
         rotation: 0,
-        facingRight: true,
-        attackAnim: 0,
         selected: false,
         spawnPoint: troopPos,
-        moveRadius: reinforcementStats.moveRadius,
         spawnSlot: i,
+        type: "reinforcement" as const,
         userTargetPos: troopPos,
+        visualTier: reinforcementStats.visualTier,
       };
     });
     p.addTroopEntities(newTroops);
@@ -631,19 +742,28 @@ export function handleCanvasClickImpl(
     p.addParticles({ x: castCenter.x + 20, y: castCenter.y + 15 }, "spark", 8);
     p.setSpells((prev) =>
       prev.map((s) =>
-        s.type === "reinforcements" ? { ...s, cooldown: s.maxCooldown } : s,
-      ),
+        s.type === "reinforcements" ? { ...s, cooldown: s.maxCooldown } : s
+      )
     );
     p.setPlacingTroop(false);
     return;
   }
 
   if (p.targetingSpell) {
-    const worldPos = screenToWorld(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const worldPos = screenToWorld(
+      clickPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const castType = p.targetingSpell;
     p.executeTargetedSpellRef.current(p.targetingSpell, worldPos);
     p.setSpells((prev) =>
-      prev.map((s) => (s.type === castType ? { ...s, cooldown: s.maxCooldown } : s)),
+      prev.map((s) =>
+        s.type === castType ? { ...s, cooldown: s.maxCooldown } : s
+      )
     );
     p.setTargetingSpell(null);
     return;
@@ -654,10 +774,17 @@ export function handleCanvasClickImpl(
   const heroIsSelected = p.hero && !p.hero.dead && p.hero.selected;
   const levelSpecialTowers = getLevelSpecialTowers(p.selectedMap);
 
-  const clickWorldPos = screenToWorld(clickPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+  const clickWorldPos = screenToWorld(
+    clickPos,
+    width,
+    height,
+    dpr,
+    p.cameraOffset,
+    p.cameraZoom
+  );
   const clickedSpecialTower =
     levelSpecialTowers.find(
-      (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 140,
+      (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 140
     ) ?? null;
   const clickedSentinelNexus =
     clickedSpecialTower?.type === "sentinel_nexus" ? clickedSpecialTower : null;
@@ -667,8 +794,10 @@ export function handleCanvasClickImpl(
     const targetPos = p.clampWorldToMapBounds(clickWorldPos);
     p.setTowers((prev) =>
       prev.map((t) =>
-        t.id === p.missileMortarTargetingId ? { ...t, mortarTarget: targetPos } : t,
-      ),
+        t.id === p.missileMortarTargetingId
+          ? { ...t, mortarTarget: targetPos }
+          : t
+      )
     );
     p.setMissileMortarTargetingId(null);
     p.addParticles(targetPos, "fire", 10);
@@ -692,15 +821,17 @@ export function handleCanvasClickImpl(
       const next = [
         ...prev,
         {
+          duration: 460,
           id: generateId("sentinel_lockon"),
           pos: lockedTarget,
-          type: "sentinel_lockon" as const,
           progress: 0,
           size: 72,
-          duration: 460,
+          type: "sentinel_lockon" as const,
         },
       ];
-      return next.length > MAX_EFFECTS ? next.slice(next.length - MAX_EFFECTS) : next;
+      return next.length > MAX_EFFECTS
+        ? next.slice(next.length - MAX_EFFECTS)
+        : next;
     });
     p.addParticles(lockedTarget, "light", 12);
     p.addParticles(lockedTarget, "spark", 8);
@@ -719,15 +850,17 @@ export function handleCanvasClickImpl(
         const next = [
           ...prev,
           {
+            duration: 460,
             id: generateId("sentinel_lockon"),
             pos: existingTarget,
-            type: "sentinel_lockon" as const,
             progress: 0,
             size: 72,
-            duration: 460,
+            type: "sentinel_lockon" as const,
           },
         ];
-        return next.length > MAX_EFFECTS ? next.slice(next.length - MAX_EFFECTS) : next;
+        return next.length > MAX_EFFECTS
+          ? next.slice(next.length - MAX_EFFECTS)
+          : next;
       });
     }
     p.addParticles(gridToWorld(clickedSentinelNexus.pos), "spark", 10);
@@ -742,7 +875,7 @@ export function handleCanvasClickImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
 
     if (distance(clickPos, heroScreen) < 28) {
@@ -775,7 +908,7 @@ export function handleCanvasClickImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     if (distance(clickPos, troopScreen) < 22) {
       p.setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
@@ -783,15 +916,25 @@ export function handleCanvasClickImpl(
     }
 
     if (p.moveTargetPos && p.moveTargetValid && p.selectedUnitMoveInfo) {
-      p.issueTroopFormationMoveCommand(selectedTroopUnit.ownerId, p.moveTargetPos);
+      p.issueTroopFormationMoveCommand(
+        selectedTroopUnit.ownerId,
+        p.moveTargetPos
+      );
       return;
     }
 
     if (isTouch) {
-      const moveInfo = getTroopMoveInfo(selectedTroopUnit, p.towers, levelSpecialTowers);
+      const moveInfo = getTroopMoveInfo(
+        selectedTroopUnit,
+        p.towers,
+        levelSpecialTowers
+      );
       const touchTarget = p.resolveTroopCommandTarget(clickWorldPos, moveInfo);
       if (touchTarget) {
-        p.issueTroopFormationMoveCommand(selectedTroopUnit.ownerId, touchTarget);
+        p.issueTroopFormationMoveCommand(
+          selectedTroopUnit.ownerId,
+          touchTarget
+        );
         return;
       }
     }
@@ -817,9 +960,12 @@ export function handleCanvasClickImpl(
         height,
         dpr,
         p.cameraOffset,
-        p.cameraZoom,
+        p.cameraZoom
       );
-      if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * p.cameraZoom) {
+      if (
+        distance(clickPos, reticleScreen) <
+        RETICLE_HIT_RADIUS * p.cameraZoom
+      ) {
         p.setMissileMortarTargetingId(tower.id);
         p.setSelectedTower(null);
         return;
@@ -828,25 +974,31 @@ export function handleCanvasClickImpl(
   }
 
   for (const tower of p.towers) {
-    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") continue;
-    if (tower.mortarAutoAim === false) continue;
+    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") {
+      continue;
+    }
+    if (tower.mortarAutoAim === false) {
+      continue;
+    }
     const aimPos = p.missileAutoAimRef.current.get(tower.id);
-    if (!aimPos) continue;
+    if (!aimPos) {
+      continue;
+    }
     const reticleScreen = worldToScreen(
       aimPos,
       width,
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * p.cameraZoom) {
       p.setTowers((prev) =>
         prev.map((t) =>
           t.id === tower.id
             ? { ...t, mortarAutoAim: false, mortarTarget: { ...aimPos } }
-            : t,
-        ),
+            : t
+        )
       );
       p.setMissileMortarTargetingId(tower.id);
       p.setSelectedTower(null);
@@ -855,17 +1007,21 @@ export function handleCanvasClickImpl(
   }
 
   for (const spec of levelSpecialTowers) {
-    if (spec.type !== "sentinel_nexus") continue;
+    if (spec.type !== "sentinel_nexus") {
+      continue;
+    }
     const key = p.getSpecialTowerKey(spec);
     const targetPos = p.sentinelTargetsRef.current[key];
-    if (!targetPos) continue;
+    if (!targetPos) {
+      continue;
+    }
     const reticleScreen = worldToScreen(
       targetPos,
       width,
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * p.cameraZoom) {
       p.setActiveSentinelTargetKey(key);
@@ -880,7 +1036,14 @@ export function handleCanvasClickImpl(
   // ========== NORMAL SELECTION MODE ==========
   const clickedTower = p.towers.find((t) => {
     const worldPos = gridToWorld(t.pos);
-    const screenPos = worldToScreen(worldPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const screenPos = worldToScreen(
+      worldPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const hitboxRadius = getTowerHitboxRadius(t, p.cameraZoom);
     return distance(clickPos, screenPos) < hitboxRadius;
   });
@@ -899,7 +1062,7 @@ export function handleCanvasClickImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     if (distance(clickPos, heroScreen) < 28) {
       p.setHero((prev) => (prev ? { ...prev, selected: true } : null));
@@ -916,11 +1079,11 @@ export function handleCanvasClickImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     if (distance(clickPos, troopScreen) < 22) {
       p.setTroops((prev) =>
-        prev.map((t) => ({ ...t, selected: t.id === troop.id })),
+        prev.map((t) => ({ ...t, selected: t.id === troop.id }))
       );
       p.setHero((prev) => (prev ? { ...prev, selected: false } : null));
       p.setSelectedTower(null);
@@ -940,7 +1103,7 @@ export function handleCanvasClickImpl(
 
 export function handleMouseMoveImpl(
   p: CanvasEventParams,
-  e: React.PointerEvent<HTMLCanvasElement>,
+  e: React.PointerEvent<HTMLCanvasElement>
 ): void {
   const isTouch = e.pointerType === "touch";
 
@@ -949,10 +1112,14 @@ export function handleMouseMoveImpl(
     p.setHoveredWaveBubblePathKey(null);
   }
 
-  if (!isTouch && Date.now() - p.lastTouchTimeRef.current < 500) return;
+  if (!isTouch && Date.now() - p.lastTouchTimeRef.current < 500) {
+    return;
+  }
 
   const canvas = p.canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
@@ -982,7 +1149,7 @@ export function handleMouseMoveImpl(
     (e.buttons & 1) === 0
       ? getHoveredWaveStartBubblePath(
           p.getWaveStartBubblesScreenData(width, height, dpr),
-          { x, y },
+          { x, y }
         )
       : null;
   p.setHoveredWaveBubblePathKey(hoveredWaveBubblePath);
@@ -1000,7 +1167,10 @@ export function handleMouseMoveImpl(
   if (p.isPanning && p.panStart && p.panStartOffset) {
     const dx = (x - p.panStart.x) / p.cameraZoom;
     const dy = (y - p.panStart.y) / p.cameraZoom;
-    p.setCameraOffset({ x: p.panStartOffset.x + dx, y: p.panStartOffset.y + dy });
+    p.setCameraOffset({
+      x: p.panStartOffset.x + dx,
+      y: p.panStartOffset.y + dy,
+    });
     return;
   }
 
@@ -1014,21 +1184,29 @@ export function handleMouseMoveImpl(
   if (p.draggingUnit && p.unitDragStart) {
     if (
       !p.unitDragMoved &&
-      (Math.abs(x - p.unitDragStart.x) > 4 || Math.abs(y - p.unitDragStart.y) > 4)
+      (Math.abs(x - p.unitDragStart.x) > 4 ||
+        Math.abs(y - p.unitDragStart.y) > 4)
     ) {
       p.setUnitDragMoved(true);
     }
 
-    const mouseWorldPos = screenToWorld({ x, y }, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const mouseWorldPos = screenToWorld(
+      { x, y },
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const pointerMoveSpecialTowers = getLevelSpecialTowers(p.selectedMap);
 
     if (p.draggingUnit.kind === "hero") {
       p.setSelectedUnitMoveInfo({
         anchorPos: p.hero?.pos || mouseWorldPos,
-        moveRadius: Infinity,
         canMoveAnywhere: true,
-        ownerType: "hero",
+        moveRadius: Infinity,
         ownerId: p.draggingUnit.heroId,
+        ownerType: "hero",
       });
 
       const pathResult = findClosestPathPoint(mouseWorldPos, p.selectedMap);
@@ -1040,7 +1218,9 @@ export function handleMouseMoveImpl(
         p.setMoveTargetValid(false);
       }
     } else {
-      const draggedTroop = p.troops.find((t) => t.id === p.draggingUnit!.troopId);
+      const draggedTroop = p.troops.find(
+        (t) => t.id === p.draggingUnit!.troopId
+      );
       if (!draggedTroop) {
         p.setDraggingUnit(null);
         p.setUnitDragStart(null);
@@ -1051,18 +1231,23 @@ export function handleMouseMoveImpl(
         return;
       }
 
-      const moveInfo = getTroopMoveInfo(draggedTroop, p.towers, pointerMoveSpecialTowers);
+      const moveInfo = getTroopMoveInfo(
+        draggedTroop,
+        p.towers,
+        pointerMoveSpecialTowers
+      );
       p.setSelectedUnitMoveInfo(moveInfo);
       const pathResult = findClosestPathPointWithinRadius(
         mouseWorldPos,
         moveInfo.anchorPos,
         moveInfo.moveRadius,
-        p.selectedMap,
+        p.selectedMap
       );
 
       if (pathResult) {
         const pathPoint = findClosestPathPoint(mouseWorldPos, p.selectedMap);
-        const isNearPath = !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2;
+        const isNearPath =
+          !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2;
         p.setMoveTargetPos(pathResult.point);
         p.setMoveTargetValid(pathResult.isValid && isNearPath);
       } else {
@@ -1079,7 +1264,10 @@ export function handleMouseMoveImpl(
     if (p.isPanning && p.panStart && p.panStartOffset) {
       const dx = (x - p.panStart.x) / p.cameraZoom;
       const dy = (y - p.panStart.y) / p.cameraZoom;
-      p.setCameraOffset({ x: p.panStartOffset.x + dx, y: p.panStartOffset.y + dy });
+      p.setCameraOffset({
+        x: p.panStartOffset.x + dx,
+        y: p.panStartOffset.y + dy,
+      });
       return;
     }
 
@@ -1089,9 +1277,9 @@ export function handleMouseMoveImpl(
     }
 
     if (p.isBuildDragging && p.buildingTower && !p.draggingTower) {
-      p.setDraggingTower({ type: p.buildingTower, pos: { x, y } });
+      p.setDraggingTower({ pos: { x, y }, type: p.buildingTower });
     } else if (p.isBuildDragging && p.draggingTower) {
-      p.setDraggingTower({ type: p.draggingTower.type, pos: { x, y } });
+      p.setDraggingTower({ pos: { x, y }, type: p.draggingTower.type });
     }
     return;
   }
@@ -1099,18 +1287,18 @@ export function handleMouseMoveImpl(
   // ========== INSPECTOR MODE - Handle unit hover ==========
   if (p.inspectorActive) {
     const hoverResult = getInspectorHoverResult({
-      screenPos: { x, y },
-      width,
-      height,
-      dpr,
       cameraOffset: p.cameraOffset,
       cameraZoom: p.cameraZoom,
+      decorations: p.cachedDecorationsRef.current?.decorations,
+      dpr,
       enemies: p.enemies,
       getEnemyPosWithPath,
-      selectedMap: p.selectedMap,
+      height,
       hero: p.hero,
+      screenPos: { x, y },
+      selectedMap: p.selectedMap,
       troops: p.troops,
-      decorations: p.cachedDecorationsRef.current?.decorations,
+      width,
     });
 
     p.setHoveredInspectEnemy(hoverResult.hoveredEnemy?.id || null);
@@ -1118,14 +1306,16 @@ export function handleMouseMoveImpl(
     p.setHoveredInspectHero(hoverResult.hoveredHero);
     p.setHoveredInspectDecoration(hoverResult.hoveredDecoration);
 
-    if (p.gameSpeed === 0 && !p.draggingTower && !p.buildingTower) return;
+    if (p.gameSpeed === 0 && !p.draggingTower && !p.buildingTower) {
+      return;
+    }
   }
 
   // Tower drag preview
   if (p.buildingTower && !p.draggingTower) {
-    p.setDraggingTower({ type: p.buildingTower, pos: { x, y } });
+    p.setDraggingTower({ pos: { x, y }, type: p.buildingTower });
   } else if (p.draggingTower) {
-    p.setDraggingTower({ type: p.draggingTower.type, pos: { x, y } });
+    p.setDraggingTower({ pos: { x, y }, type: p.draggingTower.type });
   }
 
   // Suppress all world tooltips while placing a tower
@@ -1138,14 +1328,28 @@ export function handleMouseMoveImpl(
     return;
   }
 
-  const mouseWorldPos = screenToWorld({ x, y }, width, height, dpr, p.cameraOffset, p.cameraZoom);
+  const mouseWorldPos = screenToWorld(
+    { x, y },
+    width,
+    height,
+    dpr,
+    p.cameraOffset,
+    p.cameraZoom
+  );
 
   // ========== HOVER DETECTION ==========
   // Priority: Tower/Troop > Hero > Special Building > Landmark > Hazard
 
   const hoveredT = p.towers.find((t) => {
     const worldPos = gridToWorld(t.pos);
-    const screenPos = worldToScreen(worldPos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+    const screenPos = worldToScreen(
+      worldPos,
+      width,
+      height,
+      dpr,
+      p.cameraOffset,
+      p.cameraZoom
+    );
     const hitboxRadius = getTowerHitboxRadius(t, p.cameraZoom);
     return distance({ x, y }, screenPos) < hitboxRadius;
   });
@@ -1153,7 +1357,14 @@ export function handleMouseMoveImpl(
   let hoveredTroopOwnerId: string | null = null;
   if (!hoveredT) {
     const hoveredTroop = p.troops.find((t) => {
-      const screenPos = worldToScreen(t.pos, width, height, dpr, p.cameraOffset, p.cameraZoom);
+      const screenPos = worldToScreen(
+        t.pos,
+        width,
+        height,
+        dpr,
+        p.cameraOffset,
+        p.cameraZoom
+      );
       return distance({ x, y }, screenPos) < 22;
     });
     if (hoveredTroop && !hoveredTroop.ownerId.startsWith("spell")) {
@@ -1169,7 +1380,7 @@ export function handleMouseMoveImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     isHeroHovered = distance({ x, y }, heroScreen) < 28;
   }
@@ -1185,7 +1396,7 @@ export function handleMouseMoveImpl(
       height,
       dpr,
       p.cameraOffset,
-      p.cameraZoom,
+      p.cameraZoom
     );
     const dist = distance({ x, y }, towerScreenPos);
     if (dist < 80 && dist < nearestSpecialDist) {
@@ -1214,9 +1425,10 @@ export function handleMouseMoveImpl(
           height,
           dpr,
           p.cameraOffset,
-          p.cameraZoom,
+          p.cameraZoom
         );
-        const scale = (resolvedPlacement?.scale ?? (deco.size || 1)) * p.cameraZoom;
+        const scale =
+          (resolvedPlacement?.scale ?? (deco.size || 1)) * p.cameraZoom;
         const hitRadius = scale * 35;
         const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
         const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
@@ -1239,7 +1451,7 @@ export function handleMouseMoveImpl(
           height,
           dpr,
           p.cameraOffset,
-          p.cameraZoom,
+          p.cameraZoom
         );
         const hitRadius = (haz.radius || 2) * 24 * p.cameraZoom;
         if (distance({ x, y }, hazScreen) < hitRadius) {
@@ -1291,19 +1503,24 @@ export function handleMouseMoveImpl(
   const hoverSpecialTowers = getLevelSpecialTowers(p.selectedMap);
 
   if (selectedTroop) {
-    const moveInfo = getTroopMoveInfo(selectedTroop, p.towers, hoverSpecialTowers);
+    const moveInfo = getTroopMoveInfo(
+      selectedTroop,
+      p.towers,
+      hoverSpecialTowers
+    );
     p.setSelectedUnitMoveInfo(moveInfo);
 
     const pathResult = findClosestPathPointWithinRadius(
       mouseWorldPos,
       moveInfo.anchorPos,
       moveInfo.moveRadius,
-      p.selectedMap,
+      p.selectedMap
     );
 
     if (pathResult) {
       const pathPoint = findClosestPathPoint(mouseWorldPos, p.selectedMap);
-      const isNearPath = !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2;
+      const isNearPath =
+        !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2;
       p.setMoveTargetPos(pathResult.point);
       p.setMoveTargetValid(pathResult.isValid && isNearPath);
     } else {
@@ -1313,10 +1530,10 @@ export function handleMouseMoveImpl(
   } else if (heroIsSelected) {
     p.setSelectedUnitMoveInfo({
       anchorPos: p.hero!.pos,
-      moveRadius: Infinity,
       canMoveAnywhere: true,
-      ownerType: "hero",
+      moveRadius: Infinity,
       ownerId: p.hero!.id,
+      ownerType: "hero",
     });
 
     const pathResult = findClosestPathPoint(mouseWorldPos, p.selectedMap);

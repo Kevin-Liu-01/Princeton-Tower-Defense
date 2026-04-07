@@ -72,9 +72,9 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
   const [sizes, setSizes] = useState<ResponsiveSizes>({
     heroIcon: 28,
     heroIconLarge: 48,
+    spellIcon: 24,
     towerIcon: 34,
     towerIconLarge: 48,
-    spellIcon: 24,
   });
 
   useEffect(() => {
@@ -85,49 +85,49 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 48,
           heroIconLarge: 72,
+          spellIcon: 40,
           towerIcon: 56,
           towerIconLarge: 72,
-          spellIcon: 40,
         });
       } else if (width >= 1280) {
         setSizes({
           heroIcon: 42,
           heroIconLarge: 64,
+          spellIcon: 36,
           towerIcon: 50,
           towerIconLarge: 64,
-          spellIcon: 36,
         });
       } else if (width >= 1024) {
         setSizes({
           heroIcon: 36,
           heroIconLarge: 60,
+          spellIcon: 32,
           towerIcon: 44,
           towerIconLarge: 60,
-          spellIcon: 32,
         });
       } else if (width >= 768) {
         setSizes({
           heroIcon: 32,
           heroIconLarge: 56,
+          spellIcon: 28,
           towerIcon: 40,
           towerIconLarge: 56,
-          spellIcon: 28,
         });
       } else if (width >= 640) {
         setSizes({
           heroIcon: 28,
           heroIconLarge: 52,
+          spellIcon: 24,
           towerIcon: 34,
           towerIconLarge: 52,
-          spellIcon: 24,
         });
       } else {
         setSizes({
           heroIcon: 24,
           heroIconLarge: 48,
+          spellIcon: 20,
           towerIcon: 30,
           towerIconLarge: 48,
-          spellIcon: 20,
         });
       }
     };

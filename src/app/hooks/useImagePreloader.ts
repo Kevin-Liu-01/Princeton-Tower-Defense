@@ -9,16 +9,18 @@ export interface PreloaderState {
 }
 
 const INITIAL_STATE: PreloaderState = {
-  loaded: 0,
-  total: 0,
-  progress: 0,
   isComplete: false,
+  loaded: 0,
+  progress: 0,
+  total: 0,
 };
 
 const imageCache = new Set<string>();
 
 function preloadSingleImage(src: string): Promise<void> {
-  if (imageCache.has(src)) return Promise.resolve();
+  if (imageCache.has(src)) {
+    return Promise.resolve();
+  }
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -39,31 +41,49 @@ export function useImagePreloader(urls: string[]): PreloaderState {
   const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (urls.length === 0 || hasStarted.current) return;
+    if (urls.length === 0 || hasStarted.current) {
+      return;
+    }
     hasStarted.current = true;
 
     const total = urls.length;
     let loaded = urls.filter((u) => imageCache.has(u)).length;
-    setState({ loaded, total, progress: loaded / total, isComplete: loaded >= total });
+    setState({
+      isComplete: loaded >= total,
+      loaded,
+      progress: loaded / total,
+      total,
+    });
 
     const uncached = urls.filter((u) => !imageCache.has(u));
-    if (uncached.length === 0) return;
+    if (uncached.length === 0) {
+      return;
+    }
 
     const CONCURRENCY = 6;
     let idx = 0;
 
     function next(): Promise<void> {
-      if (idx >= uncached.length) return Promise.resolve();
+      if (idx >= uncached.length) {
+        return Promise.resolve();
+      }
       const url = uncached[idx++];
       return preloadSingleImage(url).then(() => {
         loaded++;
-        setState({ loaded, total, progress: loaded / total, isComplete: loaded >= total });
+        setState({
+          isComplete: loaded >= total,
+          loaded,
+          progress: loaded / total,
+          total,
+        });
         return next();
       });
     }
 
     Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () => next()),
+      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () =>
+        next()
+      )
     );
   }, [urls]);
 
@@ -76,7 +96,7 @@ export function useImagePreloader(urls: string[]): PreloaderState {
  */
 export function preloadImagesWithProgress(
   urls: string[],
-  onProgress: (loaded: number, total: number) => void,
+  onProgress: (loaded: number, total: number) => void
 ): Promise<void> {
   const total = urls.length;
   if (total === 0) {
@@ -88,14 +108,18 @@ export function preloadImagesWithProgress(
   let loaded = total - uncached.length;
   onProgress(loaded, total);
 
-  if (uncached.length === 0) return Promise.resolve();
+  if (uncached.length === 0) {
+    return Promise.resolve();
+  }
 
   const CONCURRENCY = 6;
   let idx = 0;
 
   return new Promise((resolve) => {
     function next(): Promise<void> {
-      if (idx >= uncached.length) return Promise.resolve();
+      if (idx >= uncached.length) {
+        return Promise.resolve();
+      }
       const url = uncached[idx++];
       return preloadSingleImage(url).then(() => {
         loaded++;
@@ -105,7 +129,9 @@ export function preloadImagesWithProgress(
     }
 
     Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () => next()),
+      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () =>
+        next()
+      )
     ).then(() => resolve());
   });
 }
@@ -116,7 +142,7 @@ export function preloadImagesWithProgress(
  */
 export function usePreloadGate(
   urls: string[],
-  minDisplayMs = 2000,
+  minDisplayMs = 2000
 ): PreloaderState & { isReady: boolean } {
   const preloader = useImagePreloader(urls);
   const [minTimePassed, setMinTimePassed] = useState(false);
@@ -144,10 +170,7 @@ export function usePreloadGate(
  * Progress that smoothly fills over the full display window.
  * Accounts for asset loading AND UI render/initialization time.
  */
-function useSyntheticProgress(
-  active: boolean,
-  minDisplayMs: number,
-): number {
+function useSyntheticProgress(active: boolean, minDisplayMs: number): number {
   const [display, setDisplay] = useState(0);
   const rafRef = useRef(0);
   const startRef = useRef(0);
@@ -192,7 +215,7 @@ function useSyntheticProgress(
 export function useBattleLoadingGate(
   getUrls: () => string[],
   minDisplayMs = 2200,
-  onReady: () => void,
+  onReady: () => void
 ) {
   const [active, setActive] = useState(false);
   const [loaded, setLoaded] = useState(0);
@@ -215,22 +238,30 @@ export function useBattleLoadingGate(
     const startTime = Date.now();
 
     preloadImagesWithProgress(urls, (l, t) => {
-      if (sessionRef.current !== session) return;
+      if (sessionRef.current !== session) {
+        return;
+      }
       setLoaded(l);
       setTotal(t);
     }).then(() => {
-      if (sessionRef.current !== session) return;
+      if (sessionRef.current !== session) {
+        return;
+      }
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, minDisplayMs - elapsed);
 
       // Phase 1 → Phase 2 transition: wait for minDisplayMs
       setTimeout(() => {
-        if (sessionRef.current !== session) return;
+        if (sessionRef.current !== session) {
+          return;
+        }
         readyCallbackRef.current();
 
         // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
         setTimeout(() => {
-          if (sessionRef.current !== session) return;
+          if (sessionRef.current !== session) {
+            return;
+          }
           setActive(false);
         }, UI_GRACE_MS);
       }, remaining);
@@ -242,5 +273,5 @@ export function useBattleLoadingGate(
     setActive(false);
   }, []);
 
-  return { active, loaded, total, progress: visualProgress, trigger, cancel };
+  return { active, cancel, loaded, progress: visualProgress, total, trigger };
 }

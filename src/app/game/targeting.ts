@@ -16,10 +16,14 @@ export function getPrioritizedEnemiesInRange(
   const rangeSq = range * range;
   const targets: Enemy[] = [];
   for (const enemy of enemiesByProgress) {
-    if (predicate && !predicate(enemy)) continue;
+    if (predicate && !predicate(enemy)) {
+      continue;
+    }
     if (distanceSq(origin, getEnemyPos(enemy)) <= rangeSq) {
       targets.push(enemy);
-      if (targets.length >= limit) break;
+      if (targets.length >= limit) {
+        break;
+      }
     }
   }
   return targets;
@@ -38,7 +42,9 @@ export function getClosestEnemyInRange(
   let closestEnemy: Enemy | null = null;
   let closestDistSq = range * range;
   for (const enemy of enemies) {
-    if (predicate && !predicate(enemy)) continue;
+    if (predicate && !predicate(enemy)) {
+      continue;
+    }
     const dSq = distanceSq(origin, getEnemyPos(enemy));
     if (dSq <= closestDistSq) {
       closestDistSq = dSq;
@@ -64,13 +70,17 @@ export function getChainTargets(
   const chained = new Set<string>([primaryTarget.id]);
 
   for (let i = 1; i < maxChainCount; i++) {
-    const lastPos = getEnemyPos(chain[chain.length - 1]);
+    const lastPos = getEnemyPos(chain.at(-1));
     let bestEnemy: Enemy | null = null;
     let bestDistSq = chainRange * chainRange;
 
     for (const enemy of allEnemies) {
-      if (chained.has(enemy.id)) continue;
-      if (enemy.dead || enemy.hp <= 0) continue;
+      if (chained.has(enemy.id)) {
+        continue;
+      }
+      if (enemy.dead || enemy.hp <= 0) {
+        continue;
+      }
       const dSq = distanceSq(lastPos, getEnemyPos(enemy));
       if (dSq <= bestDistSq) {
         bestDistSq = dSq;
@@ -78,7 +88,9 @@ export function getChainTargets(
       }
     }
 
-    if (!bestEnemy) break;
+    if (!bestEnemy) {
+      break;
+    }
     chain.push(bestEnemy);
     chained.add(bestEnemy.id);
   }
@@ -113,9 +125,13 @@ export function findNearestTroopInRange(
   for (let cy = baseY - cellRadius; cy <= baseY + cellRadius; cy++) {
     for (let cx = baseX - cellRadius; cx <= baseX + cellRadius; cx++) {
       const bucket = troopBuckets.get(`${cx}:${cy}`);
-      if (!bucket) continue;
+      if (!bucket) {
+        continue;
+      }
       for (const troop of bucket) {
-        if (predicate && !predicate(troop)) continue;
+        if (predicate && !predicate(troop)) {
+          continue;
+        }
         const dSq = distanceSq(origin, troop.pos);
         if (dSq <= closestDistSq) {
           closest = troop;

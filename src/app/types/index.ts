@@ -68,7 +68,7 @@ export interface TowerStats {
     A: TowerUpgradeStats;
     B: TowerUpgradeStats;
   };
-  levelDesc: { [key: number]: string };
+  levelDesc: Record<number, string>;
 }
 
 // Flavor of tower disable - determines visual treatment
@@ -103,12 +103,12 @@ export interface Tower {
   trainAnimProgress?: number;
   currentTroopCount?: number;
   occupiedSpawnSlots?: boolean[];
-  pendingRespawns?: Array<{
+  pendingRespawns?: {
     slot: number;
     timer: number;
     respawnPos: Position;
     troopType: string;
-  }>;
+  }[];
   // Combat state
   lockedTarget?: string;
   lockOnStacks?: number;
@@ -293,18 +293,18 @@ export type EnemyType =
 
 // Enemy categories for organization
 export type EnemyCategory =
-  | "region_boss"   // End-of-region capstone mega bosses
-  | "academic"      // Academic progression: writing sem, thesis, grad apps, etc.
-  | "campus"        // Campus life: athletes, tiger fans, recruiters, etc.
-  | "ranged"        // Ranged attackers
-  | "dark_fantasy"  // Undead, skeletal, and dark fantasy enemies
-  | "forest"        // Forest biome creatures
-  | "swamp"         // Swamp biome creatures
-  | "desert"        // Desert biome creatures
-  | "winter"        // Winter/frost biome creatures
-  | "volcanic"      // Fire/lava biome creatures
-  | "flying"        // Aerial threats
-  | "insectoid";    // Bug and arachnid enemies
+  | "region_boss" // End-of-region capstone mega bosses
+  | "academic" // Academic progression: writing sem, thesis, grad apps, etc.
+  | "campus" // Campus life: athletes, tiger fans, recruiters, etc.
+  | "ranged" // Ranged attackers
+  | "dark_fantasy" // Undead, skeletal, and dark fantasy enemies
+  | "forest" // Forest biome creatures
+  | "swamp" // Swamp biome creatures
+  | "desert" // Desert biome creatures
+  | "winter" // Winter/frost biome creatures
+  | "volcanic" // Fire/lava biome creatures
+  | "flying" // Aerial threats
+  | "insectoid"; // Bug and arachnid enemies
 
 // Enemy ability types - special effects enemies can apply
 export type EnemyAbilityType =
@@ -354,7 +354,7 @@ export interface EnemyData {
   color: string;
   size: number;
   category?: EnemyCategory; // Enemy category for organization
-  nativeRegion?: MapTheme;  // Home biome — skips regional palette shift when rendering
+  nativeRegion?: MapTheme; // Home biome — skips regional palette shift when rendering
   isRanged?: boolean;
   range?: number;
   attackSpeed?: number;
@@ -909,14 +909,10 @@ export interface WaveGroup {
 }
 
 // Level stars tracking
-export interface LevelStars {
-  [mapId: string]: number;
-}
+export type LevelStars = Record<string, number>;
 
 // Completed levels tracking
-export interface CompletedLevels {
-  [mapId: string]: boolean;
-}
+export type CompletedLevels = Record<string, boolean>;
 
 // ============================================================================
 // MAP & DECORATION TYPES

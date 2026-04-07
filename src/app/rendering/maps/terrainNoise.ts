@@ -1,7 +1,7 @@
 function noiseHash(px: number, py: number, seed: number): number {
-  let h = (px * 374761393 + py * 668265263 + seed * 1013904223) | 0;
-  h = ((h ^ (h >> 13)) * 1274126177) | 0;
-  return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff;
+  let h = (px * 374_761_393 + py * 668_265_263 + seed * 1_013_904_223) | 0;
+  h = ((h ^ (h >> 13)) * 1_274_126_177) | 0;
+  return ((h ^ (h >> 16)) & 0x7f_ff_ff_ff) / 0x7f_ff_ff_ff;
 }
 
 export function valueNoise(x: number, y: number, seed: number): number {
@@ -29,7 +29,7 @@ export function fbmNoise(
   x: number,
   y: number,
   seed: number,
-  octaves: number,
+  octaves: number
 ): number {
   let value = 0;
   let amplitude = 1;
@@ -50,12 +50,10 @@ export function domainWarpedNoise(
   y: number,
   seed: number,
   octaves: number,
-  warpStrength: number,
+  warpStrength: number
 ): number {
-  const wx =
-    fbmNoise(x + 5.2, y + 1.3, seed + 100, octaves) * warpStrength;
-  const wy =
-    fbmNoise(x + 8.7, y + 2.8, seed + 200, octaves) * warpStrength;
+  const wx = fbmNoise(x + 5.2, y + 1.3, seed + 100, octaves) * warpStrength;
+  const wy = fbmNoise(x + 8.7, y + 2.8, seed + 200, octaves) * warpStrength;
   return fbmNoise(x + wx, y + wy, seed, octaves);
 }
 
@@ -63,7 +61,7 @@ export function ridgedNoise(
   x: number,
   y: number,
   seed: number,
-  octaves: number,
+  octaves: number
 ): number {
   let value = 0;
   let amplitude = 1;

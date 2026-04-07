@@ -1,8 +1,8 @@
 "use client";
 
+import { X } from "lucide-react";
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 
 interface MobileBottomSheetProps {
   isOpen: boolean;
@@ -45,38 +45,44 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
   }, [onClose]);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") {
+        handleClose();
+      }
     };
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [mounted, handleClose]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return null;
+  }
 
   const sheet = (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
         alignItems: "flex-end",
+        display: "flex",
+        inset: 0,
         justifyContent: "center",
         pointerEvents: visible ? "auto" : "none",
+        position: "fixed",
+        zIndex: 9999,
       }}
     >
       {/* Backdrop */}
       <div
         onClick={handleClose}
         style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(0,0,0,0.75)",
-          backdropFilter: "blur(4px)",
           WebkitBackdropFilter: "blur(4px)",
+          backdropFilter: "blur(4px)",
+          background: "rgba(0,0,0,0.75)",
+          inset: 0,
           opacity: visible ? 1 : 0,
+          position: "absolute",
           transition: `opacity ${ANIM_DURATION_MS}ms ease`,
         }}
       />
@@ -84,26 +90,33 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
       {/* Sheet */}
       <div
         style={{
-          position: "relative",
-          width: "100%",
-          maxHeight: "70dvh",
-          overflow: "hidden",
           background:
             "linear-gradient(180deg, rgba(38,32,24,0.99) 0%, rgba(20,16,10,0.99) 100%)",
           borderTop: `1.5px solid ${accentColor}`,
           boxShadow: `0 -8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`,
+          maxHeight: "70dvh",
+          overflow: "hidden",
+          position: "relative",
           transform: visible ? "translateY(0)" : "translateY(100%)",
           transition: `transform ${ANIM_DURATION_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+          width: "100%",
         }}
       >
         {/* Drag handle */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 4 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingBottom: 4,
+            paddingTop: 10,
+          }}
+        >
           <div
             style={{
-              width: 40,
-              height: 4,
-              borderRadius: 9999,
               background: "rgba(255,255,255,0.15)",
+              borderRadius: 9999,
+              height: 4,
+              width: 40,
             }}
           />
         </div>
@@ -111,26 +124,34 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         {/* Header */}
         <div
           style={{
-            display: "flex",
             alignItems: "center",
+            borderBottom: `1px solid ${accentColor}`,
+            display: "flex",
             justifyContent: "space-between",
             padding: "0 16px 8px 16px",
-            borderBottom: `1px solid ${accentColor}`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              alignItems: "center",
+              display: "flex",
+              flex: 1,
+              gap: 8,
+              minWidth: 0,
+            }}
+          >
             {titleIcon && <span style={{ flexShrink: 0 }}>{titleIcon}</span>}
             <span
               style={{
+                color: "#fde68a",
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "#fde68a",
+                minWidth: 0,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                textTransform: "uppercase",
                 whiteSpace: "nowrap",
-                minWidth: 0,
               }}
             >
               {title}
@@ -139,16 +160,16 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
           <button
             onClick={handleClose}
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              display: "flex",
               alignItems: "center",
-              justifyContent: "center",
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
-              cursor: "pointer",
+              borderRadius: 8,
               color: "#a8a29e",
+              cursor: "pointer",
+              display: "flex",
+              height: 28,
+              justifyContent: "center",
+              width: 28,
             }}
           >
             <X size={14} />
@@ -158,10 +179,10 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         {/* Content */}
         <div
           style={{
-            overflowY: "auto",
-            maxHeight: "calc(70dvh - 60px)",
-            padding: 12,
             WebkitOverflowScrolling: "touch",
+            maxHeight: "calc(70dvh - 60px)",
+            overflowY: "auto",
+            padding: 12,
           }}
         >
           {children}
@@ -170,6 +191,8 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     </div>
   );
 
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined") {
+    return null;
+  }
   return createPortal(sheet, document.body);
 };

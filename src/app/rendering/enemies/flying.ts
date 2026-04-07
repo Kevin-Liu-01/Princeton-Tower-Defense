@@ -1,6 +1,13 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import type { MapTheme } from "../../types";
-import { drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
+import {
+  drawWindGusts,
+  drawEmberSparks,
+  drawShiftingSegments,
+  drawOrbitingDebris,
+  drawFloatingPiece,
+  drawAnimatedTendril,
+} from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
@@ -15,7 +22,7 @@ export function drawHarpyEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
   // HARPY - Storm Fury, Aerial Predator of the Tempest
   // A terrifying avian huntress with iridescent plumage and deadly talons
@@ -70,7 +77,7 @@ export function drawHarpyEnemy(
       x + Math.cos(time * 2 + w) * size * 0.3,
       windY - size * 0.1,
       x + size * 0.6 + Math.sin(time * 3 + w + 1) * size * 0.2,
-      windY + size * 0.05,
+      windY + size * 0.05
     );
     ctx.stroke();
   }
@@ -95,7 +102,7 @@ export function drawHarpyEnemy(
 
   // Wind swirl particles orbiting the wings
   for (let ws = 0; ws < 5; ws++) {
-    const swirlAngle = time * 3.5 + ws * (Math.PI * 2) / 5;
+    const swirlAngle = time * 3.5 + (ws * (Math.PI * 2)) / 5;
     const swirlRadius = size * (0.55 + Math.sin(time * 1.2 + ws) * 0.1);
     const swirlX = x + Math.cos(swirlAngle) * swirlRadius;
     const swirlY =
@@ -151,11 +158,21 @@ export function drawHarpyEnemy(
   // Wing membrane inner glow - pulses with wingbeat
   const leftMembraneAlpha = 0.1 + Math.abs(wingFlap) * 0.12;
   const leftMembraneGlow = ctx.createRadialGradient(
-    -size * 0.45, -size * 0.15, 0,
-    -size * 0.45, -size * 0.15, size * 0.45,
+    -size * 0.45,
+    -size * 0.15,
+    0,
+    -size * 0.45,
+    -size * 0.15,
+    size * 0.45
   );
-  leftMembraneGlow.addColorStop(0, `rgba(167, 139, 250, ${leftMembraneAlpha * 1.5})`);
-  leftMembraneGlow.addColorStop(0.5, `rgba(139, 92, 246, ${leftMembraneAlpha * 0.6})`);
+  leftMembraneGlow.addColorStop(
+    0,
+    `rgba(167, 139, 250, ${leftMembraneAlpha * 1.5})`
+  );
+  leftMembraneGlow.addColorStop(
+    0.5,
+    `rgba(139, 92, 246, ${leftMembraneAlpha * 0.6})`
+  );
   leftMembraneGlow.addColorStop(1, "rgba(139, 92, 246, 0)");
   ctx.fillStyle = leftMembraneGlow;
   ctx.fill();
@@ -197,7 +214,12 @@ export function drawHarpyEnemy(
     const flY = -size * 0.02 - fl * size * 0.04;
     ctx.beginPath();
     ctx.moveTo(flX + size * 0.06, flY);
-    ctx.quadraticCurveTo(flX, flY - size * 0.06, flX - size * 0.06, flY + size * 0.02);
+    ctx.quadraticCurveTo(
+      flX,
+      flY - size * 0.06,
+      flX - size * 0.06,
+      flY + size * 0.02
+    );
     ctx.quadraticCurveTo(flX, flY + size * 0.04, flX + size * 0.06, flY);
     ctx.fill();
   }
@@ -208,7 +230,12 @@ export function drawHarpyEnemy(
     const flY = -size * 0.12 - fl * size * 0.05;
     ctx.beginPath();
     ctx.moveTo(flX + size * 0.05, flY);
-    ctx.quadraticCurveTo(flX, flY - size * 0.05, flX - size * 0.05, flY + size * 0.015);
+    ctx.quadraticCurveTo(
+      flX,
+      flY - size * 0.05,
+      flX - size * 0.05,
+      flY + size * 0.015
+    );
     ctx.quadraticCurveTo(flX, flY + size * 0.03, flX + size * 0.05, flY);
     ctx.fill();
   }
@@ -222,14 +249,20 @@ export function drawHarpyEnemy(
     ctx.beginPath();
     ctx.moveTo(tfX + size * 0.04, tfY);
     ctx.bezierCurveTo(
-      tfX + size * 0.02, tfY - tfLen * 0.6,
-      tfX - size * 0.03, tfY - tfLen * 0.8,
-      tfX - size * 0.06, tfY - tfLen * 0.2,
+      tfX + size * 0.02,
+      tfY - tfLen * 0.6,
+      tfX - size * 0.03,
+      tfY - tfLen * 0.8,
+      tfX - size * 0.06,
+      tfY - tfLen * 0.2
     );
     ctx.bezierCurveTo(
-      tfX - size * 0.04, tfY + tfLen * 0.15,
-      tfX + size * 0.01, tfY + size * 0.03,
-      tfX + size * 0.04, tfY,
+      tfX - size * 0.04,
+      tfY + tfLen * 0.15,
+      tfX + size * 0.01,
+      tfY + size * 0.03,
+      tfX + size * 0.04,
+      tfY
     );
     ctx.fill();
   }
@@ -241,7 +274,12 @@ export function drawHarpyEnemy(
     const tfY = size * 0.04 - tf * size * 0.015;
     ctx.beginPath();
     ctx.moveTo(tfX + size * 0.03, tfY);
-    ctx.quadraticCurveTo(tfX - size * 0.01, tfY - size * 0.04, tfX - size * 0.05, tfY - size * 0.06);
+    ctx.quadraticCurveTo(
+      tfX - size * 0.01,
+      tfY - size * 0.04,
+      tfX - size * 0.05,
+      tfY - size * 0.06
+    );
     ctx.stroke();
   }
 
@@ -255,7 +293,7 @@ export function drawHarpyEnemy(
     size * 0.15,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -266,7 +304,7 @@ export function drawHarpyEnemy(
     size * 0.12,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -328,11 +366,21 @@ export function drawHarpyEnemy(
   // Wing membrane inner glow - pulses with wingbeat
   const rightMembraneAlpha = 0.1 + Math.abs(wingFlap) * 0.12;
   const rightMembraneGlow = ctx.createRadialGradient(
-    size * 0.45, -size * 0.15, 0,
-    size * 0.45, -size * 0.15, size * 0.45,
+    size * 0.45,
+    -size * 0.15,
+    0,
+    size * 0.45,
+    -size * 0.15,
+    size * 0.45
   );
-  rightMembraneGlow.addColorStop(0, `rgba(167, 139, 250, ${rightMembraneAlpha * 1.5})`);
-  rightMembraneGlow.addColorStop(0.5, `rgba(139, 92, 246, ${rightMembraneAlpha * 0.6})`);
+  rightMembraneGlow.addColorStop(
+    0,
+    `rgba(167, 139, 250, ${rightMembraneAlpha * 1.5})`
+  );
+  rightMembraneGlow.addColorStop(
+    0.5,
+    `rgba(139, 92, 246, ${rightMembraneAlpha * 0.6})`
+  );
   rightMembraneGlow.addColorStop(1, "rgba(139, 92, 246, 0)");
   ctx.fillStyle = rightMembraneGlow;
   ctx.fill();
@@ -373,7 +421,12 @@ export function drawHarpyEnemy(
     const flY = -size * 0.02 - fl * size * 0.04;
     ctx.beginPath();
     ctx.moveTo(flX - size * 0.06, flY);
-    ctx.quadraticCurveTo(flX, flY - size * 0.06, flX + size * 0.06, flY + size * 0.02);
+    ctx.quadraticCurveTo(
+      flX,
+      flY - size * 0.06,
+      flX + size * 0.06,
+      flY + size * 0.02
+    );
     ctx.quadraticCurveTo(flX, flY + size * 0.04, flX - size * 0.06, flY);
     ctx.fill();
   }
@@ -384,7 +437,12 @@ export function drawHarpyEnemy(
     const flY = -size * 0.12 - fl * size * 0.05;
     ctx.beginPath();
     ctx.moveTo(flX - size * 0.05, flY);
-    ctx.quadraticCurveTo(flX, flY - size * 0.05, flX + size * 0.05, flY + size * 0.015);
+    ctx.quadraticCurveTo(
+      flX,
+      flY - size * 0.05,
+      flX + size * 0.05,
+      flY + size * 0.015
+    );
     ctx.quadraticCurveTo(flX, flY + size * 0.03, flX - size * 0.05, flY);
     ctx.fill();
   }
@@ -398,14 +456,20 @@ export function drawHarpyEnemy(
     ctx.beginPath();
     ctx.moveTo(tfX - size * 0.04, tfY);
     ctx.bezierCurveTo(
-      tfX - size * 0.02, tfY - tfLen * 0.6,
-      tfX + size * 0.03, tfY - tfLen * 0.8,
-      tfX + size * 0.06, tfY - tfLen * 0.2,
+      tfX - size * 0.02,
+      tfY - tfLen * 0.6,
+      tfX + size * 0.03,
+      tfY - tfLen * 0.8,
+      tfX + size * 0.06,
+      tfY - tfLen * 0.2
     );
     ctx.bezierCurveTo(
-      tfX + size * 0.04, tfY + tfLen * 0.15,
-      tfX - size * 0.01, tfY + size * 0.03,
-      tfX - size * 0.04, tfY,
+      tfX + size * 0.04,
+      tfY + tfLen * 0.15,
+      tfX - size * 0.01,
+      tfY + size * 0.03,
+      tfX - size * 0.04,
+      tfY
     );
     ctx.fill();
   }
@@ -417,7 +481,12 @@ export function drawHarpyEnemy(
     const tfY = size * 0.04 - tf * size * 0.015;
     ctx.beginPath();
     ctx.moveTo(tfX - size * 0.03, tfY);
-    ctx.quadraticCurveTo(tfX + size * 0.01, tfY - size * 0.04, tfX + size * 0.05, tfY - size * 0.06);
+    ctx.quadraticCurveTo(
+      tfX + size * 0.01,
+      tfY - size * 0.04,
+      tfX + size * 0.05,
+      tfY - size * 0.06
+    );
     ctx.stroke();
   }
 
@@ -431,7 +500,7 @@ export function drawHarpyEnemy(
     size * 0.15,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -459,39 +528,63 @@ export function drawHarpyEnemy(
     color: clawBase,
     colorDark: clawDark,
     footColor: "#1a1a2e",
-    strideSpeed: 10,
-    strideAmt: 0.45,
     legLen: 0.2,
-    width: 0.04,
+    strideAmt: 0.45,
+    strideSpeed: 10,
     style: "fleshy",
+    width: 0.04,
   });
 
   // === ANIMATED CLAWS — talons reaching forward ===
-  drawPathArm(ctx, x - size * 0.18, y + size * 0.05 + swoop, size, time, zoom, -1, {
-    color: wingBase,
-    colorDark: wingDark,
-    handColor: clawBase,
-    handRadius: 0.03,
-    shoulderAngle: -0.8 + Math.sin(time * 4) * 0.15 + (isAttacking ? -attackIntensity * 0.5 : 0),
-    elbowAngle: 0.3 + Math.sin(time * 5 + 0.8) * 0.15,
-    upperLen: 0.14,
-    foreLen: 0.12,
-    width: 0.04,
-    style: "fleshy",
-  });
-  drawPathArm(ctx, x + size * 0.18, y + size * 0.05 + swoop, size, time, zoom, 1, {
-    color: wingBase,
-    colorDark: wingDark,
-    handColor: clawBase,
-    handRadius: 0.03,
-    shoulderAngle: 0.8 + Math.sin(time * 4 + Math.PI) * 0.15 + (isAttacking ? attackIntensity * 0.5 : 0),
-    elbowAngle: 0.3 + Math.sin(time * 5 + 2.5) * 0.15,
-    upperLen: 0.14,
-    foreLen: 0.12,
-    width: 0.04,
-    attackExtra: attackIntensity,
-    style: "fleshy",
-  });
+  drawPathArm(
+    ctx,
+    x - size * 0.18,
+    y + size * 0.05 + swoop,
+    size,
+    time,
+    zoom,
+    -1,
+    {
+      color: wingBase,
+      colorDark: wingDark,
+      elbowAngle: 0.3 + Math.sin(time * 5 + 0.8) * 0.15,
+      foreLen: 0.12,
+      handColor: clawBase,
+      handRadius: 0.03,
+      shoulderAngle:
+        -0.8 +
+        Math.sin(time * 4) * 0.15 +
+        (isAttacking ? -attackIntensity * 0.5 : 0),
+      style: "fleshy",
+      upperLen: 0.14,
+      width: 0.04,
+    }
+  );
+  drawPathArm(
+    ctx,
+    x + size * 0.18,
+    y + size * 0.05 + swoop,
+    size,
+    time,
+    zoom,
+    1,
+    {
+      attackExtra: attackIntensity,
+      color: wingBase,
+      colorDark: wingDark,
+      elbowAngle: 0.3 + Math.sin(time * 5 + 2.5) * 0.15,
+      foreLen: 0.12,
+      handColor: clawBase,
+      handRadius: 0.03,
+      shoulderAngle:
+        0.8 +
+        Math.sin(time * 4 + Math.PI) * 0.15 +
+        (isAttacking ? attackIntensity * 0.5 : 0),
+      style: "fleshy",
+      upperLen: 0.14,
+      width: 0.04,
+    }
+  );
 
   // === LAYER 5: ELEGANT AVIAN BODY ===
   // Body gradient with feather pattern
@@ -501,7 +594,7 @@ export function drawHarpyEnemy(
     0,
     x,
     y + size * 0.1 + swoop,
-    size * 0.35,
+    size * 0.35
   );
   bodyGrad.addColorStop(0, featherLight);
   bodyGrad.addColorStop(0.4, wingBase);
@@ -516,7 +609,7 @@ export function drawHarpyEnemy(
     size * 0.32,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -540,7 +633,7 @@ export function drawHarpyEnemy(
     0,
     x,
     y + size * 0.05 + swoop,
-    size * 0.18,
+    size * 0.18
   );
   chestGrad.addColorStop(0, "#f5f3ff");
   chestGrad.addColorStop(0.5, "#ede9fe");
@@ -554,7 +647,7 @@ export function drawHarpyEnemy(
     size * 0.18,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -569,7 +662,7 @@ export function drawHarpyEnemy(
       size * 0.08,
       Math.PI * 0.7,
       Math.PI * 0.3,
-      true,
+      true
     );
     ctx.stroke();
   }
@@ -585,7 +678,7 @@ export function drawHarpyEnemy(
     size * 0.1,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -596,7 +689,7 @@ export function drawHarpyEnemy(
     0,
     x,
     y - size * 0.32 + swoop,
-    size * 0.16,
+    size * 0.16
   );
   headGrad.addColorStop(0, "#fef3c7");
   headGrad.addColorStop(0.6, "#fde68a");
@@ -627,19 +720,19 @@ export function drawHarpyEnemy(
     ctx.beginPath();
     ctx.moveTo(
       x + Math.cos(crownAngle) * size * 0.1,
-      y - size * 0.44 + swoop + Math.sin(crownAngle) * size * 0.05,
+      y - size * 0.44 + swoop + Math.sin(crownAngle) * size * 0.05
     );
     ctx.quadraticCurveTo(
       x + Math.cos(crownAngle - 0.2) * crownLen * 0.6,
       y - size * 0.5 + swoop + Math.sin(crownAngle) * crownLen * 0.3,
       x + Math.cos(crownAngle) * crownLen,
-      y - size * 0.44 - crownLen * 0.4 + swoop,
+      y - size * 0.44 - crownLen * 0.4 + swoop
     );
     ctx.quadraticCurveTo(
       x + Math.cos(crownAngle + 0.2) * crownLen * 0.6,
       y - size * 0.5 + swoop + Math.sin(crownAngle) * crownLen * 0.3,
       x + Math.cos(crownAngle + 0.15) * size * 0.1,
-      y - size * 0.44 + swoop + Math.sin(crownAngle + 0.15) * size * 0.05,
+      y - size * 0.44 + swoop + Math.sin(crownAngle + 0.15) * size * 0.05
     );
     ctx.fill();
   }
@@ -656,14 +749,20 @@ export function drawHarpyEnemy(
     ctx.beginPath();
     ctx.moveTo(pBaseX - size * 0.01, pBaseY);
     ctx.bezierCurveTo(
-      pBaseX - size * 0.012 + pSway * 0.5, pBaseY - pHeight * 0.5,
-      pBaseX + pSway, pBaseY - pHeight * 0.85,
-      pBaseX + pSway * 1.2, pBaseY - pHeight,
+      pBaseX - size * 0.012 + pSway * 0.5,
+      pBaseY - pHeight * 0.5,
+      pBaseX + pSway,
+      pBaseY - pHeight * 0.85,
+      pBaseX + pSway * 1.2,
+      pBaseY - pHeight
     );
     ctx.bezierCurveTo(
-      pBaseX + size * 0.005 + pSway, pBaseY - pHeight * 0.85,
-      pBaseX + size * 0.012 + pSway * 0.5, pBaseY - pHeight * 0.5,
-      pBaseX + size * 0.01, pBaseY,
+      pBaseX + size * 0.005 + pSway,
+      pBaseY - pHeight * 0.85,
+      pBaseX + size * 0.012 + pSway * 0.5,
+      pBaseY - pHeight * 0.5,
+      pBaseX + size * 0.01,
+      pBaseY
     );
     ctx.fill();
     // Feather rachis (central shaft)
@@ -671,7 +770,12 @@ export function drawHarpyEnemy(
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(pBaseX, pBaseY);
-    ctx.quadraticCurveTo(pBaseX + pSway * 0.6, pBaseY - pHeight * 0.6, pBaseX + pSway * 1.2, pBaseY - pHeight);
+    ctx.quadraticCurveTo(
+      pBaseX + pSway * 0.6,
+      pBaseY - pHeight * 0.6,
+      pBaseX + pSway * 1.2,
+      pBaseY - pHeight
+    );
     ctx.stroke();
   }
 
@@ -683,7 +787,7 @@ export function drawHarpyEnemy(
     0,
     x - size * 0.06,
     y - size * 0.36 + swoop,
-    size * 0.06,
+    size * 0.06
   );
   eyeGlowL.addColorStop(0, "#fbbf24");
   eyeGlowL.addColorStop(0.5, "rgba(251, 191, 36, 0.4)");
@@ -695,14 +799,14 @@ export function drawHarpyEnemy(
     y - size * 0.36 + swoop,
     size * 0.06,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.arc(
     x + size * 0.06,
     y - size * 0.36 + swoop,
     size * 0.06,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -716,7 +820,7 @@ export function drawHarpyEnemy(
     size * 0.03,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.06,
@@ -725,7 +829,7 @@ export function drawHarpyEnemy(
     size * 0.03,
     0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -737,14 +841,14 @@ export function drawHarpyEnemy(
     y - size * 0.36 + swoop,
     size * 0.025,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.arc(
     x + size * 0.055,
     y - size * 0.36 + swoop,
     size * 0.025,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -758,7 +862,7 @@ export function drawHarpyEnemy(
     size * 0.018,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.055,
@@ -767,7 +871,7 @@ export function drawHarpyEnemy(
     size * 0.018,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -779,23 +883,31 @@ export function drawHarpyEnemy(
     y - size * 0.37 + swoop,
     size * 0.008,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.arc(
     x + size * 0.045,
     y - size * 0.37 + swoop,
     size * 0.008,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
   // Enhanced predator eye glow - pulsing "laser eyes" effect
-  const laserPulse = 0.4 + Math.sin(time * 6) * 0.15 + (isAttacking ? attackIntensity * 0.3 : 0);
+  const laserPulse =
+    0.4 + Math.sin(time * 6) * 0.15 + (isAttacking ? attackIntensity * 0.3 : 0);
   for (let eye = 0; eye < 2; eye++) {
     const eyeCX = eye === 0 ? x - size * 0.055 : x + size * 0.055;
     const eyeCY = y - size * 0.36 + swoop;
-    const laserGlow = ctx.createRadialGradient(eyeCX, eyeCY, 0, eyeCX, eyeCY, size * 0.08);
+    const laserGlow = ctx.createRadialGradient(
+      eyeCX,
+      eyeCY,
+      0,
+      eyeCX,
+      eyeCY,
+      size * 0.08
+    );
     laserGlow.addColorStop(0, `rgba(251, 191, 36, ${laserPulse * 0.6})`);
     laserGlow.addColorStop(0.3, `rgba(245, 158, 11, ${laserPulse * 0.3})`);
     laserGlow.addColorStop(0.6, `rgba(217, 119, 6, ${laserPulse * 0.12})`);
@@ -812,7 +924,7 @@ export function drawHarpyEnemy(
     x,
     y - size * 0.3 + swoop,
     x,
-    y - size * 0.2 + swoop,
+    y - size * 0.2 + swoop
   );
   beakGrad.addColorStop(0, beakColor);
   beakGrad.addColorStop(0.5, "#f59e0b");
@@ -824,7 +936,7 @@ export function drawHarpyEnemy(
     x - size * 0.06,
     y - size * 0.26 + swoop,
     x - size * 0.04,
-    y - size * 0.22 + swoop,
+    y - size * 0.22 + swoop
   );
   ctx.lineTo(x, y - size * 0.25 + swoop);
   ctx.lineTo(x + size * 0.04, y - size * 0.22 + swoop);
@@ -832,16 +944,26 @@ export function drawHarpyEnemy(
     x + size * 0.06,
     y - size * 0.26 + swoop,
     x,
-    y - size * 0.3 + swoop,
+    y - size * 0.3 + swoop
   );
   ctx.fill();
   // Beak hook - curved raptor tip
   ctx.fillStyle = clawMid;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.25 + swoop);
-  ctx.quadraticCurveTo(x - size * 0.01, y - size * 0.22 + swoop, x - size * 0.015, y - size * 0.21 + swoop);
+  ctx.quadraticCurveTo(
+    x - size * 0.01,
+    y - size * 0.22 + swoop,
+    x - size * 0.015,
+    y - size * 0.21 + swoop
+  );
   ctx.lineTo(x + size * 0.015, y - size * 0.21 + swoop);
-  ctx.quadraticCurveTo(x + size * 0.01, y - size * 0.22 + swoop, x, y - size * 0.25 + swoop);
+  ctx.quadraticCurveTo(
+    x + size * 0.01,
+    y - size * 0.22 + swoop,
+    x,
+    y - size * 0.25 + swoop
+  );
   ctx.fill();
   // Beak ridge line
   ctx.strokeStyle = clawLight;
@@ -854,7 +976,12 @@ export function drawHarpyEnemy(
   ctx.fillStyle = beakColor;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.03, y - size * 0.24 + swoop);
-  ctx.quadraticCurveTo(x, y - size * 0.21 + swoop, x + size * 0.03, y - size * 0.24 + swoop);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.21 + swoop,
+    x + size * 0.03,
+    y - size * 0.24 + swoop
+  );
   ctx.fill();
   // Nostril
   ctx.fillStyle = clawBase;
@@ -866,12 +993,14 @@ export function drawHarpyEnemy(
     size * 0.004,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
   // Sonic screech visual - concentric arcs from beak
-  const screechBase = isAttacking ? 0.4 + attackIntensity * 0.5 : 0.15 + Math.sin(time * 3) * 0.05;
+  const screechBase = isAttacking
+    ? 0.4 + attackIntensity * 0.5
+    : 0.15 + Math.sin(time * 3) * 0.05;
   for (let ring = 0; ring < 4; ring++) {
     const ringPhase = (time * 2.5 + ring * 0.4) % 1.5;
     const ringRadius = size * (0.06 + ringPhase * 0.2);
@@ -880,9 +1009,11 @@ export function drawHarpyEnemy(
     ctx.lineWidth = (1.5 - ringPhase * 0.8) * zoom;
     ctx.beginPath();
     ctx.arc(
-      x, y - size * 0.23 + swoop,
+      x,
+      y - size * 0.23 + swoop,
       ringRadius,
-      Math.PI * 0.15, Math.PI * 0.85,
+      Math.PI * 0.15,
+      Math.PI * 0.85
     );
     ctx.stroke();
   }
@@ -916,7 +1047,12 @@ export function drawHarpyEnemy(
       ctx.fillStyle = s % 2 === 0 ? beakColor : clawLight;
       ctx.beginPath();
       ctx.moveTo(lx - size * 0.018, scaleY);
-      ctx.quadraticCurveTo(lx, scaleY - size * 0.015, lx + size * 0.018, scaleY);
+      ctx.quadraticCurveTo(
+        lx,
+        scaleY - size * 0.015,
+        lx + size * 0.018,
+        scaleY
+      );
       ctx.quadraticCurveTo(lx, scaleY + size * 0.01, lx - size * 0.018, scaleY);
       ctx.fill();
     }
@@ -953,7 +1089,11 @@ export function drawHarpyEnemy(
       ctx.lineWidth = 2.2 * zoom;
       for (let ph = 0; ph < phalanxCount; ph++) {
         const nextPX = pX + Math.cos(tAngle) * phalanxLen * (isBack ? -0.7 : 1);
-        const nextPY = pY + Math.sin(Math.PI * 0.5 + tAngle * 0.3) * phalanxLen * (isBack ? 0.5 : 0.8);
+        const nextPY =
+          pY +
+          Math.sin(Math.PI * 0.5 + tAngle * 0.3) *
+            phalanxLen *
+            (isBack ? 0.5 : 0.8);
         ctx.beginPath();
         ctx.moveTo(pX, pY);
         ctx.lineTo(nextPX, nextPY);
@@ -978,13 +1118,13 @@ export function drawHarpyEnemy(
       ctx.beginPath();
       ctx.moveTo(
         talonX + Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03,
-        talonBase,
+        talonBase
       );
       ctx.lineTo(
         talonX +
           Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03 +
           Math.cos(clawAngle) * clawLen * 0.5,
-        talonBase + Math.sin(Math.PI * 0.5 + clawAngle * 0.3) * clawLen * 0.6,
+        talonBase + Math.sin(Math.PI * 0.5 + clawAngle * 0.3) * clawLen * 0.6
       );
       // Claw tip (curved hook)
       ctx.quadraticCurveTo(
@@ -995,7 +1135,7 @@ export function drawHarpyEnemy(
         talonX +
           Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03 +
           Math.cos(clawAngle - 0.4) * clawLen,
-        talonBase + clawLen * 0.75,
+        talonBase + clawLen * 0.75
       );
       ctx.fill();
 
@@ -1006,19 +1146,19 @@ export function drawHarpyEnemy(
         talonX +
           Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03 +
           Math.cos(clawAngle - 0.3) * clawLen * 0.85,
-        talonBase + clawLen * 0.82,
+        talonBase + clawLen * 0.82
       );
       ctx.lineTo(
         talonX +
           Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03 +
           Math.cos(clawAngle - 0.4) * clawLen,
-        talonBase + clawLen * 0.75,
+        talonBase + clawLen * 0.75
       );
       ctx.lineTo(
         talonX +
           Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03 +
           Math.cos(clawAngle - 0.5) * clawLen * 0.9,
-        talonBase + clawLen * 0.7,
+        talonBase + clawLen * 0.7
       );
       ctx.fill();
     }
@@ -1039,7 +1179,12 @@ export function drawHarpyEnemy(
     ctx.fillStyle = `rgba(167, 139, 250, ${trailAlpha})`;
     ctx.beginPath();
     ctx.moveTo(0, -trailSize * 2);
-    ctx.quadraticCurveTo(trailSize * 0.8, -trailSize * 0.5, trailSize * 0.3, trailSize * 1.5);
+    ctx.quadraticCurveTo(
+      trailSize * 0.8,
+      -trailSize * 0.5,
+      trailSize * 0.3,
+      trailSize * 1.5
+    );
     ctx.lineTo(0, trailSize);
     ctx.quadraticCurveTo(-trailSize * 0.8, -trailSize * 0.5, 0, -trailSize * 2);
     ctx.fill();
@@ -1078,9 +1223,9 @@ export function drawHarpyEnemy(
   drawWindGusts(ctx, x, y + swoop, size * 0.3, time, zoom, {
     color: "rgba(167, 139, 250, 0.4)",
     count: 5,
-    speed: 2.5,
-    maxAlpha: 0.35,
     gustLength: 0.6,
+    maxAlpha: 0.35,
+    speed: 2.5,
   });
 
   // === FLOATING FEATHER SHARDS (orbiting) ===
@@ -1089,20 +1234,20 @@ export function drawHarpyEnemy(
     colorAlt: wingMid,
     count: 5,
     orbitRadius: 0.45,
-    segmentSize: 0.03,
     orbitSpeed: 1.8,
+    segmentSize: 0.03,
     shape: "shard",
   });
 
   // === ORBITING WIND PARTICLES ===
   drawOrbitingDebris(ctx, x, y + swoop, size, time, zoom, {
     color: "rgba(196, 181, 253, 0.6)",
-    glowColor: "rgba(167, 139, 250, 0.25)",
     count: 4,
-    speed: 2.5,
-    particleSize: 0.015,
-    minRadius: 0.3,
+    glowColor: "rgba(167, 139, 250, 0.25)",
     maxRadius: 0.55,
+    minRadius: 0.3,
+    particleSize: 0.015,
+    speed: 2.5,
     trailLen: 2,
   });
 
@@ -1120,7 +1265,7 @@ export function drawWyvernEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
   // WYVERN - Ancient Draconic Terror with Venomous Breath
   // A colossal flying predator wreathed in toxic miasma
@@ -1182,8 +1327,11 @@ export function drawWyvernEnemy(
       const wobble = Math.sin(a * 4 + time * 2 + ring) * size * 0.04;
       const rx = x + Math.cos(a) * (ringSize + wobble);
       const ry = y + Math.sin(a) * (ringSize * 0.5 + wobble * 0.4) + hoverBob;
-      if (a === 0) ctx.moveTo(rx, ry);
-      else ctx.lineTo(rx, ry);
+      if (a === 0) {
+        ctx.moveTo(rx, ry);
+      } else {
+        ctx.lineTo(rx, ry);
+      }
     }
     ctx.closePath();
     ctx.fill();
@@ -1193,17 +1341,25 @@ export function drawWyvernEnemy(
   const auraGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.85);
   auraGrad.addColorStop(
     0,
-    `rgba(16, 185, 129, ${0.25 + venomIntensity * 0.15})`,
+    `rgba(16, 185, 129, ${0.25 + venomIntensity * 0.15})`
   );
   auraGrad.addColorStop(
     0.4,
-    `rgba(5, 150, 105, ${0.15 + venomIntensity * 0.1})`,
+    `rgba(5, 150, 105, ${0.15 + venomIntensity * 0.1})`
   );
   auraGrad.addColorStop(0.7, `rgba(4, 120, 87, ${0.08})`);
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + hoverBob, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y + hoverBob,
+    size * 0.85,
+    size * 0.85 * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // === LAYER 2: MASSIVE SEGMENTED TAIL ===
@@ -1223,7 +1379,7 @@ export function drawWyvernEnemy(
       0,
       segX,
       segY,
-      segSize,
+      segSize
     );
     segGrad.addColorStop(0, scaleBase);
     segGrad.addColorStop(0.6, scaleDark);
@@ -1238,7 +1394,15 @@ export function drawWyvernEnemy(
       ctx.strokeStyle = "rgba(4, 120, 87, 0.5)";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(segX - size * 0.06, segY, segSize * 0.8, segSize * 0.5, seg * 0.08, 0, Math.PI * 2);
+      ctx.ellipse(
+        segX - size * 0.06,
+        segY,
+        segSize * 0.8,
+        segSize * 0.5,
+        seg * 0.08,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
     }
     // Segment ridge scales
@@ -1253,7 +1417,15 @@ export function drawWyvernEnemy(
     // Ventral scale plates on tail underside
     ctx.fillStyle = "rgba(167, 243, 208, 0.2)";
     ctx.beginPath();
-    ctx.ellipse(segX, segY + segSize * 0.35, segSize * 0.5, segSize * 0.2, seg * 0.08, 0, Math.PI);
+    ctx.ellipse(
+      segX,
+      segY + segSize * 0.35,
+      segSize * 0.5,
+      segSize * 0.2,
+      seg * 0.08,
+      0,
+      Math.PI
+    );
     ctx.fill();
   }
 
@@ -1269,10 +1441,13 @@ export function drawWyvernEnemy(
       const rScale = 1 - Math.abs(r - 1) * 0.15;
       ctx.beginPath();
       ctx.ellipse(
-        ringX + rOff, ringY,
-        ringSize * 0.65 * rScale, ringSize * 0.45 * rScale,
+        ringX + rOff,
+        ringY,
+        ringSize * 0.65 * rScale,
+        ringSize * 0.45 * rScale,
         seg * 0.08,
-        0, Math.PI * 2,
+        0,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1284,7 +1459,15 @@ export function drawWyvernEnemy(
     const ringY = Math.sin(time * 3 + seg * 0.5 + 0.25) * size * 0.02;
     const ringSize = size * (0.11 - seg * 0.012);
     ctx.beginPath();
-    ctx.ellipse(ringX, ringY, ringSize * 0.65, ringSize * 0.45, seg * 0.08, 0, Math.PI * 2);
+    ctx.ellipse(
+      ringX,
+      ringY,
+      ringSize * 0.65,
+      ringSize * 0.45,
+      seg * 0.08,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -1317,7 +1500,7 @@ export function drawWyvernEnemy(
     -size * 0.05 + dripPhase * size * 0.08,
     size * 0.015 * (1 - dripPhase * 0.6),
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1335,7 +1518,7 @@ export function drawWyvernEnemy(
       size * 0.018 * (1 - tdPhase * 0.3),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1348,7 +1531,14 @@ export function drawWyvernEnemy(
     const edAlpha = Math.max(0, 0.6 - edPhase * 0.3) * venomIntensity;
     const dropRadius = size * 0.018 * (1 - edPhase * 0.25);
 
-    const dripGlow = ctx.createRadialGradient(edSegX, edY, 0, edSegX, edY, dropRadius * 3);
+    const dripGlow = ctx.createRadialGradient(
+      edSegX,
+      edY,
+      0,
+      edSegX,
+      edY,
+      dropRadius * 3
+    );
     dripGlow.addColorStop(0, `rgba(74, 222, 128, ${edAlpha * 0.7})`);
     dripGlow.addColorStop(0.5, `rgba(52, 211, 153, ${edAlpha * 0.25})`);
     dripGlow.addColorStop(1, "rgba(52, 211, 153, 0)");
@@ -1361,7 +1551,12 @@ export function drawWyvernEnemy(
     ctx.beginPath();
     ctx.moveTo(edSegX, edY - dropRadius * 1.5);
     ctx.quadraticCurveTo(edSegX + dropRadius, edY, edSegX, edY + dropRadius);
-    ctx.quadraticCurveTo(edSegX - dropRadius, edY, edSegX, edY - dropRadius * 1.5);
+    ctx.quadraticCurveTo(
+      edSegX - dropRadius,
+      edY,
+      edSegX,
+      edY - dropRadius * 1.5
+    );
     ctx.fill();
 
     ctx.strokeStyle = `rgba(52, 211, 153, ${edAlpha * 0.4})`;
@@ -1380,7 +1575,7 @@ export function drawWyvernEnemy(
     0,
     spikeBase + size * 0.22,
     -size * 0.03,
-    size * 0.08,
+    size * 0.08
   );
   tipGlowGrad.addColorStop(0, `rgba(74, 222, 128, ${glowPulse})`);
   tipGlowGrad.addColorStop(0.5, `rgba(52, 211, 153, ${glowPulse * 0.4})`);
@@ -1402,7 +1597,12 @@ export function drawWyvernEnemy(
     ctx.translate(x + side * size * 0.18, y - size * 0.1 + breathe + hoverBob);
     ctx.rotate(side * (0.5 + secWingFlap));
 
-    const secGrad = ctx.createLinearGradient(0, 0, side * size * 0.55, -size * 0.12);
+    const secGrad = ctx.createLinearGradient(
+      0,
+      0,
+      side * size * 0.55,
+      -size * 0.12
+    );
     secGrad.addColorStop(0, "rgba(4, 90, 60, 0.5)");
     secGrad.addColorStop(0.4, "rgba(3, 70, 50, 0.4)");
     secGrad.addColorStop(0.7, "rgba(2, 55, 38, 0.3)");
@@ -1413,21 +1613,30 @@ export function drawWyvernEnemy(
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.bezierCurveTo(
-      sx * size * 0.06, -size * 0.18,
-      sx * size * 0.14, -size * 0.26,
-      sx * size * 0.22, -size * 0.24,
+      sx * size * 0.06,
+      -size * 0.18,
+      sx * size * 0.14,
+      -size * 0.26,
+      sx * size * 0.22,
+      -size * 0.24
     );
     ctx.lineTo(sx * size * 0.26, -size * 0.19);
     ctx.bezierCurveTo(
-      sx * size * 0.32, -size * 0.23,
-      sx * size * 0.4, -size * 0.2,
-      sx * size * 0.46, -size * 0.15,
+      sx * size * 0.32,
+      -size * 0.23,
+      sx * size * 0.4,
+      -size * 0.2,
+      sx * size * 0.46,
+      -size * 0.15
     );
     ctx.lineTo(sx * size * 0.44, -size * 0.09);
     ctx.bezierCurveTo(
-      sx * size * 0.48, -size * 0.11,
-      sx * size * 0.52, -size * 0.06,
-      sx * size * 0.54, -size * 0.02,
+      sx * size * 0.48,
+      -size * 0.11,
+      sx * size * 0.52,
+      -size * 0.06,
+      sx * size * 0.54,
+      -size * 0.02
     );
     ctx.lineTo(sx * size * 0.48, size * 0.01);
     ctx.lineTo(sx * size * 0.42, size * 0.06);
@@ -1483,7 +1692,7 @@ export function drawWyvernEnemy(
     0,
     0,
     -size * 0.95,
-    -size * 0.2,
+    -size * 0.2
   );
   leftWingGrad.addColorStop(0, scaleBase);
   leftWingGrad.addColorStop(0.3, scaleDark);
@@ -1547,7 +1756,9 @@ export function drawWyvernEnemy(
   // Finger joint knobs
   ctx.fillStyle = scaleDarkest;
   const fingerJoints = [
-    [-0.35, -0.32], [-0.56, -0.27], [-0.65, -0.15],
+    [-0.35, -0.32],
+    [-0.56, -0.27],
+    [-0.65, -0.15],
   ];
   for (const [jx, jy] of fingerJoints) {
     ctx.beginPath();
@@ -1572,7 +1783,7 @@ export function drawWyvernEnemy(
       -size * 0.4 - v * size * 0.12,
       size * 0.05 + Math.sin(v) * size * 0.03,
       -size * 0.3 - v * size * 0.08,
-      size * 0.12,
+      size * 0.12
     );
     ctx.stroke();
   }
@@ -1581,10 +1792,18 @@ export function drawWyvernEnemy(
   ctx.strokeStyle = "rgba(6, 95, 70, 0.22)";
   ctx.lineWidth = 0.6 * zoom;
   const leftJoints: [number, number][] = [
-    [-0.35, -0.15], [-0.35, -0.32], [-0.56, -0.27], [-0.65, -0.15],
+    [-0.35, -0.15],
+    [-0.35, -0.32],
+    [-0.56, -0.27],
+    [-0.65, -0.15],
   ];
   const leftMembraneEdges: [number, number][] = [
-    [-0.88, 0.02], [-0.75, 0.08], [-0.68, 0.18], [-0.5, 0.15], [-0.42, 0.22], [-0.25, 0.18],
+    [-0.88, 0.02],
+    [-0.75, 0.08],
+    [-0.68, 0.18],
+    [-0.5, 0.15],
+    [-0.42, 0.22],
+    [-0.25, 0.18],
   ];
   for (let j = 0; j < leftJoints.length; j++) {
     const [jx, jy] = leftJoints[j];
@@ -1611,7 +1830,7 @@ export function drawWyvernEnemy(
       -size * 0.4 - vg * size * 0.12,
       size * 0.05 + Math.sin(vg) * size * 0.03 + flowOffset,
       -size * 0.3 - vg * size * 0.08,
-      size * 0.12 + flowOffset,
+      size * 0.12 + flowOffset
     );
     ctx.stroke();
   }
@@ -1634,7 +1853,7 @@ export function drawWyvernEnemy(
     0,
     0,
     size * 0.95,
-    -size * 0.2,
+    -size * 0.2
   );
   rightWingGrad.addColorStop(0, scaleBase);
   rightWingGrad.addColorStop(0.3, scaleDark);
@@ -1691,7 +1910,9 @@ export function drawWyvernEnemy(
   // Finger joint knobs (mirrored)
   ctx.fillStyle = scaleDarkest;
   const rightFingerJoints = [
-    [0.35, -0.32], [0.56, -0.27], [0.65, -0.15],
+    [0.35, -0.32],
+    [0.56, -0.27],
+    [0.65, -0.15],
   ];
   for (const [jx, jy] of rightFingerJoints) {
     ctx.beginPath();
@@ -1716,7 +1937,7 @@ export function drawWyvernEnemy(
       size * 0.4 + v * size * 0.12,
       size * 0.05 + Math.sin(v) * size * 0.03,
       size * 0.3 + v * size * 0.08,
-      size * 0.12,
+      size * 0.12
     );
     ctx.stroke();
   }
@@ -1725,10 +1946,18 @@ export function drawWyvernEnemy(
   ctx.strokeStyle = "rgba(6, 95, 70, 0.22)";
   ctx.lineWidth = 0.6 * zoom;
   const rightJoints: [number, number][] = [
-    [0.35, -0.15], [0.35, -0.32], [0.56, -0.27], [0.65, -0.15],
+    [0.35, -0.15],
+    [0.35, -0.32],
+    [0.56, -0.27],
+    [0.65, -0.15],
   ];
   const rightMembraneEdges: [number, number][] = [
-    [0.88, 0.02], [0.75, 0.08], [0.68, 0.18], [0.5, 0.15], [0.42, 0.22], [0.25, 0.18],
+    [0.88, 0.02],
+    [0.75, 0.08],
+    [0.68, 0.18],
+    [0.5, 0.15],
+    [0.42, 0.22],
+    [0.25, 0.18],
   ];
   for (let j = 0; j < rightJoints.length; j++) {
     const [jx, jy] = rightJoints[j];
@@ -1755,7 +1984,7 @@ export function drawWyvernEnemy(
       size * 0.4 + vg * size * 0.12,
       size * 0.05 + Math.sin(vg) * size * 0.03 + flowOffset,
       size * 0.3 + vg * size * 0.08,
-      size * 0.12 + flowOffset,
+      size * 0.12 + flowOffset
     );
     ctx.stroke();
   }
@@ -1773,11 +2002,11 @@ export function drawWyvernEnemy(
     color: scaleDark,
     colorDark: scaleDeep,
     footColor: hornColor,
-    strideSpeed: 3,
-    strideAmt: 0.15,
     legLen: 0.22,
-    width: 0.06,
+    strideAmt: 0.15,
+    strideSpeed: 3,
     style: "armored",
+    width: 0.06,
   });
 
   // === LAYER 4: MUSCULAR BODY ===
@@ -1793,7 +2022,7 @@ export function drawWyvernEnemy(
     size * 0.38,
     0.05,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1804,7 +2033,7 @@ export function drawWyvernEnemy(
     0,
     x,
     bodyY,
-    size * 0.42,
+    size * 0.42
   );
   bodyGrad.addColorStop(0, scaleLight);
   bodyGrad.addColorStop(0.3, scaleBase);
@@ -1820,7 +2049,7 @@ export function drawWyvernEnemy(
     x,
     bodyY - size * 0.2,
     x,
-    bodyY + size * 0.3,
+    bodyY + size * 0.3
   );
   bellyGrad.addColorStop(0, bellyLight);
   bellyGrad.addColorStop(0.5, bellyMid);
@@ -1834,7 +2063,7 @@ export function drawWyvernEnemy(
     size * 0.26,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1919,7 +2148,8 @@ export function drawWyvernEnemy(
   for (let side = 0; side < 2; side++) {
     const sDir = side === 0 ? -1 : 1;
     for (let ls = 0; ls < 6; ls++) {
-      const lsX = x + sDir * size * 0.28 + sDir * Math.sin(ls * 0.9) * size * 0.02;
+      const lsX =
+        x + sDir * size * 0.28 + sDir * Math.sin(ls * 0.9) * size * 0.02;
       const lsY = bodyY - size * 0.15 + ls * size * 0.065;
       const lsS = size * 0.018;
       ctx.beginPath();
@@ -1934,15 +2164,26 @@ export function drawWyvernEnemy(
   }
 
   // Scale shimmer - traveling highlight across body
-  const shimmerPos = (time * 1.2) % 3 - 0.5;
+  const shimmerPos = ((time * 1.2) % 3) - 0.5;
   const shimmerGrad = ctx.createLinearGradient(
-    x + (shimmerPos - 0.3) * size, bodyY,
-    x + (shimmerPos + 0.3) * size, bodyY,
+    x + (shimmerPos - 0.3) * size,
+    bodyY,
+    x + (shimmerPos + 0.3) * size,
+    bodyY
   );
   shimmerGrad.addColorStop(0, "rgba(167, 243, 208, 0)");
-  shimmerGrad.addColorStop(0.3, `rgba(167, 243, 208, ${0.12 + Math.sin(time * 4) * 0.04})`);
-  shimmerGrad.addColorStop(0.5, `rgba(209, 250, 229, ${0.2 + Math.sin(time * 4) * 0.06})`);
-  shimmerGrad.addColorStop(0.7, `rgba(167, 243, 208, ${0.12 + Math.sin(time * 4) * 0.04})`);
+  shimmerGrad.addColorStop(
+    0.3,
+    `rgba(167, 243, 208, ${0.12 + Math.sin(time * 4) * 0.04})`
+  );
+  shimmerGrad.addColorStop(
+    0.5,
+    `rgba(209, 250, 229, ${0.2 + Math.sin(time * 4) * 0.06})`
+  );
+  shimmerGrad.addColorStop(
+    0.7,
+    `rgba(167, 243, 208, ${0.12 + Math.sin(time * 4) * 0.04})`
+  );
   shimmerGrad.addColorStop(1, "rgba(167, 243, 208, 0)");
   ctx.fillStyle = shimmerGrad;
   ctx.beginPath();
@@ -1954,7 +2195,7 @@ export function drawWyvernEnemy(
     x - size * 0.15,
     y - size * 0.2,
     x + size * 0.1,
-    y - size * 0.55,
+    y - size * 0.55
   );
   neckGrad.addColorStop(0, scaleDark);
   neckGrad.addColorStop(0.5, scaleBase);
@@ -1966,14 +2207,14 @@ export function drawWyvernEnemy(
     x - size * 0.05 + neckSway,
     y - size * 0.38,
     x + size * 0.03 + lungeLean,
-    y - size * 0.52 + breathe + hoverBob,
+    y - size * 0.52 + breathe + hoverBob
   );
   ctx.lineTo(x + size * 0.14 + lungeLean, y - size * 0.48 + breathe + hoverBob);
   ctx.quadraticCurveTo(
     x + size * 0.12 + neckSway,
     y - size * 0.32,
     x + size * 0.12,
-    y - size * 0.18 + breathe + hoverBob,
+    y - size * 0.18 + breathe + hoverBob
   );
   ctx.fill();
 
@@ -2003,7 +2244,7 @@ export function drawWyvernEnemy(
     0,
     headX,
     headY,
-    size * 0.18,
+    size * 0.18
   );
   headGrad.addColorStop(0, scaleBase);
   headGrad.addColorStop(0.6, scaleDark);
@@ -2023,7 +2264,7 @@ export function drawWyvernEnemy(
     size * 0.05,
     0.2,
     Math.PI,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2040,7 +2281,7 @@ export function drawWyvernEnemy(
     size * 0.06,
     0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Lower jaw (opens when attacking)
@@ -2085,7 +2326,7 @@ export function drawWyvernEnemy(
     size * 0.01,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     snoutX - size * 0.04,
@@ -2094,7 +2335,7 @@ export function drawWyvernEnemy(
     size * 0.01,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2121,7 +2362,7 @@ export function drawWyvernEnemy(
     size * 0.04,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     headX + size * 0.09,
@@ -2130,7 +2371,7 @@ export function drawWyvernEnemy(
     size * 0.035,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2147,7 +2388,7 @@ export function drawWyvernEnemy(
     size * 0.03,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     headX + size * 0.09,
@@ -2156,7 +2397,7 @@ export function drawWyvernEnemy(
     size * 0.025,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2171,7 +2412,7 @@ export function drawWyvernEnemy(
     size * 0.025,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     headX + size * 0.09,
@@ -2180,7 +2421,7 @@ export function drawWyvernEnemy(
     size * 0.02,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2192,14 +2433,14 @@ export function drawWyvernEnemy(
     headY - size * 0.045,
     size * 0.01,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.arc(
     headX + size * 0.08,
     headY - size * 0.025,
     size * 0.008,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2212,14 +2453,14 @@ export function drawWyvernEnemy(
     headX + size * 0.12,
     headY - size * 0.2,
     headX + size * 0.16,
-    headY - size * 0.28,
+    headY - size * 0.28
   );
   ctx.lineTo(headX + size * 0.12, headY - size * 0.22);
   ctx.quadraticCurveTo(
     headX + size * 0.1,
     headY - size * 0.14,
     headX + size * 0.08,
-    headY - size * 0.08,
+    headY - size * 0.08
   );
   ctx.fill();
   ctx.beginPath();
@@ -2228,14 +2469,14 @@ export function drawWyvernEnemy(
     headX - size * 0.08,
     headY - size * 0.24,
     headX - size * 0.06,
-    headY - size * 0.32,
+    headY - size * 0.32
   );
   ctx.lineTo(headX - size * 0.04, headY - size * 0.26);
   ctx.quadraticCurveTo(
     headX - size * 0.04,
     headY - size * 0.18,
     headX - size * 0.02,
-    headY - size * 0.1,
+    headY - size * 0.1
   );
   ctx.fill();
 
@@ -2246,13 +2487,7 @@ export function drawWyvernEnemy(
     const ridgeY = headY - size * 0.14 - h * size * 0.03;
     const ridgeW = size * (0.025 - h * 0.003);
     ctx.beginPath();
-    ctx.arc(
-      headX + size * 0.1 + h * size * 0.012,
-      ridgeY,
-      ridgeW,
-      0,
-      Math.PI,
-    );
+    ctx.arc(headX + size * 0.1 + h * size * 0.012, ridgeY, ridgeW, 0, Math.PI);
     ctx.stroke();
   }
   // Growth ring segments on left horn
@@ -2260,13 +2495,7 @@ export function drawWyvernEnemy(
     const ridgeY = headY - size * 0.16 - h * size * 0.03;
     const ridgeW = size * (0.02 - h * 0.002);
     ctx.beginPath();
-    ctx.arc(
-      headX - size * 0.05 - h * size * 0.003,
-      ridgeY,
-      ridgeW,
-      0,
-      Math.PI,
-    );
+    ctx.arc(headX - size * 0.05 - h * size * 0.003, ridgeY, ridgeW, 0, Math.PI);
     ctx.stroke();
   }
   // Horn edge highlights
@@ -2274,11 +2503,21 @@ export function drawWyvernEnemy(
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(headX + size * 0.07, headY - size * 0.1);
-  ctx.quadraticCurveTo(headX + size * 0.13, headY - size * 0.2, headX + size * 0.16, headY - size * 0.27);
+  ctx.quadraticCurveTo(
+    headX + size * 0.13,
+    headY - size * 0.2,
+    headX + size * 0.16,
+    headY - size * 0.27
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.03, headY - size * 0.12);
-  ctx.quadraticCurveTo(headX - size * 0.07, headY - size * 0.24, headX - size * 0.06, headY - size * 0.31);
+  ctx.quadraticCurveTo(
+    headX - size * 0.07,
+    headY - size * 0.24,
+    headX - size * 0.06,
+    headY - size * 0.31
+  );
   ctx.stroke();
 
   // Horn wrapping ridge bands - full elliptical bands around right horn
@@ -2323,39 +2562,69 @@ export function drawWyvernEnemy(
   // Magical horn tip glow - pulses with power level
   const hornPulse = 0.3 + Math.sin(time * 3.5) * 0.15 + venomIntensity * 0.2;
   const rightHornGlow = ctx.createRadialGradient(
-    headX + size * 0.16, headY - size * 0.28, 0,
-    headX + size * 0.16, headY - size * 0.28, size * 0.06,
+    headX + size * 0.16,
+    headY - size * 0.28,
+    0,
+    headX + size * 0.16,
+    headY - size * 0.28,
+    size * 0.06
   );
   rightHornGlow.addColorStop(0, `rgba(74, 222, 128, ${hornPulse * 0.7})`);
   rightHornGlow.addColorStop(0.4, `rgba(52, 211, 153, ${hornPulse * 0.3})`);
   rightHornGlow.addColorStop(1, "rgba(52, 211, 153, 0)");
   ctx.fillStyle = rightHornGlow;
   ctx.beginPath();
-  ctx.arc(headX + size * 0.16, headY - size * 0.28, size * 0.06, 0, Math.PI * 2);
+  ctx.arc(
+    headX + size * 0.16,
+    headY - size * 0.28,
+    size * 0.06,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   const leftHornGlow = ctx.createRadialGradient(
-    headX - size * 0.06, headY - size * 0.32, 0,
-    headX - size * 0.06, headY - size * 0.32, size * 0.06,
+    headX - size * 0.06,
+    headY - size * 0.32,
+    0,
+    headX - size * 0.06,
+    headY - size * 0.32,
+    size * 0.06
   );
   leftHornGlow.addColorStop(0, `rgba(74, 222, 128, ${hornPulse * 0.7})`);
   leftHornGlow.addColorStop(0.4, `rgba(52, 211, 153, ${hornPulse * 0.3})`);
   leftHornGlow.addColorStop(1, "rgba(52, 211, 153, 0)");
   ctx.fillStyle = leftHornGlow;
   ctx.beginPath();
-  ctx.arc(headX - size * 0.06, headY - size * 0.32, size * 0.06, 0, Math.PI * 2);
+  ctx.arc(
+    headX - size * 0.06,
+    headY - size * 0.32,
+    size * 0.06,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   const smallHornGlow = ctx.createRadialGradient(
-    headX + size * 0.18, headY - size * 0.12, 0,
-    headX + size * 0.18, headY - size * 0.12, size * 0.04,
+    headX + size * 0.18,
+    headY - size * 0.12,
+    0,
+    headX + size * 0.18,
+    headY - size * 0.12,
+    size * 0.04
   );
   smallHornGlow.addColorStop(0, `rgba(74, 222, 128, ${hornPulse * 0.5})`);
   smallHornGlow.addColorStop(0.5, `rgba(52, 211, 153, ${hornPulse * 0.2})`);
   smallHornGlow.addColorStop(1, "rgba(52, 211, 153, 0)");
   ctx.fillStyle = smallHornGlow;
   ctx.beginPath();
-  ctx.arc(headX + size * 0.18, headY - size * 0.12, size * 0.04, 0, Math.PI * 2);
+  ctx.arc(
+    headX + size * 0.18,
+    headY - size * 0.12,
+    size * 0.04,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // === LAYER 9: POWERFUL LEGS WITH TALONS ===
@@ -2369,14 +2638,14 @@ export function drawWyvernEnemy(
     x - size * 0.18,
     legY + size * 0.15,
     x - size * 0.2,
-    legY + size * 0.3,
+    legY + size * 0.3
   );
   ctx.lineTo(x - size * 0.12, legY + size * 0.3);
   ctx.quadraticCurveTo(
     x - size * 0.11,
     legY + size * 0.15,
     x - size * 0.1,
-    legY - size * 0.02,
+    legY - size * 0.02
   );
   ctx.fill();
 
@@ -2387,14 +2656,14 @@ export function drawWyvernEnemy(
     x + size * 0.18,
     legY + size * 0.15,
     x + size * 0.2,
-    legY + size * 0.3,
+    legY + size * 0.3
   );
   ctx.lineTo(x + size * 0.12, legY + size * 0.3);
   ctx.quadraticCurveTo(
     x + size * 0.11,
     legY + size * 0.15,
     x + size * 0.1,
-    legY - size * 0.02,
+    legY - size * 0.02
   );
   ctx.fill();
 
@@ -2412,13 +2681,13 @@ export function drawWyvernEnemy(
         clawX,
         talonY + size * 0.02,
         clawX,
-        talonY + size * 0.08,
+        talonY + size * 0.08
       );
       ctx.quadraticCurveTo(
         clawX + size * 0.005,
         talonY + size * 0.02,
         clawX + size * 0.015,
-        talonY,
+        talonY
       );
       ctx.fill();
     }
@@ -2427,7 +2696,7 @@ export function drawWyvernEnemy(
     ctx.moveTo(legX + (leg === 0 ? size * 0.03 : -size * 0.03), talonY);
     ctx.lineTo(
       legX + (leg === 0 ? size * 0.08 : -size * 0.08),
-      talonY + size * 0.04,
+      talonY + size * 0.04
     );
     ctx.lineTo(legX + (leg === 0 ? size * 0.05 : -size * 0.05), talonY);
     ctx.fill();
@@ -2441,8 +2710,18 @@ export function drawWyvernEnemy(
     const chargeX = snoutX - size * 0.04;
     const chargeY = snoutY + jawOpen * size * 0.02;
 
-    const chargeGlow = ctx.createRadialGradient(chargeX, chargeY, 0, chargeX, chargeY, chargeSize * 3);
-    chargeGlow.addColorStop(0, `rgba(74, 222, 128, ${chargeAlpha * 0.6 * chargePulse})`);
+    const chargeGlow = ctx.createRadialGradient(
+      chargeX,
+      chargeY,
+      0,
+      chargeX,
+      chargeY,
+      chargeSize * 3
+    );
+    chargeGlow.addColorStop(
+      0,
+      `rgba(74, 222, 128, ${chargeAlpha * 0.6 * chargePulse})`
+    );
     chargeGlow.addColorStop(0.4, `rgba(52, 211, 153, ${chargeAlpha * 0.25})`);
     chargeGlow.addColorStop(1, "rgba(52, 211, 153, 0)");
     ctx.fillStyle = chargeGlow;
@@ -2450,7 +2729,14 @@ export function drawWyvernEnemy(
     ctx.arc(chargeX, chargeY, chargeSize * 3, 0, Math.PI * 2);
     ctx.fill();
 
-    const coreGlow = ctx.createRadialGradient(chargeX, chargeY, 0, chargeX, chargeY, chargeSize * chargePulse);
+    const coreGlow = ctx.createRadialGradient(
+      chargeX,
+      chargeY,
+      0,
+      chargeX,
+      chargeY,
+      chargeSize * chargePulse
+    );
     coreGlow.addColorStop(0, `rgba(209, 250, 229, ${chargeAlpha * 0.9})`);
     coreGlow.addColorStop(0.5, `rgba(110, 231, 183, ${chargeAlpha * 0.6})`);
     coreGlow.addColorStop(1, `rgba(74, 222, 128, ${chargeAlpha * 0.2})`);
@@ -2487,7 +2773,7 @@ export function drawWyvernEnemy(
       breathX,
       breathY,
       breathX - streamLength,
-      breathY,
+      breathY
     );
     streamGrad.addColorStop(0, `rgba(74, 222, 128, ${venomIntensity * 0.9})`);
     streamGrad.addColorStop(0.3, `rgba(52, 211, 153, ${venomIntensity * 0.7})`);
@@ -2501,13 +2787,13 @@ export function drawWyvernEnemy(
       breathX - streamLength * 0.5,
       breathY - size * 0.05 + Math.sin(time * 8) * size * 0.02,
       breathX - streamLength,
-      breathY + Math.sin(time * 6) * size * 0.04,
+      breathY + Math.sin(time * 6) * size * 0.04
     );
     ctx.quadraticCurveTo(
       breathX - streamLength * 0.5,
       breathY + size * 0.05 + Math.sin(time * 8 + 1) * size * 0.02,
       breathX,
-      breathY + size * 0.03,
+      breathY + size * 0.03
     );
     ctx.closePath();
     ctx.fill();
@@ -2528,7 +2814,7 @@ export function drawWyvernEnemy(
         dropY,
         size * 0.015 * (1 - dropPhase * 0.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2549,7 +2835,7 @@ export function drawWyvernEnemy(
         surgeY,
         size * 0.05 + attackIntensity * size * 0.03,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -2566,7 +2852,7 @@ export function drawWyvernEnemy(
         legY + size * 0.35,
         size * 0.15,
         Math.PI * (leg === 0 ? 0.8 : 0.2) + swipePhase,
-        Math.PI * (leg === 0 ? 1.2 : -0.2) + swipePhase,
+        Math.PI * (leg === 0 ? 1.2 : -0.2) + swipePhase
       );
       ctx.stroke();
     }
@@ -2583,12 +2869,12 @@ export function drawWyvernEnemy(
     zoom,
     {
       color: scaleDeep,
-      tipColor: venomBright,
       length: 0.35,
-      waveSpeed: 3.5,
+      tipColor: venomBright,
       waveAmt: 0.08,
+      waveSpeed: 3.5,
       width: 0.035,
-    },
+    }
   );
 
   // === DRACONIC EMBER SPARKS ===
@@ -2596,9 +2882,9 @@ export function drawWyvernEnemy(
     color: "rgba(74, 222, 128, 0.45)",
     coreColor: "rgba(180, 255, 160, 0.7)",
     count: 6,
-    speed: 1.2,
     maxAlpha: 0.35,
     sparkSize: 0.06,
+    speed: 1.2,
   });
 
   // === FLOATING SCALE SEGMENTS (diamond) ===
@@ -2607,8 +2893,8 @@ export function drawWyvernEnemy(
     colorAlt: scaleDarkest,
     count: 6,
     orbitRadius: 0.5,
-    segmentSize: 0.035,
     orbitSpeed: 1.2,
+    segmentSize: 0.035,
     shape: "diamond",
   });
 

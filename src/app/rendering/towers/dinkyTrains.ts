@@ -1,11 +1,11 @@
-import type { Tower, Position } from "../../types";
 import { ISO_SIN, ISO_Y_RATIO } from "../../constants";
-import { drawIsometricPrism } from "./towerHelpers";
+import type { Tower, Position } from "../../types";
 import {
   drawIsoGothicWindow,
   drawIsoFlushSlit,
   drawIsoFlushRect,
 } from "../isoFlush";
+import { drawIsometricPrism } from "./towerHelpers";
 
 export function renderDinkyTrains(
   ctx: CanvasRenderingContext2D,
@@ -13,7 +13,7 @@ export function renderDinkyTrains(
   screenPos: Position,
   zoom: number,
   time: number,
-  baseW: number,
+  baseW: number
 ) {
   // ========== DETAILED ISOMETRIC TRAINS ==========
   // CORRECT LAYERING: Draw cab FIRST (bottom-right), then boiler, then tender LAST (top-left)
@@ -57,7 +57,7 @@ export function renderDinkyTrains(
       radius: number,
       bodyCol: string,
       darkCol: string,
-      lightCol: string,
+      lightCol: string
     ) => {
       const bk = isoOffset(cx, cy, -halfLen);
       const ft = isoOffset(cx, cy, halfLen);
@@ -126,7 +126,7 @@ export function renderDinkyTrains(
         midX,
         midY - r,
         midX,
-        midY - r * 0.2,
+        midY - r * 0.2
       );
       specGrad.addColorStop(0, "rgba(255,255,255,0)");
       specGrad.addColorStop(0.3, "rgba(255,255,255,0.22)");
@@ -166,7 +166,7 @@ export function renderDinkyTrains(
           r * 0.98,
           0,
           Math.PI * 1.15,
-          Math.PI * 1.85,
+          Math.PI * 1.85
         );
         ctx.stroke();
 
@@ -180,7 +180,7 @@ export function renderDinkyTrains(
           r * 0.98,
           0,
           Math.PI * 1.15,
-          Math.PI * 1.85,
+          Math.PI * 1.85
         );
         ctx.stroke();
       }
@@ -203,7 +203,7 @@ export function renderDinkyTrains(
           ryTop - 0.2 * zoom,
           0.3 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -242,7 +242,7 @@ export function renderDinkyTrains(
         r + 1.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.45)";
@@ -255,7 +255,7 @@ export function renderDinkyTrains(
         0,
         ft.x,
         ft.y,
-        r,
+        r
       );
       capGrad.addColorStop(0, lightCol);
       capGrad.addColorStop(0.5, bodyCol);
@@ -284,7 +284,7 @@ export function renderDinkyTrains(
         r * 0.72,
         0,
         -Math.PI * 0.85,
-        -Math.PI * 0.15,
+        -Math.PI * 0.15
       );
       ctx.stroke();
 
@@ -318,7 +318,7 @@ export function renderDinkyTrains(
         ft.y - 0.3 * zoom,
         0.45 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     };
@@ -367,7 +367,7 @@ export function renderDinkyTrains(
       8 * zoom,
       -0.46,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -384,7 +384,7 @@ export function renderDinkyTrains(
       rz: number,
       mainColor: string,
       rimColor: string,
-      accentColor: string | undefined,
+      accentColor: string | undefined
     ) => {
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.4)";
@@ -413,7 +413,7 @@ export function renderDinkyTrains(
         0,
         wx,
         wy,
-        rz * 0.85,
+        rz * 0.85
       );
       faceGrad.addColorStop(0, accentColor || mainColor);
       faceGrad.addColorStop(0.6, mainColor);
@@ -437,11 +437,11 @@ export function renderDinkyTrains(
         ctx.beginPath();
         ctx.moveTo(
           wx + Math.cos(angle) * iRx * 0.18,
-          wy + Math.sin(angle) * iRy * 0.18,
+          wy + Math.sin(angle) * iRy * 0.18
         );
         ctx.lineTo(
           wx + Math.cos(angle) * iRx * 0.72,
-          wy + Math.sin(angle) * iRy * 0.72,
+          wy + Math.sin(angle) * iRy * 0.72
         );
         ctx.stroke();
       }
@@ -468,7 +468,7 @@ export function renderDinkyTrains(
         iRy * 0.95,
         0,
         Math.PI * 1.1,
-        Math.PI * 1.9,
+        Math.PI * 1.9
       );
       ctx.stroke();
 
@@ -482,7 +482,7 @@ export function renderDinkyTrains(
       r: number,
       mainColor: string,
       rimColor: string,
-      accentColor?: string,
+      accentColor?: string
     ) => {
       const rz = r * zoom;
       const iRx = rz * ISO_SIN;
@@ -500,7 +500,7 @@ export function renderDinkyTrains(
         rz,
         mainColor,
         rimColor,
-        accentColor,
+        accentColor
       );
       ctx.restore();
 
@@ -521,7 +521,7 @@ export function renderDinkyTrains(
         rz,
         mainColor,
         rimColor,
-        accentColor,
+        accentColor
       );
     };
 
@@ -530,9 +530,11 @@ export function renderDinkyTrains(
       positions: number[],
       baseX: number,
       baseY: number,
-      rodColor: string,
+      rodColor: string
     ) => {
-      if (positions.length < 2) return;
+      if (positions.length < 2) {
+        return;
+      }
       const ch = CROSS_HALF * zoom;
       const phase = time * 3;
       const crankR = 1.8 * zoom;
@@ -545,8 +547,11 @@ export function renderDinkyTrains(
         const wp = isoOffset(baseX, baseY, positions[i]);
         const px = wp.x + ch + Math.sin(phase) * crankR * ISO_SIN;
         const py = wp.y + ch * 0.5 + Math.cos(phase) * crankR;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.stroke();
 
@@ -571,8 +576,11 @@ export function renderDinkyTrains(
         const wp = isoOffset(baseX, baseY, positions[i]);
         const px = wp.x - ch + Math.sin(phase) * crankR * ISO_SIN;
         const py = wp.y - ch * 0.5 + Math.cos(phase) * crankR;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.stroke();
       ctx.restore();
@@ -587,7 +595,7 @@ export function renderDinkyTrains(
       r: number,
       housingColor: string,
       bracketColor: string,
-      glowAlpha: number,
+      glowAlpha: number
     ) => {
       const hlRx = r * zoom * ISO_SIN;
       const hlRy = r * zoom;
@@ -625,7 +633,7 @@ export function renderDinkyTrains(
       mainCol: string,
       darkCol: string,
       barCol: string,
-      barCount: number = 4,
+      barCount: number = 4
     ) => {
       const tip = isoOffset(cx, cy, forwardOff);
       const hw = halfW * zoom;
@@ -708,7 +716,7 @@ export function renderDinkyTrains(
       hlBracketCol: string,
       hlGlowAlpha: number,
       scale: number,
-      cowBarCount: number,
+      cowBarCount: number
     ) => {
       const w = pw * zoom * 0.5;
       const d = pd * zoom * 0.25;
@@ -811,7 +819,7 @@ export function renderDinkyTrains(
         mainCol,
         darkCol,
         accentCol,
-        cowBarCount,
+        cowBarCount
       );
 
       // === HEADLIGHT mounted on upper front face ===
@@ -829,7 +837,7 @@ export function renderDinkyTrains(
         1.8 * s,
         hlHousingCol,
         hlBracketCol,
-        hlGlowAlpha,
+        hlGlowAlpha
       );
     };
 
@@ -847,7 +855,7 @@ export function renderDinkyTrains(
         chStart.x,
         chStart.y,
         chEnd.x,
-        chEnd.y,
+        chEnd.y
       );
       chassGrad.addColorStop(0, "#2a1810");
       chassGrad.addColorStop(0.5, "#3a2818");
@@ -883,7 +891,7 @@ export function renderDinkyTrains(
           sp.x,
           sp.y - 2 * zoom,
           sp.x + 3 * zoom,
-          sp.y + 0.5 * zoom,
+          sp.y + 0.5 * zoom
         );
         ctx.stroke();
         ctx.strokeStyle = "#4a3a2a";
@@ -894,7 +902,7 @@ export function renderDinkyTrains(
           sp.x,
           sp.y - 1 * zoom,
           sp.x + 2.5 * zoom,
-          sp.y + 1 * zoom,
+          sp.y + 1 * zoom
         );
         ctx.stroke();
         ctx.strokeStyle = "#5a4a3a";
@@ -908,7 +916,7 @@ export function renderDinkyTrains(
         4,
         "#8B5E3C",
         "#5a3a1a",
-        "#B87333",
+        "#B87333"
       );
       drawWheel(
         isoOffset(trainX, wheelY, 3).x,
@@ -916,7 +924,7 @@ export function renderDinkyTrains(
         4,
         "#8B5E3C",
         "#5a3a1a",
-        "#B87333",
+        "#B87333"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -3).x,
@@ -924,7 +932,7 @@ export function renderDinkyTrains(
         3.5,
         "#8B5E3C",
         "#5a3a1a",
-        "#B87333",
+        "#B87333"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -8).x,
@@ -932,7 +940,7 @@ export function renderDinkyTrains(
         3.5,
         "#8B5E3C",
         "#5a3a1a",
-        "#B87333",
+        "#B87333"
       );
 
       // === CAB (front, draw first - appears behind) ===
@@ -944,8 +952,8 @@ export function renderDinkyTrains(
         11,
         10,
         16,
-        { top: "#8B4513", left: "#6B3410", right: "#4B2408" },
-        zoom,
+        { left: "#6B3410", right: "#4B2408", top: "#8B4513" },
+        zoom
       );
 
       // Wooden plank texture — isometric slopes (+0.45 left, -0.45 right)
@@ -987,13 +995,13 @@ export function renderDinkyTrains(
         cabPos.x - roofW,
         roofTop - 4 * zoom,
         cabPos.x,
-        roofTop - 5 * zoom,
+        roofTop - 5 * zoom
       );
       ctx.quadraticCurveTo(
         cabPos.x + roofW,
         roofTop - 4 * zoom,
         cabPos.x + roofW,
-        roofTop + 1 * zoom,
+        roofTop + 1 * zoom
       );
       ctx.lineTo(cabPos.x + roofW, roofTop + 2 * zoom);
       ctx.lineTo(cabPos.x, roofTop + 2 * zoom + 2.5 * zoom);
@@ -1015,13 +1023,13 @@ export function renderDinkyTrains(
         cabPos.x - roofW * 0.5,
         roofTop - 3.5 * zoom,
         cabPos.x,
-        roofTop - 4.5 * zoom,
+        roofTop - 4.5 * zoom
       );
       ctx.quadraticCurveTo(
         cabPos.x + roofW * 0.5,
         roofTop - 3.5 * zoom,
         cabPos.x + roofW * 0.8,
-        roofTop - 1 * zoom,
+        roofTop - 1 * zoom
       );
       ctx.stroke();
 
@@ -1036,7 +1044,7 @@ export function renderDinkyTrains(
         cabPos.x + 3.2 * zoom,
         cabPos.y - 14 * zoom,
         cabPos.x + 1.5 * zoom,
-        cabPos.y - 12 * zoom,
+        cabPos.y - 12 * zoom
       );
       ctx.closePath();
       ctx.fill();
@@ -1051,7 +1059,7 @@ export function renderDinkyTrains(
         cabPos.x + 3.2 * zoom,
         cabPos.y - 13 * zoom,
         cabPos.x + 2 * zoom,
-        cabPos.y - 11.5 * zoom,
+        cabPos.y - 11.5 * zoom
       );
       ctx.closePath();
       ctx.fill();
@@ -1075,7 +1083,7 @@ export function renderDinkyTrains(
         1.3 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = `rgba(255, 180, 80, ${cabGlow * 0.7})`;
@@ -1089,7 +1097,7 @@ export function renderDinkyTrains(
         0.9 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1103,7 +1111,7 @@ export function renderDinkyTrains(
         1.3 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -1118,7 +1126,7 @@ export function renderDinkyTrains(
         cabPos.x + 2 * zoom,
         cabPos.y - 11 * zoom,
         cabPos.x + 1 * zoom,
-        cabPos.y - 10 * zoom,
+        cabPos.y - 10 * zoom
       );
       ctx.closePath();
       ctx.stroke();
@@ -1129,7 +1137,7 @@ export function renderDinkyTrains(
         cabPos.y - 5.5 * zoom,
         0.7 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1164,7 +1172,7 @@ export function renderDinkyTrains(
         4.5,
         "#B87333",
         "#8B5E3C",
-        "#D4956B",
+        "#D4956B"
       );
 
       // Brass boiler bands with highlights
@@ -1173,7 +1181,7 @@ export function renderDinkyTrains(
         const bandPos = isoOffset(
           boilerPos.x,
           boilerPos.y - 5.5 * zoom,
-          -4 + b * 2.5,
+          -4 + b * 2.5
         );
         ctx.strokeStyle = "#C9A227";
         ctx.beginPath();
@@ -1184,7 +1192,7 @@ export function renderDinkyTrains(
           4.5 * zoom + 0.5 * zoom,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.strokeStyle = "rgba(255,220,120,0.3)";
@@ -1197,7 +1205,7 @@ export function renderDinkyTrains(
           4.5 * zoom * 0.95,
           0,
           Math.PI * 1.2,
-          Math.PI * 1.8,
+          Math.PI * 1.8
         );
         ctx.stroke();
         ctx.lineWidth = 1.8 * zoom;
@@ -1207,7 +1215,7 @@ export function renderDinkyTrains(
       const domePosL1 = isoOffset(
         boilerPos.x,
         boilerPos.y - 5.5 * zoom - 4.5 * zoom,
-        0,
+        0
       );
       const domeGrad = ctx.createRadialGradient(
         domePosL1.x - 1 * zoom,
@@ -1215,7 +1223,7 @@ export function renderDinkyTrains(
         0,
         domePosL1.x,
         domePosL1.y,
-        3.5 * zoom,
+        3.5 * zoom
       );
       domeGrad.addColorStop(0, "#D4956B");
       domeGrad.addColorStop(0.6, "#B87333");
@@ -1229,7 +1237,7 @@ export function renderDinkyTrains(
         4 * zoom,
         0,
         Math.PI,
-        0,
+        0
       );
       ctx.fill();
       ctx.fillStyle = "#8B5E3C";
@@ -1241,7 +1249,7 @@ export function renderDinkyTrains(
         1.4 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#C9A227";
@@ -1253,7 +1261,7 @@ export function renderDinkyTrains(
         0.8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "rgba(255,220,120,0.4)";
@@ -1266,7 +1274,7 @@ export function renderDinkyTrains(
         0.8 * zoom,
         0,
         Math.PI * 1.1,
-        Math.PI * 1.9,
+        Math.PI * 1.9
       );
       ctx.stroke();
 
@@ -1304,7 +1312,7 @@ export function renderDinkyTrains(
         3.5 * zoom,
         0,
         Math.PI,
-        0,
+        0
       );
       ctx.fill();
       ctx.strokeStyle = "#6a5a3a";
@@ -1315,13 +1323,13 @@ export function renderDinkyTrains(
         ctx.beginPath();
         ctx.moveTo(
           stackPos.x - meshRx * Math.cos(meshAngle),
-          stackPos.y - 13.5 * zoom,
+          stackPos.y - 13.5 * zoom
         );
         ctx.quadraticCurveTo(
           stackPos.x,
           stackPos.y - 17 * zoom,
           stackPos.x + meshRx * Math.cos(Math.PI - meshAngle),
-          stackPos.y - 13.5 * zoom,
+          stackPos.y - 13.5 * zoom
         );
         ctx.stroke();
       }
@@ -1336,7 +1344,7 @@ export function renderDinkyTrains(
         2.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.fillStyle = "#5a4a3a";
@@ -1348,7 +1356,7 @@ export function renderDinkyTrains(
         1.8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#2a1a0a";
@@ -1360,7 +1368,7 @@ export function renderDinkyTrains(
         0.9 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1379,7 +1387,7 @@ export function renderDinkyTrains(
           0,
           puffX,
           puffY,
-          puffR,
+          puffR
         );
         puffGrad.addColorStop(0, `rgba(240, 235, 225, ${puffA})`);
         puffGrad.addColorStop(0.5, `rgba(210, 205, 195, ${puffA * 0.7})`);
@@ -1416,7 +1424,7 @@ export function renderDinkyTrains(
           2.5,
           "#C9A227",
           "#8B5E3C",
-          0.75 + Math.sin(time * 3) * 0.2,
+          0.75 + Math.sin(time * 3) * 0.2
         );
       }
 
@@ -1435,7 +1443,7 @@ export function renderDinkyTrains(
         0,
         bellPos.x,
         bellPos.y + 1.5 * zoom,
-        3 * zoom,
+        3 * zoom
       );
       bellGrad.addColorStop(0, "#E8C847");
       bellGrad.addColorStop(0.5, "#C9A227");
@@ -1447,14 +1455,14 @@ export function renderDinkyTrains(
         bellPos.x - 3 * zoom,
         bellPos.y + 2.5 * zoom,
         bellPos.x - 1.2 * zoom,
-        bellPos.y + 3.5 * zoom,
+        bellPos.y + 3.5 * zoom
       );
       ctx.lineTo(bellPos.x + 1.2 * zoom, bellPos.y + 3.5 * zoom);
       ctx.quadraticCurveTo(
         bellPos.x + 3 * zoom,
         bellPos.y + 2.5 * zoom,
         bellPos.x + 2.5 * zoom,
-        bellPos.y,
+        bellPos.y
       );
       ctx.closePath();
       ctx.fill();
@@ -1467,7 +1475,7 @@ export function renderDinkyTrains(
         1.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Bell highlight
@@ -1480,7 +1488,7 @@ export function renderDinkyTrains(
         0.6 * zoom,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1500,11 +1508,11 @@ export function renderDinkyTrains(
         ctx.beginPath();
         ctx.moveTo(
           gaugePos.x - 5.5 * zoom + Math.cos(ta) * 1.4 * zoom,
-          gaugePos.y + Math.sin(ta) * 1.4 * zoom,
+          gaugePos.y + Math.sin(ta) * 1.4 * zoom
         );
         ctx.lineTo(
           gaugePos.x - 5.5 * zoom + Math.cos(ta) * 1.7 * zoom,
-          gaugePos.y + Math.sin(ta) * 1.7 * zoom,
+          gaugePos.y + Math.sin(ta) * 1.7 * zoom
         );
         ctx.stroke();
       }
@@ -1515,7 +1523,7 @@ export function renderDinkyTrains(
       ctx.moveTo(gaugePos.x - 5.5 * zoom, gaugePos.y);
       ctx.lineTo(
         gaugePos.x - 5.5 * zoom + Math.cos(needleAngle) * 1.5 * zoom,
-        gaugePos.y + Math.sin(needleAngle) * 1.5 * zoom,
+        gaugePos.y + Math.sin(needleAngle) * 1.5 * zoom
       );
       ctx.stroke();
       ctx.fillStyle = "#B87333";
@@ -1531,8 +1539,8 @@ export function renderDinkyTrains(
         11,
         10,
         9,
-        { top: "#8B4513", left: "#6B3410", right: "#4B2408" },
-        zoom,
+        { left: "#6B3410", right: "#4B2408", top: "#8B4513" },
+        zoom
       );
 
       // Plank texture on faces — isometric slopes (+0.45 left, -0.45 right)
@@ -1567,7 +1575,7 @@ export function renderDinkyTrains(
         0,
         tenderPos.x,
         tenderPos.y - 9 * zoom,
-        4.5 * zoom,
+        4.5 * zoom
       );
       coalGrad.addColorStop(0, "#2a2018");
       coalGrad.addColorStop(0.5, "#1a1008");
@@ -1581,7 +1589,7 @@ export function renderDinkyTrains(
         1.8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -1592,7 +1600,7 @@ export function renderDinkyTrains(
         4 * zoom,
         0,
         Math.PI,
-        0,
+        0
       );
       ctx.fill();
 
@@ -1608,7 +1616,7 @@ export function renderDinkyTrains(
         [-0.8, -1.5, 41, 31, 21],
         [1.5, -1.2, 33, 23, 13],
         [0.3, -1.8, 39, 29, 19],
-        [-1.2, -1.0, 45, 35, 25],
+        [-1.2, -1, 45, 35, 25],
         [0.8, -0.3, 34, 24, 14],
       ];
       for (const [cx, cy, cr, cg, cb] of coalSpots) {
@@ -1619,7 +1627,7 @@ export function renderDinkyTrains(
           tenderPos.y - 10 * zoom + cy * zoom,
           1 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Faceted highlight on upper-left
@@ -1630,7 +1638,7 @@ export function renderDinkyTrains(
           tenderPos.y - 10.3 * zoom + cy * zoom,
           0.45 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1648,7 +1656,7 @@ export function renderDinkyTrains(
         1 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1663,7 +1671,7 @@ export function renderDinkyTrains(
         tenderPos.x - 0.5 * zoom,
         tenderPos.y - 10.5 * zoom,
         tenderPos.x + 1.5 * zoom,
-        tenderPos.y - 9.8 * zoom,
+        tenderPos.y - 9.8 * zoom
       );
       ctx.stroke();
       ctx.beginPath();
@@ -1672,7 +1680,7 @@ export function renderDinkyTrains(
         tenderPos.x + 0.5 * zoom,
         tenderPos.y - 10 * zoom,
         tenderPos.x + 2 * zoom,
-        tenderPos.y - 9.5 * zoom,
+        tenderPos.y - 9.5 * zoom
       );
       ctx.stroke();
 
@@ -1805,8 +1813,8 @@ export function renderDinkyTrains(
         "#C9A227",
         "#B87333",
         0.75 + Math.sin(time * 3) * 0.2,
-        1.0,
-        4,
+        1,
+        4
       );
 
       // "DINKY" nameplate on boiler side — 3D raised brass plaque
@@ -1843,7 +1851,7 @@ export function renderDinkyTrains(
         npX + npW,
         npY + npH,
         npX + npW - npBevel,
-        npY + npH,
+        npY + npH
       );
       ctx.lineTo(npX + npBevel, npY + npH);
       ctx.quadraticCurveTo(npX, npY + npH, npX, npY + npH - npBevel);
@@ -1880,7 +1888,7 @@ export function renderDinkyTrains(
         npX + npW,
         npY + npH,
         npX + npW - npBevel,
-        npY + npH,
+        npY + npH
       );
       ctx.lineTo(npX + npBevel, npY + npH);
       ctx.quadraticCurveTo(npX, npY + npH, npX, npY + npH - npBevel);
@@ -1910,7 +1918,7 @@ export function renderDinkyTrains(
       ctx.fillText(
         "DINKY",
         npX + npW * 0.5 + 0.3 * zoom,
-        npY + npH * 0.65 + 0.3 * zoom,
+        npY + npH * 0.65 + 0.3 * zoom
       );
       ctx.fillStyle = "#3a1a08";
       ctx.fillText("DINKY", npX + npW * 0.5, npY + npH * 0.65);
@@ -1919,7 +1927,7 @@ export function renderDinkyTrains(
       ctx.fillText(
         "DINKY",
         npX + npW * 0.5 - 0.15 * zoom,
-        npY + npH * 0.65 - 0.15 * zoom,
+        npY + npH * 0.65 - 0.15 * zoom
       );
 
       // Corner rivets
@@ -1953,7 +1961,7 @@ export function renderDinkyTrains(
         chStart.x,
         chStart.y,
         chEnd.x,
-        chEnd.y,
+        chEnd.y
       );
       steelGrad.addColorStop(0, "#1a1e25");
       steelGrad.addColorStop(0.5, "#2a2e35");
@@ -1986,7 +1994,7 @@ export function renderDinkyTrains(
           sp.x,
           sp.y - 2.5 * zoom,
           sp.x + 3.5 * zoom,
-          sp.y + 0.5 * zoom,
+          sp.y + 0.5 * zoom
         );
         ctx.stroke();
         ctx.strokeStyle = "#3a4050";
@@ -1997,7 +2005,7 @@ export function renderDinkyTrains(
           sp.x,
           sp.y - 1.2 * zoom,
           sp.x + 3 * zoom,
-          sp.y + 1.2 * zoom,
+          sp.y + 1.2 * zoom
         );
         ctx.stroke();
         ctx.strokeStyle = "#4a5060";
@@ -2011,7 +2019,7 @@ export function renderDinkyTrains(
         4.5,
         "#3a4050",
         "#1a1e25",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, 4).x,
@@ -2019,7 +2027,7 @@ export function renderDinkyTrains(
         4.5,
         "#3a4050",
         "#1a1e25",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -4).x,
@@ -2027,7 +2035,7 @@ export function renderDinkyTrains(
         4.5,
         "#3a4050",
         "#1a1e25",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -11).x,
@@ -2035,7 +2043,7 @@ export function renderDinkyTrains(
         4.5,
         "#3a4050",
         "#1a1e25",
-        "#5a6070",
+        "#5a6070"
       );
 
       // Animated connecting rods — proper isometric
@@ -2049,8 +2057,8 @@ export function renderDinkyTrains(
         12,
         11,
         16,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
 
       // Welded armor plate seams — isometric slopes (+0.46 left, -0.46 right)
@@ -2095,8 +2103,8 @@ export function renderDinkyTrains(
         14,
         13,
         2.5,
-        { top: "#2a3040", left: "#1a2030", right: "#101820" },
-        zoom,
+        { left: "#1a2030", right: "#101820", top: "#2a3040" },
+        zoom
       );
 
       // Angled front armor plate — isometric slope -d/w = -0.46
@@ -2105,7 +2113,7 @@ export function renderDinkyTrains(
         frontArmor.x - 5 * zoom,
         frontArmor.y,
         frontArmor.x + 5 * zoom,
-        frontArmor.y,
+        frontArmor.y
       );
       armorGrad.addColorStop(0, "#3a4050");
       armorGrad.addColorStop(0.5, "#4a5060");
@@ -2160,8 +2168,8 @@ export function renderDinkyTrains(
         3.5,
         3.5,
         7,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
       ctx.fillStyle = "#88ccaa";
       ctx.shadowColor = "#88ccaa";
@@ -2174,7 +2182,7 @@ export function renderDinkyTrains(
         0.7 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -2205,8 +2213,8 @@ export function renderDinkyTrains(
         13,
         11,
         13,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
 
       // Armored boiler cylinder
@@ -2217,7 +2225,7 @@ export function renderDinkyTrains(
         5,
         "#3a4050",
         "#1a2030",
-        "#5a6070",
+        "#5a6070"
       );
 
       // Steel reinforcement bands
@@ -2227,7 +2235,7 @@ export function renderDinkyTrains(
         const bandPos = isoOffset(
           locoPos.x,
           locoPos.y - 6.5 * zoom,
-          -4 + b * 4,
+          -4 + b * 4
         );
         ctx.beginPath();
         ctx.ellipse(
@@ -2237,7 +2245,7 @@ export function renderDinkyTrains(
           5 * zoom + 0.4 * zoom,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -2261,8 +2269,8 @@ export function renderDinkyTrains(
         8,
         7,
         2.5,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
       ctx.strokeStyle = "#4a5060";
       ctx.lineWidth = 1.2 * zoom;
@@ -2274,7 +2282,7 @@ export function renderDinkyTrains(
         1.8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -2292,7 +2300,7 @@ export function renderDinkyTrains(
           0,
           puffX,
           puffY,
-          puffR,
+          puffR
         );
         smokeGrad.addColorStop(0, `rgba(120, 120, 130, ${puffA})`);
         smokeGrad.addColorStop(0.6, `rgba(100, 100, 110, ${puffA * 0.6})`);
@@ -2332,7 +2340,7 @@ export function renderDinkyTrains(
           valvePos.y - 1 * zoom,
           2 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2348,7 +2356,7 @@ export function renderDinkyTrains(
           2.5,
           "#3a4050",
           "#3a4050",
-          0.55 + Math.sin(time * 3) * 0.2,
+          0.55 + Math.sin(time * 3) * 0.2
         );
       }
 
@@ -2360,8 +2368,8 @@ export function renderDinkyTrains(
         13,
         11,
         11,
-        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
-        zoom,
+        { left: "#3a4050", right: "#2a3040", top: "#4a5060" },
+        zoom
       );
 
       // Heavy rivets on cargo car (right face)
@@ -2411,7 +2419,7 @@ export function renderDinkyTrains(
         1.8 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#E77500";
@@ -2440,7 +2448,7 @@ export function renderDinkyTrains(
         2.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "#5a6070";
@@ -2453,7 +2461,7 @@ export function renderDinkyTrains(
         2.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       // Ring bearing teeth (visible arc)
@@ -2478,8 +2486,8 @@ export function renderDinkyTrains(
         6,
         6,
         5,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
 
       // Turret armor rivets (left face)
@@ -2491,7 +2499,7 @@ export function renderDinkyTrains(
           turretBaseY - (2 - ri * 0.9) * zoom,
           0.5 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2501,7 +2509,7 @@ export function renderDinkyTrains(
       const turretBarrelEnd = isoOffset(
         cargoPos.x,
         turretBaseY - 2.5 * zoom,
-        5 + barrelSwing,
+        5 + barrelSwing
       );
       const barrelStart = isoOffset(cargoPos.x, turretBaseY - 2.5 * zoom, 1);
 
@@ -2515,7 +2523,7 @@ export function renderDinkyTrains(
         1.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "#4a5060";
@@ -2552,19 +2560,19 @@ export function renderDinkyTrains(
       ctx.beginPath();
       ctx.moveTo(
         turretBarrelEnd.x - mzPerpX * 2.2 * zoom,
-        turretBarrelEnd.y - mzPerpY * 2.2 * zoom,
+        turretBarrelEnd.y - mzPerpY * 2.2 * zoom
       );
       ctx.lineTo(
         turretBarrelEnd.x + mzPerpX * 2.2 * zoom,
-        turretBarrelEnd.y + mzPerpY * 2.2 * zoom,
+        turretBarrelEnd.y + mzPerpY * 2.2 * zoom
       );
       ctx.lineTo(
         turretBarrelEnd.x + mzNx * 2 * zoom + mzPerpX * 2.2 * zoom,
-        turretBarrelEnd.y + mzNy * 2 * zoom + mzPerpY * 2.2 * zoom,
+        turretBarrelEnd.y + mzNy * 2 * zoom + mzPerpY * 2.2 * zoom
       );
       ctx.lineTo(
         turretBarrelEnd.x + mzNx * 2 * zoom - mzPerpX * 2.2 * zoom,
-        turretBarrelEnd.y + mzNy * 2 * zoom - mzPerpY * 2.2 * zoom,
+        turretBarrelEnd.y + mzNy * 2 * zoom - mzPerpY * 2.2 * zoom
       );
       ctx.closePath();
       ctx.fill();
@@ -2593,7 +2601,7 @@ export function renderDinkyTrains(
         turretBarrelEnd.y + mzNy * 2 * zoom,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2608,7 +2616,7 @@ export function renderDinkyTrains(
         1 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = `rgba(60, 220, 80, ${viewportGlow})`;
@@ -2622,7 +2630,7 @@ export function renderDinkyTrains(
         0.7 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -2671,7 +2679,7 @@ export function renderDinkyTrains(
         "#3a4050",
         0.7 + Math.sin(time * 3) * 0.2,
         1.1,
-        4,
+        4
       );
 
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
@@ -2741,7 +2749,7 @@ export function renderDinkyTrains(
         5,
         "#4a5060",
         "#2a2e35",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, 4).x,
@@ -2749,7 +2757,7 @@ export function renderDinkyTrains(
         5,
         "#4a5060",
         "#2a2e35",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -4).x,
@@ -2757,7 +2765,7 @@ export function renderDinkyTrains(
         5,
         "#4a5060",
         "#2a2e35",
-        "#5a6070",
+        "#5a6070"
       );
       drawWheel(
         isoOffset(trainX, wheelY, -13).x,
@@ -2765,7 +2773,7 @@ export function renderDinkyTrains(
         5,
         "#4a5060",
         "#2a2e35",
-        "#5a6070",
+        "#5a6070"
       );
       drawConnectingRods([13, 4, -4, -13], trainX, wheelY, "#5a6070");
 
@@ -2776,7 +2784,7 @@ export function renderDinkyTrains(
         prowPos.x - 3 * zoom,
         prowPos.y,
         prowPos.x + 3 * zoom,
-        prowPos.y,
+        prowPos.y
       );
       prowGrad.addColorStop(0, "#3a4050");
       prowGrad.addColorStop(0.5, "#5a6070");
@@ -2800,8 +2808,8 @@ export function renderDinkyTrains(
         13,
         12,
         18,
-        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
-        zoom,
+        { left: "#3a4050", right: "#2a3040", top: "#4a5060" },
+        zoom
       );
 
       // Riveted armor plates
@@ -2814,7 +2822,7 @@ export function renderDinkyTrains(
             cabPos.y - (4 + row * 4) * zoom + col * 0.6 * zoom,
             0.7 * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           ctx.beginPath();
@@ -2823,7 +2831,7 @@ export function renderDinkyTrains(
             cabPos.y - (4 + row * 4) * zoom + col * 0.6 * zoom,
             0.7 * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -2854,8 +2862,8 @@ export function renderDinkyTrains(
           3,
           3,
           4,
-          { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
-          zoom,
+          { left: "#4a5060", right: "#3a4050", top: "#5a6070" },
+          zoom
         );
       }
 
@@ -2875,7 +2883,7 @@ export function renderDinkyTrains(
         lookR + 1 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
@@ -2943,7 +2951,7 @@ export function renderDinkyTrains(
           lookR * 0.95,
           0,
           Math.PI * 1.2,
-          Math.PI * 1.8,
+          Math.PI * 1.8
         );
         ctx.stroke();
       }
@@ -2955,7 +2963,7 @@ export function renderDinkyTrains(
         0,
         periPos.x,
         periPos.y - lookH,
-        lookR,
+        lookR
       );
       lookCapGrad.addColorStop(0, "#5a6070");
       lookCapGrad.addColorStop(0.6, "#4a5060");
@@ -2969,7 +2977,7 @@ export function renderDinkyTrains(
         lookR,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.35)";
@@ -3001,7 +3009,7 @@ export function renderDinkyTrains(
         0.6 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       const pScopeGlow = 0.4 + Math.sin(time * 2.5) * 0.15;
@@ -3016,7 +3024,7 @@ export function renderDinkyTrains(
         0.4 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -3041,8 +3049,8 @@ export function renderDinkyTrains(
         15,
         13,
         15,
-        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
-        zoom,
+        { left: "#3a4050", right: "#2a3040", top: "#4a5060" },
+        zoom
       );
 
       // Armor plate welded seams — isometric slopes (+0.43 left, -0.43 right)
@@ -3098,7 +3106,7 @@ export function renderDinkyTrains(
         const ventPos = isoOffset(
           locoPos.x,
           locoPos.y - (5 + vi * 5) * zoom,
-          -6,
+          -6
         );
         const ventX = ventPos.x - 6 * zoom;
         const ventY = ventPos.y;
@@ -3165,7 +3173,7 @@ export function renderDinkyTrains(
           const ha = (hi / 6) * Math.PI * 2;
           ctx.lineTo(
             lanternPos.x + side * 1 * zoom + Math.cos(ha) * 2.2 * zoom,
-            lanternPos.y + Math.sin(ha) * 2.2 * zoom,
+            lanternPos.y + Math.sin(ha) * 2.2 * zoom
           );
         }
         ctx.closePath();
@@ -3179,7 +3187,7 @@ export function renderDinkyTrains(
           lanternPos.y,
           1.6 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -3194,8 +3202,8 @@ export function renderDinkyTrains(
         8,
         8,
         16,
-        { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
-        zoom,
+        { left: "#4a5060", right: "#3a4050", top: "#5a6070" },
+        zoom
       );
 
       // Arrow slits on tower — isometric slope ±0.5 (tower 8×8)
@@ -3227,8 +3235,8 @@ export function renderDinkyTrains(
           2.5,
           2.5,
           3.5,
-          { top: "#6a7080", left: "#4a5060", right: "#3a4050" },
-          zoom,
+          { left: "#4a5060", right: "#3a4050", top: "#6a7080" },
+          zoom
         );
       }
 
@@ -3252,7 +3260,7 @@ export function renderDinkyTrains(
         flagPole.x + 3.5 * zoom + 1 * zoom,
         flagPole.y - 4 * zoom + flagWave * zoom - 0.5 * zoom,
         flagPole.x + 6 * zoom + 1 * zoom,
-        flagPole.y - 3.5 * zoom + flagWave * zoom - 0.5 * zoom,
+        flagPole.y - 3.5 * zoom + flagWave * zoom - 0.5 * zoom
       );
       ctx.lineTo(flagPole.x + 1 * zoom, flagPole.y - 1.5 * zoom - 0.5 * zoom);
       ctx.closePath();
@@ -3264,7 +3272,7 @@ export function renderDinkyTrains(
         flagPole.x + 3.5 * zoom,
         flagPole.y - 4 * zoom + flagWave * zoom,
         flagPole.x + 6 * zoom,
-        flagPole.y - 3.5 * zoom + flagWave * zoom,
+        flagPole.y - 3.5 * zoom + flagWave * zoom
       );
       ctx.lineTo(flagPole.x, flagPole.y - 1.5 * zoom);
       ctx.closePath();
@@ -3279,8 +3287,8 @@ export function renderDinkyTrains(
         5.5,
         5.5,
         12,
-        { top: "#2a3040", left: "#1a2030", right: "#101520" },
-        zoom,
+        { left: "#1a2030", right: "#101520", top: "#2a3040" },
+        zoom
       );
       drawIsometricPrism(
         ctx,
@@ -3289,8 +3297,8 @@ export function renderDinkyTrains(
         7.5,
         7.5,
         2.5,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
       // Spark catcher mesh dome — isometric elliptical
       ctx.fillStyle = "rgba(70, 80, 90, 0.6)";
@@ -3302,7 +3310,7 @@ export function renderDinkyTrains(
         3.5 * zoom,
         0,
         Math.PI,
-        0,
+        0
       );
       ctx.fill();
       ctx.strokeStyle = "#5a6070";
@@ -3313,13 +3321,13 @@ export function renderDinkyTrains(
         ctx.beginPath();
         ctx.moveTo(
           stackPos.x - meshRx * Math.cos(meshAngle),
-          stackPos.y - 15.5 * zoom,
+          stackPos.y - 15.5 * zoom
         );
         ctx.quadraticCurveTo(
           stackPos.x,
           stackPos.y - 19 * zoom,
           stackPos.x + meshRx * Math.cos(Math.PI - meshAngle),
-          stackPos.y - 15.5 * zoom,
+          stackPos.y - 15.5 * zoom
         );
         ctx.stroke();
       }
@@ -3339,7 +3347,7 @@ export function renderDinkyTrains(
           0,
           puffX,
           puffY,
-          puffR,
+          puffR
         );
         puffGrad.addColorStop(0, `rgba(140, 140, 155, ${puffA})`);
         puffGrad.addColorStop(0.4, `rgba(120, 120, 135, ${puffA * 0.7})`);
@@ -3383,7 +3391,7 @@ export function renderDinkyTrains(
         pipeR.y - 1.5 * zoom,
         2.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3395,8 +3403,8 @@ export function renderDinkyTrains(
         15,
         13,
         13,
-        { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
-        zoom,
+        { left: "#4a5060", right: "#3a4050", top: "#5a6070" },
+        zoom
       );
 
       // Heavier battlements: 5 merlons
@@ -3404,7 +3412,7 @@ export function renderDinkyTrains(
         const bPos = isoOffset(
           fortressPos.x,
           fortressPos.y - 13 * zoom,
-          -6 + i * 3,
+          -6 + i * 3
         );
         drawIsometricPrism(
           ctx,
@@ -3413,8 +3421,8 @@ export function renderDinkyTrains(
           2.5,
           2.5,
           4.5,
-          { top: "#6a7080", left: "#4a5060", right: "#3a4050" },
-          zoom,
+          { left: "#4a5060", right: "#3a4050", top: "#6a7080" },
+          zoom
         );
       }
 
@@ -3462,8 +3470,11 @@ export function renderDinkyTrains(
         const px = rwCX3 + Math.cos(a) * rwR3 * 0.6;
         const py =
           rwCY3 + Math.sin(a) * rwR3 - Math.cos(a) * rwR3 * 0.6 * rwSlope3;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.closePath();
       ctx.fill();
@@ -3482,8 +3493,11 @@ export function renderDinkyTrains(
           rwCY3 +
           Math.sin(a) * rwR3 * 0.92 -
           Math.cos(a) * rwR3 * 0.55 * rwSlope3;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.closePath();
       ctx.fill();
@@ -3505,15 +3519,19 @@ export function renderDinkyTrains(
 
       ctx.fillStyle = "#fff4e0";
       ctx.beginPath();
-      ctx.ellipse(rwCX3, rwCY3, 0.9 * zoom * 0.6, 0.9 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        rwCX3,
+        rwCY3,
+        0.9 * zoom * 0.6,
+        0.9 * zoom,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       // War banner on fortress car (3D isometric) — right face
-      const bannerPole = isoOffset(
-        fortressPos.x,
-        fortressPos.y - 13 * zoom,
-        7,
-      );
+      const bannerPole = isoOffset(fortressPos.x, fortressPos.y - 13 * zoom, 7);
       ctx.strokeStyle = "#3a4050";
       ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
@@ -3527,7 +3545,7 @@ export function renderDinkyTrains(
         bannerPole.y - 10 * zoom,
         1.3 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       const bFlagWave = Math.sin(time * 2.5 + 0.5) * 0.6;
@@ -3538,11 +3556,11 @@ export function renderDinkyTrains(
         bannerPole.x + 4 * zoom + 1 * zoom,
         bannerPole.y - 8 * zoom + bFlagWave * zoom + 0.5 * zoom,
         bannerPole.x + 6 * zoom + 1 * zoom,
-        bannerPole.y - 7 * zoom + bFlagWave * zoom + 0.5 * zoom,
+        bannerPole.y - 7 * zoom + bFlagWave * zoom + 0.5 * zoom
       );
       ctx.lineTo(
         bannerPole.x + 1 * zoom,
-        bannerPole.y - 5.5 * zoom + 0.5 * zoom,
+        bannerPole.y - 5.5 * zoom + 0.5 * zoom
       );
       ctx.closePath();
       ctx.fill();
@@ -3553,7 +3571,7 @@ export function renderDinkyTrains(
         bannerPole.x + 4 * zoom,
         bannerPole.y - 8 * zoom + bFlagWave * zoom,
         bannerPole.x + 6 * zoom,
-        bannerPole.y - 7 * zoom + bFlagWave * zoom,
+        bannerPole.y - 7 * zoom + bFlagWave * zoom
       );
       ctx.lineTo(bannerPole.x, bannerPole.y - 5.5 * zoom);
       ctx.closePath();
@@ -3564,7 +3582,7 @@ export function renderDinkyTrains(
         const mhPos = isoOffset(
           fortressPos.x,
           fortressPos.y + 1 * zoom,
-          -4 + mhi * 2.5,
+          -4 + mhi * 2.5
         );
         ctx.fillStyle = "#0a0e14";
         ctx.beginPath();
@@ -3580,7 +3598,7 @@ export function renderDinkyTrains(
         const cb = isoOffset(
           trainX,
           trainY - 2 * zoom,
-          cOff > 0 ? cOff - 1 : cOff + 1,
+          cOff > 0 ? cOff - 1 : cOff + 1
         );
         ctx.beginPath();
         ctx.moveTo(ca.x, ca.y);
@@ -3588,7 +3606,7 @@ export function renderDinkyTrains(
           (ca.x + cb.x) / 2,
           (ca.y + cb.y) / 2 + 2.5 * zoom,
           cb.x,
-          cb.y,
+          cb.y
         );
         ctx.stroke();
       }
@@ -3607,7 +3625,7 @@ export function renderDinkyTrains(
         "#3a4050",
         0.75 + Math.sin(time * 3) * 0.2,
         1.15,
-        3,
+        3
       );
 
       // Princeton orange stripe
@@ -3652,8 +3670,8 @@ export function renderDinkyTrains(
         26,
         5,
         2,
-        { top: "#F0ECE4", left: "#E0DCD0", right: "#D0CCC0" },
-        zoom,
+        { left: "#E0DCD0", right: "#D0CCC0", top: "#F0ECE4" },
+        zoom
       );
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.5 * zoom;
@@ -3675,7 +3693,7 @@ export function renderDinkyTrains(
           1.5 * zoom,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.stroke();
       }
@@ -3697,8 +3715,8 @@ export function renderDinkyTrains(
         11,
         11,
         14,
-        { top: "#FAFAF5", left: "#F0ECE4", right: "#E0DCD0" },
-        zoom,
+        { left: "#F0ECE4", right: "#E0DCD0", top: "#FAFAF5" },
+        zoom
       );
 
       // Gold trim on all cab edges
@@ -3730,7 +3748,7 @@ export function renderDinkyTrains(
           cabPos.x + dRx * 0.95,
           dBaseY - (dPeakY - dBaseY) * 0.2,
           cabPos.x + dRx * 0.15,
-          dPeakY,
+          dPeakY
         );
         ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -3744,7 +3762,7 @@ export function renderDinkyTrains(
           cabPos.x - dRx * 0.95,
           dBaseY - (dPeakY - dBaseY) * 0.2,
           cabPos.x - dRx * 0.15,
-          dPeakY,
+          dPeakY
         );
         ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -3758,7 +3776,7 @@ export function renderDinkyTrains(
           cabPos.x,
           dBaseY - dRy * 1.5,
           cabPos.x + dRx,
-          dBaseY,
+          dBaseY
         );
         ctx.lineTo(cabPos.x, dBaseY + dRy);
         ctx.closePath();
@@ -3787,7 +3805,7 @@ export function renderDinkyTrains(
             arcRy,
             0,
             Math.PI * 0.1,
-            Math.PI * 0.9,
+            Math.PI * 0.9
           );
           ctx.stroke();
         }
@@ -3822,7 +3840,7 @@ export function renderDinkyTrains(
           zoom,
           "rgba(255, 250, 230",
           cabGlow,
-          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" },
+          { frame: "#C0A060", sill: "#C9A227", void: "#2a1808" }
         );
         // Left face window
         drawIsoGothicWindow(
@@ -3835,7 +3853,7 @@ export function renderDinkyTrains(
           zoom,
           "rgba(255, 250, 230",
           cabGlow,
-          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" },
+          { frame: "#C0A060", sill: "#C9A227", void: "#2a1808" }
         );
       }
 
@@ -3866,7 +3884,7 @@ export function renderDinkyTrains(
           cabPos.x + side * 3.5 * zoom,
           cabPos.y - 13.5 * zoom,
           cabPos.x + side * 5 * zoom,
-          cabPos.y - 12.5 * zoom,
+          cabPos.y - 12.5 * zoom
         );
         ctx.stroke();
       }
@@ -3879,8 +3897,8 @@ export function renderDinkyTrains(
         13,
         11,
         13,
-        { top: "#F8F4EC", left: "#E8E4DC", right: "#D8D4CC" },
-        zoom,
+        { left: "#E8E4DC", right: "#D8D4CC", top: "#F8F4EC" },
+        zoom
       );
 
       // Wide ornate gold bands — V-shaped to follow both faces
@@ -3909,7 +3927,7 @@ export function renderDinkyTrains(
           locoPos.x + ldRx * 0.9,
           ldBaseY - 2 * zoom,
           locoPos.x + ldRx * 0.1,
-          ldPeakY,
+          ldPeakY
         );
         ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -3922,7 +3940,7 @@ export function renderDinkyTrains(
           locoPos.x - ldRx * 0.9,
           ldBaseY - 2 * zoom,
           locoPos.x - ldRx * 0.1,
-          ldPeakY,
+          ldPeakY
         );
         ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -3935,7 +3953,7 @@ export function renderDinkyTrains(
           locoPos.x,
           ldBaseY - ldRy * 1.5,
           locoPos.x + ldRx,
-          ldBaseY,
+          ldBaseY
         );
         ctx.lineTo(locoPos.x, ldBaseY + ldRy);
         ctx.closePath();
@@ -3957,7 +3975,7 @@ export function renderDinkyTrains(
           1.2 * zoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#DAA520";
@@ -3967,8 +3985,7 @@ export function renderDinkyTrains(
         ctx.lineTo(locoPos.x + 2 * zoom, ldPeakY - 0.42 * zoom);
         ctx.lineTo(locoPos.x + 1 * zoom, ldPeakY);
         ctx.closePath();
-        ctx.fill(
-        );
+        ctx.fill();
       }
 
       // Isometric fluted gold smokestack
@@ -4023,7 +4040,7 @@ export function renderDinkyTrains(
           stRTop * ISO_SIN * 1.3,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -4038,7 +4055,7 @@ export function renderDinkyTrains(
           1.2 * zoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -4051,7 +4068,7 @@ export function renderDinkyTrains(
           stackPos.y - stH - 4 * zoom,
           5.5 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = `rgba(255, 245, 220, ${steam * 0.45})`;
@@ -4061,7 +4078,7 @@ export function renderDinkyTrains(
           stackPos.y - stH - 9 * zoom,
           4 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4077,7 +4094,7 @@ export function renderDinkyTrains(
           3,
           "#B8860B",
           "#B8860B",
-          0.9,
+          0.9
         );
       }
 
@@ -4089,8 +4106,8 @@ export function renderDinkyTrains(
         13,
         11,
         11,
-        { top: "#F0ECE4", left: "#E0DCD4", right: "#D0CCC4" },
-        zoom,
+        { left: "#E0DCD4", right: "#D0CCC4", top: "#F0ECE4" },
+        zoom
       );
 
       // Gold columns on left face — isometric flush lines
@@ -4100,7 +4117,7 @@ export function renderDinkyTrains(
         const colPos = isoOffset(
           passengerPos.x,
           passengerPos.y,
-          -3.5 + ci * 2.5,
+          -3.5 + ci * 2.5
         );
         const colX = colPos.x - 3.25 * zoom;
         const colTopY = colPos.y - 11 * zoom;
@@ -4117,18 +4134,11 @@ export function renderDinkyTrains(
           1,
           "left",
           zoom,
-          { fill: "#C9A227" },
+          { fill: "#C9A227" }
         );
-        drawIsoFlushRect(
-          ctx,
-          colX,
-          colPos.y - 0.6 * zoom,
-          2,
-          1,
-          "left",
-          zoom,
-          { fill: "#C9A227" },
-        );
+        drawIsoFlushRect(ctx, colX, colPos.y - 0.6 * zoom, 2, 1, "left", zoom, {
+          fill: "#C9A227",
+        });
       }
 
       // Arched windows — isometric gothic flush with left wall
@@ -4138,7 +4148,7 @@ export function renderDinkyTrains(
           const wPos4a = isoOffset(
             passengerPos.x,
             passengerPos.y - 5.5 * zoom,
-            -2.5 + wi * 2.5,
+            -2.5 + wi * 2.5
           );
           const wx = wPos4a.x - 3.25 * zoom;
           const wy = wPos4a.y;
@@ -4152,7 +4162,7 @@ export function renderDinkyTrains(
             zoom,
             "rgba(255, 250, 230",
             winGlow,
-            { frame: "#C0A060", void: "#1a1008", sill: "#C9A227" },
+            { frame: "#C0A060", sill: "#C9A227", void: "#1a1008" }
           );
         }
       }
@@ -4164,7 +4174,7 @@ export function renderDinkyTrains(
         const bpPos = isoOffset(
           passengerPos.x,
           passengerPos.y - 11 * zoom,
-          -5 + bi * 2,
+          -5 + bi * 2
         );
         ctx.beginPath();
         ctx.moveTo(bpPos.x - 3.25 * zoom, bpPos.y - 0.5 * zoom);
@@ -4186,7 +4196,7 @@ export function renderDinkyTrains(
       const horsePos = isoOffset(
         passengerPos.x,
         passengerPos.y - 5.5 * zoom,
-        4.5,
+        4.5
       );
       ctx.beginPath();
       ctx.moveTo(horsePos.x + 1 * zoom, horsePos.y + 3 * zoom);
@@ -4196,14 +4206,14 @@ export function renderDinkyTrains(
         horsePos.x + 1 * zoom,
         horsePos.y - 3.5 * zoom,
         horsePos.x,
-        horsePos.y - 3 * zoom,
+        horsePos.y - 3 * zoom
       );
       ctx.lineTo(horsePos.x - 0.5 * zoom, horsePos.y - 4 * zoom);
       ctx.quadraticCurveTo(
         horsePos.x - 2 * zoom,
         horsePos.y - 2.5 * zoom,
         horsePos.x - 1 * zoom,
-        horsePos.y,
+        horsePos.y
       );
       ctx.lineTo(horsePos.x - 1.5 * zoom, horsePos.y + 3 * zoom);
       ctx.closePath();
@@ -4218,7 +4228,7 @@ export function renderDinkyTrains(
         const cb = isoOffset(
           trainX,
           trainY - 2 * zoom,
-          cOff > 0 ? cOff - 1 : cOff + 1,
+          cOff > 0 ? cOff - 1 : cOff + 1
         );
         ctx.beginPath();
         ctx.moveTo(ca.x, ca.y);
@@ -4226,7 +4236,7 @@ export function renderDinkyTrains(
           (ca.x + cb.x) / 2,
           (ca.y + cb.y) / 2 + 1.5 * zoom,
           cb.x,
-          cb.y,
+          cb.y
         );
         ctx.stroke();
       }
@@ -4235,7 +4245,7 @@ export function renderDinkyTrains(
       const pennantPole = isoOffset(
         passengerPos.x,
         passengerPos.y - 11 * zoom,
-        0,
+        0
       );
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.2 * zoom;
@@ -4250,7 +4260,7 @@ export function renderDinkyTrains(
         pennantPole.y - 7 * zoom,
         0.8 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       const pWave4a = Math.sin(time * 3) * 0.5;
@@ -4259,7 +4269,7 @@ export function renderDinkyTrains(
       ctx.moveTo(pennantPole.x, pennantPole.y - 7 * zoom);
       ctx.lineTo(
         pennantPole.x + 3.5 * zoom,
-        pennantPole.y - 5 * zoom + pWave4a * zoom,
+        pennantPole.y - 5 * zoom + pWave4a * zoom
       );
       ctx.lineTo(pennantPole.x, pennantPole.y - 3.5 * zoom);
       ctx.closePath();
@@ -4303,8 +4313,8 @@ export function renderDinkyTrains(
         "#C9A227",
         "#C9A227",
         0.75 + Math.sin(time * 3) * 0.15,
-        1.0,
-        4,
+        1,
+        4
       );
     } else {
       // ========== LEVEL 4B: Dark Royal Armored War Train ==========
@@ -4334,8 +4344,8 @@ export function renderDinkyTrains(
         30,
         6,
         2.5,
-        { top: "#3a3e45", left: "#2a2e35", right: "#1a1e25" },
-        zoom,
+        { left: "#2a2e35", right: "#1a1e25", top: "#3a3e45" },
+        zoom
       );
       ctx.strokeStyle = royalSteelLight;
       ctx.lineWidth = 1.1 * zoom;
@@ -4368,8 +4378,8 @@ export function renderDinkyTrains(
         13,
         13,
         18,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
 
       // Gold trim on major edges only
@@ -4404,8 +4414,14 @@ export function renderDinkyTrains(
       for (const side of [1, -1]) {
         ctx.beginPath();
         ctx.moveTo(cabPos.x + side * 2.1 * zoom, cabPos.y - 4.8 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - 1.5 * zoom), cabPos.y - 6.2 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - 1.5 * zoom), cabPos.y - 15.4 * zoom);
+        ctx.lineTo(
+          cabPos.x + side * (cW4b - 1.5 * zoom),
+          cabPos.y - 6.2 * zoom
+        );
+        ctx.lineTo(
+          cabPos.x + side * (cW4b - 1.5 * zoom),
+          cabPos.y - 15.4 * zoom
+        );
         ctx.lineTo(cabPos.x + side * 2.1 * zoom, cabPos.y - 14 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -4442,7 +4458,7 @@ export function renderDinkyTrains(
           cabPos.y + r.dy * zoom,
           0.55 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(255, 240, 180, 0.25)";
@@ -4452,7 +4468,7 @@ export function renderDinkyTrains(
           cabPos.y + r.dy * zoom - 0.12 * zoom,
           0.18 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = royalGoldDark;
@@ -4470,11 +4486,11 @@ export function renderDinkyTrains(
           "right",
           zoom,
           {
-            voidColor: "#0a0e14",
             frameColor: royalGold,
-            glowColor: "rgba(60, 220, 80",
             glowAlpha: vsGlow,
-          },
+            glowColor: "rgba(60, 220, 80",
+            voidColor: "#0a0e14",
+          }
         );
       }
 
@@ -4557,8 +4573,8 @@ export function renderDinkyTrains(
         15,
         13,
         15,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
 
       // Royal purple service band separates the armored body from the gold trim.
@@ -4608,7 +4624,7 @@ export function renderDinkyTrains(
           locoPos.x + adRx * 0.9,
           adBaseY - 1.5 * zoom,
           locoPos.x + adRx * 0.1,
-          adPeakY,
+          adPeakY
         );
         ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -4621,7 +4637,7 @@ export function renderDinkyTrains(
           locoPos.x - adRx * 0.9,
           adBaseY - 1.5 * zoom,
           locoPos.x - adRx * 0.1,
-          adPeakY,
+          adPeakY
         );
         ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
         ctx.closePath();
@@ -4634,7 +4650,7 @@ export function renderDinkyTrains(
           locoPos.x,
           adBaseY - adRy * 1.5,
           locoPos.x + adRx,
-          adBaseY,
+          adBaseY
         );
         ctx.lineTo(locoPos.x, adBaseY + adRy);
         ctx.closePath();
@@ -4677,7 +4693,7 @@ export function renderDinkyTrains(
           pipeRy * 0.6,
           0,
           Math.PI,
-          0,
+          0
         );
         ctx.lineTo(epPos.x + pipeRx, epPos.y - 3.5 * zoom);
         ctx.closePath();
@@ -4692,7 +4708,7 @@ export function renderDinkyTrains(
           pipeRy * 0.6,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Gold valve wheel
@@ -4706,7 +4722,7 @@ export function renderDinkyTrains(
           pipeRy * 1.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.fillStyle = royalGold;
@@ -4718,7 +4734,7 @@ export function renderDinkyTrains(
           pipeRy * 0.4,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4760,7 +4776,7 @@ export function renderDinkyTrains(
           stRTop * ISO_SIN * 1.2,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "#C9A227";
@@ -4805,7 +4821,7 @@ export function renderDinkyTrains(
           stackPos.y - stH - 6 * zoom,
           7 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4821,7 +4837,7 @@ export function renderDinkyTrains(
           3.2,
           royalSteel,
           royalSteelDark,
-          0.9,
+          0.9
         );
         // Decorative spokes — isometric elliptical
         const hlRx = 3.2 * zoom * ISO_SIN;
@@ -4833,11 +4849,11 @@ export function renderDinkyTrains(
           ctx.beginPath();
           ctx.moveTo(
             hlPos.x + Math.cos(ra) * hlRx * 0.75,
-            hlPos.y + Math.sin(ra) * hlRy * 0.75,
+            hlPos.y + Math.sin(ra) * hlRy * 0.75
           );
           ctx.lineTo(
             hlPos.x + Math.cos(ra) * hlRx * 1.1,
-            hlPos.y + Math.sin(ra) * hlRy * 1.1,
+            hlPos.y + Math.sin(ra) * hlRy * 1.1
           );
           ctx.stroke();
         }
@@ -4851,8 +4867,8 @@ export function renderDinkyTrains(
         15,
         13,
         13,
-        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
-        zoom,
+        { left: "#3a4050", right: "#2a3040", top: "#4a5060" },
+        zoom
       );
 
       // Gold borders on panel edges
@@ -4896,12 +4912,12 @@ export function renderDinkyTrains(
         const gpPos = isoOffset(
           armoredPos.x,
           armoredPos.y - 4.5 * zoom,
-          -3.5 + gi * 7,
+          -3.5 + gi * 7
         );
         const gpX = gpPos.x - 2.5 * zoom;
         drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "left", zoom, {
-          voidColor: "#0a0e14",
           frameColor: royalGold,
+          voidColor: "#0a0e14",
         });
       }
 
@@ -4921,8 +4937,11 @@ export function renderDinkyTrains(
           const px = rwCX + Math.cos(a) * rwR * 0.6;
           const py =
             rwCY + Math.sin(a) * rwR - Math.cos(a) * rwR * 0.6 * rwSlope;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (i === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -4942,8 +4961,11 @@ export function renderDinkyTrains(
             rwCY +
             Math.sin(a) * rwR * 0.92 -
             Math.cos(a) * rwR * 0.55 * rwSlope;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (i === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -4974,7 +4996,7 @@ export function renderDinkyTrains(
           1.2 * zoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4988,8 +5010,8 @@ export function renderDinkyTrains(
         6,
         6,
         6,
-        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
-        zoom,
+        { left: "#2a3040", right: "#1a2030", top: "#3a4050" },
+        zoom
       );
       // Crown finial — V-shaped base matching turret top face (slope ±0.5)
       ctx.fillStyle = "#C9A227";
@@ -5014,11 +5036,23 @@ export function renderDinkyTrains(
       const csL = 0.433;
       ctx.beginPath();
       ctx.moveTo(crownPos.x + 4.5 * zoom, crownPos.y - 4.5 * csL * zoom);
-      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom - 3.5 * csL * zoom);
-      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom - 1.8 * csL * zoom);
+      ctx.lineTo(
+        crownPos.x + 3.5 * zoom,
+        crownPos.y - 3.5 * zoom - 3.5 * csL * zoom
+      );
+      ctx.lineTo(
+        crownPos.x + 1.8 * zoom,
+        crownPos.y - 1.8 * zoom - 1.8 * csL * zoom
+      );
       ctx.lineTo(crownPos.x, crownPos.y - 4 * zoom);
-      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom + 1.8 * csL * zoom);
-      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom + 3.5 * csL * zoom);
+      ctx.lineTo(
+        crownPos.x - 1.8 * zoom,
+        crownPos.y - 1.8 * zoom + 1.8 * csL * zoom
+      );
+      ctx.lineTo(
+        crownPos.x - 3.5 * zoom,
+        crownPos.y - 3.5 * zoom + 3.5 * csL * zoom
+      );
       ctx.lineTo(crownPos.x - 4.5 * zoom, crownPos.y + 4.5 * csL * zoom);
       ctx.closePath();
       ctx.fill();
@@ -5029,8 +5063,14 @@ export function renderDinkyTrains(
       ctx.lineTo(crownPos.x, crownPos.y - 7 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom - 1.8 * csL * zoom);
-      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom + 1.8 * csL * zoom);
+      ctx.moveTo(
+        crownPos.x + 1.8 * zoom,
+        crownPos.y - 5.8 * zoom - 1.8 * csL * zoom
+      );
+      ctx.lineTo(
+        crownPos.x - 1.8 * zoom,
+        crownPos.y - 5.8 * zoom + 1.8 * csL * zoom
+      );
       ctx.stroke();
       ctx.shadowBlur = 0;
 
@@ -5042,7 +5082,7 @@ export function renderDinkyTrains(
         const cb = isoOffset(
           trainX,
           trainY - 2 * zoom,
-          cOff > 0 ? cOff - 1 : cOff + 1,
+          cOff > 0 ? cOff - 1 : cOff + 1
         );
         ctx.beginPath();
         ctx.moveTo(ca.x, ca.y);
@@ -5050,7 +5090,7 @@ export function renderDinkyTrains(
           (ca.x + cb.x) / 2,
           (ca.y + cb.y) / 2 + 2.5 * zoom,
           cb.x,
-          cb.y,
+          cb.y
         );
         ctx.stroke();
       }
@@ -5083,7 +5123,7 @@ export function renderDinkyTrains(
         rsPole4b.x + 4 * zoom + 1.2 * zoom,
         rsPole4b.y - 3 * zoom + rsWave4b * zoom - 0.6 * zoom,
         rsPole4b.x + 6 * zoom + 1.2 * zoom,
-        rsPole4b.y - 2 * zoom + rsWave4b * zoom - 0.6 * zoom,
+        rsPole4b.y - 2 * zoom + rsWave4b * zoom - 0.6 * zoom
       );
       ctx.lineTo(rsPole4b.x + 1.2 * zoom, rsPole4b.y - 0.5 * zoom - 0.6 * zoom);
       ctx.closePath();
@@ -5095,7 +5135,7 @@ export function renderDinkyTrains(
         rsPole4b.x + 4 * zoom,
         rsPole4b.y - 3 * zoom + rsWave4b * zoom,
         rsPole4b.x + 6 * zoom,
-        rsPole4b.y - 2 * zoom + rsWave4b * zoom,
+        rsPole4b.y - 2 * zoom + rsWave4b * zoom
       );
       ctx.lineTo(rsPole4b.x, rsPole4b.y - 0.5 * zoom);
       ctx.closePath();
@@ -5143,7 +5183,7 @@ export function renderDinkyTrains(
         royalSteelDark,
         0.75 + Math.sin(time * 3) * 0.2,
         1.2,
-        4,
+        4
       );
     }
 

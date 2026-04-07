@@ -32,23 +32,23 @@ export function getIsoFlushCorners(
   w: number,
   h: number,
   face: IsoFace,
-  zoom: number,
+  zoom: number
 ): IsoCorners {
   const slope = getIsoSlope(face);
   const hw = w * zoom * 0.5;
   const hh = h * zoom * 0.5;
   return {
+    bl: [cx - hw, cy + hh - hw * slope],
+    br: [cx + hw, cy + hh + hw * slope],
     tl: [cx - hw, cy - hh - hw * slope],
     tr: [cx + hw, cy - hh + hw * slope],
-    br: [cx + hw, cy + hh + hw * slope],
-    bl: [cx - hw, cy + hh - hw * slope],
   };
 }
 
 /** Compute recess offset for 3D depth effect on a given face. */
 export function getIsoRecessOffset(
   face: IsoFace,
-  depth: number,
+  depth: number
 ): [number, number] {
   const rdx = face === "right" ? depth : face === "left" ? -depth : 0;
   const rdy = -depth * ISO_Y_RATIO;
@@ -63,7 +63,7 @@ export function traceIsoFlushRect(
   w: number,
   h: number,
   face: IsoFace,
-  zoom: number,
+  zoom: number
 ): void {
   const c = getIsoFlushCorners(cx, cy, w, h, face, zoom);
   ctx.beginPath();
@@ -81,26 +81,30 @@ export function traceIsoFlushRect(
 export function lerpIsoEdge(
   c: IsoCorners,
   edge: "top" | "bottom" | "left" | "right",
-  t: number,
+  t: number
 ): [number, number] {
   let p0: [number, number], p1: [number, number];
   switch (edge) {
-    case "top":
+    case "top": {
       p0 = c.tl;
       p1 = c.tr;
       break;
-    case "bottom":
+    }
+    case "bottom": {
       p0 = c.bl;
       p1 = c.br;
       break;
-    case "left":
+    }
+    case "left": {
       p0 = c.tl;
       p1 = c.bl;
       break;
-    case "right":
+    }
+    case "right": {
       p0 = c.tr;
       p1 = c.br;
       break;
+    }
   }
   return [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
 }
@@ -125,7 +129,7 @@ export function drawIsoFlushRect(
   h: number,
   face: IsoFace,
   zoom: number,
-  options?: IsoFlushRectOptions,
+  options?: IsoFlushRectOptions
 ): void {
   const rd = (options?.recessDepth ?? 0) * zoom;
 
@@ -162,7 +166,7 @@ export function drawIsoGothicWindow(
   zoom: number,
   glowColor: string | null = "rgba(255, 150, 50",
   glowAlpha: number = 0.3,
-  colors?: { frame?: string; void?: string; sill?: string },
+  colors?: { frame?: string; void?: string; sill?: string }
 ): void {
   const slope = getIsoSlope(face);
   const hw = w * zoom * 0.5;
@@ -248,7 +252,7 @@ export function drawIsoFlushSlit(
   h: number,
   face: IsoFace,
   zoom: number,
-  options?: IsoFlushSlitOptions,
+  options?: IsoFlushSlitOptions
 ): void {
   const slope = getIsoSlope(face);
   const hw = w * zoom * 0.5;
@@ -317,7 +321,7 @@ export function drawIsoFlushDoor(
   h: number,
   face: IsoFace,
   zoom: number,
-  options?: IsoFlushDoorOptions,
+  options?: IsoFlushDoorOptions
 ): void {
   const slope = getIsoSlope(face);
   const hw = w * zoom * 0.5;
@@ -349,10 +353,14 @@ export function drawIsoFlushDoor(
     ctx.beginPath();
     ctx.moveTo(cx - stepW, botY + botSlopeL);
     ctx.lineTo(cx + stepW, botY + botSlopeR);
-    ctx.lineTo(cx + stepW - stepD * (face === "right" ? 1 : face === "left" ? -1 : 0),
-      botY + botSlopeR + stepH + stepD * ISO_Y_RATIO);
-    ctx.lineTo(cx - stepW - stepD * (face === "right" ? 1 : face === "left" ? -1 : 0),
-      botY + botSlopeL + stepH + stepD * ISO_Y_RATIO);
+    ctx.lineTo(
+      cx + stepW - stepD * (face === "right" ? 1 : face === "left" ? -1 : 0),
+      botY + botSlopeR + stepH + stepD * ISO_Y_RATIO
+    );
+    ctx.lineTo(
+      cx - stepW - stepD * (face === "right" ? 1 : face === "left" ? -1 : 0),
+      botY + botSlopeL + stepH + stepD * ISO_Y_RATIO
+    );
     ctx.closePath();
     ctx.fill();
     // Step top
@@ -360,10 +368,14 @@ export function drawIsoFlushDoor(
     ctx.beginPath();
     ctx.moveTo(cx - stepW, botY + botSlopeL);
     ctx.lineTo(cx + stepW, botY + botSlopeR);
-    ctx.lineTo(cx + stepW + stepD * (face === "right" ? -1 : face === "left" ? 1 : 0),
-      botY + botSlopeR - stepD * ISO_Y_RATIO);
-    ctx.lineTo(cx - stepW + stepD * (face === "right" ? -1 : face === "left" ? 1 : 0),
-      botY + botSlopeL - stepD * ISO_Y_RATIO);
+    ctx.lineTo(
+      cx + stepW + stepD * (face === "right" ? -1 : face === "left" ? 1 : 0),
+      botY + botSlopeR - stepD * ISO_Y_RATIO
+    );
+    ctx.lineTo(
+      cx - stepW + stepD * (face === "right" ? -1 : face === "left" ? 1 : 0),
+      botY + botSlopeL - stepD * ISO_Y_RATIO
+    );
     ctx.closePath();
     ctx.fill();
   }
@@ -376,16 +388,20 @@ export function drawIsoFlushDoor(
   ctx.moveTo(cx - fmHw + rdx, botY - fmHw * slope + rdy);
   ctx.lineTo(cx - fmHw + rdx, botY - 2 * fmHh - fmHw * slope + rdy);
   ctx.quadraticCurveTo(
-    cx + rdx, botY - 2 * fmHh - archRise * 2.2 + rdy,
-    cx + fmHw + rdx, botY - 2 * fmHh + fmHw * slope + rdy,
+    cx + rdx,
+    botY - 2 * fmHh - archRise * 2.2 + rdy,
+    cx + fmHw + rdx,
+    botY - 2 * fmHh + fmHw * slope + rdy
   );
   ctx.lineTo(cx + fmHw + rdx, botY + fmHw * slope + rdy);
   ctx.closePath();
   ctx.fill();
 
   // Door body with gradient
-  const gradStart = face === "right" ? cx - hw : face === "left" ? cx + hw : cx - hw;
-  const gradEnd = face === "right" ? cx + hw : face === "left" ? cx - hw : cx + hw;
+  const gradStart =
+    face === "right" ? cx - hw : face === "left" ? cx + hw : cx - hw;
+  const gradEnd =
+    face === "right" ? cx + hw : face === "left" ? cx - hw : cx + hw;
   const doorG = ctx.createLinearGradient(gradStart, cy, gradEnd, cy);
   doorG.addColorStop(0, bodyDark);
   doorG.addColorStop(0.3, bodyLight);
@@ -398,8 +414,10 @@ export function drawIsoFlushDoor(
   ctx.moveTo(cx - hw, botY - hw * slope);
   ctx.lineTo(cx - hw, botY - 2 * hh + archRise - hw * slope);
   ctx.quadraticCurveTo(
-    cx, botY - 2 * hh - archRise * 1.5,
-    cx + hw, botY - 2 * hh + archRise + hw * slope,
+    cx,
+    botY - 2 * hh - archRise * 1.5,
+    cx + hw,
+    botY - 2 * hh + archRise + hw * slope
   );
   ctx.lineTo(cx + hw, botY + hw * slope);
   ctx.closePath();
@@ -429,7 +447,8 @@ export function drawIsoFlushDoor(
     const hingeY = botY - 2 * hh * hingeT;
     const hingeSide = face === "right" ? -1 : 1;
     const hingeX = cx + hingeSide * hw * 0.9;
-    const hingSlopeY = hingeX === cx + hw * 0.9 ? hw * 0.9 * slope : -hw * 0.9 * slope;
+    const hingSlopeY =
+      hingeX === cx + hw * 0.9 ? hw * 0.9 * slope : -hw * 0.9 * slope;
     ctx.beginPath();
     ctx.arc(hingeX, hingeY + hingSlopeY, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -439,7 +458,8 @@ export function drawIsoFlushDoor(
   ctx.fillStyle = handleColor;
   const handleSide = face === "right" ? 1 : -1;
   const handleX = cx + handleSide * hw * 0.3;
-  const handleSlopeY = handleX > cx ? (handleX - cx) * slope : -(cx - handleX) * slope;
+  const handleSlopeY =
+    handleX > cx ? (handleX - cx) * slope : -(cx - handleX) * slope;
   ctx.beginPath();
   ctx.arc(handleX, botY - hh * 0.9 + handleSlopeY, 1.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -447,7 +467,13 @@ export function drawIsoFlushDoor(
   ctx.strokeStyle = handleColor;
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
-  ctx.arc(handleX, botY - hh * 0.9 + handleSlopeY - 1.5 * zoom, 1 * zoom, 0, Math.PI);
+  ctx.arc(
+    handleX,
+    botY - hh * 0.9 + handleSlopeY - 1.5 * zoom,
+    1 * zoom,
+    0,
+    Math.PI
+  );
   ctx.stroke();
 }
 
@@ -470,7 +496,7 @@ export function drawIsoFlushVent(
   h: number,
   face: IsoFace,
   zoom: number,
-  options?: IsoFlushVentOptions,
+  options?: IsoFlushVentOptions
 ): void {
   const slope = getIsoSlope(face);
   const hw = w * zoom * 0.5;
@@ -505,7 +531,7 @@ export function drawIsoFlushVent(
   ctx.lineWidth = 0.8 * zoom;
   for (let i = 1; i <= slats; i++) {
     const t = i / (slats + 1);
-    const slatY = (cy - hh) + (2 * hh) * t;
+    const slatY = cy - hh + 2 * hh * t;
     ctx.beginPath();
     ctx.moveTo(cx - hw, slatY - hw * slope);
     ctx.lineTo(cx + hw, slatY + hw * slope);
@@ -532,7 +558,7 @@ export function drawIsoFlushPanel(
   h: number,
   face: IsoFace,
   zoom: number,
-  options?: IsoFlushPanelOptions,
+  options?: IsoFlushPanelOptions
 ): void {
   const rd = (options?.recessDepth ?? 0.8) * zoom;
   const [rdx, rdy] = getIsoRecessOffset(face, rd);
@@ -551,7 +577,15 @@ export function drawIsoFlushPanel(
 
   // Inner glow
   if (options?.innerGlow) {
-    traceIsoFlushRect(ctx, cx + rdx * 0.5, cy + rdy * 0.5, w * 0.85, h * 0.85, face, zoom);
+    traceIsoFlushRect(
+      ctx,
+      cx + rdx * 0.5,
+      cy + rdy * 0.5,
+      w * 0.85,
+      h * 0.85,
+      face,
+      zoom
+    );
     ctx.fillStyle = options.innerGlow;
     ctx.fill();
   }

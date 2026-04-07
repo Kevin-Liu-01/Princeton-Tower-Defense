@@ -31,20 +31,25 @@ export function getOcclusionState(
   let isInsideOccluder = false;
   let clampIsoY: number | undefined;
   for (const anchor of occlusionAnchors) {
-    if (anchor.source === entry) continue;
+    if (anchor.source === entry) {
+      continue;
+    }
     const dx = entry.screenPos.x - anchor.centerX;
     const dy = entry.screenPos.y - anchor.centerY;
     const norm =
       (dx * dx) / (anchor.radiusX * anchor.radiusX) +
       (dy * dy) / (anchor.radiusY * anchor.radiusY);
-    if (norm > 1) continue;
+    if (norm > 1) {
+      continue;
+    }
 
     isInsideOccluder = true;
     const isClearlyInFrontByScreenY =
       entry.screenPos.y > anchor.centerY + anchor.radiusY * 0.22;
     const isClearlyInFrontByDepth =
       entry.isoY - anchor.isoY > anchor.frontDepthPadding;
-    const isClearlyInFront = isClearlyInFrontByScreenY || isClearlyInFrontByDepth;
+    const isClearlyInFront =
+      isClearlyInFrontByScreenY || isClearlyInFrontByDepth;
     if (!isClearlyInFront) {
       const occludedIsoY = anchor.isoY - 0.02;
       clampIsoY =
@@ -53,5 +58,5 @@ export function getOcclusionState(
           : Math.min(clampIsoY, occludedIsoY);
     }
   }
-  return { isInsideOccluder, clampIsoY };
+  return { clampIsoY, isInsideOccluder };
 }

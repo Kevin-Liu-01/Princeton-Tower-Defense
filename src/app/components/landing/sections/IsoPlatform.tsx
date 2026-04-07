@@ -11,9 +11,9 @@ interface IsoPlatformProps {
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   return [
-    parseInt(h.substring(0, 2), 16),
-    parseInt(h.substring(2, 4), 16),
-    parseInt(h.substring(4, 6), 16),
+    Number.parseInt(h.slice(0, 2), 16),
+    Number.parseInt(h.slice(2, 4), 16),
+    Number.parseInt(h.slice(4, 6), 16),
   ];
 }
 
@@ -67,7 +67,13 @@ export function IsoPlatform({
       style={{ display: "block" }}
     >
       <defs>
-        <filter id={`iso-glow-${color.replace("#", "")}`} x="-50%" y="-50%" width="200%" height="200%">
+        <filter
+          id={`iso-glow-${color.replace("#", "")}`}
+          x="-50%"
+          y="-50%"
+          width="200%"
+          height="200%"
+        >
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />

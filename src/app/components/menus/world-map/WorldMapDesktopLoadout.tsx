@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,12 +10,14 @@ import {
   Sparkles,
   Swords,
 } from "lucide-react";
+import React from "react";
+
 import type { HeroType, SpellType, SpellUpgradeLevels } from "../../../types";
-import { GOLD, dividerGradient, panelGradient } from "../../ui/system/theme";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { GOLD, dividerGradient, panelGradient } from "../../ui/system/theme";
+import type { CodexTabId } from "../CodexModal";
 import { HeroSelector } from "../HeroSelector";
 import { SpellSelector } from "../SpellSelector";
-import type { CodexTabId } from "../CodexModal";
 
 interface WorldMapDesktopLoadoutProps {
   loadoutCompact: boolean;
@@ -41,7 +42,7 @@ interface WorldMapDesktopLoadoutProps {
   onSelectBattleShortcut: () => void;
 }
 
-const COMPACT_ACTIONS: Array<{
+const COMPACT_ACTIONS: {
   label: string;
   tab: CodexTabId | null;
   icon: React.ReactNode;
@@ -49,16 +50,66 @@ const COMPACT_ACTIONS: Array<{
   bg: string;
   border: string;
   glow: string;
-}> = [
-  { label: "Towers", tab: "towers", icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-  { label: "Heroes", tab: "heroes", icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-  { label: "Spells", tab: "spells", icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
-  { label: "Enemies", tab: "enemies", icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
-  { label: "FAQ", tab: "guide", icon: <Info size={13} />, color: "#93c5fd", bg: "rgba(30,60,120,0.4)", border: "rgba(60,100,200,0.35)", glow: "rgba(60,100,200,0.2)" },
-  { label: "Battle", tab: null, icon: <Swords size={13} />, color: "#fbbf24", bg: "rgba(160,110,25,0.6)", border: "rgba(200,160,60,0.5)", glow: "rgba(200,160,60,0.2)" },
+}[] = [
+  {
+    bg: "rgba(120,85,20,0.45)",
+    border: "rgba(180,140,60,0.35)",
+    color: "#fcd34d",
+    glow: "rgba(180,140,60,0.2)",
+    icon: <ChessRook size={13} />,
+    label: "Towers",
+    tab: "towers",
+  },
+  {
+    bg: "rgba(120,85,20,0.45)",
+    border: "rgba(180,140,60,0.35)",
+    color: "#fcd34d",
+    glow: "rgba(180,140,60,0.2)",
+    icon: <Crown size={13} />,
+    label: "Heroes",
+    tab: "heroes",
+  },
+  {
+    bg: "rgba(80,40,120,0.4)",
+    border: "rgba(140,80,200,0.35)",
+    color: "#d8b4fe",
+    glow: "rgba(140,80,200,0.2)",
+    icon: <Sparkles size={13} />,
+    label: "Spells",
+    tab: "spells",
+  },
+  {
+    bg: "rgba(100,30,30,0.4)",
+    border: "rgba(180,60,60,0.35)",
+    color: "#fca5a5",
+    glow: "rgba(180,60,60,0.2)",
+    icon: <Skull size={13} />,
+    label: "Enemies",
+    tab: "enemies",
+  },
+  {
+    bg: "rgba(30,60,120,0.4)",
+    border: "rgba(60,100,200,0.35)",
+    color: "#93c5fd",
+    glow: "rgba(60,100,200,0.2)",
+    icon: <Info size={13} />,
+    label: "FAQ",
+    tab: "guide",
+  },
+  {
+    bg: "rgba(160,110,25,0.6)",
+    border: "rgba(200,160,60,0.5)",
+    color: "#fbbf24",
+    glow: "rgba(200,160,60,0.2)",
+    icon: <Swords size={13} />,
+    label: "Battle",
+    tab: null,
+  },
 ];
 
-const EXPANDED_ACTIONS = COMPACT_ACTIONS.filter((action) => action.tab !== null);
+const EXPANDED_ACTIONS = COMPACT_ACTIONS.filter(
+  (action) => action.tab !== null
+);
 
 function QuickActionButton({
   label,
@@ -95,7 +146,11 @@ function QuickActionButton({
       {showTooltip && (
         <span
           className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-          style={{ background: "rgba(20,16,10,0.95)", border: `1px solid ${border}`, color }}
+          style={{
+            background: "rgba(20,16,10,0.95)",
+            border: `1px solid ${border}`,
+            color,
+          }}
         >
           {label}
         </span>
@@ -144,7 +199,10 @@ export function WorldMapDesktopLoadout({
             boxShadow: `inset 0 0 20px ${GOLD.glow04}`,
           }}
         >
-          <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: dividerGradient }} />
+          <div
+            className="absolute top-0 left-0 right-0 h-px opacity-50"
+            style={{ background: dividerGradient }}
+          />
 
           {loadoutCompact ? (
             <div className="flex items-stretch gap-2 px-3 py-2">
@@ -164,7 +222,13 @@ export function WorldMapDesktopLoadout({
                 ))}
               </div>
 
-              <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: "linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)" }} />
+              <div
+                className="w-px h-8 flex-shrink-0 self-center"
+                style={{
+                  background:
+                    "linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)",
+                }}
+              />
 
               <HeroSelector
                 selectedHero={selectedHero}
@@ -175,7 +239,13 @@ export function WorldMapDesktopLoadout({
                 compact
               />
 
-              <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: "linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)" }} />
+              <div
+                className="w-px h-8 flex-shrink-0 self-center"
+                style={{
+                  background:
+                    "linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)",
+                }}
+              />
 
               <SpellSelector
                 selectedSpells={selectedSpells}
@@ -198,7 +268,8 @@ export function WorldMapDesktopLoadout({
                 onClick={() => setLoadoutCompact(false)}
                 className="absolute bottom-0 right-0 flex-shrink-0 self-center p-1 pr-2 pb-2 rounded-tl-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
                 style={{
-                  background: "radial-gradient(circle at 30% 30%, rgba(120,85,20,0.4), rgba(20,16,10,0.8))",
+                  background:
+                    "radial-gradient(circle at 30% 30%, rgba(120,85,20,0.4), rgba(20,16,10,0.8))",
                   border: "1.5px solid rgba(180,140,60,0.35)",
                   boxShadow: "0 0 6px rgba(180,140,60,0.12)",
                 }}
@@ -261,7 +332,8 @@ export function WorldMapDesktopLoadout({
                   onClick={() => setLoadoutCompact(true)}
                   className="absolute bottom-0 right-0 flex-shrink-0 self-center p-1 pr-2 pb-2 rounded-tl-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
                   style={{
-                    background: "radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))",
+                    background:
+                      "radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))",
                     border: "1.5px solid rgba(100,80,50,0.3)",
                   }}
                   title="Compact loadout"
@@ -272,7 +344,10 @@ export function WorldMapDesktopLoadout({
             </div>
           )}
 
-          <div className="h-px opacity-40" style={{ background: dividerGradient }} />
+          <div
+            className="h-px opacity-40"
+            style={{ background: dividerGradient }}
+          />
         </div>
       </OrnateFrame>
     </div>

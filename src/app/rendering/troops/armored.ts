@@ -18,7 +18,7 @@ export function drawArmoredTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   const stance = Math.sin(time * 2.8) * 1.1;
   const breathe = Math.sin(time * 2.05) * 0.45;
@@ -72,7 +72,7 @@ export function drawArmoredTroop(
     steelBright,
     steelHigh,
     steelMid,
-    steelDark,
+    steelDark
   );
 
   // === CHAINMAIL FAULD ===
@@ -86,7 +86,7 @@ export function drawArmoredTroop(
     zoom,
     steelHigh,
     steelMid,
-    steelDark,
+    steelDark
   );
 
   // === CUIRASS ===
@@ -102,7 +102,7 @@ export function drawArmoredTroop(
     steelHigh,
     steelMid,
     steelDark,
-    steelDeep,
+    steelDeep
   );
 
   // === TABARD ===
@@ -121,13 +121,13 @@ export function drawArmoredTroop(
     stance,
     breathe,
     {
-      armorPeak: steelBright,
+      armorDark: steelDark,
       armorHigh: steelHigh,
       armorMid: steelMid,
-      armorDark: steelDark,
+      armorPeak: steelBright,
       trimColor: "#b8a870",
     },
-    { plateCount: 5, widthFactor: 0.42, depthFactor: 0.14, topOffset: 0.28 },
+    { depthFactor: 0.14, plateCount: 5, topOffset: 0.28, widthFactor: 0.42 }
   );
 
   // === PAULDRONS ===
@@ -142,7 +142,7 @@ export function drawArmoredTroop(
     steelBright,
     steelHigh,
     steelMid,
-    steelDark,
+    steelDark
   );
 
   // === LEFT ARM + HEATER SHIELD ===
@@ -158,7 +158,7 @@ export function drawArmoredTroop(
     steelMid,
     steelHigh,
     steelDark,
-    steelDeep,
+    steelDeep
   );
 
   // === RIGHT ARM + FLANGED MACE ===
@@ -179,7 +179,7 @@ export function drawArmoredTroop(
     targetPos,
     steelHigh,
     steelMid,
-    steelDark,
+    steelDark
   );
 
   // === GORGET + HELMET ===
@@ -198,7 +198,7 @@ export function drawArmoredTroop(
     steelHigh,
     steelMid,
     steelDark,
-    steelDeep,
+    steelDeep
   );
 
   drawTroopMasterworkFinish(
@@ -209,7 +209,7 @@ export function drawArmoredTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.armored,
-    { vanguard: true },
+    { vanguard: true }
   );
   ctx.restore();
 }
@@ -226,7 +226,7 @@ function drawArmoredCape(
   breathe: number,
   capeWave: number,
   shimmer: number,
-  zoom: number,
+  zoom: number
 ) {
   const cw = capeWave * size * 0.025;
   const br = breathe;
@@ -249,14 +249,14 @@ function drawArmoredCape(
     capeCtrlLX + size * 0.01,
     capeCtrlLY + size * 0.02,
     capeBotLX + size * 0.01,
-    capeBotLY + size * 0.02,
+    capeBotLY + size * 0.02
   );
   ctx.lineTo(capeBotRX + size * 0.01, capeBotRY + size * 0.02);
   ctx.quadraticCurveTo(
     capeRX + size * 0.01,
     y + size * 0.14,
     capeRX + size * 0.01,
-    capeTopY + size * 0.02,
+    capeTopY + size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -266,7 +266,7 @@ function drawArmoredCape(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   outerGrad.addColorStop(0, "#1e1428");
   outerGrad.addColorStop(0.35, "#180e22");
@@ -286,7 +286,7 @@ function drawArmoredCape(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   innerGrad.addColorStop(0, "#882818");
   innerGrad.addColorStop(0.25, "#b03820");
@@ -300,14 +300,14 @@ function drawArmoredCape(
     capeCtrlLX + size * 0.06,
     capeCtrlLY,
     capeBotLX + size * 0.04,
-    capeBotLY - size * 0.06,
+    capeBotLY - size * 0.06
   );
   ctx.lineTo(capeBotRX - size * 0.02, capeBotRY - size * 0.05);
   ctx.quadraticCurveTo(
     capeRX - size * 0.03,
     y + size * 0.12,
     capeRX - size * 0.02,
-    capeTopY + size * 0.01,
+    capeTopY + size * 0.01
   );
   ctx.closePath();
   ctx.fill();
@@ -325,7 +325,7 @@ function drawArmoredCape(
       fTopX + cw * (0.8 - fT * 0.5),
       y + size * 0.22,
       fBotX,
-      capeBotLY - size * 0.06,
+      capeBotLY - size * 0.06
     );
     ctx.stroke();
   }
@@ -338,7 +338,7 @@ function drawArmoredCape(
     capeLX + size * 0.04 + cw * 0.6,
     y + size * 0.22,
     capeBotLX + size * 0.06,
-    capeBotLY - size * 0.06,
+    capeBotLY - size * 0.06
   );
   ctx.stroke();
 
@@ -383,7 +383,7 @@ function drawArmoredLegs(
   steelBright: string,
   steelHigh: string,
   steelMid: string,
-  steelDark: string,
+  steelDark: string
 ) {
   const steelDeep = "#282b40";
 
@@ -445,7 +445,7 @@ function drawArmoredLegs(
       thighH * 0.55,
       size * 0.008,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -463,7 +463,7 @@ function drawArmoredLegs(
       0,
       0,
       kneeY,
-      size * 0.06,
+      size * 0.06
     );
     kneeCopGrad.addColorStop(0, steelBright);
     kneeCopGrad.addColorStop(0.5, steelHigh);
@@ -500,7 +500,7 @@ function drawArmoredLegs(
       -hlw,
       greaveTop,
       hlw,
-      greaveTop,
+      greaveTop
     );
     greaveGrad.addColorStop(0, steelDark);
     greaveGrad.addColorStop(0.15, steelMid);
@@ -543,7 +543,7 @@ function drawArmoredLegs(
       -hlw - size * 0.002,
       greaveTop + greaveH * 0.45,
       lw + size * 0.004,
-      size * 0.016,
+      size * 0.016
     );
 
     // Greave edge highlight
@@ -600,7 +600,7 @@ function drawArmoredLegs(
       -hlw - size * 0.01,
       bootTop + bootH - size * 0.012,
       lw + size * 0.02,
-      size * 0.012,
+      size * 0.012
     );
 
     ctx.restore();
@@ -621,13 +621,13 @@ function drawChainmailFauld(
   zoom: number,
   steelHigh: string,
   steelMid: string,
-  steelDark: string,
+  steelDark: string
 ) {
   const fauld = ctx.createLinearGradient(
     x - size * 0.17,
     y + size * 0.22 + breathe,
     x + size * 0.17,
-    y + size * 0.32 + breathe,
+    y + size * 0.32 + breathe
   );
   fauld.addColorStop(0, steelDark);
   fauld.addColorStop(0.3, steelMid);
@@ -641,7 +641,7 @@ function drawChainmailFauld(
     y + size * 0.22 + breathe,
     size * 0.34,
     size * 0.1,
-    size * 0.02,
+    size * 0.02
   );
   ctx.fill();
 
@@ -669,7 +669,7 @@ function drawChainmailFauld(
     size * 0.035,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -690,7 +690,7 @@ function drawCuirass(
   steelHigh: string,
   steelMid: string,
   steelDark: string,
-  steelDeep: string,
+  steelDeep: string
 ) {
   // Back plate shadow
   ctx.fillStyle = steelDeep;
@@ -701,7 +701,7 @@ function drawCuirass(
     x,
     y - size * 0.23 + breathe * 0.35,
     x + size * 0.23,
-    y - size * 0.11 + breathe * 0.5,
+    y - size * 0.11 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.21, y + size * 0.35 + breathe);
   ctx.closePath();
@@ -712,7 +712,7 @@ function drawCuirass(
     x - size * 0.22,
     y - size * 0.14,
     x + size * 0.22,
-    y + size * 0.32,
+    y + size * 0.32
   );
   cuirassGrad.addColorStop(0, steelDark);
   cuirassGrad.addColorStop(0.1, steelMid);
@@ -730,7 +730,7 @@ function drawCuirass(
     x,
     y - size * 0.22 + breathe * 0.35,
     x + size * 0.225,
-    y - size * 0.1 + breathe * 0.5,
+    y - size * 0.1 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.205, y + size * 0.34 + breathe);
   ctx.closePath();
@@ -746,7 +746,7 @@ function drawCuirass(
     x,
     y - size * 0.22 + breathe * 0.35,
     x + size * 0.225,
-    y - size * 0.1 + breathe * 0.5,
+    y - size * 0.1 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.205, y + size * 0.34 + breathe);
   ctx.stroke();
@@ -757,7 +757,7 @@ function drawCuirass(
       x + side * size * 0.02,
       y - size * 0.14,
       x + side * size * 0.16,
-      y + size * 0.04,
+      y + size * 0.04
     );
     pecGrad.addColorStop(0, `rgba(200, 204, 224, ${0.22 + shimmer * 0.1})`);
     pecGrad.addColorStop(0.5, `rgba(180, 184, 210, ${0.12 + shimmer * 0.06})`);
@@ -770,7 +770,7 @@ function drawCuirass(
       x + side * size * 0.14,
       y - size * 0.06 + breathe * 0.5,
       x + side * size * 0.16,
-      y + size * 0.04 + breathe * 0.65,
+      y + size * 0.04 + breathe * 0.65
     );
     ctx.stroke();
 
@@ -778,12 +778,12 @@ function drawCuirass(
     ctx.strokeStyle = `rgba(30, 34, 56, 0.35)`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.05, y + size * 0.0 + breathe * 0.6);
+    ctx.moveTo(x + side * size * 0.05, y + 0 + breathe * 0.6);
     ctx.quadraticCurveTo(
       x + side * size * 0.12,
       y + size * 0.06 + breathe * 0.7,
       x + side * size * 0.18,
-      y + size * 0.04 + breathe * 0.65,
+      y + size * 0.04 + breathe * 0.65
     );
     ctx.stroke();
   }
@@ -793,7 +793,7 @@ function drawCuirass(
     x,
     y - size * 0.18,
     x,
-    y + size * 0.1,
+    y + size * 0.1
   );
   sternumGrad.addColorStop(0, `rgba(200, 204, 224, ${0.5 + shimmer * 0.2})`);
   sternumGrad.addColorStop(0.5, `rgba(170, 174, 200, ${0.3 + shimmer * 0.1})`);
@@ -852,7 +852,7 @@ function drawCuirass(
         rivY - size * 0.002,
         size * 0.004,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -865,7 +865,7 @@ function drawCuirass(
     0,
     x - size * 0.04,
     y - size * 0.09 + breathe * 0.4,
-    size * 0.16,
+    size * 0.16
   );
   chestSpec.addColorStop(0, `rgba(235, 240, 255, ${0.3 + shimmer * 0.2})`);
   chestSpec.addColorStop(0.35, `rgba(210, 214, 245, ${0.14 + shimmer * 0.1})`);
@@ -879,7 +879,7 @@ function drawCuirass(
     size * 0.17,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -906,13 +906,13 @@ function drawTabard(
   breathe: number,
   shimmer: number,
   zoom: number,
-  heraldicColor: string,
+  heraldicColor: string
 ) {
   const tabardGrad = ctx.createLinearGradient(
     x - size * 0.1,
     y - size * 0.02,
     x + size * 0.1,
-    y + size * 0.27,
+    y + size * 0.27
   );
   tabardGrad.addColorStop(0, "#7a2210");
   tabardGrad.addColorStop(0.25, "#aa3a18");
@@ -988,21 +988,21 @@ function drawBelt(
   breathe: number,
   shimmer: number,
   steelPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   ctx.fillStyle = "#1e1e2a";
   ctx.fillRect(
     x - size * 0.19,
     y + size * 0.252 + breathe,
     size * 0.38,
-    size * 0.058,
+    size * 0.058
   );
   ctx.fillStyle = `rgba(186, 61, 45, ${0.6 + steelPulse * 0.2})`;
   ctx.fillRect(
     x - size * 0.175,
     y + size * 0.262 + breathe,
     size * 0.35,
-    size * 0.017,
+    size * 0.017
   );
   ctx.fillStyle = "#a08a50";
   for (let stud = -2; stud <= 2; stud++) {
@@ -1012,7 +1012,7 @@ function drawBelt(
       y + size * 0.271 + breathe,
       size * 0.006,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1022,7 +1022,7 @@ function drawBelt(
     x - size * 0.04,
     y + size * 0.255 + breathe,
     x + size * 0.04,
-    y + size * 0.305 + breathe,
+    y + size * 0.305 + breathe
   );
   buckleGrad.addColorStop(0, "#d4b870");
   buckleGrad.addColorStop(0.5, "#f0d890");
@@ -1034,7 +1034,7 @@ function drawBelt(
     y + size * 0.253 + breathe,
     size * 0.096,
     size * 0.054,
-    size * 0.012,
+    size * 0.012
   );
   ctx.fill();
   ctx.strokeStyle = "#8a7430";
@@ -1064,7 +1064,7 @@ function drawPauldrons(
   steelBright: string,
   steelHigh: string,
   steelMid: string,
-  steelDark: string,
+  steelDark: string
 ) {
   for (let side = -1; side <= 1; side += 2) {
     const px = x + side * size * 0.245;
@@ -1077,7 +1077,7 @@ function drawPauldrons(
       0,
       px,
       py,
-      size * 0.14,
+      size * 0.14
     );
     pauldronGrad.addColorStop(0, steelBright);
     pauldronGrad.addColorStop(0.35, steelHigh);
@@ -1098,7 +1098,7 @@ function drawPauldrons(
       size * 0.045,
       side * 0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1112,7 +1112,7 @@ function drawPauldrons(
       size * 0.025,
       side * 0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1136,7 +1136,7 @@ function drawPauldrons(
         size * 0.025,
         side * 0.3,
         0,
-        Math.PI,
+        Math.PI
       );
       ctx.stroke();
     }
@@ -1152,7 +1152,7 @@ function drawPauldrons(
         py + Math.sin(adjustedAngle) * size * 0.065,
         size * 0.007,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1182,7 +1182,7 @@ function drawShieldArm(
   steelMid: string,
   steelHigh: string,
   steelDark: string,
-  steelDeep: string,
+  steelDeep: string
 ) {
   const shieldX = x - size * 0.3;
   const shieldY = y + size * 0.08 + breathe * 0.55;
@@ -1190,14 +1190,14 @@ function drawShieldArm(
   const lShoulderY = y + size * 0.02 + breathe * 0.45;
   const armAngle = Math.atan2(shieldY - lShoulderY, shieldX - lShoulderX);
   const armoredShieldArmColors: ArmColors = {
-    upper: steelMid,
-    upperLight: steelHigh,
-    upperDark: steelDark,
-    vambrace: steelHigh,
-    vambraceLight: steelMid,
     elbow: steelMid,
     hand: steelMid,
     trim: "#b94935",
+    upper: steelMid,
+    upperDark: steelDark,
+    upperLight: steelHigh,
+    vambrace: steelHigh,
+    vambraceLight: steelMid,
   };
 
   ctx.save();
@@ -1243,7 +1243,7 @@ function drawShieldArm(
     -ashW * 0.5,
     -ashH * 0.3,
     ashW * 0.5,
-    ashH * 0.3,
+    ashH * 0.3
   );
   shieldGrad.addColorStop(0, steelDeep);
   shieldGrad.addColorStop(0.2, steelDark);
@@ -1305,7 +1305,7 @@ function drawShieldArm(
     -ashW * 0.3,
     -ashH * 0.3,
     ashW * 0.1,
-    ashH * 0.1,
+    ashH * 0.1
   );
   redFieldGrad.addColorStop(0, "#8a2010");
   redFieldGrad.addColorStop(0.5, "#b03018");
@@ -1358,11 +1358,11 @@ function drawShieldArm(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(fa) * size * 0.018,
-      -size * 0.085 + Math.sin(fa) * size * 0.018,
+      -size * 0.085 + Math.sin(fa) * size * 0.018
     );
     ctx.lineTo(
       Math.cos(fa) * size * 0.042,
-      -size * 0.085 + Math.sin(fa) * size * 0.042,
+      -size * 0.085 + Math.sin(fa) * size * 0.042
     );
     ctx.stroke();
   }
@@ -1431,7 +1431,7 @@ function drawMaceBanner(
   size: number,
   zoom: number,
   time: number,
-  shimmer: number,
+  shimmer: number
 ) {
   const bannerAttachY = -size * 0.5;
   const bannerWidth = size * 0.065;
@@ -1448,7 +1448,7 @@ function drawMaceBanner(
     size * 0.025,
     bannerAttachY,
     size * 0.025,
-    bannerAttachY + bannerLength,
+    bannerAttachY + bannerLength
   );
   bannerGrad.addColorStop(0, "#b83030");
   bannerGrad.addColorStop(0.4, "#c04040");
@@ -1457,9 +1457,9 @@ function drawMaceBanner(
 
   ctx.fillStyle = bannerGrad;
   ctx.beginPath();
-  let prevLX = size * 0.025 - bannerWidth * 0.5;
-  let prevRX = size * 0.025 + bannerWidth * 0.5;
-  let prevY = bannerAttachY;
+  const prevLX = size * 0.025 - bannerWidth * 0.5;
+  const prevRX = size * 0.025 + bannerWidth * 0.5;
+  const prevY = bannerAttachY;
   ctx.moveTo(prevLX, prevY);
 
   const leftXs: number[] = [prevLX];
@@ -1505,7 +1505,7 @@ function drawMaceBanner(
       midX,
       ys[i] + segH * 0.15,
       rightXs[i] - bannerWidth * 0.12,
-      ys[i],
+      ys[i]
     );
     ctx.stroke();
   }
@@ -1516,8 +1516,11 @@ function drawMaceBanner(
   ctx.beginPath();
   for (let i = 0; i <= segments; i++) {
     const hx = leftXs[i] + (rightXs[i] - leftXs[i]) * 0.3;
-    if (i === 0) ctx.moveTo(hx, ys[i]);
-    else ctx.lineTo(hx, ys[i]);
+    if (i === 0) {
+      ctx.moveTo(hx, ys[i]);
+    } else {
+      ctx.lineTo(hx, ys[i]);
+    }
   }
   ctx.stroke();
 
@@ -1525,7 +1528,7 @@ function drawMaceBanner(
   const crossCX = (leftXs[1] + rightXs[1]) * 0.5;
   const crossCY = ys[0] + segH * 0.7;
   ctx.strokeStyle = `rgba(180, 184, 200, ${0.7 + shimmer * 0.2})`;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(crossCX, crossCY - size * 0.014);
   ctx.lineTo(crossCX, crossCY + size * 0.014);
@@ -1541,7 +1544,7 @@ function drawMaceBanner(
     bannerAttachY - size * 0.008,
     bannerWidth * 1.1,
     size * 0.016,
-    size * 0.004,
+    size * 0.004
   );
   ctx.fill();
   ctx.strokeStyle = "#686c80";
@@ -1572,7 +1575,7 @@ function drawMaceArm(
   targetPos: Position | undefined,
   steelHigh: string,
   steelMid: string,
-  steelDark: string,
+  steelDark: string
 ) {
   ctx.save();
   const armBaseAngle = isAttacking
@@ -1587,7 +1590,7 @@ function drawMaceArm(
     armBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.05 : 0.58,
-    WEAPON_LIMITS.rightArm,
+    WEAPON_LIMITS.rightArm
   );
   ctx.translate(armX, armY);
   ctx.rotate(armAngle);
@@ -1627,7 +1630,7 @@ function drawMaceArm(
     0,
     0,
     bicepH + size * 0.01,
-    size * 0.045,
+    size * 0.045
   );
   elbowGrad.addColorStop(0, steelHigh);
   elbowGrad.addColorStop(0.6, steelMid);
@@ -1641,7 +1644,7 @@ function drawMaceArm(
     size * 0.035,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1658,7 +1661,7 @@ function drawMaceArm(
     -size * 0.06,
     0,
     size * 0.06,
-    0,
+    0
   );
   vambraceGrad.addColorStop(0, steelDark);
   vambraceGrad.addColorStop(0.3, steelMid);
@@ -1688,7 +1691,7 @@ function drawMaceArm(
     -size * 0.024,
     -size * 0.56,
     size * 0.024,
-    size * 0.2,
+    size * 0.2
   );
   shaftGrad.addColorStop(0, "#3a2810");
   shaftGrad.addColorStop(0.2, "#5a4020");
@@ -1717,7 +1720,7 @@ function drawMaceArm(
     -size * 0.53,
     size * 0.07,
     size * 0.028,
-    size * 0.008,
+    size * 0.008
   );
   ctx.fill();
   ctx.strokeStyle = "#686c80";
@@ -1734,7 +1737,7 @@ function drawMaceArm(
     0,
     0,
     size * 0.2,
-    size * 0.028,
+    size * 0.028
   );
   pomGrad.addColorStop(0, "#a0a4b8");
   pomGrad.addColorStop(0.6, "#787c92");
@@ -1763,7 +1766,7 @@ function drawMaceArm(
     size * 0.01,
     0,
     maceHeadY,
-    size * 0.11,
+    size * 0.11
   );
   maceHeadGrad.addColorStop(0, "#f0f0fa");
   maceHeadGrad.addColorStop(0.25, "#c0c4d8");
@@ -1840,7 +1843,7 @@ function drawMaceArm(
       maceHeadY,
       size * 0.26,
       -Math.PI * 0.54,
-      -Math.PI * 0.54 + maceSwing * 0.84,
+      -Math.PI * 0.54 + maceSwing * 0.84
     );
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 220, 180, ${trailAlpha * 0.45})`;
@@ -1851,7 +1854,7 @@ function drawMaceArm(
       maceHeadY,
       size * 0.2,
       -Math.PI * 0.52,
-      -Math.PI * 0.52 + maceSwing * 0.78,
+      -Math.PI * 0.52 + maceSwing * 0.78
     );
     ctx.stroke();
 
@@ -1868,7 +1871,7 @@ function drawMaceArm(
           maceHeadY + Math.sin(sa) * sr,
           size * 0.008,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1896,7 +1899,7 @@ function drawHelmetAssembly(
   steelHigh: string,
   steelMid: string,
   steelDark: string,
-  steelDeep: string,
+  steelDeep: string
 ) {
   const helmBreath = breathe * 0.2;
   const hb = helmBreath;
@@ -1906,7 +1909,7 @@ function drawHelmetAssembly(
     x - size * 0.11,
     y - size * 0.15,
     x + size * 0.11,
-    y - size * 0.15,
+    y - size * 0.15
   );
   gorgetGrad.addColorStop(0, steelDeep);
   gorgetGrad.addColorStop(0.2, steelDark);
@@ -1922,7 +1925,7 @@ function drawHelmetAssembly(
     x,
     y - size * 0.215,
     x + size * 0.125,
-    y - size * 0.18 + breathe,
+    y - size * 0.18 + breathe
   );
   ctx.lineTo(x + size * 0.1, y - size * 0.08 + breathe);
   ctx.closePath();
@@ -1950,7 +1953,7 @@ function drawHelmetAssembly(
     x,
     y - size * 0.215,
     x + size * 0.125,
-    y - size * 0.18 + breathe,
+    y - size * 0.18 + breathe
   );
   ctx.lineTo(x + size * 0.1, y - size * 0.08 + breathe);
   ctx.stroke();
@@ -1961,7 +1964,7 @@ function drawHelmetAssembly(
     x - size * 0.17,
     y - size * 0.42 + hb,
     x + size * 0.17,
-    helmBottom,
+    helmBottom
   );
   helmGrad.addColorStop(0, steelDeep);
   helmGrad.addColorStop(0.12, steelDark);
@@ -1978,26 +1981,26 @@ function drawHelmetAssembly(
     x - size * 0.175,
     y - size * 0.43 + hb * 0.5,
     x,
-    y - size * 0.455 + hb * 0.5,
+    y - size * 0.455 + hb * 0.5
   );
   ctx.quadraticCurveTo(
     x + size * 0.175,
     y - size * 0.43 + hb * 0.5,
     x + size * 0.145,
-    y - size * 0.3 + hb,
+    y - size * 0.3 + hb
   );
   ctx.lineTo(x + size * 0.14, helmBottom - size * 0.04);
   ctx.quadraticCurveTo(
     x + size * 0.1,
     helmBottom + size * 0.01,
     x,
-    helmBottom + size * 0.015,
+    helmBottom + size * 0.015
   );
   ctx.quadraticCurveTo(
     x - size * 0.1,
     helmBottom + size * 0.01,
     x - size * 0.14,
-    helmBottom - size * 0.04,
+    helmBottom - size * 0.04
   );
   ctx.closePath();
   ctx.fill();
@@ -2027,7 +2030,7 @@ function drawHelmetAssembly(
     x,
     browY + size * 0.008,
     x - size * 0.15,
-    browY + size * 0.018,
+    browY + size * 0.018
   );
   ctx.closePath();
   ctx.fill();
@@ -2049,7 +2052,7 @@ function drawHelmetAssembly(
     size * 0.06,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Secondary specular
@@ -2062,7 +2065,7 @@ function drawHelmetAssembly(
     size * 0.03,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2079,7 +2082,7 @@ function drawHelmetAssembly(
     visorY - size * 0.022,
     size * 0.23,
     size * 0.048,
-    size * 0.014,
+    size * 0.014
   );
   ctx.fill();
   // Nose/breath slot
@@ -2089,7 +2092,7 @@ function drawHelmetAssembly(
     visorY,
     size * 0.048,
     size * 0.1,
-    size * 0.008,
+    size * 0.008
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -2103,7 +2106,7 @@ function drawHelmetAssembly(
     visorY - size * 0.022,
     size * 0.23,
     size * 0.048,
-    size * 0.014,
+    size * 0.014
   );
   ctx.stroke();
 
@@ -2126,7 +2129,7 @@ function drawHelmetAssembly(
     eyeRy * 1.6,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2137,7 +2140,7 @@ function drawHelmetAssembly(
     eyeRy * 1.6,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -2164,7 +2167,7 @@ function drawHelmetAssembly(
     eyeRy * 0.45,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2175,7 +2178,7 @@ function drawHelmetAssembly(
     eyeRy * 0.45,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2191,7 +2194,7 @@ function drawHelmetAssembly(
         size * 0.004,
         side * 0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2203,7 +2206,7 @@ function drawHelmetAssembly(
       x + side * size * 0.08,
       y - size * 0.29 + hb,
       x + side * size * 0.16,
-      y - size * 0.2 + hb,
+      y - size * 0.2 + hb
     );
     cheekGrad.addColorStop(0, steelHigh);
     cheekGrad.addColorStop(0.5, steelMid);
@@ -2225,7 +2228,7 @@ function drawHelmetAssembly(
       y - size * 0.23 + hb,
       size * 0.007,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2256,13 +2259,13 @@ function drawHelmetAssembly(
     x + crestSpread * 0.3 - plumeWave * 1.2,
     crestBaseY - crestPeakH * 0.95,
     x - crestSpread * 0.6 - plumeWave * 2.5,
-    crestBaseY - crestPeakH * 0.15,
+    crestBaseY - crestPeakH * 0.15
   );
   ctx.quadraticCurveTo(
     x - crestSpread * 0.15,
     crestBaseY - crestPeakH * 0.35,
     x - size * 0.02,
-    crestBaseY,
+    crestBaseY
   );
   ctx.closePath();
   ctx.fill();
@@ -2272,7 +2275,7 @@ function drawHelmetAssembly(
     x,
     crestBaseY - crestPeakH,
     x - crestSpread,
-    crestBaseY,
+    crestBaseY
   );
   crestBase.addColorStop(0, "#ff6a10");
   crestBase.addColorStop(0.35, "#e84a0a");
@@ -2282,16 +2285,16 @@ function drawHelmetAssembly(
   ctx.beginPath();
   ctx.moveTo(x + size * 0.015, crestBaseY);
   ctx.quadraticCurveTo(
-    x + crestSpread * 0.2 - plumeWave * 1.0,
+    x + crestSpread * 0.2 - plumeWave * 1,
     crestBaseY - crestPeakH * 0.9,
-    x - crestSpread * 0.5 - plumeWave * 2.0,
-    crestBaseY - crestPeakH * 0.1,
+    x - crestSpread * 0.5 - plumeWave * 2,
+    crestBaseY - crestPeakH * 0.1
   );
   ctx.quadraticCurveTo(
     x - crestSpread * 0.1,
     crestBaseY - crestPeakH * 0.3,
     x - size * 0.015,
-    crestBaseY,
+    crestBaseY
   );
   ctx.closePath();
   ctx.fill();
@@ -2304,13 +2307,13 @@ function drawHelmetAssembly(
     x + crestSpread * 0.1 - plumeWave * 0.8,
     crestBaseY - crestPeakH * 0.85,
     x - crestSpread * 0.35 - plumeWave * 1.5,
-    crestBaseY - crestPeakH * 0.15,
+    crestBaseY - crestPeakH * 0.15
   );
   ctx.quadraticCurveTo(
     x - crestSpread * 0.05,
     crestBaseY - crestPeakH * 0.25,
     x,
-    crestBaseY - size * 0.02,
+    crestBaseY - size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -2327,7 +2330,7 @@ function drawHelmetAssembly(
       sx,
       crestBaseY - crestPeakH * (0.6 + t * 0.3),
       sx - crestSpread * 0.2,
-      crestBaseY - crestPeakH * 0.1 * (1 - t),
+      crestBaseY - crestPeakH * 0.1 * (1 - t)
     );
     ctx.stroke();
   }
@@ -2340,7 +2343,7 @@ function drawHelmetAssembly(
     crestBaseY - size * 0.01,
     size * 0.05,
     size * 0.02,
-    size * 0.005,
+    size * 0.005
   );
   ctx.fill();
   ctx.fillStyle = `rgba(255, 100, 40, ${0.55 + shimmer * 0.3})`;

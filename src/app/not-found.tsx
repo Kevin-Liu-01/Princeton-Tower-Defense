@@ -1,11 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+
 import { OrnateFrame } from "@/app/components/ui/primitives/OrnateFrame";
 import PrincetonTDLogo from "@/app/components/ui/primitives/PrincetonTDLogo";
-import { GOLD, dividerGradient, panelGradient } from "@/app/components/ui/system/theme";
-import { SCREENSHOTS, SCREENSHOT_LABELS } from "@/app/constants/notFoundScreenshots";
+import {
+  GOLD,
+  dividerGradient,
+  panelGradient,
+} from "@/app/components/ui/system/theme";
+import {
+  SCREENSHOTS,
+  SCREENSHOT_LABELS,
+} from "@/app/constants/notFoundScreenshots";
 
 export default function NotFound() {
   return (
@@ -17,8 +25,8 @@ export default function NotFound() {
           fill
           className="object-cover"
           style={{
-            opacity: 0.15,
             filter: "blur(3px) saturate(0.6)",
+            opacity: 0.15,
           }}
           priority
         />
@@ -52,10 +60,10 @@ export default function NotFound() {
               <h1
                 className="text-6xl sm:text-7xl font-black tracking-wider"
                 style={{
-                  background:
-                    "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
+                  background:
+                    "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 100%)",
                   filter:
                     "drop-shadow(0 2px 8px rgba(245,158,11,0.4)) drop-shadow(0 0 20px rgba(251,191,36,0.2))",
                 }}
@@ -129,10 +137,10 @@ export default function NotFound() {
               style={{
                 background:
                   "linear-gradient(180deg, rgba(180,130,30,0.92) 0%, rgba(120,78,15,0.95) 100%)",
-                color: "rgba(41, 24, 8, 0.96)",
-                textShadow: "0 1px 0 rgba(255, 235, 180, 0.18)",
                 border: `1px solid ${GOLD.border35}`,
                 boxShadow: `0 0 12px ${GOLD.glow07}, 0 4px 12px rgba(0,0,0,0.4)`,
+                color: "rgba(41, 24, 8, 0.96)",
+                textShadow: "0 1px 0 rgba(255, 235, 180, 0.18)",
               }}
             >
               Return to Battle

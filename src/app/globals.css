@@ -8,7 +8,8 @@
 }
 @font-face {
   font-family: "bc-novatica-cyr";
-  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-LightItalic.woff2") format("woff2");
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-LightItalic.woff2")
+    format("woff2");
   font-weight: 300;
   font-style: italic;
   font-display: swap;
@@ -36,21 +37,24 @@
 }
 @font-face {
   font-family: "bc-novatica-cyr";
-  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-MediumItalic.woff2") format("woff2");
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-MediumItalic.woff2")
+    format("woff2");
   font-weight: 500;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "bc-novatica-cyr";
-  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBold.woff2") format("woff2");
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBold.woff2")
+    format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "bc-novatica-cyr";
-  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBoldItalic.woff2") format("woff2");
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBoldItalic.woff2")
+    format("woff2");
   font-weight: 600;
   font-style: italic;
   font-display: swap;
@@ -64,7 +68,8 @@
 }
 @font-face {
   font-family: "bc-novatica-cyr";
-  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-BoldItalic.woff2") format("woff2");
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-BoldItalic.woff2")
+    format("woff2");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
@@ -167,180 +172,408 @@ body {
 /* ─── Modal Animations ─── */
 
 @keyframes hero-aura-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.08); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.8;
+  }
 }
 
 @keyframes hero-aura-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes float-particle {
-  0%, 100% { transform: translateY(0px) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
-  90% { opacity: 0; }
-  100% { transform: translateY(-60px) scale(0.8); }
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.2);
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-60px) scale(0.8);
+  }
 }
 
 @keyframes shimmer-sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes stat-bar-fill {
-  from { width: 0%; }
+  from {
+    width: 0%;
+  }
 }
 
 @keyframes badge-glow {
-  0%, 100% { box-shadow: 0 0 8px var(--glow-color, rgba(180,140,60,0.3)); }
-  50% { box-shadow: 0 0 16px var(--glow-color, rgba(180,140,60,0.5)); }
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--glow-color, rgba(180, 140, 60, 0.3));
+  }
+  50% {
+    box-shadow: 0 0 16px var(--glow-color, rgba(180, 140, 60, 0.5));
+  }
 }
 
 @keyframes rune-fade {
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.06; }
+  0%,
+  100% {
+    opacity: 0.03;
+  }
+  50% {
+    opacity: 0.06;
+  }
 }
 
 @keyframes spell-orb-pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.04); filter: brightness(1.15); }
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.04);
+    filter: brightness(1.15);
+  }
 }
 
 @keyframes loadout-slot-idle {
-  0%, 100% { border-color: rgba(140,80,200,0.15); }
-  50% { border-color: rgba(140,80,200,0.3); }
+  0%,
+  100% {
+    border-color: rgba(140, 80, 200, 0.15);
+  }
+  50% {
+    border-color: rgba(140, 80, 200, 0.3);
+  }
 }
 
-.animate-hero-aura { animation: hero-aura-pulse 3s ease-in-out infinite; }
-.animate-aura-spin { animation: hero-aura-spin 20s linear infinite; }
-.animate-float-particle { animation: float-particle 3s ease-in-out infinite; }
-.animate-shimmer { animation: shimmer-sweep 3s ease-in-out infinite; }
-.animate-stat-fill { animation: stat-bar-fill 0.8s ease-out forwards; }
-.animate-badge-glow { animation: badge-glow 2s ease-in-out infinite; }
-.animate-rune-fade { animation: rune-fade 4s ease-in-out infinite; }
-.animate-spell-orb { animation: spell-orb-pulse 2.5s ease-in-out infinite; }
-.animate-loadout-idle { animation: loadout-slot-idle 2s ease-in-out infinite; }
+.animate-hero-aura {
+  animation: hero-aura-pulse 3s ease-in-out infinite;
+}
+.animate-aura-spin {
+  animation: hero-aura-spin 20s linear infinite;
+}
+.animate-float-particle {
+  animation: float-particle 3s ease-in-out infinite;
+}
+.animate-shimmer {
+  animation: shimmer-sweep 3s ease-in-out infinite;
+}
+.animate-stat-fill {
+  animation: stat-bar-fill 0.8s ease-out forwards;
+}
+.animate-badge-glow {
+  animation: badge-glow 2s ease-in-out infinite;
+}
+.animate-rune-fade {
+  animation: rune-fade 4s ease-in-out infinite;
+}
+.animate-spell-orb {
+  animation: spell-orb-pulse 2.5s ease-in-out infinite;
+}
+.animate-loadout-idle {
+  animation: loadout-slot-idle 2s ease-in-out infinite;
+}
 
 /* ─── World Map Animations ─── */
 
 @keyframes wm-progress-shimmer {
-  0% { transform: translateX(-150%); }
-  100% { transform: translateX(250%); }
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
 }
 
 @keyframes wm-cta-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(251,191,36,0.15), inset 0 0 12px rgba(251,191,36,0.06); }
-  50% { box-shadow: 0 0 28px rgba(251,191,36,0.3), inset 0 0 18px rgba(251,191,36,0.1); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 16px rgba(251, 191, 36, 0.15),
+      inset 0 0 12px rgba(251, 191, 36, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(251, 191, 36, 0.3),
+      inset 0 0 18px rgba(251, 191, 36, 0.1);
+  }
 }
 
 @keyframes wm-battle-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(255,180,40,0.25), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4); }
-  50% { box-shadow: 0 0 36px rgba(255,180,40,0.45), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(255, 180, 40, 0.25),
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 240, 160, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 36px rgba(255, 180, 40, 0.45),
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 240, 160, 0.4);
+  }
 }
 
 @keyframes wm-star-breathe {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,191,36,0.2)); }
-  50% { filter: drop-shadow(0 0 10px rgba(251,191,36,0.45)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.45));
+  }
 }
 
 @keyframes wm-border-breathe {
-  0%, 100% { border-color: rgba(180,140,60,0.5); box-shadow: 0 0 20px rgba(180,140,60,0.06), inset 0 0 12px rgba(180,140,60,0.03); }
-  50% { border-color: rgba(180,140,60,0.65); box-shadow: 0 0 30px rgba(180,140,60,0.12), inset 0 0 18px rgba(180,140,60,0.06); }
+  0%,
+  100% {
+    border-color: rgba(180, 140, 60, 0.5);
+    box-shadow:
+      0 0 20px rgba(180, 140, 60, 0.06),
+      inset 0 0 12px rgba(180, 140, 60, 0.03);
+  }
+  50% {
+    border-color: rgba(180, 140, 60, 0.65);
+    box-shadow:
+      0 0 30px rgba(180, 140, 60, 0.12),
+      inset 0 0 18px rgba(180, 140, 60, 0.06);
+  }
 }
 
 @keyframes wm-fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes wm-conquered-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(52,211,153,0.15), inset 0 0 12px rgba(52,211,153,0.06); }
-  50% { box-shadow: 0 0 28px rgba(52,211,153,0.3), inset 0 0 18px rgba(52,211,153,0.1); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 16px rgba(52, 211, 153, 0.15),
+      inset 0 0 12px rgba(52, 211, 153, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(52, 211, 153, 0.3),
+      inset 0 0 18px rgba(52, 211, 153, 0.1);
+  }
 }
 
 @keyframes wm-legendary-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(168,130,255,0.15), inset 0 0 12px rgba(168,130,255,0.06); }
-  50% { box-shadow: 0 0 28px rgba(168,130,255,0.35), inset 0 0 18px rgba(168,130,255,0.12); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 16px rgba(168, 130, 255, 0.15),
+      inset 0 0 12px rgba(168, 130, 255, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgba(168, 130, 255, 0.35),
+      inset 0 0 18px rgba(168, 130, 255, 0.12);
+  }
 }
 
-.animate-wm-progress-shimmer { animation: wm-progress-shimmer 2.5s ease-in-out infinite; }
-.animate-wm-cta-glow { animation: wm-cta-glow 3s ease-in-out infinite; }
-.animate-wm-conquered-glow { animation: wm-conquered-glow 3s ease-in-out infinite; }
-.animate-wm-legendary-glow { animation: wm-legendary-glow 3s ease-in-out infinite; }
-.animate-wm-battle-pulse { animation: wm-battle-pulse 2s ease-in-out infinite; }
-.animate-wm-star-breathe { animation: wm-star-breathe 3s ease-in-out infinite; }
-.animate-wm-border-breathe { animation: wm-border-breathe 4s ease-in-out infinite; }
+.animate-wm-progress-shimmer {
+  animation: wm-progress-shimmer 2.5s ease-in-out infinite;
+}
+.animate-wm-cta-glow {
+  animation: wm-cta-glow 3s ease-in-out infinite;
+}
+.animate-wm-conquered-glow {
+  animation: wm-conquered-glow 3s ease-in-out infinite;
+}
+.animate-wm-legendary-glow {
+  animation: wm-legendary-glow 3s ease-in-out infinite;
+}
+.animate-wm-battle-pulse {
+  animation: wm-battle-pulse 2s ease-in-out infinite;
+}
+.animate-wm-star-breathe {
+  animation: wm-star-breathe 3s ease-in-out infinite;
+}
+.animate-wm-border-breathe {
+  animation: wm-border-breathe 4s ease-in-out infinite;
+}
 
 /* ─── Landing Page Animations ─── */
 
 @keyframes landing-ember0 {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  6% { opacity: 1; }
-  50% { transform: translateY(-55vh) translateX(18px) scale(0.6); }
-  100% { transform: translateY(-112vh) translateX(-8px) scale(0.15); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-55vh) translateX(18px) scale(0.6);
+  }
+  100% {
+    transform: translateY(-112vh) translateX(-8px) scale(0.15);
+    opacity: 0;
+  }
 }
 
 @keyframes landing-ember1 {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  6% { opacity: 1; }
-  50% { transform: translateY(-55vh) translateX(-22px) scale(0.65); }
-  100% { transform: translateY(-112vh) translateX(12px) scale(0.2); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-55vh) translateX(-22px) scale(0.65);
+  }
+  100% {
+    transform: translateY(-112vh) translateX(12px) scale(0.2);
+    opacity: 0;
+  }
 }
 
 @keyframes landing-ember2 {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  6% { opacity: 1; }
-  50% { transform: translateY(-55vh) translateX(30px) scale(0.55); }
-  100% { transform: translateY(-112vh) translateX(5px) scale(0.1); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-55vh) translateX(30px) scale(0.55);
+  }
+  100% {
+    transform: translateY(-112vh) translateX(5px) scale(0.1);
+    opacity: 0;
+  }
 }
 
 @keyframes landing-ember3 {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  6% { opacity: 1; }
-  50% { transform: translateY(-55vh) translateX(-14px) scale(0.7); }
-  100% { transform: translateY(-112vh) translateX(-22px) scale(0.15); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-55vh) translateX(-14px) scale(0.7);
+  }
+  100% {
+    transform: translateY(-112vh) translateX(-22px) scale(0.15);
+    opacity: 0;
+  }
 }
 
 @keyframes landing-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.15); opacity: 0.5; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.5;
+  }
 }
 
 @keyframes landing-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes landing-shimmer {
-  0% { transform: translateX(-200%); }
-  50%, 100% { transform: translateX(200%); }
+  0% {
+    transform: translateX(-200%);
+  }
+  50%,
+  100% {
+    transform: translateX(200%);
+  }
 }
 
 @keyframes landing-ken-burns {
-  0% { transform: scale(1) translate(0, 0); }
-  100% { transform: scale(1.08) translate(-1%, -0.5%); }
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.08) translate(-1%, -0.5%);
+  }
 }
 
 @keyframes landing-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes landing-scroll-bounce {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(8px); opacity: 1; }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
 }
 
 @keyframes landing-portrait-glow {
-  0%, 100% { box-shadow: 0 0 12px var(--glow-color, rgba(180,140,60,0.2)); }
-  50% { box-shadow: 0 0 24px var(--glow-color, rgba(180,140,60,0.4)); }
+  0%,
+  100% {
+    box-shadow: 0 0 12px var(--glow-color, rgba(180, 140, 60, 0.2));
+  }
+  50% {
+    box-shadow: 0 0 24px var(--glow-color, rgba(180, 140, 60, 0.4));
+  }
 }
 
 @keyframes landing-marquee-reverse {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .animate-landing-marquee {
@@ -370,164 +603,351 @@ body {
 /* ─── Sprite Battle Animations ─── */
 
 @keyframes landing-battle-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes landing-battle-glow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.15); }
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+  }
 }
 
 @keyframes landing-battle-surge-left {
-  0%, 100% { transform: translateX(0); }
-  35% { transform: translateX(6px); }
-  50% { transform: translateX(0); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(6px);
+  }
+  50% {
+    transform: translateX(0);
+  }
 }
 
 @keyframes landing-battle-surge-right {
-  0%, 100% { transform: scaleX(-1) translateX(0); }
-  35% { transform: scaleX(-1) translateX(6px); }
-  50% { transform: scaleX(-1) translateX(0); }
+  0%,
+  100% {
+    transform: scaleX(-1) translateX(0);
+  }
+  35% {
+    transform: scaleX(-1) translateX(6px);
+  }
+  50% {
+    transform: scaleX(-1) translateX(0);
+  }
 }
 
 @keyframes landing-clash-burst {
-  0%, 70%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.2; }
-  35% { transform: scale(1.3) rotate(20deg); opacity: 1; }
+  0%,
+  70%,
+  100% {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.2;
+  }
+  35% {
+    transform: scale(1.3) rotate(20deg);
+    opacity: 1;
+  }
 }
 
 @keyframes landing-clash-pulse {
-  0%, 70%, 100% { transform: scale(0.85); opacity: 0.4; }
-  35% { transform: scale(1.2); opacity: 1; }
+  0%,
+  70%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  35% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
 @keyframes landing-spark {
-  0% { transform: translate(0, 0) scale(1); opacity: 0; }
-  15% { opacity: 1; }
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
   100% {
     transform: translate(
-      calc(cos(var(--spark-angle, 0deg)) * 28px),
-      calc(sin(var(--spark-angle, 0deg)) * 28px)
-    ) scale(0);
+        calc(cos(var(--spark-angle, 0deg)) * 28px),
+        calc(sin(var(--spark-angle, 0deg)) * 28px)
+      )
+      scale(0);
     opacity: 0;
   }
 }
 
 @keyframes landing-battle-particle {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  15% { opacity: 0.8; }
-  100% { transform: translateY(-50px) scale(0); opacity: 0; }
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-50px) scale(0);
+    opacity: 0;
+  }
 }
 
 /* ─── Credits Modal Animation ─── */
 
 @keyframes landing-credits-enter {
-  from { opacity: 0; transform: translateY(12px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes landing-tower-enter {
-  from { opacity: 0; transform: translateY(6px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ─── Landing Section Atmospherics ─── */
 
 @keyframes landing-drift {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  33% { transform: translateY(-8px) translateX(4px); }
-  66% { transform: translateY(4px) translateX(-6px); }
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-8px) translateX(4px);
+  }
+  66% {
+    transform: translateY(4px) translateX(-6px);
+  }
 }
 
 @keyframes landing-glow-breathe {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 @keyframes landing-threat-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--threat-color, rgba(220,40,40,0.25)); }
-  50% { box-shadow: 0 0 20px var(--threat-color, rgba(220,40,40,0.5)); }
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--threat-color, rgba(220, 40, 40, 0.25));
+  }
+  50% {
+    box-shadow: 0 0 20px var(--threat-color, rgba(220, 40, 40, 0.5));
+  }
 }
 
 @keyframes landing-hero-reveal {
-  from { opacity: 0; transform: scale(0.85) translateY(20px); filter: blur(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes landing-stat-fill-sweep {
-  from { width: 0%; opacity: 0.5; }
-  to { opacity: 1; }
+  from {
+    width: 0%;
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes landing-connector-flow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 @keyframes landing-cta-ember {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  10% { opacity: 0.8; }
-  50% { transform: translateY(-50px) translateX(8px) scale(0.5); opacity: 0.4; }
-  100% { transform: translateY(-100px) translateX(-4px) scale(0.1); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-50px) translateX(8px) scale(0.5);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-100px) translateX(-4px) scale(0.1);
+    opacity: 0;
+  }
 }
 
 @keyframes landing-fog-drift {
-  0% { transform: translateX(-5%) scaleX(1.1); opacity: 0.3; }
-  50% { transform: translateX(5%) scaleX(1); opacity: 0.5; }
-  100% { transform: translateX(-5%) scaleX(1.1); opacity: 0.3; }
+  0% {
+    transform: translateX(-5%) scaleX(1.1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(5%) scaleX(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(-5%) scaleX(1.1);
+    opacity: 0.3;
+  }
 }
 
 @keyframes landing-ring-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.animate-landing-drift { animation: landing-drift 12s ease-in-out infinite; }
-.animate-landing-glow-breathe { animation: landing-glow-breathe 4s ease-in-out infinite; }
-.animate-landing-threat-pulse { animation: landing-threat-pulse 2s ease-in-out infinite; }
+.animate-landing-drift {
+  animation: landing-drift 12s ease-in-out infinite;
+}
+.animate-landing-glow-breathe {
+  animation: landing-glow-breathe 4s ease-in-out infinite;
+}
+.animate-landing-threat-pulse {
+  animation: landing-threat-pulse 2s ease-in-out infinite;
+}
 
 /* Landing section crosshatch texture */
 .landing-texture-crosshatch {
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(180,140,60,0.055) 14px, rgba(180,140,60,0.055) 15px),
-    repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(180,140,60,0.055) 14px, rgba(180,140,60,0.055) 15px);
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 14px,
+      rgba(180, 140, 60, 0.055) 14px,
+      rgba(180, 140, 60, 0.055) 15px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 14px,
+      rgba(180, 140, 60, 0.055) 14px,
+      rgba(180, 140, 60, 0.055) 15px
+    );
 }
 
 .landing-texture-dots {
-  background-image: radial-gradient(circle at 1px 1px, rgba(180,140,60,0.09) 1px, transparent 0);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(180, 140, 60, 0.09) 1px,
+    transparent 0
+  );
   background-size: 20px 20px;
 }
 
 /* ─── Fantasy Map Animations ─── */
 
 @keyframes map-trail-flow {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: -28; }
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -28;
+  }
 }
 
 @keyframes map-marker-breathe {
-  0%, 100% { opacity: 0.7; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-2px); }
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes map-compass-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(212,168,74,0.15)); }
-  50% { filter: drop-shadow(0 0 16px rgba(212,168,74,0.3)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(212, 168, 74, 0.15));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(212, 168, 74, 0.3));
+  }
 }
 
 @keyframes map-terrain-fade {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes map-border-shimmer {
-  0% { opacity: 0.12; }
-  50% { opacity: 0.2; }
-  100% { opacity: 0.12; }
+  0% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0.12;
+  }
 }
 
-.animate-map-trail { animation: map-trail-flow 4s linear infinite; }
-.animate-map-marker { animation: map-marker-breathe 5s ease-in-out infinite; }
-.animate-map-compass-glow { animation: map-compass-glow 4s ease-in-out infinite; }
-.animate-map-terrain { animation: map-terrain-fade 8s ease-in-out infinite; }
-.animate-map-border-shimmer { animation: map-border-shimmer 6s ease-in-out infinite; }
+.animate-map-trail {
+  animation: map-trail-flow 4s linear infinite;
+}
+.animate-map-marker {
+  animation: map-marker-breathe 5s ease-in-out infinite;
+}
+.animate-map-compass-glow {
+  animation: map-compass-glow 4s ease-in-out infinite;
+}
+.animate-map-terrain {
+  animation: map-terrain-fade 8s ease-in-out infinite;
+}
+.animate-map-border-shimmer {
+  animation: map-border-shimmer 6s ease-in-out infinite;
+}

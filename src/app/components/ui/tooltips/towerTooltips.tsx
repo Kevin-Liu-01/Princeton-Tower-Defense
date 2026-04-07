@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   AlertTriangle,
   Ban,
@@ -20,9 +19,15 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import type { Position, Tower, TowerType } from "../../../types";
-import { STATION_TROOP_RANGE, TOWER_DATA, TOWER_TAGS } from "../../../constants";
+import React from "react";
+
+import {
+  STATION_TROOP_RANGE,
+  TOWER_DATA,
+  TOWER_TAGS,
+} from "../../../constants";
 import { calculateTowerStats } from "../../../constants/towerStats";
+import type { Position, Tower, TowerType } from "../../../types";
 import { TagBadge } from "../primitives/TagBadge";
 import { GOLD, PANEL, panelGradient } from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
@@ -33,18 +38,18 @@ interface TooltipProps {
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({ content, position }) => {
-  const coords = getTooltipPosition(position, { width: 200, height: 80 });
+  const coords = getTooltipPosition(position, { height: 80, width: 200 });
 
   return (
     <div
       className="fixed pointer-events-none px-3 py-2 shadow-2xl rounded-lg max-w-[200px] backdrop-blur-md"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 250,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}`,
+        left: coords.left,
+        top: coords.top,
+        zIndex: 250,
       }}
     >
       {content}
@@ -67,34 +72,47 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
     tower.level,
     tower.upgrade,
     tower.rangeBoost || 1,
-    tower.damageBoost || 1,
+    tower.damageBoost || 1
   );
 
   const hasRangeBuff = (tower.rangeBoost || 1) > 1;
   const hasDamageBuff = (tower.damageBoost || 1) > 1;
   const hasAttackSpeedBuff = (tower.attackSpeedBoost || 1) > 1;
-  const coords = getTooltipPosition(position, { width: 220, height: 360 });
+  const coords = getTooltipPosition(position, { height: 360, width: 220 });
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 250,
-        width: 220,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
+        left: coords.left,
+        top: coords.top,
+        width: 220,
+        zIndex: 250,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-      <div className="px-3 py-1.5 relative z-10" style={{ background: PANEL.bgWarmMid, borderBottom: `1px solid ${GOLD.border25}` }}>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
         <div className="flex items-center justify-between">
-          <span className="font-bold text-amber-200 text-sm">{towerData.name}</span>
+          <span className="font-bold text-amber-200 text-sm">
+            {towerData.name}
+          </span>
           <div className="flex items-center gap-0.5">
             {[...Array(tower.level)].map((_, index) => (
-              <span key={index} className="text-yellow-400 text-[10px]">★</span>
+              <span key={index} className="text-yellow-400 text-[10px]">
+                ★
+              </span>
             ))}
           </div>
         </div>
@@ -111,117 +129,221 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
       </div>
 
       <div className="px-3 py-2">
-        {tower.debuffs && tower.debuffs.filter((debuff) => debuff.until > Date.now()).length > 0 && (() => {
-          const activeDebuffs = tower.debuffs.filter((debuff) => debuff.until > Date.now());
-          const disableDebuff = activeDebuffs.find((debuff) => debuff.type === "disable");
-          const otherDebuffs = activeDebuffs.filter((debuff) => debuff.type !== "disable");
+        {tower.debuffs &&
+          tower.debuffs.some((debuff) => debuff.until > Date.now()) &&
+          (() => {
+            const activeDebuffs = tower.debuffs.filter(
+              (debuff) => debuff.until > Date.now()
+            );
+            const disableDebuff = activeDebuffs.find(
+              (debuff) => debuff.type === "disable"
+            );
+            const otherDebuffs = activeDebuffs.filter(
+              (debuff) => debuff.type !== "disable"
+            );
 
-          const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
-          for (const debuff of otherDebuffs) {
-            const existing = consolidatedDebuffs.get(debuff.type);
-            if (!existing || debuff.intensity > existing.intensity) {
-              consolidatedDebuffs.set(debuff.type, debuff);
+            const consolidatedDebuffs = new Map<
+              string,
+              { type: string; intensity: number; until: number }
+            >();
+            for (const debuff of otherDebuffs) {
+              const existing = consolidatedDebuffs.get(debuff.type);
+              if (!existing || debuff.intensity > existing.intensity) {
+                consolidatedDebuffs.set(debuff.type, debuff);
+              }
             }
-          }
 
-          const disableThemes = {
-            freeze: { icon: <Snowflake size={12} />, label: "FROZEN", bgClass: "bg-gradient-to-r from-cyan-950/80 to-blue-950/80", borderClass: "border-cyan-500/60", headerColor: "text-cyan-300", tagClass: "bg-cyan-900/60 text-cyan-200 border-cyan-600/40" },
-            petrify: { icon: <Mountain size={12} />, label: "PETRIFIED", bgClass: "bg-gradient-to-r from-stone-900/80 to-gray-900/80", borderClass: "border-stone-500/60", headerColor: "text-stone-300", tagClass: "bg-stone-800/60 text-stone-200 border-stone-600/40" },
-            hold: { icon: <Ban size={12} />, label: "ON HOLD", bgClass: "bg-gradient-to-r from-amber-950/80 to-red-950/80", borderClass: "border-amber-600/60", headerColor: "text-amber-300", tagClass: "bg-amber-900/60 text-amber-200 border-amber-600/40" },
-            stun: { icon: <Zap size={12} />, label: "STUNNED", bgClass: "bg-gradient-to-r from-yellow-950/80 to-orange-950/80", borderClass: "border-yellow-500/60", headerColor: "text-yellow-300", tagClass: "bg-yellow-900/60 text-yellow-200 border-yellow-600/40" },
-          } as const;
+            const disableThemes = {
+              freeze: {
+                bgClass: "bg-gradient-to-r from-cyan-950/80 to-blue-950/80",
+                borderClass: "border-cyan-500/60",
+                headerColor: "text-cyan-300",
+                icon: <Snowflake size={12} />,
+                label: "FROZEN",
+                tagClass: "bg-cyan-900/60 text-cyan-200 border-cyan-600/40",
+              },
+              hold: {
+                bgClass: "bg-gradient-to-r from-amber-950/80 to-red-950/80",
+                borderClass: "border-amber-600/60",
+                headerColor: "text-amber-300",
+                icon: <Ban size={12} />,
+                label: "ON HOLD",
+                tagClass: "bg-amber-900/60 text-amber-200 border-amber-600/40",
+              },
+              petrify: {
+                bgClass: "bg-gradient-to-r from-stone-900/80 to-gray-900/80",
+                borderClass: "border-stone-500/60",
+                headerColor: "text-stone-300",
+                icon: <Mountain size={12} />,
+                label: "PETRIFIED",
+                tagClass: "bg-stone-800/60 text-stone-200 border-stone-600/40",
+              },
+              stun: {
+                bgClass: "bg-gradient-to-r from-yellow-950/80 to-orange-950/80",
+                borderClass: "border-yellow-500/60",
+                headerColor: "text-yellow-300",
+                icon: <Zap size={12} />,
+                label: "STUNNED",
+                tagClass:
+                  "bg-yellow-900/60 text-yellow-200 border-yellow-600/40",
+              },
+            } as const;
 
-          return (
-            <>
-              {disableDebuff && (() => {
-                const flavor = ((disableDebuff as typeof disableDebuff & { disableFlavor?: string }).disableFlavor ?? "stun") as keyof typeof disableThemes;
-                const theme = disableThemes[flavor] || disableThemes.stun;
-                const remaining = Math.max(0, (disableDebuff.until - Date.now()) / 1000);
-                const abilityName = (disableDebuff as typeof disableDebuff & { abilityName?: string }).abilityName;
-
-                return (
-                  <div className={`mb-2 p-2 rounded-lg border ${theme.bgClass} ${theme.borderClass}`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className={`flex items-center gap-1.5 ${theme.headerColor}`}>
-                        {theme.icon}
-                        <span className="text-[10px] font-black tracking-wider">{theme.label}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] text-white/80 font-mono">
-                        <Timer size={10} className="opacity-70" />
-                        <span>{remaining.toFixed(1)}s</span>
-                      </div>
-                    </div>
-                    {abilityName && (
-                      <div className="text-[8px] text-white/50 mb-1">{abilityName}</div>
-                    )}
-                    <div className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded border w-fit ${theme.tagClass}`}>
-                      <Ban size={9} />
-                      <span>Cannot attack</span>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {consolidatedDebuffs.size > 0 && (
-                <div className="mb-2 p-1.5 bg-red-950/60 rounded border border-red-800/50">
-                  <div className="flex items-center gap-1 mb-1">
-                    <AlertTriangle size={10} className="text-red-400" />
-                    <span className="text-[9px] font-bold text-red-300">DEBUFFED</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {Array.from(consolidatedDebuffs.values()).map((debuff, index) => {
-                      const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
-                      const debuffInfo: Record<string, { icon: React.ReactNode; desc: string; color: string }> = {
-                        slow: { icon: <Timer size={10} />, color: "text-blue-400", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
-                        weaken: { icon: <TrendingDown size={10} />, color: "text-red-400", desc: `-${Math.round(debuff.intensity * 100)}% DMG` },
-                        blind: { icon: <EyeOff size={10} />, color: "text-purple-400", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
+            return (
+              <>
+                {disableDebuff &&
+                  (() => {
+                    const flavor = ((
+                      disableDebuff as typeof disableDebuff & {
+                        disableFlavor?: string;
+                      }
+                    ).disableFlavor ?? "stun") as keyof typeof disableThemes;
+                    const theme = disableThemes[flavor] || disableThemes.stun;
+                    const remaining = Math.max(
+                      0,
+                      (disableDebuff.until - Date.now()) / 1000
+                    );
+                    const { abilityName } =
+                      disableDebuff as typeof disableDebuff & {
+                        abilityName?: string;
                       };
-                      const info = debuffInfo[debuff.type];
-                      if (!info) return null;
-                      return (
-                        <div key={index} className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 ${info.color}`}>
-                          {info.icon}
-                          <span>{info.desc}</span>
-                          <span className="text-white/50">({remaining}s)</span>
+
+                    return (
+                      <div
+                        className={`mb-2 p-2 rounded-lg border ${theme.bgClass} ${theme.borderClass}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div
+                            className={`flex items-center gap-1.5 ${theme.headerColor}`}
+                          >
+                            {theme.icon}
+                            <span className="text-[10px] font-black tracking-wider">
+                              {theme.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-white/80 font-mono">
+                            <Timer size={10} className="opacity-70" />
+                            <span>{remaining.toFixed(1)}s</span>
+                          </div>
                         </div>
-                      );
-                    })}
+                        {abilityName && (
+                          <div className="text-[8px] text-white/50 mb-1">
+                            {abilityName}
+                          </div>
+                        )}
+                        <div
+                          className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded border w-fit ${theme.tagClass}`}
+                        >
+                          <Ban size={9} />
+                          <span>Cannot attack</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                {consolidatedDebuffs.size > 0 && (
+                  <div className="mb-2 p-1.5 bg-red-950/60 rounded border border-red-800/50">
+                    <div className="flex items-center gap-1 mb-1">
+                      <AlertTriangle size={10} className="text-red-400" />
+                      <span className="text-[9px] font-bold text-red-300">
+                        DEBUFFED
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {[...consolidatedDebuffs.values()].map(
+                        (debuff, index) => {
+                          const remaining = Math.ceil(
+                            (debuff.until - Date.now()) / 1000
+                          );
+                          const debuffInfo: Record<
+                            string,
+                            {
+                              icon: React.ReactNode;
+                              desc: string;
+                              color: string;
+                            }
+                          > = {
+                            blind: {
+                              color: "text-purple-400",
+                              desc: `-${Math.round(debuff.intensity * 100)}% Range`,
+                              icon: <EyeOff size={10} />,
+                            },
+                            slow: {
+                              color: "text-blue-400",
+                              desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd`,
+                              icon: <Timer size={10} />,
+                            },
+                            weaken: {
+                              color: "text-red-400",
+                              desc: `-${Math.round(debuff.intensity * 100)}% DMG`,
+                              icon: <TrendingDown size={10} />,
+                            },
+                          };
+                          const info = debuffInfo[debuff.type];
+                          if (!info) {
+                            return null;
+                          }
+                          return (
+                            <div
+                              key={index}
+                              className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 ${info.color}`}
+                            >
+                              {info.icon}
+                              <span>{info.desc}</span>
+                              <span className="text-white/50">
+                                ({remaining}s)
+                              </span>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          );
-        })()}
+                )}
+              </>
+            );
+          })()}
 
         {(hasRangeBuff || hasDamageBuff || hasAttackSpeedBuff) && (
           <div className="mb-2 p-1.5 bg-emerald-950/60 rounded border border-emerald-700/50">
             <div className="flex items-center gap-1 mb-1">
               <Sparkles size={10} className="text-emerald-400" />
-              <span className="text-[9px] font-bold text-emerald-300">BUFFED</span>
+              <span className="text-[9px] font-bold text-emerald-300">
+                BUFFED
+              </span>
             </div>
             <div className="flex flex-wrap gap-1">
               {hasRangeBuff && tower.type !== "station" && (
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-cyan-400">
                   <Target size={10} />
-                  <span>+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range</span>
+                  <span>
+                    +{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range
+                  </span>
                 </div>
               )}
               {hasRangeBuff && tower.type === "station" && (
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-cyan-400">
                   <Fence size={10} />
-                  <span>+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Deploy</span>
+                  <span>
+                    +{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Deploy
+                  </span>
                 </div>
               )}
               {hasDamageBuff && (
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-orange-400">
                   <Swords size={10} />
-                  <span>+{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG</span>
+                  <span>
+                    +{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG
+                  </span>
                 </div>
               )}
               {hasAttackSpeedBuff && (
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-indigo-300">
                   <Timer size={10} />
-                  <span>+{Math.round(((tower.attackSpeedBoost || 1) - 1) * 100)}% Atk Spd</span>
+                  <span>
+                    +{Math.round(((tower.attackSpeedBoost || 1) - 1) * 100)}%
+                    Atk Spd
+                  </span>
                 </div>
               )}
             </div>
@@ -232,31 +354,49 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
           {stats.damage > 0 && (
             <div className="flex items-center gap-1">
               <Swords size={11} className="text-red-400" />
-              <span className="text-red-300 font-medium">{Math.floor(stats.damage)}</span>
+              <span className="text-red-300 font-medium">
+                {Math.floor(stats.damage)}
+              </span>
             </div>
           )}
           {stats.range > 0 && tower.type !== "club" && (
             <div className="flex items-center gap-1">
               <Target size={11} className="text-blue-400" />
-              <span className="text-blue-300 font-medium">{Math.floor(stats.range)}</span>
+              <span className="text-blue-300 font-medium">
+                {Math.floor(stats.range)}
+              </span>
             </div>
           )}
           {stats.attackSpeed > 0 && (
             <div className="flex items-center gap-1">
               <Gauge size={11} className="text-green-400" />
-              <span className="text-green-300 font-medium">{(stats.attackSpeed / 1000).toFixed(1)}s</span>
+              <span className="text-green-300 font-medium">
+                {(stats.attackSpeed / 1000).toFixed(1)}s
+              </span>
             </div>
           )}
           {stats.slowAmount && stats.slowAmount > 0 && (
             <div className="flex items-center gap-1">
               <Snowflake size={11} className="text-purple-400" />
-              <span className="text-purple-300 font-medium">{Math.round(stats.slowAmount * 100)}%</span>
+              <span className="text-purple-300 font-medium">
+                {Math.round(stats.slowAmount * 100)}%
+              </span>
             </div>
           )}
           {stats.chainTargets && stats.chainTargets > 1 && (
             <div className="flex items-center gap-1">
-              {tower.type === "lab" ? <Zap size={11} className="text-cyan-400" /> : <Users size={11} className="text-yellow-400" />}
-              <span className={tower.type === "lab" ? "text-cyan-300 font-medium" : "text-yellow-300 font-medium"}>
+              {tower.type === "lab" ? (
+                <Zap size={11} className="text-cyan-400" />
+              ) : (
+                <Users size={11} className="text-yellow-400" />
+              )}
+              <span
+                className={
+                  tower.type === "lab"
+                    ? "text-cyan-300 font-medium"
+                    : "text-yellow-300 font-medium"
+                }
+              >
                 {stats.chainTargets}
               </span>
             </div>
@@ -277,20 +417,35 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
               </span>
             </div>
           )}
-          {tower.type === "station" && (() => {
-            const baseDeployRange = TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE;
-            const boostedDeployRange = Math.floor(baseDeployRange * (tower.rangeBoost || 1));
-            const isDeployBoosted = (tower.rangeBoost || 1) > 1;
-            return (
-              <div className="flex items-center gap-1">
-                <Fence size={11} className={isDeployBoosted ? "text-cyan-400" : "text-orange-400"} />
-                <span className={isDeployBoosted ? "text-cyan-300 font-medium" : "text-orange-300 font-medium"}>
-                  {isDeployBoosted ? boostedDeployRange : baseDeployRange}
-                </span>
-                <span className="text-stone-500 text-[9px]">deploy</span>
-              </div>
-            );
-          })()}
+          {tower.type === "station" &&
+            (() => {
+              const baseDeployRange =
+                TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE;
+              const boostedDeployRange = Math.floor(
+                baseDeployRange * (tower.rangeBoost || 1)
+              );
+              const isDeployBoosted = (tower.rangeBoost || 1) > 1;
+              return (
+                <div className="flex items-center gap-1">
+                  <Fence
+                    size={11}
+                    className={
+                      isDeployBoosted ? "text-cyan-400" : "text-orange-400"
+                    }
+                  />
+                  <span
+                    className={
+                      isDeployBoosted
+                        ? "text-cyan-300 font-medium"
+                        : "text-orange-300 font-medium"
+                    }
+                  >
+                    {isDeployBoosted ? boostedDeployRange : baseDeployRange}
+                  </span>
+                  <span className="text-stone-500 text-[9px]">deploy</span>
+                </div>
+              );
+            })()}
         </div>
 
         {tower.type === "club" && tower.level === 4 && tower.upgrade && (
@@ -299,14 +454,18 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
               <div className="flex items-center gap-1 text-[10px]">
                 <Target size={11} className="text-cyan-400" />
                 <span className="text-cyan-300 font-medium">+15% Range</span>
-                <span className="text-cyan-500/70 text-[9px]">to nearby towers</span>
+                <span className="text-cyan-500/70 text-[9px]">
+                  to nearby towers
+                </span>
               </div>
             )}
             {tower.upgrade === "B" && (
               <div className="flex items-center gap-1 text-[10px]">
                 <Swords size={11} className="text-orange-400" />
                 <span className="text-orange-300 font-medium">+15% Damage</span>
-                <span className="text-orange-500/70 text-[9px]">to nearby towers</span>
+                <span className="text-orange-500/70 text-[9px]">
+                  to nearby towers
+                </span>
               </div>
             )}
           </div>
@@ -315,7 +474,9 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
         {tower.type === "station" && (
           <div className="flex items-center gap-1 mt-1.5 text-[10px]">
             <Users size={11} className="text-amber-400" />
-            <span className="text-amber-300">Troops: {tower.currentTroopCount || 0}/3</span>
+            <span className="text-amber-300">
+              Troops: {tower.currentTroopCount || 0}/3
+            </span>
           </div>
         )}
       </div>
@@ -333,24 +494,35 @@ export const BuildTowerTooltip: React.FC<BuildTowerTooltipProps> = ({
   position,
 }) => {
   const towerData = TOWER_DATA[towerType];
-  const coords = getTooltipPosition(position, { width: 220, height: 120 });
+  const coords = getTooltipPosition(position, { height: 120, width: 220 });
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 250,
-        width: 220,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
+        left: coords.left,
+        top: coords.top,
+        width: 220,
+        zIndex: 250,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-      <div className="px-3 py-1.5 flex items-center justify-between relative z-10" style={{ background: PANEL.bgWarmMid, borderBottom: `1px solid ${GOLD.border25}` }}>
-        <span className="font-bold text-amber-200 text-sm">{towerData.name}</span>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <div
+        className="px-3 py-1.5 flex items-center justify-between relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
+        <span className="font-bold text-amber-200 text-sm">
+          {towerData.name}
+        </span>
         <span className="flex items-center gap-1 text-amber-300 text-xs font-bold">
           <Coins size={12} /> {towerData.cost}
         </span>
@@ -361,19 +533,25 @@ export const BuildTowerTooltip: React.FC<BuildTowerTooltipProps> = ({
           {towerData.damage > 0 && (
             <div className="flex items-center gap-1">
               <Swords size={11} className="text-red-400" />
-              <span className="text-red-300 font-medium">{towerData.damage}</span>
+              <span className="text-red-300 font-medium">
+                {towerData.damage}
+              </span>
             </div>
           )}
           {towerData.range > 0 && (
             <div className="flex items-center gap-1">
               <Target size={11} className="text-blue-400" />
-              <span className="text-blue-300 font-medium">{towerData.range}</span>
+              <span className="text-blue-300 font-medium">
+                {towerData.range}
+              </span>
             </div>
           )}
           {towerData.attackSpeed > 0 && (
             <div className="flex items-center gap-1">
               <Gauge size={11} className="text-green-400" />
-              <span className="text-green-300 font-medium">{(towerData.attackSpeed / 1000).toFixed(1)}s</span>
+              <span className="text-green-300 font-medium">
+                {(towerData.attackSpeed / 1000).toFixed(1)}s
+              </span>
             </div>
           )}
         </div>

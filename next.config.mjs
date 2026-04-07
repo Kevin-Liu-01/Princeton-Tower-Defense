@@ -1,21 +1,13 @@
-import { fileURLToPath } from "url";
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  outputFileTracingRoot: __dirname,
-  turbopack: {
-    root: __dirname,
-  },
-  async headers() {
+  headers() {
     return [
       {
-        source: "/(.*)",
         headers: [
           {
             key: "X-Content-Type-Options",
@@ -38,8 +30,16 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
         ],
+        source: "/(.*)",
       },
     ];
+  },
+  outputFileTracingRoot: __dirname,
+  turbopack: {
+    root: __dirname,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 export default nextConfig;

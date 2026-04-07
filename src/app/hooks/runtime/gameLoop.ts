@@ -1,4 +1,7 @@
 import type { MutableRefObject } from "react";
+
+import { setPerformanceSettings } from "../../rendering/performance";
+import type { EntityCounts } from "./renderScene";
 import type { RenderQuality } from "./runtimeConfig";
 import {
   DEV_CONFIG_MENU_ENABLED,
@@ -11,8 +14,6 @@ import {
   QUALITY_UPGRADE_TARGET,
   QUALITY_UPGRADE_THRESHOLD,
 } from "./runtimeConfig";
-import { setPerformanceSettings } from "../../rendering/performance";
-import type { EntityCounts } from "./renderScene";
 
 export interface GameLoopRefs {
   lastTimeRef: MutableRefObject<number>;
@@ -50,7 +51,7 @@ export interface DevPerfSnapshot {
 export function startGameLoop(
   refs: GameLoopRefs,
   setRenderDprCap: (fn: (prev: number) => number) => void,
-  setDevPerfSnapshot: (snap: DevPerfSnapshot) => void,
+  setDevPerfSnapshot: (snap: DevPerfSnapshot) => void
 ): () => void {
   const gameLoop = (timestamp: number) => {
     const rawDelta = refs.lastTimeRef.current
@@ -58,9 +59,13 @@ export function startGameLoop(
       : 0;
     const cappedDelta = Math.min(rawDelta, 100);
     const sampleMs = Math.max(8, cappedDelta || 16.7);
-    refs.rollingFrameMsRef.current = refs.rollingFrameMsRef.current * 0.9 + sampleMs * 0.1;
+    refs.rollingFrameMsRef.current =
+      refs.rollingFrameMsRef.current * 0.9 + sampleMs * 0.1;
 
-    if (timestamp - refs.qualityLastChangedAtRef.current > refs.qualityCooldownMsRef.current) {
+    if (
+      timestamp - refs.qualityLastChangedAtRef.current >
+      refs.qualityCooldownMsRef.current
+    ) {
       const avgFrameMs = refs.rollingFrameMsRef.current;
       const currentQuality = refs.renderQualityRef.current;
       let nextQuality: RenderQuality = currentQuality;
@@ -82,7 +87,7 @@ export function startGameLoop(
 
           refs.qualityCooldownMsRef.current = Math.min(
             refs.qualityCooldownMsRef.current * 2,
-            QUALITY_TRANSITION_MAX_COOLDOWN_MS,
+            QUALITY_TRANSITION_MAX_COOLDOWN_MS
           );
 
           const nextDprCap = QUALITY_DPR_CAP[nextQuality];
@@ -96,10 +101,12 @@ export function startGameLoop(
       } else {
         refs.qualityThresholdSustainedSinceRef.current = 0;
 
-        if (refs.qualityCooldownMsRef.current > QUALITY_TRANSITION_COOLDOWN_MS) {
+        if (
+          refs.qualityCooldownMsRef.current > QUALITY_TRANSITION_COOLDOWN_MS
+        ) {
           refs.qualityCooldownMsRef.current = Math.max(
             QUALITY_TRANSITION_COOLDOWN_MS,
-            refs.qualityCooldownMsRef.current - cappedDelta,
+            refs.qualityCooldownMsRef.current - cappedDelta
           );
         }
       }
@@ -129,17 +136,17 @@ export function startGameLoop(
         const counts = refs.entityCountsRef.current;
         const frameMs = refs.rollingFrameMsRef.current;
         setDevPerfSnapshot({
+          effects: counts.effects,
+          enemies: counts.enemies,
           fps: Math.round(1000 / Math.max(1, frameMs)),
           frameMs: Number(frameMs.toFixed(1)),
-          updateMs: Number(refs.devPerfUpdateMsRef.current.toFixed(2)),
-          renderMs: Number(refs.devPerfRenderMsRef.current.toFixed(2)),
-          quality: refs.renderQualityRef.current,
-          towers: counts.towers,
-          enemies: counts.enemies,
-          troops: counts.troops,
-          projectiles: counts.projectiles,
-          effects: counts.effects,
           particles: counts.particles,
+          projectiles: counts.projectiles,
+          quality: refs.renderQualityRef.current,
+          renderMs: Number(refs.devPerfRenderMsRef.current.toFixed(2)),
+          towers: counts.towers,
+          troops: counts.troops,
+          updateMs: Number(refs.devPerfUpdateMsRef.current.toFixed(2)),
         });
       }
     } else {
@@ -151,6 +158,8 @@ export function startGameLoop(
   };
   refs.gameLoopRef.current = requestAnimationFrame(gameLoop);
   return () => {
-    if (refs.gameLoopRef.current) cancelAnimationFrame(refs.gameLoopRef.current);
+    if (refs.gameLoopRef.current) {
+      cancelAnimationFrame(refs.gameLoopRef.current);
+    }
   };
 }

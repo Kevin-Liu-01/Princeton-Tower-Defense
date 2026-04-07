@@ -1,14 +1,8 @@
 "use client";
 
-import React from "react";
 import { Coins } from "lucide-react";
-import type {
-  Hero,
-  Spell,
-  SpellType,
-  Enemy,
-  SpellUpgradeLevels,
-} from "../../types";
+import React from "react";
+
 import {
   HERO_DATA,
   SPELL_DATA,
@@ -17,7 +11,17 @@ import {
   getSpellActionImagePath,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
-import { heroFrameElements, spellFrameElements } from "./primitives/ornateFrameHelpers";
+import type {
+  Hero,
+  Spell,
+  SpellType,
+  Enemy,
+  SpellUpgradeLevels,
+} from "../../types";
+import {
+  heroFrameElements,
+  spellFrameElements,
+} from "./primitives/ornateFrameHelpers";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -26,8 +30,14 @@ const CIRCLE_SIZE = 44;
 const HP_RING_RADIUS = (HERO_CIRCLE_SIZE - 4) / 2;
 const HP_RING_CIRCUMFERENCE = 2 * Math.PI * HP_RING_RADIUS;
 
-const SPELL_ACCENT: Record<string, { border: string; glow: string; bg: string }> = Object.fromEntries(
-  Object.entries(SPELL_FULL_THEMES).map(([k, v]) => [k, { border: v.accent, glow: v.glow, bg: v.bg }])
+const SPELL_ACCENT: Record<
+  string,
+  { border: string; glow: string; bg: string }
+> = Object.fromEntries(
+  Object.entries(SPELL_FULL_THEMES).map(([k, v]) => [
+    k,
+    { bg: v.bg, border: v.accent, glow: v.glow },
+  ])
 );
 
 // ── Ornate Frame Constants ──────────────────────────────────────────────────
@@ -58,24 +68,34 @@ const M_ORB_MID_CIRCUM = 2 * Math.PI * M_ORB_MID_R;
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function getHpColor(percent: number): string {
-  if (percent <= 25) return "#ef4444";
-  if (percent <= 50) return "#eab308";
+  if (percent <= 25) {
+    return "#ef4444";
+  }
+  if (percent <= 50) {
+    return "#eab308";
+  }
   return "#10b981";
 }
 
 function canCastSpell(
   spell: Spell,
   pawPoints: number,
-  enemies: Enemy[],
+  enemies: Enemy[]
 ): boolean {
-  if (spell.cooldown > 0) return false;
-  if (pawPoints < SPELL_DATA[spell.type].cost) return false;
+  if (spell.cooldown > 0) {
+    return false;
+  }
+  if (pawPoints < SPELL_DATA[spell.type].cost) {
+    return false;
+  }
   const requiresEnemies =
     spell.type === "fireball" ||
     spell.type === "lightning" ||
     spell.type === "freeze" ||
     spell.type === "hex_ward";
-  if (requiresEnemies && enemies.length === 0) return false;
+  if (requiresEnemies && enemies.length === 0) {
+    return false;
+  }
   return true;
 }
 
@@ -98,11 +118,14 @@ function MobileHeroCircle({
   const strokeOffset = HP_RING_CIRCUMFERENCE * (1 - hpPercent / 100);
 
   return (
-    <div className="relative" style={{ width: HERO_CIRCLE_SIZE, height: HERO_CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: HERO_CIRCLE_SIZE, width: HERO_CIRCLE_SIZE }}
+    >
       {/* ─── Ornate SVG frame ─── */}
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -M_HERO_PAD, left: -M_HERO_PAD }}
+        style={{ left: -M_HERO_PAD, top: -M_HERO_PAD }}
         width={M_HERO_FRAME}
         height={M_HERO_FRAME}
         overflow="visible"
@@ -118,18 +141,21 @@ function MobileHeroCircle({
         </defs>
 
         {heroFrameElements({
-          cx: M_HERO_CX,
-          outerR: M_HERO_CX - 2,
-          midR: M_HERO_MID_R,
           color: isAlive ? hexToRgba(hc, 0.22) : "rgba(110,110,110,0.16)",
+          cx: M_HERO_CX,
           dimColor: isAlive ? hexToRgba(hc, 0.1) : "rgba(110,110,110,0.08)",
+          glowFilter:
+            isAlive && hero.selected ? "url(#mHeroGemGlow)" : undefined,
+          midR: M_HERO_MID_R,
+          outerR: M_HERO_CX - 2,
           prefix: "mh",
-          glowFilter: isAlive && hero.selected ? "url(#mHeroGemGlow)" : undefined,
         })}
 
         {isAlive && (
           <circle
-            cx={M_HERO_CX} cy={M_HERO_CX} r={M_HERO_MID_R}
+            cx={M_HERO_CX}
+            cy={M_HERO_CX}
+            r={M_HERO_MID_R}
             fill="none"
             stroke={hpColor}
             strokeWidth={2}
@@ -144,7 +170,9 @@ function MobileHeroCircle({
 
         {hero.selected && isAlive && (
           <circle
-            cx={M_HERO_CX} cy={M_HERO_CX} r={M_HERO_MID_R}
+            cx={M_HERO_CX}
+            cy={M_HERO_CX}
+            r={M_HERO_MID_R}
             fill="none"
             stroke={hexToRgba(hc, 0.2)}
             strokeWidth={1.5}
@@ -189,18 +217,19 @@ function MobileHeroCircle({
           )}
         </svg>
 
-        <div className="absolute inset-[1px] rounded-full pointer-events-none" style={{
-          borderTop: `1px solid ${isAlive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)"}`,
-          borderBottom: `1px solid ${isAlive ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.06)"}`,
-          borderLeft: "1px solid transparent",
-          borderRight: "1px solid transparent",
-        }} />
+        <div
+          className="absolute inset-[1px] rounded-full pointer-events-none"
+          style={{
+            borderBottom: `1px solid ${isAlive ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.06)"}`,
+            borderLeft: "1px solid transparent",
+            borderRight: "1px solid transparent",
+            borderTop: `1px solid ${isAlive ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)"}`,
+          }}
+        />
 
         <div
           className="relative rounded-full flex items-center justify-center overflow-hidden"
           style={{
-            width: HERO_CIRCLE_SIZE - 6,
-            height: HERO_CIRCLE_SIZE - 6,
             background: isAlive
               ? `radial-gradient(circle at 32% 32%, ${hc}35, ${hc}12)`
               : "linear-gradient(135deg, rgba(50,40,35,0.95), rgba(30,25,20,0.95))",
@@ -208,13 +237,17 @@ function MobileHeroCircle({
               ? `0 0 14px ${hc}45, inset 0 1px 0 rgba(255,255,255,0.12)`
               : "inset 0 1px 0 rgba(255,255,255,0.06)",
             filter: isAlive ? "none" : "grayscale(0.8)",
+            height: HERO_CIRCLE_SIZE - 6,
+            width: HERO_CIRCLE_SIZE - 6,
           }}
         >
           {isAlive && (
             <>
               <div
                 className="absolute inset-0 rounded-full bg-cover bg-center opacity-70"
-                style={{ backgroundImage: `url(/images/heroes/${hero.type}-action.png)` }}
+                style={{
+                  backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
+                }}
               />
               <div
                 className="absolute inset-0 rounded-full pointer-events-none"
@@ -222,11 +255,18 @@ function MobileHeroCircle({
                   background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 10%, ${hc}22 35%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.65) 100%)`,
                 }}
               />
-              <div className="absolute rounded-full pointer-events-none" style={{
-                top: 2, left: 3, width: '40%', height: '34%',
-                background: "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.1), transparent 55%)",
-                filter: "blur(1px)",
-              }} />
+              <div
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.1), transparent 55%)",
+                  filter: "blur(1px)",
+                  height: "34%",
+                  left: 3,
+                  top: 2,
+                  width: "40%",
+                }}
+              />
             </>
           )}
           <div className="relative z-10 flex items-center justify-center">
@@ -242,8 +282,8 @@ function MobileHeroCircle({
             ? `linear-gradient(180deg, ${hexToRgba(hc, 0.1)}, rgba(20,16,10,0.92))`
             : "rgba(20,16,10,0.92)",
           border: `1px solid ${isAlive ? hpColor + "60" : "rgba(80,60,40,0.4)"}`,
-          color: isAlive ? hpColor : "rgba(160,130,90,0.7)",
           boxShadow: isAlive ? `0 0 4px ${hpColor}12` : "none",
+          color: isAlive ? hpColor : "rgba(160,130,90,0.7)",
         }}
       >
         {isAlive
@@ -279,11 +319,14 @@ function MobileAbilityCircle({
   const readyAngle = (1 - cdFrac) * 360;
 
   return (
-    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: CIRCLE_SIZE, width: CIRCLE_SIZE }}
+    >
       {/* ─── Ornate SVG frame ─── */}
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -M_ORB_PAD, left: -M_ORB_PAD }}
+        style={{ left: -M_ORB_PAD, top: -M_ORB_PAD }}
         width={M_ORB_FRAME}
         height={M_ORB_FRAME}
         overflow="visible"
@@ -299,14 +342,18 @@ function MobileAbilityCircle({
         </defs>
 
         <circle
-          cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_OUTER_R}
+          cx={M_ORB_CX}
+          cy={M_ORB_CX}
+          r={M_ORB_OUTER_R}
           fill="none"
           stroke={isReady ? "rgba(250,204,21,0.2)" : "rgba(110,110,110,0.12)"}
           strokeWidth={0.8}
           strokeDasharray="2 3 4 3"
         />
         <circle
-          cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
+          cx={M_ORB_CX}
+          cy={M_ORB_CX}
+          r={M_ORB_MID_R}
           fill="none"
           stroke={isReady ? "rgba(250,204,21,0.1)" : "rgba(110,110,110,0.06)"}
           strokeWidth={0.5}
@@ -324,7 +371,9 @@ function MobileAbilityCircle({
               y1={M_ORB_CX + M_ORB_TICK_IN * sin}
               x2={M_ORB_CX + M_ORB_TICK_OUT * cos}
               y2={M_ORB_CX + M_ORB_TICK_OUT * sin}
-              stroke={isReady ? "rgba(250,204,21,0.28)" : "rgba(110,110,110,0.1)"}
+              stroke={
+                isReady ? "rgba(250,204,21,0.28)" : "rgba(110,110,110,0.1)"
+              }
               strokeWidth={isCard ? 1.8 : 0.6}
               strokeLinecap="round"
             />
@@ -338,11 +387,16 @@ function MobileAbilityCircle({
           return (
             <rect
               key={`mag-${deg}`}
-              x={cx - 2.5} y={cy - 2.5} width={5} height={5}
+              x={cx - 2.5}
+              y={cy - 2.5}
+              width={5}
+              height={5}
               rx={0.7}
               transform={`rotate(45 ${cx} ${cy})`}
               fill={isReady ? hexToRgba(hc, 0.75) : "rgba(100,100,100,0.25)"}
-              stroke={isReady ? "rgba(250,204,21,0.55)" : "rgba(110,110,110,0.16)"}
+              stroke={
+                isReady ? "rgba(250,204,21,0.55)" : "rgba(110,110,110,0.16)"
+              }
               strokeWidth={0.7}
               filter={isReady ? "url(#mAbilityGlow)" : undefined}
             />
@@ -364,7 +418,9 @@ function MobileAbilityCircle({
 
         {!isReady && cdFrac > 0 && (
           <circle
-            cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
+            cx={M_ORB_CX}
+            cy={M_ORB_CX}
+            r={M_ORB_MID_R}
             fill="none"
             stroke="rgba(250,204,21,0.2)"
             strokeWidth={1.5}
@@ -378,7 +434,9 @@ function MobileAbilityCircle({
 
         {isReady && (
           <circle
-            cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
+            cx={M_ORB_CX}
+            cy={M_ORB_CX}
+            r={M_ORB_MID_R}
             fill="none"
             stroke="rgba(250,204,21,0.22)"
             strokeWidth={1.5}
@@ -406,34 +464,53 @@ function MobileAbilityCircle({
           cursor: isReady ? "pointer" : "not-allowed",
         }}
       >
-        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
-          background: isReady
-            ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.22)}, transparent 65%)`
-            : `radial-gradient(ellipse at 50% 60%, ${hexToRgba(hc, 0.08)}, transparent 60%)`,
-        }} />
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: isReady
+              ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.22)}, transparent 65%)`
+              : `radial-gradient(ellipse at 50% 60%, ${hexToRgba(hc, 0.08)}, transparent 60%)`,
+          }}
+        />
 
-        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
-          background: "radial-gradient(circle at 50% 50%, transparent 28%, rgba(0,0,0,0.22) 60%, rgba(0,0,0,0.4) 100%)",
-        }} />
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, transparent 28%, rgba(0,0,0,0.22) 60%, rgba(0,0,0,0.4) 100%)",
+          }}
+        />
 
-        <div className="absolute rounded-full pointer-events-none" style={{
-          top: 3, left: 4, width: '38%', height: '32%',
-          background: isReady
-            ? "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.15), transparent 55%)"
-            : "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.04), transparent 50%)",
-          filter: "blur(1px)",
-        }} />
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            background: isReady
+              ? "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.15), transparent 55%)"
+              : "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.04), transparent 50%)",
+            filter: "blur(1px)",
+            height: "32%",
+            left: 4,
+            top: 3,
+            width: "38%",
+          }}
+        />
 
-        <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
-          borderTop: `1px solid ${isReady ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)"}`,
-          borderBottom: `1px solid ${isReady ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.08)"}`,
-          borderLeft: "1px solid transparent",
-          borderRight: "1px solid transparent",
-        }} />
+        <div
+          className="absolute inset-[2px] rounded-full pointer-events-none"
+          style={{
+            borderBottom: `1px solid ${isReady ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.08)"}`,
+            borderLeft: "1px solid transparent",
+            borderRight: "1px solid transparent",
+            borderTop: `1px solid ${isReady ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)"}`,
+          }}
+        />
 
-        <div className="absolute inset-[5px] rounded-full pointer-events-none" style={{
-          border: `1px solid ${isReady ? "rgba(250,204,21,0.08)" : "rgba(80,60,40,0.04)"}`,
-        }} />
+        <div
+          className="absolute inset-[5px] rounded-full pointer-events-none"
+          style={{
+            border: `1px solid ${isReady ? "rgba(250,204,21,0.08)" : "rgba(80,60,40,0.04)"}`,
+          }}
+        />
 
         {!isReady && cdFrac > 0 && (
           <div
@@ -445,22 +522,33 @@ function MobileAbilityCircle({
         )}
 
         {isReady && (
-          <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
-            background: "conic-gradient(from 0deg, transparent 0deg, rgba(250,204,21,0.09) 12deg, transparent 24deg, transparent 120deg, rgba(250,204,21,0.06) 132deg, transparent 144deg, transparent 240deg, rgba(250,204,21,0.06) 252deg, transparent 264deg, transparent 360deg)",
-            animation: "mobileShimmer 5s linear infinite",
-          }} />
+          <div
+            className="absolute inset-[2px] rounded-full pointer-events-none"
+            style={{
+              animation: "mobileShimmer 5s linear infinite",
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, rgba(250,204,21,0.09) 12deg, transparent 24deg, transparent 120deg, rgba(250,204,21,0.06) 132deg, transparent 144deg, transparent 240deg, rgba(250,204,21,0.06) 252deg, transparent 264deg, transparent 360deg)",
+            }}
+          />
         )}
 
-        <div className="relative z-10 flex items-center justify-center" style={{
-          filter: isReady ? `drop-shadow(0 0 4px ${hexToRgba(hc, 0.4)})` : "none",
-        }}>
+        <div
+          className="relative z-10 flex items-center justify-center"
+          style={{
+            filter: isReady
+              ? `drop-shadow(0 0 4px ${hexToRgba(hc, 0.4)})`
+              : "none",
+          }}
+        >
           {getHeroAbilityIcon(hero.type, 20, isReady ? "" : "opacity-40")}
         </div>
 
         {isReady && (
           <div
             className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
-            style={{ boxShadow: `0 0 16px rgba(250,204,21,0.35), 0 0 6px ${hexToRgba(hc, 0.2)}` }}
+            style={{
+              boxShadow: `0 0 16px rgba(250,204,21,0.35), 0 0 6px ${hexToRgba(hc, 0.2)}`,
+            }}
           />
         )}
       </button>
@@ -472,8 +560,8 @@ function MobileAbilityCircle({
             ? "linear-gradient(180deg, rgba(55,42,14,0.95), rgba(22,18,6,0.95))"
             : "rgba(20,16,10,0.92)",
           border: `1px solid ${isReady ? "rgba(250,204,21,0.45)" : "rgba(80,60,40,0.3)"}`,
-          color: isReady ? "#fbbf24" : "rgba(160,140,100,0.6)",
           boxShadow: isReady ? "0 0 5px rgba(250,204,21,0.1)" : "none",
+          color: isReady ? "#fbbf24" : "rgba(160,140,100,0.6)",
         }}
       >
         {hero.dead
@@ -509,11 +597,14 @@ function MobileSpellCircle({
   const active = canCast || isTargeting;
 
   return (
-    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: CIRCLE_SIZE, width: CIRCLE_SIZE }}
+    >
       {/* ─── Ornate SVG frame ─── */}
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -M_ORB_PAD, left: -M_ORB_PAD }}
+        style={{ left: -M_ORB_PAD, top: -M_ORB_PAD }}
         width={M_ORB_FRAME}
         height={M_ORB_FRAME}
         overflow="visible"
@@ -529,18 +620,24 @@ function MobileSpellCircle({
         </defs>
 
         {spellFrameElements({
+          color: active
+            ? hexToRgba(accent.border, 0.22)
+            : "rgba(110,110,110,0.16)",
           cx: M_ORB_CX,
-          outerR: M_ORB_CX - 2,
-          midR: M_ORB_MID_R,
-          color: active ? hexToRgba(accent.border, 0.22) : "rgba(110,110,110,0.16)",
-          dimColor: active ? hexToRgba(accent.border, 0.1) : "rgba(110,110,110,0.08)",
-          prefix: `ms-${spell.type}`,
+          dimColor: active
+            ? hexToRgba(accent.border, 0.1)
+            : "rgba(110,110,110,0.08)",
           glowFilter: active ? `url(#mSpellGlow-${spell.type})` : undefined,
+          midR: M_ORB_MID_R,
+          outerR: M_ORB_CX - 2,
+          prefix: `ms-${spell.type}`,
         })}
 
         {onCooldown && (
           <circle
-            cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
+            cx={M_ORB_CX}
+            cy={M_ORB_CX}
+            r={M_ORB_MID_R}
             fill="none"
             stroke={hexToRgba(accent.border, 0.2)}
             strokeWidth={1.5}
@@ -554,7 +651,9 @@ function MobileSpellCircle({
 
         {isTargeting && (
           <circle
-            cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
+            cx={M_ORB_CX}
+            cy={M_ORB_CX}
+            r={M_ORB_MID_R}
             fill="none"
             stroke={hexToRgba(accent.border, 0.28)}
             strokeWidth={1.5}
@@ -569,8 +668,8 @@ function MobileSpellCircle({
         disabled={!active}
         className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
         style={{
-          opacity: active ? 1 : 0.45,
           cursor: active ? "pointer" : "not-allowed",
+          opacity: active ? 1 : 0.45,
         }}
       >
         <div
@@ -591,28 +690,41 @@ function MobileSpellCircle({
             <>
               <div
                 className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
-                style={{ backgroundImage: `url(${getSpellActionImagePath(spell.type)})` }}
+                style={{
+                  backgroundImage: `url(${getSpellActionImagePath(spell.type)})`,
+                }}
               />
               <div
                 className="absolute inset-0 rounded-full pointer-events-none"
                 style={{
-                  background: "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 16%, rgba(0,0,0,0.3) 48%, rgba(0,0,0,0.6) 100%)",
+                  background:
+                    "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 16%, rgba(0,0,0,0.3) 48%, rgba(0,0,0,0.6) 100%)",
                 }}
               />
-              <div className="absolute rounded-full pointer-events-none" style={{
-                top: 3, left: 3, width: '36%', height: '30%',
-                background: "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.11), transparent 55%)",
-                filter: "blur(1px)",
-              }} />
+              <div
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.11), transparent 55%)",
+                  filter: "blur(1px)",
+                  height: "30%",
+                  left: 3,
+                  top: 3,
+                  width: "36%",
+                }}
+              />
             </>
           )}
 
-          <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
-            borderTop: `1px solid ${active ? 'rgba(255,255,255,0.07)' : 'rgba(80,80,80,0.03)'}`,
-            borderBottom: `1px solid ${active ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.05)'}`,
-            borderLeft: "1px solid transparent",
-            borderRight: "1px solid transparent",
-          }} />
+          <div
+            className="absolute inset-[2px] rounded-full pointer-events-none"
+            style={{
+              borderBottom: `1px solid ${active ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.05)"}`,
+              borderLeft: "1px solid transparent",
+              borderRight: "1px solid transparent",
+              borderTop: `1px solid ${active ? "rgba(255,255,255,0.07)" : "rgba(80,80,80,0.03)"}`,
+            }}
+          />
 
           {onCooldown && (
             <div
@@ -624,9 +736,12 @@ function MobileSpellCircle({
           )}
         </div>
 
-        <div className="relative z-[5] flex items-center justify-center" style={{
-          filter: active ? `drop-shadow(0 0 3px ${accent.glow})` : "none",
-        }}>
+        <div
+          className="relative z-[5] flex items-center justify-center"
+          style={{
+            filter: active ? `drop-shadow(0 0 3px ${accent.glow})` : "none",
+          }}
+        >
           <SpellSprite type={spell.type} size={22} />
         </div>
       </button>
@@ -639,27 +754,31 @@ function MobileSpellCircle({
             ? "linear-gradient(135deg, rgba(100,75,18,0.92), rgba(60,45,10,0.92))"
             : "rgba(80,60,15,0.9)",
           border: `1px solid ${active ? hexToRgba(accent.border, 0.35) : "rgba(250,204,21,0.2)"}`,
-          color: "#fde047",
           boxShadow: active ? `0 0 4px ${accent.glow}` : "none",
+          color: "#fde047",
         }}
       >
-        <span className="text-[5px] font-semibold opacity-60 uppercase">Lv</span>{spellLevel + 1}
+        <span className="text-[5px] font-semibold opacity-60 uppercase">
+          Lv
+        </span>
+        {spellLevel + 1}
       </div>
 
       {/* Bottom label */}
       <div
         className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-px px-1.5 py-px rounded-full text-[6px] font-bold whitespace-nowrap z-20"
         style={{
-          background: active && !onCooldown
-            ? `linear-gradient(180deg, ${accent.bg.replace("0.3)", "0.18)")}, rgba(20,16,10,0.92))`
-            : "rgba(20,16,10,0.92)",
+          background:
+            active && !onCooldown
+              ? `linear-gradient(180deg, ${accent.bg.replace("0.3)", "0.18)")}, rgba(20,16,10,0.92))`
+              : "rgba(20,16,10,0.92)",
           border: `1px solid ${onCooldown ? "rgba(239,68,68,0.4)" : active ? accent.border + "50" : "rgba(80,60,40,0.25)"}`,
+          boxShadow: active && !onCooldown ? `0 0 4px ${accent.glow}` : "none",
           color: onCooldown
             ? "#f87171"
             : active
               ? accent.border
               : "rgba(120,100,80,0.5)",
-          boxShadow: active && !onCooldown ? `0 0 4px ${accent.glow}` : "none",
         }}
       >
         {onCooldown ? (
@@ -680,10 +799,13 @@ function MobileSpellCircle({
             className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
             style={{ boxShadow: `0 0 16px ${accent.glow}` }}
           />
-          <div className="absolute inset-[1px] rounded-full pointer-events-none" style={{
-            background: `conic-gradient(from 0deg, transparent 0deg, ${hexToRgba(accent.border, 0.07)} 15deg, transparent 30deg, transparent 180deg, ${hexToRgba(accent.border, 0.05)} 195deg, transparent 210deg, transparent 360deg)`,
-            animation: "mobileShimmer 5s linear infinite",
-          }} />
+          <div
+            className="absolute inset-[1px] rounded-full pointer-events-none"
+            style={{
+              animation: "mobileShimmer 5s linear infinite",
+              background: `conic-gradient(from 0deg, transparent 0deg, ${hexToRgba(accent.border, 0.07)} 15deg, transparent 30deg, transparent 180deg, ${hexToRgba(accent.border, 0.05)} 195deg, transparent 210deg, transparent 360deg)`,
+            }}
+          />
         </>
       )}
     </div>
@@ -721,37 +843,39 @@ export const MobileHeroSpellBar: React.FC<MobileHeroSpellBarProps> = ({
   onUseHeroAbility,
   castSpell,
 }) => {
-  if (!hero) return null;
+  if (!hero) {
+    return null;
+  }
 
   return (
     <>
-    <div className="flex items-end justify-between w-full px-2 pb-3">
-      {/* Left: Hero + Ability */}
-      <div className="flex items-end gap-3 pointer-events-auto">
-        <MobileHeroCircle hero={hero} onClick={toggleHeroSelection} />
-        <MobileAbilityCircle hero={hero} onUseAbility={onUseHeroAbility} />
-      </div>
+      <div className="flex items-end justify-between w-full px-2 pb-3">
+        {/* Left: Hero + Ability */}
+        <div className="flex items-end gap-3 pointer-events-auto">
+          <MobileHeroCircle hero={hero} onClick={toggleHeroSelection} />
+          <MobileAbilityCircle hero={hero} onUseAbility={onUseHeroAbility} />
+        </div>
 
-      {/* Right: Spells */}
-      <div className="flex items-end gap-3 pointer-events-auto">
-        {spells.map((spell) => {
-          const isTargeting =
-            targetingSpell === spell.type ||
-            (spell.type === "reinforcements" && placingTroop);
-          return (
-            <MobileSpellCircle
-              key={spell.type}
-              spell={spell}
-              spellLevel={spellUpgradeLevels[spell.type] ?? 0}
-              canCast={canCastSpell(spell, pawPoints, enemies)}
-              isTargeting={isTargeting}
-              onClick={() => castSpell(spell.type)}
-            />
-          );
-        })}
+        {/* Right: Spells */}
+        <div className="flex items-end gap-3 pointer-events-auto">
+          {spells.map((spell) => {
+            const isTargeting =
+              targetingSpell === spell.type ||
+              (spell.type === "reinforcements" && placingTroop);
+            return (
+              <MobileSpellCircle
+                key={spell.type}
+                spell={spell}
+                spellLevel={spellUpgradeLevels[spell.type] ?? 0}
+                canCast={canCastSpell(spell, pawPoints, enemies)}
+                isTargeting={isTargeting}
+                onClick={() => castSpell(spell.type)}
+              />
+            );
+          })}
+        </div>
       </div>
-    </div>
-    <style>{`@keyframes mobileShimmer { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes mobileShimmer { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
     </>
   );
 };

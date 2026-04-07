@@ -1,14 +1,21 @@
 "use client";
-import React, { useRef, useEffect, useState, lazy, Suspense } from "react";
-import Image from "next/image";
 import { MapPin, Lock, Clapperboard } from "lucide-react";
-import { PANEL, GOLD, NEUTRAL, SELECTED, dividerGradient, panelGradient } from "../ui/system/theme";
+import Image from "next/image";
+import React, { useRef, useEffect, useState, lazy, Suspense } from "react";
 
-const BattlefieldPreviewCanvas = lazy(
-  () =>
-    import("./BattlefieldPreviewCanvas").then((m) => ({
-      default: m.BattlefieldPreviewCanvas,
-    }))
+import {
+  PANEL,
+  GOLD,
+  NEUTRAL,
+  SELECTED,
+  dividerGradient,
+  panelGradient,
+} from "../ui/system/theme";
+
+const BattlefieldPreviewCanvas = lazy(() =>
+  import("./BattlefieldPreviewCanvas").then((m) => ({
+    default: m.BattlefieldPreviewCanvas,
+  }))
 );
 
 const SLIDESHOW_IMAGES = [
@@ -86,10 +93,7 @@ export const BattlefieldPreview: React.FC<{
           </>
         )}
 
-        <div
-          className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
-
-        >
+        <div className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden">
           {/* Inner ghost border */}
           <div
             className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10"

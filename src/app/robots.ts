@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+
 import { SITE_URL } from "./seo/constants";
 
 const AI_CRAWLERS = [
@@ -19,18 +20,18 @@ const AI_CRAWLERS = [
 
 export default function robots(): MetadataRoute.Robots {
   return {
+    host: SITE_URL,
     rules: [
       {
-        userAgent: "*",
         allow: "/",
         disallow: ["/api/"],
+        userAgent: "*",
       },
       ...AI_CRAWLERS.map((bot) => ({
-        userAgent: bot,
         allow: "/" as const,
+        userAgent: bot,
       })),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
   };
 }

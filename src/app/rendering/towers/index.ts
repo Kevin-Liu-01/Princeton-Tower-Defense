@@ -1,3 +1,9 @@
+import {
+  TOWER_COLORS,
+  ISO_PRISM_W_FACTOR,
+  ISO_PRISM_D_FACTOR,
+} from "../../constants";
+import { getGameSettings } from "../../hooks/useSettings";
 import type {
   Tower,
   TowerType,
@@ -6,27 +12,29 @@ import type {
   Position,
 } from "../../types";
 import {
-  TOWER_COLORS,
-  ISO_PRISM_W_FACTOR,
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
-import { gridToWorld, worldToScreenRounded, isoTileDiamondHalfH } from "../../utils";
-import { getGameSettings } from "../../hooks/useSettings";
+  gridToWorld,
+  worldToScreenRounded,
+  isoTileDiamondHalfH,
+} from "../../utils";
+import { renderArchTower } from "./arch";
+import { drawStar, renderCannonTower } from "./cannon";
+import { renderClubTower } from "./club";
+import { renderLabTower } from "./lab";
+import { renderLibraryTower } from "./library";
+import { renderMortarTower } from "./mortar";
+import { renderStationTower } from "./station";
 import {
   drawTowerPassiveEffects,
   getTowerFoundationSize,
   getTowerYShift,
   getTowerVisualMetrics,
 } from "./towerHelpers";
-import { drawStar, renderCannonTower } from "./cannon";
-import { renderMortarTower } from "./mortar";
-import { renderLibraryTower } from "./library";
-import { renderLabTower } from "./lab";
-import { renderArchTower } from "./arch";
-import { renderClubTower } from "./club";
-import { renderStationTower } from "./station";
 
-export { getTowerFoundationSize, getTowerYShift, getTowerVisualMetrics } from "./towerHelpers";
+export {
+  getTowerFoundationSize,
+  getTowerYShift,
+  getTowerVisualMetrics,
+} from "./towerHelpers";
 export {
   renderStationRange,
   renderTowerRange,
@@ -35,13 +43,13 @@ export {
 } from "./towerRange";
 
 const TOWER_SPRITE_SCALE: Record<TowerType, number> = {
-  cannon: 0.84,
-  library: 0.94,
-  lab: 1,
   arch: 0.95,
+  cannon: 0.84,
   club: 0.7,
-  station: 0.95,
+  lab: 1,
+  library: 0.94,
   mortar: 0.9,
+  station: 0.95,
 };
 
 const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
@@ -50,13 +58,13 @@ const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
 };
 
 const TOWER_SPRITE_FOOT_MULT: Partial<Record<TowerType, number>> = {
-  club: 0.78,
-  mortar: 0.35,
-  library: 0.4,
-  lab: 0.38,
-  cannon: 0.4,
-  station: 0.23,
   arch: 0.22,
+  cannon: 0.4,
+  club: 0.78,
+  lab: 0.38,
+  library: 0.4,
+  mortar: 0.35,
+  station: 0.23,
 };
 
 export function drawTowerSprite(
@@ -67,24 +75,24 @@ export function drawTowerSprite(
   type: TowerType,
   level: 1 | 2 | 3 | 4 = 1,
   upgrade?: TowerUpgrade,
-  time: number = 0,
+  time: number = 0
 ): void {
   const tower: Tower = {
     id: "__sprite__",
-    type,
-    pos: { row: 0, col: 0 },
-    level,
-    upgrade,
     lastAttack: 0,
+    level,
+    pos: { col: 0, row: 0 },
     rotation: TOWER_SPRITE_ROTATION[type] ?? 0,
+    type,
+    upgrade,
   };
 
   const colors = TOWER_COLORS[type];
   const metrics = getTowerVisualMetrics(tower);
   const baseVisualH = metrics.visualHeight;
   const targetFit = size * 0.85;
-  const typeScale = TOWER_SPRITE_SCALE[type] ?? 1.0;
-  const lvl4Scale = level === 4 ? 0.82 : 1.0;
+  const typeScale = TOWER_SPRITE_SCALE[type] ?? 1;
+  const lvl4Scale = level === 4 ? 0.82 : 1;
   const zoom =
     Math.max(0.1, Math.min(targetFit / baseVisualH, size / 80)) *
     typeScale *
@@ -96,7 +104,7 @@ export function drawTowerSprite(
 
   ctx.save();
   switch (type) {
-    case "cannon":
+    case "cannon": {
       renderCannonTower(
         ctx,
         screenPos,
@@ -108,13 +116,15 @@ export function drawTowerSprite(
         "",
         0,
         0,
-        1,
+        1
       );
       break;
-    case "library":
+    }
+    case "library": {
       renderLibraryTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "lab":
+    }
+    case "lab": {
       renderLabTower(
         ctx,
         screenPos,
@@ -126,21 +136,26 @@ export function drawTowerSprite(
         "",
         0,
         0,
-        1,
+        1
       );
       break;
-    case "arch":
+    }
+    case "arch": {
       renderArchTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "club":
+    }
+    case "club": {
       renderClubTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "station":
+    }
+    case "station": {
       renderStationTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "mortar":
+    }
+    case "mortar": {
       renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
       break;
+    }
   }
   ctx.restore();
 }
@@ -156,7 +171,7 @@ export function renderTower(
   enemies: Enemy[],
   selectedMap: string,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreenRounded(
@@ -165,7 +180,7 @@ export function renderTower(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   screenPos.y -= isoTileDiamondHalfH(zoom);
@@ -191,30 +206,14 @@ export function renderTower(
     ctx.shadowBlur = 30 * zoom;
 
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      glowShadowY,
-      glowRx,
-      glowRy,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(screenPos.x, glowShadowY, glowRx, glowRy, 0, 0, Math.PI * 2);
     ctx.fillStyle = isSelected
       ? "rgba(255, 215, 0, 0.15)"
       : "rgba(255,255,255,0.1)";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      glowShadowY,
-      innerRx,
-      innerRy,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(screenPos.x, glowShadowY, innerRx, innerRy, 0, 0, Math.PI * 2);
     ctx.fillStyle = isSelected
       ? "rgba(255, 215, 0, 0.25)"
       : "rgba(255,255,255,0.2)";
@@ -228,15 +227,7 @@ export function renderTower(
       ctx.lineWidth = 2 * zoom;
       ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        glowShadowY,
-        ringRx,
-        ringRy,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(screenPos.x, glowShadowY, ringRx, ringRy, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -252,26 +243,18 @@ export function renderTower(
     0,
     screenPos.x,
     glowShadowY,
-    shadowW,
+    shadowW
   );
   shadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
   shadowGrad.addColorStop(0.6, "rgba(0,0,0,0.2)");
   shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    glowShadowY,
-    shadowW,
-    shadowH,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(screenPos.x, glowShadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
   ctx.fill();
 
   switch (tower.type) {
-    case "cannon":
+    case "cannon": {
       renderCannonTower(
         ctx,
         screenPos,
@@ -285,13 +268,15 @@ export function renderTower(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       break;
-    case "library":
+    }
+    case "library": {
       renderLibraryTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "lab":
+    }
+    case "lab": {
       renderLabTower(
         ctx,
         screenPos,
@@ -305,21 +290,26 @@ export function renderTower(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       break;
-    case "arch":
+    }
+    case "arch": {
       renderArchTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "club":
+    }
+    case "club": {
       renderClubTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "station":
+    }
+    case "station": {
       renderStationTower(ctx, screenPos, tower, zoom, time, colors);
       break;
-    case "mortar":
+    }
+    case "mortar": {
       renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
       break;
+    }
   }
 
   if (getGameSettings().ui.showTowerBadges) {

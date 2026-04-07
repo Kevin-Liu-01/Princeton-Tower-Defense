@@ -1,26 +1,27 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
+
 import type {
   DecorationCategory,
   HazardType,
   SpecialTowerType,
   TowerType,
 } from "../../types";
-import type { CreatorModalProps, ToolMode } from "./types";
-import { TOWER_TYPE_OPTIONS } from "./constants";
-import { useCreatorDraft } from "./hooks/useCreatorDraft";
-import { useCreatorCamera } from "./hooks/useCreatorCamera";
-import { useCreatorBoard } from "./hooks/useCreatorBoard";
 import { BaseModal } from "../ui/primitives/BaseModal";
-import { CreatorHeader } from "./components/CreatorHeader";
 import { CreatorCanvas } from "./components/CreatorCanvas";
+import { CreatorHeader } from "./components/CreatorHeader";
 import { InspectorPanel } from "./components/InspectorPanel";
+import { ObjectivePanel } from "./components/ObjectivePanel";
+import { PalettePanel } from "./components/PalettePanel";
 import { SavedMapsPanel } from "./components/SavedMapsPanel";
 import { ToolbeltPanel } from "./components/ToolbeltPanel";
-import { PalettePanel } from "./components/PalettePanel";
-import { ObjectivePanel } from "./components/ObjectivePanel";
 import { WaveDesignerPanel } from "./components/WaveDesignerPanel";
+import { TOWER_TYPE_OPTIONS } from "./constants";
+import { useCreatorBoard } from "./hooks/useCreatorBoard";
+import { useCreatorCamera } from "./hooks/useCreatorCamera";
+import { useCreatorDraft } from "./hooks/useCreatorDraft";
+import type { CreatorModalProps, ToolMode } from "./types";
 
 export const CreatorModal: React.FC<CreatorModalProps> = ({
   isOpen,
@@ -52,7 +53,7 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     selectedObjectiveType,
     selectedTowerType,
     draftActions,
-    camera,
+    camera
   );
 
   const { draft, setDraft, applyDraftUpdate } = draftActions;
@@ -98,7 +99,9 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
       applyDraftUpdate((prev) => {
         const next = [...prev.decorations];
         const current = next[index];
-        if (!current) return prev;
+        if (!current) {
+          return prev;
+        }
         next[index] = { ...current, size };
         return { ...prev, decorations: next };
       });
@@ -111,7 +114,9 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
       applyDraftUpdate((prev) => {
         const next = [...prev.hazards];
         const current = next[index];
-        if (!current) return prev;
+        if (!current) {
+          return prev;
+        }
         next[index] = { ...current, radius };
         return { ...prev, hazards: next };
       });
@@ -124,7 +129,9 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
       applyDraftUpdate((prev) => {
         const next = [...prev.specialTowers];
         const current = next[index];
-        if (!current) return prev;
+        if (!current) {
+          return prev;
+        }
         next[index] = { ...current, type };
         return { ...prev, specialTowers: next };
       });
@@ -137,7 +144,9 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
       applyDraftUpdate((prev) => {
         const next = [...prev.specialTowers];
         const current = next[index];
-        if (!current) return prev;
+        if (!current) {
+          return prev;
+        }
         next[index] = { ...current, hp };
         return { ...prev, specialTowers: next };
       });
@@ -212,7 +221,12 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
               onSave={draftActions.saveDraft}
               onPlaytest={() => draft.id && onPlayLevel(draft.id)}
               onDelete={draftActions.deleteCurrentDraft}
-              onEraseSelection={() => draftActions.eraseSelection(board.selection, board.clearSelection)}
+              onEraseSelection={() =>
+                draftActions.eraseSelection(
+                  board.selection,
+                  board.clearSelection
+                )
+              }
               onNewMap={handleResetAll}
               onExportMap={draftActions.exportMap}
               onImportMap={draftActions.importMap}

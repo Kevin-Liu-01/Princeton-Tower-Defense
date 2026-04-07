@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
+
 import {
   ENEMY_DATA,
   GRID_HEIGHT,
@@ -7,6 +8,13 @@ import {
   LEVEL_WAVES,
   MAP_PATHS,
 } from "../constants";
+import { STORAGE_KEY_CUSTOM_LEVELS } from "../constants/storage";
+import type {
+  CustomLevelDefinition,
+  CustomLevelDraftInput,
+  CustomLevelUpsertResult,
+  GridPoint,
+} from "../customLevels/types";
 import type {
   MapDecoration,
   MapHazard,
@@ -15,14 +23,6 @@ import type {
   WaveGroup,
 } from "../types";
 import { useLocalStorage } from "./useLocalStorage";
-import type {
-  CustomLevelDefinition,
-  CustomLevelDraftInput,
-  CustomLevelUpsertResult,
-  GridPoint,
-} from "../customLevels/types";
-
-import { STORAGE_KEY_CUSTOM_LEVELS } from "../constants/storage";
 export const CUSTOM_LEVELS_STORAGE_KEY = STORAGE_KEY_CUSTOM_LEVELS;
 export const CUSTOM_LEVEL_PREFIX = "custom_";
 const DEFAULT_WAVE_TEMPLATE = "default";
@@ -30,14 +30,16 @@ const PATH_MARGIN_TILES = 4;
 
 const registeredCustomLevelIds = new Set<string>();
 
-const THEME_DEFAULT_CAMERA: Record<MapTheme, { x: number; y: number; zoom: number }> =
-  {
-    grassland: { x: -100, y: -340, zoom: 0.95 },
-    swamp: { x: -120, y: -340, zoom: 0.9 },
-    desert: { x: -90, y: -330, zoom: 0.9 },
-    winter: { x: -130, y: -340, zoom: 0.88 },
-    volcanic: { x: -110, y: -330, zoom: 0.9 },
-  };
+const THEME_DEFAULT_CAMERA: Record<
+  MapTheme,
+  { x: number; y: number; zoom: number }
+> = {
+  desert: { x: -90, y: -330, zoom: 0.9 },
+  grassland: { x: -100, y: -340, zoom: 0.95 },
+  swamp: { x: -120, y: -340, zoom: 0.9 },
+  volcanic: { x: -110, y: -330, zoom: 0.9 },
+  winter: { x: -130, y: -340, zoom: 0.88 },
+};
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
@@ -46,8 +48,8 @@ const sanitizeSlug = (value: string): string =>
   value
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")
     .slice(0, 48);
 
 const normalizeGridPoint = (point: GridPoint): GridPoint => ({
@@ -56,16 +58,26 @@ const normalizeGridPoint = (point: GridPoint): GridPoint => ({
 });
 
 const normalizePathPoint = (point: GridPoint): GridPoint => ({
-  x: clamp(Math.round(point.x), -PATH_MARGIN_TILES, GRID_WIDTH - 1 + PATH_MARGIN_TILES),
-  y: clamp(Math.round(point.y), -PATH_MARGIN_TILES, GRID_HEIGHT - 1 + PATH_MARGIN_TILES),
+  x: clamp(
+    Math.round(point.x),
+    -PATH_MARGIN_TILES,
+    GRID_WIDTH - 1 + PATH_MARGIN_TILES
+  ),
+  y: clamp(
+    Math.round(point.y),
+    -PATH_MARGIN_TILES,
+    GRID_HEIGHT - 1 + PATH_MARGIN_TILES
+  ),
 });
 
 const normalizePath = (points: GridPoint[] | undefined): GridPoint[] => {
-  if (!points || points.length === 0) return [];
+  if (!points || points.length === 0) {
+    return [];
+  }
   const normalized: GridPoint[] = [];
   for (const point of points) {
     const next = normalizePathPoint(point);
-    const prev = normalized[normalized.length - 1];
+    const prev = normalized.at(-1);
     if (!prev || prev.x !== next.x || prev.y !== next.y) {
       normalized.push(next);
     }
@@ -79,32 +91,38 @@ const cloneWaveGroups = (waves: WaveGroup[][]): WaveGroup[][] =>
 const createDefaultWaveTemplate = (): WaveGroup[][] => [
   [
     {
-      type: "frosh",
       count: 10,
       interval: 600,
+      type: "frosh",
     },
   ],
 ];
 
-const normalizeCustomWaves = (waves: WaveGroup[][] | undefined): WaveGroup[][] | undefined => {
-  if (!waves || waves.length === 0) return undefined;
+const normalizeCustomWaves = (
+  waves: WaveGroup[][] | undefined
+): WaveGroup[][] | undefined => {
+  if (!waves || waves.length === 0) {
+    return undefined;
+  }
 
   const normalized = waves
     .map((wave) =>
       wave
         .map((group) => {
-          if (!group || !group.type || !(group.type in ENEMY_DATA)) return null;
+          if (!group || !group.type || !(group.type in ENEMY_DATA)) {
+            return null;
+          }
           const count = Math.max(1, Math.round(group.count));
           const interval = clamp(Math.round(group.interval), 80, 5000);
           const delay =
             typeof group.delay === "number"
-              ? clamp(Math.round(group.delay), 0, 15000)
+              ? clamp(Math.round(group.delay), 0, 15_000)
               : undefined;
           return {
-            type: group.type,
             count,
-            interval,
             delay,
+            interval,
+            type: group.type,
           } as WaveGroup;
         })
         .filter((group): group is WaveGroup => Boolean(group))
@@ -114,36 +132,46 @@ const normalizeCustomWaves = (waves: WaveGroup[][] | undefined): WaveGroup[][] |
   return normalized.length > 0 ? normalized : undefined;
 };
 
-const normalizeDecorations = (decorations: MapDecoration[] | undefined): MapDecoration[] => {
-  if (!decorations) return [];
+const normalizeDecorations = (
+  decorations: MapDecoration[] | undefined
+): MapDecoration[] => {
+  if (!decorations) {
+    return [];
+  }
   const normalized: MapDecoration[] = [];
   for (const decoration of decorations) {
     const type = decoration.type ?? decoration.category;
-    if (!type) continue;
+    if (!type) {
+      continue;
+    }
     normalized.push({
       ...decoration,
-      type,
       category: type,
       pos: normalizeGridPoint(decoration.pos),
-      size:
-        typeof decoration.size === "number"
-          ? clamp(decoration.size, 0.5, 8)
-          : undefined,
       scale:
         typeof decoration.scale === "number"
           ? clamp(decoration.scale, 0.4, 4)
           : undefined,
+      size:
+        typeof decoration.size === "number"
+          ? clamp(decoration.size, 0.5, 8)
+          : undefined,
+      type,
     });
   }
   return normalized;
 };
 
 const normalizeHazards = (hazards: MapHazard[] | undefined): MapHazard[] => {
-  if (!hazards) return [];
+  if (!hazards) {
+    return [];
+  }
   const normalized: MapHazard[] = [];
   for (const hazard of hazards) {
     const basePos = hazard.pos ?? hazard.gridPos;
-    if (!basePos) continue;
+    if (!basePos) {
+      continue;
+    }
     normalized.push({
       ...hazard,
       pos: normalizeGridPoint(basePos),
@@ -167,19 +195,20 @@ const validateAndBuildLevel = (
 ): CustomLevelUpsertResult => {
   const errors: string[] = [];
   const name = draft.name.trim();
-  if (!name) errors.push("Map name is required.");
+  if (!name) {
+    errors.push("Map name is required.");
+  }
 
   const slugSource = draft.slug || name;
   const slug = sanitizeSlug(slugSource);
-  if (!slug) errors.push("Slug must contain at least one letter or number.");
+  if (!slug) {
+    errors.push("Slug must contain at least one letter or number.");
+  }
   const levelId = draft.id?.startsWith(CUSTOM_LEVEL_PREFIX)
     ? draft.id
     : buildLevelId(slug || name);
 
-  if (
-    !draft.id &&
-    existing.some((level) => level.id === levelId)
-  ) {
+  if (!draft.id && existing.some((level) => level.id === levelId)) {
     errors.push("Another custom map already uses this slug.");
   }
   if (
@@ -216,32 +245,38 @@ const validateAndBuildLevel = (
   const specialTower = draft.specialTower
     ? {
         ...draft.specialTower,
-        pos: normalizeGridPoint(draft.specialTower.pos),
         hp:
           typeof draft.specialTower.hp === "number"
             ? Math.max(1, Math.round(draft.specialTower.hp))
             : undefined,
+        pos: normalizeGridPoint(draft.specialTower.pos),
       }
     : undefined;
 
-  const specialTowers = draft.specialTowers && draft.specialTowers.length > 0
-    ? draft.specialTowers.map((st) => ({
-        ...st,
-        pos: normalizeGridPoint(st.pos),
-        hp: typeof st.hp === "number" ? Math.max(1, Math.round(st.hp)) : undefined,
-      }))
-    : undefined;
+  const specialTowers =
+    draft.specialTowers && draft.specialTowers.length > 0
+      ? draft.specialTowers.map((st) => ({
+          ...st,
+          hp:
+            typeof st.hp === "number"
+              ? Math.max(1, Math.round(st.hp))
+              : undefined,
+          pos: normalizeGridPoint(st.pos),
+        }))
+      : undefined;
 
-  const placedTowers = draft.placedTowers && draft.placedTowers.length > 0
-    ? draft.placedTowers.map((t) => ({
-        ...t,
-        pos: normalizeGridPoint(t.pos),
-      }))
-    : undefined;
+  const placedTowers =
+    draft.placedTowers && draft.placedTowers.length > 0
+      ? draft.placedTowers.map((t) => ({
+          ...t,
+          pos: normalizeGridPoint(t.pos),
+        }))
+      : undefined;
 
-  const allowedTowers = draft.allowedTowers && draft.allowedTowers.length > 0
-    ? draft.allowedTowers
-    : undefined;
+  const allowedTowers =
+    draft.allowedTowers && draft.allowedTowers.length > 0
+      ? draft.allowedTowers
+      : undefined;
 
   const startingPawPoints = Math.round(
     clamp(draft.startingPawPoints, 150, 2500)
@@ -254,38 +289,41 @@ const validateAndBuildLevel = (
       ? requestedWaveTemplate
       : DEFAULT_WAVE_TEMPLATE;
   const customWaves = normalizeCustomWaves(draft.customWaves);
-  const description = draft.description.trim() || "Custom map created in sandbox mode.";
+  const description =
+    draft.description.trim() || "Custom map created in sandbox mode.";
   const decorations = normalizeDecorations(draft.decorations);
   const hazards = normalizeHazards(draft.hazards);
 
-  if (errors.length > 0) return { ok: false, errors };
+  if (errors.length > 0) {
+    return { errors, ok: false };
+  }
 
   const now = Date.now();
   const existingEntry = existing.find((level) => level.id === draft.id);
   const level: CustomLevelDefinition = {
-    id: levelId,
-    slug,
-    name,
-    description,
-    theme: draft.theme,
-    difficulty: draft.difficulty,
-    startingPawPoints,
-    waveTemplate,
+    allowedTowers,
+    createdAt: existingEntry?.createdAt ?? now,
     customWaves: customWaves ? cloneWaveGroups(customWaves) : undefined,
+    decorations,
+    description,
+    difficulty: draft.difficulty,
+    hazards,
+    heroSpawn,
+    id: levelId,
+    name,
+    placedTowers,
     primaryPath,
     secondaryPath: hasSecondaryPath ? secondaryPath : undefined,
-    heroSpawn,
+    slug,
     specialTower,
     specialTowers,
-    placedTowers,
-    allowedTowers,
-    decorations,
-    hazards,
-    createdAt: existingEntry?.createdAt ?? now,
+    startingPawPoints,
+    theme: draft.theme,
     updatedAt: now,
+    waveTemplate,
   };
 
-  return { ok: true, level };
+  return { level, ok: true };
 };
 
 const unregisterCustomLevels = (): void => {
@@ -302,7 +340,9 @@ const registerCustomLevels = (levels: CustomLevelDefinition[]): void => {
   unregisterCustomLevels();
 
   for (const level of levels) {
-    if (level.primaryPath.length < 2) continue;
+    if (level.primaryPath.length < 2) {
+      continue;
+    }
 
     MAP_PATHS[level.id] = level.primaryPath.map((point) => ({ ...point }));
     if (level.secondaryPath && level.secondaryPath.length >= 2) {
@@ -313,68 +353,68 @@ const registerCustomLevels = (levels: CustomLevelDefinition[]): void => {
 
     const camera = THEME_DEFAULT_CAMERA[level.theme];
     LEVEL_DATA[level.id] = {
-      name: level.name,
-      position: { x: 120, y: 200 },
-      description: level.description,
+      allowedTowers: level.allowedTowers,
       camera: {
         offset: { x: camera.x, y: camera.y },
         zoom: camera.zoom,
       },
-      region: level.theme,
-      theme: level.theme,
+      decorations: level.decorations,
+      description: level.description,
       difficulty: level.difficulty,
-      startingPawPoints: level.startingPawPoints,
       dualPath: Boolean(level.secondaryPath && level.secondaryPath.length >= 2),
-      secondaryPath:
-        level.secondaryPath && level.secondaryPath.length >= 2
-          ? `${level.id}_b`
-          : undefined,
+      hazards: level.hazards,
+      heroSpawn: level.heroSpawn,
+      levelKind: "custom",
+      name: level.name,
       pathKeys:
         level.secondaryPath && level.secondaryPath.length >= 2
           ? [`${level.id}_b`]
           : undefined,
-      heroSpawn: level.heroSpawn,
+      position: { x: 120, y: 200 },
+      region: level.theme,
+      secondaryPath:
+        level.secondaryPath && level.secondaryPath.length >= 2
+          ? `${level.id}_b`
+          : undefined,
       specialTower: level.specialTower
         ? {
+            hp: level.specialTower.hp,
             pos: { ...level.specialTower.pos },
             type: level.specialTower.type,
-            hp: level.specialTower.hp,
           }
         : undefined,
       specialTowers: level.specialTowers
         ? level.specialTowers.map((st) => ({
+            hp: st.hp,
             pos: { ...st.pos },
             type: st.type,
-            hp: st.hp,
           }))
         : undefined,
-      levelKind: "custom",
-      allowedTowers: level.allowedTowers,
-      decorations: level.decorations,
-      hazards: level.hazards,
+      startingPawPoints: level.startingPawPoints,
+      theme: level.theme,
     } as any;
 
     if (level.placedTowers && level.placedTowers.length > 0) {
       const placedTowerConfigs = level.placedTowers;
       (LEVEL_DATA[level.id] as any).prePlacedTowers = () =>
         placedTowerConfigs.map((config, idx) => ({
-          id: `preplaced-${idx}`,
-          type: config.type,
-          gridPosition: { ...config.pos },
-          position: { x: config.pos.x * 60 + 30, y: config.pos.y * 60 + 30 },
-          level: 1,
-          experience: 0,
-          range: 0,
           cooldown: 0,
           currentCooldown: 0,
-          target: null,
-          upgrade: null,
-          kills: 0,
-          totalDamage: 0,
-          projectiles: [],
           effects: [],
-          troops: [],
+          experience: 0,
+          gridPosition: { ...config.pos },
+          id: `preplaced-${idx}`,
           isPrePlaced: true,
+          kills: 0,
+          level: 1,
+          position: { x: config.pos.x * 60 + 30, y: config.pos.y * 60 + 30 },
+          projectiles: [],
+          range: 0,
+          target: null,
+          totalDamage: 0,
+          troops: [],
+          type: config.type,
+          upgrade: null,
         }));
     }
 
@@ -383,7 +423,9 @@ const registerCustomLevels = (levels: CustomLevelDefinition[]): void => {
         ? level.customWaves
         : level.waveTemplate === DEFAULT_WAVE_TEMPLATE
           ? createDefaultWaveTemplate()
-          : LEVEL_WAVES[level.waveTemplate] ?? LEVEL_WAVES.poe ?? createDefaultWaveTemplate();
+          : (LEVEL_WAVES[level.waveTemplate] ??
+            LEVEL_WAVES.poe ??
+            createDefaultWaveTemplate());
     if (levelWaves) {
       LEVEL_WAVES[level.id] = cloneWaveGroups(levelWaves);
     }
@@ -396,15 +438,16 @@ export const isCustomLevelId = (levelId: string): boolean =>
   levelId.startsWith(CUSTOM_LEVEL_PREFIX);
 
 export function useCustomLevels() {
-  const [customLevels, setCustomLevels] = useLocalStorage<CustomLevelDefinition[]>(
-    CUSTOM_LEVELS_STORAGE_KEY,
-    []
-  );
+  const [customLevels, setCustomLevels] = useLocalStorage<
+    CustomLevelDefinition[]
+  >(CUSTOM_LEVELS_STORAGE_KEY, []);
 
   const sortedCustomLevels = useMemo(
     () =>
-      [...customLevels].sort((a, b) => {
-        if (b.updatedAt !== a.updatedAt) return b.updatedAt - a.updatedAt;
+      [...customLevels].toSorted((a, b) => {
+        if (b.updatedAt !== a.updatedAt) {
+          return b.updatedAt - a.updatedAt;
+        }
         return a.name.localeCompare(b.name);
       }),
     [customLevels]
@@ -420,11 +463,17 @@ export function useCustomLevels() {
   const upsertCustomLevel = useCallback(
     (draft: CustomLevelDraftInput): CustomLevelUpsertResult => {
       const result = validateAndBuildLevel(draft, customLevels);
-      if (!result.ok || !result.level) return result;
+      if (!result.ok || !result.level) {
+        return result;
+      }
 
       setCustomLevels((prev) => {
-        const existingIndex = prev.findIndex((level) => level.id === result.level!.id);
-        if (existingIndex === -1) return [...prev, result.level!];
+        const existingIndex = prev.findIndex(
+          (level) => level.id === result.level!.id
+        );
+        if (existingIndex === -1) {
+          return [...prev, result.level!];
+        }
         const next = [...prev];
         next[existingIndex] = result.level!;
         return next;
@@ -444,7 +493,7 @@ export function useCustomLevels() {
 
   return {
     customLevels: sortedCustomLevels,
-    upsertCustomLevel,
     deleteCustomLevel,
+    upsertCustomLevel,
   };
 }

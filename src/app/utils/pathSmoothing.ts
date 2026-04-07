@@ -1,4 +1,7 @@
-type PathPoint = { x: number; y: number };
+interface PathPoint {
+  x: number;
+  y: number;
+}
 
 const DEFAULT_CORNER_RADIUS = 1.6;
 const DEFAULT_ARC_POINTS = 5;
@@ -13,7 +16,7 @@ function isTurn(
   ndx1: number,
   ndy1: number,
   ndx2: number,
-  ndy2: number,
+  ndy2: number
 ): boolean {
   const dot = ndx1 * ndx2 + ndy1 * ndy2;
   return dot < 0.95;
@@ -30,7 +33,7 @@ function quadBezier(
   p1y: number,
   p2x: number,
   p2y: number,
-  t: number,
+  t: number
 ): PathPoint {
   const mt = 1 - t;
   return {
@@ -53,9 +56,11 @@ function quadBezier(
 export function roundPathCorners(
   path: PathPoint[],
   radius: number = DEFAULT_CORNER_RADIUS,
-  arcPoints: number = DEFAULT_ARC_POINTS,
+  arcPoints: number = DEFAULT_ARC_POINTS
 ): PathPoint[] {
-  if (path.length < 3) return [...path];
+  if (path.length < 3) {
+    return [...path];
+  }
 
   const result: PathPoint[] = [path[0]];
 
@@ -100,12 +105,12 @@ export function roundPathCorners(
 
     for (let j = 0; j <= effectiveArcPoints; j++) {
       result.push(
-        quadBezier(p0x, p0y, curr.x, curr.y, p2x, p2y, j / effectiveArcPoints),
+        quadBezier(p0x, p0y, curr.x, curr.y, p2x, p2y, j / effectiveArcPoints)
       );
     }
   }
 
-  result.push(path[path.length - 1]);
+  result.push(path.at(-1));
   return result;
 }
 

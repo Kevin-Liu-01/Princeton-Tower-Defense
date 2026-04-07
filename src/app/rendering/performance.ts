@@ -42,45 +42,45 @@ export interface PerformanceSettings {
 
 // Default settings based on browser
 const firefoxDefaults: PerformanceSettings = {
+  antiAliasing: true,
+  deathAnimations: true,
   disableShadows: true,
-  shadowQualityMultiplier: 0,
+  idleAnimations: true,
+  projectileTrails: true,
+  reducedFogQuality: true,
   reducedParticles: true,
+  shadowQualityMultiplier: 0,
+  showAurora: true,
+  showGodRays: true,
+  showHealthBars: true,
+  showLandmarks: true,
+  showPathDecorations: true,
+  showScreenGlow: true,
+  showWaterEffects: true,
   simplifiedGradients: true,
   skipEnvironmentEffects: false,
-  reducedFogQuality: true,
-  showGodRays: true,
-  showAurora: true,
-  showScreenGlow: true,
-  antiAliasing: true,
-  showHealthBars: true,
-  showPathDecorations: true,
-  showLandmarks: true,
-  showWaterEffects: true,
-  deathAnimations: true,
-  projectileTrails: true,
   towerAnimations: true,
-  idleAnimations: true,
 };
 
 const defaultSettings: PerformanceSettings = {
+  antiAliasing: true,
+  deathAnimations: true,
   disableShadows: false,
-  shadowQualityMultiplier: 1,
+  idleAnimations: true,
+  projectileTrails: true,
+  reducedFogQuality: false,
   reducedParticles: false,
+  shadowQualityMultiplier: 1,
+  showAurora: true,
+  showGodRays: true,
+  showHealthBars: true,
+  showLandmarks: true,
+  showPathDecorations: true,
+  showScreenGlow: true,
+  showWaterEffects: true,
   simplifiedGradients: false,
   skipEnvironmentEffects: false,
-  reducedFogQuality: false,
-  showGodRays: true,
-  showAurora: true,
-  showScreenGlow: true,
-  antiAliasing: true,
-  showHealthBars: true,
-  showPathDecorations: true,
-  showLandmarks: true,
-  showWaterEffects: true,
-  deathAnimations: true,
-  projectileTrails: true,
   towerAnimations: true,
-  idleAnimations: true,
 };
 
 let currentSettings: PerformanceSettings | null = null;
@@ -95,7 +95,7 @@ export function getPerformanceSettings(): PerformanceSettings {
 }
 
 export function setPerformanceSettings(
-  settings: Partial<PerformanceSettings>,
+  settings: Partial<PerformanceSettings>
 ): void {
   currentSettings = { ...getPerformanceSettings(), ...settings };
 }
@@ -127,7 +127,7 @@ export function refreshShadowCache(): void {
 export function setShadowBlur(
   ctx: CanvasRenderingContext2D,
   blur: number,
-  color?: string,
+  color?: string
 ): void {
   if (cachedShadowsDisabled) {
     ctx.shadowBlur = 0;
@@ -152,7 +152,9 @@ export function clearShadow(ctx: CanvasRenderingContext2D): void {
  * pre-rendered glow without reaching into private state.
  */
 export function getEffectiveShadowBlur(baseBlur: number): number {
-  if (cachedShadowsDisabled) return 0;
+  if (cachedShadowsDisabled) {
+    return 0;
+  }
   return baseBlur * cachedShadowQualityMul;
 }
 
@@ -169,11 +171,15 @@ const SHADOW_PATCHED = Symbol("shadowPatched");
  */
 export function interceptShadows(ctx: CanvasRenderingContext2D): void {
   const record = ctx as unknown as Record<symbol, boolean>;
-  if (record[SHADOW_PATCHED]) return;
+  if (record[SHADOW_PATCHED]) {
+    return;
+  }
   record[SHADOW_PATCHED] = true;
 
   let rawBlur = 0;
   Object.defineProperty(ctx, "shadowBlur", {
+    configurable: true,
+    enumerable: true,
     get() {
       return rawBlur;
     },
@@ -184,8 +190,6 @@ export function interceptShadows(ctx: CanvasRenderingContext2D): void {
       }
       rawBlur = value * cachedShadowQualityMul;
     },
-    configurable: true,
-    enumerable: true,
   });
 }
 
@@ -216,7 +220,7 @@ export function getCachedRadialGradient(
   x1: number,
   y1: number,
   r1: number,
-  colorStops: Array<[number, string]>,
+  colorStops: [number, string][]
 ): CanvasGradient {
   const settings = getPerformanceSettings();
 
@@ -224,9 +228,7 @@ export function getCachedRadialGradient(
     (settings.simplifiedGradients ||
       currentScenePressure.forceSimplifiedGradients) &&
     colorStops.length > 3;
-  const stops = simplify
-    ? [colorStops[0], colorStops[colorStops.length - 1]]
-    : colorStops;
+  const stops = simplify ? [colorStops[0], colorStops.at(-1)] : colorStops;
 
   const cached = gradientCache.get(key);
   const now = Date.now();
@@ -242,7 +244,9 @@ export function getCachedRadialGradient(
 
   if (gradientCache.size >= GRADIENT_CACHE_MAX_SIZE) {
     const oldestKey = gradientCache.keys().next().value;
-    if (oldestKey) gradientCache.delete(oldestKey);
+    if (oldestKey) {
+      gradientCache.delete(oldestKey);
+    }
   }
 
   gradientCache.set(key, { gradient, key, timestamp: now });
@@ -259,7 +263,7 @@ export function getCachedLinearGradient(
   y0: number,
   x1: number,
   y1: number,
-  colorStops: Array<[number, string]>,
+  colorStops: [number, string][]
 ): CanvasGradient {
   const settings = getPerformanceSettings();
 
@@ -267,9 +271,7 @@ export function getCachedLinearGradient(
     (settings.simplifiedGradients ||
       currentScenePressure.forceSimplifiedGradients) &&
     colorStops.length > 3;
-  const stops = simplify
-    ? [colorStops[0], colorStops[colorStops.length - 1]]
-    : colorStops;
+  const stops = simplify ? [colorStops[0], colorStops.at(-1)] : colorStops;
 
   const cached = gradientCache.get(key);
   const now = Date.now();
@@ -285,7 +287,9 @@ export function getCachedLinearGradient(
 
   if (gradientCache.size >= GRADIENT_CACHE_MAX_SIZE) {
     const oldestKey = gradientCache.keys().next().value;
-    if (oldestKey) gradientCache.delete(oldestKey);
+    if (oldestKey) {
+      gradientCache.delete(oldestKey);
+    }
   }
 
   gradientCache.set(key, { gradient, key, timestamp: now });
@@ -307,7 +311,9 @@ export function clearGradientCache(): void {
  * Should spawn a particle? Returns false more often on Firefox
  */
 export function shouldSpawnParticle(baseChance: number): boolean {
-  if (currentScenePressure.skipNonEssentialParticles) return false;
+  if (currentScenePressure.skipNonEssentialParticles) {
+    return false;
+  }
   const settings = getPerformanceSettings();
   const pressureReduction = currentScenePressure.skipDecorativeEffects
     ? 0.6
@@ -322,15 +328,16 @@ export function shouldSpawnParticle(baseChance: number): boolean {
  * Get adjusted particle count for Firefox
  */
 export function getAdjustedParticleCount(baseCount: number): number {
-  if (currentScenePressure.skipNonEssentialParticles)
+  if (currentScenePressure.skipNonEssentialParticles) {
     return Math.ceil(baseCount * 0.2);
+  }
   const settings = getPerformanceSettings();
   const pressureReduction = currentScenePressure.skipDecorativeEffects
     ? 0.6
     : 1;
   return Math.ceil(
     (settings.reducedParticles ? baseCount * 0.5 : baseCount) *
-      pressureReduction,
+      pressureReduction
   );
 }
 
@@ -380,12 +387,12 @@ export interface ScenePressure {
 }
 
 let currentScenePressure: ScenePressure = {
-  total: 0,
-  skipDecorativeEffects: false,
-  forceSimplifiedGradients: false,
   forceShadowsOff: false,
-  skipNonEssentialParticles: false,
+  forceSimplifiedGradients: false,
   simplifyEnemies: false,
+  skipDecorativeEffects: false,
+  skipNonEssentialParticles: false,
+  total: 0,
 };
 
 const PRESSURE_SKIP_DECORATIVE = 120;
@@ -396,12 +403,12 @@ const PRESSURE_SIMPLIFY_ENEMIES = 300;
 
 export function updateScenePressure(renderableCount: number): ScenePressure {
   currentScenePressure = {
-    total: renderableCount,
-    skipDecorativeEffects: renderableCount > PRESSURE_SKIP_DECORATIVE,
-    forceSimplifiedGradients: renderableCount > PRESSURE_SIMPLIFY_GRADIENTS,
     forceShadowsOff: renderableCount > PRESSURE_SHADOWS_OFF,
-    skipNonEssentialParticles: renderableCount > PRESSURE_SKIP_PARTICLES,
+    forceSimplifiedGradients: renderableCount > PRESSURE_SIMPLIFY_GRADIENTS,
     simplifyEnemies: renderableCount > PRESSURE_SIMPLIFY_ENEMIES,
+    skipDecorativeEffects: renderableCount > PRESSURE_SKIP_DECORATIVE,
+    skipNonEssentialParticles: renderableCount > PRESSURE_SKIP_PARTICLES,
+    total: renderableCount,
   };
   return currentScenePressure;
 }

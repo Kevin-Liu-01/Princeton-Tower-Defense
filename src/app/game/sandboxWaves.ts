@@ -1,5 +1,5 @@
-import type { EnemyType, WaveGroup } from "../types";
 import { LEVEL_WAVES } from "../constants";
+import type { EnemyType, WaveGroup } from "../types";
 
 // ---------------------------------------------------------------------------
 // Theme definitions — each theme is a curated pool of enemies grouped by tier
@@ -14,14 +14,12 @@ interface SandboxTheme {
 
 const SANDBOX_THEMES: SandboxTheme[] = [
   {
-    name: "Dark Fantasy",
-    grunts: [
-      "skeleton_footman",
-      "zombie_shambler",
-      "zombie_spitter",
-      "ghoul",
-      "skeleton_archer",
-      "hellhound",
+    bosses: [
+      "death_knight",
+      "lich",
+      "abomination",
+      "doom_herald",
+      "skeleton_king",
     ],
     elites: [
       "skeleton_knight",
@@ -34,18 +32,18 @@ const SANDBOX_THEMES: SandboxTheme[] = [
       "wraith",
       "revenant",
     ],
-    bosses: ["death_knight", "lich", "abomination", "doom_herald", "skeleton_king"],
+    grunts: [
+      "skeleton_footman",
+      "zombie_shambler",
+      "zombie_spitter",
+      "ghoul",
+      "skeleton_archer",
+      "hellhound",
+    ],
+    name: "Dark Fantasy",
   },
   {
-    name: "Bug Swarm",
-    grunts: [
-      "orb_weaver",
-      "ant_soldier",
-      "mosquito",
-      "fire_ant",
-      "frost_tick",
-      "silk_moth",
-    ],
+    bosses: ["brood_mother"],
     elites: [
       "mantis",
       "bombardier_beetle",
@@ -58,11 +56,18 @@ const SANDBOX_THEMES: SandboxTheme[] = [
       "ash_moth",
       "snow_moth",
     ],
-    bosses: ["brood_mother"],
+    grunts: [
+      "orb_weaver",
+      "ant_soldier",
+      "mosquito",
+      "fire_ant",
+      "frost_tick",
+      "silk_moth",
+    ],
+    name: "Bug Swarm",
   },
   {
-    name: "Beast Horde",
-    grunts: ["timber_wolf", "dire_wolf", "bog_creature", "salamander"],
+    bosses: ["ancient_ent", "swamp_hydra", "mammoth", "wendigo", "lava_golem"],
     elites: [
       "dire_bear",
       "forest_troll",
@@ -74,35 +79,49 @@ const SANDBOX_THEMES: SandboxTheme[] = [
       "giant_eagle",
       "volcanic_drake",
     ],
-    bosses: ["ancient_ent", "swamp_hydra", "mammoth", "wendigo", "lava_golem"],
+    grunts: ["timber_wolf", "dire_wolf", "bog_creature", "salamander"],
+    name: "Beast Horde",
   },
   {
-    name: "Arcane Coven",
-    grunts: ["cultist", "dark_priest", "plaguebearer", "will_o_wisp"],
-    elites: ["mage", "warlock", "hexer", "necromancer", "bone_mage", "ice_witch", "specter"],
     bosses: ["lich", "banshee", "djinn"],
+    elites: [
+      "mage",
+      "warlock",
+      "hexer",
+      "necromancer",
+      "bone_mage",
+      "ice_witch",
+      "specter",
+    ],
+    grunts: ["cultist", "dark_priest", "plaguebearer", "will_o_wisp"],
+    name: "Arcane Coven",
   },
   {
-    name: "Desert Raiders",
-    grunts: ["nomad", "scarab", "scorpion"],
-    elites: ["sandworm", "manticore", "basilisk"],
     bosses: ["phoenix", "sphinx_guardian", "djinn"],
+    elites: ["sandworm", "manticore", "basilisk"],
+    grunts: ["nomad", "scarab", "scorpion"],
+    name: "Desert Raiders",
   },
   {
-    name: "Frost Legion",
-    grunts: ["snow_goblin", "frostling", "frost_tick", "snow_moth"],
-    elites: ["yeti", "ice_witch", "ice_beetle", "frost_troll", "dire_wolf"],
     bosses: ["wendigo", "mammoth", "frost_colossus"],
+    elites: ["yeti", "ice_witch", "ice_beetle", "frost_troll", "dire_wolf"],
+    grunts: ["snow_goblin", "frostling", "frost_tick", "snow_moth"],
+    name: "Frost Legion",
   },
   {
-    name: "Volcanic Fury",
-    grunts: ["fire_imp", "magma_spawn", "fire_ant", "ash_moth"],
-    elites: ["ember_guard", "infernal", "magma_beetle", "salamander", "volcanic_drake"],
     bosses: ["lava_golem", "inferno_wyrm"],
+    elites: [
+      "ember_guard",
+      "infernal",
+      "magma_beetle",
+      "salamander",
+      "volcanic_drake",
+    ],
+    grunts: ["fire_imp", "magma_spawn", "fire_ant", "ash_moth"],
+    name: "Volcanic Fury",
   },
   {
-    name: "Swamp Horrors",
-    grunts: ["bog_creature", "will_o_wisp", "mosquito", "silk_moth"],
+    bosses: ["swamp_hydra", "swamp_leviathan"],
     elites: [
       "swamp_troll",
       "giant_toad",
@@ -111,19 +130,20 @@ const SANDBOX_THEMES: SandboxTheme[] = [
       "centipede",
       "dragonfly",
     ],
-    bosses: ["swamp_hydra", "swamp_leviathan"],
+    grunts: ["bog_creature", "will_o_wisp", "mosquito", "silk_moth"],
+    name: "Swamp Horrors",
   },
   {
-    name: "Academic Gauntlet",
-    grunts: ["frosh", "sophomore", "athlete", "tiger_fan"],
-    elites: ["junior", "senior", "gradstudent", "archer", "crossbowman"],
     bosses: ["professor", "dean", "trustee", "mascot"],
+    elites: ["junior", "senior", "gradstudent", "archer", "crossbowman"],
+    grunts: ["frosh", "sophomore", "athlete", "tiger_fan"],
+    name: "Academic Gauntlet",
   },
   {
-    name: "War Machine",
-    grunts: ["archer", "crossbowman", "berserker"],
-    elites: ["golem", "shadow_knight", "catapult", "harpy", "wyvern"],
     bosses: ["juggernaut", "assassin", "dragon"],
+    elites: ["golem", "shadow_knight", "catapult", "harpy", "wyvern"],
+    grunts: ["archer", "crossbowman", "berserker"],
+    name: "War Machine",
   },
 ];
 
@@ -138,7 +158,7 @@ function pickRandom<T>(arr: readonly T[]): T {
 }
 
 function pickRandomN<T>(arr: readonly T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  const shuffled = [...arr].toSorted(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(n, shuffled.length));
 }
 
@@ -212,15 +232,21 @@ function generateSandboxWave(waveIndex: number): WaveGroup[] {
     }
 
     const enemyType = pickRandom(pool);
-    const count = Math.max(1, Math.round(baseCount * (0.8 + Math.random() * 0.4)));
-    const interval = Math.max(120, Math.round(baseInterval * (0.85 + Math.random() * 0.3)));
+    const count = Math.max(
+      1,
+      Math.round(baseCount * (0.8 + Math.random() * 0.4))
+    );
+    const interval = Math.max(
+      120,
+      Math.round(baseInterval * (0.85 + Math.random() * 0.3))
+    );
 
     const delay = g === 0 ? 0 : clamp(2200 - waveNum * 25, 600, 2800);
 
     wave.push({
-      type: enemyType,
       count,
       interval,
+      type: enemyType,
       ...(delay > 0 ? { delay } : {}),
     });
   }
@@ -257,9 +283,15 @@ export function isSandboxLevel(levelId: string): boolean {
 }
 
 export function getSandboxThemeName(waveIndex: number): string | null {
-  if (waveIndex < 0) return null;
+  if (waveIndex < 0) {
+    return null;
+  }
   const waveNum = waveIndex + 1;
-  if (waveNum % 10 === 0) return "Chaos";
-  if (waveNum % 5 === 0) return "Boss Rush";
+  if (waveNum % 10 === 0) {
+    return "Chaos";
+  }
+  if (waveNum % 5 === 0) {
+    return "Boss Rush";
+  }
   return null;
 }

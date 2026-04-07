@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { SpellType } from "../../types";
-import type { GameProgress } from "../useLocalStorage";
+
 import {
   DEFAULT_SPELL_UPGRADES,
   MAX_SPELL_UPGRADE_LEVEL,
@@ -8,22 +7,28 @@ import {
   getNextSpellUpgradeCost,
   getSpentSpellUpgradeStars,
 } from "../../constants";
+import type { SpellType } from "../../types";
+import type { GameProgress } from "../useLocalStorage";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
 
 export function upgradeSpellImpl(
   spellType: SpellType,
-  setProgress: Setter<GameProgress>,
+  setProgress: Setter<GameProgress>
 ): void {
   setProgress((prev) => {
     const normalizedUpgrades = normalizeSpellUpgradeLevels(
       prev.spellUpgrades ?? DEFAULT_SPELL_UPGRADES
     );
     const currentLevel = normalizedUpgrades[spellType] ?? 0;
-    if (currentLevel >= MAX_SPELL_UPGRADE_LEVEL) return prev;
+    if (currentLevel >= MAX_SPELL_UPGRADE_LEVEL) {
+      return prev;
+    }
 
     const nextUpgradeCost = getNextSpellUpgradeCost(spellType, currentLevel);
-    if (nextUpgradeCost <= 0) return prev;
+    if (nextUpgradeCost <= 0) {
+      return prev;
+    }
 
     const totalEarned =
       prev.totalStarsEarned ??
@@ -33,7 +38,9 @@ export function upgradeSpellImpl(
       );
     const spent = getSpentSpellUpgradeStars(normalizedUpgrades);
     const available = Math.max(0, totalEarned - spent);
-    if (available < nextUpgradeCost) return prev;
+    if (available < nextUpgradeCost) {
+      return prev;
+    }
 
     return {
       ...prev,
@@ -47,14 +54,16 @@ export function upgradeSpellImpl(
 
 export function downgradeSpellImpl(
   spellType: SpellType,
-  setProgress: Setter<GameProgress>,
+  setProgress: Setter<GameProgress>
 ): void {
   setProgress((prev) => {
     const normalizedUpgrades = normalizeSpellUpgradeLevels(
       prev.spellUpgrades ?? DEFAULT_SPELL_UPGRADES
     );
     const currentLevel = normalizedUpgrades[spellType] ?? 0;
-    if (currentLevel <= 0) return prev;
+    if (currentLevel <= 0) {
+      return prev;
+    }
 
     return {
       ...prev,

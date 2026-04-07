@@ -1,5 +1,5 @@
-import type { TroopOwnerType } from "../../types";
 import type { MapTheme } from "../../constants/maps";
+import type { TroopOwnerType } from "../../types";
 
 // ============================================================================
 // KNIGHT COLOR THEMES - Distinct visual styles based on owner type
@@ -43,122 +43,122 @@ export interface KnightTheme {
 
 // Orange theme - Default/Station knights (Princeton orange)
 export const KNIGHT_THEME_ORANGE: KnightTheme = {
-  name: "princeton",
   auraColorInner: "rgba(255, 100, 20, ",
   auraColorMid: "rgba(255, 60, 0, ",
   auraColorOuter: "rgba(200, 40, 0, 0)",
-  flameWisps: "rgba(255, 150, 50, ",
-  energyRings: "rgba(255, 80, 20, ",
-  capeLight: "#cc3300",
-  capeMid: "#ff5500",
+  beltBuckle: "#c0c0d0",
+  bladeRunes: "rgba(200, 80, 0, ",
   capeDark: "#aa2200",
   capeInner: "#8b2200",
-  sigilGlow: "rgba(200, 80, 0, ",
-  beltBuckle: "#c0c0d0",
-  crossguardMain: "#8b0000",
+  capeLight: "#cc3300",
+  capeMid: "#ff5500",
   crossguardAccent: "#aa2020",
-  gemColor: "rgba(255, 200, 50, ",
-  bladeRunes: "rgba(200, 80, 0, ",
-  swingTrail: "rgba(255, 150, 50, ",
-  swingTrailAlt: "rgba(255, 200, 100, ",
-  shieldEmblem: "#cc4400",
-  plume: "#dd4400",
-  plumeDark: "#6a1e00",
-  plumeLight: "#ff7733",
-  plumeHighlight: "#ffaa66",
+  crossguardMain: "#8b0000",
+  energyRings: "rgba(255, 80, 20, ",
   eyeGlow: "rgba(255, 150, 50, ",
   eyeShadow: "#ff6600",
+  flameWisps: "rgba(255, 150, 50, ",
+  gemColor: "rgba(255, 200, 50, ",
+  name: "princeton",
+  plume: "#dd4400",
+  plumeDark: "#6a1e00",
+  plumeHighlight: "#ffaa66",
+  plumeLight: "#ff7733",
+  shieldEmblem: "#cc4400",
   shockwave: "rgba(255, 100, 50, ",
+  sigilGlow: "rgba(200, 80, 0, ",
+  swingTrail: "rgba(255, 150, 50, ",
+  swingTrailAlt: "rgba(255, 200, 100, ",
 };
 
 // Blue theme - Frontier Barracks knights
 export const KNIGHT_THEME_BLUE: KnightTheme = {
-  name: "frontier",
   auraColorInner: "rgba(80, 160, 255, ",
   auraColorMid: "rgba(40, 120, 220, ",
   auraColorOuter: "rgba(20, 80, 180, 0)",
-  flameWisps: "rgba(100, 180, 255, ",
-  energyRings: "rgba(60, 140, 255, ",
-  capeLight: "#1a4a8a",
-  capeMid: "#2266bb",
+  beltBuckle: "#8aa8cc",
+  bladeRunes: "rgba(80, 180, 255, ",
   capeDark: "#0a3366",
   capeInner: "#082244",
-  sigilGlow: "rgba(80, 160, 255, ",
-  beltBuckle: "#8aa8cc",
-  crossguardMain: "#1a4080",
+  capeLight: "#1a4a8a",
+  capeMid: "#2266bb",
   crossguardAccent: "#2855a0",
-  gemColor: "rgba(150, 220, 255, ",
-  bladeRunes: "rgba(80, 180, 255, ",
-  swingTrail: "rgba(100, 180, 255, ",
-  swingTrailAlt: "rgba(150, 210, 255, ",
-  shieldEmblem: "#2266aa",
-  plume: "#3388dd",
-  plumeDark: "#183c66",
-  plumeLight: "#66aaee",
-  plumeHighlight: "#99ccff",
+  crossguardMain: "#1a4080",
+  energyRings: "rgba(60, 140, 255, ",
   eyeGlow: "rgba(120, 200, 255, ",
   eyeShadow: "#4499ff",
+  flameWisps: "rgba(100, 180, 255, ",
+  gemColor: "rgba(150, 220, 255, ",
+  name: "frontier",
+  plume: "#3388dd",
+  plumeDark: "#183c66",
+  plumeHighlight: "#99ccff",
+  plumeLight: "#66aaee",
+  shieldEmblem: "#2266aa",
   shockwave: "rgba(80, 160, 255, ",
+  sigilGlow: "rgba(80, 160, 255, ",
+  swingTrail: "rgba(100, 180, 255, ",
+  swingTrailAlt: "rgba(150, 210, 255, ",
 };
 
 // Red theme - General Mercer (Captain hero) summoned knights
 export const KNIGHT_THEME_RED: KnightTheme = {
-  name: "mercer",
   auraColorInner: "rgba(255, 60, 60, ",
   auraColorMid: "rgba(200, 30, 30, ",
   auraColorOuter: "rgba(150, 20, 20, 0)",
-  flameWisps: "rgba(255, 100, 100, ",
-  energyRings: "rgba(255, 50, 50, ",
-  capeLight: "#8b1a1a",
-  capeMid: "#cc2222",
+  beltBuckle: "#cc9999",
+  bladeRunes: "rgba(255, 60, 60, ",
   capeDark: "#661111",
   capeInner: "#440a0a",
-  sigilGlow: "rgba(255, 80, 80, ",
-  beltBuckle: "#cc9999",
-  crossguardMain: "#660000",
+  capeLight: "#8b1a1a",
+  capeMid: "#cc2222",
   crossguardAccent: "#882020",
-  gemColor: "rgba(255, 180, 180, ",
-  bladeRunes: "rgba(255, 60, 60, ",
-  swingTrail: "rgba(255, 100, 100, ",
-  swingTrailAlt: "rgba(255, 150, 150, ",
-  shieldEmblem: "#aa2222",
-  plume: "#dd3333",
-  plumeDark: "#661515",
-  plumeLight: "#ee6666",
-  plumeHighlight: "#ff9999",
+  crossguardMain: "#660000",
+  energyRings: "rgba(255, 50, 50, ",
   eyeGlow: "rgba(255, 120, 120, ",
   eyeShadow: "#ff4444",
+  flameWisps: "rgba(255, 100, 100, ",
+  gemColor: "rgba(255, 180, 180, ",
+  name: "mercer",
+  plume: "#dd3333",
+  plumeDark: "#661515",
+  plumeHighlight: "#ff9999",
+  plumeLight: "#ee6666",
+  shieldEmblem: "#aa2222",
   shockwave: "rgba(255, 80, 80, ",
+  sigilGlow: "rgba(255, 80, 80, ",
+  swingTrail: "rgba(255, 100, 100, ",
+  swingTrailAlt: "rgba(255, 150, 150, ",
 };
 
 // Purple theme - Volcanic barracks knights
 export const KNIGHT_THEME_PURPLE: KnightTheme = {
-  name: "volcanic",
   auraColorInner: "rgba(180, 80, 255, ",
   auraColorMid: "rgba(130, 40, 220, ",
   auraColorOuter: "rgba(80, 20, 160, 0)",
-  flameWisps: "rgba(200, 120, 255, ",
-  energyRings: "rgba(160, 60, 255, ",
-  capeLight: "#5A1A8A",
-  capeMid: "#7B2FBB",
+  beltBuckle: "#B899CC",
+  bladeRunes: "rgba(180, 80, 255, ",
   capeDark: "#3A0A66",
   capeInner: "#280644",
-  sigilGlow: "rgba(180, 100, 255, ",
-  beltBuckle: "#B899CC",
-  crossguardMain: "#3A0060",
+  capeLight: "#5A1A8A",
+  capeMid: "#7B2FBB",
   crossguardAccent: "#5520A0",
-  gemColor: "rgba(220, 180, 255, ",
-  bladeRunes: "rgba(180, 80, 255, ",
-  swingTrail: "rgba(200, 120, 255, ",
-  swingTrailAlt: "rgba(220, 170, 255, ",
-  shieldEmblem: "#7A30AA",
-  plume: "#9B44DD",
-  plumeDark: "#3e1a5c",
-  plumeLight: "#bb77ee",
-  plumeHighlight: "#d4aaff",
+  crossguardMain: "#3A0060",
+  energyRings: "rgba(160, 60, 255, ",
   eyeGlow: "rgba(200, 140, 255, ",
   eyeShadow: "#B366FF",
+  flameWisps: "rgba(200, 120, 255, ",
+  gemColor: "rgba(220, 180, 255, ",
+  name: "volcanic",
+  plume: "#9B44DD",
+  plumeDark: "#3e1a5c",
+  plumeHighlight: "#d4aaff",
+  plumeLight: "#bb77ee",
+  shieldEmblem: "#7A30AA",
   shockwave: "rgba(180, 100, 255, ",
+  sigilGlow: "rgba(180, 100, 255, ",
+  swingTrail: "rgba(200, 120, 255, ",
+  swingTrailAlt: "rgba(220, 170, 255, ",
 };
 
 // ============================================================================
@@ -186,70 +186,70 @@ export interface KnightGearVariant {
 export const KNIGHT_GEAR_VARIANTS: KnightGearVariant[] = [
   {
     // Variant 0: Heavy Plate — dark steel, great helm, wide broadsword
-    armorPeak: "#acb2c6",
+    armorDark: "#41485b",
     armorHigh: "#878ea7",
     armorMid: "#646b81",
-    armorDark: "#41485b",
+    armorPeak: "#acb2c6",
     helmetStyle: "greathelm",
-    weaponStyle: "broadsword",
     trimColor: "#5a5a6e",
     trimHighlight: "#c8c8d8",
+    weaponStyle: "broadsword",
   },
   {
     // Variant 1: Crusader — cool silver steel, cross visor, longsword
-    armorPeak: "#b8bcc8",
+    armorDark: "#484e60",
     armorHigh: "#949aac",
     armorMid: "#6e7488",
-    armorDark: "#484e60",
+    armorPeak: "#b8bcc8",
     helmetStyle: "crusader",
-    weaponStyle: "longsword",
     trimColor: "#606878",
     trimHighlight: "#d0d4dc",
+    weaponStyle: "longsword",
   },
   {
     // Variant 2: Royal Guard — polished bright steel, winged helm, bastard sword
-    armorPeak: "#c0c4d0",
+    armorDark: "#505870",
     armorHigh: "#a0a6b8",
     armorMid: "#78809a",
-    armorDark: "#505870",
+    armorPeak: "#c0c4d0",
     helmetStyle: "winged",
-    weaponStyle: "bastardsword",
     trimColor: "#6a7088",
     trimHighlight: "#d8dce8",
+    weaponStyle: "bastardsword",
   },
 ];
 
 // Captain Mercer's hero-summoned knights — gold-tinted versions of each variant
 export const MERCER_GEAR_VARIANTS: KnightGearVariant[] = [
   {
-    armorPeak: "#f0e0a0",
+    armorDark: "#7a6820",
     armorHigh: "#d4b860",
     armorMid: "#a89030",
-    armorDark: "#7a6820",
+    armorPeak: "#f0e0a0",
     helmetStyle: "greathelm",
-    weaponStyle: "broadsword",
     trimColor: "#c4a030",
     trimHighlight: "#f8ecc0",
+    weaponStyle: "broadsword",
   },
   {
-    armorPeak: "#ecdca0",
+    armorDark: "#786428",
     armorHigh: "#d0b868",
     armorMid: "#a89040",
-    armorDark: "#786428",
+    armorPeak: "#ecdca0",
     helmetStyle: "crusader",
-    weaponStyle: "longsword",
     trimColor: "#b89838",
     trimHighlight: "#f4e4b0",
+    weaponStyle: "longsword",
   },
   {
-    armorPeak: "#f4e8b0",
+    armorDark: "#8a7020",
     armorHigh: "#dcc460",
     armorMid: "#b49830",
-    armorDark: "#8a7020",
+    armorPeak: "#f4e8b0",
     helmetStyle: "winged",
-    weaponStyle: "bastardsword",
     trimColor: "#cca828",
     trimHighlight: "#faf0c8",
+    weaponStyle: "bastardsword",
   },
 ];
 
@@ -268,15 +268,16 @@ export interface KnightColorVariation {
 export const KNIGHT_COLOR_VARIATIONS: readonly KnightColorVariation[] = [
   { label: "Station", ownerType: "station" },
   { label: "Barracks", ownerType: "barracks" },
-  { label: "Volcanic", ownerType: "barracks", mapTheme: "volcanic" },
+  { label: "Volcanic", mapTheme: "volcanic", ownerType: "barracks" },
   { label: "Mercer", ownerType: "hero_summon" },
 ];
 
 export function getKnightGearVariant(
   variant?: number,
-  ownerType?: TroopOwnerType,
+  ownerType?: TroopOwnerType
 ): KnightGearVariant {
-  const pool = ownerType === "hero_summon" ? MERCER_GEAR_VARIANTS : KNIGHT_GEAR_VARIANTS;
+  const pool =
+    ownerType === "hero_summon" ? MERCER_GEAR_VARIANTS : KNIGHT_GEAR_VARIANTS;
   const idx = (variant ?? 0) % pool.length;
   return pool[idx];
 }
@@ -285,24 +286,29 @@ export function getKnightGearVariant(
 // Barracks knights adapt to the biome: orange on desert, purple on volcanic.
 export function getKnightTheme(
   ownerType?: TroopOwnerType,
-  mapTheme?: MapTheme,
+  mapTheme?: MapTheme
 ): KnightTheme {
   if (ownerType === "barracks") {
     switch (mapTheme) {
-      case "desert":
+      case "desert": {
         return KNIGHT_THEME_ORANGE;
-      case "volcanic":
+      }
+      case "volcanic": {
         return KNIGHT_THEME_PURPLE;
-      default:
+      }
+      default: {
         return KNIGHT_THEME_BLUE;
+      }
     }
   }
   switch (ownerType) {
-    case "hero_summon":
+    case "hero_summon": {
       return KNIGHT_THEME_RED;
+    }
     case "station":
     case "default":
-    default:
+    default: {
       return KNIGHT_THEME_ORANGE;
+    }
   }
 }

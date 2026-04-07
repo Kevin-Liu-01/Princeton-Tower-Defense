@@ -1,20 +1,20 @@
+import { drawOrganicBlobAt } from "../../../../rendering/helpers";
+import { drawPalmTree, drawDesertCactus } from "./desertDecorations";
 import type { WorldMapDrawContext } from "./drawContext";
 import { drawTree } from "./grasslandDecorations";
+import { drawBridge, drawBoulder } from "./structureDecorations";
 import {
   drawWillowTree,
   drawSwampPool,
   drawSwampGas,
   drawFireflies,
 } from "./swampDecorations";
-import { drawPalmTree, drawDesertCactus } from "./desertDecorations";
-import { drawFrostedPine } from "./winterDecorations";
 import {
   drawAshTree,
   drawObsidianSpire,
   drawBurningRuins,
 } from "./volcanicDecorations";
-import { drawBridge, drawBoulder } from "./structureDecorations";
-import { drawOrganicBlobAt } from "../../../../rendering/helpers";
+import { drawFrostedPine } from "./winterDecorations";
 
 export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
   const { ctx, height, time, getY, seededRandom } = dc;
@@ -152,7 +152,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
       pry * 0.4,
       i * 6.3 + 99,
       0.15,
-      12,
+      12
     );
     ctx.fill();
     ctx.globalAlpha = 1;
@@ -249,7 +249,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     drawSwampGas(
       dc,
       400 + seededRandom(i * 55) * 300,
-      30 + seededRandom(i * 22) * 60,
+      30 + seededRandom(i * 22) * 60
     );
   }
 
@@ -258,7 +258,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     drawFireflies(
       dc,
       400 + seededRandom(i * 99) * 320,
-      20 + seededRandom(i * 88) * 70,
+      20 + seededRandom(i * 88) * 70
     );
   }
 
@@ -417,8 +417,11 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
       const shimmerOffset =
         Math.sin(time * 5 + sx * 0.06 + h * 1.2) * 4 +
         Math.cos(time * 3 + sx * 0.03) * 2;
-      if (sx === 720) ctx.moveTo(sx, shimmerY + shimmerOffset);
-      else ctx.lineTo(sx, shimmerY + shimmerOffset);
+      if (sx === 720) {
+        ctx.moveTo(sx, shimmerY + shimmerOffset);
+      } else {
+        ctx.lineTo(sx, shimmerY + shimmerOffset);
+      }
     }
     ctx.lineTo(1080, shimmerY + 10);
     ctx.lineTo(720, shimmerY + 10);
@@ -482,7 +485,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
       fr * 0.2,
       i * 4.9 + 77,
       0.1,
-      10,
+      10
     );
     ctx.fill();
   }
@@ -508,23 +511,23 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     auroraGrad.addColorStop(0, `hsla(${120 + hueShift * 0.3}, 90%, 65%, 0)`);
     auroraGrad.addColorStop(
       0.12,
-      `hsla(${140 + hueShift * 0.4}, 85%, 60%, ${0.06 + Math.sin(time * 0.6 + a * 0.8) * 0.03})`,
+      `hsla(${140 + hueShift * 0.4}, 85%, 60%, ${0.06 + Math.sin(time * 0.6 + a * 0.8) * 0.03})`
     );
     auroraGrad.addColorStop(
       0.3,
-      `hsla(${170 + hueShift * 0.35}, 90%, 58%, ${0.16 + Math.sin(time * 1.1 + a * 0.5) * 0.08})`,
+      `hsla(${170 + hueShift * 0.35}, 90%, 58%, ${0.16 + Math.sin(time * 1.1 + a * 0.5) * 0.08})`
     );
     auroraGrad.addColorStop(
       0.5,
-      `hsla(${210 + hueShift * 0.25}, 92%, 62%, ${0.22 + Math.sin(time * 1.4 + a * 0.3) * 0.1})`,
+      `hsla(${210 + hueShift * 0.25}, 92%, 62%, ${0.22 + Math.sin(time * 1.4 + a * 0.3) * 0.1})`
     );
     auroraGrad.addColorStop(
       0.7,
-      `hsla(${250 + hueShift * 0.35}, 85%, 58%, ${0.14 + Math.sin(time * 0.9 + a * 0.6) * 0.06})`,
+      `hsla(${250 + hueShift * 0.35}, 85%, 58%, ${0.14 + Math.sin(time * 0.9 + a * 0.6) * 0.06})`
     );
     auroraGrad.addColorStop(
       0.88,
-      `hsla(${290 + hueShift * 0.3}, 80%, 60%, ${0.08 + Math.sin(time * 1.2 + a * 0.4) * 0.04})`,
+      `hsla(${290 + hueShift * 0.3}, 80%, 60%, ${0.08 + Math.sin(time * 1.2 + a * 0.4) * 0.04})`
     );
     auroraGrad.addColorStop(1, `hsla(${310 + hueShift * 0.2}, 90%, 65%, 0)`);
     ctx.fillStyle = auroraGrad;
@@ -625,7 +628,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
           ctx.moveTo(0, 0);
           ctx.lineTo(
             Math.cos(angle) * flakeSize * 1.5,
-            Math.sin(angle) * flakeSize * 1.5,
+            Math.sin(angle) * flakeSize * 1.5
           );
           ctx.stroke();
         }
@@ -702,7 +705,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
       or * 0.2,
       i * 5.1 + 55,
       0.15,
-      8,
+      8
     );
     ctx.fill();
   }

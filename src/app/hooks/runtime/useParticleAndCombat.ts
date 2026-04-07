@@ -1,5 +1,6 @@
 import { useRef, useMemo, useCallback } from "react";
 import type { MutableRefObject, Dispatch, SetStateAction } from "react";
+
 import type {
   Position,
   Enemy,
@@ -9,10 +10,8 @@ import type {
   Particle,
   DeathCause,
 } from "../../types";
-import type { EntityCounts } from "./renderScene";
 import type { GameEventLogAPI } from "../useGameEventLog";
 import {
-  type ParticleBurstRequest,
   addParticlesImpl,
   flushQueuedParticlesImpl,
   awardBountyImpl,
@@ -24,6 +23,8 @@ import {
   onEnemyKillImpl,
   onTroopDeathImpl,
 } from "./particleAndCombatCallbacks";
+import type { ParticleBurstRequest } from "./particleAndCombatCallbacks";
+import type { EntityCounts } from "./renderScene";
 
 export interface ParticleCombatDeps {
   entityCountsRef: MutableRefObject<EntityCounts>;
@@ -32,7 +33,9 @@ export interface ParticleCombatDeps {
   activeWaveSpawnPaths: string[];
   selectedMap: string;
   addPawPoints: (amount: number) => void;
-  setBountyIncomeEvents: Dispatch<SetStateAction<Array<{ id: string; amount: number; isGoldBoosted: boolean }>>>;
+  setBountyIncomeEvents: Dispatch<
+    SetStateAction<{ id: string; amount: number; isGoldBoosted: boolean }[]>
+  >;
   setPaydayPawPointsEarned: Dispatch<SetStateAction<number>>;
   addTroopEntities: (troops: Troop[]) => void;
   setHexWardRaisesRemaining: Dispatch<SetStateAction<number>>;
@@ -42,9 +45,22 @@ export interface ParticleCombatDeps {
 export interface ParticleCombatReturn {
   addParticles: (pos: Position, type: Particle["type"], count: number) => void;
   flushQueuedParticles: () => void;
-  awardBounty: (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => number;
-  killHero: (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number) => Hero;
-  onEnemyKill: (enemy: Enemy, pos: Position, particleCount?: number, deathCause?: DeathCause) => void;
+  awardBounty: (
+    baseBounty: number,
+    hasGoldAura: boolean,
+    sourceId?: string
+  ) => number;
+  killHero: (
+    fallenHero: Hero,
+    respawnTimerMs: number,
+    lastCombatTime?: number
+  ) => Hero;
+  onEnemyKill: (
+    enemy: Enemy,
+    pos: Position,
+    particleCount?: number,
+    deathCause?: DeathCause
+  ) => void;
   onTroopDeath: (troop: Troop, pos: Position) => void;
   raiseHexWardGhostFromTroopDeath: (troop: Troop, deathPos: Position) => void;
   pendingParticleBurstsRef: MutableRefObject<ParticleBurstRequest[]>;
@@ -58,12 +74,21 @@ export interface ParticleCombatReturn {
   effectsUpdateAccumulator: MutableRefObject<number>;
 }
 
-export function useParticleAndCombat(deps: ParticleCombatDeps): ParticleCombatReturn {
+export function useParticleAndCombat(
+  deps: ParticleCombatDeps
+): ParticleCombatReturn {
   const {
-    entityCountsRef, gameEventLogRef,
-    hexWardEndTime, activeWaveSpawnPaths, selectedMap,
-    addPawPoints, setBountyIncomeEvents, setPaydayPawPointsEarned,
-    addTroopEntities, setHexWardRaisesRemaining, addEffectEntity,
+    entityCountsRef,
+    gameEventLogRef,
+    hexWardEndTime,
+    activeWaveSpawnPaths,
+    selectedMap,
+    addPawPoints,
+    setBountyIncomeEvents,
+    setPaydayPawPointsEarned,
+    addTroopEntities,
+    setHexWardRaisesRemaining,
+    addEffectEntity,
   } = deps;
 
   const lastParticleSpawn = useRef<Map<string, number>>(new Map());
@@ -77,115 +102,166 @@ export function useParticleAndCombat(deps: ParticleCombatDeps): ParticleCombatRe
   const hexWardRaisesRemainingRef = useRef(0);
   const handledWaveCompletionRef = useRef<number>(-1);
 
-  const particleRefs = useMemo(() => ({
-    lastParticleSpawn,
-    pendingParticleBurstsRef,
-    entityCountsRef,
-  }), [entityCountsRef]);
+  const particleRefs = useMemo(
+    () => ({
+      entityCountsRef,
+      lastParticleSpawn,
+      pendingParticleBurstsRef,
+    }),
+    [entityCountsRef]
+  );
 
   const addParticles = useCallback(
     (pos: Position, type: Particle["type"], count: number) => {
       addParticlesImpl(pos, type, count, particleRefs);
     },
-    [particleRefs],
+    [particleRefs]
   );
 
   const flushQueuedParticles = useCallback(
     () => flushQueuedParticlesImpl(particleRefs),
-    [particleRefs],
+    [particleRefs]
   );
 
   const awardBounty = useCallback(
     (baseBounty: number, hasGoldAura: boolean, sourceId?: string) =>
       awardBountyImpl(baseBounty, hasGoldAura, sourceId, {
-        setBountyIncomeEvents,
         addPawPoints,
+        setBountyIncomeEvents,
         setPaydayPawPointsEarned,
       }),
-    [addPawPoints, setBountyIncomeEvents, setPaydayPawPointsEarned],
+    [addPawPoints, setBountyIncomeEvents, setPaydayPawPointsEarned]
   );
 
   const spawnHexWardGhostTroop = useCallback(
-    (sourceKey: string, strength: "weak" | "medium" | "strong" | "apex", deathPos: Position) => {
+    (
+      sourceKey: string,
+      strength: "weak" | "medium" | "strong" | "apex",
+      deathPos: Position
+    ) => {
       spawnHexWardGhostTroopImpl(
-        sourceKey, strength, deathPos,
-        hexWardEndTime, activeWaveSpawnPaths, selectedMap,
-        { hexWardRaisesRemainingRef, handledHexGhostSourceIdsRef },
+        sourceKey,
+        strength,
+        deathPos,
+        hexWardEndTime,
+        activeWaveSpawnPaths,
+        selectedMap,
+        { handledHexGhostSourceIdsRef, hexWardRaisesRemainingRef },
         { addTroopEntities, setHexWardRaisesRemaining },
-        addParticles,
+        addParticles
       );
     },
-    [activeWaveSpawnPaths, addParticles, addTroopEntities, hexWardEndTime, setHexWardRaisesRemaining, selectedMap],
+    [
+      activeWaveSpawnPaths,
+      addParticles,
+      addTroopEntities,
+      hexWardEndTime,
+      setHexWardRaisesRemaining,
+      selectedMap,
+    ]
   );
 
   const raiseHexWardGhostFromEnemyDeath = useCallback(
     (enemy: Enemy, deathPos: Position) =>
-      raiseHexWardGhostFromEnemyDeathImpl(enemy, deathPos, spawnHexWardGhostTroop),
-    [spawnHexWardGhostTroop],
+      raiseHexWardGhostFromEnemyDeathImpl(
+        enemy,
+        deathPos,
+        spawnHexWardGhostTroop
+      ),
+    [spawnHexWardGhostTroop]
   );
 
   const raiseHexWardGhostFromTroopDeath = useCallback(
     (troop: Troop, deathPos: Position) =>
-      raiseHexWardGhostFromTroopDeathImpl(troop, deathPos, spawnHexWardGhostTroop),
-    [spawnHexWardGhostTroop],
+      raiseHexWardGhostFromTroopDeathImpl(
+        troop,
+        deathPos,
+        spawnHexWardGhostTroop
+      ),
+    [spawnHexWardGhostTroop]
   );
 
   const raiseHexWardGhostFromHeroDeath = useCallback(
     (fallenHero: Hero) =>
       raiseHexWardGhostFromHeroDeathImpl(fallenHero, spawnHexWardGhostTroop),
-    [spawnHexWardGhostTroop],
+    [spawnHexWardGhostTroop]
   );
 
   const killHero = useCallback(
     (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number): Hero =>
       killHeroImpl(
-        fallenHero, respawnTimerMs, lastCombatTime,
-        raiseHexWardGhostFromHeroDeath, addParticles,
-        selectedMap, { pendingDeathEffectsRef }, { addEffectEntity },
+        fallenHero,
+        respawnTimerMs,
+        lastCombatTime,
+        raiseHexWardGhostFromHeroDeath,
+        addParticles,
+        selectedMap,
+        { pendingDeathEffectsRef },
+        { addEffectEntity }
       ),
-    [addParticles, raiseHexWardGhostFromHeroDeath, addEffectEntity, selectedMap],
+    [addParticles, raiseHexWardGhostFromHeroDeath, addEffectEntity, selectedMap]
   );
 
   const onTroopDeath = useCallback(
     (troop: Troop, pos: Position) => {
       onTroopDeathImpl(
-        troop, pos, selectedMap,
+        troop,
+        pos,
+        selectedMap,
         { pendingDeathEffectsRef },
         { addEffectEntity },
-        addParticles,
+        addParticles
       );
     },
-    [addParticles, addEffectEntity, selectedMap],
+    [addParticles, addEffectEntity, selectedMap]
   );
 
   const onEnemyKill = useCallback(
-    (enemy: Enemy, pos: Position, particleCount: number = 8, deathCause: DeathCause = "default") => {
+    (
+      enemy: Enemy,
+      pos: Position,
+      particleCount: number = 8,
+      deathCause: DeathCause = "default"
+    ) => {
       onEnemyKillImpl(
-        enemy, pos, particleCount, deathCause, selectedMap,
-        { handledEnemyIdsRef, pendingDeathEffectsRef, gameEventLogRef },
+        enemy,
+        pos,
+        particleCount,
+        deathCause,
+        selectedMap,
+        { gameEventLogRef, handledEnemyIdsRef, pendingDeathEffectsRef },
         { addEffectEntity },
-        awardBounty, raiseHexWardGhostFromEnemyDeath, addParticles,
+        awardBounty,
+        raiseHexWardGhostFromEnemyDeath,
+        addParticles
       );
     },
-    [awardBounty, addParticles, addEffectEntity, raiseHexWardGhostFromEnemyDeath, selectedMap, gameEventLogRef],
+    [
+      awardBounty,
+      addParticles,
+      addEffectEntity,
+      raiseHexWardGhostFromEnemyDeath,
+      selectedMap,
+      gameEventLogRef,
+    ]
   );
 
   return {
     addParticles,
-    flushQueuedParticles,
     awardBounty,
+    effectsUpdateAccumulator,
+    flushQueuedParticles,
+    handledEnemyIdsRef,
+    handledHexGhostSourceIdsRef,
+    handledWaveCompletionRef,
+    hexWardRaisesRemainingRef,
     killHero,
     onEnemyKill,
     onTroopDeath,
-    raiseHexWardGhostFromTroopDeath,
-    pendingParticleBurstsRef,
-    pendingDeathEffectsRef,
-    handledEnemyIdsRef,
-    handledHexGhostSourceIdsRef,
-    hexWardRaisesRemainingRef,
-    handledWaveCompletionRef,
-    projectileUpdateAccumulator,
     particleUpdateAccumulator,
-    effectsUpdateAccumulator,
+    pendingDeathEffectsRef,
+    pendingParticleBurstsRef,
+    projectileUpdateAccumulator,
+    raiseHexWardGhostFromTroopDeath,
   };
 }

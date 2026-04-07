@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
 import {
   Eye,
   Shield,
@@ -19,7 +18,8 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import type { HeroType, SpellType, SpellUpgradeLevels } from "../../types";
+import React, { useState } from "react";
+
 import {
   HERO_DATA,
   HERO_ABILITY_COOLDOWNS,
@@ -35,11 +35,15 @@ import {
 } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
-import { MobileBottomSheet } from "./MobileBottomSheet";
+import type { HeroType, SpellType, SpellUpgradeLevels } from "../../types";
+import {
+  heroFrameElements,
+  spellFrameElements,
+} from "../ui/primitives/ornateFrameHelpers";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
-import { heroFrameElements, spellFrameElements } from "../ui/primitives/ornateFrameHelpers";
-import { HERO_OPTIONS, MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
+import { MobileBottomSheet } from "./MobileBottomSheet";
 import { hexToRgba } from "./shared/colorUtils";
+import { HERO_OPTIONS, MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
 
 const getHeroRoleLabel = (type: HeroType): string => HERO_ROLES[type].label;
 
@@ -162,20 +166,23 @@ function HeroCircleButton({
   const hc = hero ? hero.color : "#b4a04a";
 
   return (
-    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: CIRCLE_SIZE, width: CIRCLE_SIZE }}
+    >
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        style={{ left: -FRAME_PAD, top: -FRAME_PAD }}
         width={FRAME_SIZE}
         height={FRAME_SIZE}
         overflow="visible"
       >
         {heroFrameElements({
-          cx: FRAME_CX,
-          outerR: FRAME_OUTER_R,
-          midR: FRAME_MID_R,
           color: hexToRgba(hc, 0.3),
+          cx: FRAME_CX,
           dimColor: hexToRgba(hc, 0.12),
+          midR: FRAME_MID_R,
+          outerR: FRAME_OUTER_R,
           prefix: "lh",
         })}
       </svg>
@@ -223,20 +230,23 @@ function SpellCircleButton({
   const sc = "#a855f7";
 
   return (
-    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: CIRCLE_SIZE, width: CIRCLE_SIZE }}
+    >
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        style={{ left: -FRAME_PAD, top: -FRAME_PAD }}
         width={FRAME_SIZE}
         height={FRAME_SIZE}
         overflow="visible"
       >
         {spellFrameElements({
-          cx: FRAME_CX,
-          outerR: FRAME_OUTER_R,
-          midR: FRAME_MID_R,
           color: isFull ? hexToRgba(sc, 0.35) : hexToRgba(sc, 0.18),
+          cx: FRAME_CX,
           dimColor: isFull ? hexToRgba(sc, 0.15) : hexToRgba(sc, 0.08),
+          midR: FRAME_MID_R,
+          outerR: FRAME_OUTER_R,
           prefix: "ls",
         })}
       </svg>
@@ -262,10 +272,10 @@ function SpellCircleButton({
             ? "linear-gradient(135deg, #22c55e, #16a34a)"
             : "linear-gradient(135deg, #a855f7, #7c3aed)",
           borderColor: "rgba(20,14,30,0.9)",
-          color: "white",
           boxShadow: isFull
             ? "0 0 8px rgba(34,197,94,0.5)"
             : "0 0 8px rgba(168,85,247,0.5)",
+          color: "white",
         }}
       >
         {selectedCount}
@@ -298,20 +308,23 @@ function UpgradeCircleButton({
   const gc = "#facc15";
 
   return (
-    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+    <div
+      className="relative"
+      style={{ height: CIRCLE_SIZE, width: CIRCLE_SIZE }}
+    >
       <svg
         className="absolute pointer-events-none"
-        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        style={{ left: -FRAME_PAD, top: -FRAME_PAD }}
         width={FRAME_SIZE}
         height={FRAME_SIZE}
         overflow="visible"
       >
         {spellFrameElements({
-          cx: FRAME_CX,
-          outerR: FRAME_OUTER_R,
-          midR: FRAME_MID_R,
           color: hasStars ? hexToRgba(gc, 0.3) : "rgba(180,150,60,0.14)",
+          cx: FRAME_CX,
           dimColor: hasStars ? hexToRgba(gc, 0.12) : "rgba(180,150,60,0.06)",
+          midR: FRAME_MID_R,
+          outerR: FRAME_OUTER_R,
           prefix: "lu",
         })}
       </svg>
@@ -338,8 +351,8 @@ function UpgradeCircleButton({
           style={{
             background: "linear-gradient(135deg, #fbbf24, #d97706)",
             borderColor: "rgba(38,34,20,0.9)",
-            color: "white",
             boxShadow: "0 0 8px rgba(251,191,36,0.5)",
+            color: "white",
           }}
         >
           {availableStars}
@@ -423,22 +436,44 @@ function HeroSelectionContent({
               </div>
 
               {/* Stats strip */}
-              <div className="flex items-center gap-0 mt-1 rounded overflow-hidden"
+              <div
+                className="flex items-center gap-0 mt-1 rounded overflow-hidden"
                 style={{ border: "1px solid rgba(100,80,50,0.12)" }}
               >
                 {[
-                  { icon: <Heart size={7} className="text-red-400" />, value: hero.hp, bg: "rgba(127,29,29,0.2)" },
-                  { icon: <Swords size={7} className="text-orange-400" />, value: hero.damage, bg: "rgba(124,45,18,0.2)" },
-                  { icon: <Target size={7} className="text-blue-400" />, value: hero.range, bg: "rgba(30,58,138,0.2)" },
-                  { icon: <Gauge size={7} className="text-green-400" />, value: hero.speed, bg: "rgba(20,83,45,0.2)" },
-                  { icon: <Timer size={7} className="text-purple-400" />, value: `${cooldown / 1000}s`, bg: "rgba(88,28,135,0.2)" },
+                  {
+                    bg: "rgba(127,29,29,0.2)",
+                    icon: <Heart size={7} className="text-red-400" />,
+                    value: hero.hp,
+                  },
+                  {
+                    bg: "rgba(124,45,18,0.2)",
+                    icon: <Swords size={7} className="text-orange-400" />,
+                    value: hero.damage,
+                  },
+                  {
+                    bg: "rgba(30,58,138,0.2)",
+                    icon: <Target size={7} className="text-blue-400" />,
+                    value: hero.range,
+                  },
+                  {
+                    bg: "rgba(20,83,45,0.2)",
+                    icon: <Gauge size={7} className="text-green-400" />,
+                    value: hero.speed,
+                  },
+                  {
+                    bg: "rgba(88,28,135,0.2)",
+                    icon: <Timer size={7} className="text-purple-400" />,
+                    value: `${cooldown / 1000}s`,
+                  },
                 ].map((stat, idx) => (
                   <div
                     key={idx}
                     className="flex-1 flex items-center justify-center gap-0.5 py-0.5"
                     style={{
                       background: stat.bg,
-                      borderRight: idx < 4 ? "1px solid rgba(100,80,50,0.08)" : "none",
+                      borderRight:
+                        idx < 4 ? "1px solid rgba(100,80,50,0.08)" : "none",
                     }}
                   >
                     {stat.icon}
@@ -539,9 +574,7 @@ function SpellSelectionContent({
                 ? `linear-gradient(135deg, ${colors.bg}, ${colors.bg})`
                 : "linear-gradient(135deg, rgba(30,22,38,0.6), rgba(20,14,28,0.6))",
               border: `1.5px solid ${isSelected ? colors.border : "rgba(70,40,100,0.2)"}`,
-              boxShadow: isSelected
-                ? `0 0 12px ${colors.accent}15`
-                : "none",
+              boxShadow: isSelected ? `0 0 12px ${colors.accent}15` : "none",
             }}
           >
             {/* Top row: sprite + name + level + selection */}
@@ -598,41 +631,63 @@ function SpellSelectionContent({
             </div>
 
             {/* Stats grid */}
-            <div className="flex items-center gap-0 rounded overflow-hidden"
+            <div
+              className="flex items-center gap-0 rounded overflow-hidden"
               style={{ border: "1px solid rgba(100,70,140,0.12)" }}
             >
               {/* Cost */}
-              <div className="flex-1 flex items-center justify-center gap-0.5 py-1"
+              <div
+                className="flex-1 flex items-center justify-center gap-0.5 py-1"
                 style={{
-                  background: spell.cost > 0 ? "rgba(120,80,20,0.2)" : "rgba(20,83,45,0.2)",
+                  background:
+                    spell.cost > 0
+                      ? "rgba(120,80,20,0.2)"
+                      : "rgba(20,83,45,0.2)",
                   borderRight: "1px solid rgba(100,70,140,0.08)",
                 }}
               >
-                <Coins size={8} className={spell.cost > 0 ? "text-amber-400/70" : "text-green-400/70"} />
-                <span className={`text-[8px] font-bold ${spell.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}`}>
+                <Coins
+                  size={8}
+                  className={
+                    spell.cost > 0 ? "text-amber-400/70" : "text-green-400/70"
+                  }
+                />
+                <span
+                  className={`text-[8px] font-bold ${spell.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}`}
+                >
                   {spell.cost > 0 ? `${spell.cost} PP` : "Free"}
                 </span>
               </div>
               {/* Cooldown */}
-              <div className="flex-1 flex items-center justify-center gap-0.5 py-1"
+              <div
+                className="flex-1 flex items-center justify-center gap-0.5 py-1"
                 style={{
                   background: "rgba(30,58,138,0.15)",
                   borderRight: "1px solid rgba(100,70,140,0.08)",
                 }}
               >
                 <Clock size={8} className="text-blue-400/70" />
-                <span className="text-[8px] font-bold text-blue-300/80">{spell.cooldown / 1000}s</span>
+                <span className="text-[8px] font-bold text-blue-300/80">
+                  {spell.cooldown / 1000}s
+                </span>
               </div>
               {/* Spell-specific stats */}
               {stats.map((stat, idx) => (
-                <div key={idx} className="flex-1 flex items-center justify-center gap-0.5 py-1"
+                <div
+                  key={idx}
+                  className="flex-1 flex items-center justify-center gap-0.5 py-1"
                   style={{
                     background: stat.bg,
-                    borderRight: idx < stats.length - 1 ? "1px solid rgba(100,70,140,0.08)" : "none",
+                    borderRight:
+                      idx < stats.length - 1
+                        ? "1px solid rgba(100,70,140,0.08)"
+                        : "none",
                   }}
                 >
                   {stat.icon}
-                  <span className={`text-[8px] font-bold ${stat.textColor}`}>{stat.value}</span>
+                  <span className={`text-[8px] font-bold ${stat.textColor}`}>
+                    {stat.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -650,53 +705,141 @@ interface SpellStatDisplay {
   bg: string;
 }
 
-function getSpellStatsForType(spellType: SpellType, level: number): SpellStatDisplay[] {
+function getSpellStatsForType(
+  spellType: SpellType,
+  level: number
+): SpellStatDisplay[] {
   switch (spellType) {
     case "fireball": {
       const s = getFireballSpellStats(level);
       return [
-        { icon: <Flame size={8} className="text-orange-400/70" />, value: `${s.damagePerMeteor}×${s.meteorCount}`, textColor: "text-orange-300/80", bg: "rgba(124,45,18,0.15)" },
-        { icon: <Target size={8} className="text-red-400/70" />, value: `${s.impactRadius}`, textColor: "text-red-300/80", bg: "rgba(127,29,29,0.15)" },
-        { icon: <Timer size={8} className="text-amber-400/70" />, value: `${(s.burnDurationMs / 1000).toFixed(1)}s`, textColor: "text-amber-300/80", bg: "rgba(120,53,15,0.15)" },
+        {
+          bg: "rgba(124,45,18,0.15)",
+          icon: <Flame size={8} className="text-orange-400/70" />,
+          textColor: "text-orange-300/80",
+          value: `${s.damagePerMeteor}×${s.meteorCount}`,
+        },
+        {
+          bg: "rgba(127,29,29,0.15)",
+          icon: <Target size={8} className="text-red-400/70" />,
+          textColor: "text-red-300/80",
+          value: `${s.impactRadius}`,
+        },
+        {
+          bg: "rgba(120,53,15,0.15)",
+          icon: <Timer size={8} className="text-amber-400/70" />,
+          textColor: "text-amber-300/80",
+          value: `${(s.burnDurationMs / 1000).toFixed(1)}s`,
+        },
       ];
     }
     case "lightning": {
       const s = getLightningSpellStats(level);
       return [
-        { icon: <Zap size={8} className="text-yellow-400/70" />, value: `${s.totalDamage}`, textColor: "text-yellow-300/80", bg: "rgba(113,63,18,0.15)" },
-        { icon: <TrendingUp size={8} className="text-cyan-400/70" />, value: `${s.chainCount}ch`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
-        { icon: <Timer size={8} className="text-blue-400/70" />, value: `${(s.stunDurationMs / 1000).toFixed(2)}s`, textColor: "text-blue-300/80", bg: "rgba(30,58,138,0.15)" },
+        {
+          bg: "rgba(113,63,18,0.15)",
+          icon: <Zap size={8} className="text-yellow-400/70" />,
+          textColor: "text-yellow-300/80",
+          value: `${s.totalDamage}`,
+        },
+        {
+          bg: "rgba(22,78,99,0.15)",
+          icon: <TrendingUp size={8} className="text-cyan-400/70" />,
+          textColor: "text-cyan-300/80",
+          value: `${s.chainCount}ch`,
+        },
+        {
+          bg: "rgba(30,58,138,0.15)",
+          icon: <Timer size={8} className="text-blue-400/70" />,
+          textColor: "text-blue-300/80",
+          value: `${(s.stunDurationMs / 1000).toFixed(2)}s`,
+        },
       ];
     }
     case "freeze": {
       const s = getFreezeSpellStats(level);
       return [
-        { icon: <Snowflake size={8} className="text-cyan-400/70" />, value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
-        { icon: <Target size={8} className="text-indigo-400/70" />, value: s.isGlobal ? "Global" : `${s.maxTargets} max`, textColor: "text-indigo-300/80", bg: "rgba(49,46,129,0.15)" },
+        {
+          bg: "rgba(22,78,99,0.15)",
+          icon: <Snowflake size={8} className="text-cyan-400/70" />,
+          textColor: "text-cyan-300/80",
+          value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`,
+        },
+        {
+          bg: "rgba(49,46,129,0.15)",
+          icon: <Target size={8} className="text-indigo-400/70" />,
+          textColor: "text-indigo-300/80",
+          value: s.isGlobal ? "Global" : `${s.maxTargets} max`,
+        },
       ];
     }
     case "hex_ward": {
       const s = getHexWardSpellStats(level);
       return [
-        { icon: <Users size={8} className="text-fuchsia-400/70" />, value: `${s.maxReanimations} raise`, textColor: "text-fuchsia-300/80", bg: "rgba(88,28,135,0.15)" },
-        { icon: <Eye size={8} className="text-purple-400/70" />, value: `${s.maxTargets} mark`, textColor: "text-purple-300/80", bg: "rgba(76,29,149,0.15)" },
-        { icon: <Timer size={8} className="text-violet-400/70" />, value: `${(s.durationMs / 1000).toFixed(0)}s`, textColor: "text-violet-300/80", bg: "rgba(91,33,182,0.15)" },
+        {
+          bg: "rgba(88,28,135,0.15)",
+          icon: <Users size={8} className="text-fuchsia-400/70" />,
+          textColor: "text-fuchsia-300/80",
+          value: `${s.maxReanimations} raise`,
+        },
+        {
+          bg: "rgba(76,29,149,0.15)",
+          icon: <Eye size={8} className="text-purple-400/70" />,
+          textColor: "text-purple-300/80",
+          value: `${s.maxTargets} mark`,
+        },
+        {
+          bg: "rgba(91,33,182,0.15)",
+          icon: <Timer size={8} className="text-violet-400/70" />,
+          textColor: "text-violet-300/80",
+          value: `${(s.durationMs / 1000).toFixed(0)}s`,
+        },
       ];
     }
     case "payday": {
       const s = getPaydaySpellStats(level);
       return [
-        { icon: <Coins size={8} className="text-amber-400/70" />, value: `${s.basePayout}`, textColor: "text-amber-300/80", bg: "rgba(120,53,15,0.15)" },
-        { icon: <TrendingUp size={8} className="text-green-400/70" />, value: `+${s.bonusPerEnemy}/e`, textColor: "text-green-300/80", bg: "rgba(20,83,45,0.15)" },
-        { icon: <Timer size={8} className="text-yellow-400/70" />, value: `${s.auraDurationMs / 1000}s`, textColor: "text-yellow-300/80", bg: "rgba(113,63,18,0.15)" },
+        {
+          bg: "rgba(120,53,15,0.15)",
+          icon: <Coins size={8} className="text-amber-400/70" />,
+          textColor: "text-amber-300/80",
+          value: `${s.basePayout}`,
+        },
+        {
+          bg: "rgba(20,83,45,0.15)",
+          icon: <TrendingUp size={8} className="text-green-400/70" />,
+          textColor: "text-green-300/80",
+          value: `+${s.bonusPerEnemy}/e`,
+        },
+        {
+          bg: "rgba(113,63,18,0.15)",
+          icon: <Timer size={8} className="text-yellow-400/70" />,
+          textColor: "text-yellow-300/80",
+          value: `${s.auraDurationMs / 1000}s`,
+        },
       ];
     }
     case "reinforcements": {
       const s = getReinforcementSpellStats(level);
       return [
-        { icon: <Users size={8} className="text-emerald-400/70" />, value: `×${s.knightCount}`, textColor: "text-emerald-300/80", bg: "rgba(6,78,59,0.15)" },
-        { icon: <Heart size={8} className="text-red-400/70" />, value: `${s.knightHp}`, textColor: "text-red-300/80", bg: "rgba(127,29,29,0.15)" },
-        { icon: <Swords size={8} className="text-orange-400/70" />, value: `${s.knightDamage}`, textColor: "text-orange-300/80", bg: "rgba(124,45,18,0.15)" },
+        {
+          bg: "rgba(6,78,59,0.15)",
+          icon: <Users size={8} className="text-emerald-400/70" />,
+          textColor: "text-emerald-300/80",
+          value: `×${s.knightCount}`,
+        },
+        {
+          bg: "rgba(127,29,29,0.15)",
+          icon: <Heart size={8} className="text-red-400/70" />,
+          textColor: "text-red-300/80",
+          value: `${s.knightHp}`,
+        },
+        {
+          bg: "rgba(124,45,18,0.15)",
+          icon: <Swords size={8} className="text-orange-400/70" />,
+          textColor: "text-orange-300/80",
+          value: `${s.knightDamage}`,
+        },
       ];
     }
   }

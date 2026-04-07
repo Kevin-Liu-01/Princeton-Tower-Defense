@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+
 import type {
   GameSettings,
   QualityPreset,
@@ -47,7 +48,16 @@ export function getSettingsVersion(): number {
 function syncPerformanceModule(settings: GameSettings): void {
   const { graphics, landscaping, animation, ui } = settings;
   setPerformanceSettings({
+    antiAliasing: graphics.antiAliasing,
+    deathAnimations: animation.deathAnimations,
     disableShadows: graphics.shadowQuality === "off",
+    idleAnimations: animation.idleAnimations,
+    projectileTrails: animation.projectileTrails,
+    reducedFogQuality:
+      graphics.fogQuality === "off" || graphics.fogQuality === "reduced",
+    reducedParticles:
+      graphics.particleDensity === "off" ||
+      graphics.particleDensity === "reduced",
     shadowQualityMultiplier:
       graphics.shadowQuality === "off"
         ? 0
@@ -55,26 +65,17 @@ function syncPerformanceModule(settings: GameSettings): void {
           ? 0.35
           : graphics.shadowQuality === "medium"
             ? 0.6
-            : 1.0,
-    reducedParticles:
-      graphics.particleDensity === "off" ||
-      graphics.particleDensity === "reduced",
+            : 1,
+    showAurora: graphics.showAurora,
+    showGodRays: graphics.showGodRays,
+    showHealthBars: ui.showHealthBars,
+    showLandmarks: landscaping.showLandmarks,
+    showPathDecorations: landscaping.showPathDecorations,
+    showScreenGlow: graphics.showScreenGlow,
+    showWaterEffects: landscaping.showWaterEffects,
     simplifiedGradients: graphics.gradientQuality === "simplified",
     skipEnvironmentEffects: graphics.environmentEffects === "off",
-    reducedFogQuality:
-      graphics.fogQuality === "off" || graphics.fogQuality === "reduced",
-    showGodRays: graphics.showGodRays,
-    showAurora: graphics.showAurora,
-    showScreenGlow: graphics.showScreenGlow,
-    antiAliasing: graphics.antiAliasing,
-    showHealthBars: ui.showHealthBars,
-    showPathDecorations: landscaping.showPathDecorations,
-    showLandmarks: landscaping.showLandmarks,
-    showWaterEffects: landscaping.showWaterEffects,
-    deathAnimations: animation.deathAnimations,
-    projectileTrails: animation.projectileTrails,
     towerAnimations: animation.towerAnimations,
-    idleAnimations: animation.idleAnimations,
   });
 }
 
@@ -92,13 +93,15 @@ export function useSettings(): {
   resetToDefaults: () => void;
   resetCategory: (category: SettingsCategory) => void;
 } {
-  const [settings, setSettings] = useState<GameSettings>(
-    () => deepClone(currentGameSettings)
+  const [settings, setSettings] = useState<GameSettings>(() =>
+    deepClone(currentGameSettings)
   );
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    if (!isInitialMount.current) return;
+    if (!isInitialMount.current) {
+      return;
+    }
     isInitialMount.current = false;
 
     try {
@@ -151,9 +154,15 @@ export function useSettings(): {
       const presetData = QUALITY_PRESETS[preset];
       setSettings((prev) => {
         const next = deepClone(prev);
-        if (presetData.graphics) Object.assign(next.graphics, presetData.graphics);
-        if (presetData.landscaping) Object.assign(next.landscaping, presetData.landscaping);
-        if (presetData.animation) Object.assign(next.animation, presetData.animation);
+        if (presetData.graphics) {
+          Object.assign(next.graphics, presetData.graphics);
+        }
+        if (presetData.landscaping) {
+          Object.assign(next.landscaping, presetData.landscaping);
+        }
+        if (presetData.animation) {
+          Object.assign(next.animation, presetData.animation);
+        }
         persist(next);
         return next;
       });
@@ -181,5 +190,11 @@ export function useSettings(): {
     [persist]
   );
 
-  return { settings, updateCategory, applyPreset, resetToDefaults, resetCategory };
+  return {
+    applyPreset,
+    resetCategory,
+    resetToDefaults,
+    settings,
+    updateCategory,
+  };
 }

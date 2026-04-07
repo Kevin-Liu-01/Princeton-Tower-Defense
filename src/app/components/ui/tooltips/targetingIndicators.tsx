@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
 import { Crosshair, Flame, Rocket, Target, Users, Zap } from "lucide-react";
-import type { SpellType } from "../../../types";
+import React from "react";
+
 import type { MapTheme } from "../../../constants/maps";
-import { GOLD, panelGradient } from "../system/theme";
 import { getSentinelPalette } from "../../../rendering/towers/sentinelTheme";
+import type { SpellType } from "../../../types";
+import { GOLD, panelGradient } from "../system/theme";
 
 const INDICATOR_TOP_BASE = 80;
 const INDICATOR_TOP_PAYDAY_OFFSET = 68;
@@ -20,26 +21,26 @@ function getIndicatorTop(paydayActive: boolean): number {
 
 export const PlacingTroopIndicator: React.FC<{ paydayActive?: boolean }> = ({
   paydayActive = false,
-}) => {
-  return (
-    <div
-      className={INDICATOR_CLASS}
-      style={{
-        top: getIndicatorTop(paydayActive),
-        zIndex: 150,
-        background: panelGradient,
-        border: `1.5px solid ${GOLD.border30}`,
-        boxShadow: `0 0 20px ${GOLD.glow07}`,
-      }}
-    >
-      <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
-        <Users size={16} className="text-purple-400" />
-        <span className="text-purple-100">Click to Deploy Reinforce</span>
-        <span className="text-purple-400 text-xs">(3 Knights with 500 HP each)</span>
-      </div>
+}) => (
+  <div
+    className={INDICATOR_CLASS}
+    style={{
+      background: panelGradient,
+      border: `1.5px solid ${GOLD.border30}`,
+      boxShadow: `0 0 20px ${GOLD.glow07}`,
+      top: getIndicatorTop(paydayActive),
+      zIndex: 150,
+    }}
+  >
+    <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
+      <Users size={16} className="text-purple-400" />
+      <span className="text-purple-100">Click to Deploy Reinforce</span>
+      <span className="text-purple-400 text-xs">
+        (3 Knights with 500 HP each)
+      </span>
     </div>
-  );
-};
+  </div>
+);
 
 const SPELL_TARGET_CONFIG: Record<
   string,
@@ -53,20 +54,21 @@ const SPELL_TARGET_CONFIG: Record<
   }
 > = {
   fireball: {
-    label: "Click to Target Meteor Shower",
-    color: "text-orange-100",
-    icon: <Flame size={16} className="text-orange-400" />,
-    borderColor: "rgba(234,88,12,0.6)",
     bgGrad: "linear-gradient(135deg, rgba(120,50,10,0.92), rgba(60,25,5,0.88))",
+    borderColor: "rgba(234,88,12,0.6)",
+    color: "text-orange-100",
     glowColor: "0 0 20px rgba(234,88,12,0.4)",
+    icon: <Flame size={16} className="text-orange-400" />,
+    label: "Click to Target Meteor Shower",
   },
   lightning: {
-    label: "Click to Target Chain Lightning",
-    color: "text-yellow-100",
-    icon: <Zap size={16} className="text-yellow-400" />,
+    bgGrad:
+      "linear-gradient(135deg, rgba(120,100,10,0.92), rgba(60,50,5,0.88))",
     borderColor: "rgba(234,179,8,0.6)",
-    bgGrad: "linear-gradient(135deg, rgba(120,100,10,0.92), rgba(60,50,5,0.88))",
+    color: "text-yellow-100",
     glowColor: "0 0 20px rgba(234,179,8,0.4)",
+    icon: <Zap size={16} className="text-yellow-400" />,
+    label: "Click to Target Chain Lightning",
   },
 };
 
@@ -83,11 +85,11 @@ export const TargetingSpellIndicator: React.FC<{
     <div
       className={INDICATOR_CLASS}
       style={{
-        top: getIndicatorTop(paydayActive),
-        zIndex: 150,
         background: config.bgGrad,
         border: `1.5px solid ${config.borderColor}`,
         boxShadow: config.glowColor,
+        top: getIndicatorTop(paydayActive),
+        zIndex: 150,
       }}
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
@@ -99,32 +101,31 @@ export const TargetingSpellIndicator: React.FC<{
   );
 };
 
-export const MissileTargetingIndicator: React.FC<{ paydayActive?: boolean }> = ({
-  paydayActive = false,
-}) => {
-  return (
-    <div
-      className={INDICATOR_CLASS}
-      style={{
-        top: getIndicatorTop(paydayActive),
-        zIndex: 150,
-        background: "linear-gradient(135deg, rgba(120,55,0,0.94), rgba(60,28,0,0.9))",
-        border: "1.5px solid rgba(255,140,0,0.6)",
-        boxShadow:
-          "0 0 24px rgba(255,100,0,0.35), inset 0 0 12px rgba(255,140,0,0.08)",
-      }}
-    >
-      <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
-        <Rocket size={16} className="text-orange-400" />
-        <span className="text-orange-100">Select Strike Zone</span>
-        <span className="text-orange-400/70 text-[10px] font-medium ml-1">
-          Click to confirm target
-        </span>
-        <Crosshair size={14} className="text-orange-500/60" />
-      </div>
+export const MissileTargetingIndicator: React.FC<{
+  paydayActive?: boolean;
+}> = ({ paydayActive = false }) => (
+  <div
+    className={INDICATOR_CLASS}
+    style={{
+      background:
+        "linear-gradient(135deg, rgba(120,55,0,0.94), rgba(60,28,0,0.9))",
+      border: "1.5px solid rgba(255,140,0,0.6)",
+      boxShadow:
+        "0 0 24px rgba(255,100,0,0.35), inset 0 0 12px rgba(255,140,0,0.08)",
+      top: getIndicatorTop(paydayActive),
+      zIndex: 150,
+    }}
+  >
+    <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
+      <Rocket size={16} className="text-orange-400" />
+      <span className="text-orange-100">Select Strike Zone</span>
+      <span className="text-orange-400/70 text-[10px] font-medium ml-1">
+        Click to confirm target
+      </span>
+      <Crosshair size={14} className="text-orange-500/60" />
     </div>
-  );
-};
+  </div>
+);
 
 export const SentinelTargetingIndicator: React.FC<{
   paydayActive?: boolean;
@@ -137,7 +138,9 @@ export const SentinelTargetingIndicator: React.FC<{
   const border = `rgba(${r},${g},${b},0.6)`;
   const shadow = `0 0 24px rgba(${r},${g},${b},0.35), inset 0 0 12px rgba(${r},${g},${b},0.08)`;
   const iconColor = { color: `rgb(${r},${g},${b})` };
-  const textColor = { color: `rgba(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)},1)` };
+  const textColor = {
+    color: `rgba(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)},1)`,
+  };
   const subtextColor = { color: `rgba(${r},${g},${b},0.7)` };
   const crosshairColor = { color: `rgba(${r},${g},${b},0.6)` };
 
@@ -145,11 +148,11 @@ export const SentinelTargetingIndicator: React.FC<{
     <div
       className={INDICATOR_CLASS}
       style={{
-        top: getIndicatorTop(paydayActive),
-        zIndex: 150,
         background: `linear-gradient(135deg, ${bgDark}, ${bgDeep})`,
         border: `1.5px solid ${border}`,
         boxShadow: shadow,
+        top: getIndicatorTop(paydayActive),
+        zIndex: 150,
       }}
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">

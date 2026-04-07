@@ -8,16 +8,16 @@ import { getDecorationHeightTag } from "./index";
  * so they can still sit naturally near larger objects.
  */
 const EXCLUSION_RADIUS_BY_TAG: Record<DecorationHeightTag, number> = {
+  ground: 0.08,
   landmark: 0.8,
-  tall: 0.35,
   medium: 0.22,
   short: 0.14,
-  ground: 0.08,
+  tall: 0.35,
 };
 
 export function getExclusionRadius(
   type: DecorationType,
-  scale: number,
+  scale: number
 ): number {
   const tag = getDecorationHeightTag(type);
   return EXCLUSION_RADIUS_BY_TAG[tag] * Math.max(0.4, scale);
@@ -39,7 +39,7 @@ export class DecorationSpatialGrid {
   private readonly cellSize: number;
   private readonly cells = new Map<string, PlacedEntry[]>();
 
-  constructor(cellSize = 1.0) {
+  constructor(cellSize = 1) {
     this.cellSize = cellSize;
   }
 
@@ -56,7 +56,7 @@ export class DecorationSpatialGrid {
       bucket = [];
       this.cells.set(k, bucket);
     }
-    bucket.push({ x: gridX, y: gridY, radius });
+    bucket.push({ radius, x: gridX, y: gridY });
   }
 
   canPlace(gridX: number, gridY: number, radius: number): boolean {
@@ -67,12 +67,15 @@ export class DecorationSpatialGrid {
     for (let dx = -reach; dx <= reach; dx++) {
       for (let dy = -reach; dy <= reach; dy++) {
         const bucket = this.cells.get(this.key(cx + dx, cy + dy));
-        if (!bucket) continue;
+        if (!bucket) {
+          continue;
+        }
         for (const entry of bucket) {
-          const distSq =
-            (gridX - entry.x) ** 2 + (gridY - entry.y) ** 2;
+          const distSq = (gridX - entry.x) ** 2 + (gridY - entry.y) ** 2;
           const minDist = radius + entry.radius;
-          if (distSq < minDist * minDist) return false;
+          if (distSq < minDist * minDist) {
+            return false;
+          }
         }
       }
     }
@@ -80,7 +83,9 @@ export class DecorationSpatialGrid {
   }
 
   tryPlace(gridX: number, gridY: number, radius: number): boolean {
-    if (!this.canPlace(gridX, gridY, radius)) return false;
+    if (!this.canPlace(gridX, gridY, radius)) {
+      return false;
+    }
     this.register(gridX, gridY, radius);
     return true;
   }

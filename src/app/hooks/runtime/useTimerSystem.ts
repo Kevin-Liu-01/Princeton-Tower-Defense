@@ -1,5 +1,6 @@
 import { useRef, useCallback, useMemo } from "react";
 import type { MutableRefObject } from "react";
+
 import type { PausableTimeoutEntry } from "../../game/state";
 import {
   clearAllTimersImpl,
@@ -36,24 +37,51 @@ export function useTimerSystem(gameSpeed: number): TimerSystemReturn {
   const zoomSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isZoomDebouncingRef = useRef(false);
 
-  const timerRefs = useMemo(() => ({
-    spawnIntervalsRef, activeTimeoutsRef, pausableTimeoutsRef,
-    zoomSettleTimerRef, isZoomDebouncingRef, pausableTimeoutIdCounter,
-    gameSpeedRef, pausedAtRef,
-  }), []);
-
-  const clearAllTimers = useCallback(() => clearAllTimersImpl(timerRefs), [timerRefs]);
-  const setPausableTimeout = useCallback(
-    (callback: () => void, delay: number) => setPausableTimeoutImpl(timerRefs, callback, delay),
-    [timerRefs],
+  const timerRefs = useMemo(
+    () => ({
+      activeTimeoutsRef,
+      gameSpeedRef,
+      isZoomDebouncingRef,
+      pausableTimeoutIdCounter,
+      pausableTimeoutsRef,
+      pausedAtRef,
+      spawnIntervalsRef,
+      zoomSettleTimerRef,
+    }),
+    []
   );
-  const pauseAllTimeouts = useCallback(() => pauseAllTimeoutsImpl(timerRefs), [timerRefs]);
-  const resumeAllTimeouts = useCallback(() => resumeAllTimeoutsImpl(timerRefs), [timerRefs]);
+
+  const clearAllTimers = useCallback(
+    () => clearAllTimersImpl(timerRefs),
+    [timerRefs]
+  );
+  const setPausableTimeout = useCallback(
+    (callback: () => void, delay: number) =>
+      setPausableTimeoutImpl(timerRefs, callback, delay),
+    [timerRefs]
+  );
+  const pauseAllTimeouts = useCallback(
+    () => pauseAllTimeoutsImpl(timerRefs),
+    [timerRefs]
+  );
+  const resumeAllTimeouts = useCallback(
+    () => resumeAllTimeoutsImpl(timerRefs),
+    [timerRefs]
+  );
 
   return {
-    clearAllTimers, setPausableTimeout, pauseAllTimeouts, resumeAllTimeouts,
-    spawnIntervalsRef, activeTimeoutsRef, pausableTimeoutsRef,
-    gameSpeedRef, pausedAtRef, totalPausedTimeRef, pausableTimeoutIdCounter,
-    zoomSettleTimerRef, isZoomDebouncingRef,
+    activeTimeoutsRef,
+    clearAllTimers,
+    gameSpeedRef,
+    isZoomDebouncingRef,
+    pausableTimeoutIdCounter,
+    pausableTimeoutsRef,
+    pauseAllTimeouts,
+    pausedAtRef,
+    resumeAllTimeouts,
+    setPausableTimeout,
+    spawnIntervalsRef,
+    totalPausedTimeRef,
+    zoomSettleTimerRef,
   };
 }

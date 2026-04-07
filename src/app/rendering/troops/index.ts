@@ -1,22 +1,21 @@
-import type { Troop, Position, TroopOwnerType } from "../../types";
-import type { MapTheme } from "../../constants/maps";
 import { TROOP_DATA, ISO_Y_RATIO } from "../../constants";
+import type { MapTheme } from "../../constants/maps";
+import type { Troop, Position, TroopOwnerType } from "../../types";
 import { worldToScreen, worldToScreenRounded } from "../../utils";
 import { getPerformanceSettings, getScenePressure } from "../performance";
-
-import { drawSoldierTroop } from "./soldier";
+import { drawArmoredTroop } from "./armored";
 import { drawCavalryTroop } from "./cavalry";
 import { drawCentaurTroop } from "./centaur";
 import { drawEliteTroop } from "./elite";
-import { drawArmoredTroop } from "./armored";
-import { drawThesisTroop } from "./thesis";
-import { drawRowingTroop } from "./rowing";
 import { drawHexlingTroop } from "./hexling";
 import { drawHexseerTroop } from "./hexseer";
-import { drawReinforcementTroop } from "./reinforcement";
 import { drawKnightTroop } from "./knight";
-import { drawTurretTroop } from "./turret";
+import { drawReinforcementTroop } from "./reinforcement";
+import { drawRowingTroop } from "./rowing";
+import { drawSoldierTroop } from "./soldier";
+import { drawThesisTroop } from "./thesis";
 import { drawTroopRegionOverlay } from "./troopRegionThemes";
+import { drawTurretTroop } from "./turret";
 
 export type { KnightTheme } from "./knightThemes";
 export { getKnightTheme } from "./knightThemes";
@@ -30,7 +29,7 @@ export function renderTroop(
   cameraOffset?: Position,
   cameraZoom?: number,
   targetPos?: Position,
-  mapTheme?: MapTheme,
+  mapTheme?: MapTheme
 ) {
   const screenPos = worldToScreenRounded(
     troop.pos,
@@ -38,7 +37,7 @@ export function renderTroop(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const troopType = troop.type || "footsoldier";
@@ -52,10 +51,11 @@ export function renderTroop(
     troop.isHexGhost && troop.hexGhostExpireTime
       ? Math.max(0, Math.min(1, (troop.hexGhostExpireTime - Date.now()) / 8000))
       : 1;
-  const ghostAlpha =
-    troop.isHexGhost
-      ? 0.42 + ghostRemainingRatio * 0.5 + (minDetail ? 0 : Math.sin(time * 7.5) * 0.04)
-      : 1;
+  const ghostAlpha = troop.isHexGhost
+    ? 0.42 +
+      ghostRemainingRatio * 0.5 +
+      (minDetail ? 0 : Math.sin(time * 7.5) * 0.04)
+    : 1;
 
   ctx.save();
   if (troop.isHexGhost) {
@@ -70,7 +70,7 @@ export function renderTroop(
       0,
       screenPos.x,
       screenPos.y - 3 * zoom,
-      30 * zoom,
+      30 * zoom
     );
     ghostAura.addColorStop(0, `rgba(244, 114, 182, ${0.22 * ghostPulse})`);
     ghostAura.addColorStop(1, "rgba(76, 29, 149, 0)");
@@ -83,7 +83,7 @@ export function renderTroop(
       18 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -116,7 +116,7 @@ export function renderTroop(
       14 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -131,7 +131,7 @@ export function renderTroop(
     (troop.isHexGhost ? 4.5 : 7) * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -145,7 +145,7 @@ export function renderTroop(
       ? Math.cos(troop.rotation + Math.PI / 4) >= 0
       : true);
 
-  let targetScreenPos: Position | undefined = undefined;
+  let targetScreenPos;
   if (targetPos) {
     targetScreenPos = worldToScreen(
       targetPos,
@@ -153,7 +153,7 @@ export function renderTroop(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   }
 
@@ -187,7 +187,7 @@ export function renderTroop(
       size * 0.1,
       screenPos.x,
       screenPos.y,
-      size * 1.0,
+      size * 1
     );
     outerGlow.addColorStop(0, `rgba(134, 239, 172, ${0.5 * pulseAlpha})`);
     outerGlow.addColorStop(1, "rgba(34, 197, 94, 0)");
@@ -200,7 +200,7 @@ export function renderTroop(
       size * 0.9 * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -224,7 +224,7 @@ export function renderTroop(
     troop.visualTier,
     mapTheme,
     troop.id,
-    troop.knightVariant,
+    troop.knightVariant
   );
 
   ctx.restore();
@@ -239,7 +239,7 @@ export function renderTroop(
       0,
       screenPos.x,
       screenPos.y,
-      size * 0.45,
+      size * 0.45
     );
     innerGlow.addColorStop(0, `rgba(187, 247, 208, ${0.65 * pulseAlpha})`);
     innerGlow.addColorStop(1, "rgba(74, 222, 128, 0)");
@@ -252,7 +252,7 @@ export function renderTroop(
       size * 0.45 * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -264,7 +264,7 @@ export function renderTroop(
           screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
         const sparkleY = screenPos.y + size * 0.15 - sparklePhase * size * 0.9;
         const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
-        const sparkleSize = (2.0 + Math.sin(i * 1.2) * 0.6) * zoom;
+        const sparkleSize = (2 + Math.sin(i * 1.2) * 0.6) * zoom;
 
         ctx.fillStyle = `rgba(220, 252, 231, ${sparkleAlpha})`;
         ctx.beginPath();
@@ -277,7 +277,7 @@ export function renderTroop(
       }
 
       for (let i = 0; i < 3; i++) {
-        const shimmerAngle = time * 1.0 + i * ((Math.PI * 2) / 3);
+        const shimmerAngle = time * 1 + i * ((Math.PI * 2) / 3);
         const shimmerDist = size * 0.35;
         const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
         const shimmerY =
@@ -295,21 +295,21 @@ export function renderTroop(
 
   if (getPerformanceSettings().showHealthBars && troop.hp < troop.maxHp) {
     const TROOP_HP_BAR_HEIGHT: Record<string, number> = {
-      footsoldier: 1.1,
-      soldier: 1.2,
-      rowing: 1.1,
-      hexling: 1.28,
       armored: 1.72,
-      elite: 1.75,
-      thesis: 1.4,
-      hexseer: 1.42,
-      reinforcement: 1.72,
       cavalry: 2.4,
-      centaur: 2.0,
+      centaur: 2,
+      elite: 1.75,
+      footsoldier: 1.1,
+      hexling: 1.28,
+      hexseer: 1.42,
       knight: 1.92,
+      reinforcement: 1.72,
+      rowing: 1.1,
+      soldier: 1.2,
+      thesis: 1.4,
       turret: 1.75,
     };
-    const hpBarHeightMul = TROOP_HP_BAR_HEIGHT[troopType] ?? 1.0;
+    const hpBarHeightMul = TROOP_HP_BAR_HEIGHT[troopType] ?? 1;
     const barWidth = 32 * zoom;
     const barHeight = 5 * zoom;
     const barY = screenPos.y - size * hpBarHeightMul - 10 * zoom;
@@ -327,7 +327,7 @@ export function renderTroop(
       barY - 1,
       barWidth + 2,
       barHeight + 2,
-      cornerRadius,
+      cornerRadius
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -343,9 +343,19 @@ export function renderTroop(
 
     if (hpWidth > 0) {
       if (lowDetail) {
-        ctx.fillStyle = hpPercent > 0.5 ? "#4ade80" : hpPercent > 0.25 ? "#facc15" : "#f87171";
+        ctx.fillStyle =
+          hpPercent > 0.5
+            ? "#4ade80"
+            : hpPercent > 0.25
+              ? "#facc15"
+              : "#f87171";
       } else {
-        const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+        const hpGradient = ctx.createLinearGradient(
+          barX,
+          barY,
+          barX,
+          barY + barHeight
+        );
         if (hpPercent > 0.5) {
           hpGradient.addColorStop(0, "#86efac");
           hpGradient.addColorStop(0.5, "#4ade80");
@@ -371,7 +381,12 @@ export function renderTroop(
       ctx.fill();
 
       if (!lowDetail) {
-        const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.45);
+        const shineGrad = ctx.createLinearGradient(
+          barX,
+          barY,
+          barX,
+          barY + barHeight * 0.45
+        );
         shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.35)");
         shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
         ctx.fillStyle = shineGrad;
@@ -396,7 +411,13 @@ export function renderTroop(
       ctx.strokeStyle = glowColor;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+      ctx.roundRect(
+        barX - 1,
+        barY - 1,
+        barWidth + 2,
+        barHeight + 2,
+        cornerRadius
+      );
       ctx.stroke();
     }
   }
@@ -418,31 +439,31 @@ export function drawTroopSprite(
   visualTier?: number,
   mapTheme?: MapTheme,
   troopId?: string,
-  knightVariant?: number,
+  knightVariant?: number
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
-    footsoldier: 1.15,
-    soldier: 1.25,
-    rowing: 1.15,
-    hexling: 1.2,
     armored: 1.65,
-    elite: 1.7,
-    thesis: 1.35,
-    hexseer: 1.28,
-    reinforcement: 1.55,
     cavalry: 1.6,
     centaur: 1.6,
+    elite: 1.7,
+    footsoldier: 1.15,
+    hexling: 1.2,
+    hexseer: 1.28,
     knight: 1.55,
+    reinforcement: 1.55,
+    rowing: 1.15,
+    soldier: 1.25,
+    thesis: 1.35,
     turret: 1.7,
   };
 
-  const scale = TROOP_SPRITE_SCALES[type] ?? 1.0;
+  const scale = TROOP_SPRITE_SCALES[type] ?? 1;
   const scaledSize = size * scale;
   const scaledY = y - size * (scale - 1) * 0.5;
 
   switch (type) {
     case "soldier":
-    case "footsoldier":
+    case "footsoldier": {
       drawSoldierTroop(
         ctx,
         x,
@@ -452,10 +473,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "cavalry":
+    }
+    case "cavalry": {
       drawCavalryTroop(
         ctx,
         x,
@@ -465,10 +487,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "centaur":
+    }
+    case "centaur": {
       drawCentaurTroop(
         ctx,
         x,
@@ -478,10 +501,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "elite":
+    }
+    case "elite": {
       drawEliteTroop(
         ctx,
         x,
@@ -491,10 +515,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "armored":
+    }
+    case "armored": {
       drawArmoredTroop(
         ctx,
         x,
@@ -504,10 +529,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "thesis":
+    }
+    case "thesis": {
       drawThesisTroop(
         ctx,
         x,
@@ -517,10 +543,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "hexling":
+    }
+    case "hexling": {
       drawHexlingTroop(
         ctx,
         x,
@@ -530,10 +557,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "reinforcement":
+    }
+    case "reinforcement": {
       drawReinforcementTroop(
         ctx,
         x,
@@ -544,10 +572,11 @@ export function drawTroopSprite(
         attackPhase,
         visualTier,
         targetPos,
-        troopId,
+        troopId
       );
       break;
-    case "rowing":
+    }
+    case "rowing": {
       drawRowingTroop(
         ctx,
         x,
@@ -557,10 +586,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "hexseer":
+    }
+    case "hexseer": {
       drawHexseerTroop(
         ctx,
         x,
@@ -570,10 +600,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    case "knight":
+    }
+    case "knight": {
       drawKnightTroop(
         ctx,
         x,
@@ -586,10 +617,11 @@ export function drawTroopSprite(
         ownerType,
         targetPos,
         mapTheme,
-        knightVariant,
+        knightVariant
       );
       break;
-    case "turret":
+    }
+    case "turret": {
       drawTurretTroop(
         ctx,
         x,
@@ -599,10 +631,11 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos,
+        targetPos
       );
       break;
-    default:
+    }
+    default: {
       drawKnightTroop(
         ctx,
         x,
@@ -614,11 +647,21 @@ export function drawTroopSprite(
         attackPhase,
         undefined,
         targetPos,
-        mapTheme,
+        mapTheme
       );
+    }
   }
 
   if (mapTheme && mapTheme !== "grassland") {
-    drawTroopRegionOverlay(ctx, x, scaledY, scaledSize, type, mapTheme, time, zoom);
+    drawTroopRegionOverlay(
+      ctx,
+      x,
+      scaledY,
+      scaledSize,
+      type,
+      mapTheme,
+      time,
+      zoom
+    );
   }
 }

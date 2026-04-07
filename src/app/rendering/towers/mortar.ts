@@ -1,5 +1,6 @@
-import type { Tower, Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants";
+import { TOWER_STATS } from "../../constants/towerStats";
+import type { Tower, Position } from "../../types";
 import {
   generateIsoHexVertices,
   computeHexSideNormals,
@@ -7,11 +8,9 @@ import {
   drawHexCap,
   drawHexBand,
   scaleVerts,
-  type IsoOffFn,
-  type Pt,
 } from "../helpers";
+import type { IsoOffFn, Pt } from "../helpers";
 import { drawIsometricPrism, drawIsoSandbag } from "./towerHelpers";
-import { TOWER_STATS } from "../../constants/towerStats";
 
 const MORTAR_BASE_ATTACK_SPEED = TOWER_STATS.mortar.baseStats.attackSpeed;
 const MISSILE_ATTACK_SPEED =
@@ -20,8 +19,12 @@ const EMBER_ATTACK_SPEED =
   TOWER_STATS.mortar.upgrades.B.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
 
 function getMortarAttackSpeed(tower: Tower): number {
-  if (tower.level === 4 && tower.upgrade === "A") return MISSILE_ATTACK_SPEED;
-  if (tower.level === 4 && tower.upgrade === "B") return EMBER_ATTACK_SPEED;
+  if (tower.level === 4 && tower.upgrade === "A") {
+    return MISSILE_ATTACK_SPEED;
+  }
+  if (tower.level === 4 && tower.upgrade === "B") {
+    return EMBER_ATTACK_SPEED;
+  }
   return MORTAR_BASE_ATTACK_SPEED;
 }
 
@@ -31,11 +34,11 @@ export function renderMortarTower(
   tower: Tower,
   zoom: number,
   time: number,
-  colors: { base: string; dark: string; light: string; accent: string },
+  colors: { base: string; dark: string; light: string; accent: string }
 ) {
   void colors;
   ctx.save();
-  const level = tower.level;
+  const { level } = tower;
   const isMissile = level === 4 && tower.upgrade === "A";
   const isEmber = level === 4 && tower.upgrade === "B";
   const variantAttackSpeed = getMortarAttackSpeed(tower);
@@ -57,15 +60,13 @@ export function renderMortarTower(
     recoilBase =
       t < 0.15
         ? (t / 0.15) * 3 * zoom
-        : 3 * zoom * Math.pow(1 - (t - 0.15) / 0.85, 2);
+        : 3 * zoom * (1 - (t - 0.15) / 0.85) ** 2;
     recoilMid =
-      t < 0.1
-        ? (t / 0.1) * 6 * zoom
-        : 6 * zoom * Math.pow(1 - (t - 0.1) / 0.9, 1.8);
+      t < 0.1 ? (t / 0.1) * 6 * zoom : 6 * zoom * (1 - (t - 0.1) / 0.9) ** 1.8;
     recoilTip =
       t < 0.06
         ? (t / 0.06) * 14 * zoom
-        : 14 * zoom * Math.pow(1 - (t - 0.06) / 0.94, 1.5);
+        : 14 * zoom * (1 - (t - 0.06) / 0.94) ** 1.5;
   }
 
   // ========== GROUND SHADOW (multi-layered, soft edge) ==========
@@ -81,7 +82,7 @@ export function renderMortarTower(
       shW * 0.35,
       shX,
       shY,
-      shW * 1.25,
+      shW * 1.25
     );
     penGrad.addColorStop(0, "rgba(0,0,0,0.30)");
     penGrad.addColorStop(0.5, "rgba(0,0,0,0.16)");
@@ -119,7 +120,8 @@ export function renderMortarTower(
     const rubbleSeed = 47;
     ctx.fillStyle = "rgba(60,55,45,0.14)";
     for (let ri = 0; ri < 12; ri++) {
-      const angle = (ri / 12) * Math.PI * 2 + ((rubbleSeed * ri * 7) % 100) * 0.006;
+      const angle =
+        (ri / 12) * Math.PI * 2 + ((rubbleSeed * ri * 7) % 100) * 0.006;
       const dist = rubbleR * (0.85 + ((rubbleSeed * ri * 13) % 100) * 0.003);
       const rx = screenPos.x + Math.cos(angle) * dist;
       const ry = rubbleY + Math.sin(angle) * dist * ISO_Y_RATIO;
@@ -142,11 +144,27 @@ export function renderMortarTower(
     // Firing scorch marks (darkened blast residue near base)
     ctx.fillStyle = "rgba(20,15,10,0.08)";
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, rubbleY - 2 * zoom, rubbleR * 0.5, rubbleR * 0.22, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      rubbleY - 2 * zoom,
+      rubbleR * 0.5,
+      rubbleR * 0.22,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.fillStyle = "rgba(30,20,10,0.05)";
     ctx.beginPath();
-    ctx.ellipse(screenPos.x + 3 * zoom, rubbleY - 1 * zoom, rubbleR * 0.35, rubbleR * 0.15, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x + 3 * zoom,
+      rubbleY - 1 * zoom,
+      rubbleR * 0.35,
+      rubbleR * 0.15,
+      0.4,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -182,16 +200,16 @@ export function renderMortarTower(
       wallTop.x + (wallVerts[i].x + wallVerts[ni].x) * 0.5,
       wallTop.y + (wallVerts[i].y + wallVerts[ni].y) * 0.5,
       wallBot.x + (wallVerts[i].x + wallVerts[ni].x) * 0.5,
-      wallBot.y + (wallVerts[i].y + wallVerts[ni].y) * 0.5,
+      wallBot.y + (wallVerts[i].y + wallVerts[ni].y) * 0.5
     );
     wallGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, r + 18)},${Math.min(255, g + 16)},${Math.min(255, b + 14)})`,
+      `rgb(${Math.min(255, r + 18)},${Math.min(255, g + 16)},${Math.min(255, b + 14)})`
     );
     wallGrad.addColorStop(0.5, `rgb(${r},${g},${b})`);
     wallGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, r - 18)},${Math.max(0, g - 14)},${Math.max(0, b - 12)})`,
+      `rgb(${Math.max(0, r - 18)},${Math.max(0, g - 14)},${Math.max(0, b - 12)})`
     );
     ctx.fillStyle = wallGrad;
     ctx.beginPath();
@@ -215,7 +233,9 @@ export function renderMortarTower(
       ctx.stroke();
     }
 
-    if (n < -0.5) continue;
+    if (n < -0.5) {
+      continue;
+    }
     const mx = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
     const my = (wallVerts[i].y + wallVerts[ni].y) * 0.5;
 
@@ -225,7 +245,7 @@ export function renderMortarTower(
         wallBot.x +
         wallVerts[i].x * (1 - u) +
         wallVerts[ni].x * u +
-        (wallTop.x - wallBot.x + (wallVerts[i].x - wallVerts[i].x) * 0) * v,
+        (wallTop.x - wallBot.x + 0) * v,
       y:
         wallBot.y +
         wallVerts[i].y * (1 - u) +
@@ -245,11 +265,11 @@ export function renderMortarTower(
         ctx.beginPath();
         ctx.moveTo(
           wallBot.x + wallVerts[i].x,
-          rowY + wallVerts[i].y * (1 - rowVf),
+          rowY + wallVerts[i].y * (1 - rowVf)
         );
         ctx.lineTo(
           wallBot.x + wallVerts[ni].x,
-          rowY + wallVerts[ni].y * (1 - rowVf),
+          rowY + wallVerts[ni].y * (1 - rowVf)
         );
         ctx.stroke();
         // Subtle bag bulge highlight
@@ -258,11 +278,11 @@ export function renderMortarTower(
         ctx.beginPath();
         ctx.moveTo(
           wallBot.x + wallVerts[i].x,
-          rowY + wallVerts[i].y * (1 - rowVf) - 0.8 * zoom,
+          rowY + wallVerts[i].y * (1 - rowVf) - 0.8 * zoom
         );
         ctx.lineTo(
           wallBot.x + wallVerts[ni].x,
-          rowY + wallVerts[ni].y * (1 - rowVf) - 0.8 * zoom,
+          rowY + wallVerts[ni].y * (1 - rowVf) - 0.8 * zoom
         );
         ctx.stroke();
       }
@@ -309,7 +329,7 @@ export function renderMortarTower(
           pt.y,
           (0.3 + ((seed * sd) % 3) * 0.15) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -341,11 +361,11 @@ export function renderMortarTower(
       ctx.beginPath();
       ctx.moveTo(
         wallBot.x + wallVerts[i].x,
-        midY + wallVerts[i].y * 0.5 - 0.6 * zoom,
+        midY + wallVerts[i].y * 0.5 - 0.6 * zoom
       );
       ctx.lineTo(
         wallBot.x + wallVerts[ni].x,
-        midY + wallVerts[ni].y * 0.5 - 0.6 * zoom,
+        midY + wallVerts[ni].y * 0.5 - 0.6 * zoom
       );
       ctx.stroke();
       // Weld heat tint (faint blue/purple along bead)
@@ -354,11 +374,11 @@ export function renderMortarTower(
       ctx.beginPath();
       ctx.moveTo(
         wallBot.x + wallVerts[i].x,
-        midY + wallVerts[i].y * 0.5 + 0.3 * zoom,
+        midY + wallVerts[i].y * 0.5 + 0.3 * zoom
       );
       ctx.lineTo(
         wallBot.x + wallVerts[ni].x,
-        midY + wallVerts[ni].y * 0.5 + 0.3 * zoom,
+        midY + wallVerts[ni].y * 0.5 + 0.3 * zoom
       );
       ctx.stroke();
       // Two rivet rows (top + bottom border)
@@ -383,7 +403,7 @@ export function renderMortarTower(
             rvy - 0.2 * zoom,
             0.35 * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           ctx.fillStyle = `rgba(140,145,160,${0.4 + bright * 0.3})`;
@@ -496,7 +516,7 @@ export function renderMortarTower(
           pp.y - 0.15 * zoom,
           0.4 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = `rgba(201,162,39,${0.55 + bright * 0.3})`;
@@ -507,11 +527,11 @@ export function renderMortarTower(
       ctx.beginPath();
       ctx.moveTo(
         wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08,
-        wallTop.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 + 1 * zoom,
+        wallTop.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 + 1 * zoom
       );
       ctx.lineTo(
         wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08,
-        wallBot.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 - 1 * zoom,
+        wallBot.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 - 1 * zoom
       );
       ctx.stroke();
       // Secondary shorter highlight (reflection break)
@@ -520,12 +540,12 @@ export function renderMortarTower(
       ctx.beginPath();
       ctx.moveTo(
         wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8,
-        wallTop.y + (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) + 2 * zoom,
+        wallTop.y + (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) + 2 * zoom
       );
       ctx.lineTo(
         wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8,
         (wallBot.y + wallTop.y) * 0.5 +
-          (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) * 0.5,
+          (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) * 0.5
       );
       ctx.stroke();
     }
@@ -537,19 +557,25 @@ export function renderMortarTower(
     const wCapB = level >= 3 ? 96 : level >= 2 ? 104 : 106;
     // Base fill with radial gradient for dome-like depth
     const wcGrad = ctx.createRadialGradient(
-      wallTop.x - wallR * 0.15, wallTop.y - wallR * 0.08,
+      wallTop.x - wallR * 0.15,
+      wallTop.y - wallR * 0.08,
       wallR * 0.1,
-      wallTop.x, wallTop.y,
-      wallR * 0.95,
+      wallTop.x,
+      wallTop.y,
+      wallR * 0.95
     );
     wcGrad.addColorStop(0, `rgb(${wCapR + 22},${wCapG + 20},${wCapB + 16})`);
     wcGrad.addColorStop(0.45, `rgb(${wCapR},${wCapG},${wCapB})`);
-    wcGrad.addColorStop(1, `rgb(${Math.max(0, wCapR - 18)},${Math.max(0, wCapG - 16)},${Math.max(0, wCapB - 12)})`);
+    wcGrad.addColorStop(
+      1,
+      `rgb(${Math.max(0, wCapR - 18)},${Math.max(0, wCapG - 16)},${Math.max(0, wCapB - 12)})`
+    );
     ctx.fillStyle = wcGrad;
     ctx.beginPath();
     ctx.moveTo(wallTop.x + wallVerts[0].x, wallTop.y + wallVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
+    for (let i = 1; i < hexSides; i++) {
       ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+    }
     ctx.closePath();
     ctx.fill();
     // Edge outline
@@ -569,7 +595,9 @@ export function renderMortarTower(
     for (let i = 0; i < hexSides; i++) {
       const ni = (i + 1) % hexSides;
       const n = wallNormals[i];
-      if (n < 0.2) continue;
+      if (n < 0.2) {
+        continue;
+      }
       ctx.strokeStyle = `rgba(200,210,220,${(n - 0.2) * 0.12})`;
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
@@ -586,17 +614,31 @@ export function renderMortarTower(
     for (const i of wallSorted) {
       const ni = (i + 1) % hexSides;
       const n = wallNormals[i];
-      if (n < -0.5) continue;
+      if (n < -0.5) {
+        continue;
+      }
       const bright = Math.max(0, Math.min(1, 0.05 + (n + 1) * 0.4));
       const mr = Math.floor(30 + bright * 40);
       const mg = Math.floor(32 + bright * 38);
       const mb = Math.floor(38 + bright * 34);
       ctx.fillStyle = `rgb(${mr},${mg},${mb})`;
       ctx.beginPath();
-      ctx.moveTo(wallBot.x + wallVerts[i].x * moldScale, wallBot.y + wallVerts[i].y * moldScale);
-      ctx.lineTo(wallBot.x + wallVerts[ni].x * moldScale, wallBot.y + wallVerts[ni].y * moldScale);
-      ctx.lineTo(wallBot.x + wallVerts[ni].x * moldScale, wallBot.y + wallVerts[ni].y * moldScale - moldH);
-      ctx.lineTo(wallBot.x + wallVerts[i].x * moldScale, wallBot.y + wallVerts[i].y * moldScale - moldH);
+      ctx.moveTo(
+        wallBot.x + wallVerts[i].x * moldScale,
+        wallBot.y + wallVerts[i].y * moldScale
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[ni].x * moldScale,
+        wallBot.y + wallVerts[ni].y * moldScale
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[ni].x * moldScale,
+        wallBot.y + wallVerts[ni].y * moldScale - moldH
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[i].x * moldScale,
+        wallBot.y + wallVerts[i].y * moldScale - moldH
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.06})`;
@@ -609,13 +651,23 @@ export function renderMortarTower(
   {
     const plateSize = 2 * zoom;
     for (let i = 0; i < hexSides; i++) {
-      if (wallNormals[i] < -0.3 && wallNormals[(i + hexSides - 1) % hexSides] < -0.3) continue;
+      if (
+        wallNormals[i] < -0.3 &&
+        wallNormals[(i + hexSides - 1) % hexSides] < -0.3
+      ) {
+        continue;
+      }
       const vx = wallBot.x + wallVerts[i].x;
       const vy = wallBot.y + wallVerts[i].y;
       const vtx = wallTop.x + wallVerts[i].x;
       const vty = wallTop.y + wallVerts[i].y;
       // Bottom plate (small triangle bracket)
-      ctx.fillStyle = level >= 3 ? "rgba(160,130,40,0.3)" : level >= 2 ? "rgba(100,100,110,0.3)" : "rgba(80,75,60,0.25)";
+      ctx.fillStyle =
+        level >= 3
+          ? "rgba(160,130,40,0.3)"
+          : level >= 2
+            ? "rgba(100,100,110,0.3)"
+            : "rgba(80,75,60,0.25)";
       ctx.beginPath();
       ctx.moveTo(vx, vy);
       ctx.lineTo(vx - plateSize * 0.5, vy - plateSize);
@@ -630,7 +682,8 @@ export function renderMortarTower(
       ctx.closePath();
       ctx.fill();
       // Bolt at each plate center
-      ctx.fillStyle = level >= 3 ? "rgba(201,162,39,0.5)" : "rgba(120,120,130,0.4)";
+      ctx.fillStyle =
+        level >= 3 ? "rgba(201,162,39,0.5)" : "rgba(120,120,130,0.4)";
       ctx.beginPath();
       ctx.arc(vx, vy - plateSize * 0.6, 0.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -661,16 +714,16 @@ export function renderMortarTower(
       platTop.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
       platTop.y,
       platBot.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
-      platBot.y,
+      platBot.y
     );
     platGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, pR + 14)},${Math.min(255, pG + 12)},${Math.min(255, pB + 10)})`,
+      `rgb(${Math.min(255, pR + 14)},${Math.min(255, pG + 12)},${Math.min(255, pB + 10)})`
     );
     platGrad.addColorStop(0.5, `rgb(${pR},${pG},${pB})`);
     platGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, pR - 16)},${Math.max(0, pG - 14)},${Math.max(0, pB - 10)})`,
+      `rgb(${Math.max(0, pR - 16)},${Math.max(0, pG - 14)},${Math.max(0, pB - 10)})`
     );
     ctx.fillStyle = platGrad;
     ctx.beginPath();
@@ -687,10 +740,12 @@ export function renderMortarTower(
   // Platform cap — gradient-shaded isometric top with beveled edge
   {
     const pcGrad = ctx.createRadialGradient(
-      platTop.x - platR * 0.15, platTop.y - platR * 0.08,
+      platTop.x - platR * 0.15,
+      platTop.y - platR * 0.08,
       platR * 0.1,
-      platTop.x, platTop.y,
-      platR * 0.95,
+      platTop.x,
+      platTop.y,
+      platR * 0.95
     );
     pcGrad.addColorStop(0, "#606070");
     pcGrad.addColorStop(0.4, "#484858");
@@ -698,8 +753,9 @@ export function renderMortarTower(
     ctx.fillStyle = pcGrad;
     ctx.beginPath();
     ctx.moveTo(platTop.x + platVerts[0].x, platTop.y + platVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
+    for (let i = 1; i < hexSides; i++) {
       ctx.lineTo(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y);
+    }
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.14)";
@@ -713,15 +769,20 @@ export function renderMortarTower(
       const idx = i % hexSides;
       const px = platTop.x + platVerts[idx].x * 0.88;
       const py = platTop.y + platVerts[idx].y * 0.88;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.stroke();
     // Lit-edge highlights on upper edges
     for (let i = 0; i < hexSides; i++) {
       const ni = (i + 1) % hexSides;
       const n = platNormals[i];
-      if (n < 0.2) continue;
+      if (n < 0.2) {
+        continue;
+      }
       ctx.strokeStyle = `rgba(180,185,200,${(n - 0.2) * 0.1})`;
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
@@ -734,7 +795,11 @@ export function renderMortarTower(
   // ========== PLATFORM CAP MARKINGS (concentric rings + cardinal indicators) ==========
   {
     // Concentric operational rings (painted target markings)
-    const ringColors = ["rgba(90,90,100,0.12)", "rgba(90,90,100,0.08)", "rgba(90,90,100,0.05)"];
+    const ringColors = [
+      "rgba(90,90,100,0.12)",
+      "rgba(90,90,100,0.08)",
+      "rgba(90,90,100,0.05)",
+    ];
     for (let ri = 0; ri < 3; ri++) {
       const ringFrac = 0.3 + ri * 0.22;
       ctx.strokeStyle = ringColors[ri];
@@ -744,14 +809,22 @@ export function renderMortarTower(
         const idx = vi % hexSides;
         const px = platTop.x + platVerts[idx].x * ringFrac;
         const py = platTop.y + platVerts[idx].y * ringFrac;
-        if (vi === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (vi === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.stroke();
     }
 
     // Cardinal direction indicators (small triangles at every other hex vertex)
-    const dirColor = level >= 3 ? "rgba(201,162,39,0.25)" : level >= 2 ? "rgba(130,130,145,0.2)" : "rgba(100,95,80,0.2)";
+    const dirColor =
+      level >= 3
+        ? "rgba(201,162,39,0.25)"
+        : level >= 2
+          ? "rgba(130,130,145,0.2)"
+          : "rgba(100,95,80,0.2)";
     ctx.fillStyle = dirColor;
     for (let ci = 0; ci < hexSides; ci += 2) {
       const vx = platTop.x + platVerts[ci].x * 0.85;
@@ -771,7 +844,8 @@ export function renderMortarTower(
     }
 
     // Center bolt marking (cross-hair on platform center)
-    ctx.strokeStyle = level >= 3 ? "rgba(201,162,39,0.15)" : "rgba(100,100,110,0.1)";
+    ctx.strokeStyle =
+      level >= 3 ? "rgba(201,162,39,0.15)" : "rgba(100,100,110,0.1)";
     ctx.lineWidth = 0.5 * zoom;
     const chLen = platR * 0.15;
     ctx.beginPath();
@@ -808,15 +882,16 @@ export function renderMortarTower(
     if (
       platNormals[i] < -0.5 &&
       platNormals[(i + hexSides - 1) % hexSides] < -0.5
-    )
+    ) {
       continue;
+    }
     ctx.beginPath();
     ctx.arc(
       platTop.x + platVerts[i].x,
       platTop.y + platVerts[i].y,
       1.5 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#aaa";
@@ -826,7 +901,7 @@ export function renderMortarTower(
       platTop.y + platVerts[i].y,
       0.7 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#7a7a82";
@@ -840,8 +915,9 @@ export function renderMortarTower(
       if (
         wallNormals[i] < -0.7 &&
         wallNormals[(i + hexSides - 1) % hexSides] < -0.7
-      )
+      ) {
         continue;
+      }
       const vx = wallVerts[i].x;
       const vy = wallVerts[i].y;
       // Diagonal brace from wall vertex down
@@ -858,7 +934,9 @@ export function renderMortarTower(
     ctx.lineWidth = 1.2 * zoom;
     for (let i = 0; i < hexSides; i++) {
       const ni = (i + 1) % hexSides;
-      if (wallNormals[i] < -0.7) continue;
+      if (wallNormals[i] < -0.7) {
+        continue;
+      }
       const mx1 = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
       const my1 = (wallVerts[i].y + wallVerts[ni].y) * 0.5;
       // X-brace on visible faces
@@ -878,7 +956,7 @@ export function renderMortarTower(
         (wallBot.y + wallTop.y) * 0.5 + my1,
         1 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -916,16 +994,16 @@ export function renderMortarTower(
       depotTop.x + (depotVerts[i].x + depotVerts[ni].x) * 0.5,
       depotTop.y + (depotVerts[i].y + depotVerts[ni].y) * 0.5,
       depotBot.x + (depotVerts[i].x + depotVerts[ni].x) * 0.5,
-      depotBot.y + (depotVerts[i].y + depotVerts[ni].y) * 0.5,
+      depotBot.y + (depotVerts[i].y + depotVerts[ni].y) * 0.5
     );
     depotGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, dr + 18)},${Math.min(255, dg + 16)},${Math.min(255, db + 12)})`,
+      `rgb(${Math.min(255, dr + 18)},${Math.min(255, dg + 16)},${Math.min(255, db + 12)})`
     );
     depotGrad.addColorStop(0.45, `rgb(${dr},${dg},${db})`);
     depotGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, dr - 20)},${Math.max(0, dg - 16)},${Math.max(0, db - 10)})`,
+      `rgb(${Math.max(0, dr - 20)},${Math.max(0, dg - 16)},${Math.max(0, db - 10)})`
     );
     ctx.fillStyle = depotGrad;
     ctx.beginPath();
@@ -938,7 +1016,9 @@ export function renderMortarTower(
     ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.06})`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
-    if (n < -0.5) continue;
+    if (n < -0.5) {
+      continue;
+    }
 
     // Depot face detail helper
     const depotFacePt = (u: number, v: number) => ({
@@ -967,11 +1047,11 @@ export function renderMortarTower(
     ctx.beginPath();
     ctx.moveTo(
       depotBot.x + depotVerts[i].x,
-      seamY + depotVerts[i].y * 0.3 - 0.6 * zoom,
+      seamY + depotVerts[i].y * 0.3 - 0.6 * zoom
     );
     ctx.lineTo(
       depotBot.x + depotVerts[ni].x,
-      seamY + depotVerts[ni].y * 0.3 - 0.6 * zoom,
+      seamY + depotVerts[ni].y * 0.3 - 0.6 * zoom
     );
     ctx.stroke();
 
@@ -1086,7 +1166,7 @@ export function renderMortarTower(
             vPt.x - 0.8 * zoom,
             vPt.y - 0.3 * zoom,
             1.6 * zoom,
-            0.6 * zoom,
+            0.6 * zoom
           );
         }
       }
@@ -1100,7 +1180,7 @@ export function renderMortarTower(
         depotTop.y + depotVerts[i].y * 0.97 + 1 * zoom,
         0.7 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Gold highlight dot
@@ -1111,7 +1191,7 @@ export function renderMortarTower(
         depotTop.y + depotVerts[i].y * 0.97 + 1 * zoom - 0.15 * zoom,
         0.3 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1122,19 +1202,25 @@ export function renderMortarTower(
     const dcG = level >= 3 ? 74 : level >= 2 ? 78 : 84;
     const dcB = level >= 3 ? 56 : level >= 2 ? 54 : 52;
     const dcGrad = ctx.createRadialGradient(
-      depotTop.x - depotR * 0.15, depotTop.y - depotR * 0.08,
+      depotTop.x - depotR * 0.15,
+      depotTop.y - depotR * 0.08,
       depotR * 0.1,
-      depotTop.x, depotTop.y,
-      depotR * 0.95,
+      depotTop.x,
+      depotTop.y,
+      depotR * 0.95
     );
     dcGrad.addColorStop(0, `rgb(${dcR + 24},${dcG + 22},${dcB + 18})`);
     dcGrad.addColorStop(0.4, `rgb(${dcR},${dcG},${dcB})`);
-    dcGrad.addColorStop(1, `rgb(${Math.max(0, dcR - 20)},${Math.max(0, dcG - 18)},${Math.max(0, dcB - 14)})`);
+    dcGrad.addColorStop(
+      1,
+      `rgb(${Math.max(0, dcR - 20)},${Math.max(0, dcG - 18)},${Math.max(0, dcB - 14)})`
+    );
     ctx.fillStyle = dcGrad;
     ctx.beginPath();
     ctx.moveTo(depotTop.x + depotVerts[0].x, depotTop.y + depotVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
+    for (let i = 1; i < hexSides; i++) {
       ctx.lineTo(depotTop.x + depotVerts[i].x, depotTop.y + depotVerts[i].y);
+    }
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.14)";
@@ -1146,20 +1232,30 @@ export function renderMortarTower(
     for (let i = 0; i < hexSides; i += 2) {
       const opp = (i + Math.floor(hexSides / 2)) % hexSides;
       ctx.beginPath();
-      ctx.moveTo(depotTop.x + depotVerts[i].x * 0.9, depotTop.y + depotVerts[i].y * 0.9);
-      ctx.lineTo(depotTop.x + depotVerts[opp].x * 0.9, depotTop.y + depotVerts[opp].y * 0.9);
+      ctx.moveTo(
+        depotTop.x + depotVerts[i].x * 0.9,
+        depotTop.y + depotVerts[i].y * 0.9
+      );
+      ctx.lineTo(
+        depotTop.x + depotVerts[opp].x * 0.9,
+        depotTop.y + depotVerts[opp].y * 0.9
+      );
       ctx.stroke();
     }
     // Inner hatch ring
-    ctx.strokeStyle = level >= 3 ? "rgba(201,162,39,0.18)" : "rgba(100,95,80,0.12)";
+    ctx.strokeStyle =
+      level >= 3 ? "rgba(201,162,39,0.18)" : "rgba(100,95,80,0.12)";
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     for (let i = 0; i <= hexSides; i++) {
       const idx = i % hexSides;
       const px = depotTop.x + depotVerts[idx].x * 0.55;
       const py = depotTop.y + depotVerts[idx].y * 0.55;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.stroke();
     // Center hatch bolt
@@ -1171,7 +1267,9 @@ export function renderMortarTower(
     for (let i = 0; i < hexSides; i++) {
       const ni = (i + 1) % hexSides;
       const n = depotNormals[i];
-      if (n < 0.2) continue;
+      if (n < 0.2) {
+        continue;
+      }
       ctx.strokeStyle = `rgba(180,160,120,${(n - 0.2) * 0.1})`;
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
@@ -1195,7 +1293,7 @@ export function renderMortarTower(
     },
     "rgba(0,0,0,0.15)",
     0.4 * zoom,
-    -0.5,
+    -0.5
   );
 
   // ========== HYDRAULIC ACTUATORS (platform to depot) ==========
@@ -1205,7 +1303,9 @@ export function renderMortarTower(
     for (let h = 0; h < hydCount; h++) {
       const hi = Math.floor(h * hydSpacing + 1) % hexSides;
       const n = platNormals[hi];
-      if (n < -0.5) continue;
+      if (n < -0.5) {
+        continue;
+      }
       const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
 
       // Foot anchors on platform edge, attach points on depot body
@@ -1255,7 +1355,7 @@ export function renderMortarTower(
         1.6 * zoom * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = `rgba(200,200,210,${0.6 + bright * 0.3})`;
@@ -1273,7 +1373,7 @@ export function renderMortarTower(
         1.3 * zoom * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = `rgba(190,190,200,${0.5 + bright * 0.3})`;
@@ -1290,10 +1390,12 @@ export function renderMortarTower(
     for (let i = 0; i < 3; i++) {
       const ci = (i * 2 + 1) % hexSides;
       const cni = (ci + 1) % hexSides;
-      if (platNormals[ci] < -0.7) continue;
+      if (platNormals[ci] < -0.7) {
+        continue;
+      }
       const bright = Math.max(
         0,
-        Math.min(1, 0.2 + (platNormals[ci] + 1) * 0.4),
+        Math.min(1, 0.2 + (platNormals[ci] + 1) * 0.4)
       );
 
       // Cable runs from platform vertex to the adjacent vertex with sag
@@ -1340,7 +1442,7 @@ export function renderMortarTower(
         0.9 * zoom * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -1351,7 +1453,7 @@ export function renderMortarTower(
         0.9 * zoom * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1368,11 +1470,38 @@ export function renderMortarTower(
     const bH = 2.8;
     const stepX = 4 * zoom;
     const stepY = 2 * zoom;
-    drawIsoSandbag(ctx, sbX, sbY, bW, bD, bH, zoom, 0.0);
+    drawIsoSandbag(ctx, sbX, sbY, bW, bD, bH, zoom, 0);
     drawIsoSandbag(ctx, sbX + stepX, sbY - stepY, bW, bD, bH, zoom, 0.6);
-    drawIsoSandbag(ctx, sbX + stepX * 2, sbY - stepY * 2, bW, bD, bH, zoom, 0.3);
-    drawIsoSandbag(ctx, sbX + stepX * 0.5, sbY - stepY * 0.5 - bH * zoom, bW, bD, bH, zoom, 0.8);
-    drawIsoSandbag(ctx, sbX + stepX * 1.5, sbY - stepY * 1.5 - bH * zoom, bW, bD, bH, zoom, 0.4);
+    drawIsoSandbag(
+      ctx,
+      sbX + stepX * 2,
+      sbY - stepY * 2,
+      bW,
+      bD,
+      bH,
+      zoom,
+      0.3
+    );
+    drawIsoSandbag(
+      ctx,
+      sbX + stepX * 0.5,
+      sbY - stepY * 0.5 - bH * zoom,
+      bW,
+      bD,
+      bH,
+      zoom,
+      0.8
+    );
+    drawIsoSandbag(
+      ctx,
+      sbX + stepX * 1.5,
+      sbY - stepY * 1.5 - bH * zoom,
+      bW,
+      bD,
+      bH,
+      zoom,
+      0.4
+    );
   }
 
   // ========== RAILING POSTS on hex vertices ==========
@@ -1384,8 +1513,9 @@ export function renderMortarTower(
       if (
         wallNormals[i] < -0.7 &&
         wallNormals[(i + hexSides - 1) % hexSides] < -0.7
-      )
+      ) {
         continue;
+      }
       const px = wallTop.x + wallVerts[i].x * 1.02;
       const py = wallTop.y + wallVerts[i].y * 1.02;
       ctx.beginPath();
@@ -1403,26 +1533,28 @@ export function renderMortarTower(
     ctx.lineWidth = 1.2 * zoom;
     for (let i = 0; i < hexSides; i++) {
       const ni = (i + 1) % hexSides;
-      if (wallNormals[i] < -0.7) continue;
+      if (wallNormals[i] < -0.7) {
+        continue;
+      }
       ctx.beginPath();
       ctx.moveTo(
         wallTop.x + wallVerts[i].x * 1.02,
-        wallTop.y + wallVerts[i].y * 1.02 - railH,
+        wallTop.y + wallVerts[i].y * 1.02 - railH
       );
       ctx.lineTo(
         wallTop.x + wallVerts[ni].x * 1.02,
-        wallTop.y + wallVerts[ni].y * 1.02 - railH,
+        wallTop.y + wallVerts[ni].y * 1.02 - railH
       );
       ctx.stroke();
       // Mid rail
       ctx.beginPath();
       ctx.moveTo(
         wallTop.x + wallVerts[i].x * 1.02,
-        wallTop.y + wallVerts[i].y * 1.02 - railH * 0.5,
+        wallTop.y + wallVerts[i].y * 1.02 - railH * 0.5
       );
       ctx.lineTo(
         wallTop.x + wallVerts[ni].x * 1.02,
-        wallTop.y + wallVerts[ni].y * 1.02 - railH * 0.5,
+        wallTop.y + wallVerts[ni].y * 1.02 - railH * 0.5
       );
       ctx.stroke();
     }
@@ -1466,8 +1598,12 @@ export function renderMortarTower(
 
     // Top cap with radial gradient highlight
     const capGrad = ctx.createRadialGradient(
-      canX - 0.5 * zoom, canY - canH - 0.3 * zoom, 0,
-      canX, canY - canH, canRx,
+      canX - 0.5 * zoom,
+      canY - canH - 0.3 * zoom,
+      0,
+      canX,
+      canY - canH,
+      canRx
     );
     capGrad.addColorStop(0, c === 0 ? "#6a7a4a" : "#5e6e40");
     capGrad.addColorStop(0.6, c === 0 ? "#4a5a2a" : "#3e4e24");
@@ -1550,7 +1686,7 @@ export function renderMortarTower(
         0,
         tankX,
         tankY - tH,
-        tRx,
+        tRx
       );
       capGrad.addColorStop(0, t === 0 ? "#7a4a2a" : "#6a5a3a");
       capGrad.addColorStop(0.7, t === 0 ? "#5a2a14" : "#4a3a28");
@@ -1580,7 +1716,7 @@ export function renderMortarTower(
         0.7 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = t === 0 ? "#ff6620" : "#cc8830";
@@ -1590,7 +1726,7 @@ export function renderMortarTower(
         tankY - tH - 0.5 * zoom,
         0.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1604,7 +1740,7 @@ export function renderMortarTower(
         tankX + (screenPos.x - tankX) * 0.3,
         tankY - tH - 4 * zoom,
         screenPos.x,
-        topY + 3 * zoom,
+        topY + 3 * zoom
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1652,10 +1788,26 @@ export function renderMortarTower(
     // Leg feet (small pads)
     ctx.fillStyle = "#4a3a2a";
     ctx.beginPath();
-    ctx.ellipse(rackX - rW * 0.9, rackY + 3 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      rackX - rW * 0.9,
+      rackY + 3 * zoom,
+      1.2 * zoom,
+      0.6 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(rackX + rD * 0.7, rackY + 3 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      rackX + rD * 0.7,
+      rackY + 3 * zoom,
+      1.2 * zoom,
+      0.6 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Rack body - left face with gradient for depth
@@ -1781,7 +1933,9 @@ export function renderMortarTower(
     const loadingIdx =
       timeSinceFire < 800 ? Math.floor((timeSinceFire / 800) * shellCount) : -1;
     for (let sh = 0; sh < shellCount; sh++) {
-      if (sh === loadingIdx) continue;
+      if (sh === loadingIdx) {
+        continue;
+      }
       const shellY = rackY - (3 + sh * 3.5) * zoom;
       const sRx = 2.2 * zoom;
       const sRy = 1.3 * zoom;
@@ -1791,7 +1945,7 @@ export function renderMortarTower(
         rackX - sRx,
         shellY,
         rackX + sRx,
-        shellY,
+        shellY
       );
       const shellBase = isMissile ? "#aa1100" : isEmber ? "#cc5500" : "#7a6a50";
       const shellLight = isMissile
@@ -1820,7 +1974,7 @@ export function renderMortarTower(
         sRy * 0.85,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -1834,7 +1988,7 @@ export function renderMortarTower(
         sRy * 0.6,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1848,7 +2002,7 @@ export function renderMortarTower(
         sRy * 0.2,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1895,7 +2049,7 @@ export function renderMortarTower(
         pivotY - 0.3 * zoom,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1943,7 +2097,7 @@ export function renderMortarTower(
         ctrlX + railOff,
         ctrlY,
         convEndX + railOff,
-        convEndY,
+        convEndY
       );
       ctx.stroke();
     }
@@ -2036,14 +2190,14 @@ export function renderMortarTower(
       gearNormals,
       gearBot,
       gearTop,
-      1.0,
+      1,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
         return `rgb(${Math.floor(70 + b * 30)},${Math.floor(70 + b * 30)},${Math.floor(78 + b * 22)})`;
       },
       "rgba(0,0,0,0.15)",
       0.4 * zoom,
-      -0.5,
+      -0.5
     );
     drawHexCap(
       ctx,
@@ -2051,7 +2205,7 @@ export function renderMortarTower(
       gearVerts,
       "#5a5a62",
       "rgba(0,0,0,0.1)",
-      0.4 * zoom,
+      0.4 * zoom
     );
 
     // Gear teeth
@@ -2065,7 +2219,7 @@ export function renderMortarTower(
         topY + Math.sin(a) * gearR * ISO_Y_RATIO * 1.06,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2078,7 +2232,7 @@ export function renderMortarTower(
       bearingVerts,
       "#4a4a50",
       "rgba(0,0,0,0.12)",
-      0.5 * zoom,
+      0.5 * zoom
     );
   }
 
@@ -2129,7 +2283,7 @@ export function renderMortarTower(
         rfY - 8 * zoom,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2148,7 +2302,7 @@ export function renderMortarTower(
       compR * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     ctx.strokeStyle = "#ff4400";
@@ -2157,7 +2311,7 @@ export function renderMortarTower(
     ctx.moveTo(screenPos.x, compY);
     ctx.lineTo(
       screenPos.x + cosR * compR * 0.65,
-      compY + sinR * compR * ISO_Y_RATIO * 0.65,
+      compY + sinR * compR * ISO_Y_RATIO * 0.65
     );
     ctx.stroke();
   }
@@ -2175,8 +2329,8 @@ export function renderMortarTower(
       6,
       5,
       6,
-      { top: "#3a3a42", left: "#2a2a32", right: "#1a1a28" },
-      zoom,
+      { left: "#2a2a32", right: "#1a1a28", top: "#3a3a42" },
+      zoom
     );
     const dp = 0.3 + Math.sin(time * 2.5) * 0.15;
     ctx.fillStyle = `rgba(40, 180, 80, ${dp})`;
@@ -2195,7 +2349,9 @@ export function renderMortarTower(
   // L2: warning lights on wall vertices
   if (level === 2) {
     for (let wi = 0; wi < hexSides; wi += 2) {
-      if (wallNormals[wi] < -0.7) continue;
+      if (wallNormals[wi] < -0.7) {
+        continue;
+      }
       const lx = wallTop.x + wallVerts[wi].x * 1.02;
       const ly = wallTop.y + wallVerts[wi].y * 1.02 - 8 * zoom;
       const lightOn = Math.sin(time * 3 + wi) > 0.3;
@@ -2236,7 +2392,7 @@ export function renderMortarTower(
         sly + sinR * 0.5 * zoom,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2281,7 +2437,7 @@ export function renderMortarTower(
           cx,
           depotTop.y +
             depotVerts[warnIdx].y +
-            (depotVerts[wni].y - depotVerts[warnIdx].y) * t,
+            (depotVerts[wni].y - depotVerts[warnIdx].y) * t
         );
         ctx.stroke();
       }
@@ -2300,7 +2456,7 @@ export function renderMortarTower(
       recoilBase,
       recoilMid,
       recoilTip,
-      timeSinceFire,
+      timeSinceFire
     );
   } else if (isMissile) {
     renderMortarMissileSilo(
@@ -2310,7 +2466,7 @@ export function renderMortarTower(
       tower,
       zoom,
       time,
-      timeSinceFire,
+      timeSinceFire
     );
   } else {
     renderMortarStandardBarrel(
@@ -2323,7 +2479,7 @@ export function renderMortarTower(
       recoilBase,
       recoilMid,
       recoilTip,
-      timeSinceFire,
+      timeSinceFire
     );
   }
 
@@ -2353,7 +2509,7 @@ export function renderMortarTower(
         topY - 10 * zoom - smokeT * 14 * zoom + Math.sin(ang) * dist * 0.2,
         smokeSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2370,7 +2526,7 @@ export interface CradleArmParams {
   cosR: number;
   perpX: number;
   perpY: number;
-  tiers: Array<{ r: number; h: number }>;
+  tiers: { r: number; h: number }[];
   tierRecoils: number[];
   posAtFrac: (frac: number, recoilOffset: number) => Pt;
   metalDark: string;
@@ -2389,7 +2545,7 @@ export function isoQuadPath(
   uX: number,
   uY: number,
   vX: number,
-  vY: number,
+  vY: number
 ) {
   ctx.moveTo(cx - hw * uX - hh * vX, cy - hw * uY - hh * vY);
   ctx.lineTo(cx + hw * uX - hh * vX, cy + hw * uY - hh * vY);
@@ -2400,15 +2556,15 @@ export function isoQuadPath(
 
 function parseHexColor(hex: string) {
   return {
-    r: parseInt(hex.slice(1, 3), 16),
-    g: parseInt(hex.slice(3, 5), 16),
-    b: parseInt(hex.slice(5, 7), 16),
+    b: Number.parseInt(hex.slice(5, 7), 16),
+    g: Number.parseInt(hex.slice(3, 5), 16),
+    r: Number.parseInt(hex.slice(1, 3), 16),
   };
 }
 
 export function drawMortarCradleArm(
   ctx: CanvasRenderingContext2D,
-  p: CradleArmParams,
+  p: CradleArmParams
 ) {
   const {
     side,
@@ -2485,9 +2641,9 @@ export function drawMortarCradleArm(
       return `rgb(${r},${g},${bb})`;
     };
     const colorAtRGB = (b: number) => ({
-      r: Math.floor(dk.r + (lt.r - dk.r) * b),
-      g: Math.floor(dk.g + (lt.g - dk.g) * b),
       b: Math.floor(dk.b + (lt.b - dk.b) * b),
+      g: Math.floor(dk.g + (lt.g - dk.g) * b),
+      r: Math.floor(dk.r + (lt.r - dk.r) * b),
     });
 
     if (drawPhase === "shoe") {
@@ -2533,7 +2689,7 @@ export function drawMortarCradleArm(
           topBack.x,
           topBack.y,
           botBack.x,
-          botBack.y + shoeHeight,
+          botBack.y + shoeHeight
         );
         grad.addColorStop(0, colorAt(backBright + 0.05));
         grad.addColorStop(1, colorAt(backBright - 0.05));
@@ -2557,7 +2713,7 @@ export function drawMortarCradleArm(
           topFar.x,
           topFar.y,
           botFar.x,
-          botFar.y + shoeHeight,
+          botFar.y + shoeHeight
         );
         grad.addColorStop(0, colorAt(innerBright + 0.05));
         grad.addColorStop(1, colorAt(innerBright - 0.05));
@@ -2580,7 +2736,7 @@ export function drawMortarCradleArm(
           topOuter.x,
           topOuter.y,
           botOuter.x,
-          botOuter.y + shoeHeight,
+          botOuter.y + shoeHeight
         );
         grad.addColorStop(0, colorAt(sideBrightOuter + 0.08));
         grad.addColorStop(1, colorAt(Math.max(0, sideBrightOuter - 0.12)));
@@ -2613,7 +2769,7 @@ export function drawMortarCradleArm(
           topNear.x,
           topNear.y,
           botNear.x,
-          botNear.y + shoeHeight,
+          botNear.y + shoeHeight
         );
         grad.addColorStop(0, colorAt(sideBrightFront + 0.08));
         grad.addColorStop(1, colorAt(Math.max(0, sideBrightFront - 0.12)));
@@ -2636,16 +2792,16 @@ export function drawMortarCradleArm(
         topBack.x,
         topBack.y,
         topNear.x,
-        topNear.y,
+        topNear.y
       );
       topGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, topRGB.r + 12)},${Math.min(255, topRGB.g + 10)},${Math.min(255, topRGB.b + 8)})`,
+        `rgb(${Math.min(255, topRGB.r + 12)},${Math.min(255, topRGB.g + 10)},${Math.min(255, topRGB.b + 8)})`
       );
       topGrad.addColorStop(0.5, `rgb(${topRGB.r},${topRGB.g},${topRGB.b})`);
       topGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, topRGB.r - 8)},${Math.max(0, topRGB.g - 6)},${Math.max(0, topRGB.b - 5)})`,
+        `rgb(${Math.max(0, topRGB.r - 8)},${Math.max(0, topRGB.g - 6)},${Math.max(0, topRGB.b - 5)})`
       );
       ctx.fillStyle = topGrad;
       ctx.beginPath();
@@ -2800,13 +2956,13 @@ export function drawMortarCradleArm(
       const outerBot: Pt[] = [];
       const innerTop: Pt[] = [];
       const innerBot: Pt[] = [];
-      const innerScale = 1.0 - clampDepth / clampR;
+      const innerScale = 1 - clampDepth / clampR;
       const arcAngles: number[] = [];
 
       for (let si = 0; si <= arcSteps; si++) {
         const a = startA + (endA - startA) * (si / arcSteps);
         arcAngles.push(a);
-        const op = arcPt(a, 1.0);
+        const op = arcPt(a, 1);
         outerTop.push(op);
         outerBot.push({ x: op.x, y: op.y + clampThick });
         const ip = arcPt(a, innerScale);
@@ -2829,21 +2985,25 @@ export function drawMortarCradleArm(
       let lastVis = -1;
       for (let si = 0; si < arcSteps; si++) {
         if (segVisible[si]) {
-          if (firstVis === -1) firstVis = si;
+          if (firstVis === -1) {
+            firstVis = si;
+          }
           lastVis = si;
         }
       }
 
       // Draw visible segments as individual quads
       for (let si = 0; si < arcSteps; si++) {
-        if (!segVisible[si]) continue;
+        if (!segVisible[si]) {
+          continue;
+        }
         const s0 = si;
         const s1 = si + 1;
 
         // Outer band face (vertical drop)
         const segBright = Math.max(
           0,
-          Math.min(1, clampSideBright + 0.1 - si * 0.01),
+          Math.min(1, clampSideBright + 0.1 - si * 0.01)
         );
         ctx.fillStyle = colorAt(segBright);
         ctx.beginPath();
@@ -2921,9 +3081,9 @@ export function renderMortarStandardBarrel(
   recoilBase: number,
   recoilMid: number,
   recoilTip: number,
-  timeSinceFire: number,
+  timeSinceFire: number
 ) {
-  const level = tower.level;
+  const { level } = tower;
   const rot = tower.rotation || 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
@@ -2941,25 +3101,25 @@ export function renderMortarStandardBarrel(
 
   const tiers = [
     {
-      r: (17 + level * 2.5) * zoom,
-      h: (8 + level) * zoom,
       dark: level >= 3 ? "#1c1520" : level >= 2 ? "#1a2230" : "#1e2228",
-      mid: level >= 3 ? "#3e3044" : level >= 2 ? "#34405a" : "#384450",
-      light: level >= 3 ? "#5e4c58" : level >= 2 ? "#526880" : "#5a6878",
-    },
-    {
-      r: (13 + level * 2) * zoom,
       h: (8 + level) * zoom,
-      dark: level >= 3 ? "#221a28" : level >= 2 ? "#1e2838" : "#222830",
-      mid: level >= 3 ? "#463a4e" : level >= 2 ? "#3c4c66" : "#404a58",
-      light: level >= 3 ? "#6c5c68" : level >= 2 ? "#5e7492" : "#667280",
+      light: level >= 3 ? "#5e4c58" : level >= 2 ? "#526880" : "#5a6878",
+      mid: level >= 3 ? "#3e3044" : level >= 2 ? "#34405a" : "#384450",
+      r: (17 + level * 2.5) * zoom,
     },
     {
-      r: (10 + level * 1.5) * zoom,
-      h: (6 + level * 0.5) * zoom,
+      dark: level >= 3 ? "#221a28" : level >= 2 ? "#1e2838" : "#222830",
+      h: (8 + level) * zoom,
+      light: level >= 3 ? "#6c5c68" : level >= 2 ? "#5e7492" : "#667280",
+      mid: level >= 3 ? "#463a4e" : level >= 2 ? "#3c4c66" : "#404a58",
+      r: (13 + level * 2) * zoom,
+    },
+    {
       dark: level >= 3 ? "#28202e" : level >= 2 ? "#242e3e" : "#282e34",
-      mid: level >= 3 ? "#504458" : level >= 2 ? "#465876" : "#4e5862",
+      h: (6 + level * 0.5) * zoom,
       light: level >= 3 ? "#7e6a78" : level >= 2 ? "#6e82a0" : "#748088",
+      mid: level >= 3 ? "#504458" : level >= 2 ? "#465876" : "#4e5862",
+      r: (10 + level * 1.5) * zoom,
     },
   ];
 
@@ -3047,19 +3207,19 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         rearX + side * perpX * railW * 0.5,
-        rearY + side * perpY * railW * 0.5,
+        rearY + side * perpY * railW * 0.5
       );
       ctx.lineTo(
         frontX + side * perpX * railW * 0.5,
-        frontY + side * perpY * railW * 0.5,
+        frontY + side * perpY * railW * 0.5
       );
       ctx.lineTo(
         frontX + side * perpX * railW * 0.5,
-        frontY + side * perpY * railW * 0.5 + railH,
+        frontY + side * perpY * railW * 0.5 + railH
       );
       ctx.lineTo(
         rearX + side * perpX * railW * 0.5,
-        rearY + side * perpY * railW * 0.5 + railH,
+        rearY + side * perpY * railW * 0.5 + railH
       );
       ctx.closePath();
       ctx.fill();
@@ -3111,7 +3271,7 @@ export function renderMortarStandardBarrel(
         Math.min(leftX, rightX) - 0.5 * zoom,
         Math.min(leftY, rightY) - 1 * zoom,
         Math.abs(rightX - leftX) + 1 * zoom,
-        2 * zoom,
+        2 * zoom
       );
       // Draw as a line for clarity
       ctx.strokeStyle = metalLight;
@@ -3163,11 +3323,11 @@ export function renderMortarStandardBarrel(
       ctx.moveTo(bracketX + side * bracketW * 0.6, bracketY + bracketH * 0.5);
       ctx.lineTo(
         bracketX + side * bracketW * 0.6 + side * platThick * 0.5,
-        bracketY + bracketH * 0.5 + platThick * 0.3,
+        bracketY + bracketH * 0.5 + platThick * 0.3
       );
       ctx.lineTo(
         bracketX + side * bracketW * 0.4 + side * platThick * 0.5,
-        bracketY - bracketH * 0.5 + platThick * 0.3,
+        bracketY - bracketH * 0.5 + platThick * 0.3
       );
       ctx.lineTo(bracketX + side * bracketW * 0.4, bracketY - bracketH * 0.5);
       ctx.closePath();
@@ -3233,19 +3393,19 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         basePt.x - perpX * bpW - cosR * bpD,
-        basePt.y - perpY * bpW - sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y - perpY * bpW - sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.lineTo(
         basePt.x + perpX * bpW - cosR * bpD,
-        basePt.y + perpY * bpW - sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y + perpY * bpW - sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.lineTo(
         basePt.x + perpX * bpW + cosR * bpD,
-        basePt.y + perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y + perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.lineTo(
         basePt.x - perpX * bpW + cosR * bpD,
-        basePt.y - perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y - perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.closePath();
       ctx.fill();
@@ -3257,27 +3417,19 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         basePt.x - perpX * bpW + cosR * bpD,
-        basePt.y - perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y - perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.lineTo(
         basePt.x + perpX * bpW + cosR * bpD,
-        basePt.y + perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom,
+        basePt.y + perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom
       );
       ctx.lineTo(
         basePt.x + perpX * bpW + cosR * bpD,
-        basePt.y +
-          perpY * bpW +
-          sinR * bpD * ISO_Y_RATIO +
-          4 * zoom +
-          platThick,
+        basePt.y + perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom + platThick
       );
       ctx.lineTo(
         basePt.x - perpX * bpW + cosR * bpD,
-        basePt.y -
-          perpY * bpW +
-          sinR * bpD * ISO_Y_RATIO +
-          4 * zoom +
-          platThick,
+        basePt.y - perpY * bpW + sinR * bpD * ISO_Y_RATIO + 4 * zoom + platThick
       );
       ctx.closePath();
       ctx.fill();
@@ -3296,7 +3448,7 @@ export function renderMortarStandardBarrel(
           slideX - 2.5 * zoom,
           slideY - 1.5 * zoom,
           5 * zoom,
-          3 * zoom,
+          3 * zoom
         );
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.lineWidth = 0.4 * zoom;
@@ -3304,7 +3456,7 @@ export function renderMortarStandardBarrel(
           slideX - 2.5 * zoom,
           slideY - 1.5 * zoom,
           5 * zoom,
-          3 * zoom,
+          3 * zoom
         );
         ctx.fillStyle = "#9a9a9a";
         ctx.beginPath();
@@ -3329,36 +3481,36 @@ export function renderMortarStandardBarrel(
   const accentF = level >= 3 ? "#c9a227" : level >= 2 ? "#8a4428" : "#6a3a28";
 
   const backArmBase = {
-    side: farSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentB,
     cosR,
+    level,
+    metalDark: metalDarkB,
+    metalLight: metalLightB,
+    metalMid: metalMidB,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkB,
-    metalMid: metalMidB,
-    metalLight: metalLightB,
-    accent: accentB,
+    side: farSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
   const frontArmBase = {
-    side: nearSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentF,
     cosR,
+    level,
+    metalDark: metalDarkF,
+    metalLight: metalLightF,
+    metalMid: metalMidF,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkF,
-    metalMid: metalMidF,
-    metalLight: metalLightF,
-    accent: accentF,
+    side: nearSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
 
   // ===== PHASE 1: Back-facing C-clamp arc segments (behind barrel) =====
@@ -3388,12 +3540,12 @@ export function renderMortarStandardBarrel(
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
       const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
-      const dr = parseInt(tier.dark.slice(1, 3), 16);
-      const dg = parseInt(tier.dark.slice(3, 5), 16);
-      const db = parseInt(tier.dark.slice(5, 7), 16);
-      const lr = parseInt(tier.light.slice(1, 3), 16);
-      const lg = parseInt(tier.light.slice(3, 5), 16);
-      const lb = parseInt(tier.light.slice(5, 7), 16);
+      const dr = Number.parseInt(tier.dark.slice(1, 3), 16);
+      const dg = Number.parseInt(tier.dark.slice(3, 5), 16);
+      const db = Number.parseInt(tier.dark.slice(5, 7), 16);
+      const lr = Number.parseInt(tier.light.slice(1, 3), 16);
+      const lg = Number.parseInt(tier.light.slice(3, 5), 16);
+      const lb = Number.parseInt(tier.light.slice(5, 7), 16);
       const fR = Math.floor(dr + (lr - dr) * bright);
       const fG = Math.floor(dg + (lg - dg) * bright);
       const fB = Math.floor(db + (lb - db) * bright);
@@ -3404,16 +3556,16 @@ export function renderMortarStandardBarrel(
         topCenter.x + faceMidX,
         topCenter.y + faceMidY,
         botCenter.x + faceMidX,
-        botCenter.y + faceMidY,
+        botCenter.y + faceMidY
       );
       faceGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, fR + 22)},${Math.min(255, fG + 20)},${Math.min(255, fB + 18)})`,
+        `rgb(${Math.min(255, fR + 22)},${Math.min(255, fG + 20)},${Math.min(255, fB + 18)})`
       );
       faceGrad.addColorStop(0.35, `rgb(${fR},${fG},${fB})`);
       faceGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, fR - 24)},${Math.max(0, fG - 20)},${Math.max(0, fB - 16)})`,
+        `rgb(${Math.max(0, fR - 24)},${Math.max(0, fG - 20)},${Math.max(0, fB - 16)})`
       );
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
@@ -3451,11 +3603,11 @@ export function renderMortarStandardBarrel(
           ctx.moveTo(botCenter.x + hexVerts[i].x, botCenter.y + hexVerts[i].y);
           ctx.lineTo(
             botCenter.x + hexVerts[ni].x,
-            botCenter.y + hexVerts[ni].y,
+            botCenter.y + hexVerts[ni].y
           );
           ctx.lineTo(
             topCenter.x + hexVerts[ni].x,
-            topCenter.y + hexVerts[ni].y,
+            topCenter.y + hexVerts[ni].y
           );
           ctx.lineTo(topCenter.x + hexVerts[i].x, topCenter.y + hexVerts[i].y);
           ctx.closePath();
@@ -3463,7 +3615,9 @@ export function renderMortarStandardBarrel(
         }
       }
 
-      if (n < -0.85) continue;
+      if (n < -0.85) {
+        continue;
+      }
 
       // Face interpolation helper
       const barrelFacePt = (u: number, v: number) => ({
@@ -3503,7 +3657,7 @@ export function renderMortarStandardBarrel(
             pt.y,
             (0.2 + ((pitSeed * p) % 5) * 0.1) * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -3534,7 +3688,7 @@ export function renderMortarStandardBarrel(
             bPt.y - 0.15 * zoom,
             0.3 * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           ctx.fillStyle = `rgba(80,80,88,${0.45 + bright * 0.3})`;
@@ -3598,7 +3752,7 @@ export function renderMortarStandardBarrel(
             markX - 1.5 * zoom,
             markY - 1 * zoom,
             3 * zoom,
-            2 * zoom,
+            2 * zoom
           );
         }
       }
@@ -3669,7 +3823,7 @@ export function renderMortarStandardBarrel(
         ctx.moveTo(topCenter.x + hlx2, topCenter.y + hly2);
         ctx.lineTo(
           (botCenter.x + topCenter.x) * 0.5 + hlx2,
-          (botCenter.y + topCenter.y) * 0.5 + hly2,
+          (botCenter.y + topCenter.y) * 0.5 + hly2
         );
         ctx.stroke();
         // Gold rosette rivets at face corners (with raised highlight)
@@ -3688,7 +3842,7 @@ export function renderMortarStandardBarrel(
               ry - 0.15 * zoom,
               0.35 * zoom,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
             ctx.fillStyle = `rgba(201,162,39,${0.6 + bright * 0.3})`;
@@ -3704,12 +3858,15 @@ export function renderMortarStandardBarrel(
       hexVerts,
       tier.light,
       "rgba(0,0,0,0.12)",
-      0.8 * zoom,
+      0.8 * zoom
     );
 
     // Metal band at tier top (aligned along barrel axis)
     const bandH = (level >= 3 ? 2.5 : 2) * zoom;
-    const bandBot: Pt = { x: topCenter.x - bAx * bandH, y: topCenter.y - bAy * bandH };
+    const bandBot: Pt = {
+      x: topCenter.x - bAx * bandH,
+      y: topCenter.y - bAy * bandH,
+    };
     const bandColor =
       level >= 3 ? "#d4aa2a" : level >= 2 ? "#6a7a96" : "#6a5844";
     drawHexBand(
@@ -3721,14 +3878,14 @@ export function renderMortarStandardBarrel(
       1.03,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
-        const bR = parseInt(bandColor.slice(1, 3), 16);
-        const bG = parseInt(bandColor.slice(3, 5), 16);
-        const bB = parseInt(bandColor.slice(5, 7), 16);
+        const bR = Number.parseInt(bandColor.slice(1, 3), 16);
+        const bG = Number.parseInt(bandColor.slice(3, 5), 16);
+        const bB = Number.parseInt(bandColor.slice(5, 7), 16);
         return `rgb(${Math.floor(bR * (0.6 + b * 0.4))},${Math.floor(bG * (0.6 + b * 0.4))},${Math.floor(bB * (0.6 + b * 0.4))})`;
       },
       "rgba(0,0,0,0.2)",
       0.5 * zoom,
-      -1.5,
+      -1.5
     );
 
     // L1: rope bindings between tiers
@@ -3742,16 +3899,18 @@ export function renderMortarStandardBarrel(
           y: botCenter.y + (topCenter.y - botCenter.y) * ropeFrac,
         };
         for (let ri = 0; ri < hexSides; ri++) {
-          if (sideNormals[ri] < -0.85) continue;
+          if (sideNormals[ri] < -0.85) {
+            continue;
+          }
           const rni = (ri + 1) % hexSides;
           ctx.beginPath();
           ctx.moveTo(
             rpPt.x + hexVerts[ri].x * 1.01,
-            rpPt.y + hexVerts[ri].y * 1.01,
+            rpPt.y + hexVerts[ri].y * 1.01
           );
           ctx.lineTo(
             rpPt.x + hexVerts[rni].x * 1.01,
-            rpPt.y + hexVerts[rni].y * 1.01,
+            rpPt.y + hexVerts[rni].y * 1.01
           );
           ctx.stroke();
         }
@@ -3762,14 +3921,16 @@ export function renderMortarStandardBarrel(
     if (level >= 2) {
       ctx.fillStyle = level >= 3 ? "#e8c840" : "#8090a0";
       for (let i = 0; i < hexSides; i++) {
-        if (sideNormals[i] < -0.85) continue;
+        if (sideNormals[i] < -0.85) {
+          continue;
+        }
         ctx.beginPath();
         ctx.arc(
           topCenter.x + hexVerts[i].x * 1.03,
           topCenter.y + hexVerts[i].y * 1.03,
           (level >= 3 ? 1.1 : 0.9) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3787,16 +3948,18 @@ export function renderMortarStandardBarrel(
         ctx.strokeStyle = "#5a5a5a";
         ctx.lineWidth = 1.5 * zoom;
         for (let hi = 0; hi < hexSides; hi++) {
-          if (sideNormals[hi] < -0.85) continue;
+          if (sideNormals[hi] < -0.85) {
+            continue;
+          }
           const hni = (hi + 1) % hexSides;
           ctx.beginPath();
           ctx.moveTo(
             hoopPt.x + hexVerts[hi].x * 1.02,
-            hoopPt.y + hexVerts[hi].y * 1.02,
+            hoopPt.y + hexVerts[hi].y * 1.02
           );
           ctx.lineTo(
             hoopPt.x + hexVerts[hni].x * 1.02,
-            hoopPt.y + hexVerts[hni].y * 1.02,
+            hoopPt.y + hexVerts[hni].y * 1.02
           );
           ctx.stroke();
         }
@@ -3806,7 +3969,7 @@ export function renderMortarStandardBarrel(
       if (level >= 2 && cosR + 0.5 * sinR > -0.3) {
         const injPt = posAtFrac(
           botFrac + (topFrac - botFrac) * 0.5,
-          cumRecoil - tierRecoils[ti] * 0.5,
+          cumRecoil - tierRecoils[ti] * 0.5
         );
         const injX = injPt.x + cosR * tier.r * 0.9;
         const injY = injPt.y + sinR * tier.r * ISO_Y_RATIO * 0.9;
@@ -3838,7 +4001,7 @@ export function renderMortarStandardBarrel(
           ctx.moveTo(injX + perpOX, injY + perpOY);
           ctx.lineTo(
             injX + aimDirX * 6 * zoom + perpOX,
-            injY + aimDirY * 6 * zoom + perpOY,
+            injY + aimDirY * 6 * zoom + perpOY
           );
           ctx.stroke();
         }
@@ -3848,7 +4011,7 @@ export function renderMortarStandardBarrel(
       if (level === 1 && -cosR - 0.5 * sinR > -0.3) {
         const handlePt = posAtFrac(
           botFrac + (topFrac - botFrac) * 0.6,
-          cumRecoil - tierRecoils[ti] * 0.4,
+          cumRecoil - tierRecoils[ti] * 0.4
         );
         const hx = handlePt.x - cosR * tier.r * 0.8;
         const hy = handlePt.y - sinR * tier.r * ISO_Y_RATIO * 0.8;
@@ -3860,7 +4023,7 @@ export function renderMortarStandardBarrel(
           hx - bAx * 4 * zoom,
           hy - bAy * 4 * zoom,
           hx + bNx * 2 * zoom,
-          hy + bNy * 2 * zoom,
+          hy + bNy * 2 * zoom
         );
         ctx.stroke();
       }
@@ -3871,7 +4034,7 @@ export function renderMortarStandardBarrel(
       if (level >= 3 && -cosR - 0.5 * sinR > -0.3) {
         const screwPt = posAtFrac(
           botFrac + (topFrac - botFrac) * 0.3,
-          cumRecoil - tierRecoils[ti] * 0.7,
+          cumRecoil - tierRecoils[ti] * 0.7
         );
         const screwX = screwPt.x - cosR * tier.r * 0.7;
         const screwY = screwPt.y - sinR * tier.r * ISO_Y_RATIO * 0.7;
@@ -3896,7 +4059,7 @@ export function renderMortarStandardBarrel(
             screwY + (shaftEnd.y - screwY) * t,
             0.9 * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -3915,10 +4078,12 @@ export function renderMortarStandardBarrel(
       if (level === 2) {
         for (const side of [-1, 1]) {
           const sideVis = side * (-sinR + 0.5 * cosR);
-          if (sideVis < -0.85) continue;
+          if (sideVis < -0.85) {
+            continue;
+          }
           const hPt = posAtFrac(
             botFrac + (topFrac - botFrac) * 0.5,
-            cumRecoil - tierRecoils[ti] * 0.5,
+            cumRecoil - tierRecoils[ti] * 0.5
           );
           const hx = hPt.x + side * sinR * tier.r * 0.85;
           const hy = hPt.y - side * cosR * tier.r * ISO_Y_RATIO * 0.4;
@@ -3935,7 +4100,7 @@ export function renderMortarStandardBarrel(
       if (level >= 2 && cosR + 0.5 * sinR > -0.3) {
         const gaugePt = posAtFrac(
           botFrac + (topFrac - botFrac) * 0.7,
-          cumRecoil - tierRecoils[ti] * 0.3,
+          cumRecoil - tierRecoils[ti] * 0.3
         );
         const gx = gaugePt.x + cosR * tier.r * 0.85;
         const gy = gaugePt.y + sinR * tier.r * ISO_Y_RATIO * 0.85;
@@ -3959,7 +4124,7 @@ export function renderMortarStandardBarrel(
         ctx.moveTo(gx, gy);
         ctx.lineTo(
           gx + (nCos * bNx + nSin * bAx) * needleLen,
-          gy + (nCos * bNy + nSin * bAy) * needleLen,
+          gy + (nCos * bNy + nSin * bAy) * needleLen
         );
         ctx.stroke();
       }
@@ -3970,13 +4135,15 @@ export function renderMortarStandardBarrel(
       if (level >= 2) {
         const ventPt = posAtFrac(
           botFrac + (topFrac - botFrac) * 0.4,
-          cumRecoil - tierRecoils[ti] * 0.6,
+          cumRecoil - tierRecoils[ti] * 0.6
         );
         for (let vi = 0; vi < 3; vi++) {
           const va = rot + vi * Math.PI * 0.5;
           const vx = ventPt.x + Math.cos(va) * tier.r * 0.85;
           const vy = ventPt.y + Math.sin(va) * tier.r * ISO_Y_RATIO * 0.85;
-          if (Math.cos(va) * cosR + Math.sin(va) * sinR < -0.85) continue;
+          if (Math.cos(va) * cosR + Math.sin(va) * sinR < -0.85) {
+            continue;
+          }
           ctx.fillStyle = "#1a1a1a";
           ctx.beginPath();
           ctx.ellipse(vx, vy, 1.2 * zoom, 0.6 * zoom, rot, 0, Math.PI * 2);
@@ -3992,7 +4159,7 @@ export function renderMortarStandardBarrel(
               vy - (timeSinceFire / halfBaseSpeed) * 5 * zoom,
               (1 + (timeSinceFire / halfBaseSpeed) * 2) * zoom,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -4003,10 +4170,12 @@ export function renderMortarStandardBarrel(
       if (level >= 3) {
         for (const side of [-1, 1]) {
           const epSideVis = side * (-sinR + 0.5 * cosR);
-          if (epSideVis < -0.85) continue;
+          if (epSideVis < -0.85) {
+            continue;
+          }
           const epPt = posAtFrac(
             botFrac + (topFrac - botFrac) * 0.3,
-            cumRecoil - tierRecoils[ti] * 0.7,
+            cumRecoil - tierRecoils[ti] * 0.7
           );
           const epx = epPt.x + side * sinR * tier.r * 0.9;
           const epy = epPt.y - side * cosR * tier.r * ISO_Y_RATIO * 0.5;
@@ -4031,7 +4200,7 @@ export function renderMortarStandardBarrel(
             0.9 * zoom,
             pipeAng,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -4047,19 +4216,25 @@ export function renderMortarStandardBarrel(
       const collarVerts = generateIsoHexVertices(
         isoOff,
         collarR * 1.05,
-        hexSides,
+        hexSides
       );
       const collarNormals = computeHexSideNormals(cosR, hexSides);
       const collarBandH = 1.2 * zoom;
-      const collarBotPt: Pt = { x: collarPt.x - bAx * collarBandH, y: collarPt.y - bAy * collarBandH };
-      const collarTopPt: Pt = { x: collarPt.x + bAx * collarBandH, y: collarPt.y + bAy * collarBandH };
+      const collarBotPt: Pt = {
+        x: collarPt.x - bAx * collarBandH,
+        y: collarPt.y - bAy * collarBandH,
+      };
+      const collarTopPt: Pt = {
+        x: collarPt.x + bAx * collarBandH,
+        y: collarPt.y + bAy * collarBandH,
+      };
       drawHexBand(
         ctx,
         collarVerts,
         collarNormals,
         collarBotPt,
         collarTopPt,
-        1.0,
+        1,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
           return level >= 3
@@ -4068,18 +4243,20 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.15)",
         0.4 * zoom,
-        -1.5,
+        -1.5
       );
       ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
       for (let ci = 0; ci < hexSides; ci++) {
-        if (collarNormals[ci] < -1.5) continue;
+        if (collarNormals[ci] < -1.5) {
+          continue;
+        }
         ctx.beginPath();
         ctx.arc(
           collarPt.x + collarVerts[ci].x,
           collarPt.y + collarVerts[ci].y,
           0.8 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4091,15 +4268,23 @@ export function renderMortarStandardBarrel(
       const tierBotFrac = cumH / totalH;
       const tierTopFrac = (cumH + tier.h) / totalH;
       for (const ringFrac of ringPositions) {
-        if (ringFrac < tierBotFrac || ringFrac >= tierTopFrac) continue;
+        if (ringFrac < tierBotFrac || ringFrac >= tierTopFrac) {
+          continue;
+        }
         const ringRecoil = cumRecoil * ringFrac;
         const ringPt = posAtFrac(ringFrac, ringRecoil);
         const ringR = tier.r * 1.04;
         const ringVerts = generateIsoHexVertices(isoOff, ringR, hexSides);
         const ringNormals = computeHexSideNormals(cosR, hexSides);
         const ringH = 1.5 * zoom;
-        const ringBot: Pt = { x: ringPt.x - bAx * ringH * 0.5, y: ringPt.y - bAy * ringH * 0.5 };
-        const ringTop: Pt = { x: ringPt.x + bAx * ringH * 0.5, y: ringPt.y + bAy * ringH * 0.5 };
+        const ringBot: Pt = {
+          x: ringPt.x - bAx * ringH * 0.5,
+          y: ringPt.y - bAy * ringH * 0.5,
+        };
+        const ringTop: Pt = {
+          x: ringPt.x + bAx * ringH * 0.5,
+          y: ringPt.y + bAy * ringH * 0.5,
+        };
         const ringColor =
           level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
         drawHexBand(
@@ -4108,17 +4293,17 @@ export function renderMortarStandardBarrel(
           ringNormals,
           ringBot,
           ringTop,
-          1.0,
+          1,
           (n) => {
             const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
-            const rc = parseInt(ringColor.slice(1, 3), 16);
-            const gc = parseInt(ringColor.slice(3, 5), 16);
-            const bc = parseInt(ringColor.slice(5, 7), 16);
+            const rc = Number.parseInt(ringColor.slice(1, 3), 16);
+            const gc = Number.parseInt(ringColor.slice(3, 5), 16);
+            const bc = Number.parseInt(ringColor.slice(5, 7), 16);
             return `rgb(${Math.floor(rc * (0.6 + b * 0.4))},${Math.floor(gc * (0.6 + b * 0.4))},${Math.floor(bc * (0.6 + b * 0.4))})`;
           },
           "rgba(0,0,0,0.12)",
           0.3 * zoom,
-          -1.5,
+          -1.5
         );
       }
     }
@@ -4166,15 +4351,15 @@ export function renderMortarStandardBarrel(
       ctx.moveTo(scopeBaseX - 2 * zoom * bAx, scopeBaseY - 2 * zoom * bAy);
       ctx.lineTo(
         scopeBaseX + 3.5 * zoom * outX - 2 * zoom * bAx,
-        scopeBaseY + 3.5 * zoom * outY - 2 * zoom * bAy,
+        scopeBaseY + 3.5 * zoom * outY - 2 * zoom * bAy
       );
       ctx.lineTo(
         scopeBaseX + 3.5 * zoom * outX + 3.5 * zoom * bAx,
-        scopeBaseY + 3.5 * zoom * outY + 3.5 * zoom * bAy,
+        scopeBaseY + 3.5 * zoom * outY + 3.5 * zoom * bAy
       );
       ctx.lineTo(
         scopeBaseX + 1 * zoom * outX + 3.5 * zoom * bAx,
-        scopeBaseY + 1 * zoom * outY + 3.5 * zoom * bAy,
+        scopeBaseY + 1 * zoom * outY + 3.5 * zoom * bAy
       );
       ctx.lineTo(scopeBaseX + 1 * zoom * outX, scopeBaseY + 1 * zoom * outY);
       ctx.lineTo(scopeBaseX, scopeBaseY);
@@ -4189,11 +4374,11 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         scopeBaseX + 3.5 * zoom * outX + 3.5 * zoom * bAx,
-        scopeBaseY + 3.5 * zoom * outY + 3.5 * zoom * bAy,
+        scopeBaseY + 3.5 * zoom * outY + 3.5 * zoom * bAy
       );
       ctx.lineTo(
         scopeBaseX + 1 * zoom * outX + 3.5 * zoom * bAx,
-        scopeBaseY + 1 * zoom * outY + 3.5 * zoom * bAy,
+        scopeBaseY + 1 * zoom * outY + 3.5 * zoom * bAy
       );
       ctx.stroke();
       // Mount cross-bolt clamp — positioned along barrel axis
@@ -4229,7 +4414,7 @@ export function renderMortarStandardBarrel(
       const tubePrismVerts = generateIsoHexVertices(
         isoOff,
         tubeR2,
-        tubeHexSides,
+        tubeHexSides
       );
       const tubePrismNormals = computeHexSideNormals(cosR, tubeHexSides);
       const tubePrismSorted = sortSidesByDepth(tubePrismNormals);
@@ -4251,7 +4436,7 @@ export function renderMortarStandardBarrel(
         tubePrismVerts,
         tubeDkCol,
         "rgba(0,0,0,0.15)",
-        0.4 * zoom,
+        0.4 * zoom
       );
 
       for (let ts = 0; ts < tubeSegCount; ts++) {
@@ -4260,50 +4445,52 @@ export function renderMortarStandardBarrel(
         for (const ti of tubePrismSorted) {
           const tni = (ti + 1) % tubeHexSides;
           const tn = tubePrismNormals[ti];
-          if (tn < -0.85) continue;
+          if (tn < -0.85) {
+            continue;
+          }
           const bright = Math.max(0, Math.min(1, 0.2 + (tn + 1) * 0.4));
           const fR = Math.floor(
-            tubeDkRgb.r + (tubeLtRgb.r - tubeDkRgb.r) * bright,
+            tubeDkRgb.r + (tubeLtRgb.r - tubeDkRgb.r) * bright
           );
           const fG = Math.floor(
-            tubeDkRgb.g + (tubeLtRgb.g - tubeDkRgb.g) * bright,
+            tubeDkRgb.g + (tubeLtRgb.g - tubeDkRgb.g) * bright
           );
           const fB = Math.floor(
-            tubeDkRgb.b + (tubeLtRgb.b - tubeDkRgb.b) * bright,
+            tubeDkRgb.b + (tubeLtRgb.b - tubeDkRgb.b) * bright
           );
 
           const fGrad = ctx.createLinearGradient(
             segTop.x,
             segTop.y,
             segBot.x,
-            segBot.y,
+            segBot.y
           );
           fGrad.addColorStop(
             0,
-            `rgb(${Math.min(255, fR + 6)},${Math.min(255, fG + 5)},${Math.min(255, fB + 4)})`,
+            `rgb(${Math.min(255, fR + 6)},${Math.min(255, fG + 5)},${Math.min(255, fB + 4)})`
           );
           fGrad.addColorStop(0.5, `rgb(${fR},${fG},${fB})`);
           fGrad.addColorStop(
             1,
-            `rgb(${Math.max(0, fR - 8)},${Math.max(0, fG - 6)},${Math.max(0, fB - 5)})`,
+            `rgb(${Math.max(0, fR - 8)},${Math.max(0, fG - 6)},${Math.max(0, fB - 5)})`
           );
           ctx.fillStyle = fGrad;
           ctx.beginPath();
           ctx.moveTo(
             segBot.x + tubePrismVerts[ti].x,
-            segBot.y + tubePrismVerts[ti].y,
+            segBot.y + tubePrismVerts[ti].y
           );
           ctx.lineTo(
             segBot.x + tubePrismVerts[tni].x,
-            segBot.y + tubePrismVerts[tni].y,
+            segBot.y + tubePrismVerts[tni].y
           );
           ctx.lineTo(
             segTop.x + tubePrismVerts[tni].x,
-            segTop.y + tubePrismVerts[tni].y,
+            segTop.y + tubePrismVerts[tni].y
           );
           ctx.lineTo(
             segTop.x + tubePrismVerts[ti].x,
-            segTop.y + tubePrismVerts[ti].y,
+            segTop.y + tubePrismVerts[ti].y
           );
           ctx.closePath();
           ctx.fill();
@@ -4317,11 +4504,11 @@ export function renderMortarStandardBarrel(
             ctx.beginPath();
             ctx.moveTo(
               segBot.x + tubePrismVerts[tni].x,
-              segBot.y + tubePrismVerts[tni].y,
+              segBot.y + tubePrismVerts[tni].y
             );
             ctx.lineTo(
               segTop.x + tubePrismVerts[tni].x,
-              segTop.y + tubePrismVerts[tni].y,
+              segTop.y + tubePrismVerts[tni].y
             );
             ctx.stroke();
           }
@@ -4343,7 +4530,7 @@ export function renderMortarStandardBarrel(
           rx - rhh * tubeNx,
           ry - rhh * tubeNy,
           rx + rhh * tubeNx,
-          ry + rhh * tubeNy,
+          ry + rhh * tubeNy
         );
         const ringBase =
           level >= 3 ? "#5a5a65" : level >= 2 ? "#404868" : "#4a4a4a";
@@ -4392,7 +4579,7 @@ export function renderMortarStandardBarrel(
         objR * 0.65,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Anti-reflection coating shimmer (color-shifting)
@@ -4410,7 +4597,7 @@ export function renderMortarStandardBarrel(
         objR * 0.5,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Lens rim ring
@@ -4425,7 +4612,7 @@ export function renderMortarStandardBarrel(
         objR * 0.65,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       // Specular highlight (crescent reflection)
@@ -4438,7 +4625,7 @@ export function renderMortarStandardBarrel(
         0.45 * zoom,
         tubeAng - 0.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4453,7 +4640,7 @@ export function renderMortarStandardBarrel(
         eyeR * 0.7,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Rubber eye cup
@@ -4467,7 +4654,7 @@ export function renderMortarStandardBarrel(
         eyeR * 0.65,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       // Eye relief aperture
@@ -4480,7 +4667,7 @@ export function renderMortarStandardBarrel(
         eyeR * 0.35,
         tubeAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4501,7 +4688,7 @@ export function renderMortarStandardBarrel(
           0,
           turretX,
           turretY,
-          turretR,
+          turretR
         );
         turGrad.addColorStop(0, level >= 3 ? "#5a5a62" : "#444a58");
         turGrad.addColorStop(0.7, level >= 3 ? "#4a4a52" : "#3a3a48");
@@ -4515,7 +4702,7 @@ export function renderMortarStandardBarrel(
           turretR * turSqueeze,
           turAngle,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -4536,13 +4723,13 @@ export function renderMortarStandardBarrel(
             turretX +
               (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * inR,
             turretY +
-              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * inR,
+              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * inR
           );
           ctx.lineTo(
             turretX +
               (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * outR,
             turretY +
-              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * outR,
+              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * outR
           );
           ctx.stroke();
         }
@@ -4556,7 +4743,7 @@ export function renderMortarStandardBarrel(
           turretR * 0.35 * turSqueeze,
           turAngle,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Pointer line along tube normal
@@ -4566,7 +4753,7 @@ export function renderMortarStandardBarrel(
         ctx.moveTo(turretX, turretY);
         ctx.lineTo(
           turretX - tubeNx * turretR * 0.35,
-          turretY - tubeNy * turretR * 0.35,
+          turretY - tubeNy * turretR * 0.35
         );
         ctx.stroke();
 
@@ -4583,7 +4770,7 @@ export function renderMortarStandardBarrel(
           windR * turSqueeze,
           turAngle,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.18)";
@@ -4599,11 +4786,11 @@ export function renderMortarStandardBarrel(
           ctx.beginPath();
           ctx.moveTo(
             windX + (wCos * tDx - wSin * tubeNx * turSqueeze) * windR * 0.6,
-            windY + (wCos * tDy - wSin * tubeNy * turSqueeze) * windR * 0.6,
+            windY + (wCos * tDy - wSin * tubeNy * turSqueeze) * windR * 0.6
           );
           ctx.lineTo(
             windX + (wCos * tDx - wSin * tubeNx * turSqueeze) * windR * 0.9,
-            windY + (wCos * tDy - wSin * tubeNy * turSqueeze) * windR * 0.9,
+            windY + (wCos * tDy - wSin * tubeNy * turSqueeze) * windR * 0.9
           );
           ctx.stroke();
         }
@@ -4623,7 +4810,7 @@ export function renderMortarStandardBarrel(
           lrfX - lrfW * 0.5 * tDx,
           lrfY - lrfW * 0.5 * tDy,
           lrfX + lrfW * 0.5 * tDx,
-          lrfY + lrfW * 0.5 * tDy,
+          lrfY + lrfW * 0.5 * tDy
         );
         lrfGrad.addColorStop(0, "#222228");
         lrfGrad.addColorStop(0.5, "#2e2e36");
@@ -4639,7 +4826,7 @@ export function renderMortarStandardBarrel(
           tDx,
           tDy,
           tubeNx,
-          tubeNy,
+          tubeNy
         );
         ctx.fill();
         // Housing border (gold accent)
@@ -4658,7 +4845,7 @@ export function renderMortarStandardBarrel(
           tDx,
           tDy,
           tubeNx,
-          tubeNy,
+          tubeNy
         );
         ctx.fill();
 
@@ -4675,7 +4862,7 @@ export function renderMortarStandardBarrel(
           0.6 * zoom,
           tubeAng,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = `rgba(255, 20, 20, ${laserPulse})`;
@@ -4687,7 +4874,7 @@ export function renderMortarStandardBarrel(
           0.36 * zoom,
           tubeAng,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         if (laserPulse > 0.35) {
@@ -4713,7 +4900,7 @@ export function renderMortarStandardBarrel(
           tDx,
           tDy,
           tubeNx,
-          tubeNy,
+          tubeNy
         );
         ctx.fill();
         const readGlow = 0.35 + Math.sin(time * 2) * 0.1;
@@ -4728,7 +4915,7 @@ export function renderMortarStandardBarrel(
           tDx,
           tDy,
           tubeNx,
-          tubeNy,
+          tubeNy
         );
         ctx.fill();
 
@@ -4786,7 +4973,7 @@ export function renderMortarStandardBarrel(
     }
 
     // Bright core glow at barrel mouth
-    const mouthPt = posAtFrac(1.0, cumRecoil);
+    const mouthPt = posAtFrac(1, cumRecoil);
     const mouthR = tiers[2].r * 0.7;
     const mouthGlow = totalGlow * 1.2;
     if (mouthGlow > 0.05) {
@@ -4796,19 +4983,19 @@ export function renderMortarStandardBarrel(
         0,
         mouthPt.x,
         mouthPt.y,
-        mouthR,
+        mouthR
       );
       mGrad.addColorStop(
         0,
-        `rgba(255, 200, 80, ${Math.min(mouthGlow * 0.7, 0.55)})`,
+        `rgba(255, 200, 80, ${Math.min(mouthGlow * 0.7, 0.55)})`
       );
       mGrad.addColorStop(
         0.3,
-        `rgba(255, 140, 40, ${Math.min(mouthGlow * 0.45, 0.35)})`,
+        `rgba(255, 140, 40, ${Math.min(mouthGlow * 0.45, 0.35)})`
       );
       mGrad.addColorStop(
         0.6,
-        `rgba(255, 80, 10, ${Math.min(mouthGlow * 0.2, 0.2)})`,
+        `rgba(255, 80, 10, ${Math.min(mouthGlow * 0.2, 0.2)})`
       );
       mGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
       ctx.fillStyle = mGrad;
@@ -4821,7 +5008,7 @@ export function renderMortarStandardBarrel(
         mouthR * 0.5,
         mouthTiltA,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -4833,7 +5020,7 @@ export function renderMortarStandardBarrel(
         totalGlow * 0.12 +
           (timeSinceFire < MISSILE_ATTACK_SPEED
             ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.04
-            : 0),
+            : 0)
       );
       const shimmerCount = level >= 3 ? 5 : level >= 2 ? 4 : 3;
       const shimTiltA = Math.atan2(bNy, bNx);
@@ -4854,7 +5041,7 @@ export function renderMortarStandardBarrel(
           shimR * 0.5,
           shimTiltA,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4932,20 +5119,20 @@ export function renderMortarStandardBarrel(
         sx + feedNormX * shellRad,
         sy + feedNormY * shellRad,
         sx - feedNormX * shellRad,
-        sy - feedNormY * shellRad,
+        sy - feedNormY * shellRad
       );
       const casingBase = level >= 3 ? [201, 162, 39] : [138, 122, 80];
       casingGrad.addColorStop(
         0,
-        `rgb(${casingBase[0] - 30},${casingBase[1] - 20},${casingBase[2] - 10})`,
+        `rgb(${casingBase[0] - 30},${casingBase[1] - 20},${casingBase[2] - 10})`
       );
       casingGrad.addColorStop(
         0.35,
-        `rgb(${Math.min(255, casingBase[0] + 20)},${Math.min(255, casingBase[1] + 15)},${Math.min(255, casingBase[2] + 10)})`,
+        `rgb(${Math.min(255, casingBase[0] + 20)},${Math.min(255, casingBase[1] + 15)},${Math.min(255, casingBase[2] + 10)})`
       );
       casingGrad.addColorStop(
         1,
-        `rgb(${casingBase[0] - 20},${casingBase[1] - 15},${casingBase[2] - 8})`,
+        `rgb(${casingBase[0] - 20},${casingBase[1] - 15},${casingBase[2] - 8})`
       );
       ctx.fillStyle = casingGrad;
       ctx.beginPath();
@@ -4969,7 +5156,7 @@ export function renderMortarStandardBarrel(
         shellRad * 0.95,
         shellAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -4986,7 +5173,7 @@ export function renderMortarStandardBarrel(
         shellRad * 0.35,
         feedAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5009,7 +5196,7 @@ export function renderMortarStandardBarrel(
         shellRad * 0.2,
         shellAng,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5056,7 +5243,7 @@ export function renderMortarStandardBarrel(
       1.5 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -5065,7 +5252,7 @@ export function renderMortarStandardBarrel(
 
     // Scope tube body — isometric hex-prism
     const tubeLen = (level >= 3 ? 14 : level >= 2 ? 12 : 10) * zoom;
-    const tubeR = (level >= 3 ? 2.8 : level >= 2 ? 2.4 : 2.0) * zoom;
+    const tubeR = (level >= 3 ? 2.8 : level >= 2 ? 2.4 : 2) * zoom;
     const tubeStartX = mountX - bAx * tubeLen * 0.4;
     const tubeStartY = mountY - bAy * tubeLen * 0.4;
     const tubeEndX = mountX + bAx * tubeLen * 0.6;
@@ -5094,52 +5281,54 @@ export function renderMortarStandardBarrel(
       isoScopeVerts,
       level >= 3 ? "#2a2a34" : "#222230",
       "rgba(0,0,0,0.15)",
-      0.4 * zoom,
+      0.4 * zoom
     );
 
     for (let ss = 0; ss < isoScopeSegs; ss++) {
       const sBot = isoScopePts[ss];
       const sTop = isoScopePts[ss + 1];
       const isObjEnd = ss === isoScopeSegs - 1;
-      const taper = isObjEnd ? 1.1 : 1.0;
+      const taper = isObjEnd ? 1.1 : 1;
       for (const si of isoScopeSorted) {
         const sni = (si + 1) % isoScopeSides;
         const sn = isoScopeNormals[si];
-        if (sn < -0.85) continue;
+        if (sn < -0.85) {
+          continue;
+        }
         const bright = Math.max(0, Math.min(1, 0.2 + (sn + 1) * 0.4));
         const cR = Math.floor(
-          isoScopeDk.r + (isoScopeLt.r - isoScopeDk.r) * bright,
+          isoScopeDk.r + (isoScopeLt.r - isoScopeDk.r) * bright
         );
         const cG = Math.floor(
-          isoScopeDk.g + (isoScopeLt.g - isoScopeDk.g) * bright,
+          isoScopeDk.g + (isoScopeLt.g - isoScopeDk.g) * bright
         );
         const cB = Math.floor(
-          isoScopeDk.b + (isoScopeLt.b - isoScopeDk.b) * bright,
+          isoScopeDk.b + (isoScopeLt.b - isoScopeDk.b) * bright
         );
         const sGrad = ctx.createLinearGradient(sTop.x, sTop.y, sBot.x, sBot.y);
         sGrad.addColorStop(
           0,
-          `rgb(${Math.min(255, cR + 6)},${Math.min(255, cG + 5)},${Math.min(255, cB + 4)})`,
+          `rgb(${Math.min(255, cR + 6)},${Math.min(255, cG + 5)},${Math.min(255, cB + 4)})`
         );
         sGrad.addColorStop(0.5, `rgb(${cR},${cG},${cB})`);
         sGrad.addColorStop(
           1,
-          `rgb(${Math.max(0, cR - 8)},${Math.max(0, cG - 6)},${Math.max(0, cB - 5)})`,
+          `rgb(${Math.max(0, cR - 8)},${Math.max(0, cG - 6)},${Math.max(0, cB - 5)})`
         );
         ctx.fillStyle = sGrad;
         ctx.beginPath();
         ctx.moveTo(sBot.x + isoScopeVerts[si].x, sBot.y + isoScopeVerts[si].y);
         ctx.lineTo(
           sBot.x + isoScopeVerts[sni].x,
-          sBot.y + isoScopeVerts[sni].y,
+          sBot.y + isoScopeVerts[sni].y
         );
         ctx.lineTo(
           sTop.x + isoScopeVerts[sni].x * taper,
-          sTop.y + isoScopeVerts[sni].y * taper,
+          sTop.y + isoScopeVerts[sni].y * taper
         );
         ctx.lineTo(
           sTop.x + isoScopeVerts[si].x * taper,
-          sTop.y + isoScopeVerts[si].y * taper,
+          sTop.y + isoScopeVerts[si].y * taper
         );
         ctx.closePath();
         ctx.fill();
@@ -5152,11 +5341,11 @@ export function renderMortarStandardBarrel(
           ctx.beginPath();
           ctx.moveTo(
             sBot.x + isoScopeVerts[sni].x,
-            sBot.y + isoScopeVerts[sni].y,
+            sBot.y + isoScopeVerts[sni].y
           );
           ctx.lineTo(
             sTop.x + isoScopeVerts[sni].x * taper,
-            sTop.y + isoScopeVerts[sni].y * taper,
+            sTop.y + isoScopeVerts[sni].y * taper
           );
           ctx.stroke();
         }
@@ -5176,7 +5365,7 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.12)",
         0.35 * zoom,
-        -1.5,
+        -1.5
       );
     }
 
@@ -5191,7 +5380,7 @@ export function renderMortarStandardBarrel(
       lensR * Math.abs(bAx * 0.5 + 0.5),
       Math.atan2(bAy, bAx),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = level >= 3 ? "#6a6a78" : "#5a5a68";
@@ -5206,7 +5395,7 @@ export function renderMortarStandardBarrel(
       0,
       tubeEndX,
       tubeEndY,
-      lensR,
+      lensR
     );
     lensGlint.addColorStop(0, `rgba(140,180,255,${glintPulse})`);
     lensGlint.addColorStop(0.4, `rgba(80,120,200,${glintPulse * 0.5})`);
@@ -5220,7 +5409,7 @@ export function renderMortarStandardBarrel(
       lensR * 0.85 * Math.abs(bAx * 0.5 + 0.5),
       Math.atan2(bAy, bAx),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -5246,7 +5435,7 @@ export function renderMortarStandardBarrel(
       epR * Math.abs(bAx * 0.5 + 0.5),
       Math.atan2(bAy, bAx),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -5292,7 +5481,7 @@ export function renderMortarStandardBarrel(
   // ===== L2: instrument panel mounted on leg — iso projected =====
   if (level === 2 && nearSide * (-sinR + 0.5 * cosR) > -0.3) {
     const panelAnchor = posAtFrac(0.15, tierRecoils[0] * 0.3);
-    const panelX = panelAnchor.x + nearSide * (-sinR) * tiers[0].r * 1.0;
+    const panelX = panelAnchor.x + nearSide * -sinR * tiers[0].r * 1;
     const panelY =
       panelAnchor.y + nearSide * cosR * tiers[0].r * ISO_Y_RATIO * 0.5;
     const pHW = 3 * zoom;
@@ -5319,7 +5508,7 @@ export function renderMortarStandardBarrel(
         panelY + ledOff * bNy,
         0.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5338,7 +5527,9 @@ export function renderMortarStandardBarrel(
     const scaffTopPt = posAtFrac(0.4, tierRecoils[0]);
     for (let s = 0; s < 3; s++) {
       const sa = scaffAngles[s];
-      if (Math.cos(sa) + 0.5 * Math.sin(sa) < -0.85) continue;
+      if (Math.cos(sa) + 0.5 * Math.sin(sa) < -0.85) {
+        continue;
+      }
       const footX = Math.cos(sa) * scaffR;
       const footY = Math.sin(sa) * scaffR * ISO_Y_RATIO + 4 * zoom;
       const poleTopX = scaffTopPt.x + Math.cos(sa) * scaffR * 0.2;
@@ -5353,7 +5544,8 @@ export function renderMortarStandardBarrel(
         const nfx = Math.cos(nsa) * scaffR;
         const nfy = Math.sin(nsa) * scaffR * ISO_Y_RATIO + 4 * zoom;
         const nPoleTopX = scaffTopPt.x + Math.cos(nsa) * scaffR * 0.2;
-        const nPoleTopY = scaffTopPt.y + Math.sin(nsa) * scaffR * ISO_Y_RATIO * 0.2;
+        const nPoleTopY =
+          scaffTopPt.y + Math.sin(nsa) * scaffR * ISO_Y_RATIO * 0.2;
         const beamMidX = (footX + poleTopX) * 0.5;
         const beamMidY = (footY + poleTopY) * 0.5;
         const nBeamMidX = (nfx + nPoleTopX) * 0.5;
@@ -5380,8 +5572,8 @@ export function renderMortarStandardBarrel(
         5,
         4,
         5,
-        { top: "#3a3a42", left: "#2a2a32", right: "#1a1a28" },
-        zoom,
+        { left: "#2a2a32", right: "#1a1a28", top: "#3a3a42" },
+        zoom
       );
       const pulse = 0.3 + Math.sin(time * 4) * 0.2;
       ctx.fillStyle = `rgba(0, 180, 255, ${pulse})`;
@@ -5398,7 +5590,7 @@ export function renderMortarStandardBarrel(
         genX + cosR * 5 * zoom,
         genY - 8 * zoom,
         cableEnd.x,
-        cableEnd.y,
+        cableEnd.y
       );
       ctx.stroke();
     }
@@ -5443,7 +5635,7 @@ export function renderMortarStandardBarrel(
         cylStartX + cylNx * cylDia * 0.5,
         cylStartY + cylNy * cylDia * 0.5,
         cylStartX - cylNx * cylDia * 0.5,
-        cylStartY - cylNy * cylDia * 0.5,
+        cylStartY - cylNy * cylDia * 0.5
       );
       const cylDark = level >= 3 ? "#404048" : "#3a3a42";
       const cylLight = level >= 3 ? "#6a6a72" : "#5a5a62";
@@ -5465,11 +5657,11 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         cylStartX + cylNx * cylDia * 0.2,
-        cylStartY + cylNy * cylDia * 0.2,
+        cylStartY + cylNy * cylDia * 0.2
       );
       ctx.lineTo(
         cylEndX + cylNx * cylDia * 0.2,
-        cylEndY + cylNy * cylDia * 0.2,
+        cylEndY + cylNy * cylDia * 0.2
       );
       ctx.stroke();
 
@@ -5488,7 +5680,7 @@ export function renderMortarStandardBarrel(
         cylEndX + cylNx * rodDia,
         cylEndY + cylNy * rodDia,
         cylEndX - cylNx * rodDia,
-        cylEndY - cylNy * rodDia,
+        cylEndY - cylNy * rodDia
       );
       rodGrad.addColorStop(0, level >= 3 ? "#909098" : "#808088");
       rodGrad.addColorStop(0.35, level >= 3 ? "#d0d0d8" : "#b8b8c0");
@@ -5509,7 +5701,7 @@ export function renderMortarStandardBarrel(
         0,
         cylStartX,
         cylStartY,
-        cylDia * 0.65,
+        cylDia * 0.65
       );
       capGrad.addColorStop(0, level >= 3 ? "#7a7a82" : "#5a5a62");
       capGrad.addColorStop(0.6, level >= 3 ? "#5a5a62" : "#4a4a52");
@@ -5547,10 +5739,10 @@ export function renderMortarStandardBarrel(
       const sEndPt = posAtFrac(0.3, tierRecoils[0] * 0.8);
       const coilCount = level >= 3 ? 10 : 7;
       const coilW = (level >= 3 ? 2.2 : 1.8) * zoom;
-      const wireThick = (level >= 3 ? 1.0 : 0.8) * zoom;
+      const wireThick = (level >= 3 ? 1 : 0.8) * zoom;
       const springLen = Math.hypot(
         sEndPt.x - sStartPt.x,
-        sEndPt.y - sStartPt.y,
+        sEndPt.y - sStartPt.y
       );
       const springDirX =
         springLen > 0 ? (sEndPt.x - sStartPt.x) / springLen : 0;
@@ -5579,7 +5771,7 @@ export function renderMortarStandardBarrel(
           coilW * 0.35,
           Math.atan2(springDirY, springDirX),
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.15)";
@@ -5640,7 +5832,9 @@ export function renderMortarStandardBarrel(
     for (let w = 0; w < wireCount; w++) {
       const wireAngle = rot + Math.PI * 0.5 + w * Math.PI * 0.25;
       const wireVis = Math.cos(wireAngle) + 0.5 * Math.sin(wireAngle);
-      if (wireVis < -0.85) continue;
+      if (wireVis < -0.85) {
+        continue;
+      }
       const startR = tiers[0].r * (0.6 + w * 0.1);
       const startX = Math.cos(wireAngle) * startR;
       const startY = Math.sin(wireAngle) * startR * ISO_Y_RATIO + 3 * zoom;
@@ -5674,7 +5868,9 @@ export function renderMortarStandardBarrel(
       const lightPt = posAtFrac(lightFrac, lightRecoil);
       const lightAngle = rot + Math.PI * 0.55 + li * Math.PI * 0.35;
       const lightVis = Math.cos(lightAngle) + 0.5 * Math.sin(lightAngle);
-      if (lightVis < -0.85) continue;
+      if (lightVis < -0.85) {
+        continue;
+      }
       const lightR = tiers[Math.min(li, 2)].r;
       const lx = lightPt.x + Math.cos(lightAngle) * lightR * 0.98;
       const ly = lightPt.y + Math.sin(lightAngle) * lightR * ISO_Y_RATIO * 0.98;
@@ -5718,10 +5914,10 @@ export function renderMortarStandardBarrel(
     const springR = (level >= 3 ? 3.5 : level >= 2 ? 3 : 2.5) * zoom;
     const springSides = 8;
     const springDk = parseHexColor(
-      level >= 3 ? "#2a2832" : level >= 2 ? "#282c34" : "#2e2e32",
+      level >= 3 ? "#2a2832" : level >= 2 ? "#282c34" : "#2e2e32"
     );
     const springLt = parseHexColor(
-      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068",
+      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068"
     );
     const springNormals = computeHexSideNormals(cosR, springSides);
     const springSorted = sortSidesByDepth(springNormals);
@@ -5757,7 +5953,7 @@ export function renderMortarStandardBarrel(
         const cx = sBase.x + (sTip.x - sBase.x) * t + springOffX + barrelDirOff;
         const cy =
           sBase.y + (sTip.y - sBase.y) * t + springOffY + barrelDirOffY;
-        const taper = 1.0 - t * 0.15;
+        const taper = 1 - t * 0.15;
         springPts.push({
           center: { x: cx, y: cy },
           verts: generateIsoHexVertices(isoOff, springR * taper, springSides),
@@ -5771,7 +5967,7 @@ export function renderMortarStandardBarrel(
         springPts[0].verts,
         level >= 3 ? "#3a3440" : "#3a3a3e",
         level >= 3 ? "#2a2430" : "#2a2a2e",
-        0.4 * zoom,
+        0.4 * zoom
       );
 
       // Prism segments
@@ -5783,32 +5979,32 @@ export function renderMortarStandardBarrel(
           const n = springNormals[i];
           const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
           const fR = Math.floor(
-            springDk.r + (springLt.r - springDk.r) * bright,
+            springDk.r + (springLt.r - springDk.r) * bright
           );
           const fG = Math.floor(
-            springDk.g + (springLt.g - springDk.g) * bright,
+            springDk.g + (springLt.g - springDk.g) * bright
           );
           const fB = Math.floor(
-            springDk.b + (springLt.b - springDk.b) * bright,
+            springDk.b + (springLt.b - springDk.b) * bright
           );
 
           ctx.fillStyle = `rgb(${fR},${fG},${fB})`;
           ctx.beginPath();
           ctx.moveTo(
             bot.center.x + bot.verts[i].x,
-            bot.center.y + bot.verts[i].y,
+            bot.center.y + bot.verts[i].y
           );
           ctx.lineTo(
             bot.center.x + bot.verts[ni].x,
-            bot.center.y + bot.verts[ni].y,
+            bot.center.y + bot.verts[ni].y
           );
           ctx.lineTo(
             top.center.x + top.verts[ni].x,
-            top.center.y + top.verts[ni].y,
+            top.center.y + top.verts[ni].y
           );
           ctx.lineTo(
             top.center.x + top.verts[i].x,
-            top.center.y + top.verts[i].y,
+            top.center.y + top.verts[i].y
           );
           ctx.closePath();
           ctx.fill();
@@ -5816,7 +6012,9 @@ export function renderMortarStandardBarrel(
           ctx.lineWidth = 0.4 * zoom;
           ctx.stroke();
 
-          if (n < -0.85) continue;
+          if (n < -0.85) {
+            continue;
+          }
 
           // Highlight on bright edges
           if (bright > 0.55) {
@@ -5825,11 +6023,11 @@ export function renderMortarStandardBarrel(
             ctx.beginPath();
             ctx.moveTo(
               bot.center.x + bot.verts[ni].x,
-              bot.center.y + bot.verts[ni].y,
+              bot.center.y + bot.verts[ni].y
             );
             ctx.lineTo(
               top.center.x + top.verts[ni].x,
-              top.center.y + top.verts[ni].y,
+              top.center.y + top.verts[ni].y
             );
             ctx.stroke();
           }
@@ -5842,8 +6040,14 @@ export function renderMortarStandardBarrel(
             ctx,
             bot.verts,
             springNormals,
-            { x: bot.center.x - bAx * 0.8 * zoom, y: bot.center.y - bAy * 0.8 * zoom },
-            { x: bot.center.x + bAx * 0.8 * zoom, y: bot.center.y + bAy * 0.8 * zoom },
+            {
+              x: bot.center.x - bAx * 0.8 * zoom,
+              y: bot.center.y - bAy * 0.8 * zoom,
+            },
+            {
+              x: bot.center.x + bAx * 0.8 * zoom,
+              y: bot.center.y + bAy * 0.8 * zoom,
+            },
             ringScale,
             (n) => {
               const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
@@ -5853,7 +6057,7 @@ export function renderMortarStandardBarrel(
             },
             "rgba(0,0,0,0.12)",
             0.3 * zoom,
-            -1.5,
+            -1.5
           );
         }
       }
@@ -5866,7 +6070,7 @@ export function renderMortarStandardBarrel(
         sTop.verts,
         level >= 3 ? "#5a5260" : "#505058",
         level >= 3 ? "#3a3440" : "#3a3a3e",
-        0.4 * zoom,
+        0.4 * zoom
       );
 
       // End mounting bolts
@@ -5878,7 +6082,7 @@ export function renderMortarStandardBarrel(
         springPts[0].center.y,
         1 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -5894,10 +6098,10 @@ export function renderMortarStandardBarrel(
     const scopeR = (level >= 3 ? 4 : level >= 2 ? 3.5 : 3) * zoom;
     const scopeSides = 8;
     const scopeDk = parseHexColor(
-      level >= 3 ? "#1e1a24" : level >= 2 ? "#222630" : "#28282c",
+      level >= 3 ? "#1e1a24" : level >= 2 ? "#222630" : "#28282c"
     );
     const scopeLt = parseHexColor(
-      level >= 3 ? "#5a4e5a" : level >= 2 ? "#4a5060" : "#505058",
+      level >= 3 ? "#5a4e5a" : level >= 2 ? "#4a5060" : "#505058"
     );
     const scopeNormals = computeHexSideNormals(cosR, scopeSides);
     const scopeSorted = sortSidesByDepth(scopeNormals);
@@ -5919,7 +6123,7 @@ export function renderMortarStandardBarrel(
       const t = si / scopeSegCount;
       const cx = scBase.x + (scTip.x - scBase.x) * t + scopeOX;
       const cy = scBase.y + (scTip.y - scBase.y) * t + scopeOY;
-      const taper = si === 0 ? 0.85 : si === scopeSegCount ? 1.1 : 1.0;
+      const taper = si === 0 ? 0.85 : si === scopeSegCount ? 1.1 : 1;
       scopePts.push({
         center: { x: cx, y: cy },
         verts: generateIsoHexVertices(isoOff, scopeR * taper, scopeSides),
@@ -5933,7 +6137,7 @@ export function renderMortarStandardBarrel(
       scopePts[0].verts,
       level >= 3 ? "#2a2430" : "#2a2a30",
       level >= 3 ? "#1a1420" : "#1e1e22",
-      0.4 * zoom,
+      0.4 * zoom
     );
 
     // Scope body segments
@@ -5954,34 +6158,34 @@ export function renderMortarStandardBarrel(
           top.center.x,
           top.center.y,
           bot.center.x,
-          bot.center.y,
+          bot.center.y
         );
         faceGrad.addColorStop(
           0,
-          `rgb(${Math.min(255, fR + 8)},${Math.min(255, fG + 6)},${Math.min(255, fB + 5)})`,
+          `rgb(${Math.min(255, fR + 8)},${Math.min(255, fG + 6)},${Math.min(255, fB + 5)})`
         );
         faceGrad.addColorStop(0.5, `rgb(${fR},${fG},${fB})`);
         faceGrad.addColorStop(
           1,
-          `rgb(${Math.max(0, fR - 10)},${Math.max(0, fG - 8)},${Math.max(0, fB - 6)})`,
+          `rgb(${Math.max(0, fR - 10)},${Math.max(0, fG - 8)},${Math.max(0, fB - 6)})`
         );
         ctx.fillStyle = faceGrad;
         ctx.beginPath();
         ctx.moveTo(
           bot.center.x + bot.verts[i].x,
-          bot.center.y + bot.verts[i].y,
+          bot.center.y + bot.verts[i].y
         );
         ctx.lineTo(
           bot.center.x + bot.verts[ni].x,
-          bot.center.y + bot.verts[ni].y,
+          bot.center.y + bot.verts[ni].y
         );
         ctx.lineTo(
           top.center.x + top.verts[ni].x,
-          top.center.y + top.verts[ni].y,
+          top.center.y + top.verts[ni].y
         );
         ctx.lineTo(
           top.center.x + top.verts[i].x,
-          top.center.y + top.verts[i].y,
+          top.center.y + top.verts[i].y
         );
         ctx.closePath();
         ctx.fill();
@@ -5989,7 +6193,9 @@ export function renderMortarStandardBarrel(
         ctx.lineWidth = 0.4 * zoom;
         ctx.stroke();
 
-        if (n < -0.85) continue;
+        if (n < -0.85) {
+          continue;
+        }
 
         // Edge highlight
         if (bright > 0.5) {
@@ -5998,11 +6204,11 @@ export function renderMortarStandardBarrel(
           ctx.beginPath();
           ctx.moveTo(
             bot.center.x + bot.verts[ni].x,
-            bot.center.y + bot.verts[ni].y,
+            bot.center.y + bot.verts[ni].y
           );
           ctx.lineTo(
             top.center.x + top.verts[ni].x,
-            top.center.y + top.verts[ni].y,
+            top.center.y + top.verts[ni].y
           );
           ctx.stroke();
         }
@@ -6042,13 +6248,14 @@ export function renderMortarStandardBarrel(
         isObjectiveEnd ? 1.15 : 1.06,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.3));
-          if (level >= 3)
+          if (level >= 3) {
             return `rgb(${140 + Math.floor(b * 50)},${115 + Math.floor(b * 45)},${28 + Math.floor(b * 18)})`;
+          }
           return `rgb(${60 + Math.floor(b * 35)},${60 + Math.floor(b * 35)},${68 + Math.floor(b * 25)})`;
         },
         "rgba(0,0,0,0.15)",
         0.4 * zoom,
-        -1.5,
+        -1.5
       );
     }
 
@@ -6061,7 +6268,7 @@ export function renderMortarStandardBarrel(
       objVerts,
       level >= 3 ? "#3a3040" : "#2e2e36",
       level >= 3 ? "#1e1824" : "#1e1e24",
-      0.4 * zoom,
+      0.4 * zoom
     );
 
     // Lens glass (inner octagon with blue tint)
@@ -6070,13 +6277,14 @@ export function renderMortarStandardBarrel(
     ctx.beginPath();
     ctx.moveTo(
       objPt.center.x + lensVerts[0].x,
-      objPt.center.y + lensVerts[0].y,
+      objPt.center.y + lensVerts[0].y
     );
-    for (let li = 1; li < scopeSides; li++)
+    for (let li = 1; li < scopeSides; li++) {
       ctx.lineTo(
         objPt.center.x + lensVerts[li].x,
-        objPt.center.y + lensVerts[li].y,
+        objPt.center.y + lensVerts[li].y
       );
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -6087,8 +6295,9 @@ export function renderMortarStandardBarrel(
     ctx.fillStyle = "rgba(180,200,255,0.18)";
     ctx.beginPath();
     ctx.moveTo(reflOX + reflVerts[0].x, reflOY + reflVerts[0].y);
-    for (let ri = 1; ri < scopeSides; ri++)
+    for (let ri = 1; ri < scopeSides; ri++) {
       ctx.lineTo(reflOX + reflVerts[ri].x, reflOY + reflVerts[ri].y);
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -6112,7 +6321,7 @@ export function renderMortarStandardBarrel(
       ctx.beginPath();
       ctx.moveTo(
         barrelPt.x + scopeSide * scopePerp.x * tiers[1].r * 0.9,
-        barrelPt.y + scopeSide * scopePerp.y * tiers[1].r * 0.9,
+        barrelPt.y + scopeSide * scopePerp.y * tiers[1].r * 0.9
       );
       ctx.lineTo(mPt.x, mPt.y);
       ctx.stroke();
@@ -6131,7 +6340,7 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.18)",
         0.5 * zoom,
-        -1.5,
+        -1.5
       );
 
       // Clamp bolt
@@ -6142,7 +6351,7 @@ export function renderMortarStandardBarrel(
         mPt.y + scopeSide * scopePerp.y * scopeR * 0.8,
         0.8 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6153,8 +6362,14 @@ export function renderMortarStandardBarrel(
       ctx,
       generateIsoHexVertices(isoOff, scopeR, scopeSides),
       scopeNormals,
-      { x: eyePt.center.x - bAx * 1 * zoom, y: eyePt.center.y - bAy * 1 * zoom },
-      { x: eyePt.center.x + bAx * 1 * zoom, y: eyePt.center.y + bAy * 1 * zoom },
+      {
+        x: eyePt.center.x - bAx * 1 * zoom,
+        y: eyePt.center.y - bAy * 1 * zoom,
+      },
+      {
+        x: eyePt.center.x + bAx * 1 * zoom,
+        y: eyePt.center.y + bAy * 1 * zoom,
+      },
       0.95,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.25 + (n + 1) * 0.3));
@@ -6162,7 +6377,7 @@ export function renderMortarStandardBarrel(
       },
       "rgba(0,0,0,0.2)",
       0.4 * zoom,
-      -1.5,
+      -1.5
     );
   }
 
@@ -6175,7 +6390,7 @@ export function renderMortarStandardBarrel(
 
   // ===== TOP RIM (tilted to follow barrel axis) =====
   const topTier = tiers[2];
-  const rimPt = posAtFrac(1.0, cumRecoil);
+  const rimPt = posAtFrac(1, cumRecoil);
   const rimR = (topTier.r / zoom + (level >= 3 ? 2.5 : 2)) * zoom;
   const muzzleTiltAngle = Math.atan2(bNy, bNx);
 
@@ -6208,9 +6423,9 @@ export function renderMortarStandardBarrel(
     const ni = (i + 1) % hexSides;
     const n = rimNormals[i];
     const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
-    const bR = parseInt(rimColor.slice(1, 3), 16);
-    const bG = parseInt(rimColor.slice(3, 5), 16);
-    const bB = parseInt(rimColor.slice(5, 7), 16);
+    const bR = Number.parseInt(rimColor.slice(1, 3), 16);
+    const bG = Number.parseInt(rimColor.slice(3, 5), 16);
+    const bB = Number.parseInt(rimColor.slice(5, 7), 16);
     ctx.fillStyle = `rgb(${Math.floor(bR * (0.6 + b * 0.4))},${Math.floor(bG * (0.6 + b * 0.4))},${Math.floor(bB * (0.6 + b * 0.4))})`;
     ctx.beginPath();
     ctx.moveTo(rimBotPt.x + rimVerts[i].x, rimBotPt.y + rimVerts[i].y);
@@ -6229,7 +6444,7 @@ export function renderMortarStandardBarrel(
     rimVerts,
     level >= 3 ? "#d4aa30" : level >= 2 ? "#727a8a" : "#64646a",
     "rgba(0,0,0,0.1)",
-    0.6 * zoom,
+    0.6 * zoom
   );
   // Inner bore (dark with gradient glow)
   {
@@ -6248,7 +6463,7 @@ export function renderMortarStandardBarrel(
       rimInnerVerts,
       "#0a0804",
       "rgba(0,0,0,0.3)",
-      0.8 * zoom,
+      0.8 * zoom
     );
 
     // Inner heat glow rings (concentric, getting brighter toward center)
@@ -6264,7 +6479,7 @@ export function renderMortarStandardBarrel(
           ctx,
           rimPt,
           scaleVerts(rimInnerVerts, scaleFactor * 0.85),
-          `rgba(${r}, ${g}, ${b}, ${Math.min(layerAlpha, 0.45)})`,
+          `rgba(${r}, ${g}, ${b}, ${Math.min(layerAlpha, 0.45)})`
         );
       }
     }
@@ -6280,7 +6495,7 @@ export function renderMortarStandardBarrel(
         0,
         rimPt.x,
         rimPt.y,
-        coreR,
+        coreR
       );
       coreGrad.addColorStop(0, `rgba(255, 240, 140, ${coreAlpha})`);
       coreGrad.addColorStop(0.3, `rgba(255, 160, 40, ${coreAlpha * 0.6})`);
@@ -6295,7 +6510,7 @@ export function renderMortarStandardBarrel(
         coreR * 0.5,
         muzzleTiltAngle,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6328,7 +6543,7 @@ export function renderMortarStandardBarrel(
       0,
       flashCx,
       flashCy,
-      fSize,
+      fSize
     );
     coreGrad.addColorStop(0, `rgba(255, 250, 200, ${fA * 0.9})`);
     coreGrad.addColorStop(0.15, `rgba(255, 240, 140, ${fA * 0.8})`);
@@ -6353,11 +6568,11 @@ export function renderMortarStandardBarrel(
         ctx.beginPath();
         ctx.moveTo(
           flashCx + Math.cos(sa) * innerR,
-          flashCy + Math.sin(sa) * innerR * 0.55,
+          flashCy + Math.sin(sa) * innerR * 0.55
         );
         ctx.lineTo(
           flashCx + Math.cos(sa) * outerR,
-          flashCy + Math.sin(sa) * outerR * 0.55,
+          flashCy + Math.sin(sa) * outerR * 0.55
         );
         ctx.stroke();
       }
@@ -6376,7 +6591,7 @@ export function renderMortarStandardBarrel(
         flashCy + Math.sin(pA) * pDist * 0.3 - fT * 12 * zoom - p * 2 * zoom,
         pSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6396,9 +6611,9 @@ export function renderMortarEmberTurret(
   recoilBase: number,
   recoilMid: number,
   recoilTip: number,
-  timeSinceFire: number,
+  timeSinceFire: number
 ) {
-  const level = tower.level;
+  const { level } = tower;
   const rot = tower.rotation || -Math.PI / 4;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
@@ -6415,25 +6630,25 @@ export function renderMortarEmberTurret(
 
   const tiers = [
     {
-      r: 16 * zoom,
-      h: 8 * zoom,
       dark: "#2a1508",
-      mid: "#5a3818",
+      h: 8 * zoom,
       light: "#8a5a34",
+      mid: "#5a3818",
+      r: 16 * zoom,
     },
     {
-      r: 13 * zoom,
-      h: 7 * zoom,
       dark: "#301a0c",
-      mid: "#6a4220",
+      h: 7 * zoom,
       light: "#9a6840",
+      mid: "#6a4220",
+      r: 13 * zoom,
     },
     {
-      r: 10 * zoom,
-      h: 6 * zoom,
       dark: "#381e10",
-      mid: "#7a4c28",
+      h: 6 * zoom,
       light: "#aa7a4c",
+      mid: "#7a4c28",
+      r: 10 * zoom,
     },
   ];
 
@@ -6474,11 +6689,11 @@ export function renderMortarEmberTurret(
       0,
       0,
       platBot.y + 2 * zoom,
-      platR * 0.9,
+      platR * 0.9
     );
     ugGrad.addColorStop(
       0,
-      `rgba(255,100,20,${0.12 + Math.sin(time * 2) * 0.04})`,
+      `rgba(255,100,20,${0.12 + Math.sin(time * 2) * 0.04})`
     );
     ugGrad.addColorStop(1, "rgba(255,40,0,0)");
     ctx.fillStyle = ugGrad;
@@ -6490,7 +6705,7 @@ export function renderMortarEmberTurret(
       platR * 0.45,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -6506,16 +6721,16 @@ export function renderMortarEmberTurret(
       platTop.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
       platTop.y,
       platBot.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
-      platBot.y,
+      platBot.y
     );
     pGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, cr + 16)},${Math.min(255, cg + 10)},${Math.min(255, cb + 8)})`,
+      `rgb(${Math.min(255, cr + 16)},${Math.min(255, cg + 10)},${Math.min(255, cb + 8)})`
     );
     pGrad.addColorStop(0.45, `rgb(${cr},${cg},${cb})`);
     pGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, cr - 18)},${Math.max(0, cg - 10)},${Math.max(0, cb - 6)})`,
+      `rgb(${Math.max(0, cr - 18)},${Math.max(0, cg - 10)},${Math.max(0, cb - 6)})`
     );
     ctx.fillStyle = pGrad;
     ctx.beginPath();
@@ -6552,7 +6767,7 @@ export function renderMortarEmberTurret(
     platVerts,
     "#7a4a28",
     "rgba(0,0,0,0.12)",
-    0.5 * zoom,
+    0.5 * zoom
   );
 
   {
@@ -6562,11 +6777,11 @@ export function renderMortarEmberTurret(
       0,
       0,
       platTop.y,
-      platR * 0.6,
+      platR * 0.6
     );
     capGlow.addColorStop(
       0,
-      `rgba(255,80,0,${0.06 + Math.sin(time * 3) * 0.03})`,
+      `rgba(255,80,0,${0.06 + Math.sin(time * 3) * 0.03})`
     );
     capGlow.addColorStop(1, "rgba(255,40,0,0)");
     ctx.fillStyle = capGlow;
@@ -6582,11 +6797,11 @@ export function renderMortarEmberTurret(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(tpA) * platR * 0.2,
-      platTop.y + Math.sin(tpA) * platR * 0.1,
+      platTop.y + Math.sin(tpA) * platR * 0.1
     );
     ctx.lineTo(
       Math.cos(tpA) * platR * 0.7,
-      platTop.y + Math.sin(tpA) * platR * 0.35,
+      platTop.y + Math.sin(tpA) * platR * 0.35
     );
     ctx.stroke();
   }
@@ -6601,14 +6816,14 @@ export function renderMortarEmberTurret(
       gNormals,
       { x: 0, y: platTop.y + 2 * zoom },
       platTop,
-      1.0,
+      1,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
         return `rgb(${Math.floor(110 * (0.6 + b * 0.4))},${Math.floor(70 * (0.6 + b * 0.4))},${Math.floor(35 * (0.6 + b * 0.4))})`;
       },
       "rgba(0,0,0,0.15)",
       0.5 * zoom,
-      -0.5,
+      -0.5
     );
     const gearTeeth = 20;
     for (let g = 0; g < gearTeeth; g++) {
@@ -6620,7 +6835,7 @@ export function renderMortarEmberTurret(
         Math.sin(ga) * (gR + 1.5 * zoom) * ISO_Y_RATIO + platTop.y * 0.1,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6630,8 +6845,9 @@ export function renderMortarEmberTurret(
     if (
       platNormals[i] < -0.7 &&
       platNormals[(i + hexSides - 1) % hexSides] < -0.7
-    )
+    ) {
       continue;
+    }
     ctx.fillStyle = "#4a3020";
     ctx.beginPath();
     ctx.arc(
@@ -6639,7 +6855,7 @@ export function renderMortarEmberTurret(
       platTop.y + platVerts[i].y,
       1.8 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#8a6040";
@@ -6649,7 +6865,7 @@ export function renderMortarEmberTurret(
       platTop.y + platVerts[i].y,
       1 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -6681,36 +6897,36 @@ export function renderMortarEmberTurret(
   const accentF = "#c0981f";
 
   const backArmBase = {
-    side: farSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentB,
     cosR,
+    level,
+    metalDark: metalDarkB,
+    metalLight: metalLightB,
+    metalMid: metalMidB,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkB,
-    metalMid: metalMidB,
-    metalLight: metalLightB,
-    accent: accentB,
+    side: farSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
   const frontArmBase = {
-    side: nearSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentF,
     cosR,
+    level,
+    metalDark: metalDarkF,
+    metalLight: metalLightF,
+    metalMid: metalMidF,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkF,
-    metalMid: metalMidF,
-    metalLight: metalLightF,
-    accent: accentF,
+    side: nearSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
 
   // === BACK C-CLAMP ARCS ===
@@ -6730,7 +6946,7 @@ export function renderMortarEmberTurret(
       0,
       basePt.x,
       basePt.y,
-      20 * zoom,
+      20 * zoom
     );
     furnGrad.addColorStop(0, `rgba(255,180,40,${furnPulse * 0.4})`);
     furnGrad.addColorStop(0.3, `rgba(255,100,0,${furnPulse * 0.25})`);
@@ -6760,12 +6976,12 @@ export function renderMortarEmberTurret(
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
       const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
-      const dr = parseInt(tier.dark.slice(1, 3), 16);
-      const dg = parseInt(tier.dark.slice(3, 5), 16);
-      const db = parseInt(tier.dark.slice(5, 7), 16);
-      const lr = parseInt(tier.light.slice(1, 3), 16);
-      const lg = parseInt(tier.light.slice(3, 5), 16);
-      const lb = parseInt(tier.light.slice(5, 7), 16);
+      const dr = Number.parseInt(tier.dark.slice(1, 3), 16);
+      const dg = Number.parseInt(tier.dark.slice(3, 5), 16);
+      const db = Number.parseInt(tier.dark.slice(5, 7), 16);
+      const lr = Number.parseInt(tier.light.slice(1, 3), 16);
+      const lg = Number.parseInt(tier.light.slice(3, 5), 16);
+      const lb = Number.parseInt(tier.light.slice(5, 7), 16);
       const fR = Math.floor(dr + (lr - dr) * bright);
       const fG = Math.floor(dg + (lg - dg) * bright);
       const fB = Math.floor(db + (lb - db) * bright);
@@ -6776,16 +6992,16 @@ export function renderMortarEmberTurret(
         topCenter.x + faceMidX,
         topCenter.y + faceMidY,
         botCenter.x + faceMidX,
-        botCenter.y + faceMidY,
+        botCenter.y + faceMidY
       );
       faceGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, fR + 20)},${Math.min(255, fG + 18)},${Math.min(255, fB + 16)})`,
+        `rgb(${Math.min(255, fR + 20)},${Math.min(255, fG + 18)},${Math.min(255, fB + 16)})`
       );
       faceGrad.addColorStop(0.35, `rgb(${fR},${fG},${fB})`);
       faceGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, fR - 20)},${Math.max(0, fG - 18)},${Math.max(0, fB - 14)})`,
+        `rgb(${Math.max(0, fR - 20)},${Math.max(0, fG - 18)},${Math.max(0, fB - 14)})`
       );
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
@@ -6817,11 +7033,14 @@ export function renderMortarEmberTurret(
       hexVerts,
       tier.light,
       "rgba(0,0,0,0.1)",
-      0.5 * zoom,
+      0.5 * zoom
     );
 
     if (ti < 2) {
-      const bandBot: Pt = { x: topCenter.x - bAx * 2 * zoom, y: topCenter.y - bAy * 2 * zoom };
+      const bandBot: Pt = {
+        x: topCenter.x - bAx * 2 * zoom,
+        y: topCenter.y - bAy * 2 * zoom,
+      };
       drawHexBand(
         ctx,
         hexVerts,
@@ -6835,7 +7054,7 @@ export function renderMortarEmberTurret(
         },
         "rgba(0,0,0,0.18)",
         0.5 * zoom,
-        -1.5,
+        -1.5
       );
 
       // Orange ember lights at tier junction (camera-facing sides only)
@@ -6851,7 +7070,9 @@ export function renderMortarEmberTurret(
           Math.sin(ea) * ISO_Y_RATIO * bAx +
           Math.cos(ea) * bNy +
           Math.sin(ea) * ISO_Y_RATIO * bAy;
-        if (eDot < -0.5) continue;
+        if (eDot < -0.5) {
+          continue;
+        }
 
         const eFlicker = Math.sin(time * 5 + ei * 1.8 + ti * 2.5) > 0.3;
         const eHeat = timeSinceFire < 2000 ? 1 - timeSinceFire / 2000 : 0;
@@ -6880,7 +7101,7 @@ export function renderMortarEmberTurret(
 
   // Spindle top cap with ratchet ring
   {
-    const spTop = posAtFrac(1.0, cumRecoil);
+    const spTop = posAtFrac(1, cumRecoil);
     const ratchetR = tiers[2].r * 1.3;
     ctx.strokeStyle = "#7a5a3a";
     ctx.lineWidth = 1.8 * zoom;
@@ -6901,7 +7122,7 @@ export function renderMortarEmberTurret(
       rFrac = 0;
     } else if (rShotProg < rRotEnd) {
       const t2 = (rShotProg - rFireEnd) / (rRotEnd - rFireEnd);
-      rFrac = t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - Math.pow(-2 * t2 + 2, 3) / 2;
+      rFrac = t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
     } else {
       rFrac = 1;
     }
@@ -6912,15 +7133,15 @@ export function renderMortarEmberTurret(
       ctx.beginPath();
       ctx.moveTo(
         spTop.x + Math.cos(ta) * ratchetR * 0.9,
-        spTop.y + Math.sin(ta) * ratchetR * 0.45,
+        spTop.y + Math.sin(ta) * ratchetR * 0.45
       );
       ctx.lineTo(
         spTop.x + Math.cos(ta + 0.1) * ratchetR * 1.12,
-        spTop.y + Math.sin(ta + 0.1) * ratchetR * 0.56,
+        spTop.y + Math.sin(ta + 0.1) * ratchetR * 0.56
       );
       ctx.lineTo(
         spTop.x + Math.cos(ta + 0.2) * ratchetR * 0.9,
-        spTop.y + Math.sin(ta + 0.2) * ratchetR * 0.45,
+        spTop.y + Math.sin(ta + 0.2) * ratchetR * 0.45
       );
       ctx.closePath();
       ctx.fill();
@@ -6949,7 +7170,7 @@ export function renderMortarEmberTurret(
         startX * 0.4,
         startY * 0.4 - 3 * zoom,
         basePt.x,
-        basePt.y,
+        basePt.y
       );
       ctx.stroke();
       ctx.fillStyle = "#8a5a3a";
@@ -6974,8 +7195,8 @@ export function renderMortarEmberTurret(
       5,
       4,
       5,
-      { top: "#4a3a20", left: "#3a2a14", right: "#2a1a0a" },
-      zoom,
+      { left: "#3a2a14", right: "#2a1a0a", top: "#4a3a20" },
+      zoom
     );
     ctx.fillStyle = "#ff6600";
     ctx.fillRect(hopX - 1.5 * zoom, hopY - 4 * zoom, 3 * zoom, 1 * zoom);
@@ -6989,7 +7210,7 @@ export function renderMortarEmberTurret(
         0.7 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -7046,7 +7267,7 @@ export function renderMortarEmberTurret(
     ctx.moveTo(gx, gy);
     ctx.lineTo(
       gx + Math.cos(needleA) * 2 * zoom,
-      gy + Math.sin(needleA) * 2 * zoom,
+      gy + Math.sin(needleA) * 2 * zoom
     );
     ctx.stroke();
   }
@@ -7070,7 +7291,7 @@ export function renderMortarEmberTurret(
           vy - (1 - timeSinceFire / 1200) * 4 * zoom,
           (1.5 + (1 - timeSinceFire / 1200) * 2) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -7094,7 +7315,7 @@ export function renderMortarEmberTurret(
       revolverFrac = 0;
     } else if (shotProgress < rotEnd) {
       const t = (shotProgress - fireEnd) / (rotEnd - fireEnd);
-      revolverFrac = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      revolverFrac = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
     } else {
       revolverFrac = 1;
     }
@@ -7105,19 +7326,19 @@ export function renderMortarEmberTurret(
 
     const barrelSpread = 15 * zoom;
     const barrelTiers = [
-      { r: 8 * zoom, h: 7 * zoom, dark: "#3a1a08", light: "#8a5a30" },
-      { r: 6.5 * zoom, h: 6 * zoom, dark: "#4a2818", light: "#9a6a40" },
+      { dark: "#3a1a08", h: 7 * zoom, light: "#8a5a30", r: 8 * zoom },
+      { dark: "#4a2818", h: 6 * zoom, light: "#9a6a40", r: 6.5 * zoom },
     ];
     const barrelTotalH = barrelTiers[0].h + barrelTiers[1].h;
 
     const spindleMid = posAtFrac(0.5, (tierRecoils[0] + tierRecoils[1]) * 0.5);
-    const spindleTop = posAtFrac(1.0, cumRecoil);
+    const spindleTop = posAtFrac(1, cumRecoil);
 
     const barrelAngles = [0, 1, 2].map(
-      (i) => steppedAngle + i * ((Math.PI * 2) / 3),
+      (i) => steppedAngle + i * ((Math.PI * 2) / 3)
     );
-    const barrelOrder = [0, 1, 2].sort(
-      (a, b) => Math.sin(barrelAngles[a]) - Math.sin(barrelAngles[b]),
+    const barrelOrder = [0, 1, 2].toSorted(
+      (a, b) => Math.sin(barrelAngles[a]) - Math.sin(barrelAngles[b])
     );
 
     // Pass 0: Propellant feed pipes (behind everything)
@@ -7132,7 +7353,7 @@ export function renderMortarEmberTurret(
       ctx.beginPath();
       ctx.moveTo(
         basePt.x + Math.cos(pa) * tiers[0].r,
-        basePt.y + Math.sin(pa) * tiers[0].r * 0.5,
+        basePt.y + Math.sin(pa) * tiers[0].r * 0.5
       );
       ctx.lineTo(px, py);
       ctx.stroke();
@@ -7230,12 +7451,12 @@ export function renderMortarEmberTurret(
           const ni = (i + 1) % hexSides;
           const n = bSideNormals[i];
           const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
-          const dr = parseInt(bTier.dark.slice(1, 3), 16);
-          const dg = parseInt(bTier.dark.slice(3, 5), 16);
-          const db = parseInt(bTier.dark.slice(5, 7), 16);
-          const lr = parseInt(bTier.light.slice(1, 3), 16);
-          const lg = parseInt(bTier.light.slice(3, 5), 16);
-          const lb = parseInt(bTier.light.slice(5, 7), 16);
+          const dr = Number.parseInt(bTier.dark.slice(1, 3), 16);
+          const dg = Number.parseInt(bTier.dark.slice(3, 5), 16);
+          const db = Number.parseInt(bTier.dark.slice(5, 7), 16);
+          const lr = Number.parseInt(bTier.light.slice(1, 3), 16);
+          const lg = Number.parseInt(bTier.light.slice(3, 5), 16);
+          const lb = Number.parseInt(bTier.light.slice(5, 7), 16);
           const fR = Math.floor(dr + (lr - dr) * bright);
           const fG = Math.floor(dg + (lg - dg) * bright);
           const fB = Math.floor(db + (lb - db) * bright);
@@ -7244,16 +7465,16 @@ export function renderMortarEmberTurret(
             topC.x + (bHexVerts[i].x + bHexVerts[ni].x) * 0.5,
             topC.y + (bHexVerts[i].y + bHexVerts[ni].y) * 0.5,
             botC.x + (bHexVerts[i].x + bHexVerts[ni].x) * 0.5,
-            botC.y + (bHexVerts[i].y + bHexVerts[ni].y) * 0.5,
+            botC.y + (bHexVerts[i].y + bHexVerts[ni].y) * 0.5
           );
           eFaceGrad.addColorStop(
             0,
-            `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 5)})`,
+            `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 5)})`
           );
           eFaceGrad.addColorStop(0.5, `rgb(${fR},${fG},${fB})`);
           eFaceGrad.addColorStop(
             1,
-            `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 6)})`,
+            `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 6)})`
           );
           ctx.fillStyle = eFaceGrad;
           ctx.beginPath();
@@ -7332,12 +7553,15 @@ export function renderMortarEmberTurret(
           bHexVerts,
           bTier.light,
           "rgba(0,0,0,0.1)",
-          0.5 * zoom,
+          0.5 * zoom
         );
 
         // Bronze band between barrel tiers (aligned along barrel axis)
         if (bti === 0) {
-          const bBandBot: Pt = { x: topC.x - bAx * 1.8 * zoom, y: topC.y - bAy * 1.8 * zoom };
+          const bBandBot: Pt = {
+            x: topC.x - bAx * 1.8 * zoom,
+            y: topC.y - bAy * 1.8 * zoom,
+          };
           drawHexBand(
             ctx,
             bHexVerts,
@@ -7351,7 +7575,7 @@ export function renderMortarEmberTurret(
             },
             "rgba(0,0,0,0.18)",
             0.5 * zoom,
-            -1.5,
+            -1.5
           );
         }
         bCumH += bTier.h;
@@ -7363,7 +7587,7 @@ export function renderMortarEmberTurret(
       const innerVerts = generateIsoHexVertices(
         isoOff,
         barrelTiers[1].r * 0.65,
-        hexSides,
+        hexSides
       );
       const rimC: Pt = {
         x: bx + bMaxTiltX,
@@ -7382,11 +7606,11 @@ export function renderMortarEmberTurret(
         ctx.beginPath();
         ctx.moveTo(
           rimBandBot.x + rimVerts[ri].x,
-          rimBandBot.y + rimVerts[ri].y,
+          rimBandBot.y + rimVerts[ri].y
         );
         ctx.lineTo(
           rimBandBot.x + rimVerts[rni].x,
-          rimBandBot.y + rimVerts[rni].y,
+          rimBandBot.y + rimVerts[rni].y
         );
         ctx.lineTo(rimC.x + rimVerts[rni].x, rimC.y + rimVerts[rni].y);
         ctx.lineTo(rimC.x + rimVerts[ri].x, rimC.y + rimVerts[ri].y);
@@ -7399,7 +7623,7 @@ export function renderMortarEmberTurret(
         rimVerts,
         "#d4aa30",
         "rgba(0,0,0,0.15)",
-        0.6 * zoom,
+        0.6 * zoom
       );
       drawHexCap(
         ctx,
@@ -7407,7 +7631,7 @@ export function renderMortarEmberTurret(
         innerVerts,
         "#0a0804",
         "rgba(0,0,0,0.4)",
-        0.6 * zoom,
+        0.6 * zoom
       );
 
       // Bore heat glow
@@ -7419,7 +7643,7 @@ export function renderMortarEmberTurret(
           ctx,
           rimC,
           scaleVerts(innerVerts, sf * 0.8),
-          `rgba(255,${60 + (1 - sf) * 100},${(1 - sf) * 20},${Math.min(alpha, 0.5)})`,
+          `rgba(255,${60 + (1 - sf) * 100},${(1 - sf) * 20},${Math.min(alpha, 0.5)})`
         );
       }
 
@@ -7433,7 +7657,7 @@ export function renderMortarEmberTurret(
           0,
           rimC.x,
           rimC.y - 4 * zoom,
-          fSize,
+          fSize
         );
         fGrad.addColorStop(0, `rgba(255,240,120,${fA})`);
         fGrad.addColorStop(0.3, `rgba(255,140,20,${fA * 0.6})`);
@@ -7456,7 +7680,7 @@ export function renderMortarEmberTurret(
               Math.sin(spA) * spDist * 0.3,
             (2 + shotProgress * 3) * zoom,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -7468,7 +7692,7 @@ export function renderMortarEmberTurret(
   for (let sp = 0; sp < 8; sp++) {
     const sa = time * 1.5 + sp * Math.PI * 0.25;
     const sr = 14 * zoom + Math.sin(sa * 2) * 5 * zoom;
-    const tipPt = posAtFrac(1.0, cumRecoil);
+    const tipPt = posAtFrac(1, cumRecoil);
     const sparkR = (1 + Math.sin(sa * 2) * 0.4) * zoom;
     ctx.fillStyle = `rgba(255,${80 + Math.floor(Math.sin(sa) * 80)},0,${0.4 + Math.sin(sa * 3) * 0.3})`;
     ctx.beginPath();
@@ -7477,7 +7701,7 @@ export function renderMortarEmberTurret(
       tipPt.y - 6 * zoom - Math.abs(Math.sin(sa * 1.3)) * 10 * zoom,
       sparkR,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = `rgba(255,60,0,${0.1 + Math.sin(sa * 3) * 0.08})`;
@@ -7487,14 +7711,14 @@ export function renderMortarEmberTurret(
       tipPt.y - 4 * zoom - Math.abs(Math.sin(sa * 1.3)) * 8 * zoom,
       sparkR * 1.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
 
   // === HEAT SHIMMER ===
   {
-    const tipPt = posAtFrac(1.0, cumRecoil);
+    const tipPt = posAtFrac(1, cumRecoil);
     const shimmerA = 0.06 + Math.sin(time * 4) * 0.03;
     ctx.fillStyle = `rgba(255,150,50,${shimmerA})`;
     ctx.beginPath();
@@ -7505,7 +7729,7 @@ export function renderMortarEmberTurret(
       8 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -7531,7 +7755,7 @@ function drawMissileSiloDepthSortedAccessories(
     maxTiltY: number;
     totalH: number;
   },
-  pass: "behind" | "front",
+  pass: "behind" | "front"
 ) {
   const {
     zoom,
@@ -7551,7 +7775,7 @@ function drawMissileSiloDepthSortedAccessories(
   const isoDepth = (px: number, py: number) => px + 0.5 * py;
   const barrelMidDepth = isoDepth(
     maxTiltX * 0.5,
-    -totalH * 0.5 + maxTiltY * 0.5,
+    -totalH * 0.5 + maxTiltY * 0.5
   );
   const shouldDraw = (px: number, py: number) => {
     const d = isoDepth(px, py);
@@ -7565,7 +7789,9 @@ function drawMissileSiloDepthSortedAccessories(
       cosR * ISO_Y_RATIO * side * 10 * zoom -
       sinR * ISO_Y_RATIO * 8 * zoom +
       1 * zoom;
-    if (!shouldDraw(pistonBaseX, pistonBaseY)) continue;
+    if (!shouldDraw(pistonBaseX, pistonBaseY)) {
+      continue;
+    }
     const midPtP = posAtFrac(0.3, 0);
     const pistonTopX = midPtP.x + -sinR * side * tiers[1].r * 0.8;
     const pistonTopY =
@@ -7617,20 +7843,22 @@ function drawMissileSiloDepthSortedAccessories(
       for (const mi of mastSorted) {
         const mni = (mi + 1) % mastSides;
         const mn = mastNormals[mi];
-        if (mn < -0.85) continue;
+        if (mn < -0.85) {
+          continue;
+        }
         const bright = Math.max(0, Math.min(1, 0.2 + (mn + 1) * 0.4));
         const cv = Math.floor(55 + bright * 55);
         const mGrad = ctx.createLinearGradient(
           mastTop.x,
           mastTop.y,
           mastBot.x,
-          mastBot.y,
+          mastBot.y
         );
         mGrad.addColorStop(0, `rgb(${cv + 8},${cv + 8},${cv + 14})`);
         mGrad.addColorStop(0.5, `rgb(${cv},${cv},${cv + 6})`);
         mGrad.addColorStop(
           1,
-          `rgb(${Math.max(0, cv - 10)},${Math.max(0, cv - 10)},${Math.max(0, cv - 4)})`,
+          `rgb(${Math.max(0, cv - 10)},${Math.max(0, cv - 10)},${Math.max(0, cv - 4)})`
         );
         ctx.fillStyle = mGrad;
         ctx.beginPath();
@@ -7650,7 +7878,7 @@ function drawMissileSiloDepthSortedAccessories(
         mastVerts,
         "#7a7a84",
         "rgba(0,0,0,0.12)",
-        0.4 * zoom,
+        0.4 * zoom
       );
 
       drawHexBand(
@@ -7666,7 +7894,7 @@ function drawMissileSiloDepthSortedAccessories(
         },
         "rgba(0,0,0,0.12)",
         0.35 * zoom,
-        -1.5,
+        -1.5
       );
 
       const dishAngle = time * 1.5;
@@ -7703,7 +7931,7 @@ function drawMissileSiloDepthSortedAccessories(
           0,
           backCX,
           backCY,
-          dishR * 0.9,
+          dishR * 0.9
         );
         backGrad.addColorStop(0, "#6a6a72");
         backGrad.addColorStop(0.6, "#5a5a62");
@@ -7711,8 +7939,9 @@ function drawMissileSiloDepthSortedAccessories(
         ctx.fillStyle = backGrad;
         ctx.beginPath();
         ctx.moveTo(dishRimPts[0].x, dishRimPts[0].y);
-        for (let d = 1; d <= dishSegs; d++)
+        for (let d = 1; d <= dishSegs; d++) {
           ctx.lineTo(dishRimPts[d].x, dishRimPts[d].y);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -7724,8 +7953,9 @@ function drawMissileSiloDepthSortedAccessories(
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(dishRimPts[0].x, dishRimPts[0].y);
-      for (let d = 1; d <= dishSegs; d++)
+      for (let d = 1; d <= dishSegs; d++) {
         ctx.lineTo(dishRimPts[d].x, dishRimPts[d].y);
+      }
       ctx.closePath();
       ctx.stroke();
 
@@ -7736,7 +7966,7 @@ function drawMissileSiloDepthSortedAccessories(
           0,
           dishCX,
           dishCY,
-          dishR * 0.9,
+          dishR * 0.9
         );
         innerGrad.addColorStop(0, "#3a3a42");
         innerGrad.addColorStop(0.5, "#505058");
@@ -7745,8 +7975,9 @@ function drawMissileSiloDepthSortedAccessories(
         ctx.fillStyle = innerGrad;
         ctx.beginPath();
         ctx.moveTo(dishRimPts[0].x, dishRimPts[0].y);
-        for (let d = 1; d <= dishSegs; d++)
+        for (let d = 1; d <= dishSegs; d++) {
           ctx.lineTo(dishRimPts[d].x, dishRimPts[d].y);
+        }
         ctx.closePath();
         ctx.fill();
 
@@ -7767,8 +7998,11 @@ function drawMissileSiloDepthSortedAccessories(
               cosDA * cosPhi * rr * ISO_Y_RATIO -
               sinPhi * rr +
               sinDA * pushF * ISO_Y_RATIO;
-            if (d === 0) ctx.moveTo(rx, ry);
-            else ctx.lineTo(rx, ry);
+            if (d === 0) {
+              ctx.moveTo(rx, ry);
+            } else {
+              ctx.lineTo(rx, ry);
+            }
           }
           ctx.closePath();
           ctx.stroke();
@@ -7814,7 +8048,7 @@ function drawMissileSiloDepthSortedAccessories(
           0,
           mastTop.x,
           mastTop.y - 2 * zoom,
-          glowR,
+          glowR
         );
         glowGrad.addColorStop(0, `rgba(255,34,0,${0.3 + ledPulse * 0.15})`);
         glowGrad.addColorStop(1, "rgba(255,34,0,0)");
@@ -7839,7 +8073,7 @@ function drawMissileSiloDepthSortedAccessories(
         0,
         sensorX,
         sensorY,
-        3 * zoom,
+        3 * zoom
       );
       sensorGrad.addColorStop(0, "#5a5a64");
       sensorGrad.addColorStop(0.5, "#3a3a44");
@@ -7853,7 +8087,7 @@ function drawMissileSiloDepthSortedAccessories(
         2 * zoom * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.strokeStyle = "#5a5a64";
@@ -7868,7 +8102,7 @@ function drawMissileSiloDepthSortedAccessories(
           0,
           sensorX,
           sensorY,
-          2.5 * zoom,
+          2.5 * zoom
         );
         sGlowGrad.addColorStop(0, `rgba(255,60,0,${sensorGlow})`);
         sGlowGrad.addColorStop(0.5, `rgba(255,60,0,${sensorGlow * 0.4})`);
@@ -7891,7 +8125,7 @@ function drawMissileSiloDepthSortedAccessories(
         (sensorX + radarBaseX) * 0.5,
         Math.max(sensorY, radarBaseY) + 3 * zoom,
         radarBaseX,
-        radarBaseY,
+        radarBaseY
       );
       ctx.stroke();
     }
@@ -7910,8 +8144,8 @@ function drawMissileSiloDepthSortedAccessories(
         6,
         8,
         6,
-        { top: "#4a5a3a", left: "#3a4a2a", right: "#2a3a1a" },
-        zoom,
+        { left: "#3a4a2a", right: "#2a3a1a", top: "#4a5a3a" },
+        zoom
       );
       ctx.fillStyle = "#cc2200";
       ctx.fillRect(boxX - 2 * zoom, boxY - 4.5 * zoom, 4 * zoom, 1.2 * zoom);
@@ -7931,8 +8165,8 @@ function drawMissileSiloDepthSortedAccessories(
         5,
         5,
         7,
-        { top: "#2a2a32", left: "#1a1a24", right: "#151520" },
-        zoom,
+        { left: "#1a1a24", right: "#151520", top: "#2a2a32" },
+        zoom
       );
       const screenG = 0.5 + Math.sin(time * 2.5) * 0.2;
       ctx.fillStyle = `rgba(0,200,80,${screenG})`;
@@ -7959,7 +8193,7 @@ function drawMissileSiloDepthSortedAccessories(
           tcY - 3 * zoom,
           0.5 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -7980,7 +8214,7 @@ function drawMissileSiloDepthSortedAccessories(
         cableStartX * 0.5,
         cableStartY - 4 * zoom,
         basePt.x,
-        basePt.y,
+        basePt.y
       );
       ctx.stroke();
       ctx.strokeStyle = "#2a2a32";
@@ -7991,7 +8225,7 @@ function drawMissileSiloDepthSortedAccessories(
         cableStartX * 0.5 + 2 * zoom,
         cableStartY - 3 * zoom,
         basePt.x + 2 * zoom,
-        basePt.y + 1 * zoom,
+        basePt.y + 1 * zoom
       );
       ctx.stroke();
     }
@@ -8022,7 +8256,7 @@ function drawMissileSiloDepthSortedAccessories(
           rdX - 2 * zoom + ri * 0.7 * zoom,
           rdY - 0.8 * zoom,
           0.5 * zoom,
-          1.6 * zoom,
+          1.6 * zoom
         );
       }
     }
@@ -8037,9 +8271,9 @@ export function renderMortarMissileSilo(
   tower: Tower,
   zoom: number,
   time: number,
-  timeSinceFire: number,
+  timeSinceFire: number
 ) {
-  const level = tower.level;
+  const { level } = tower;
   const rot = tower.rotation || -Math.PI / 4;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
@@ -8054,25 +8288,25 @@ export function renderMortarMissileSilo(
 
   const tiers = [
     {
-      r: 26 * zoom,
-      h: 10 * zoom,
       dark: "#1e2618",
-      mid: "#3a4830",
+      h: 10 * zoom,
       light: "#586848",
+      mid: "#3a4830",
+      r: 26 * zoom,
     },
     {
-      r: 23 * zoom,
-      h: 9 * zoom,
       dark: "#222a1c",
-      mid: "#3e4e34",
+      h: 9 * zoom,
       light: "#5e7050",
+      mid: "#3e4e34",
+      r: 23 * zoom,
     },
     {
-      r: 20 * zoom,
-      h: 8 * zoom,
       dark: "#262e20",
-      mid: "#445438",
+      h: 8 * zoom,
       light: "#647858",
+      mid: "#445438",
+      r: 20 * zoom,
     },
   ];
 
@@ -8115,13 +8349,13 @@ export function renderMortarMissileSilo(
       platTop.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
       platTop.y,
       platBot.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
-      platBot.y,
+      platBot.y
     );
     pGrad.addColorStop(0, `rgb(${cv + 14},${cv + 20},${cv + 12})`);
     pGrad.addColorStop(0.45, `rgb(${cv},${cv + 6},${cv + 2})`);
     pGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, cv - 14)},${Math.max(0, cv - 8)},${Math.max(0, cv - 10)})`,
+      `rgb(${Math.max(0, cv - 14)},${Math.max(0, cv - 8)},${Math.max(0, cv - 10)})`
     );
     ctx.fillStyle = pGrad;
     ctx.beginPath();
@@ -8141,7 +8375,7 @@ export function renderMortarMissileSilo(
     platVerts,
     "#323e30",
     "rgba(0,0,0,0.14)",
-    0.6 * zoom,
+    0.6 * zoom
   );
 
   {
@@ -8154,14 +8388,14 @@ export function renderMortarMissileSilo(
       gNormals,
       { x: 0, y: platTop.y + 1.5 * zoom },
       platTop,
-      1.0,
+      1,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
         return `rgb(${Math.floor(70 + b * 32)},${Math.floor(70 + b * 32)},${Math.floor(82 + b * 24)})`;
       },
       "rgba(0,0,0,0.12)",
       0.4 * zoom,
-      -0.5,
+      -0.5
     );
     for (let g = 0; g < 20; g++) {
       const ga = (g / 20) * Math.PI * 2 + time * 0.15;
@@ -8172,7 +8406,7 @@ export function renderMortarMissileSilo(
         Math.sin(ga) * gR * ISO_Y_RATIO,
         1.2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -8182,8 +8416,9 @@ export function renderMortarMissileSilo(
     if (
       platNormals[i] < -0.7 &&
       platNormals[(i + hexSides - 1) % hexSides] < -0.7
-    )
+    ) {
       continue;
+    }
     ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
     ctx.arc(
@@ -8191,7 +8426,7 @@ export function renderMortarMissileSilo(
       platTop.y + platVerts[i].y,
       2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#6a6a72";
@@ -8201,7 +8436,7 @@ export function renderMortarMissileSilo(
       platTop.y + platVerts[i].y,
       1.2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -8213,11 +8448,11 @@ export function renderMortarMissileSilo(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(tpA) * platR * 0.15,
-      platTop.y + Math.sin(tpA) * platR * 0.075,
+      platTop.y + Math.sin(tpA) * platR * 0.075
     );
     ctx.lineTo(
       Math.cos(tpA) * platR * 0.75,
-      platTop.y + Math.sin(tpA) * platR * 0.375,
+      platTop.y + Math.sin(tpA) * platR * 0.375
     );
     ctx.stroke();
   }
@@ -8260,52 +8495,52 @@ export function renderMortarMissileSilo(
   const accentF = "#727a68";
 
   const backArmBase = {
-    side: farSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentB,
     cosR,
+    level,
+    metalDark: metalDarkB,
+    metalLight: metalLightB,
+    metalMid: metalMidB,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkB,
-    metalMid: metalMidB,
-    metalLight: metalLightB,
-    accent: accentB,
+    side: farSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
   const frontArmBase = {
-    side: nearSide,
-    level,
-    zoom,
-    sinR,
+    accent: accentF,
     cosR,
+    level,
+    metalDark: metalDarkF,
+    metalLight: metalLightF,
+    metalMid: metalMidF,
     perpX: -sinR,
     perpY: cosR * ISO_Y_RATIO,
-    tiers,
-    tierRecoils,
     posAtFrac,
-    metalDark: metalDarkF,
-    metalMid: metalMidF,
-    metalLight: metalLightF,
-    accent: accentF,
+    side: nearSide,
+    sinR,
+    tierRecoils,
+    tiers,
+    zoom,
   };
 
   // === DEPTH-SORTED ACCESSORIES (behind-barrel pass) ===
   const accessoryParams = {
-    zoom,
-    time,
-    timeSinceFire,
     cosR,
-    sinR,
-    nearSide,
-    platR,
-    tiers,
-    posAtFrac,
     maxTiltX,
     maxTiltY,
+    nearSide,
+    platR,
+    posAtFrac,
+    sinR,
+    tiers,
+    time,
+    timeSinceFire,
     totalH,
+    zoom,
   };
   drawMissileSiloDepthSortedAccessories(ctx, accessoryParams, "behind");
 
@@ -8333,12 +8568,12 @@ export function renderMortarMissileSilo(
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
       const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
-      const dr = parseInt(tier.dark.slice(1, 3), 16);
-      const dg = parseInt(tier.dark.slice(3, 5), 16);
-      const db = parseInt(tier.dark.slice(5, 7), 16);
-      const lr = parseInt(tier.light.slice(1, 3), 16);
-      const lg = parseInt(tier.light.slice(3, 5), 16);
-      const lb = parseInt(tier.light.slice(5, 7), 16);
+      const dr = Number.parseInt(tier.dark.slice(1, 3), 16);
+      const dg = Number.parseInt(tier.dark.slice(3, 5), 16);
+      const db = Number.parseInt(tier.dark.slice(5, 7), 16);
+      const lr = Number.parseInt(tier.light.slice(1, 3), 16);
+      const lg = Number.parseInt(tier.light.slice(3, 5), 16);
+      const lb = Number.parseInt(tier.light.slice(5, 7), 16);
       const fR = Math.floor(dr + (lr - dr) * bright);
       const fG = Math.floor(dg + (lg - dg) * bright);
       const fB = Math.floor(db + (lb - db) * bright);
@@ -8349,16 +8584,16 @@ export function renderMortarMissileSilo(
         topCenter.x + faceMidX,
         topCenter.y + faceMidY,
         botCenter.x + faceMidX,
-        botCenter.y + faceMidY,
+        botCenter.y + faceMidY
       );
       faceGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, fR + 22)},${Math.min(255, fG + 20)},${Math.min(255, fB + 18)})`,
+        `rgb(${Math.min(255, fR + 22)},${Math.min(255, fG + 20)},${Math.min(255, fB + 18)})`
       );
       faceGrad.addColorStop(0.35, `rgb(${fR},${fG},${fB})`);
       faceGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, fR - 24)},${Math.max(0, fG - 20)},${Math.max(0, fB - 16)})`,
+        `rgb(${Math.max(0, fR - 24)},${Math.max(0, fG - 20)},${Math.max(0, fB - 16)})`
       );
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
@@ -8449,11 +8684,14 @@ export function renderMortarMissileSilo(
       hexVerts,
       tier.light,
       "rgba(0,0,0,0.1)",
-      0.5 * zoom,
+      0.5 * zoom
     );
 
     if (ti < 2) {
-      const bandBot: Pt = { x: topCenter.x - bAx * 2 * zoom, y: topCenter.y - bAy * 2 * zoom };
+      const bandBot: Pt = {
+        x: topCenter.x - bAx * 2 * zoom,
+        y: topCenter.y - bAy * 2 * zoom,
+      };
       drawHexBand(
         ctx,
         hexVerts,
@@ -8467,7 +8705,7 @@ export function renderMortarMissileSilo(
         },
         "rgba(0,0,0,0.15)",
         0.5 * zoom,
-        -1.5,
+        -1.5
       );
 
       // Status lights at tier junction (only on camera-facing sides)
@@ -8483,7 +8721,9 @@ export function renderMortarMissileSilo(
           Math.sin(la) * ISO_Y_RATIO * bAx +
           Math.cos(la) * bNy +
           Math.sin(la) * ISO_Y_RATIO * bAy;
-        if (faceDot < -0.5) continue;
+        if (faceDot < -0.5) {
+          continue;
+        }
 
         const lMSince = timeSinceFire - si * 150 - ti * 450;
         const lFiring = lMSince >= 0 && lMSince < 400;
@@ -8496,7 +8736,7 @@ export function renderMortarMissileSilo(
           const lgGrad = ctx.createRadialGradient(lpx, lpy, 0, lpx, lpy, lgR);
           lgGrad.addColorStop(
             0,
-            lFiring ? `rgba(255,34,0,${lGlowA})` : `rgba(0,255,68,${lGlowA})`,
+            lFiring ? `rgba(255,34,0,${lGlowA})` : `rgba(0,255,68,${lGlowA})`
           );
           lgGrad.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = lgGrad;
@@ -8541,8 +8781,11 @@ export function renderMortarMissileSilo(
       const dep = Math.sin(a) * aiR * ISO_Y_RATIO;
       const px = aiCenter.x + lat * bNx + dep * bAx;
       const py = aiCenter.y + lat * bNy + dep * bAy;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -8551,7 +8794,7 @@ export function renderMortarMissileSilo(
 
   // === MUZZLE CAP WITH LAUNCH TUBES ===
   {
-    const tipPt = posAtFrac(1.0, 0);
+    const tipPt = posAtFrac(1, 0);
     const topTier = tiers[2];
 
     const genTiltedVerts = (r: number): Pt[] => {
@@ -8600,9 +8843,9 @@ export function renderMortarMissileSilo(
     for (let hi = 0; hi < 6; hi++) {
       const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
       podPositions.push({
-        lat: Math.cos(ha) * ringDist,
         dep: Math.sin(ha) * ringDist * ISO_Y_RATIO,
         idx: hi,
+        lat: Math.cos(ha) * ringDist,
       });
     }
 
@@ -8624,7 +8867,7 @@ export function renderMortarMissileSilo(
         0,
         tubeX,
         tubeY,
-        tubeR * 1.5,
+        tubeR * 1.5
       );
       outerCollar.addColorStop(0, "#6a6a76");
       outerCollar.addColorStop(0.3, "#52525e");
@@ -8636,7 +8879,7 @@ export function renderMortarMissileSilo(
       ctx.fill();
 
       ctx.strokeStyle = "#5e5e6c";
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.ellipse(tubeX, tubeY, tubeR * 1.4, tubeR * 0.78, 0, 0, Math.PI * 2);
       ctx.stroke();
@@ -8647,7 +8890,7 @@ export function renderMortarMissileSilo(
         tubeR * 0.1,
         tubeX,
         tubeY,
-        tubeR * 1.15,
+        tubeR * 1.15
       );
       midCollar.addColorStop(0, "#585864");
       midCollar.addColorStop(0.5, "#44444e");
@@ -8669,7 +8912,7 @@ export function renderMortarMissileSilo(
         0,
         tubeX,
         tubeY,
-        tubeR * 0.92,
+        tubeR * 0.92
       );
       boreGrad.addColorStop(0, "#020202");
       boreGrad.addColorStop(0.5, "#080606");
@@ -8687,11 +8930,11 @@ export function renderMortarMissileSilo(
         ctx.beginPath();
         ctx.moveTo(
           tubeX + Math.cos(ra) * tubeR * 0.18,
-          tubeY + Math.sin(ra) * tubeR * 0.1,
+          tubeY + Math.sin(ra) * tubeR * 0.1
         );
         ctx.lineTo(
           tubeX + Math.cos(ra) * tubeR * 0.85,
-          tubeY + Math.sin(ra) * tubeR * 0.48,
+          tubeY + Math.sin(ra) * tubeR * 0.48
         );
         ctx.stroke();
       }
@@ -8725,7 +8968,7 @@ export function renderMortarMissileSilo(
           missileAlpha = Math.max(0, 1 - t * t);
         } else if (isReloading) {
           const t = Math.min(1, (mSince - launchDur - emptyDur) / reloadDur);
-          const easeT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const easeT = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
           protrude = easeT * 3.5 * zoom;
           missileAlpha = easeT;
         }
@@ -8741,7 +8984,7 @@ export function renderMortarMissileSilo(
           noseX - bNx * bodyW,
           noseY - bNy * bodyW,
           noseX + bNx * bodyW,
-          noseY + bNy * bodyW,
+          noseY + bNy * bodyW
         );
         mBodyGrad.addColorStop(0, "#555");
         mBodyGrad.addColorStop(0.2, "#999");
@@ -8765,7 +9008,7 @@ export function renderMortarMissileSilo(
           noseX - bNx * bodyW * 0.7,
           noseY - bNy * bodyW * 0.7,
           noseX + bNx * bodyW * 0.7,
-          noseY + bNy * bodyW * 0.7,
+          noseY + bNy * bodyW * 0.7
         );
         warheadGrad.addColorStop(0, "#991100");
         warheadGrad.addColorStop(0.3, "#cc1100");
@@ -8788,11 +9031,11 @@ export function renderMortarMissileSilo(
         ctx.beginPath();
         ctx.moveTo(
           noseX + bAx * bodyLen * stripePos + bNx * bodyW * 0.8,
-          noseY + bAy * bodyLen * stripePos + bNy * bodyW * 0.8,
+          noseY + bAy * bodyLen * stripePos + bNy * bodyW * 0.8
         );
         ctx.lineTo(
           noseX + bAx * bodyLen * stripePos - bNx * bodyW * 0.8,
-          noseY + bAy * bodyLen * stripePos - bNy * bodyW * 0.8,
+          noseY + bAy * bodyLen * stripePos - bNy * bodyW * 0.8
         );
         ctx.stroke();
 
@@ -8804,7 +9047,7 @@ export function renderMortarMissileSilo(
           noseY + bAy * bodyLen * 1.05,
           tubeR * 0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -8813,15 +9056,15 @@ export function renderMortarMissileSilo(
         ctx.beginPath();
         ctx.moveTo(
           noseX + bAx * bodyLen * 0.6 - bNx * bodyW * 0.7,
-          noseY + bAy * bodyLen * 0.6 - bNy * bodyW * 0.7,
+          noseY + bAy * bodyLen * 0.6 - bNy * bodyW * 0.7
         );
         ctx.lineTo(
           noseX + bAx * bodyLen * 0.9 - bNx * bodyW * 0.3,
-          noseY + bAy * bodyLen * 0.9 - bNy * bodyW * 0.3,
+          noseY + bAy * bodyLen * 0.9 - bNy * bodyW * 0.3
         );
         ctx.lineTo(
           noseX + bAx * bodyLen * 0.5 - bNx * bodyW * 0.2,
-          noseY + bAy * bodyLen * 0.5 - bNy * bodyW * 0.2,
+          noseY + bAy * bodyLen * 0.5 - bNy * bodyW * 0.2
         );
         ctx.closePath();
         ctx.fill();
@@ -8838,7 +9081,7 @@ export function renderMortarMissileSilo(
             0,
             tubeX,
             tubeY,
-            flashR_tube,
+            flashR_tube
           );
           flashGrad.addColorStop(0, `rgba(255,235,140,${flashA})`);
           flashGrad.addColorStop(0.4, `rgba(255,160,50,${flashA * 0.5})`);
@@ -8858,7 +9101,7 @@ export function renderMortarMissileSilo(
           0,
           tubeX,
           tubeY,
-          tubeR * 0.85,
+          tubeR * 0.85
         );
         deepBore.addColorStop(0, "#030303");
         deepBore.addColorStop(0.6, "#0a0808");
@@ -8872,7 +9115,7 @@ export function renderMortarMissileSilo(
           tubeR * 0.48,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -8891,7 +9134,7 @@ export function renderMortarMissileSilo(
 
   // === STATUS LIGHTS (on muzzle cap rim) ===
   {
-    const tipPt2 = posAtFrac(1.0, 0);
+    const tipPt2 = posAtFrac(1, 0);
     const lightR = tiers[2].r * 1.18;
     for (let li = 0; li < 6; li++) {
       const a = (li / 6) * Math.PI * 2;
@@ -8911,7 +9154,7 @@ export function renderMortarMissileSilo(
         const glowGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, glowR);
         glowGrad.addColorStop(
           0,
-          isLaunching ? `rgba(255,34,0,${glowA})` : `rgba(0,255,68,${glowA})`,
+          isLaunching ? `rgba(255,34,0,${glowA})` : `rgba(0,255,68,${glowA})`
         );
         glowGrad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = glowGrad;

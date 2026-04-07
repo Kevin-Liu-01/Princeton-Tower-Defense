@@ -7,25 +7,33 @@ export function getImpactEffect(projType: string): EffectType {
     case "dragonBreath":
     case "ember":
     case "phoenixFlame":
-    case "phoenixFlameBlue":
+    case "phoenixFlameBlue": {
       return "fire_impact";
-    case "rock":
+    }
+    case "rock": {
       return "rock_impact";
-    case "frostBolt":
+    }
+    case "frostBolt": {
       return "frost_impact";
-    case "poisonBolt":
+    }
+    case "poisonBolt": {
       return "poison_splash";
+    }
     case "magicBolt":
     case "darkBolt":
-    case "wyvernBolt":
+    case "wyvernBolt": {
       return "magic_impact";
+    }
     case "arrow":
-    case "bolt":
+    case "bolt": {
       return "arrow_hit";
+    }
     case "mortarShell":
-    case "missile":
+    case "missile": {
       return "mortar_impact";
-    default:
+    }
+    default: {
       return "impact_hit";
+    }
   }
 }

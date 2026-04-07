@@ -12,7 +12,9 @@ interface MapFileEnvelope {
   draft: Omit<CreatorDraftState, "id">;
 }
 
-function sanitizeDraftForExport(draft: CreatorDraftState): Omit<CreatorDraftState, "id"> {
+function sanitizeDraftForExport(
+  draft: CreatorDraftState
+): Omit<CreatorDraftState, "id"> {
   const { id, ...rest } = draft;
   return rest;
 }
@@ -22,7 +24,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function validateImportedDraft(raw: unknown): CreatorDraftState | string {
-  if (!isPlainObject(raw)) return "Draft data is not an object.";
+  if (!isPlainObject(raw)) {
+    return "Draft data is not an object.";
+  }
 
   const template = createEmptyDraft();
   const requiredKeys: (keyof CreatorDraftState)[] = [
@@ -38,37 +42,67 @@ function validateImportedDraft(raw: unknown): CreatorDraftState | string {
   ];
 
   for (const key of requiredKeys) {
-    if (!(key in raw)) return `Missing required field: "${key}".`;
+    if (!(key in raw)) {
+      return `Missing required field: "${key}".`;
+    }
   }
 
-  if (typeof raw.name !== "string") return '"name" must be a string.';
-  if (typeof raw.theme !== "string") return '"theme" must be a string.';
-  if (typeof raw.difficulty !== "number" || ![1, 2, 3].includes(raw.difficulty as number)) {
+  if (typeof raw.name !== "string") {
+    return '"name" must be a string.';
+  }
+  if (typeof raw.theme !== "string") {
+    return '"theme" must be a string.';
+  }
+  if (
+    typeof raw.difficulty !== "number" ||
+    ![1, 2, 3].includes(raw.difficulty as number)
+  ) {
     return '"difficulty" must be 1, 2, or 3.';
   }
-  if (typeof raw.startingPawPoints !== "number") return '"startingPawPoints" must be a number.';
-  if (!Array.isArray(raw.primaryPath)) return '"primaryPath" must be an array.';
-  if (!Array.isArray(raw.decorations)) return '"decorations" must be an array.';
-  if (!Array.isArray(raw.hazards)) return '"hazards" must be an array.';
+  if (typeof raw.startingPawPoints !== "number") {
+    return '"startingPawPoints" must be a number.';
+  }
+  if (!Array.isArray(raw.primaryPath)) {
+    return '"primaryPath" must be an array.';
+  }
+  if (!Array.isArray(raw.decorations)) {
+    return '"decorations" must be an array.';
+  }
+  if (!Array.isArray(raw.hazards)) {
+    return '"hazards" must be an array.';
+  }
 
   const draft: CreatorDraftState = {
     ...template,
-    slug: typeof raw.slug === "string" ? raw.slug : "",
-    name: raw.name as string,
-    description: typeof raw.description === "string" ? raw.description : "",
-    theme: raw.theme as CreatorDraftState["theme"],
-    difficulty: raw.difficulty as 1 | 2 | 3,
-    startingPawPoints: raw.startingPawPoints as number,
-    waveTemplate: typeof raw.waveTemplate === "string" ? raw.waveTemplate : "default",
-    customWaves: Array.isArray(raw.customWaves) ? raw.customWaves as CreatorDraftState["customWaves"] : [],
-    primaryPath: raw.primaryPath as CreatorDraftState["primaryPath"],
-    secondaryPath: Array.isArray(raw.secondaryPath) ? raw.secondaryPath as CreatorDraftState["secondaryPath"] : [],
-    heroSpawn: isPlainObject(raw.heroSpawn) ? raw.heroSpawn as CreatorDraftState["heroSpawn"] : null,
-    specialTowers: Array.isArray(raw.specialTowers) ? raw.specialTowers as CreatorDraftState["specialTowers"] : [],
-    placedTowers: Array.isArray(raw.placedTowers) ? raw.placedTowers as CreatorDraftState["placedTowers"] : [],
-    allowedTowers: Array.isArray(raw.allowedTowers) ? raw.allowedTowers as CreatorDraftState["allowedTowers"] : [],
+    allowedTowers: Array.isArray(raw.allowedTowers)
+      ? (raw.allowedTowers as CreatorDraftState["allowedTowers"])
+      : [],
+    customWaves: Array.isArray(raw.customWaves)
+      ? (raw.customWaves as CreatorDraftState["customWaves"])
+      : [],
     decorations: raw.decorations as CreatorDraftState["decorations"],
+    description: typeof raw.description === "string" ? raw.description : "",
+    difficulty: raw.difficulty as 1 | 2 | 3,
     hazards: raw.hazards as CreatorDraftState["hazards"],
+    heroSpawn: isPlainObject(raw.heroSpawn)
+      ? (raw.heroSpawn as CreatorDraftState["heroSpawn"])
+      : null,
+    name: raw.name as string,
+    placedTowers: Array.isArray(raw.placedTowers)
+      ? (raw.placedTowers as CreatorDraftState["placedTowers"])
+      : [],
+    primaryPath: raw.primaryPath as CreatorDraftState["primaryPath"],
+    secondaryPath: Array.isArray(raw.secondaryPath)
+      ? (raw.secondaryPath as CreatorDraftState["secondaryPath"])
+      : [],
+    slug: typeof raw.slug === "string" ? raw.slug : "",
+    specialTowers: Array.isArray(raw.specialTowers)
+      ? (raw.specialTowers as CreatorDraftState["specialTowers"])
+      : [],
+    startingPawPoints: raw.startingPawPoints as number,
+    theme: raw.theme as CreatorDraftState["theme"],
+    waveTemplate:
+      typeof raw.waveTemplate === "string" ? raw.waveTemplate : "default",
   };
 
   return draft;
@@ -76,10 +110,10 @@ function validateImportedDraft(raw: unknown): CreatorDraftState | string {
 
 export function exportMapToFile(draft: CreatorDraftState): void {
   const envelope: MapFileEnvelope = {
-    version: FILE_FORMAT_VERSION,
-    type: FILE_TYPE_MARKER,
-    exportedAt: new Date().toISOString(),
     draft: sanitizeDraftForExport(draft),
+    exportedAt: new Date().toISOString(),
+    type: FILE_TYPE_MARKER,
+    version: FILE_FORMAT_VERSION,
   };
 
   const json = JSON.stringify(envelope, null, 2);
@@ -88,13 +122,13 @@ export function exportMapToFile(draft: CreatorDraftState): void {
 
   const filename = (draft.name.trim() || "untitled-map")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "");
 
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = `${filename}${FILE_EXTENSION}`;
-  document.body.appendChild(anchor);
+  document.body.append(anchor);
   anchor.click();
   document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
@@ -129,7 +163,11 @@ export function importMapFromFile(): Promise<CreatorDraftState> {
           } else if ("primaryPath" in parsed && "theme" in parsed) {
             draftData = parsed;
           } else {
-            reject(new Error("Unrecognized file format. Expected a Princeton TD map file."));
+            reject(
+              new Error(
+                "Unrecognized file format. Expected a Princeton TD map file."
+              )
+            );
             return;
           }
 
@@ -140,8 +178,12 @@ export function importMapFromFile(): Promise<CreatorDraftState> {
           }
 
           resolve(result);
-        } catch (err) {
-          reject(new Error(`Failed to parse file: ${err instanceof Error ? err.message : String(err)}`));
+        } catch (error) {
+          reject(
+            new Error(
+              `Failed to parse file: ${error instanceof Error ? error.message : String(error)}`
+            )
+          );
         }
       };
       reader.onerror = () => reject(new Error("Failed to read file."));

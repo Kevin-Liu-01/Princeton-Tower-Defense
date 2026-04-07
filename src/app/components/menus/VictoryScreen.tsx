@@ -1,5 +1,4 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
 import {
   ArrowRight,
   Clock,
@@ -9,8 +8,16 @@ import {
   Crown,
   Swords,
 } from "lucide-react";
+import React, { useRef, useEffect, useState } from "react";
+
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
-import { GOLD, DIVIDER, VICTORY, OVERLAY, panelGradient } from "../ui/system/theme";
+import {
+  GOLD,
+  DIVIDER,
+  VICTORY,
+  OVERLAY,
+  panelGradient,
+} from "../ui/system/theme";
 import { formatDuration } from "./shared/menuMath";
 
 interface CategoryRatings {
@@ -26,7 +33,7 @@ const SURVIVAL_THRESHOLDS = { three: 18, two: 10 }; // lives remaining out of 20
 export function calculateCategoryRatings(
   timeSpent: number,
   lives: number,
-  totalWaves: number,
+  totalWaves: number
 ): CategoryRatings {
   const secsPerWave = totalWaves > 0 ? timeSpent / totalWaves : timeSpent;
 
@@ -46,7 +53,7 @@ export function calculateCategoryRatings(
     speed >= 3 && survival >= 3 ? 3 : speed >= 2 && survival >= 2 ? 2 : 1;
   const overall = survival;
 
-  return { speed, survival, strategy, overall };
+  return { overall, speed, strategy, survival };
 }
 
 interface VictoryScreenProps {
@@ -74,9 +81,13 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
@@ -90,7 +101,14 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     const t = time * 0.1;
 
     // --- Ambient radial glow behind trophy ---
-    const ambientGlow = ctx.createRadialGradient(cx, cy - 5 * s, 10 * s, cx, cy - 5 * s, 75 * s);
+    const ambientGlow = ctx.createRadialGradient(
+      cx,
+      cy - 5 * s,
+      10 * s,
+      cx,
+      cy - 5 * s,
+      75 * s
+    );
     const ambientAlpha = 0.15 + Math.sin(t * 1.5) * 0.05;
     ambientGlow.addColorStop(0, `rgba(255,215,0,${ambientAlpha})`);
     ambientGlow.addColorStop(0.5, `rgba(255,180,0,${ambientAlpha * 0.4})`);
@@ -123,7 +141,12 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.fillRect(cx - 35 * s, cy + 53 * s, 70 * s, 2 * s);
 
     // Middle tier
-    const midBaseGrad = ctx.createLinearGradient(cx - 30 * s, 0, cx + 30 * s, 0);
+    const midBaseGrad = ctx.createLinearGradient(
+      cx - 30 * s,
+      0,
+      cx + 30 * s,
+      0
+    );
     midBaseGrad.addColorStop(0, "#7a5c12");
     midBaseGrad.addColorStop(0.5, "#b8860b");
     midBaseGrad.addColorStop(1, "#7a5c12");
@@ -195,16 +218,35 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 
     ctx.beginPath();
     ctx.moveTo(cx - 36 * s, cy - 42 * s);
-    ctx.bezierCurveTo(cx - 48 * s, cy - 10 * s, cx - 40 * s, cy + 10 * s, cx - 22 * s, cy + 20 * s);
+    ctx.bezierCurveTo(
+      cx - 48 * s,
+      cy - 10 * s,
+      cx - 40 * s,
+      cy + 10 * s,
+      cx - 22 * s,
+      cy + 20 * s
+    );
     ctx.lineTo(cx + 22 * s, cy + 20 * s);
-    ctx.bezierCurveTo(cx + 40 * s, cy + 10 * s, cx + 48 * s, cy - 10 * s, cx + 36 * s, cy - 42 * s);
+    ctx.bezierCurveTo(
+      cx + 40 * s,
+      cy + 10 * s,
+      cx + 48 * s,
+      cy - 10 * s,
+      cx + 36 * s,
+      cy - 42 * s
+    );
     ctx.closePath();
     ctx.fill();
 
     ctx.shadowBlur = 0;
 
     // Cup inner shadow (depth)
-    const innerShadow = ctx.createLinearGradient(cx, cy - 42 * s, cx, cy - 25 * s);
+    const innerShadow = ctx.createLinearGradient(
+      cx,
+      cy - 42 * s,
+      cx,
+      cy - 25 * s
+    );
     innerShadow.addColorStop(0, "rgba(0,0,0,0.25)");
     innerShadow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = innerShadow;
@@ -213,7 +255,12 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.fill();
 
     // Vertical highlight streak on cup
-    const streakGrad = ctx.createLinearGradient(cx - 5 * s, cy - 35 * s, cx + 5 * s, cy + 10 * s);
+    const streakGrad = ctx.createLinearGradient(
+      cx - 5 * s,
+      cy - 35 * s,
+      cx + 5 * s,
+      cy + 10 * s
+    );
     streakGrad.addColorStop(0, "rgba(255,255,220,0.35)");
     streakGrad.addColorStop(0.5, "rgba(255,255,220,0.15)");
     streakGrad.addColorStop(1, "rgba(255,255,220,0)");
@@ -228,7 +275,12 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.ellipse(cx, cy - 42 * s, 36 * s, 9 * s, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const rimGrad = ctx.createLinearGradient(cx - 32 * s, cy - 42 * s, cx + 32 * s, cy - 42 * s);
+    const rimGrad = ctx.createLinearGradient(
+      cx - 32 * s,
+      cy - 42 * s,
+      cx + 32 * s,
+      cy - 42 * s
+    );
     rimGrad.addColorStop(0, "#b8860b");
     rimGrad.addColorStop(0.3, "#daa520");
     rimGrad.addColorStop(0.5, "#c8a020");
@@ -250,14 +302,26 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.lineCap = "round";
 
     // Left handle
-    const lhGrad = ctx.createLinearGradient(cx - 58 * s, cy - 25 * s, cx - 38 * s, cy - 5 * s);
+    const lhGrad = ctx.createLinearGradient(
+      cx - 58 * s,
+      cy - 25 * s,
+      cx - 38 * s,
+      cy - 5 * s
+    );
     lhGrad.addColorStop(0, "#b8860b");
     lhGrad.addColorStop(0.5, "#ffd700");
     lhGrad.addColorStop(1, "#b8860b");
     ctx.strokeStyle = lhGrad;
     ctx.beginPath();
     ctx.moveTo(cx - 38 * s, cy - 30 * s);
-    ctx.bezierCurveTo(cx - 58 * s, cy - 28 * s, cx - 58 * s, cy + 5 * s, cx - 40 * s, cy + 2 * s);
+    ctx.bezierCurveTo(
+      cx - 58 * s,
+      cy - 28 * s,
+      cx - 58 * s,
+      cy + 5 * s,
+      cx - 40 * s,
+      cy + 2 * s
+    );
     ctx.stroke();
     // Left handle curl
     ctx.lineWidth = 3 * s;
@@ -266,7 +330,12 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.stroke();
 
     // Right handle
-    const rhGrad = ctx.createLinearGradient(cx + 38 * s, cy - 25 * s, cx + 58 * s, cy - 5 * s);
+    const rhGrad = ctx.createLinearGradient(
+      cx + 38 * s,
+      cy - 25 * s,
+      cx + 58 * s,
+      cy - 5 * s
+    );
     rhGrad.addColorStop(0, "#b8860b");
     rhGrad.addColorStop(0.5, "#ffd700");
     rhGrad.addColorStop(1, "#b8860b");
@@ -274,7 +343,14 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.lineWidth = 5 * s;
     ctx.beginPath();
     ctx.moveTo(cx + 38 * s, cy - 30 * s);
-    ctx.bezierCurveTo(cx + 58 * s, cy - 28 * s, cx + 58 * s, cy + 5 * s, cx + 40 * s, cy + 2 * s);
+    ctx.bezierCurveTo(
+      cx + 58 * s,
+      cy - 28 * s,
+      cx + 58 * s,
+      cy + 5 * s,
+      cx + 40 * s,
+      cy + 2 * s
+    );
     ctx.stroke();
     // Right handle curl
     ctx.lineWidth = 3 * s;
@@ -296,11 +372,25 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.lineWidth = 1.5 * s;
     ctx.beginPath();
     ctx.moveTo(cx - 32 * s, cy - 8 * s);
-    ctx.bezierCurveTo(cx - 20 * s, cy - 12 * s, cx + 20 * s, cy - 12 * s, cx + 32 * s, cy - 8 * s);
+    ctx.bezierCurveTo(
+      cx - 20 * s,
+      cy - 12 * s,
+      cx + 20 * s,
+      cy - 12 * s,
+      cx + 32 * s,
+      cy - 8 * s
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(cx - 30 * s, cy - 2 * s);
-    ctx.bezierCurveTo(cx - 18 * s, cy - 6 * s, cx + 18 * s, cy - 6 * s, cx + 30 * s, cy - 2 * s);
+    ctx.bezierCurveTo(
+      cx - 18 * s,
+      cy - 6 * s,
+      cx + 18 * s,
+      cy - 6 * s,
+      cx + 30 * s,
+      cy - 2 * s
+    );
     ctx.stroke();
 
     // --- Center emblem: ornate star with jewel ---
@@ -316,7 +406,14 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     drawStar(ctx, cx, cy - 18 * s, 10 * s, 5 * s);
 
     // Center ruby jewel
-    const jewelGrad = ctx.createRadialGradient(cx - 1 * s, cy - 20 * s, 0, cx, cy - 18 * s, 5 * s);
+    const jewelGrad = ctx.createRadialGradient(
+      cx - 1 * s,
+      cy - 20 * s,
+      0,
+      cx,
+      cy - 18 * s,
+      5 * s
+    );
     jewelGrad.addColorStop(0, "#ff6b6b");
     jewelGrad.addColorStop(0.4, "#dc143c");
     jewelGrad.addColorStop(1, "#8b0000");
@@ -360,8 +457,18 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
       if (alpha > 0.15) {
         ctx.fillStyle = `rgba(255, 236, 139, ${alpha})`;
         // Draw cross sparkle
-        ctx.fillRect(sx - sparkleSize * 0.15, sy - sparkleSize, sparkleSize * 0.3, sparkleSize * 2);
-        ctx.fillRect(sx - sparkleSize, sy - sparkleSize * 0.15, sparkleSize * 2, sparkleSize * 0.3);
+        ctx.fillRect(
+          sx - sparkleSize * 0.15,
+          sy - sparkleSize,
+          sparkleSize * 0.3,
+          sparkleSize * 2
+        );
+        ctx.fillRect(
+          sx - sparkleSize,
+          sy - sparkleSize * 0.15,
+          sparkleSize * 2,
+          sparkleSize * 0.3
+        );
       }
     }
 
@@ -379,11 +486,14 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     }
   }, [size, time]);
 
-  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+  return <canvas ref={canvasRef} style={{ height: size, width: size }} />;
 };
 
 // Animated star rating
-const StarRating: React.FC<{ earned: number; size?: number }> = ({ earned, size = 80 }) => {
+const StarRating: React.FC<{ earned: number; size?: number }> = ({
+  earned,
+  size = 80,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
 
@@ -394,9 +504,13 @@ const StarRating: React.FC<{ earned: number; size?: number }> = ({ earned, size 
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     const width = size * 3.5;
@@ -456,18 +570,27 @@ const StarRating: React.FC<{ earned: number; size?: number }> = ({ earned, size 
     }
   }, [earned, size, time]);
 
-  return <canvas ref={canvasRef} style={{ width: size * 3.5, height: size }} />;
+  return <canvas ref={canvasRef} style={{ height: size, width: size * 3.5 }} />;
 };
 
-function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR: number, innerR: number) {
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number
+) {
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
     const angle = (i * Math.PI) / 5 - Math.PI / 2;
     const x = cx + Math.cos(angle) * r;
     const y = cy + Math.sin(angle) * r;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   }
   ctx.closePath();
   ctx.fill();
@@ -481,31 +604,31 @@ const CATEGORY_CONFIG: {
   fillClass: string;
   emptyClass: string;
 }[] = [
-    {
-      key: "speed",
-      label: "Speed",
-      icon: Clock,
-      color: "text-blue-400/85",
-      fillClass: "text-blue-400 fill-blue-400",
-      emptyClass: "text-blue-900/40",
-    },
-    {
-      key: "survival",
-      label: "Survival",
-      icon: Heart,
-      color: "text-red-400/85",
-      fillClass: "text-red-400 fill-red-400",
-      emptyClass: "text-red-900/40",
-    },
-    {
-      key: "strategy",
-      label: "Strategy",
-      icon: Swords,
-      color: "text-amber-500/85",
-      fillClass: "text-amber-400 fill-amber-400",
-      emptyClass: "text-amber-900/40",
-    },
-  ];
+  {
+    color: "text-blue-400/85",
+    emptyClass: "text-blue-900/40",
+    fillClass: "text-blue-400 fill-blue-400",
+    icon: Clock,
+    key: "speed",
+    label: "Speed",
+  },
+  {
+    color: "text-red-400/85",
+    emptyClass: "text-red-900/40",
+    fillClass: "text-red-400 fill-red-400",
+    icon: Heart,
+    key: "survival",
+    label: "Survival",
+  },
+  {
+    color: "text-amber-500/85",
+    emptyClass: "text-amber-900/40",
+    fillClass: "text-amber-400 fill-amber-400",
+    icon: Swords,
+    key: "strategy",
+    label: "Strategy",
+  },
+];
 
 const CategoryRatingRow: React.FC<{
   icon: typeof Clock;
@@ -574,16 +697,17 @@ export function VictoryScreen({
 
   return (
     <div
-      className={`${overlay
-        ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
-        : "w-full h-[100dvh] flex flex-col items-center justify-center relative overflow-auto"
-        } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
+      className={`${
+        overlay
+          ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
+          : "w-full h-[100dvh] flex flex-col items-center justify-center relative overflow-auto"
+      } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
       style={{
+        WebkitBackdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
+        backdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
         background: overlay
           ? "rgba(12, 9, 5, 0.38)"
           : "linear-gradient(180deg, #1c1610 0%, #2a1f10 40%, #1c1610 100%)",
-        backdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
-        WebkitBackdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
       }}
     >
       {!overlay && (
@@ -604,13 +728,13 @@ export function VictoryScreen({
                 key={i}
                 className="absolute rounded-full animate-pulse"
                 style={{
-                  width: `${1 + (i % 3)}px`,
+                  animationDelay: `${i * 0.3}s`,
+                  animationDuration: `${2 + (i % 3)}s`,
+                  background: `rgba(255, 200, 80, ${0.15 + (i % 4) * 0.08})`,
                   height: `${1 + (i % 3)}px`,
                   left: `${(i * 4.3) % 100}%`,
                   top: `${(i * 7.1) % 100}%`,
-                  background: `rgba(255, 200, 80, ${0.15 + (i % 4) * 0.08})`,
-                  animationDelay: `${i * 0.3}s`,
-                  animationDuration: `${2 + (i % 3)}s`,
+                  width: `${1 + (i % 3)}px`,
                 }}
               />
             ))}
@@ -619,7 +743,9 @@ export function VictoryScreen({
       )}
 
       {/* Main panel */}
-      <div className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+      <div
+        className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+      >
         <OrnateFrame
           className="rounded-2xl shadow-2xl"
           style={{ border: `2px solid ${GOLD.border35}` }}
@@ -634,11 +760,18 @@ export function VictoryScreen({
             }}
           >
             {/* Inner border glow */}
-            <div className="absolute inset-[3px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder12}` }} />
+            <div
+              className="absolute inset-[3px] rounded-[14px] pointer-events-none"
+              style={{ border: `1px solid ${GOLD.innerBorder12}` }}
+            />
 
             {/* ===== Trophy + Title Header ===== */}
-            <div className="flex flex-col items-center pt-4 sm:pt-5 pb-1 sm:pb-2 relative"
-              style={{ background: "linear-gradient(180deg, rgba(180,140,60,0.1) 0%, transparent 100%)" }}
+            <div
+              className="flex flex-col items-center pt-4 sm:pt-5 pb-1 sm:pb-2 relative"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(180,140,60,0.1) 0%, transparent 100%)",
+              }}
             >
               <TrophySprite size={64} />
 
@@ -646,7 +779,8 @@ export function VictoryScreen({
                 className="text-3xl sm:text-4xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-1"
                 style={{
                   color: "#fcd34d",
-                  textShadow: "0 0 50px rgba(252,211,77,0.4), 0 0 20px rgba(252,211,77,0.25), 0 3px 0 #7a5c10, 0 4px 8px rgba(0,0,0,0.7)",
+                  textShadow:
+                    "0 0 50px rgba(252,211,77,0.4), 0 0 20px rgba(252,211,77,0.25), 0 3px 0 #7a5c10, 0 4px 8px rgba(0,0,0,0.7)",
                 }}
               >
                 VICTORY
@@ -654,11 +788,27 @@ export function VictoryScreen({
 
               {/* Ornate divider with crown */}
               <div className="flex items-center gap-3 mt-2 w-full px-6 sm:px-10">
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)` }} />
-                <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`, border: `1px solid ${GOLD.border40}` }}>
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)`,
+                  }}
+                />
+                <div
+                  className="p-1.5 rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`,
+                    border: `1px solid ${GOLD.border40}`,
+                  }}
+                >
                   <Crown size={12} className="text-amber-400" />
                 </div>
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(270deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)` }} />
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(270deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)`,
+                  }}
+                />
               </div>
 
               {/* Level name */}
@@ -666,11 +816,18 @@ export function VictoryScreen({
                 {levelName}
               </p>
               {isFreeplay && (
-                <div className="mt-2 px-3 py-1 rounded-full" style={{
-                  background: "linear-gradient(135deg, rgba(120,80,200,0.2), rgba(80,50,140,0.15))",
-                  border: "1px solid rgba(140,100,220,0.35)",
-                }}>
-                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(180,150,240,0.8)" }}>
+                <div
+                  className="mt-2 px-3 py-1 rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(120,80,200,0.2), rgba(80,50,140,0.15))",
+                    border: "1px solid rgba(140,100,220,0.35)",
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-bold tracking-[0.2em] uppercase"
+                    style={{ color: "rgba(180,150,240,0.8)" }}
+                  >
                     Freeplay — Not Saved to Campaign
                   </span>
                 </div>
@@ -684,12 +841,20 @@ export function VictoryScreen({
 
             {/* Rating label */}
             <div className="flex items-center justify-center mb-1">
-              <div className="px-4 py-1 rounded-full" style={{
-                background: "linear-gradient(135deg, rgba(180,140,60,0.15), rgba(120,80,20,0.1))",
-                border: `1px solid ${GOLD.border25}`,
-              }}>
+              <div
+                className="px-4 py-1 rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(180,140,60,0.15), rgba(120,80,20,0.1))",
+                  border: `1px solid ${GOLD.border25}`,
+                }}
+              >
                 <span className="text-[11px] font-bold text-amber-300 tracking-[0.3em] uppercase">
-                  {displayStars === 3 ? "★ Legendary ★" : displayStars === 2 ? "Heroic" : "Survived"}
+                  {displayStars === 3
+                    ? "★ Legendary ★"
+                    : displayStars === 2
+                      ? "Heroic"
+                      : "Survived"}
                 </span>
               </div>
             </div>
@@ -701,55 +866,83 @@ export function VictoryScreen({
 
             {/* ===== Ornate Divider ===== */}
             <div className="px-6">
-              <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border35} 20%, ${GOLD.bright45} 50%, ${GOLD.border35} 80%, transparent)` }} />
+              <div
+                className="h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${GOLD.border35} 20%, ${GOLD.bright45} 50%, ${GOLD.border35} 80%, transparent)`,
+                }}
+              />
             </div>
 
             {/* ===== Stats Grid ===== */}
             <div className="px-3 sm:px-5 py-2.5 sm:py-3">
               <div className="grid grid-cols-2 gap-2">
                 {/* Time */}
-                <div className="rounded-xl p-2.5 relative" style={{
-                  background: `linear-gradient(135deg, ${VICTORY.blueCardBg}, ${VICTORY.blueCardBgDark})`,
-                  border: `1.5px solid rgba(100,120,180,0.35)`,
-                  boxShadow: "inset 0 0 12px rgba(80,100,160,0.08)",
-                }}>
+                <div
+                  className="rounded-xl p-2.5 relative"
+                  style={{
+                    background: `linear-gradient(135deg, ${VICTORY.blueCardBg}, ${VICTORY.blueCardBgDark})`,
+                    border: `1.5px solid rgba(100,120,180,0.35)`,
+                    boxShadow: "inset 0 0 12px rgba(80,100,160,0.08)",
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-1">
                     <Clock size={11} className="text-blue-400/80" />
-                    <span className="text-[10px] font-bold text-blue-400/70 tracking-[0.2em] uppercase">Time</span>
+                    <span className="text-[10px] font-bold text-blue-400/70 tracking-[0.2em] uppercase">
+                      Time
+                    </span>
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-blue-300" style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}>
+                  <div
+                    className="text-xl sm:text-2xl font-black text-blue-300"
+                    style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}
+                  >
                     {formatDuration(timeSpent)}
                   </div>
                   {isNewBestTime ? (
                     <div className="flex items-center gap-1 mt-1.5">
                       <Sparkles size={10} className="text-emerald-400" />
-                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
+                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">
+                        New Best!
+                      </span>
                     </div>
                   ) : bestTime ? (
-                    <span className="text-[9px] text-blue-400/50 mt-1 block">Best: {formatDuration(bestTime)}</span>
+                    <span className="text-[9px] text-blue-400/50 mt-1 block">
+                      Best: {formatDuration(bestTime)}
+                    </span>
                   ) : null}
                 </div>
 
                 {/* Lives */}
-                <div className="rounded-xl p-2.5 relative" style={{
-                  background: `linear-gradient(135deg, ${VICTORY.redCardBg}, ${VICTORY.redCardBgDark})`,
-                  border: `1.5px solid rgba(180,80,80,0.35)`,
-                  boxShadow: "inset 0 0 12px rgba(160,60,60,0.08)",
-                }}>
+                <div
+                  className="rounded-xl p-2.5 relative"
+                  style={{
+                    background: `linear-gradient(135deg, ${VICTORY.redCardBg}, ${VICTORY.redCardBgDark})`,
+                    border: `1.5px solid rgba(180,80,80,0.35)`,
+                    boxShadow: "inset 0 0 12px rgba(160,60,60,0.08)",
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-1">
                     <Heart size={11} className="text-red-400/80" />
-                    <span className="text-[10px] font-bold text-red-400/70 tracking-[0.2em] uppercase">Lives</span>
+                    <span className="text-[10px] font-bold text-red-400/70 tracking-[0.2em] uppercase">
+                      Lives
+                    </span>
                   </div>
-                  <div className={`text-xl sm:text-2xl font-black ${lives >= 15 ? "text-emerald-400" : lives >= 7 ? "text-yellow-400" : "text-red-400"}`}>
+                  <div
+                    className={`text-xl sm:text-2xl font-black ${lives >= 15 ? "text-emerald-400" : lives >= 7 ? "text-yellow-400" : "text-red-400"}`}
+                  >
                     {lives}/20
                   </div>
                   {isNewBestHearts ? (
                     <div className="flex items-center gap-1 mt-1.5">
                       <Sparkles size={10} className="text-emerald-400" />
-                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
+                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">
+                        New Best!
+                      </span>
                     </div>
                   ) : bestHearts ? (
-                    <span className="text-[9px] text-red-400/50 mt-1 block">Best: {bestHearts}/20</span>
+                    <span className="text-[9px] text-red-400/50 mt-1 block">
+                      Best: {bestHearts}/20
+                    </span>
                   ) : null}
                 </div>
               </div>
@@ -772,7 +965,12 @@ export function VictoryScreen({
 
             {/* ===== Ornate Divider ===== */}
             <div className="px-6">
-              <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border35} 20%, ${GOLD.bright45} 50%, ${GOLD.border35} 80%, transparent)` }} />
+              <div
+                className="h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${GOLD.border35} 20%, ${GOLD.bright45} 50%, ${GOLD.border35} 80%, transparent)`,
+                }}
+              />
             </div>
 
             {/* ===== Continue Button ===== */}
@@ -783,9 +981,10 @@ export function VictoryScreen({
                 style={{
                   background: `linear-gradient(180deg, ${VICTORY.btnLight} 0%, ${VICTORY.btnDark} 100%)`,
                   border: `1.5px solid ${GOLD.bright60}`,
-                  color: "#fff2c8",
-                  textShadow: "0 0 12px rgba(252,211,77,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                   boxShadow: `inset 0 1px 0 ${OVERLAY.white15}, 0 4px 16px ${OVERLAY.black40}, 0 0 24px rgba(180,140,60,0.15)`,
+                  color: "#fff2c8",
+                  textShadow:
+                    "0 0 12px rgba(252,211,77,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                 }}
               >
                 <span className="flex items-center gap-2 sm:gap-2.5">

@@ -1,13 +1,21 @@
 // Princeton Tower Defense - Decorations Rendering Module
 // Renders map decorations like trees, rocks, buildings, etc.
 
+import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import type { Position, MapDecoration } from "../../types";
 import { worldToScreen } from "../../utils";
-import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
-import { lightenColor, darkenColor, drawIsometricPrism, drawGroundShadow } from "../helpers";
+import {
+  lightenColor,
+  darkenColor,
+  drawIsometricPrism,
+  drawGroundShadow,
+} from "../helpers";
+import {
+  drawIsoGothicWindow,
+  drawIsoFlushDoor,
+  drawIsoFlushSlit,
+} from "../isoFlush";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawIsoGothicWindow, drawIsoFlushDoor, drawIsoFlushSlit } from "../isoFlush";
-
 // Import landmark renderers
 import {
   drawPyramid,
@@ -44,7 +52,7 @@ export function renderDecoration(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     decoration.pos,
@@ -52,7 +60,7 @@ export function renderDecoration(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
@@ -68,10 +76,11 @@ export function renderDecoration(
     typeof decoration.variant === "number" ? decoration.variant : 0;
 
   switch (decorType) {
-    case "tree":
+    case "tree": {
       drawTree(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
-    case "palm":
+    }
+    case "palm": {
       drawPalmTree(
         ctx,
         screenPos.x,
@@ -80,25 +89,31 @@ export function renderDecoration(
         Math.sin(time * 1.5 + screenPos.x * 0.01) * 2 * scale,
         time,
         variantNum,
-        screenPos.x,
+        screenPos.x
       );
       break;
-    case "obelisk":
+    }
+    case "obelisk": {
       drawObelisk(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
       break;
-    case "carnegie_lake":
+    }
+    case "carnegie_lake": {
       break;
-    case "rock":
+    }
+    case "rock": {
       drawRock(ctx, screenPos.x, screenPos.y, scale, variantStr);
       break;
-    case "bush":
+    }
+    case "bush": {
       drawBush(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
+    }
     case "flower":
-    case "flowers":
+    case "flowers": {
       drawFlower(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
-    case "building":
+    }
+    case "building": {
       drawBuilding(
         ctx,
         screenPos.x,
@@ -106,96 +121,125 @@ export function renderDecoration(
         scale,
         variantStr,
         variantNum,
-        time,
+        time
       );
       break;
-    case "statue":
+    }
+    case "statue": {
       drawStatue(ctx, screenPos.x, screenPos.y, scale, variantStr);
       break;
+    }
     case "lamp":
-    case "lamppost":
+    case "lamppost": {
       drawLamp(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "fence":
+    }
+    case "fence": {
       drawFence(ctx, screenPos.x, screenPos.y, scale, variantStr);
       break;
+    }
     case "water":
-    case "fountain":
+    case "fountain": {
       drawWaterFeature(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
-    case "ruins":
+    }
+    case "ruins": {
       drawRuins(ctx, screenPos.x, screenPos.y, scale, variantStr);
       break;
-    case "crater":
+    }
+    case "crater": {
       drawCrater(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
       break;
-    case "debris":
+    }
+    case "debris": {
       drawDebris(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
-    case "skeleton":
+    }
+    case "skeleton": {
       drawSkeleton(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
-    case "bones":
+    }
+    case "bones": {
       drawBones(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
-    case "sword":
+    }
+    case "sword": {
       drawSword(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
-    case "arrow":
+    }
+    case "arrow": {
       drawArrow(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
+    }
     // Major landmarks
-    case "pyramid":
+    case "pyramid": {
       drawPyramid(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
       break;
-    case "sphinx":
+    }
+    case "sphinx": {
       drawSphinx(ctx, screenPos.x, screenPos.y, scale, false, time);
       break;
-    case "giant_sphinx":
+    }
+    case "giant_sphinx": {
       drawSphinx(ctx, screenPos.x, screenPos.y, scale, true, time);
       break;
-    case "nassau_hall":
+    }
+    case "nassau_hall": {
       drawNassauHall(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "glacier":
+    }
+    case "glacier": {
       drawGlacier(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "fortress":
+    }
+    case "fortress": {
       drawFortress(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "ice_throne":
+    }
+    case "ice_throne": {
       drawIceThrone(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "obsidian_castle":
+    }
+    case "obsidian_castle": {
       drawObsidianCastle(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "witch_cottage":
+    }
+    case "witch_cottage": {
       drawWitchCottage(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "cannon_crest":
+    }
+    case "cannon_crest": {
       drawCannonCrest(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "ivy_crossroads":
+    }
+    case "ivy_crossroads": {
       drawIvyCrossroads(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "blight_basin":
+    }
+    case "blight_basin": {
       drawBlightBasin(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "triad_keep":
+    }
+    case "triad_keep": {
       drawTriadKeep(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "sunscorch_labyrinth":
+    }
+    case "sunscorch_labyrinth": {
       drawSunscorchLabyrinth(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "frist_outpost":
+    }
+    case "frist_outpost": {
       drawFrontierOutpost(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "ashen_spiral":
+    }
+    case "ashen_spiral": {
       drawAshenSpiral(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    default:
+    }
+    default: {
       // Generic decoration
       drawGenericDecoration(ctx, screenPos.x, screenPos.y, scale);
+    }
   }
 
   ctx.restore();
@@ -211,7 +255,7 @@ function drawTree(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0,
+  time: number = 0
 ): void {
   const sway = Math.sin(time * 1.5 + x * 0.01) * 2 * scale;
 
@@ -278,7 +322,7 @@ function sampleBezier(
   p1: number,
   p2: number,
   p3: number,
-  t: number,
+  t: number
 ): number {
   const mt = 1 - t;
   return (
@@ -292,50 +336,50 @@ function sampleBezier(
 // Pre-baked frond color sets - 4 back + 6 front entries per variant
 const FROND_COLORS_V0 = {
   back: [
-    { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
-    { rib: "#226422", lit: "#306e30", dark: "#104e10" },
-    { rib: "#1a5218", lit: "#266226", dark: "#0a3e0a" },
-    { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
+    { dark: "#0c460c", lit: "#2a6a2a", rib: "#1e5a1e" },
+    { dark: "#104e10", lit: "#306e30", rib: "#226422" },
+    { dark: "#0a3e0a", lit: "#266226", rib: "#1a5218" },
+    { dark: "#0c460c", lit: "#2a6a2a", rib: "#1e5a1e" },
   ],
   front: [
-    { rib: "#2e972e", lit: "#38a138", dark: "#228b22" },
-    { rib: "#3a9763", lit: "#44a16d", dark: "#2e8b57" },
-    { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
-    { rib: "#3aa753", lit: "#44b15d", dark: "#2e9b47" },
-    { rib: "#2e972e", lit: "#38a138", dark: "#228b22" },
-    { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
+    { dark: "#228b22", lit: "#38a138", rib: "#2e972e" },
+    { dark: "#2e8b57", lit: "#44a16d", rib: "#3a9763" },
+    { dark: "#32a852", lit: "#48be68", rib: "#3eb45e" },
+    { dark: "#2e9b47", lit: "#44b15d", rib: "#3aa753" },
+    { dark: "#228b22", lit: "#38a138", rib: "#2e972e" },
+    { dark: "#32a852", lit: "#48be68", rib: "#3eb45e" },
   ],
 };
 const FROND_COLORS_V1 = {
   back: [
-    { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
-    { rib: "#206434", lit: "#2a6e36", dark: "#0e4e1e" },
-    { rib: "#1e5c30", lit: "#28663a", dark: "#0c4c1c" },
-    { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
+    { dark: "#105626", lit: "#2c763e", rib: "#226c3c" },
+    { dark: "#0e4e1e", lit: "#2a6e36", rib: "#206434" },
+    { dark: "#0c4c1c", lit: "#28663a", rib: "#1e5c30" },
+    { dark: "#105626", lit: "#2c763e", rib: "#226c3c" },
   ],
   front: [
-    { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" },
-    { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
-    { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
-    { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
-    { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" },
-    { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
+    { dark: "#2a9040", lit: "#40a656", rib: "#369c4c" },
+    { dark: "#30985a", lit: "#46ae70", rib: "#3ca466" },
+    { dark: "#36a858", lit: "#4cbe6e", rib: "#42b464" },
+    { dark: "#30985a", lit: "#46ae70", rib: "#3ca466" },
+    { dark: "#2a9040", lit: "#40a656", rib: "#369c4c" },
+    { dark: "#36a858", lit: "#4cbe6e", rib: "#42b464" },
   ],
 };
 const FROND_COLORS_V2 = {
   back: [
-    { rib: "#16562c", lit: "#20602e", dark: "#004016" },
-    { rib: "#1a5e34", lit: "#246836", dark: "#04481e" },
-    { rib: "#145028", lit: "#1e5a2c", dark: "#003a12" },
-    { rib: "#16562c", lit: "#20602e", dark: "#004016" },
+    { dark: "#004016", lit: "#20602e", rib: "#16562c" },
+    { dark: "#04481e", lit: "#246836", rib: "#1a5e34" },
+    { dark: "#003a12", lit: "#1e5a2c", rib: "#145028" },
+    { dark: "#004016", lit: "#20602e", rib: "#16562c" },
   ],
   front: [
-    { rib: "#268434", lit: "#308e3e", dark: "#1a7828" },
-    { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
-    { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
-    { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
-    { rib: "#268434", lit: "#308e3e", dark: "#1a7828" },
-    { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
+    { dark: "#1a7828", lit: "#308e3e", rib: "#268434" },
+    { dark: "#228b40", lit: "#38a156", rib: "#2e974c" },
+    { dark: "#28a04a", lit: "#3eb660", rib: "#34ac56" },
+    { dark: "#228b40", lit: "#38a156", rib: "#2e974c" },
+    { dark: "#1a7828", lit: "#308e3e", rib: "#268434" },
+    { dark: "#28a04a", lit: "#3eb660", rib: "#34ac56" },
   ],
 };
 const FROND_PALETTES = [FROND_COLORS_V0, FROND_COLORS_V1, FROND_COLORS_V2];
@@ -345,12 +389,12 @@ const BACK_FROND_LAYOUT = [
   { angle: -2.5, len: 36, phase: 0 },
   { angle: -1.2, len: 33, phase: 1.5 },
   { angle: 0.4, len: 31, phase: 3.2 },
-  { angle: 1.9, len: 35, phase: 5.0 },
+  { angle: 1.9, len: 35, phase: 5 },
 ];
 const FRONT_FROND_LAYOUT = [
   { angle: -2.3, len: 42, phase: 0.5 },
   { angle: -1.3, len: 40, phase: 1.8 },
-  { angle: -0.2, len: 44, phase: 3.0 },
+  { angle: -0.2, len: 44, phase: 3 },
   { angle: 0.7, len: 42, phase: 4.2 },
   { angle: 1.6, len: 39, phase: 5.5 },
   { angle: 2.5, len: 36, phase: 0.8 },
@@ -364,7 +408,7 @@ function drawPalmTree(
   sway: number,
   time: number,
   variant: number = 0,
-  seed: number = 0,
+  seed: number = 0
 ): void {
   const s = scale;
   const pal = FROND_PALETTES[variant % 3];
@@ -447,7 +491,7 @@ function drawPalmTree(
       f.len * s,
       pal.back[i],
       s,
-      sw,
+      sw
     );
   }
   // Front fronds (6, static)
@@ -462,7 +506,7 @@ function drawPalmTree(
       f.len * s,
       pal.front[i],
       s,
-      sw,
+      sw
     );
   }
 
@@ -509,7 +553,7 @@ function drawPalmTree(
           1.3 * s,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -532,7 +576,7 @@ function drawPalmFrond(
   length: number,
   colors: { rib: string; lit: string; dark: string },
   scale: number,
-  sway: number,
+  sway: number
 ): void {
   const s = scale;
   const cosA = Math.cos(angle);
@@ -592,7 +636,7 @@ function drawObelisk(
   y: number,
   scale: number,
   variant: number = 0,
-  time: number = 0,
+  time: number = 0
 ): void {
   const s = scale;
   const height = 55 * s;
@@ -600,52 +644,52 @@ function drawObelisk(
   // Pre-baked palettes with all derived colors computed once
   const palettes = [
     {
-      left: "#8a7a58",
-      right: "#a89870",
-      front: "#b0a068",
-      top: "#c8b888",
       cap: "#d4a840",
       capDk: "#be9428",
       capFr: "#ca9e3b",
       capHi: "#f0d060",
+      front: "#b0a068",
       glyph: "#5a4a38",
-      pedTop: "#b8a878",
-      pedLeft: "#807048",
-      pedRight: "#988860",
+      left: "#8a7a58",
       ped2Left: "#857553",
       ped2Right: "#a39365",
+      pedLeft: "#807048",
+      pedRight: "#988860",
+      pedTop: "#b8a878",
+      right: "#a89870",
+      top: "#c8b888",
     },
     {
-      left: "#58544a",
-      right: "#706c5e",
-      front: "#666258",
-      top: "#8a8678",
       cap: "#c4c0b0",
       capDk: "#b2aea0",
       capFr: "#bdb9ab",
       capHi: "#e4e0d4",
+      front: "#666258",
       glyph: "#3a3830",
-      pedTop: "#7a766a",
-      pedLeft: "#4a4840",
-      pedRight: "#605e54",
+      left: "#58544a",
       ped2Left: "#504e46",
       ped2Right: "#666458",
+      pedLeft: "#4a4840",
+      pedRight: "#605e54",
+      pedTop: "#7a766a",
+      right: "#706c5e",
+      top: "#8a8678",
     },
     {
-      left: "#28241e",
-      right: "#38342a",
-      front: "#302c24",
-      top: "#48443a",
       cap: "#8868b8",
       capDk: "#7a56a6",
       capFr: "#8260b0",
       capHi: "#a888d8",
+      front: "#302c24",
       glyph: "#4a3858",
-      pedTop: "#383428",
-      pedLeft: "#1a1810",
-      pedRight: "#2a2820",
+      left: "#28241e",
       ped2Left: "#201e16",
       ped2Right: "#302e24",
+      pedLeft: "#1a1810",
+      pedRight: "#2a2820",
+      pedTop: "#383428",
+      right: "#38342a",
+      top: "#48443a",
     },
   ];
   const p = palettes[variant % palettes.length];
@@ -671,7 +715,7 @@ function drawObelisk(
     pedH,
     p.pedTop,
     p.pedLeft,
-    p.pedRight,
+    p.pedRight
   );
 
   const shaftBase = y - pedH;
@@ -800,7 +844,7 @@ function drawRock(
   x: number,
   y: number,
   scale: number,
-  variant?: string,
+  variant?: string
 ): void {
   const rockColor =
     variant === "dark"
@@ -877,7 +921,7 @@ function drawBush(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0,
+  time: number = 0
 ): void {
   const bushColor =
     variant === "berry"
@@ -933,7 +977,7 @@ function drawFlower(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0,
+  time: number = 0
 ): void {
   const sway = Math.sin(time * 3 + x * 0.05) * 2 * scale;
   const petalColor =
@@ -954,7 +998,7 @@ function drawFlower(
     x + sway * 0.5,
     y - 10 * scale,
     x + sway,
-    y - 20 * scale,
+    y - 20 * scale
   );
   ctx.stroke();
 
@@ -968,7 +1012,7 @@ function drawFlower(
     2 * scale,
     0.5,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -999,19 +1043,22 @@ function drawBldgStoneWall(
   corners: [number, number][],
   baseColor: string,
   rows: number,
-  s: number,
+  s: number
 ): void {
   ctx.fillStyle = baseColor;
   ctx.beginPath();
   ctx.moveTo(corners[0][0], corners[0][1]);
-  for (let i = 1; i < corners.length; i++)
+  for (let i = 1; i < corners.length; i++) {
     ctx.lineTo(corners[i][0], corners[i][1]);
+  }
   ctx.closePath();
   ctx.fill();
 
   const [bl, br, tr, tl] = corners;
   const h = Math.abs(bl[1] - tl[1]) + Math.abs(br[1] - tr[1]);
-  if (h < 4) return;
+  if (h < 4) {
+    return;
+  }
 
   ctx.strokeStyle = "rgba(30,20,10,0.22)";
   ctx.lineWidth = 0.6 * s;
@@ -1037,7 +1084,7 @@ function drawBldgStoneWall(
       ctx.moveTo(cx, cy);
       ctx.lineTo(
         cx + ((tl[0] - bl[0]) / rows) * 0.8,
-        ny - (bl[1] + (tl[1] - bl[1]) * ((r + 1.5) / rows) - cy) * 0.05,
+        ny - (bl[1] + (tl[1] - bl[1]) * ((r + 1.5) / rows) - cy) * 0.05
       );
       ctx.stroke();
     }
@@ -1053,7 +1100,7 @@ function drawBldgChimney(
   chimneyH: number,
   s: number,
   time: number,
-  seed: number,
+  seed: number
 ): void {
   const cW = 3 * s;
   const cIW = cW * ISO_COS;
@@ -1135,15 +1182,39 @@ function drawBldgChimney(
   const rise = Math.sin(time * 1.5 + seed * 0.7) * 1 * s;
   ctx.fillStyle = "rgba(170,160,150,0.2)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift * 0.5, topY - 3 * s + rise, 3 * s, 2 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift * 0.5,
+    topY - 3 * s + rise,
+    3 * s,
+    2 * s,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(150,145,140,0.14)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift, topY - 8 * s + rise, 4.5 * s, 2.5 * s, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift,
+    topY - 8 * s + rise,
+    4.5 * s,
+    2.5 * s,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(140,135,130,0.08)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift * 1.6, topY - 14 * s + rise * 1.5, 6 * s, 3 * s, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift * 1.6,
+    topY - 14 * s + rise * 1.5,
+    6 * s,
+    3 * s,
+    0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
@@ -1158,17 +1229,17 @@ function drawBldgRoof(
   s: number,
   darkCol: string,
   midCol: string,
-  litCol: string,
+  litCol: string
 ): void {
   const eIW = iW + overhang * ISO_COS;
   const eID = iD + overhang * ISO_SIN;
   const drop = 1 * s;
 
-  const front = { x: x, y: baseY + eID + drop };
+  const front = { x, y: baseY + eID + drop };
   const right = { x: x + eIW, y: baseY + drop };
-  const back = { x: x, y: baseY - eID + drop };
+  const back = { x, y: baseY - eID + drop };
   const left = { x: x - eIW, y: baseY + drop };
-  const peak = { x: x, y: peakY };
+  const peak = { x, y: peakY };
 
   // Back-right face (partially visible, draw first)
   ctx.fillStyle = midCol;
@@ -1257,7 +1328,7 @@ function drawBuilding(
   scale: number,
   variant?: string,
   variantNum: number = 0,
-  time: number = 0,
+  time: number = 0
 ): void {
   const s = scale;
   const v = variant === "stone" ? 1 : variant === "brick" ? 2 : variantNum % 4;
@@ -1269,7 +1340,7 @@ function drawBuilding(
     0,
     x + 6 * s,
     y + 8 * s,
-    42 * s,
+    42 * s
   );
   shadGrad.addColorStop(0, "rgba(0,0,0,0.38)");
   shadGrad.addColorStop(0.5, "rgba(0,0,0,0.15)");
@@ -1311,7 +1382,7 @@ function drawBuilding(
       ],
       "#5A4A3A",
       7,
-      s,
+      s
     );
 
     // Right wall with gradient + stone texture
@@ -1336,19 +1407,47 @@ function drawBuilding(
       ],
       "rgba(0,0,0,0)",
       7,
-      s,
+      s
     );
 
     // Door — isometric flush with right wall face
-    drawIsoFlushDoor(ctx, x + iW * 0.35, y + iD * 0.35 - 7 * s, 7, 14, "right", s);
+    drawIsoFlushDoor(
+      ctx,
+      x + iW * 0.35,
+      y + iD * 0.35 - 7 * s,
+      7,
+      14,
+      "right",
+      s
+    );
 
     // Right wall window — isometric gothic flush with wall
-    drawIsoGothicWindow(ctx, x + iW * 0.72, y - wH * 0.4 + iD * 0.15, 5, 8, "right", s,
-      "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+    drawIsoGothicWindow(
+      ctx,
+      x + iW * 0.72,
+      y - wH * 0.4 + iD * 0.15,
+      5,
+      8,
+      "right",
+      s,
+      "rgba(255, 200, 100",
+      0.35,
+      { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+    );
 
     // Left wall window — isometric gothic flush with wall
-    drawIsoGothicWindow(ctx, x - iW * 0.5, y - wH * 0.45, 4.5, 7.5, "left", s,
-      "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+    drawIsoGothicWindow(
+      ctx,
+      x - iW * 0.5,
+      y - wH * 0.45,
+      4.5,
+      7.5,
+      "left",
+      s,
+      "rgba(255, 200, 100",
+      0.3,
+      { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+    );
 
     // Window glow cast on ground
     const glowR = ctx.createRadialGradient(
@@ -1357,7 +1456,7 @@ function drawBuilding(
       0,
       x + iW * 0.72,
       y + iD * 0.15,
-      12 * s,
+      12 * s
     );
     glowR.addColorStop(0, "rgba(255,200,100,0.08)");
     glowR.addColorStop(1, "rgba(255,200,100,0)");
@@ -1372,7 +1471,7 @@ function drawBuilding(
       x + iW * 0.72 - 4 * s,
       y - wH * 0.4 + iD * 0.15 + 4.5 * s,
       8 * s,
-      2.5 * s,
+      2.5 * s
     );
     ctx.fillStyle = "#4A8A3A";
     for (let f = 0; f < 4; f++) {
@@ -1389,7 +1488,7 @@ function drawBuilding(
       y - wH * 0.4 + iD * 0.15 + 3.5 * s,
       1 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#E8D050";
@@ -1399,7 +1498,7 @@ function drawBuilding(
       y - wH * 0.4 + iD * 0.15 + 3.2 * s,
       1 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1415,7 +1514,7 @@ function drawBuilding(
       s,
       "#3A2A1A",
       "#5A4030",
-      "#6A5040",
+      "#6A5040"
     );
 
     // Chimney
@@ -1426,7 +1525,7 @@ function drawBuilding(
       rH * 0.6,
       s,
       time,
-      x,
+      x
     );
   } else if (v === 1) {
     // === STONE WATCHTOWER — tall with battlements, conical roof, flag ===
@@ -1460,7 +1559,7 @@ function drawBuilding(
       ],
       "#504840",
       10,
-      s,
+      s
     );
 
     // Right wall with gradient + blocks
@@ -1485,7 +1584,7 @@ function drawBuilding(
       ],
       "rgba(0,0,0,0)",
       10,
-      s,
+      s
     );
 
     // Stone band dividers at 1/3 and 2/3 height
@@ -1509,20 +1608,38 @@ function drawBuilding(
     }
 
     // Door — isometric flush with right wall face
-    drawIsoFlushDoor(ctx, x + tiW * 0.4, y + tiD * 0.25 - 5.5 * s, 5, 11, "right", s);
+    drawIsoFlushDoor(
+      ctx,
+      x + tiW * 0.4,
+      y + tiD * 0.25 - 5.5 * s,
+      5,
+      11,
+      "right",
+      s
+    );
 
     // Arrow slits on right wall — isometric flush
     for (let w = 0; w < 3; w++) {
       const wy = y - tH * (0.2 + w * 0.25);
       const wx = x + tiW * 0.55 - w * tiD * 0.12;
       drawIsoFlushSlit(ctx, wx, wy, 1.4, 7, "right", s, {
-        glowColor: "rgba(200,150,70", glowAlpha: 0.35,
+        glowAlpha: 0.35,
+        glowColor: "rgba(200,150,70",
       });
     }
 
     // Left wall window — isometric gothic flush with wall
-    drawIsoGothicWindow(ctx, x - tiW * 0.5, y - tH * 0.55, 4.5, 8, "left", s,
-      "rgba(255, 200, 100", 0.35);
+    drawIsoGothicWindow(
+      ctx,
+      x - tiW * 0.5,
+      y - tH * 0.55,
+      4.5,
+      8,
+      "left",
+      s,
+      "rgba(255, 200, 100",
+      0.35
+    );
 
     // Battlements top face (proper iso diamond)
     const batBase = y - tH;
@@ -1546,7 +1663,17 @@ function drawBuilding(
       const t = (m + 0.25) / 4;
       const mx = x - batIW + batIW * t;
       const my = batBase - batH + batID * t;
-      drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, "#7A6A58", "#5A4A3C", "#6A5A48");
+      drawIsometricPrism(
+        ctx,
+        mx,
+        my,
+        merlonW,
+        merlonW,
+        merlonH,
+        "#7A6A58",
+        "#5A4A3C",
+        "#6A5A48"
+      );
     }
 
     // Merlons (right edge - front to right iso line)
@@ -1554,7 +1681,17 @@ function drawBuilding(
       const t = (m + 0.3) / 3;
       const mx = x + batIW * t;
       const my = batBase - batH + batID * (1 - t);
-      drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, "#6A5A48", "#5A4A3C", "#5A4A3C");
+      drawIsometricPrism(
+        ctx,
+        mx,
+        my,
+        merlonW,
+        merlonW,
+        merlonH,
+        "#6A5A48",
+        "#5A4A3C",
+        "#5A4A3C"
+      );
     }
 
     // Conical roof (proper iso diamond base)
@@ -1565,9 +1702,9 @@ function drawBuilding(
     const trID = tiD + trOv * ISO_SIN;
     const trDrop = 2 * s;
 
-    const trFront = { x: x, y: roofBot + trID + trDrop };
+    const trFront = { x, y: roofBot + trID + trDrop };
     const trRight = { x: x + trIW, y: roofBot + trDrop };
-    const trBack = { x: x, y: roofBot - trID + trDrop };
+    const trBack = { x, y: roofBot - trID + trDrop };
     const trLeft = { x: x - trIW, y: roofBot + trDrop };
 
     // Back-right face (draw first - behind)
@@ -1645,14 +1782,14 @@ function drawBuilding(
       x + 4 * s + flagWave,
       pk - 8 * s,
       x + 7 * s,
-      pk - 7 * s + flagWave * 0.5,
+      pk - 7 * s + flagWave * 0.5
     );
     ctx.lineTo(x + 7 * s, pk - 4 * s + flagWave * 0.5);
     ctx.quadraticCurveTo(
       x + 4 * s + flagWave * 0.5,
       pk - 5 * s,
       x + 1 * s,
-      pk - 7 * s,
+      pk - 7 * s
     );
     ctx.closePath();
     ctx.fill();
@@ -1669,7 +1806,7 @@ function drawBuilding(
       0,
       x - tiW * 0.5,
       y - tH * 0.55,
-      8 * s,
+      8 * s
     );
     orbGlow.addColorStop(0, `rgba(255,200,100,${orbPulse * 0.15})`);
     orbGlow.addColorStop(1, "rgba(255,200,100,0)");
@@ -1710,7 +1847,7 @@ function drawBuilding(
       ],
       "#5A4A3A",
       5,
-      s,
+      s
     );
 
     // Lower right wall — stone with gradient
@@ -1735,7 +1872,7 @@ function drawBuilding(
       ],
       "rgba(0,0,0,0)",
       5,
-      s,
+      s
     );
 
     // Overhang ledge between stone/plaster (proper iso extensions)
@@ -1820,19 +1957,47 @@ function drawBuilding(
     ctx.stroke();
 
     // Large door — isometric flush with right wall face
-    drawIsoFlushDoor(ctx, x + iW * 0.2, y + iD * 0.7 - 7.5 * s, 8, 15, "right", s);
+    drawIsoFlushDoor(
+      ctx,
+      x + iW * 0.2,
+      y + iD * 0.7 - 7.5 * s,
+      8,
+      15,
+      "right",
+      s
+    );
 
     // Right wall windows (upper) — isometric gothic flush with wall
     for (let wi = 0; wi < 3; wi++) {
       const wwx = x + iW * (0.15 + wi * 0.32);
       const wwy = y + iD * (0.65 - wi * 0.32) - wH * 0.58;
-      drawIsoGothicWindow(ctx, wwx, wwy, 4.5, 7, "right", s,
-        "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+      drawIsoGothicWindow(
+        ctx,
+        wwx,
+        wwy,
+        4.5,
+        7,
+        "right",
+        s,
+        "rgba(255, 200, 100",
+        0.3,
+        { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+      );
     }
 
     // Left wall window — isometric gothic flush with wall
-    drawIsoGothicWindow(ctx, x - iW * 0.55, y - wH * 0.6, 5, 8, "left", s,
-      "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+    drawIsoGothicWindow(
+      ctx,
+      x - iW * 0.55,
+      y - wH * 0.6,
+      5,
+      8,
+      "left",
+      s,
+      "rgba(255, 200, 100",
+      0.35,
+      { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+    );
 
     // Steep roof
     drawBldgRoof(
@@ -1846,7 +2011,7 @@ function drawBuilding(
       s,
       "#3A2A1A",
       "#5A4030",
-      "#6A5040",
+      "#6A5040"
     );
 
     // Dormer window
@@ -1875,7 +2040,7 @@ function drawBuilding(
       0,
       dwX,
       dwY + 4.5 * s,
-      3.5 * s,
+      3.5 * s
     );
     dwGlow.addColorStop(0, "rgba(255,200,100,0.45)");
     dwGlow.addColorStop(1, "rgba(220,160,60,0.1)");
@@ -1899,7 +2064,7 @@ function drawBuilding(
       rH * 0.5,
       s,
       time,
-      x,
+      x
     );
   } else {
     // === ROUND STONE HUT — cylindrical walls, thatched conical roof ===
@@ -1947,7 +2112,15 @@ function drawBuilding(
     // Top rim
     ctx.fillStyle = "#6A5A48";
     ctx.beginPath();
-    ctx.ellipse(x, y - hH, hR + 1.5 * s, (hR + 1.5 * s) * hutRatio, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y - hH,
+      hR + 1.5 * s,
+      (hR + 1.5 * s) * hutRatio,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.fillStyle = "#7A6A58";
     ctx.beginPath();
@@ -1961,10 +2134,30 @@ function drawBuilding(
     drawIsoFlushDoor(ctx, dX, dBaseY - 6 * s, 6, 12, "right", s);
 
     // Windows — isometric gothic flush with wall
-    drawIsoGothicWindow(ctx, x - hR * 0.62, y - hH * 0.45, 4.5, 7, "left", s,
-      "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
-    drawIsoGothicWindow(ctx, x + hR * 0.12, y - hH * 0.5 + hR * 0.1, 3.5, 6, "right", s,
-      "rgba(255, 200, 100", 0.25, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+    drawIsoGothicWindow(
+      ctx,
+      x - hR * 0.62,
+      y - hH * 0.45,
+      4.5,
+      7,
+      "left",
+      s,
+      "rgba(255, 200, 100",
+      0.3,
+      { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+    );
+    drawIsoGothicWindow(
+      ctx,
+      x + hR * 0.12,
+      y - hH * 0.5 + hR * 0.1,
+      3.5,
+      6,
+      "right",
+      s,
+      "rgba(255, 200, 100",
+      0.25,
+      { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
+    );
 
     // Thatched conical roof (proper iso diamond base)
     const roofBase = y - hH;
@@ -1974,9 +2167,9 @@ function drawBuilding(
     const hutRID = (hR + hutOv) * hutRatio;
     const hutDrop = 3 * s;
 
-    const hutFront = { x: x, y: roofBase + hutRID + hutDrop };
+    const hutFront = { x, y: roofBase + hutRID + hutDrop };
     const hutRight = { x: x + hutRIW, y: roofBase + hutDrop };
-    const hutBack = { x: x, y: roofBase - hutRID + hutDrop };
+    const hutBack = { x, y: roofBase - hutRID + hutDrop };
     const hutLeft = { x: x - hutRIW, y: roofBase + hutDrop };
 
     // Back-right face (behind)
@@ -2065,7 +2258,7 @@ function drawBuilding(
       0,
       Math.PI,
       0,
-      true,
+      true
     );
     ctx.closePath();
     ctx.fill();
@@ -2085,7 +2278,7 @@ function drawBuilding(
       1.8 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "rgba(150,145,140,0.12)";
@@ -2101,7 +2294,7 @@ function drawBuilding(
       3 * s,
       0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2116,7 +2309,7 @@ function drawStatue(
   x: number,
   y: number,
   scale: number,
-  variant?: string,
+  variant?: string
 ): void {
   const stoneColor =
     variant === "bronze"
@@ -2158,7 +2351,7 @@ function drawLamp(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   const glowIntensity = 0.5 + Math.sin(time * 3) * 0.2;
 
@@ -2204,7 +2397,7 @@ function drawFence(
   x: number,
   y: number,
   scale: number,
-  variant?: string,
+  variant?: string
 ): void {
   void variant;
   const s = scale;
@@ -2276,7 +2469,7 @@ function drawWaterFeature(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0,
+  time: number = 0
 ): void {
   if (variant === "fountain") {
     // Fountain base
@@ -2325,7 +2518,7 @@ function drawWaterFeature(
       5 * scale * rippleProgress,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2340,7 +2533,7 @@ function drawRuins(
   x: number,
   y: number,
   scale: number,
-  variant?: string,
+  variant?: string
 ): void {
   const s = scale;
   const seed = Math.floor(Math.abs(x * 73.1 + y * 137.3));
@@ -2365,11 +2558,11 @@ function drawRuins(
 
   // Broken isometric columns — positioned on isometric grid, sorted back-to-front
   const colDefs = [
-    { isoA: -1, isoB: -0.5, h: 18, r: 3 },
-    { isoA: 0.3, isoB: -0.3, h: 22, r: 3.5 },
-    { isoA: 0.8, isoB: 0.5, h: 14, r: 2.5 },
+    { h: 18, isoA: -1, isoB: -0.5, r: 3 },
+    { h: 22, isoA: 0.3, isoB: -0.3, r: 3.5 },
+    { h: 14, isoA: 0.8, isoB: 0.5, r: 2.5 },
   ];
-  colDefs.sort((a, b) => (a.isoA + a.isoB) - (b.isoA + b.isoB));
+  colDefs.sort((a, b) => a.isoA + a.isoB - (b.isoA + b.isoB));
 
   const sp = 10;
   for (const col of colDefs) {
@@ -2377,7 +2570,8 @@ function drawRuins(
     const cy = y + (col.isoA + col.isoB) * sp * ISO_SIN * s;
     const r = col.r * s;
     const ry = r * ISO_Y_RATIO;
-    const h = (col.h + ((seed + Math.floor(Math.abs(col.isoA) * 10)) % 7) - 3) * s;
+    const h =
+      (col.h + ((seed + Math.floor(Math.abs(col.isoA) * 10)) % 7) - 3) * s;
     const topY = cy - h;
 
     // Isometric cylinder body (front half visible)
@@ -2430,7 +2624,7 @@ function drawCrater(
   y: number,
   scale: number,
   variant: number = 0,
-  time: number = 0,
+  time: number = 0
 ): void {
   // Variant determines crater style:
   // 0: Standard crater - round impact hole
@@ -2439,10 +2633,10 @@ function drawCrater(
   // 3: Shallow depression - subtle ground damage
 
   const craterStyles = [
-    { widthMult: 1.0, depthMult: 1.0, rimHeight: 0.3, name: "standard" },
-    { widthMult: 1.4, depthMult: 0.7, rimHeight: 0.2, name: "elongated" },
-    { widthMult: 0.85, depthMult: 1.3, rimHeight: 0.4, name: "deep" },
-    { widthMult: 1.2, depthMult: 0.5, rimHeight: 0.15, name: "shallow" },
+    { depthMult: 1, name: "standard", rimHeight: 0.3, widthMult: 1 },
+    { depthMult: 0.7, name: "elongated", rimHeight: 0.2, widthMult: 1.4 },
+    { depthMult: 1.3, name: "deep", rimHeight: 0.4, widthMult: 0.85 },
+    { depthMult: 0.5, name: "shallow", rimHeight: 0.15, widthMult: 1.2 },
   ];
 
   const style = craterStyles[variant % craterStyles.length];
@@ -2468,7 +2662,7 @@ function drawCrater(
     baseWidth * 0.6,
     0,
     0,
-    baseWidth * 1.2,
+    baseWidth * 1.2
   );
   rimGradient.addColorStop(0, "rgba(90, 75, 55, 0)");
   rimGradient.addColorStop(0.5, "rgba(100, 85, 65, 0.4)");
@@ -2492,7 +2686,7 @@ function drawCrater(
     baseDepth,
     0,
     Math.PI * 1.1,
-    Math.PI * 1.9,
+    Math.PI * 1.9
   );
   ctx.stroke();
 
@@ -2522,7 +2716,7 @@ function drawCrater(
     0,
     0,
     craterDepth * 0.25,
-    innerWidth,
+    innerWidth
   );
   innerGradient.addColorStop(0, "#1a1510");
   innerGradient.addColorStop(0.6, "#2a2015");
@@ -2544,7 +2738,7 @@ function drawCrater(
     baseDepth * 0.4,
     0,
     Math.PI,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2558,7 +2752,7 @@ function drawCrater(
     innerDepth * 0.6,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2583,7 +2777,7 @@ function drawCrater(
       debrisSize * 0.6,
       angle * 0.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2600,7 +2794,7 @@ function drawCrater(
       baseDepth * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2617,7 +2811,7 @@ function drawDebris(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0,
+  variant: number = 0
 ): void {
   const seed = x * 73 + y * 137;
 
@@ -2687,7 +2881,7 @@ function drawSkeleton(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0,
+  variant: number = 0
 ): void {
   const boneColor = "#e8e0d0";
   const boneShade = "#c8c0b0";
@@ -2744,7 +2938,7 @@ function drawSkeleton(
         1.5 * scale,
         0,
         Math.PI * 0.2,
-        Math.PI * 0.8,
+        Math.PI * 0.8
       );
       ctx.stroke();
     }
@@ -2766,7 +2960,7 @@ function drawSkeleton(
       0.8 * scale,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.ellipse(
       1.5 * scale,
@@ -2775,7 +2969,7 @@ function drawSkeleton(
       0.8 * scale,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2824,7 +3018,7 @@ function drawBones(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0,
+  variant: number = 0
 ): void {
   const boneColor = "#e8e0d0";
   const boneShade = "#d0c8b8";
@@ -2875,7 +3069,7 @@ function drawSword(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0,
+  variant: number = 0
 ): void {
   const seed = x * 73 + y * 137;
   const rotation = (((seed % 360) - 180) * Math.PI) / 180;
@@ -2967,7 +3161,7 @@ function drawArrow(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0,
+  variant: number = 0
 ): void {
   const seed = x * 73 + y * 137;
   const rotation = (((seed % 360) - 180) * Math.PI) / 180;
@@ -3052,7 +3246,7 @@ function drawGenericDecoration(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  scale: number,
+  scale: number
 ): void {
   ctx.fillStyle = "#888888";
   ctx.beginPath();

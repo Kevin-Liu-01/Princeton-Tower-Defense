@@ -1,13 +1,16 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { SpellUpgradeLevels } from "../types";
+
 import {
   DEFAULT_SPELL_UPGRADES,
   normalizeSpellUpgradeLevels,
 } from "../constants";
+import type { SpellUpgradeLevels } from "../types";
 
 function isGameProgressLike(value: unknown): value is GameProgress {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== "object") {
+    return false;
+  }
 
   const candidate = value as Partial<GameProgress>;
   return (
@@ -19,13 +22,12 @@ function isGameProgressLike(value: unknown): value is GameProgress {
   );
 }
 
-function readAndMergeLocalStorage<T>(
-  key: string,
-  initialValue: T
-): T {
+function readAndMergeLocalStorage<T>(key: string, initialValue: T): T {
   try {
     const item = window.localStorage.getItem(key);
-    if (!item) return initialValue;
+    if (!item) {
+      return initialValue;
+    }
 
     const parsed = JSON.parse(item);
 
@@ -67,9 +69,7 @@ function mergeGameProgress(
   const loadedMaps = Array.isArray(loaded?.unlockedMaps)
     ? loaded.unlockedMaps
     : [];
-  const mergedMaps = Array.from(
-    new Set([...defaults.unlockedMaps, ...loadedMaps])
-  );
+  const mergedMaps = [...new Set([...defaults.unlockedMaps, ...loadedMaps])];
 
   const loadedStats =
     loaded &&
@@ -90,7 +90,6 @@ function mergeGameProgress(
   return {
     ...defaults,
     ...loaded,
-    unlockedMaps: mergedMaps,
     levelStars: mergedLevelStars,
     levelStats: loadedStats,
     spellUpgrades: mergedSpellUpgrades,
@@ -98,6 +97,7 @@ function mergeGameProgress(
       (a, b) => a + b,
       0
     ),
+    unlockedMaps: mergedMaps,
   };
 }
 
@@ -136,7 +136,9 @@ export function useLocalStorage<T>(
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== null) {
@@ -184,36 +186,36 @@ export interface GameProgress {
  * Default game progress
  */
 export const DEFAULT_GAME_PROGRESS: GameProgress = {
-  unlockedMaps: ["poe", "dev_enemy_showcase", "sandbox"],
+  lastPlayedLevel: undefined,
   levelStars: {
-    poe: 0,
-    carnegie: 0,
-    nassau: 0,
-    ivy_crossroads: 0,
-    cannon_crest: 0,
-    bog: 0,
-    witch_hut: 0,
-    sunken_temple: 0,
+    ashen_spiral: 0,
     blight_basin: 0,
-    triad_keep: 0,
+    bog: 0,
+    cannon_crest: 0,
+    carnegie: 0,
+    crater: 0,
+    fortress: 0,
+    frist_outpost: 0,
+    glacier: 0,
+    ivy_crossroads: 0,
+    lava: 0,
+    nassau: 0,
     oasis: 0,
+    peak: 0,
+    poe: 0,
     pyramid: 0,
     sphinx: 0,
+    sunken_temple: 0,
     sunscorch_labyrinth: 0,
-    glacier: 0,
-    fortress: 0,
-    peak: 0,
-    whiteout_pass: 0,
-    frist_outpost: 0,
-    lava: 0,
-    crater: 0,
     throne: 0,
-    ashen_spiral: 0,
+    triad_keep: 0,
+    whiteout_pass: 0,
+    witch_hut: 0,
   },
   levelStats: {},
   spellUpgrades: { ...DEFAULT_SPELL_UPGRADES },
-  lastPlayedLevel: undefined,
   totalStarsEarned: 0,
+  unlockedMaps: ["poe", "dev_enemy_showcase", "sandbox"],
 };
 
 /**
@@ -228,7 +230,9 @@ export function useGameProgress() {
   // Update stars for a level (only if higher than current)
   const updateLevelStars = useCallback(
     (levelId: string, stars: number) => {
-      if (!levelId || stars < 1) return; // Guard against invalid inputs
+      if (!levelId || stars < 1) {
+        return;
+      } // Guard against invalid inputs
 
       setProgress((prev) => {
         // Ensure levelStars object exists
@@ -248,9 +252,9 @@ export function useGameProgress() {
 
         const newProgress = {
           ...prev,
+          lastPlayedLevel: levelId,
           levelStars: newLevelStars,
           totalStarsEarned: totalStars,
-          lastPlayedLevel: levelId,
         };
 
         return newProgress;
@@ -262,7 +266,9 @@ export function useGameProgress() {
   // Update stats for a level (time, hearts, play counts)
   const updateLevelStats = useCallback(
     (levelId: string, timeSpent: number, hearts: number, won: boolean) => {
-      if (!levelId) return;
+      if (!levelId) {
+        return;
+      }
 
       setProgress((prev) => {
         const currentStats = prev.levelStats?.[levelId] || {};
@@ -271,11 +277,11 @@ export function useGameProgress() {
 
         const newStats: LevelStats = {
           ...currentStats,
-          lastTime: timeSpent,
           lastHearts: hearts,
+          lastPlayedAt: Date.now(),
+          lastTime: timeSpent,
           timesPlayed,
           timesWon,
-          lastPlayedAt: Date.now(),
         };
 
         // Only update best time/hearts on victory
@@ -290,11 +296,11 @@ export function useGameProgress() {
 
         return {
           ...prev,
+          lastPlayedLevel: levelId,
           levelStats: {
             ...prev.levelStats,
             [levelId]: newStats,
           },
-          lastPlayedLevel: levelId,
         };
       });
     },
@@ -305,7 +311,9 @@ export function useGameProgress() {
   const unlockLevel = useCallback(
     (levelId: string) => {
       setProgress((prev) => {
-        if (prev.unlockedMaps.includes(levelId)) return prev;
+        if (prev.unlockedMaps.includes(levelId)) {
+          return prev;
+        }
         return {
           ...prev,
           unlockedMaps: [...prev.unlockedMaps, levelId],
@@ -321,17 +329,18 @@ export function useGameProgress() {
   }, [setProgress]);
 
   // Get total stars earned
-  const getTotalStars = useCallback(() => {
-    return Object.values(progress.levelStars).reduce((a, b) => a + b, 0);
-  }, [progress.levelStars]);
+  const getTotalStars = useCallback(
+    () => Object.values(progress.levelStars).reduce((a, b) => a + b, 0),
+    [progress.levelStars]
+  );
 
   return {
+    getTotalStars,
     progress,
+    resetProgress,
     setProgress,
+    unlockLevel,
     updateLevelStars,
     updateLevelStats,
-    unlockLevel,
-    resetProgress,
-    getTotalStars,
   };
 }

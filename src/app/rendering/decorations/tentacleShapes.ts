@@ -1,6 +1,7 @@
 import { ISO_Y_RATIO } from "../../constants";
 import { drawDirectionalShadow } from "./shadowHelpers";
-import { TENTACLE_PALETTES, type TentaclePalette } from "./tentaclePalettes";
+import { TENTACLE_PALETTES } from "./tentaclePalettes";
+import type { TentaclePalette } from "./tentaclePalettes";
 
 interface TentaclePoint {
   x: number;
@@ -22,7 +23,7 @@ function getShapeIndex(decorX: number, decorY: number): number {
 
 function seededRand(decorX: number, decorY: number, salt: number): number {
   const h = Math.abs(decorX * 73 + decorY * 41 + salt * 131);
-  return ((Math.sin(h) * 43758.5453) % 1 + 1) % 1;
+  return (((Math.sin(h) * 43_758.5453) % 1) + 1) % 1;
 }
 
 function drawWaterBase(
@@ -34,7 +35,7 @@ function drawWaterBase(
   decorX: number,
   pal: TentaclePalette,
   holeWidth: number,
-  holeDepth: number,
+  holeDepth: number
 ): void {
   const ripplePhase = decorTime * 1.2 + decorX;
   for (let r = 0; r < 3; r++) {
@@ -51,7 +52,7 @@ function drawWaterBase(
       holeDepth + rippleSize * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -62,7 +63,7 @@ function drawWaterBase(
     holeWidth * 0.3,
     x,
     y + 2 * s,
-    holeWidth + 10 * s,
+    holeWidth + 10 * s
   );
   waterBlendGrad.addColorStop(0, "rgba(20, 40, 60, 0.5)");
   waterBlendGrad.addColorStop(0.4, "rgba(30, 50, 70, 0.3)");
@@ -77,11 +78,18 @@ function drawWaterBase(
     (holeDepth + 5 * s) * ISO_Y_RATIO,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
-  const holeGrad = ctx.createRadialGradient(x, y, 0, x, y + 2 * s, holeWidth * 0.9);
+  const holeGrad = ctx.createRadialGradient(
+    x,
+    y,
+    0,
+    x,
+    y + 2 * s,
+    holeWidth * 0.9
+  );
   holeGrad.addColorStop(0, "rgba(5, 2, 10, 0.9)");
   holeGrad.addColorStop(0.5, "rgba(15, 10, 25, 0.7)");
   holeGrad.addColorStop(0.8, "rgba(30, 25, 50, 0.4)");
@@ -101,7 +109,7 @@ function drawWaterBase(
     holeDepth * 0.7,
     0,
     Math.PI * 0.9,
-    Math.PI * 1.7,
+    Math.PI * 1.7
   );
   ctx.stroke();
 
@@ -124,7 +132,7 @@ function drawBubbles(
   s: number,
   decorTime: number,
   decorX: number,
-  count: number,
+  count: number
 ): void {
   ctx.fillStyle = "rgba(150, 180, 210, 0.5)";
   const bubbleTime = decorTime * 2.5 + decorX;
@@ -153,9 +161,11 @@ function drawTentacleShadow(
   objectHeight: number,
   intensity: number,
   tint: string,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
-  if (skipShadow) return;
+  if (skipShadow) {
+    return;
+  }
   drawDirectionalShadow(
     ctx,
     x,
@@ -165,7 +175,7 @@ function drawTentacleShadow(
     footprintRy,
     objectHeight,
     intensity,
-    tint,
+    tint
   );
 }
 
@@ -178,7 +188,7 @@ function buildTentaclePath(
   baseRadius: number,
   tipRadius: number,
   sway: number,
-  secondarySway: number,
+  secondarySway: number
 ): TentaclePoint[] {
   const pts: TentaclePoint[] = [];
   for (let i = 0; i <= segments; i++) {
@@ -187,7 +197,7 @@ function buildTentaclePath(
     const curveY = cy - height * s * t;
     const radius = (baseRadius - t * (baseRadius - tipRadius)) * s;
     const bendAngle = Math.sin(t * Math.PI * 0.8) * 0.4 + sway * 0.01;
-    pts.push({ x: curveX, y: curveY, radius, angle: bendAngle });
+    pts.push({ angle: bendAngle, radius, x: curveX, y: curveY });
   }
   return pts;
 }
@@ -196,7 +206,7 @@ function drawTentacleBaseRing(
   ctx: CanvasRenderingContext2D,
   bp: TentaclePoint,
   s: number,
-  pal: TentaclePalette,
+  pal: TentaclePalette
 ): void {
   const baseFrontY = bp.y + bp.radius * 0.5 * ISO_Y_RATIO;
   const rx = bp.radius * 0.9;
@@ -223,7 +233,7 @@ function drawTentacleBody(
   decorTime: number,
   pal: TentaclePalette,
   baseX: number,
-  baseY: number,
+  baseY: number
 ): void {
   const segments = pts.length - 1;
   const bp = pts[0];
@@ -236,7 +246,7 @@ function drawTentacleBody(
     baseX - 15 * s,
     baseY,
     baseX + 5 * s,
-    baseY - 50 * s,
+    baseY - 50 * s
   );
   backGrad.addColorStop(0, pal.dark);
   backGrad.addColorStop(0.5, blendColor(pal.dark, pal.mid, 0.3));
@@ -261,13 +271,13 @@ function drawTentacleBody(
     tipBack.x + 3 * s,
     tipBack.y - 3 * s,
     tipBack.x,
-    tipBack.y - 5 * s,
+    tipBack.y - 5 * s
   );
   ctx.quadraticCurveTo(
     tipBack.x - 1 * s,
     tipBack.y - 3 * s,
     tipBack.x - tipBack.radius * 0.3,
-    tipBack.y,
+    tipBack.y
   );
   for (let i = segments; i >= 1; i--) {
     const p = pts[i];
@@ -282,7 +292,7 @@ function drawTentacleBody(
     baseX - 10 * s,
     baseY - 30 * s,
     baseX + 15 * s,
-    baseY,
+    baseY
   );
   frontGrad.addColorStop(0, pal.light);
   frontGrad.addColorStop(0.3, pal.mid);
@@ -308,13 +318,13 @@ function drawTentacleBody(
     tipFront.x - 2 * s,
     tipFront.y - 4 * s,
     tipFront.x,
-    tipFront.y - 5 * s,
+    tipFront.y - 5 * s
   );
   ctx.quadraticCurveTo(
     tipFront.x + 1 * s,
     tipFront.y - 2 * s,
     tipFront.x,
-    tipFront.y,
+    tipFront.y
   );
   for (let i = segments; i >= 1; i--) {
     const p = pts[i];
@@ -334,7 +344,7 @@ function drawHighlightStripe(
   ctx: CanvasRenderingContext2D,
   pts: TentaclePoint[],
   s: number,
-  pal: TentaclePalette,
+  pal: TentaclePalette
 ): void {
   const segments = pts.length - 1;
   ctx.strokeStyle = pal.highlight;
@@ -345,8 +355,11 @@ function drawHighlightStripe(
     const p = pts[i];
     const hx = p.x - p.radius * 0.5;
     const hy = p.y + p.radius * 0.2 * ISO_Y_RATIO;
-    if (i === 1) ctx.moveTo(hx, hy);
-    else ctx.lineTo(hx, hy);
+    if (i === 1) {
+      ctx.moveTo(hx, hy);
+    } else {
+      ctx.lineTo(hx, hy);
+    }
   }
   ctx.stroke();
 
@@ -357,8 +370,11 @@ function drawHighlightStripe(
     const p = pts[i];
     const hx = p.x - p.radius * 0.7;
     const hy = p.y + p.radius * 0.1 * ISO_Y_RATIO;
-    if (i === 2) ctx.moveTo(hx, hy);
-    else ctx.lineTo(hx, hy);
+    if (i === 2) {
+      ctx.moveTo(hx, hy);
+    } else {
+      ctx.lineTo(hx, hy);
+    }
   }
   ctx.stroke();
 }
@@ -368,7 +384,7 @@ function drawMuscleLines(
   pts: TentaclePoint[],
   s: number,
   decorTime: number,
-  pal: TentaclePalette,
+  pal: TentaclePalette
 ): void {
   const segments = pts.length - 1;
   ctx.strokeStyle = pal.dark;
@@ -381,8 +397,11 @@ function drawMuscleLines(
       const p = pts[i];
       const vx = p.x + p.radius * offset;
       const vy = p.y + p.radius * 0.4 * ISO_Y_RATIO;
-      if (i === 1) ctx.moveTo(vx, vy);
-      else ctx.lineTo(vx, vy);
+      if (i === 1) {
+        ctx.moveTo(vx, vy);
+      } else {
+        ctx.lineTo(vx, vy);
+      }
     }
     ctx.stroke();
   }
@@ -394,7 +413,7 @@ function drawSuckers(
   pts: TentaclePoint[],
   s: number,
   pal: TentaclePalette,
-  suckerDefs: { t: number; size: number }[],
+  suckerDefs: { t: number; size: number }[]
 ): void {
   const segments = pts.length - 1;
   for (const sp of suckerDefs) {
@@ -407,7 +426,15 @@ function drawSuckers(
 
     ctx.fillStyle = hexToRgba(pal.dark, 0.35);
     ctx.beginPath();
-    ctx.ellipse(sx + 0.8 * s, sy + 0.6 * s, sz, sz * isoRatio, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      sx + 0.8 * s,
+      sy + 0.6 * s,
+      sz,
+      sz * isoRatio,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     const rimGrad = ctx.createRadialGradient(
@@ -416,7 +443,7 @@ function drawSuckers(
       0,
       sx,
       sy,
-      sz,
+      sz
     );
     rimGrad.addColorStop(0, lightenHex(pal.suckerOuter, 0.15));
     rimGrad.addColorStop(0.5, pal.suckerOuter);
@@ -432,7 +459,7 @@ function drawSuckers(
       0,
       sx,
       sy,
-      sz * 0.7,
+      sz * 0.7
     );
     innerGrad.addColorStop(0, pal.suckerOuter);
     innerGrad.addColorStop(0.6, pal.suckerInner);
@@ -461,7 +488,7 @@ function drawSuckers(
       sz * 0.12,
       -0.4,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -473,7 +500,7 @@ function drawSlimeDrip(
   s: number,
   decorTime: number,
   decorX: number,
-  pal: TentaclePalette,
+  pal: TentaclePalette
 ): void {
   ctx.fillStyle = pal.slime;
   const dripPhase = (((decorTime * 0.6 + decorX) % 3) + 3) % 3;
@@ -493,11 +520,19 @@ function drawWetSheen(
   y: number,
   s: number,
   decorTime: number,
-  decorX: number,
+  decorX: number
 ): void {
   ctx.fillStyle = "rgba(100, 140, 180, 0.25)";
   ctx.beginPath();
-  ctx.ellipse(x - 3 * s, y - 5 * s, 5 * s, 2.5 * s * ISO_Y_RATIO, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - 3 * s,
+    y - 5 * s,
+    5 * s,
+    2.5 * s * ISO_Y_RATIO,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   ctx.fillStyle = "rgba(80, 120, 160, 0.2)";
@@ -508,7 +543,15 @@ function drawWetSheen(
       const dy = y - 12 * s + dripOffset * 8 * s;
       const dx = x + (d - 0.5) * 6 * s;
       ctx.beginPath();
-      ctx.ellipse(dx, dy, 1.2 * s, (1.5 + dripOffset * 0.5) * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        dx,
+        dy,
+        1.2 * s,
+        (1.5 + dripOffset * 0.5) * s,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -517,19 +560,19 @@ function drawWetSheen(
 import { hexToRgba } from "../../utils/colorUtils";
 
 function lightenHex(hex: string, amount: number): string {
-  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + 255 * amount);
-  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + 255 * amount);
-  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + 255 * amount);
+  const r = Math.min(255, Number.parseInt(hex.slice(1, 3), 16) + 255 * amount);
+  const g = Math.min(255, Number.parseInt(hex.slice(3, 5), 16) + 255 * amount);
+  const b = Math.min(255, Number.parseInt(hex.slice(5, 7), 16) + 255 * amount);
   return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
 }
 
 function blendColor(hexA: string, hexB: string, t: number): string {
-  const rA = parseInt(hexA.slice(1, 3), 16);
-  const gA = parseInt(hexA.slice(3, 5), 16);
-  const bA = parseInt(hexA.slice(5, 7), 16);
-  const rB = parseInt(hexB.slice(1, 3), 16);
-  const gB = parseInt(hexB.slice(3, 5), 16);
-  const bB = parseInt(hexB.slice(5, 7), 16);
+  const rA = Number.parseInt(hexA.slice(1, 3), 16);
+  const gA = Number.parseInt(hexA.slice(3, 5), 16);
+  const bA = Number.parseInt(hexA.slice(5, 7), 16);
+  const rB = Number.parseInt(hexB.slice(1, 3), 16);
+  const gB = Number.parseInt(hexB.slice(3, 5), 16);
+  const bB = Number.parseInt(hexB.slice(5, 7), 16);
   const r = Math.round(rA + (rB - rA) * t);
   const g = Math.round(gA + (gB - gA) * t);
   const b = Math.round(bA + (bB - bA) * t);
@@ -539,22 +582,22 @@ function blendColor(hexA: string, hexB: string, t: number): string {
 // ── Default sucker layout ───────────────────────────────────────
 
 const STANDARD_SUCKERS = [
-  { t: 0.12, size: 5.5 },
-  { t: 0.22, size: 5 },
-  { t: 0.32, size: 4.5 },
-  { t: 0.42, size: 4 },
-  { t: 0.52, size: 3.5 },
-  { t: 0.62, size: 3 },
-  { t: 0.72, size: 2.5 },
-  { t: 0.82, size: 2 },
+  { size: 5.5, t: 0.12 },
+  { size: 5, t: 0.22 },
+  { size: 4.5, t: 0.32 },
+  { size: 4, t: 0.42 },
+  { size: 3.5, t: 0.52 },
+  { size: 3, t: 0.62 },
+  { size: 2.5, t: 0.72 },
+  { size: 2, t: 0.82 },
 ];
 
 const SMALL_SUCKERS = [
-  { t: 0.18, size: 3.5 },
-  { t: 0.32, size: 3 },
-  { t: 0.48, size: 2.5 },
-  { t: 0.64, size: 2 },
-  { t: 0.78, size: 1.5 },
+  { size: 3.5, t: 0.18 },
+  { size: 3, t: 0.32 },
+  { size: 2.5, t: 0.48 },
+  { size: 2, t: 0.64 },
+  { size: 1.5, t: 0.78 },
 ];
 
 // ── Shape 0: Classic single tentacle ────────────────────────────
@@ -568,7 +611,7 @@ function drawClassicTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
   const sway = Math.sin(decorTime * 1.5 + decorX) * 12 * s;
   const secondarySway = Math.cos(decorTime * 2.3 + decorX * 1.5) * 6 * s;
@@ -578,7 +621,17 @@ function drawClassicTentacle(
   drawWaterBase(ctx, x, y, s, decorTime, decorX, pal, holeW, holeD);
   drawBubbles(ctx, x, y, s, decorTime, decorX, 4);
 
-  const pts = buildTentaclePath(cx(x), cy(y), s, 14, 65, 12, 2.5, sway, secondarySway);
+  const pts = buildTentaclePath(
+    cx(x),
+    cy(y),
+    s,
+    14,
+    65,
+    12,
+    2.5,
+    sway,
+    secondarySway
+  );
 
   drawTentacleShadow(
     ctx,
@@ -590,7 +643,7 @@ function drawClassicTentacle(
     60 * s,
     0.25,
     "26,15,33",
-    skipShadow,
+    skipShadow
   );
 
   drawTentacleBody(ctx, pts, s, decorTime, pal, x, y);
@@ -610,17 +663,27 @@ function drawForkedTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
   const sway = Math.sin(decorTime * 1.3 + decorX) * 10 * s;
-  const secondarySway = Math.cos(decorTime * 2.0 + decorX * 1.3) * 5 * s;
+  const secondarySway = Math.cos(decorTime * 2 + decorX * 1.3) * 5 * s;
   const holeW = 20 * s;
   const holeD = 10 * s;
 
   drawWaterBase(ctx, x, y, s, decorTime, decorX, pal, holeW, holeD);
   drawBubbles(ctx, x, y, s, decorTime, decorX, 5);
 
-  const mainPts = buildTentaclePath(x, y, s, 10, 50, 13, 5, sway, secondarySway);
+  const mainPts = buildTentaclePath(
+    x,
+    y,
+    s,
+    10,
+    50,
+    13,
+    5,
+    sway,
+    secondarySway
+  );
 
   drawTentacleShadow(
     ctx,
@@ -632,15 +695,15 @@ function drawForkedTentacle(
     55 * s,
     0.25,
     "26,15,33",
-    skipShadow,
+    skipShadow
   );
 
   drawTentacleBody(ctx, mainPts, s, decorTime, pal, x, y);
 
-  const forkBase = mainPts[mainPts.length - 1];
+  const forkBase = mainPts.at(-1);
   const forkSpread = 14 * s;
 
-  const leftSway = Math.sin(decorTime * 2.0 + decorX + 1.0) * 6 * s;
+  const leftSway = Math.sin(decorTime * 2 + decorX + 1) * 6 * s;
   const leftPts = buildTentaclePath(
     forkBase.x - forkSpread * 0.3,
     forkBase.y,
@@ -650,12 +713,20 @@ function drawForkedTentacle(
     5,
     1.5,
     leftSway - forkSpread * 0.5,
-    Math.cos(decorTime * 2.5 + decorX) * 3 * s,
+    Math.cos(decorTime * 2.5 + decorX) * 3 * s
   );
-  drawTentacleBody(ctx, leftPts, s, decorTime, pal, forkBase.x - forkSpread * 0.3, forkBase.y);
+  drawTentacleBody(
+    ctx,
+    leftPts,
+    s,
+    decorTime,
+    pal,
+    forkBase.x - forkSpread * 0.3,
+    forkBase.y
+  );
   drawSuckers(ctx, leftPts, s, pal, SMALL_SUCKERS);
 
-  const rightSway = Math.sin(decorTime * 2.0 + decorX + 2.5) * 6 * s;
+  const rightSway = Math.sin(decorTime * 2 + decorX + 2.5) * 6 * s;
   const rightPts = buildTentaclePath(
     forkBase.x + forkSpread * 0.3,
     forkBase.y,
@@ -665,16 +736,24 @@ function drawForkedTentacle(
     5,
     1.5,
     rightSway + forkSpread * 0.5,
-    Math.cos(decorTime * 2.5 + decorX + 1.5) * 3 * s,
+    Math.cos(decorTime * 2.5 + decorX + 1.5) * 3 * s
   );
-  drawTentacleBody(ctx, rightPts, s, decorTime, pal, forkBase.x + forkSpread * 0.3, forkBase.y);
+  drawTentacleBody(
+    ctx,
+    rightPts,
+    s,
+    decorTime,
+    pal,
+    forkBase.x + forkSpread * 0.3,
+    forkBase.y
+  );
   drawSuckers(ctx, rightPts, s, pal, SMALL_SUCKERS);
 
   drawSuckers(ctx, mainPts, s, pal, [
-    { t: 0.15, size: 5 },
-    { t: 0.3, size: 4.5 },
-    { t: 0.5, size: 4 },
-    { t: 0.7, size: 3.5 },
+    { size: 5, t: 0.15 },
+    { size: 4.5, t: 0.3 },
+    { size: 4, t: 0.5 },
+    { size: 3.5, t: 0.7 },
   ]);
   drawSlimeDrip(ctx, mainPts, s, decorTime, decorX, pal);
   drawWetSheen(ctx, x, y, s, decorTime, decorX);
@@ -691,10 +770,10 @@ function drawWhipTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
   const sway = Math.sin(decorTime * 2.2 + decorX) * 18 * s;
-  const secondarySway = Math.cos(decorTime * 3.0 + decorX * 1.7) * 10 * s;
+  const secondarySway = Math.cos(decorTime * 3 + decorX * 1.7) * 10 * s;
   const holeW = 14 * s;
   const holeD = 7 * s;
 
@@ -713,21 +792,21 @@ function drawWhipTentacle(
     75 * s,
     0.2,
     "26,15,33",
-    skipShadow,
+    skipShadow
   );
 
   drawTentacleBody(ctx, pts, s, decorTime, pal, x, y);
 
   const whipSuckers = [
-    { t: 0.1, size: 3.5 },
-    { t: 0.2, size: 3 },
-    { t: 0.3, size: 2.8 },
-    { t: 0.4, size: 2.5 },
-    { t: 0.5, size: 2.2 },
-    { t: 0.6, size: 2 },
-    { t: 0.7, size: 1.7 },
-    { t: 0.8, size: 1.4 },
-    { t: 0.88, size: 1.1 },
+    { size: 3.5, t: 0.1 },
+    { size: 3, t: 0.2 },
+    { size: 2.8, t: 0.3 },
+    { size: 2.5, t: 0.4 },
+    { size: 2.2, t: 0.5 },
+    { size: 2, t: 0.6 },
+    { size: 1.7, t: 0.7 },
+    { size: 1.4, t: 0.8 },
+    { size: 1.1, t: 0.88 },
   ];
   drawSuckers(ctx, pts, s, pal, whipSuckers);
 
@@ -739,8 +818,11 @@ function drawWhipTentacle(
     const p = pts[i];
     const px = p.x + p.radius * 0.4;
     const py = p.y;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.stroke();
   ctx.setLineDash([]);
@@ -760,9 +842,9 @@ function drawCoiledTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
-  const sway = Math.sin(decorTime * 1.0 + decorX) * 6 * s;
+  const sway = Math.sin(decorTime * 1 + decorX) * 6 * s;
   const holeW = 22 * s;
   const holeD = 11 * s;
 
@@ -779,7 +861,7 @@ function drawCoiledTentacle(
     50 * s,
     0.25,
     "26,15,33",
-    skipShadow,
+    skipShadow
   );
 
   const segments = 20;
@@ -788,12 +870,11 @@ function drawCoiledTentacle(
     const t = i / segments;
     const spiralAngle = t * Math.PI * 3.5 + decorTime * 0.5;
     const spiralRadius = (18 - t * 16) * s;
-    const curveX =
-      x + Math.cos(spiralAngle) * spiralRadius + sway * t;
+    const curveX = x + Math.cos(spiralAngle) * spiralRadius + sway * t;
     const curveY =
       y - 55 * s * t + Math.sin(spiralAngle) * spiralRadius * ISO_Y_RATIO * 0.5;
     const radius = (11 - t * 8.5) * s;
-    pts.push({ x: curveX, y: curveY, radius, angle: spiralAngle });
+    pts.push({ angle: spiralAngle, radius, x: curveX, y: curveY });
   }
 
   drawTentacleBody(ctx, pts, s, decorTime, pal, x, y);
@@ -812,7 +893,7 @@ function drawCoiledTentacle(
       p.radius * 0.2 * ISO_Y_RATIO,
       0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -832,7 +913,7 @@ function drawClusterTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
-  skipShadow: boolean,
+  skipShadow: boolean
 ): void {
   const armCount = 2 + Math.floor(seededRand(decorX, decorY, 77) * 2); // 2 or 3
   const holeW = 24 * s;
@@ -851,13 +932,16 @@ function drawClusterTentacle(
     55 * s,
     0.28,
     "26,15,33",
-    skipShadow,
+    skipShadow
   );
 
   for (let a = 0; a < armCount; a++) {
-    const angleOffset = ((a - (armCount - 1) / 2) / Math.max(armCount - 1, 1)) * 0.9;
+    const angleOffset =
+      ((a - (armCount - 1) / 2) / Math.max(armCount - 1, 1)) * 0.9;
     const armSway =
-      Math.sin(decorTime * (1.4 + a * 0.3) + decorX + a * 2.1) * (10 + a * 3) * s;
+      Math.sin(decorTime * (1.4 + a * 0.3) + decorX + a * 2.1) *
+      (10 + a * 3) *
+      s;
     const armSecondary =
       Math.cos(decorTime * (2.1 + a * 0.2) + decorX * 1.3 + a * 1.7) * 5 * s;
 
@@ -875,7 +959,7 @@ function drawClusterTentacle(
       armBaseR,
       armTipR,
       armSway,
-      armSecondary,
+      armSecondary
     );
 
     drawTentacleBody(ctx, pts, s, decorTime, pal, x + offsetX, y);
@@ -905,29 +989,95 @@ export function drawTentacle(
   decorX: number,
   decorY: number,
   decorTime: number,
-  skipShadow: boolean = false,
+  skipShadow: boolean = false
 ): void {
   const pal = getPalette(variant);
   const shape = getShapeIndex(decorX, decorY);
 
   switch (shape) {
-    case 0:
-      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    case 0: {
+      drawClassicTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
-    case 1:
-      drawForkedTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    }
+    case 1: {
+      drawForkedTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
-    case 2:
-      drawWhipTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    }
+    case 2: {
+      drawWhipTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
-    case 3:
-      drawCoiledTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    }
+    case 3: {
+      drawCoiledTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
-    case 4:
-      drawClusterTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    }
+    case 4: {
+      drawClusterTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
-    default:
-      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
+    }
+    default: {
+      drawClassicTentacle(
+        ctx,
+        x,
+        y,
+        s,
+        decorTime,
+        decorX,
+        decorY,
+        pal,
+        skipShadow
+      );
       break;
+    }
   }
 }

@@ -1,7 +1,5 @@
 "use client";
 
-import React, { useMemo } from "react";
-import Image from "next/image";
 import {
   Star,
   Swords,
@@ -14,9 +12,13 @@ import {
   Flag,
   Skull,
 } from "lucide-react";
-import type { LevelStars } from "../../types";
-import type { LevelStats } from "../../hooks/useLocalStorage";
+import Image from "next/image";
+import React, { useMemo } from "react";
+
 import { LEVEL_DATA } from "../../constants";
+import type { LevelStats } from "../../hooks/useLocalStorage";
+import { RegionIcon } from "../../sprites";
+import type { LevelStars } from "../../types";
 import {
   PANEL,
   GOLD,
@@ -26,16 +28,15 @@ import {
   NEUTRAL,
   SELECTED,
 } from "../ui/system/theme";
+import { MobileBottomSheet } from "./MobileBottomSheet";
+import { ShareLevelButton } from "./shared/ShareLevelButton";
+import { REGION_CHALLENGE_BADGE_STYLES } from "./shared/worldMapRegions";
 import {
   WORLD_LEVELS,
   DEV_LEVEL_IDS,
   getWaveCount,
-  type LevelNode,
 } from "./world-map/worldMapData";
-import { RegionIcon } from "../../sprites";
-import { MobileBottomSheet } from "./MobileBottomSheet";
-import { ShareLevelButton } from "./shared/ShareLevelButton";
-import { REGION_CHALLENGE_BADGE_STYLES } from "./shared/worldMapRegions";
+import type { LevelNode } from "./world-map/worldMapData";
 
 interface LevelInfo {
   id: string;
@@ -85,9 +86,7 @@ function StarRow({ earned, total = 3 }: { earned: number; total?: number }) {
           key={i}
           size={14}
           className={
-            i < earned
-              ? "text-yellow-400 fill-yellow-400"
-              : "text-stone-600"
+            i < earned ? "text-yellow-400 fill-yellow-400" : "text-stone-600"
           }
         />
       ))}
@@ -111,23 +110,21 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
 }) => {
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
 
-  const isChallenge =
-    Boolean(level?.kind === "challenge") && !level?.isCustom;
+  const isChallenge = Boolean(level?.kind === "challenge") && !level?.isCustom;
 
   const waveCount = level ? getWaveCount(level.id) : 0;
   const stars = level ? levelStars[level.id] || 0 : 0;
   const stats = level ? levelStats[level.id] : undefined;
 
-  const previewImage = level
-    ? LEVEL_DATA[level.id]?.previewImage
-    : undefined;
+  const previewImage = level ? LEVEL_DATA[level.id]?.previewImage : undefined;
 
   const regionSiblings = useMemo(() => {
-    if (!level) return [];
+    if (!level) {
+      return [];
+    }
     return WORLD_LEVELS.filter(
       (l) =>
-        l.region === level.region &&
-        (isDevMode || !DEV_LEVEL_IDS.has(l.id)),
+        l.region === level.region && (isDevMode || !DEV_LEVEL_IDS.has(l.id))
     );
   }, [level, isDevMode]);
 
@@ -149,14 +146,19 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
       }
       accentColor={
         level
-          ? REGION_CHALLENGE_BADGE_STYLES[level.region].border?.toString().replace("1px solid ", "") ?? GOLD.border35
+          ? (REGION_CHALLENGE_BADGE_STYLES[level.region].border
+              ?.toString()
+              .replace("1px solid ", "") ?? GOLD.border35)
           : GOLD.border35
       }
     >
       {level && (
         <div className="flex flex-col gap-3">
           {/* Preview image + description */}
-          <div className="relative rounded-xl overflow-hidden" style={{ minHeight: 80 }}>
+          <div
+            className="relative rounded-xl overflow-hidden"
+            style={{ minHeight: 80 }}
+          >
             {previewImage && (
               <div className="absolute inset-0 pointer-events-none">
                 <Image
@@ -166,9 +168,9 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
                   sizes="400px"
                   className="object-cover opacity-30"
                   style={{
-                    maskImage:
-                      "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
                     WebkitMaskImage:
+                      "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
+                    maskImage:
                       "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
                   }}
                 />

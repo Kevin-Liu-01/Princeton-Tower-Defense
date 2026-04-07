@@ -21,7 +21,7 @@ export function renderParticle(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  particleDensityHint: number = 0,
+  particleDensityHint: number = 0
 ): void {
   const screenPos = worldToScreen(
     particle.pos,
@@ -29,7 +29,7 @@ export function renderParticle(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
 
   if (
@@ -37,14 +37,17 @@ export function renderParticle(
     screenPos.x > canvasWidth + 20 ||
     screenPos.y < -20 ||
     screenPos.y > canvasHeight + 20
-  )
+  ) {
     return;
+  }
 
   const zoom = cameraZoom || 1;
   const lifeRatio = particle.life / particle.maxLife;
   const alpha = lifeRatio;
   const size = particle.size * zoom * lifeRatio;
-  if (size < 0.3) return;
+  if (size < 0.3) {
+    return;
+  }
 
   const prevAlpha = ctx.globalAlpha;
   ctx.globalAlpha = alpha;
@@ -52,50 +55,64 @@ export function renderParticle(
   const simplified = false;
 
   switch (particle.type) {
-    case "fire":
+    case "fire": {
       renderFire(ctx, screenPos, size, particle.color, simplified);
       break;
-    case "ice":
+    }
+    case "ice": {
       renderIce(ctx, screenPos, size, zoom, simplified);
       break;
-    case "spark":
+    }
+    case "spark": {
       renderSpark(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
-    case "smoke":
+    }
+    case "smoke": {
       renderSmoke(ctx, screenPos, size, alpha);
       break;
-    case "gold":
+    }
+    case "gold": {
       renderGold(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
-    case "magic":
+    }
+    case "magic": {
       renderMagic(ctx, screenPos, size, particle.color, simplified);
       break;
+    }
     case "glow":
-    case "light":
+    case "light": {
       renderGlow(ctx, screenPos, size, particle.color, simplified);
       break;
-    case "poison":
+    }
+    case "poison": {
       renderPoison(ctx, screenPos, size, particle.color, alpha, simplified);
       break;
-    case "water":
+    }
+    case "water": {
       renderWater(ctx, screenPos, size, particle.color, alpha, simplified);
       break;
-    case "heal":
+    }
+    case "heal": {
       renderHeal(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
-    case "sand":
+    }
+    case "sand": {
       renderSand(ctx, screenPos, size, particle.color, alpha);
       break;
-    case "summon":
+    }
+    case "summon": {
       renderSummon(ctx, screenPos, size, particle.color, simplified);
       break;
-    case "storm":
+    }
+    case "storm": {
       renderStorm(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
+    }
     case "explosion":
-    default:
+    default: {
       renderDefault(ctx, screenPos, size, particle.color);
       break;
+    }
   }
 
   ctx.globalAlpha = prevAlpha;
@@ -106,7 +123,7 @@ function renderFire(
   pos: Position,
   size: number,
   color: string,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -122,7 +139,7 @@ function renderFire(
     0,
     pos.x,
     pos.y,
-    size * 1.5,
+    size * 1.5
   );
   grad.addColorStop(0, "rgba(255, 255, 180, 0.9)");
   grad.addColorStop(0.35, color);
@@ -134,13 +151,13 @@ function renderFire(
     pos.x + size,
     pos.y - size * 0.2,
     pos.x,
-    pos.y + size * 0.5,
+    pos.y + size * 0.5
   );
   ctx.quadraticCurveTo(
     pos.x - size,
     pos.y - size * 0.2,
     pos.x,
-    pos.y - size * 1.8,
+    pos.y - size * 1.8
   );
   ctx.fill();
 }
@@ -150,7 +167,7 @@ function renderIce(
   pos: Position,
   size: number,
   zoom: number,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = "rgba(200, 235, 255, 0.7)";
@@ -178,7 +195,7 @@ function renderSpark(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean,
+  _simplified: boolean
 ): void {
   drawGlowEffect(ctx, pos.x, pos.y, color, 4 * zoom);
   ctx.fillStyle = color;
@@ -191,7 +208,7 @@ function renderSmoke(
   ctx: CanvasRenderingContext2D,
   pos: Position,
   size: number,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.fillStyle = "rgba(150, 150, 150, 0.5)";
   ctx.globalAlpha = alpha * 0.5;
@@ -206,7 +223,7 @@ function renderGold(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean,
+  _simplified: boolean
 ): void {
   drawGlowEffect(ctx, pos.x, pos.y, "#c9a227", 5 * zoom);
   ctx.fillStyle = color;
@@ -220,7 +237,7 @@ function renderMagic(
   pos: Position,
   size: number,
   color: string,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -236,7 +253,7 @@ function renderMagic(
     0,
     pos.x,
     pos.y,
-    size * 2.2,
+    size * 2.2
   );
   grad.addColorStop(0, color);
   grad.addColorStop(0.5, "rgba(139, 92, 246, 0.3)");
@@ -256,7 +273,7 @@ function renderGlow(
   pos: Position,
   size: number,
   color: string,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -272,7 +289,7 @@ function renderGlow(
     0,
     pos.x,
     pos.y,
-    size * 2,
+    size * 2
   );
   grad.addColorStop(0, color);
   grad.addColorStop(1, "transparent");
@@ -292,7 +309,7 @@ function renderPoison(
   size: number,
   color: string,
   alpha: number,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -309,7 +326,7 @@ function renderPoison(
     0,
     pos.x,
     pos.y,
-    outerSize,
+    outerSize
   );
   grad.addColorStop(0, color);
   grad.addColorStop(0.4, "rgba(68, 204, 68, 0.5)");
@@ -332,7 +349,7 @@ function renderWater(
   size: number,
   color: string,
   alpha: number,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -361,7 +378,7 @@ function renderHeal(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean,
+  _simplified: boolean
 ): void {
   const outerSize = size * 2;
   const grad = ctx.createRadialGradient(
@@ -370,7 +387,7 @@ function renderHeal(
     0,
     pos.x,
     pos.y,
-    outerSize,
+    outerSize
   );
   grad.addColorStop(0, "rgba(170, 255, 221, 0.9)");
   grad.addColorStop(0.4, color);
@@ -395,7 +412,7 @@ function renderSand(
   pos: Position,
   size: number,
   color: string,
-  alpha: number,
+  alpha: number
 ): void {
   ctx.fillStyle = color;
   ctx.globalAlpha = alpha * 0.6;
@@ -415,7 +432,7 @@ function renderSummon(
   pos: Position,
   size: number,
   color: string,
-  simplified: boolean,
+  simplified: boolean
 ): void {
   if (simplified) {
     ctx.fillStyle = color;
@@ -432,7 +449,7 @@ function renderSummon(
     0,
     pos.x,
     pos.y,
-    outerSize,
+    outerSize
   );
   grad.addColorStop(0, color);
   grad.addColorStop(0.35, "rgba(119, 34, 204, 0.4)");
@@ -454,7 +471,7 @@ function renderStorm(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean,
+  _simplified: boolean
 ): void {
   drawGlowEffect(ctx, pos.x, pos.y, "#88aaff", 6 * zoom);
   ctx.fillStyle = color;
@@ -470,7 +487,7 @@ function renderDefault(
   ctx: CanvasRenderingContext2D,
   pos: Position,
   size: number,
-  color: string,
+  color: string
 ): void {
   ctx.fillStyle = color;
   ctx.beginPath();

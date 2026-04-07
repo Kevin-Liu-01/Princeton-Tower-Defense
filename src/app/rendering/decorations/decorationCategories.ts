@@ -7,16 +7,17 @@ export interface DecorationCategorySet {
 
 export function getDecorationCategories(theme: string): DecorationCategorySet {
   switch (theme) {
-    case "desert":
+    case "desert": {
       return {
-        trees: ["palm", "cactus"],
+        scattered: ["skeleton", "bones", "treasure_chest", "sword", "arrow"],
         structures: ["ruins", "torch", "tent", "barrel", "fence", "obelisk"],
         terrain: ["rock", "dune", "sand_pile", "pottery"],
-        scattered: ["skeleton", "bones", "treasure_chest", "sword", "arrow"],
+        trees: ["palm", "cactus"],
       };
-    case "winter":
+    }
+    case "winter": {
       return {
-        trees: ["pine", "pine_tree"],
+        scattered: ["frozen_soldier", "snowman", "bones", "sword"],
         structures: [
           "ruins",
           "fence",
@@ -32,11 +33,12 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           "ice_crystal",
           "icicles",
         ],
-        scattered: ["frozen_soldier", "snowman", "bones", "sword"],
+        trees: ["pine", "pine_tree"],
       };
-    case "volcanic":
+    }
+    case "volcanic": {
       return {
-        trees: ["charred_tree"],
+        scattered: ["skeleton", "bones", "skeleton_pile", "sword", "arrow"],
         structures: [
           "obsidian_spike",
           "fire_pit",
@@ -45,11 +47,12 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           "ruins",
         ],
         terrain: ["rock", "lava_pool", "ember_rock", "ember"],
-        scattered: ["skeleton", "bones", "skeleton_pile", "sword", "arrow"],
+        trees: ["charred_tree"],
       };
-    case "swamp":
+    }
+    case "swamp": {
       return {
-        trees: ["swamp_tree", "mushroom"],
+        scattered: ["bones", "tentacle", "skeleton", "skeleton_pile", "torch"],
         structures: [
           "ruins",
           "gravestone",
@@ -59,11 +62,19 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           "glowing_runes",
         ],
         terrain: ["rock", "lily_pad", "poison_pool", "fog_wisp"],
-        scattered: ["bones", "tentacle", "skeleton", "skeleton_pile", "torch"],
+        trees: ["swamp_tree", "mushroom"],
       };
-    default:
+    }
+    default: {
       return {
-        trees: ["tree", "bush", "hedge"],
+        scattered: [
+          "lamppost",
+          "signpost",
+          "torch",
+          "bones",
+          "gravestone",
+          "statue",
+        ],
         structures: [
           "hut",
           "fence",
@@ -77,14 +88,8 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           // "fountain",
         ],
         terrain: ["rock", "grass", "flowers", "reeds", "fishing_spot"],
-        scattered: [
-          "lamppost",
-          "signpost",
-          "torch",
-          "bones",
-          "gravestone",
-          "statue",
-        ],
+        trees: ["tree", "bush", "hedge"],
       };
+    }
   }
 }

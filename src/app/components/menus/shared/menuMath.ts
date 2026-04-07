@@ -1,5 +1,9 @@
-export function circularDiff(index: number, center: number, length: number): number {
-  const raw = ((index - center) % length + length) % length;
+export function circularDiff(
+  index: number,
+  center: number,
+  length: number
+): number {
+  const raw = (((index - center) % length) + length) % length;
   return raw > length / 2 ? raw - length : raw;
 }
 

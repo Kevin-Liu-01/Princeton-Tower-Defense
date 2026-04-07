@@ -1,4 +1,14 @@
 import { LEVEL_DATA } from "../../../constants";
+import { drawDecorationGroundLayer } from "./rendering/decorationGroundLayer";
+import type { WorldMapDrawContext } from "./rendering/drawContext";
+import { drawLevelBattlePreview } from "./rendering/levelBattlePreview";
+import { drawLevelNodes } from "./rendering/levelNodes";
+import { drawPathConnections } from "./rendering/pathConnections";
+import { drawRoads } from "./rendering/roads";
+import { drawStructureLandmarkLayer } from "./rendering/structureLandmarkLayer";
+import { drawTerrainBackdrop } from "./rendering/terrainBackdrop";
+import type { DrawWorldMapParams } from "./rendering/types";
+import { drawWorldMapHero } from "./rendering/worldMapHero";
 import { MAP_WIDTH, WORLD_LEVELS } from "./worldMapData";
 import {
   getLevelNodeY,
@@ -7,16 +17,6 @@ import {
   isWorldLevelUnlocked,
   seededRandom,
 } from "./worldMapUtils";
-import { drawTerrainBackdrop } from "./rendering/terrainBackdrop";
-import { drawRoads } from "./rendering/roads";
-import type { DrawWorldMapParams } from "./rendering/types";
-import type { WorldMapDrawContext } from "./rendering/drawContext";
-import { drawDecorationGroundLayer } from "./rendering/decorationGroundLayer";
-import { drawStructureLandmarkLayer } from "./rendering/structureLandmarkLayer";
-import { drawLevelNodes } from "./rendering/levelNodes";
-import { drawPathConnections } from "./rendering/pathConnections";
-import { drawWorldMapHero } from "./rendering/worldMapHero";
-import { drawLevelBattlePreview } from "./rendering/levelBattlePreview";
 
 export const drawWorldMapCanvas = ({
   canvasRef,
@@ -49,16 +49,20 @@ export const drawWorldMapCanvas = ({
     isWorldLevelUnlocked(levelId, unlockedMaps);
   const getLevelById = (id: string) => getWorldLevelById(id);
   const canvas = canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rawCtx = canvas.getContext("2d");
-  if (!rawCtx) return;
+  if (!rawCtx) {
+    return;
+  }
   let ctx: CanvasRenderingContext2D = rawCtx;
 
   const rawDpr = window.devicePixelRatio || 1;
   const dpr = Math.min(rawDpr, isMobile ? 1 : 2);
   const width = MAP_WIDTH;
   const height = mapHeight;
-  const mapScale = Math.max(1.0, Math.min(1.5, containerWidth / MAP_WIDTH));
+  const mapScale = Math.max(1, Math.min(1.5, containerWidth / MAP_WIDTH));
   const displayW = Math.round(MAP_WIDTH * mapScale);
   const displayH = Math.round(mapHeight * mapScale);
 
@@ -71,7 +75,7 @@ export const drawWorldMapCanvas = ({
     canvas.height = displayH * dpr;
     canvas.style.width = `${displayW}px`;
     canvas.style.height = `${displayH}px`;
-    lastCanvasSizeRef.current = { w: displayW, h: displayH };
+    lastCanvasSizeRef.current = { h: displayH, w: displayW };
   }
 
   // Use ref-based time to avoid React re-renders on every frame
@@ -100,28 +104,28 @@ export const drawWorldMapCanvas = ({
       _savedCtx = ctx;
       ctx = bgCtx;
       ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
-      staticBgCache.current = { canvas: bgCanvas, w: displayW, h: displayH };
+      staticBgCache.current = { canvas: bgCanvas, h: displayH, w: displayW };
     }
   }
 
   if (!bgCacheValid) {
     drawTerrainBackdrop({
       ctx,
-      width,
       height,
       isMobile,
       time,
+      width,
     });
 
     drawRoads({
       ctx,
-      width,
+      getLevelY,
+      getY,
       height,
       isMobile,
-      time,
-      getY,
-      getLevelY,
       seededRandom,
+      time,
+      width,
     });
 
     // On mobile, bake fog directly into the static bg cache to save a drawImage blit per frame
@@ -144,13 +148,13 @@ export const drawWorldMapCanvas = ({
   // Draw context shared by all decoration modules
   const dc: WorldMapDrawContext = {
     ctx,
-    width,
+    getLevelY,
+    getY,
     height,
     isMobile,
-    time,
-    getY,
-    getLevelY,
     seededRandom,
+    time,
+    width,
   };
 
   // --- Decoration layer caching ---
@@ -226,24 +230,24 @@ export const drawWorldMapCanvas = ({
       ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
       pathCache.current = {
         canvas: pc,
-        w: displayW,
         h: displayH,
         timeBucket: pathTimeBucket,
         unlockedKey: pathUnlockedKey,
+        w: displayW,
       };
     }
   }
 
   if (!pathCacheValid) {
     drawPathConnections({
-      ctx,
       allLevels,
-      getLevelY,
+      ctx,
       getLevelById,
-      isLevelUnlocked,
+      getLevelY,
       height,
-      time,
+      isLevelUnlocked,
       isMobile,
+      time,
     });
   } // end !pathCacheValid
 
@@ -300,20 +304,20 @@ export const drawWorldMapCanvas = ({
 
   // --- LEVEL NODES (cached at reduced fps + state invalidation) ---
   drawLevelNodes({
-    ctx,
     allLevels,
-    hoveredLevel,
-    selectedLevel,
-    levelStars,
-    isLevelUnlocked,
-    getLevelY,
-    time,
-    isMobile,
-    displayW,
+    ctx,
     displayH,
+    displayW,
     dpr,
+    getLevelY,
+    hoveredLevel,
+    isLevelUnlocked,
+    isMobile,
+    levelStars,
     mapScale,
     nodeCache,
+    selectedLevel,
+    time,
     unlockedMaps,
   });
 
@@ -328,16 +332,15 @@ export const drawWorldMapCanvas = ({
         heroMapPos.current.y,
         level.id,
         time,
-        isMobile,
+        isMobile
       );
     }
   }
 
   // --- HERO SPRITE on the world map (always visible) ---
   if (heroType && heroMapPos) {
-    const attackPhase = !isHeroMoving && selectedLevel
-      ? (Math.sin(time * 2) + 1) * 0.3
-      : 0;
+    const attackPhase =
+      !isHeroMoving && selectedLevel ? (Math.sin(time * 2) + 1) * 0.3 : 0;
     drawWorldMapHero(
       ctx,
       heroMapPos.current.x,
@@ -347,7 +350,7 @@ export const drawWorldMapCanvas = ({
       isHeroMoving,
       heroFacingRight?.current ?? true,
       attackPhase,
-      isMobile,
+      isMobile
     );
   }
 
@@ -364,7 +367,7 @@ export const drawWorldMapCanvas = ({
   if (tooltipLevelId) {
     const level = getLevelById(tooltipLevelId);
     if (level && isLevelUnlocked(level.id)) {
-      const x = level.x;
+      const { x } = level;
       const y = getLevelY(level.y);
       const size = 28;
 
@@ -415,18 +418,22 @@ export const drawWorldMapCanvas = ({
             cardY + 2,
             cardWidth - 4,
             cardHeight - 24,
-            [4, 4, 0, 0],
+            [4, 4, 0, 0]
           );
           ctx.clip();
-          if (isFallback) ctx.globalAlpha = 0.5;
+          if (isFallback) {
+            ctx.globalAlpha = 0.5;
+          }
           ctx.drawImage(
             img,
             cardX + 2,
             cardY + 2,
             cardWidth - 4,
-            cardHeight - 24,
+            cardHeight - 24
           );
-          if (isFallback) ctx.globalAlpha = 1;
+          if (isFallback) {
+            ctx.globalAlpha = 1;
+          }
           ctx.restore();
         } else {
           ctx.fillStyle = "#222";
@@ -511,9 +518,9 @@ export const drawWorldMapCanvas = ({
       atmosCtx = acCtx;
       atmosphereCache.current = {
         canvas: ac,
-        w: displayW,
         h: displayH,
         timeBucket: atmosTimeBucket,
+        w: displayW,
       };
     }
   }
@@ -529,10 +536,15 @@ export const drawWorldMapCanvas = ({
       const cloudH = 12 + seededRandom(c * 37 + 3) * 15;
 
       let cloudTint = "rgba(80,70,60,";
-      if (cloudBaseX > 1440) cloudTint = "rgba(60,30,20,";
-      else if (cloudBaseX > 1080) cloudTint = "rgba(140,160,180,";
-      else if (cloudBaseX > 720) cloudTint = "rgba(160,140,100,";
-      else if (cloudBaseX > 380) cloudTint = "rgba(80,100,80,";
+      if (cloudBaseX > 1440) {
+        cloudTint = "rgba(60,30,20,";
+      } else if (cloudBaseX > 1080) {
+        cloudTint = "rgba(140,160,180,";
+      } else if (cloudBaseX > 720) {
+        cloudTint = "rgba(160,140,100,";
+      } else if (cloudBaseX > 380) {
+        cloudTint = "rgba(80,100,80,";
+      }
 
       atmosCtx.globalAlpha = 0.06 + seededRandom(c * 37 + 4) * 0.06;
       atmosCtx.fillStyle = cloudTint + "1)";
@@ -567,10 +579,13 @@ export const drawWorldMapCanvas = ({
       const wingSpan = 4 + seededRandom(b * 53 + 2) * 3;
 
       let birdColor = "#2a2a20";
-      if (wrappedX > 1440)
+      if (wrappedX > 1440) {
         birdColor = "#1a0808";
-      else if (wrappedX > 1080) birdColor = "#4a5a6a";
-      else if (wrappedX > 720) birdColor = "#5a4a30";
+      } else if (wrappedX > 1080) {
+        birdColor = "#4a5a6a";
+      } else if (wrappedX > 720) {
+        birdColor = "#5a4a30";
+      }
 
       atmosCtx.strokeStyle = birdColor;
       atmosCtx.lineWidth = 1.2;
@@ -581,13 +596,13 @@ export const drawWorldMapCanvas = ({
         wrappedX - wingSpan * 0.3,
         birdY - Math.abs(wingFlap) * 2,
         wrappedX,
-        birdY,
+        birdY
       );
       atmosCtx.quadraticCurveTo(
         wrappedX + wingSpan * 0.3,
         birdY - Math.abs(wingFlap) * 2,
         wrappedX + wingSpan,
-        birdY + wingFlap * wingSpan,
+        birdY + wingFlap * wingSpan
       );
       atmosCtx.stroke();
     }
@@ -600,16 +615,20 @@ export const drawWorldMapCanvas = ({
       const dustX =
         seededRandom(d * 67) * width + Math.sin(time * 0.4 + d * 1.3) * 20;
       const dustY =
-        seededRandom(d * 67 + 1) * height +
-        Math.cos(time * 0.3 + d * 0.9) * 15;
+        seededRandom(d * 67 + 1) * height + Math.cos(time * 0.3 + d * 0.9) * 15;
       const dustSize = 0.8 + seededRandom(d * 67 + 2) * 1.5;
       const dustAlpha = 0.15 + Math.sin(time * 2 + d * 0.7) * 0.1;
 
       let dustColor = "200,180,140";
-      if (dustX > 1440) dustColor = "255,120,50";
-      else if (dustX > 1080) dustColor = "200,220,240";
-      else if (dustX > 720) dustColor = "220,200,150";
-      else if (dustX > 380) dustColor = "120,200,120";
+      if (dustX > 1440) {
+        dustColor = "255,120,50";
+      } else if (dustX > 1080) {
+        dustColor = "200,220,240";
+      } else if (dustX > 720) {
+        dustColor = "220,200,150";
+      } else if (dustX > 380) {
+        dustColor = "120,200,120";
+      }
 
       atmosCtx.fillStyle = `rgba(${dustColor},${dustAlpha})`;
       atmosCtx.beginPath();
@@ -650,7 +669,7 @@ export const drawWorldMapCanvas = ({
         fCtx.clearRect(0, 0, fc.width, fc.height);
         fCtx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
         drawFogEdges(fCtx, width, height);
-        fogOverlayCache.current = { canvas: fc, w: displayW, h: displayH };
+        fogOverlayCache.current = { canvas: fc, h: displayH, w: displayW };
       }
     }
 
@@ -666,7 +685,7 @@ export const drawWorldMapCanvas = ({
 function drawFogEdges(
   ctx: CanvasRenderingContext2D,
   width: number,
-  height: number,
+  height: number
 ) {
   const leftFog = ctx.createLinearGradient(0, 0, 70, 0);
   leftFog.addColorStop(0, "rgba(15, 20, 8, 0.98)");
@@ -718,15 +737,15 @@ function drawFogEdges(
   ctx.fillRect(0, height - cornerSize, cornerSize, cornerSize);
 
   const brGrad = ctx.createRadialGradient(
-    width, height, 0, width, height, cornerSize,
+    width,
+    height,
+    0,
+    width,
+    height,
+    cornerSize
   );
   brGrad.addColorStop(0, "rgba(5,3,1,0.5)");
   brGrad.addColorStop(1, "rgba(5,3,1,0)");
   ctx.fillStyle = brGrad;
-  ctx.fillRect(
-    width - cornerSize,
-    height - cornerSize,
-    cornerSize,
-    cornerSize,
-  );
+  ctx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
 }

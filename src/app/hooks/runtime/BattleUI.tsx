@@ -1,4 +1,42 @@
-import React, { type MutableRefObject } from "react";
+import React from "react";
+import type { MutableRefObject } from "react";
+
+import { CampaignVictoryScreen } from "../../components/menus/CampaignVictoryScreen";
+import { DefeatScreen } from "../../components/menus/DefeatScreen";
+import { VictoryScreen } from "../../components/menus/VictoryScreen";
+import { DevMenu } from "../../components/ui/DevMenu";
+import {
+  EnemyInspector,
+  EnemyDetailTooltip,
+  TroopDetailTooltip,
+  HeroDetailTooltip,
+} from "../../components/ui/EnemyInspector";
+import {
+  TopHUD,
+  CameraControls,
+  HeroSpellBar,
+  CameraModeOverlay,
+  FullscreenButton,
+} from "../../components/ui/hud";
+import {
+  TowerHoverTooltip,
+  PlacingTroopIndicator,
+  TargetingSpellIndicator,
+  MissileTargetingIndicator,
+  SentinelTargetingIndicator,
+  SpecialBuildingTooltip,
+  LandmarkTooltip,
+  HazardTooltip,
+  DecorationInspectorTooltip,
+} from "../../components/ui/Tooltips";
+import { InlineEncounterPanel } from "../../components/ui/tooltips/EncounterTooltip";
+import { HeroHoverTooltip } from "../../components/ui/tooltips/HeroHoverTooltip";
+import { TutorialOverlay } from "../../components/ui/TutorialOverlay";
+import { BuildMenu, TowerUpgradePanel } from "../../components/ui/upgrades";
+import { INITIAL_LIVES, LEVEL_DATA } from "../../constants";
+import { computeCumulativeCampaignStats } from "../../game/campaignStats";
+import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
+import { getEnemyPosWithPath, vaultPosKey } from "../../game/setup";
 import type {
   Position,
   Tower,
@@ -14,50 +52,10 @@ import type {
   Decoration,
   SpellUpgradeLevels,
 } from "../../types";
-import {
-  INITIAL_LIVES,
-  LEVEL_DATA,
-} from "../../constants";
-import {
-  gridToWorld,
-  worldToScreen,
-} from "../../utils";
-import {
-  getEnemyPosWithPath,
-  vaultPosKey,
-} from "../../game/setup";
-
-import { TopHUD, CameraControls, HeroSpellBar, CameraModeOverlay, FullscreenButton } from "../../components/ui/hud";
-import { DevMenu } from "../../components/ui/DevMenu";
-import { BuildMenu, TowerUpgradePanel } from "../../components/ui/upgrades";
-import { HeroHoverTooltip } from "../../components/ui/tooltips/HeroHoverTooltip";
-import { InlineEncounterPanel } from "../../components/ui/tooltips/EncounterTooltip";
-import {
-  TowerHoverTooltip,
-  PlacingTroopIndicator,
-  TargetingSpellIndicator,
-  MissileTargetingIndicator,
-  SentinelTargetingIndicator,
-  SpecialBuildingTooltip,
-  LandmarkTooltip,
-  HazardTooltip,
-  DecorationInspectorTooltip,
-} from "../../components/ui/Tooltips";
-import {
-  EnemyInspector,
-  EnemyDetailTooltip,
-  TroopDetailTooltip,
-  HeroDetailTooltip,
-} from "../../components/ui/EnemyInspector";
-import { VictoryScreen } from "../../components/menus/VictoryScreen";
-import { CampaignVictoryScreen } from "../../components/menus/CampaignVictoryScreen";
-import { DefeatScreen } from "../../components/menus/DefeatScreen";
-import { TutorialOverlay } from "../../components/ui/TutorialOverlay";
-import { computeCumulativeCampaignStats } from "../../game/campaignStats";
-import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
+import { gridToWorld, worldToScreen } from "../../utils";
+import type { GameEventLogAPI } from "../useGameEventLog";
 import type { GameProgress } from "../useLocalStorage";
 import type { EncounterQueueItem } from "../useTutorial";
-import type { GameEventLogAPI } from "../useGameEventLog";
 
 export interface BattleUIProps {
   // Canvas refs
@@ -111,11 +109,15 @@ export interface BattleUIProps {
   hexWardBlocksHealing: boolean;
 
   // Income events
-  eatingClubIncomeEvents: Array<{ id: string; amount: number }>;
+  eatingClubIncomeEvents: { id: string; amount: number }[];
   onEatingClubEventComplete: (id: string) => void;
-  bountyIncomeEvents: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
+  bountyIncomeEvents: {
+    id: string;
+    amount: number;
+    isGoldBoosted: boolean;
+  }[];
   onBountyEventComplete: (id: string) => void;
-  leakedBountyEvents: Array<{ id: string; amount: number }>;
+  leakedBountyEvents: { id: string; amount: number }[];
   onLeakedBountyEventComplete: (id: string) => void;
 
   // Inspector state
@@ -166,7 +168,9 @@ export interface BattleUIProps {
   // Tower upgrade callbacks
   upgradeTower: (towerId: string, path: "A" | "B") => void;
   sellTower: (towerId: string) => void;
-  setMissileMortarTargetingId: React.Dispatch<React.SetStateAction<string | null>>;
+  setMissileMortarTargetingId: React.Dispatch<
+    React.SetStateAction<string | null>
+  >;
 
   // Placement indicators
   placingTroop: boolean;
@@ -214,7 +218,11 @@ export interface BattleUIProps {
   setIsBuildDragging: React.Dispatch<React.SetStateAction<boolean>>;
   setHoveredBuildTower: React.Dispatch<React.SetStateAction<TowerType | null>>;
   setDraggingTower: React.Dispatch<React.SetStateAction<DraggingTower | null>>;
-  handleBuildTouchDragMove: (clientX: number, clientY: number, towerType: TowerType) => void;
+  handleBuildTouchDragMove: (
+    clientX: number,
+    clientY: number,
+    towerType: TowerType
+  ) => void;
   handleBuildTouchDragEnd: (clientX: number, clientY: number) => void;
   levelAllowedTowers: TowerType[] | null;
 
@@ -225,7 +233,11 @@ export interface BattleUIProps {
   // Victory / defeat
   starsEarned: number;
   timeSpent: number;
-  currentLevelStats: { bestTime?: number; bestHearts?: number; timesPlayed?: number };
+  currentLevelStats: {
+    bestTime?: number;
+    bestHearts?: number;
+    timesPlayed?: number;
+  };
   resetGame: () => void;
   progress: GameProgress;
 
@@ -369,10 +381,17 @@ export const BattleUI: React.FC<BattleUIProps> = ({
 }) => {
   const isVictory = battleOutcome === "victory";
   const isDefeat = battleOutcome === "defeat";
-  const isAnySpellActive = goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now());
+  const isAnySpellActive =
+    goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now());
 
   return (
-    <div className="w-full h-[100dvh] flex flex-col text-amber-100 overflow-hidden relative" style={{ paddingBottom: "env(safe-area-inset-bottom)", background: fadeOverlayBackground }}>
+    <div
+      className="w-full h-[100dvh] flex flex-col text-amber-100 overflow-hidden relative"
+      style={{
+        background: fadeOverlayBackground,
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
       {!cameraModeActive && devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -383,12 +402,12 @@ export const BattleUI: React.FC<BattleUIProps> = ({
           <canvas
             ref={backdropCanvasRef}
             className="absolute pointer-events-none game-start-fade"
-            style={{ top: 0, left: 0, willChange: "transform" }}
+            style={{ left: 0, top: 0, willChange: "transform" }}
           />
           <canvas
             ref={bgCanvasRef}
             className="absolute pointer-events-none game-start-fade"
-            style={{ top: 0, left: 0, willChange: "transform" }}
+            style={{ left: 0, top: 0, willChange: "transform" }}
           />
           <canvas
             ref={canvasRef}
@@ -396,10 +415,15 @@ export const BattleUI: React.FC<BattleUIProps> = ({
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
             onPointerLeave={handleCanvasPointerLeave}
-            className={`absolute inset-0 w-full h-full touch-none game-start-fade ${isPanning ? 'cursor-grabbing' :
-              repositioningTower ? 'cursor-move' :
-                hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
-              }`}
+            className={`absolute inset-0 w-full h-full touch-none game-start-fade ${
+              isPanning
+                ? "cursor-grabbing"
+                : repositioningTower
+                  ? "cursor-move"
+                  : hoveredWaveBubblePathKey
+                    ? "cursor-pointer"
+                    : "cursor-crosshair"
+            }`}
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] battle-ui-fade">
             <TopHUD
@@ -411,7 +435,9 @@ export const BattleUI: React.FC<BattleUIProps> = ({
               isSandbox={LEVEL_DATA[selectedMap]?.levelKind === "sandbox"}
               gameSpeed={gameSpeed}
               setGameSpeed={(nextSpeed) => {
-                if (battleOutcome || pauseLocked) return;
+                if (battleOutcome || pauseLocked) {
+                  return;
+                }
                 setGameSpeed(nextSpeed);
               }}
               goldSpellActive={goldSpellActive}
@@ -452,7 +478,9 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   enemies={enemies}
                   troops={troops}
                   setGameSpeed={(nextSpeed) => {
-                    if (battleOutcome) return;
+                    if (battleOutcome) {
+                      return;
+                    }
                     setGameSpeed(nextSpeed);
                   }}
                   previousGameSpeed={previousGameSpeed}
@@ -482,19 +510,31 @@ export const BattleUI: React.FC<BattleUIProps> = ({
           )}
           {!cameraModeActive && (
             <>
-              {!isTouchDeviceRef.current && hoveredTower && !selectedTower &&
+              {!isTouchDeviceRef.current &&
+                hoveredTower &&
+                !selectedTower &&
                 (() => {
                   const tower = towers.find((t) => t.id === hoveredTower);
-                  if (!tower) return null;
-                  return <TowerHoverTooltip tower={tower} position={mousePos} />;
+                  if (!tower) {
+                    return null;
+                  }
+                  return (
+                    <TowerHoverTooltip tower={tower} position={mousePos} />
+                  );
                 })()}
-              {!isTouchDeviceRef.current && hoveredHero && !hoveredTower && hero && !hero.dead && (
-                <HeroHoverTooltip hero={hero} position={mousePos} />
-              )}
+              {!isTouchDeviceRef.current &&
+                hoveredHero &&
+                !hoveredTower &&
+                hero &&
+                !hero.dead && (
+                  <HeroHoverTooltip hero={hero} position={mousePos} />
+                )}
               {selectedTower &&
                 (() => {
                   const tower = towers.find((t) => t.id === selectedTower);
-                  if (!tower) return null;
+                  if (!tower) {
+                    return null;
+                  }
                   const worldPos = gridToWorld(tower.pos);
                   const screenPos = worldToScreen(
                     worldPos,
@@ -523,7 +563,10 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                         setTowers((prev) =>
                           prev.map((t) =>
                             t.id === towerId
-                              ? { ...t, mortarAutoAim: t.mortarAutoAim === false ? true : false }
+                              ? {
+                                  ...t,
+                                  mortarAutoAim: t.mortarAutoAim === false,
+                                }
                               : t
                           )
                         );
@@ -544,96 +587,156 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                     />
                   );
                 })()}
-              {placingTroop && <PlacingTroopIndicator paydayActive={isAnySpellActive} />}
-              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} paydayActive={isAnySpellActive} />}
-              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={isAnySpellActive} mapTheme={LEVEL_DATA[selectedMap]?.theme} />}
-              {missileMortarTargetingId && <MissileTargetingIndicator paydayActive={isAnySpellActive} />}
-              {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
-                <SpecialBuildingTooltip
-                  type={hoveredSpecialTower.type}
-                  hp={hoveredSpecialTower.type === "vault" ? (specialTowerHp[vaultPosKey(hoveredSpecialTower.pos)] ?? null) : null}
-                  maxHp={hoveredSpecialTower.hp}
-                  position={mousePos}
-                  sentinelTarget={
-                    hoveredSpecialTower.type === "sentinel_nexus"
-                      ? sentinelTargets[
-                      getSpecialTowerKey(hoveredSpecialTower)
-                      ] ?? null
-                      : undefined
-                  }
-                  sentinelTargeting={
-                    hoveredSpecialTower.type === "sentinel_nexus" &&
-                    activeSentinelTargetKey ===
-                    getSpecialTowerKey(hoveredSpecialTower)
-                  }
-                  mapTheme={LEVEL_DATA[selectedMap]?.theme || "grassland"}
+              {placingTroop && (
+                <PlacingTroopIndicator paydayActive={isAnySpellActive} />
+              )}
+              {targetingSpell && (
+                <TargetingSpellIndicator
+                  spellType={targetingSpell}
+                  paydayActive={isAnySpellActive}
                 />
               )}
-              {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !hoveredHero && !hoveredSpecialTower && !selectedTower && (
-                <LandmarkTooltip landmarkType={hoveredLandmark} position={mousePos} />
+              {activeSentinelTargetKey && (
+                <SentinelTargetingIndicator
+                  paydayActive={isAnySpellActive}
+                  mapTheme={LEVEL_DATA[selectedMap]?.theme}
+                />
               )}
-              {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !hoveredHero && !hoveredSpecialTower && !hoveredLandmark && !selectedTower && (
-                <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
+              {missileMortarTargetingId && (
+                <MissileTargetingIndicator paydayActive={isAnySpellActive} />
               )}
+              {!isTouchDeviceRef.current &&
+                hoveredSpecialTower &&
+                !hoveredTower &&
+                !hoveredHero && (
+                  <SpecialBuildingTooltip
+                    type={hoveredSpecialTower.type}
+                    hp={
+                      hoveredSpecialTower.type === "vault"
+                        ? (specialTowerHp[
+                            vaultPosKey(hoveredSpecialTower.pos)
+                          ] ?? null)
+                        : null
+                    }
+                    maxHp={hoveredSpecialTower.hp}
+                    position={mousePos}
+                    sentinelTarget={
+                      hoveredSpecialTower.type === "sentinel_nexus"
+                        ? (sentinelTargets[
+                            getSpecialTowerKey(hoveredSpecialTower)
+                          ] ?? null)
+                        : undefined
+                    }
+                    sentinelTargeting={
+                      hoveredSpecialTower.type === "sentinel_nexus" &&
+                      activeSentinelTargetKey ===
+                        getSpecialTowerKey(hoveredSpecialTower)
+                    }
+                    mapTheme={LEVEL_DATA[selectedMap]?.theme || "grassland"}
+                  />
+                )}
+              {!isTouchDeviceRef.current &&
+                hoveredLandmark &&
+                !hoveredTower &&
+                !hoveredHero &&
+                !hoveredSpecialTower &&
+                !selectedTower && (
+                  <LandmarkTooltip
+                    landmarkType={hoveredLandmark}
+                    position={mousePos}
+                  />
+                )}
+              {!isTouchDeviceRef.current &&
+                hoveredHazardType &&
+                !hoveredTower &&
+                !hoveredHero &&
+                !hoveredSpecialTower &&
+                !hoveredLandmark &&
+                !selectedTower && (
+                  <HazardTooltip
+                    hazardType={hoveredHazardType}
+                    position={mousePos}
+                  />
+                )}
               {inspectorActive && hoveredInspectDecoration && (
-                <DecorationInspectorTooltip decoration={hoveredInspectDecoration} position={mousePos} />
+                <DecorationInspectorTooltip
+                  decoration={hoveredInspectDecoration}
+                  position={mousePos}
+                />
               )}
-              {inspectorActive && selectedInspectEnemy && (() => {
-                const enemyPos = getEnemyPosWithPath(selectedInspectEnemy, selectedMap);
-                const screenPos = worldToScreen(
-                  enemyPos,
-                  width,
-                  height,
-                  dpr,
-                  cameraOffsetRef.current,
-                  cameraZoomRef.current
-                );
-                return (
-                  <EnemyDetailTooltip
-                    enemy={selectedInspectEnemy}
-                    position={screenPos}
-                    onClose={() => setSelectedInspectEnemy(null)}
-                  />
-                );
-              })()}
-              {inspectorActive && selectedInspectTroop && (() => {
-                const liveTroop = troops.find(t => t.id === selectedInspectTroop.id);
-                if (!liveTroop) return null;
-                const screenPos = worldToScreen(
-                  liveTroop.pos,
-                  width,
-                  height,
-                  dpr,
-                  cameraOffsetRef.current,
-                  cameraZoomRef.current
-                );
-                return (
-                  <TroopDetailTooltip
-                    troop={liveTroop}
-                    position={screenPos}
-                    onClose={() => setSelectedInspectTroop(null)}
-                  />
-                );
-              })()}
-              {inspectorActive && selectedInspectHero && hero && (() => {
-                const screenPos = worldToScreen(
-                  hero.pos,
-                  width,
-                  height,
-                  dpr,
-                  cameraOffsetRef.current,
-                  cameraZoomRef.current
-                );
-                return (
-                  <HeroDetailTooltip
-                    hero={hero}
-                    position={screenPos}
-                    onClose={() => setSelectedInspectHero(false)}
-                  />
-                );
-              })()}
+              {inspectorActive &&
+                selectedInspectEnemy &&
+                (() => {
+                  const enemyPos = getEnemyPosWithPath(
+                    selectedInspectEnemy,
+                    selectedMap
+                  );
+                  const screenPos = worldToScreen(
+                    enemyPos,
+                    width,
+                    height,
+                    dpr,
+                    cameraOffsetRef.current,
+                    cameraZoomRef.current
+                  );
+                  return (
+                    <EnemyDetailTooltip
+                      enemy={selectedInspectEnemy}
+                      position={screenPos}
+                      onClose={() => setSelectedInspectEnemy(null)}
+                    />
+                  );
+                })()}
+              {inspectorActive &&
+                selectedInspectTroop &&
+                (() => {
+                  const liveTroop = troops.find(
+                    (t) => t.id === selectedInspectTroop.id
+                  );
+                  if (!liveTroop) {
+                    return null;
+                  }
+                  const screenPos = worldToScreen(
+                    liveTroop.pos,
+                    width,
+                    height,
+                    dpr,
+                    cameraOffsetRef.current,
+                    cameraZoomRef.current
+                  );
+                  return (
+                    <TroopDetailTooltip
+                      troop={liveTroop}
+                      position={screenPos}
+                      onClose={() => setSelectedInspectTroop(null)}
+                    />
+                  );
+                })()}
+              {inspectorActive &&
+                selectedInspectHero &&
+                hero &&
+                (() => {
+                  const screenPos = worldToScreen(
+                    hero.pos,
+                    width,
+                    height,
+                    dpr,
+                    cameraOffsetRef.current,
+                    cameraZoomRef.current
+                  );
+                  return (
+                    <HeroDetailTooltip
+                      hero={hero}
+                      position={screenPos}
+                      onClose={() => setSelectedInspectHero(false)}
+                    />
+                  );
+                })()}
               {!showTutorial && encounterQueue.length > 0 && (
-                <div className="absolute left-2 pointer-events-none" style={{ zIndex: 110, bottom: 140 }}>
+                <div
+                  className="absolute left-2 pointer-events-none"
+                  style={{ bottom: 140, zIndex: 110 }}
+                >
                   <InlineEncounterPanel
                     encounters={encounterQueue}
                     currentIndex={encounterIndex}
@@ -643,7 +746,10 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   />
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 right-0 pointer-events-none battle-ui-fade" style={{ zIndex: 100 }}>
+              <div
+                className="absolute bottom-0 left-0 right-0 pointer-events-none battle-ui-fade"
+                style={{ zIndex: 100 }}
+              >
                 <div className="flex justify-end items-end px-0">
                   <div className="flex-shrink-0">
                     {devMenuOpen && (
@@ -688,16 +794,20 @@ export const BattleUI: React.FC<BattleUIProps> = ({
             setDraggingTower={setDraggingTower}
             onTouchDragMove={handleBuildTouchDragMove}
             onTouchDragEnd={handleBuildTouchDragEnd}
-            placedTowers={towers.reduce((acc, t) => {
-              acc[t.type] = (acc[t.type] || 0) + 1;
-              return acc;
-            }, {} as Record<TowerType, number>)}
+            placedTowers={towers.reduce(
+              (acc, t) => {
+                acc[t.type] = (acc[t.type] || 0) + 1;
+                return acc;
+              },
+              {} as Record<TowerType, number>
+            )}
             allowedTowers={levelAllowedTowers}
           />
         </div>
       )}
-      {!cameraModeActive && isVictory && (
-        selectedMap === FINAL_CAMPAIGN_LEVEL && !isFreeplay ? (
+      {!cameraModeActive &&
+        isVictory &&
+        (selectedMap === FINAL_CAMPAIGN_LEVEL && !isFreeplay ? (
           <CampaignVictoryScreen
             cumulativeStats={computeCumulativeCampaignStats(progress)}
             sessionStats={gameEventLog.stats}
@@ -718,8 +828,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
             isFreeplay={isFreeplay}
             overlay
           />
-        )
-      )}
+        ))}
       {!cameraModeActive && isDefeat && (
         <DefeatScreen
           resetGame={retryLevel}

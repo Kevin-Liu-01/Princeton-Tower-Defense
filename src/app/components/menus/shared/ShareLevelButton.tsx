@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
 import { Share2, Check } from "lucide-react";
+import React, { useState, useCallback, useRef } from "react";
+
 import { PANEL, GOLD } from "../../ui/system/theme";
 
 interface ShareLevelButtonProps {
@@ -12,7 +13,9 @@ interface ShareLevelButtonProps {
 }
 
 function buildLevelUrl(levelId: string): string {
-  if (typeof window === "undefined") return `/${levelId}`;
+  if (typeof window === "undefined") {
+    return `/${levelId}`;
+  }
   return `${window.location.origin}/${levelId}`;
 }
 
@@ -50,10 +53,12 @@ export function ShareLevelButton({
       }
 
       setCopied(true);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       timeoutRef.current = setTimeout(() => setCopied(false), 1800);
     },
-    [levelId, levelName],
+    [levelId, levelName]
   );
 
   const Icon = copied ? Check : Share2;

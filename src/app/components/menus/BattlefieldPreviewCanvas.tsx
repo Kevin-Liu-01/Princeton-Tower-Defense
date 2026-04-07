@@ -1,13 +1,15 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback } from "react";
 
-export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animTime }) => {
+export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({
+  animTime,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentScene, setCurrentScene] = useState(0);
   const timeRef = useRef(0);
-  const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
-  const cssSizeRef = useRef({ w: 0, h: 0 });
+  const lastCanvasSizeRef = useRef({ h: 0, w: 0 });
+  const cssSizeRef = useRef({ h: 0, w: 0 });
   const isVisibleRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -20,21 +22,27 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ro = new ResizeObserver(([entry]) => {
       const { inlineSize: w, blockSize: h } = entry.contentBoxSize[0];
-      cssSizeRef.current = { w, h };
+      cssSizeRef.current = { h, w };
     });
     ro.observe(canvas);
-    cssSizeRef.current = { w: canvas.clientWidth, h: canvas.clientHeight };
+    cssSizeRef.current = { h: canvas.clientHeight, w: canvas.clientWidth };
     return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const observer = new IntersectionObserver(
-      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
       { threshold: 0.05 }
     );
     observer.observe(el);
@@ -42,12 +50,16 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
   }, []);
 
   // Keep time ref in sync with prop
-  useEffect(() => { timeRef.current = animTime; }, [animTime]);
+  useEffect(() => {
+    timeRef.current = animTime;
+  }, [animTime]);
 
   // Cycle through scenes every 6 seconds (only update state when scene actually changes)
   const prevSceneRef = useRef(0);
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobile) {
+      return;
+    }
     const sceneIndex = Math.floor(animTime / 6) % 6;
     if (sceneIndex !== prevSceneRef.current) {
       prevSceneRef.current = sceneIndex;
@@ -58,18 +70,27 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
   // Draw battle scene on canvas — own rAF loop decoupled from React renders
   const drawScene = useCallback((currentSceneIdx: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     const { w: width, h: height } = cssSizeRef.current;
-    if (width === 0 || height === 0) return;
+    if (width === 0 || height === 0) {
+      return;
+    }
 
-    if (lastCanvasSizeRef.current.w !== width || lastCanvasSizeRef.current.h !== height) {
+    if (
+      lastCanvasSizeRef.current.w !== width ||
+      lastCanvasSizeRef.current.h !== height
+    ) {
       canvas.width = width * dpr;
       canvas.height = height * dpr;
-      lastCanvasSizeRef.current = { w: width, h: height };
+      lastCanvasSizeRef.current = { h: height, w: width };
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -79,63 +100,69 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     const scenes = [
       {
         name: "Nassau Campus",
-        bg1: "#1a2810", bg2: "#0d1408",
+        bg1: "#1a2810",
+        bg2: "#0d1408",
         groundColor: "#2d4a1f",
         accent: "#f97316", // Princeton orange
         secondary: "#000000",
         skyGlow: "#f9731620",
         particles: "leaves",
-        weather: "clear"
+        weather: "clear",
       },
       {
-        name: "Volcanic Caldera",
-        bg1: "#3d1a0a", bg2: "#1a0805",
-        groundColor: "#4a1a10",
         accent: "#ef4444",
+        bg1: "#3d1a0a",
+        bg2: "#1a0805",
+        groundColor: "#4a1a10",
+        name: "Volcanic Caldera",
+        particles: "embers",
         secondary: "#fbbf24",
         skyGlow: "#ef444440",
-        particles: "embers",
-        weather: "smoke"
+        weather: "smoke",
       },
       {
-        name: "Frozen Glacier",
-        bg1: "#1a2a3a", bg2: "#0d151d",
-        groundColor: "#3a5a6a",
         accent: "#60a5fa",
+        bg1: "#1a2a3a",
+        bg2: "#0d151d",
+        groundColor: "#3a5a6a",
+        name: "Frozen Glacier",
+        particles: "snow",
         secondary: "#e0f2fe",
         skyGlow: "#60a5fa30",
-        particles: "snow",
-        weather: "blizzard"
+        weather: "blizzard",
       },
       {
-        name: "Desert Sphinx",
-        bg1: "#4a3a20", bg2: "#2a2010",
-        groundColor: "#8a7050",
         accent: "#fbbf24",
+        bg1: "#4a3a20",
+        bg2: "#2a2010",
+        groundColor: "#8a7050",
+        name: "Desert Sphinx",
+        particles: "sand",
         secondary: "#d97706",
         skyGlow: "#fbbf2420",
-        particles: "sand",
-        weather: "sandstorm"
+        weather: "sandstorm",
       },
       {
-        name: "Murky Bog",
-        bg1: "#1a2a1a", bg2: "#0d150d",
-        groundColor: "#2a3a2a",
         accent: "#4ade80",
+        bg1: "#1a2a1a",
+        bg2: "#0d150d",
+        groundColor: "#2a3a2a",
+        name: "Murky Bog",
+        particles: "fireflies",
         secondary: "#a855f7",
         skyGlow: "#4ade8020",
-        particles: "fireflies",
-        weather: "fog"
+        weather: "fog",
       },
       {
-        name: "Night Siege",
-        bg1: "#15102a", bg2: "#08051a",
-        groundColor: "#2a2a4a",
         accent: "#a855f7",
+        bg1: "#15102a",
+        bg2: "#08051a",
+        groundColor: "#2a2a4a",
+        name: "Night Siege",
+        particles: "magic",
         secondary: "#f97316",
         skyGlow: "#a855f730",
-        particles: "magic",
-        weather: "starry"
+        weather: "starry",
       },
     ];
     const scene = scenes[currentSceneIdx];
@@ -182,7 +209,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     ctx.beginPath();
     ctx.moveTo(0, height * 0.5);
     for (let x = 0; x <= width; x += 30) {
-      const mountainHeight = Math.sin(x * 0.02) * 30 + Math.sin(x * 0.05) * 20 + Math.sin(x * 0.01) * 40;
+      const mountainHeight =
+        Math.sin(x * 0.02) * 30 +
+        Math.sin(x * 0.05) * 20 +
+        Math.sin(x * 0.01) * 40;
       ctx.lineTo(x, height * 0.45 - mountainHeight);
     }
     ctx.lineTo(width, height * 0.7);
@@ -227,14 +257,20 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     ctx.beginPath();
     ctx.moveTo(-20, groundY + 40);
     ctx.bezierCurveTo(
-      width * 0.25, groundY + 50,
-      width * 0.4, groundY + 20,
-      width * 0.6, groundY + 45
+      width * 0.25,
+      groundY + 50,
+      width * 0.4,
+      groundY + 20,
+      width * 0.6,
+      groundY + 45
     );
     ctx.bezierCurveTo(
-      width * 0.8, groundY + 70,
-      width * 0.9, groundY + 30,
-      width + 20, groundY + 40
+      width * 0.8,
+      groundY + 70,
+      width * 0.9,
+      groundY + 30,
+      width + 20,
+      groundY + 40
     );
     ctx.stroke();
 
@@ -262,7 +298,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     ctx.fill();
 
     // War banners on poles
-    const drawBanner = (bx: number, by: number, color1: string, color2: string, waveOffset: number) => {
+    const drawBanner = (
+      bx: number,
+      by: number,
+      color1: string,
+      color2: string,
+      waveOffset: number
+    ) => {
       const wave = Math.sin(t * 4 + waveOffset) * 5;
 
       // Pole
@@ -277,8 +319,18 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.fillStyle = color1;
       ctx.beginPath();
       ctx.moveTo(bx + 2, by - 48);
-      ctx.quadraticCurveTo(bx + 15 + wave, by - 42, bx + 22, by - 35 + wave * 0.5);
-      ctx.quadraticCurveTo(bx + 15 + wave * 0.5, by - 28, bx + 20, by - 20 + wave * 0.3);
+      ctx.quadraticCurveTo(
+        bx + 15 + wave,
+        by - 42,
+        bx + 22,
+        by - 35 + wave * 0.5
+      );
+      ctx.quadraticCurveTo(
+        bx + 15 + wave * 0.5,
+        by - 28,
+        bx + 20,
+        by - 20 + wave * 0.3
+      );
       ctx.lineTo(bx + 2, by - 25);
       ctx.closePath();
       ctx.fill();
@@ -298,16 +350,39 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.fillStyle = "#57534e";
       ctx.beginPath();
       ctx.moveTo(rx - size, ry + size * 0.3);
-      ctx.quadraticCurveTo(rx - size * 0.8, ry - size * 0.6, rx - size * 0.2, ry - size * 0.8);
-      ctx.quadraticCurveTo(rx + size * 0.3, ry - size * 0.9, rx + size * 0.7, ry - size * 0.4);
-      ctx.quadraticCurveTo(rx + size, ry + size * 0.2, rx + size * 0.5, ry + size * 0.5);
+      ctx.quadraticCurveTo(
+        rx - size * 0.8,
+        ry - size * 0.6,
+        rx - size * 0.2,
+        ry - size * 0.8
+      );
+      ctx.quadraticCurveTo(
+        rx + size * 0.3,
+        ry - size * 0.9,
+        rx + size * 0.7,
+        ry - size * 0.4
+      );
+      ctx.quadraticCurveTo(
+        rx + size,
+        ry + size * 0.2,
+        rx + size * 0.5,
+        ry + size * 0.5
+      );
       ctx.quadraticCurveTo(rx, ry + size * 0.6, rx - size, ry + size * 0.3);
       ctx.fill();
 
       // Rock highlight
       ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
       ctx.beginPath();
-      ctx.ellipse(rx - size * 0.3, ry - size * 0.4, size * 0.3, size * 0.2, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(
+        rx - size * 0.3,
+        ry - size * 0.4,
+        size * 0.3,
+        size * 0.2,
+        -0.3,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     };
 
@@ -455,7 +530,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         if (puffAlpha > 0) {
           ctx.fillStyle = `rgba(60, 55, 50, ${puffAlpha})`;
           ctx.beginPath();
-          ctx.arc(smokeX + Math.sin(t * 2 + puff) * 10, puffY, puffSize, 0, Math.PI * 2);
+          ctx.arc(
+            smokeX + Math.sin(t * 2 + puff) * 10,
+            puffY,
+            puffSize,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
       }
@@ -1180,7 +1261,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const glassG = [60, 120, 180, 160, 60, 180];
       const glassB = [60, 220, 80, 60, 200, 200];
       for (let seg = 0; seg < 6; seg++) {
-        const a1 = seg * Math.PI / 3;
+        const a1 = (seg * Math.PI) / 3;
         const a2 = a1 + Math.PI / 3;
         ctx.fillStyle = `rgba(${glassR[seg]}, ${glassG[seg]}, ${glassB[seg]}, ${rosePulse * 0.45})`;
         ctx.beginPath();
@@ -1194,7 +1275,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       for (let spoke = 0; spoke < 6; spoke++) {
-        const angle = spoke * Math.PI / 3;
+        const angle = (spoke * Math.PI) / 3;
         ctx.moveTo(0, -55);
         ctx.lineTo(Math.cos(angle) * 14, -55 + Math.sin(angle) * 14);
       }
@@ -1476,7 +1557,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       for (let puff = 0; puff < 3; puff++) {
         const puffAge = (t * 2 + puff * 0.7) % 2.5;
         if (puffAge < 2) {
-          const px = trainX + 8 + puffAge * 8 + Math.sin(t * 4 + puff * 2.1) * 4;
+          const px =
+            trainX + 8 + puffAge * 8 + Math.sin(t * 4 + puff * 2.1) * 4;
           const py = -26 - tb - puffAge * 15;
           const pSize = 3 + puffAge * 6;
           ctx.fillStyle = `rgba(220, 220, 220, ${0.5 - puffAge * 0.2})`;
@@ -1627,10 +1709,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     drawBlairArchLandmark(width * 0.88, groundY - 25, 0.65);
 
     // Draw towers at different positions with layered depth - TALLER AND MORE PROMINENT
-    drawDinkyStation(width * 0.10, groundY - 15, 0.75);
-    drawCannonTower(width * 0.30, groundY - 5, 1.1);
-    drawLabTower(width * 0.50, groundY - 15, 1.15);
-    drawArchTower(width * 0.70, groundY - 5, 1.0);
+    drawDinkyStation(width * 0.1, groundY - 15, 0.75);
+    drawCannonTower(width * 0.3, groundY - 5, 1.1);
+    drawLabTower(width * 0.5, groundY - 15, 1.15);
+    drawArchTower(width * 0.7, groundY - 5, 1);
 
     // === EPIC HERO - ARMORED WAR TIGER ===
 
@@ -1661,9 +1743,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         const pAngle = (t * 1.5 + p * Math.PI * 0.34) % (Math.PI * 2);
         const pDist = 35 + Math.sin(t * 2 + p * 0.5) * 8;
         const px = Math.cos(pAngle) * pDist;
-        const py = Math.sin(pAngle) * pDist * 0.6 - Math.abs(Math.sin(t * 4 + p)) * 8;
+        const py =
+          Math.sin(pAngle) * pDist * 0.6 - Math.abs(Math.sin(t * 4 + p)) * 8;
         const pAlpha = 0.5 + Math.sin(t * 4 + p * 0.4) * 0.3;
-        ctx.fillStyle = p % 3 === 0 ? `rgba(255, 200, 50, ${pAlpha})` : `rgba(255, 100, 0, ${pAlpha})`;
+        ctx.fillStyle =
+          p % 3 === 0
+            ? `rgba(255, 200, 50, ${pAlpha})`
+            : `rgba(255, 100, 0, ${pAlpha})`;
         ctx.beginPath();
         ctx.moveTo(px, py + 3);
         ctx.quadraticCurveTo(px - 2, py, px, py - 4);
@@ -1759,7 +1845,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         // Massive arm/shoulder muscle (flat fill)
         ctx.fillStyle = "#dd5500";
         ctx.beginPath();
-        ctx.ellipse(shoulderX + armOffset, -5, 14, 18, side * -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          shoulderX + armOffset,
+          -5,
+          14,
+          18,
+          side * -0.3,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
 
         // Arm stripes
@@ -1769,14 +1863,27 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
           const stripeOffset = -12 + stripe * 6;
           ctx.beginPath();
           ctx.moveTo(shoulderX + armOffset + side * 12, -5 + stripeOffset);
-          ctx.quadraticCurveTo(shoulderX + armOffset + side * 8, -5 + stripeOffset - 2, shoulderX + armOffset + side * 4, -5 + stripeOffset);
+          ctx.quadraticCurveTo(
+            shoulderX + armOffset + side * 8,
+            -5 + stripeOffset - 2,
+            shoulderX + armOffset + side * 4,
+            -5 + stripeOffset
+          );
           ctx.stroke();
         }
 
         // Heavy shoulder pauldron (flat fill)
         ctx.fillStyle = "#4a3a28";
         ctx.beginPath();
-        ctx.ellipse(shoulderX + armOffset, -10, 10, 8, side * 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          shoulderX + armOffset,
+          -10,
+          10,
+          8,
+          side * 0.3,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
 
         // Pauldron spike
@@ -1923,7 +2030,6 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.restore();
     };
 
-
     // === EPIC ENEMIES ===
 
     // Nassau Lion - Legendary Stone Golem Boss
@@ -2045,10 +2151,19 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
           ctx.fillStyle = maneRow === 0 ? "#a8a29e" : "#78716c";
           ctx.beginPath();
           // Pointed shard tip
-          ctx.moveTo(maneX + cosA * shardLen, maneY + sinA * shardLen + manePulse);
+          ctx.moveTo(
+            maneX + cosA * shardLen,
+            maneY + sinA * shardLen + manePulse
+          );
           // Base
-          ctx.lineTo(maneX + Math.cos(angle + 1.2) * 4, maneY + Math.sin(angle + 1.2) * 4 + manePulse);
-          ctx.lineTo(maneX + Math.cos(angle - 1.2) * 4, maneY + Math.sin(angle - 1.2) * 4 + manePulse);
+          ctx.lineTo(
+            maneX + Math.cos(angle + 1.2) * 4,
+            maneY + Math.sin(angle + 1.2) * 4 + manePulse
+          );
+          ctx.lineTo(
+            maneX + Math.cos(angle - 1.2) * 4,
+            maneY + Math.sin(angle - 1.2) * 4 + manePulse
+          );
           ctx.closePath();
           ctx.fill();
         }
@@ -2115,7 +2230,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.strokeStyle = "#44403c";
         ctx.lineWidth = 2;
         for (let crack = 0; crack < 6; crack++) {
-          const crackAngle = crack * Math.PI / 3;
+          const crackAngle = (crack * Math.PI) / 3;
           ctx.beginPath();
           ctx.moveTo(0, 28);
           ctx.lineTo(Math.cos(crackAngle) * 25, 28 + Math.sin(crackAngle) * 8);
@@ -2127,7 +2242,12 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     };
 
     // Tiger Transit Wyvern - MASSIVE TERRIFYING DRAGON
-    const drawWyvern = (x: number, y: number, index: number, scale: number = 0.75) => {
+    const drawWyvern = (
+      x: number,
+      y: number,
+      index: number,
+      scale: number = 0.75
+    ) => {
       const sinT5i = Math.sin(t * 5 + index);
       const sinT3i = Math.sin(t * 3 + index);
       const sinT6i = Math.sin(t * 6 + index);
@@ -2152,7 +2272,6 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.ellipse(0, 0, 90, 60, 0, 0, Math.PI * 2);
       ctx.fill();
 
-
       // Deadly spiked tail
       const sinT5 = Math.sin(t * 5);
       const sinT4 = Math.sin(t * 4);
@@ -2167,7 +2286,11 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.stroke();
       // 3 pre-positioned tail spikes
       ctx.fillStyle = "#2a1010";
-      const tailSpikes = [[-35, 0], [-55, 2], [-75, 4]];
+      const tailSpikes = [
+        [-35, 0],
+        [-55, 2],
+        [-75, 4],
+      ];
       for (const [sx, seedOff] of tailSpikes) {
         const sy = 18 + Math.sin(t * 5 + seedOff) * 8;
         ctx.beginPath();
@@ -2260,7 +2383,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       // Massive muscular body (flat fill)
       ctx.fillStyle = "#5a2525";
       ctx.beginPath();
-      ctx.ellipse(0, 0 + breathPulse * 0.3, 28, 22 + breathPulse * 0.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        0,
+        0 + breathPulse * 0.3,
+        28,
+        22 + breathPulse * 0.2,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       // Armored chest plates
@@ -2476,9 +2607,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.restore();
     };
 
-
     // Flying Rival Mascot - MENACING DEMONIC HARPY
-    const drawFlyingMascot = (x: number, y: number, index: number, scale: number = 0.7) => {
+    const drawFlyingMascot = (
+      x: number,
+      y: number,
+      index: number,
+      scale: number = 0.7
+    ) => {
       const sinT10i = Math.sin(t * 10 + index);
       const sinT4i = Math.sin(t * 4 + index);
       const sinT6i = Math.sin(t * 6 + index);
@@ -2602,7 +2737,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       // Muscular armored body (flat for small sprite)
       ctx.fillStyle = "#1a4040";
       ctx.beginPath();
-      ctx.ellipse(0, breathPulse * 0.5, 14, 20 + breathPulse * 0.3, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        0,
+        breathPulse * 0.5,
+        14,
+        20 + breathPulse * 0.3,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       // Glowing rune tattoos on body
@@ -2740,14 +2883,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.restore();
     };
 
-
     // Nassau Lion (boss) - moved to better position
     drawNassauLion(width * 0.72, groundY + 20);
 
     // Flying mascots with targeting effects
     for (let i = 0; i < 4; i++) {
-      const mascotX = ((width * 0.05 + t * 32 + i * 110) % (width * 1.4)) - width * 0.2;
-      const mascotY = height * (0.22 + i * 0.08) + Math.sin(t * 2.5 + i * 2.5) * 20;
+      const mascotX =
+        ((width * 0.05 + t * 32 + i * 110) % (width * 1.4)) - width * 0.2;
+      const mascotY =
+        height * (0.22 + i * 0.08) + Math.sin(t * 2.5 + i * 2.5) * 20;
 
       // Check if this mascot is being hit (periodic)
       const hitPhase = (t * 1.2 + i * 1.5) % 4;
@@ -2759,7 +2903,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
       // Targeting laser from tower
       if (hitPhase > 3 && hitPhase < 4) {
-        const targetAlpha = (hitPhase - 3);
+        const targetAlpha = hitPhase - 3;
         ctx.strokeStyle = `rgba(255, 100, 100, ${targetAlpha * 0.5})`;
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
@@ -2794,7 +2938,11 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         const explosionAlpha = 1 - explosionProgress;
 
         // Multi-layer explosion (flat colors)
-        const mascotExpColors = [`rgba(255, 80, 0, ${explosionAlpha * 0.3})`, `rgba(255, 150, 50, ${explosionAlpha * 0.4})`, `rgba(255, 255, 200, ${explosionAlpha * 0.5})`];
+        const mascotExpColors = [
+          `rgba(255, 80, 0, ${explosionAlpha * 0.3})`,
+          `rgba(255, 150, 50, ${explosionAlpha * 0.4})`,
+          `rgba(255, 255, 200, ${explosionAlpha * 0.5})`,
+        ];
         for (let layer = 0; layer < 3; layer++) {
           const layerSize = explosionSize * (1 - layer * 0.2);
           ctx.fillStyle = mascotExpColors[layer];
@@ -2805,10 +2953,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
         // Feather debris
         for (let debris = 0; debris < 8; debris++) {
-          const debrisAngle = debris * Math.PI / 4 + explosionProgress * 3;
+          const debrisAngle = (debris * Math.PI) / 4 + explosionProgress * 3;
           const debrisDist = explosionProgress * 35;
           const dx = mascotX + Math.cos(debrisAngle) * debrisDist;
-          const dy = mascotY + Math.sin(debrisAngle) * debrisDist - explosionProgress * 20;
+          const dy =
+            mascotY +
+            Math.sin(debrisAngle) * debrisDist -
+            explosionProgress * 20;
           ctx.fillStyle = `rgba(34, 211, 211, ${explosionAlpha})`;
           ctx.save();
           ctx.translate(dx, dy);
@@ -2827,7 +2978,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         const startX = width * 0.15;
         const startY = groundY + 25;
         const arrowX = startX + (mascotX - startX) * arrowProgress;
-        const arrowY = startY + (mascotY - startY) * arrowProgress - Math.sin(arrowProgress * Math.PI) * 30;
+        const arrowY =
+          startY +
+          (mascotY - startY) * arrowProgress -
+          Math.sin(arrowProgress * Math.PI) * 30;
 
         ctx.save();
         ctx.translate(arrowX, arrowY);
@@ -2893,7 +3047,12 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const wyvernExpAlpha = 1 - wyvernExpProgress;
 
       // Large explosion
-      const wyvernExpColors = ["rgba(50, 150, 255,", "rgba(100, 200, 255,", "rgba(200, 230, 255,", "rgba(30, 100, 200,"];
+      const wyvernExpColors = [
+        "rgba(50, 150, 255,",
+        "rgba(100, 200, 255,",
+        "rgba(200, 230, 255,",
+        "rgba(30, 100, 200,",
+      ];
       for (let layer = 0; layer < 4; layer++) {
         const layerSize = wyvernExpSize * (1 - layer * 0.15);
         const layerAlpha = wyvernExpAlpha * (1 - layer * 0.2) * 0.5;
@@ -2907,7 +3066,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.strokeStyle = `rgba(150, 200, 255, ${wyvernExpAlpha})`;
       ctx.lineWidth = 2;
       for (let arc = 0; arc < 8; arc++) {
-        const arcAngle = arc * Math.PI / 4 + wyvernExpProgress * 2;
+        const arcAngle = (arc * Math.PI) / 4 + wyvernExpProgress * 2;
         const arcDist = wyvernExpProgress * 50;
         ctx.beginPath();
         ctx.moveTo(wyvernX, wyvernY);
@@ -2920,10 +3079,11 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
       // Scale debris
       for (let scale = 0; scale < 12; scale++) {
-        const scaleAngle = scale * Math.PI / 6 + wyvernExpProgress * 2;
+        const scaleAngle = (scale * Math.PI) / 6 + wyvernExpProgress * 2;
         const scaleDist = wyvernExpProgress * 60;
         const scaleX = wyvernX + Math.cos(scaleAngle) * scaleDist;
-        const scaleY = wyvernY + Math.sin(scaleAngle) * scaleDist - wyvernExpProgress * 30;
+        const scaleY =
+          wyvernY + Math.sin(scaleAngle) * scaleDist - wyvernExpProgress * 30;
         ctx.fillStyle = `rgba(16, 185, 129, ${wyvernExpAlpha})`;
         ctx.beginPath();
         ctx.arc(scaleX, scaleY, 4 - wyvernExpProgress * 2, 0, Math.PI * 2);
@@ -2938,7 +3098,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const startX = width * 0.32;
       const startY = groundY - 40;
       const cbX = startX + (wyvernX - startX) * cannonProgress;
-      const cbY = startY + (wyvernY - startY) * cannonProgress - Math.sin(cannonProgress * Math.PI) * 80;
+      const cbY =
+        startY +
+        (wyvernY - startY) * cannonProgress -
+        Math.sin(cannonProgress * Math.PI) * 80;
 
       // Cannon ball (flat color)
       ctx.fillStyle = "#3a3a3a";
@@ -2962,13 +3125,16 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const shotPhase = (t * 0.9 + shot * 1.3) % 3;
       if (shotPhase < 1.8) {
         const shotProgress = shotPhase / 1.8;
-        const cannonX = width * 0.30;
+        const cannonX = width * 0.3;
         const cannonY = groundY - 60;
         const targetX = width * (0.3 + shot * 0.2) + Math.sin(t + shot) * 50;
         const targetY = height * (0.15 + shot * 0.1);
 
         const projX = cannonX + (targetX - cannonX) * shotProgress;
-        const projY = cannonY + (targetY - cannonY) * shotProgress - Math.sin(shotProgress * Math.PI) * 60;
+        const projY =
+          cannonY +
+          (targetY - cannonY) * shotProgress -
+          Math.sin(shotProgress * Math.PI) * 60;
 
         // Flaming cannon ball (flat color)
         ctx.fillStyle = "#ff8800";
@@ -2982,7 +3148,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
           const trailY = projY + ft * 3;
           ctx.fillStyle = `rgba(255, ${150 - ft * 20}, 0, ${0.6 - ft * 0.08})`;
           ctx.beginPath();
-          ctx.arc(trailX + Math.sin(t * 15 + ft) * 3, trailY, 5 - ft * 0.5, 0, Math.PI * 2);
+          ctx.arc(
+            trailX + Math.sin(t * 15 + ft) * 3,
+            trailY,
+            5 - ft * 0.5,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
       }
@@ -2993,7 +3165,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const boltPhase = (t * 1.2 + bolt * 0.8) % 2;
       if (boltPhase < 0.4) {
         const boltAlpha = 1 - boltPhase / 0.4;
-        const labX = width * 0.50;
+        const labX = width * 0.5;
         const labY = groundY - 100;
         const targetX = width * (0.2 + bolt * 0.2);
         const targetY = height * (0.18 + Math.sin(bolt) * 0.1);
@@ -3003,7 +3175,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(labX, labY);
-        let lx = labX, ly = labY;
+        let lx = labX,
+          ly = labY;
         for (let seg = 0; seg < 8; seg++) {
           lx += (targetX - labX) / 8 + (Math.random() - 0.5) * 25;
           ly += (targetY - labY) / 8 + (Math.random() - 0.5) * 15;
@@ -3015,11 +3188,19 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.strokeStyle = `rgba(150, 220, 255, ${boltAlpha * 0.6})`;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(labX + (targetX - labX) * 0.4, labY + (targetY - labY) * 0.4);
+        ctx.moveTo(
+          labX + (targetX - labX) * 0.4,
+          labY + (targetY - labY) * 0.4
+        );
         for (let seg = 0; seg < 4; seg++) {
           ctx.lineTo(
-            labX + (targetX - labX) * (0.4 + seg * 0.15) + (Math.random() - 0.5) * 30,
-            labY + (targetY - labY) * (0.4 + seg * 0.15) - 20 + (Math.random() - 0.5) * 20
+            labX +
+              (targetX - labX) * (0.4 + seg * 0.15) +
+              (Math.random() - 0.5) * 30,
+            labY +
+              (targetY - labY) * (0.4 + seg * 0.15) -
+              20 +
+              (Math.random() - 0.5) * 20
           );
         }
         ctx.stroke();
@@ -3036,7 +3217,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     for (let wave = 0; wave < 3; wave++) {
       const wavePhase = (t * 2 + wave * 1.5) % 4;
       if (wavePhase < 3) {
-        const archX = width * 0.70;
+        const archX = width * 0.7;
         const archY = groundY - 55;
         const waveRadius = wavePhase * 80;
         const waveAlpha = (1 - wavePhase / 3) * 0.5;
@@ -3045,14 +3226,26 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.strokeStyle = `rgba(168, 85, 247, ${waveAlpha})`;
         ctx.lineWidth = 4 - wavePhase;
         ctx.beginPath();
-        ctx.arc(archX, archY - wavePhase * 30, waveRadius, Math.PI * 1.2, Math.PI * 1.8);
+        ctx.arc(
+          archX,
+          archY - wavePhase * 30,
+          waveRadius,
+          Math.PI * 1.2,
+          Math.PI * 1.8
+        );
         ctx.stroke();
 
         // Secondary ring
         ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.5})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(archX, archY - wavePhase * 35, waveRadius * 0.8, Math.PI * 1.25, Math.PI * 1.75);
+        ctx.arc(
+          archX,
+          archY - wavePhase * 35,
+          waveRadius * 0.8,
+          Math.PI * 1.25,
+          Math.PI * 1.75
+        );
         ctx.stroke();
       }
     }
@@ -3073,16 +3266,24 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     // Floating embers and sparks rising from battle
     for (let ember = 0; ember < 20; ember++) {
       const emberAge = (t * 0.8 + ember * 0.3) % 3;
-      const emberX = width * (0.1 + (ember % 10) * 0.08) + Math.sin(t * 2 + ember) * 15;
+      const emberX =
+        width * (0.1 + (ember % 10) * 0.08) + Math.sin(t * 2 + ember) * 15;
       const emberY = groundY - emberAge * 80 - ember * 5;
       const emberAlpha = 0.7 - emberAge * 0.2;
 
       if (emberY > height * 0.05 && emberAlpha > 0) {
-        ctx.fillStyle = ember % 3 === 0
-          ? `rgba(255, 200, 50, ${emberAlpha})`
-          : `rgba(255, 100, 50, ${emberAlpha})`;
+        ctx.fillStyle =
+          ember % 3 === 0
+            ? `rgba(255, 200, 50, ${emberAlpha})`
+            : `rgba(255, 100, 50, ${emberAlpha})`;
         ctx.beginPath();
-        ctx.arc(emberX, emberY, 2 + Math.sin(t * 8 + ember) * 1, 0, Math.PI * 2);
+        ctx.arc(
+          emberX,
+          emberY,
+          2 + Math.sin(t * 8 + ember) * 1,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
     }
@@ -3095,7 +3296,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
       ctx.fillStyle = `rgba(80, 80, 90, ${cloudAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(cloudX, cloudY, 40 + cloud * 5, 15 + cloud * 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        cloudX,
+        cloudY,
+        40 + cloud * 5,
+        15 + cloud * 2,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.beginPath();
       ctx.ellipse(cloudX + 25, cloudY - 5, 30, 12, 0, 0, Math.PI * 2);
@@ -3110,13 +3319,16 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const missilePhase = (t * 1.5 + missile * 1.2) % 2.5;
       if (missilePhase < 2) {
         const missileProgress = missilePhase / 2;
-        const startX = width * 0.10;
+        const startX = width * 0.1;
         const startY = groundY - 30;
         const targetX = width * (0.4 + missile * 0.15);
-        const targetY = height * (0.20 + missile * 0.05);
+        const targetY = height * (0.2 + missile * 0.05);
 
         const mx = startX + (targetX - startX) * missileProgress;
-        const my = startY + (targetY - startY) * missileProgress - Math.sin(missileProgress * Math.PI) * 40;
+        const my =
+          startY +
+          (targetY - startY) * missileProgress -
+          Math.sin(missileProgress * Math.PI) * 40;
 
         // Orange magic orb (flat color)
         ctx.fillStyle = "#f97316";
@@ -3130,7 +3342,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
           const sy = my + sparkle * 4;
           ctx.fillStyle = `rgba(249, 115, 22, ${0.5 - sparkle * 0.08})`;
           ctx.beginPath();
-          ctx.arc(sx + Math.sin(t * 12 + sparkle) * 3, sy, 3 - sparkle * 0.4, 0, Math.PI * 2);
+          ctx.arc(
+            sx + Math.sin(t * 12 + sparkle) * 3,
+            sy,
+            3 - sparkle * 0.4,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
       }
@@ -3160,7 +3378,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(tx, ty);
-        ctx.lineTo(tx - (targetX - startX) * 0.1, ty - (targetY - startY) * 0.1);
+        ctx.lineTo(
+          tx - (targetX - startX) * 0.1,
+          ty - (targetY - startY) * 0.1
+        );
         ctx.stroke();
       }
     }
@@ -3183,7 +3404,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
         // Shrapnel
         for (let shrap = 0; shrap < 6; shrap++) {
-          const shrapAngle = shrap * Math.PI / 3 + expProgress * 2;
+          const shrapAngle = (shrap * Math.PI) / 3 + expProgress * 2;
           const shrapDist = expProgress * 40;
           ctx.fillStyle = `rgba(150, 150, 150, ${expAlpha})`;
           ctx.beginPath();
@@ -3191,7 +3412,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
             expX + Math.cos(shrapAngle) * shrapDist,
             expY + Math.sin(shrapAngle) * shrapDist,
             2,
-            0, Math.PI * 2
+            0,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -3207,8 +3429,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.strokeStyle = `rgba(100, 180, 255, ${beamAlpha * 0.8})`;
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(width * 0.50, groundY - 100);
-      ctx.lineTo(width * 0.50, height * 0.05);
+      ctx.moveTo(width * 0.5, groundY - 100);
+      ctx.lineTo(width * 0.5, height * 0.05);
       ctx.stroke();
 
       ctx.strokeStyle = `rgba(200, 230, 255, ${beamAlpha})`;
@@ -3217,13 +3439,23 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
       // Beam glow (flat)
       ctx.fillStyle = `rgba(100, 180, 255, ${beamAlpha * 0.15})`;
-      ctx.fillRect(width * 0.50 - 15, height * 0.05, 30, groundY - 100 - height * 0.05);
+      ctx.fillRect(
+        width * 0.5 - 15,
+        height * 0.05,
+        30,
+        groundY - 100 - height * 0.05
+      );
     }
 
     // === DETAILED TROOPS (Defenders) ===
 
     // Elite Knight - Heavy armored defender
-    const drawKnight = (x: number, y: number, index: number, facing: number) => {
+    const drawKnight = (
+      x: number,
+      y: number,
+      index: number,
+      facing: number
+    ) => {
       // Cache trig values
       const phaseA = t * 4 + index;
       const sinStance = Math.sin(phaseA);
@@ -3247,7 +3479,12 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.beginPath();
       ctx.moveTo(-6, -18);
       ctx.quadraticCurveTo(-14 + stance * 0.4, -6, -20 + stance * 0.9, 10);
-      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24 + stance * 1.2, -12 + stance * 0.4, 20);
+      ctx.quadraticCurveTo(
+        -18 + cosStance * 1.8,
+        24 + stance * 1.2,
+        -12 + stance * 0.4,
+        20
+      );
       ctx.quadraticCurveTo(-10, 16, -8 + cosStance * 0.3, 12);
       ctx.quadraticCurveTo(-6, 4, -4, -6);
       ctx.closePath();
@@ -3274,14 +3511,24 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(-20 + stance * 0.9, 10);
-      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24 + stance * 1.2, -12 + stance * 0.4, 20);
+      ctx.quadraticCurveTo(
+        -18 + cosStance * 1.8,
+        24 + stance * 1.2,
+        -12 + stance * 0.4,
+        20
+      );
       ctx.stroke();
       // Cape black trim
       ctx.strokeStyle = "#1c1917";
       ctx.lineWidth = 0.8;
       ctx.beginPath();
       ctx.moveTo(-20 + stance * 0.9, 10.8);
-      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24.8 + stance * 1.2, -12 + stance * 0.4, 20.8);
+      ctx.quadraticCurveTo(
+        -18 + cosStance * 1.8,
+        24.8 + stance * 1.2,
+        -12 + stance * 0.4,
+        20.8
+      );
       ctx.stroke();
       // Cape clasp at shoulder
       ctx.fillStyle = "#c9a227";
@@ -4325,7 +4572,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       // Cache trig values
       const phaseD = t * 2 + index;
       const drawPhase = phaseD % 3;
-      const pullBack = drawPhase < 1.5 ? drawPhase / 1.5 : (drawPhase < 2.0 ? 1.0 : 0);
+      const pullBack =
+        drawPhase < 1.5 ? drawPhase / 1.5 : drawPhase < 2 ? 1 : 0;
       const phaseF = t * 2.5 + index;
       const sinSway = Math.sin(phaseF);
       const cosSway = Math.cos(phaseF);
@@ -4345,7 +4593,12 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.beginPath();
       ctx.moveTo(2, -18);
       ctx.quadraticCurveTo(14, -12 + sinSway, 16, 0);
-      ctx.quadraticCurveTo(15 + cosSway * 0.6, 16 + sinSway * 1.2, 12 + sinSway * 0.6, 18);
+      ctx.quadraticCurveTo(
+        15 + cosSway * 0.6,
+        16 + sinSway * 1.2,
+        12 + sinSway * 0.6,
+        18
+      );
       ctx.quadraticCurveTo(8, 16, 6, 8);
       ctx.quadraticCurveTo(5, -2, 4, -14);
       ctx.closePath();
@@ -4374,7 +4627,12 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(16, 0);
-      ctx.quadraticCurveTo(15 + cosSway * 0.6, 16 + sinSway * 1.2, 12 + sinSway * 0.6, 18);
+      ctx.quadraticCurveTo(
+        15 + cosSway * 0.6,
+        16 + sinSway * 1.2,
+        12 + sinSway * 0.6,
+        18
+      );
       ctx.stroke();
       // Cloak clasp (leaf-shaped, on shoulder)
       ctx.fillStyle = "#c9a227";
@@ -4542,10 +4800,18 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.fill();
       // Chest plate corner rivets
       ctx.fillStyle = "#8b6f47";
-      ctx.beginPath(); ctx.arc(-4, -12, 0.8, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(4, -12, 0.8, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(-4, -6, 0.8, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(4, -6, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-4, -12, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(4, -12, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-4, -6, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(4, -6, 0.8, 0, Math.PI * 2);
+      ctx.fill();
       // Side buckles (detailed)
       ctx.fillStyle = "#c9a227";
       ctx.fillRect(-8, -9, 2, 2.5);
@@ -4781,9 +5047,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.stroke();
       // Metal studs on bracer
       ctx.fillStyle = "#9ca3af";
-      ctx.beginPath(); ctx.arc(-1.5, 0.3, 0.6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(1.5, 0.3, 0.6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(0, 1.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-1.5, 0.3, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(1.5, 0.3, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 1.8, 0.6, 0, Math.PI * 2);
+      ctx.fill();
       // Hand gripping bow
       ctx.fillStyle = "#c4a882";
       ctx.beginPath();
@@ -5025,9 +5297,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.stroke();
       // Metal studs on rim
       ctx.fillStyle = "#9ca3af";
-      ctx.beginPath(); ctx.arc(8, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(10.5, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(13, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(8, -15.8, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(10.5, -15.8, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(13, -15.8, 0.6, 0, Math.PI * 2);
+      ctx.fill();
       // Quiver strap
       ctx.strokeStyle = "#6b4c30";
       ctx.lineWidth = 1.5;
@@ -5037,7 +5315,15 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.stroke();
 
       // === ARROWS IN QUIVER (varied fletching) ===
-      const fletchColors = ["#dc2626", "#fbbf24", "#16a34a", "#dc2626", "#3b82f6", "#f97316", "#8b5cf6"];
+      const fletchColors = [
+        "#dc2626",
+        "#fbbf24",
+        "#16a34a",
+        "#dc2626",
+        "#3b82f6",
+        "#f97316",
+        "#8b5cf6",
+      ];
       for (let a = 0; a < 7; a++) {
         const ax = 7.5 + a * 0.95;
         const aLen = 7 + (a % 3) * 1.5;
@@ -5073,17 +5359,17 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
     // Draw detailed troop battles - spread MASSIVELY across entire battlefield
     const knightPositions = [
-      { x: 0.12, y: 20, facing: 1 },
-      { x: 0.22, y: 85, facing: -1 },
-      { x: 0.45, y: 78, facing: -1 },
+      { facing: 1, x: 0.12, y: 20 },
+      { facing: -1, x: 0.22, y: 85 },
+      { facing: -1, x: 0.45, y: 78 },
 
-      { x: 0.35, y: 28, facing: 1 },
-      { x: 0.48, y: 105, facing: -1 },
-      { x: 0.58, y: 35, facing: 1 },
-      { x: 0.68, y: 95, facing: -1 },
-      { x: 0.78, y: 22, facing: 1 },
-      { x: 0.28, y: 50, facing: 1 },
-      { x: 0.85, y: 110, facing: 1 },
+      { facing: 1, x: 0.35, y: 28 },
+      { facing: -1, x: 0.48, y: 105 },
+      { facing: 1, x: 0.58, y: 35 },
+      { facing: -1, x: 0.68, y: 95 },
+      { facing: 1, x: 0.78, y: 22 },
+      { facing: 1, x: 0.28, y: 50 },
+      { facing: 1, x: 0.85, y: 110 },
     ];
 
     for (let i = 0; i < knightPositions.length; i++) {
@@ -5104,7 +5390,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
             kx + pos.facing * 15 + Math.cos(sparkAngle) * sparkDist,
             ky - 10 + Math.sin(sparkAngle) * sparkDist,
             2.5 - spark * 0.2,
-            0, Math.PI * 2
+            0,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -5114,17 +5401,22 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.strokeStyle = `rgba(255, 200, 100, ${0.5 - shockPhase * 0.5})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(kx + pos.facing * 12, ky - 8, 5 + shockPhase * 20, 0, Math.PI * 2);
+        ctx.arc(
+          kx + pos.facing * 12,
+          ky - 8,
+          5 + shockPhase * 20,
+          0,
+          Math.PI * 2
+        );
         ctx.stroke();
       }
     }
 
     drawHeroTiger(width * 0.22, groundY + 30);
 
-
     // Archers spread across back lines at different heights - MAXIMUM SPREAD
     const archerPositions = [
-      { x: 0.10, y: 75 },
+      { x: 0.1, y: 75 },
       { x: 0.14, y: 35 },
       { x: 0.06, y: 95 },
       { x: 0.22, y: 55 },
@@ -5149,12 +5441,18 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         const targetY = targetIsFlying ? height * 0.35 : groundY + 40;
 
         const arrowX = ax + (targetX - ax) * arrowProgress;
-        const arrowY = ay - 10 + (targetY - ay + 10) * arrowProgress - Math.sin(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35);
+        const arrowY =
+          ay -
+          10 +
+          (targetY - ay + 10) * arrowProgress -
+          Math.sin(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35);
 
         ctx.save();
         ctx.translate(arrowX, arrowY);
         const arrowAngle = Math.atan2(
-          targetY - ay + Math.cos(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35),
+          targetY -
+            ay +
+            Math.cos(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35),
           targetX - ax
         );
         ctx.rotate(arrowAngle);
@@ -5182,8 +5480,6 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       }
     }
 
-
-
     // === EPIC PROJECTILES & COMBAT EFFECTS ===
 
     // Heavy Artillery - Cannon balls with explosive impact
@@ -5197,7 +5493,10 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
         const progress = projPhase / 2.5;
         const px = startX + (endX - startX) * progress;
-        const py = startY + (endY - startY) * progress - Math.sin(progress * Math.PI) * 60;
+        const py =
+          startY +
+          (endY - startY) * progress -
+          Math.sin(progress * Math.PI) * 60;
 
         // Cannon ball (flat color)
         ctx.fillStyle = "#3a3a3a";
@@ -5218,7 +5517,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
           const trailY = py + trail * 4;
           ctx.fillStyle = `rgba(80, 80, 80, ${trailAlpha})`;
           ctx.beginPath();
-          ctx.arc(trailX + Math.sin(t * 5 + trail) * 3, trailY, 4 + trail * 1.5, 0, Math.PI * 2);
+          ctx.arc(
+            trailX + Math.sin(t * 5 + trail) * 3,
+            trailY,
+            4 + trail * 1.5,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
 
@@ -5234,7 +5539,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       }
 
       // Explosion on impact
-      const impactPhase = (projPhase - 2.5);
+      const impactPhase = projPhase - 2.5;
       if (impactPhase > 0 && impactPhase < 0.8) {
         const endX = width * 0.68;
         const endY = groundY + 25;
@@ -5245,7 +5550,11 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         for (let layer = 0; layer < 3; layer++) {
           const layerSize = explosionSize * (1 - layer * 0.2);
           const layerAlpha = explosionAlpha * (1 - layer * 0.25);
-          const colors = [`rgba(255, 80, 0, ${layerAlpha * 0.4})`, `rgba(255, 150, 50, ${layerAlpha * 0.6})`, `rgba(255, 255, 200, ${layerAlpha * 0.8})`];
+          const colors = [
+            `rgba(255, 80, 0, ${layerAlpha * 0.4})`,
+            `rgba(255, 150, 50, ${layerAlpha * 0.6})`,
+            `rgba(255, 255, 200, ${layerAlpha * 0.8})`,
+          ];
           ctx.fillStyle = colors[layer];
           ctx.beginPath();
           ctx.arc(endX, endY, layerSize, 0, Math.PI * 2);
@@ -5254,10 +5563,11 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
         // Debris particles
         for (let debris = 0; debris < 8; debris++) {
-          const debrisAngle = debris * Math.PI / 4 + impactPhase * 2;
+          const debrisAngle = (debris * Math.PI) / 4 + impactPhase * 2;
           const debrisDist = impactPhase * 50;
           const dx = endX + Math.cos(debrisAngle) * debrisDist;
-          const dy = endY + Math.sin(debrisAngle) * debrisDist * 0.6 - impactPhase * 30;
+          const dy =
+            endY + Math.sin(debrisAngle) * debrisDist * 0.6 - impactPhase * 30;
           ctx.fillStyle = `rgba(100, 80, 60, ${explosionAlpha})`;
           ctx.beginPath();
           ctx.arc(dx, dy, 3, 0, Math.PI * 2);
@@ -5269,7 +5579,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     // Chain Lightning from Lab Tower - Multi-target electric arcs
     const lightningPhase = (t * 1.5) % 2;
     if (lightningPhase < 0.8) {
-      const lightningAlpha = lightningPhase < 0.4 ? 1 : 1 - (lightningPhase - 0.4) / 0.4;
+      const lightningAlpha =
+        lightningPhase < 0.4 ? 1 : 1 - (lightningPhase - 0.4) / 0.4;
 
       // Main bolt
       ctx.strokeStyle = `rgba(150, 200, 255, ${lightningAlpha})`;
@@ -5323,14 +5634,16 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
       // Electric sparks
       for (let spark = 0; spark < 6; spark++) {
-        const sparkAngle = spark * Math.PI / 3 + t * 10;
+        const sparkAngle = (spark * Math.PI) / 3 + t * 10;
         const sparkDist = 15 + Math.sin(t * 20 + spark) * 8;
         ctx.fillStyle = `rgba(200, 230, 255, ${lightningAlpha})`;
         ctx.beginPath();
         ctx.arc(
           target1X + Math.cos(sparkAngle) * sparkDist,
           target1Y + Math.sin(sparkAngle) * sparkDist * 0.6,
-          2, 0, Math.PI * 2
+          2,
+          0,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5357,7 +5670,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.6})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(waveX, waveY, waveRadius * 0.85, -Math.PI * 0.35, Math.PI * 0.35);
+        ctx.arc(
+          waveX,
+          waveY,
+          waveRadius * 0.85,
+          -Math.PI * 0.35,
+          Math.PI * 0.35
+        );
         ctx.stroke();
 
         // Distortion ripples
@@ -5365,7 +5684,13 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.lineWidth = 1;
         for (let ripple = 0; ripple < 3; ripple++) {
           ctx.beginPath();
-          ctx.arc(waveX, waveY, waveRadius + ripple * 5, -Math.PI * 0.3, Math.PI * 0.3);
+          ctx.arc(
+            waveX,
+            waveY,
+            waveRadius + ripple * 5,
+            -Math.PI * 0.3,
+            Math.PI * 0.3
+          );
           ctx.stroke();
         }
       }
@@ -5382,7 +5707,8 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const meteorProgress = meteorCycle / 1.5;
       const meteorStartY = -50;
       const meteorEndY = groundY + 20;
-      const meteorY = meteorStartY + (meteorEndY - meteorStartY) * meteorProgress;
+      const meteorY =
+        meteorStartY + (meteorEndY - meteorStartY) * meteorProgress;
 
       // Meteor body (flat fill)
       const meteorSize = 18 + Math.sin(t * 10) * 2;
@@ -5399,7 +5725,9 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         ctx.arc(
           meteorX + Math.cos(rockAngle) * meteorSize * 0.5,
           meteorY + Math.sin(rockAngle) * meteorSize * 0.5,
-          4, 0, Math.PI * 2
+          4,
+          0,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5438,15 +5766,19 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.ellipse(meteorX, meteorEndY + 10, 35, 15, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
-
     } else if (meteorCycle < 2.5) {
       // Catastrophic impact explosion
-      const impactProgress = (meteorCycle - 1.5);
+      const impactProgress = meteorCycle - 1.5;
       const impactAlpha = 1 - impactProgress;
       const impactY = groundY + 20;
 
       // Multi-layer explosion dome (flat colors instead of per-layer gradients)
-      const expColors = ["rgba(255, 100, 0,", "rgba(255, 200, 50,", "rgba(255, 255, 220,", "rgba(200, 50, 0,"];
+      const expColors = [
+        "rgba(255, 100, 0,",
+        "rgba(255, 200, 50,",
+        "rgba(255, 255, 220,",
+        "rgba(200, 50, 0,",
+      ];
       for (let layer = 0; layer < 4; layer++) {
         const layerDelay = layer * 0.1;
         const layerProgress = Math.max(0, impactProgress - layerDelay);
@@ -5464,16 +5796,28 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.strokeStyle = `rgba(255, 150, 50, ${impactAlpha * 0.6})`;
       ctx.lineWidth = 5 - impactProgress * 4;
       ctx.beginPath();
-      ctx.ellipse(meteorX, impactY + 10, shockSize, shockSize * 0.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        meteorX,
+        impactY + 10,
+        shockSize,
+        shockSize * 0.4,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.stroke();
 
       // Flying debris and rocks
       for (let debris = 0; debris < 15; debris++) {
-        const debrisAngle = debris * Math.PI * 2 / 15;
+        const debrisAngle = (debris * Math.PI * 2) / 15;
         const debrisDist = impactProgress * 80 + Math.sin(debris * 3) * 20;
-        const debrisHeight = Math.sin(impactProgress * Math.PI) * 60 * (1 + Math.sin(debris) * 0.3);
+        const debrisHeight =
+          Math.sin(impactProgress * Math.PI) *
+          60 *
+          (1 + Math.sin(debris) * 0.3);
         const dx = meteorX + Math.cos(debrisAngle) * debrisDist;
-        const dy = impactY - debrisHeight + Math.sin(debrisAngle) * debrisDist * 0.3;
+        const dy =
+          impactY - debrisHeight + Math.sin(debrisAngle) * debrisDist * 0.3;
 
         ctx.fillStyle = `rgba(80, 60, 40, ${impactAlpha})`;
         ctx.beginPath();
@@ -5485,7 +5829,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.strokeStyle = `rgba(50, 30, 20, ${impactAlpha})`;
       ctx.lineWidth = 2;
       for (let crack = 0; crack < 8; crack++) {
-        const crackAngle = crack * Math.PI / 4;
+        const crackAngle = (crack * Math.PI) / 4;
         const crackLen = 30 + Math.sin(crack * 2) * 15;
         ctx.beginPath();
         ctx.moveTo(meteorX, impactY + 10);
@@ -5516,7 +5860,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       ctx.strokeStyle = `rgba(200, 240, 255, ${freezeAlpha})`;
       ctx.lineWidth = 2;
       for (let crystal = 0; crystal < 8; crystal++) {
-        const crystalAngle = crystal * Math.PI / 4 + freezeProgress * 2;
+        const crystalAngle = (crystal * Math.PI) / 4 + freezeProgress * 2;
         const crystalLen = freezeRadius * 0.7;
         ctx.beginPath();
         ctx.moveTo(freezeX, freezeY);
@@ -5531,23 +5875,33 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         const branchY = freezeY + Math.sin(crystalAngle) * crystalLen * 0.3;
         ctx.beginPath();
         ctx.moveTo(branchX, branchY);
-        ctx.lineTo(branchX + Math.cos(crystalAngle + 0.5) * 15, branchY + Math.sin(crystalAngle + 0.5) * 8);
+        ctx.lineTo(
+          branchX + Math.cos(crystalAngle + 0.5) * 15,
+          branchY + Math.sin(crystalAngle + 0.5) * 8
+        );
         ctx.moveTo(branchX, branchY);
-        ctx.lineTo(branchX + Math.cos(crystalAngle - 0.5) * 15, branchY + Math.sin(crystalAngle - 0.5) * 8);
+        ctx.lineTo(
+          branchX + Math.cos(crystalAngle - 0.5) * 15,
+          branchY + Math.sin(crystalAngle - 0.5) * 8
+        );
         ctx.stroke();
       }
 
       // Floating ice particles
       for (let ice = 0; ice < 20; ice++) {
-        const iceAngle = ice * Math.PI / 10 + t * 2;
+        const iceAngle = (ice * Math.PI) / 10 + t * 2;
         const iceDist = freezeRadius * (0.3 + Math.sin(ice) * 0.5);
         const iceSize = 2 + Math.sin(t * 5 + ice) * 1;
         ctx.fillStyle = `rgba(200, 240, 255, ${freezeAlpha * 0.8})`;
         ctx.beginPath();
         ctx.arc(
           freezeX + Math.cos(iceAngle) * iceDist,
-          freezeY + Math.sin(iceAngle) * iceDist * 0.5 - Math.sin(t * 4 + ice) * 10,
-          iceSize, 0, Math.PI * 2
+          freezeY +
+            Math.sin(iceAngle) * iceDist * 0.5 -
+            Math.sin(t * 4 + ice) * 10,
+          iceSize,
+          0,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5560,13 +5914,17 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const leafColors = ["#4ade80", "#22c55e", "#84cc16", "#eab308"];
       for (let i = 0; i < 12; i++) {
         const lx = ((t * 35 + i * 105) % (width + 150)) - 75;
-        const ly = ((t * 25 + i * 70 + Math.sin(t + i) * 30) % (height * 0.85));
+        const ly = (t * 25 + i * 70 + Math.sin(t + i) * 30) % (height * 0.85);
         const leafColor = leafColors[i % leafColors.length];
         const leafAlpha = 0.4 + Math.sin(t * 2 + i) * 0.2;
         ctx.save();
         ctx.translate(lx, ly);
         ctx.rotate(t * 3 + i * 0.5);
-        ctx.fillStyle = leafColor + Math.floor(leafAlpha * 255).toString(16).padStart(2, '0');
+        ctx.fillStyle =
+          leafColor +
+          Math.floor(leafAlpha * 255)
+            .toString(16)
+            .padStart(2, "0");
         ctx.beginPath();
         ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -5593,7 +5951,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       // Detailed snowflakes with drift
       for (let i = 0; i < 25; i++) {
         const drift = Math.sin(t * 0.5 + i * 0.3) * 30;
-        const sx = (i * 62 + drift + t * 10) % (width + 60) - 30;
+        const sx = ((i * 62 + drift + t * 10) % (width + 60)) - 30;
         const sy = ((t * 30 + i * 40) % (height + 30)) - 15;
         const snowSize = 1.5 + (i % 3);
         const snowAlpha = 0.5 + Math.sin(i) * 0.3;
@@ -5683,10 +6041,20 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
       const layerAlpha = 0.07 - layer * 0.02;
       ctx.fillStyle = `rgba(100, 90, 80, ${layerAlpha})`;
       for (let wisp = 0; wisp < 2; wisp++) {
-        const wx = ((t * (12 - layer * 3) + wisp * 300 + layer * 100) % (width + 400)) - 200;
+        const wx =
+          ((t * (12 - layer * 3) + wisp * 300 + layer * 100) % (width + 400)) -
+          200;
         const wy = height * (0.2 + layer * 0.2 + wisp * 0.15);
         ctx.beginPath();
-        ctx.ellipse(wx, wy, 160 + layer * 30, 45 + layer * 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          wx,
+          wy,
+          160 + layer * 30,
+          45 + layer * 10,
+          0,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
     }
@@ -5710,7 +6078,9 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
 
   // Own animation loop — throttled to ~50fps, skipped on mobile / when off-screen
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobile) {
+      return;
+    }
     let animationId: number;
     let lastDrawTime = 0;
     const animate = (timestamp: number) => {
@@ -5730,7 +6100,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full opacity-40"
-          style={{ width: "100%", height: "100%" }}
+          style={{ height: "100%", width: "100%" }}
         />
       )}
     </div>

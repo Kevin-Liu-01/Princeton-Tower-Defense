@@ -9,7 +9,7 @@ export function drawSandDune(
   heightPx: number,
   colorLight: string,
   colorMid: string,
-  colorDark: string,
+  colorDark: string
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const dy = getY(dyPct);
@@ -26,7 +26,7 @@ export function drawSandDune(
     isoDepth * 0.6,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.restore();
@@ -36,7 +36,7 @@ export function drawSandDune(
     dx + width * 0.1,
     dy - heightPx,
     dx + width * 0.5,
-    dy + isoDepth,
+    dy + isoDepth
   );
   leeShadow.addColorStop(0, colorDark);
   leeShadow.addColorStop(0.4, colorMid);
@@ -50,7 +50,7 @@ export function drawSandDune(
     dx + width * 0.4,
     dy - heightPx * 0.3,
     dx + width * 0.5,
-    dy,
+    dy
   );
   ctx.lineTo(dx + width * 0.5, dy + isoDepth * 0.3);
   ctx.bezierCurveTo(
@@ -59,7 +59,7 @@ export function drawSandDune(
     dx + width * 0.2,
     dy + isoDepth * 0.5,
     dx + width * 0.1,
-    dy + isoDepth * 0.3,
+    dy + isoDepth * 0.3
   );
   ctx.lineTo(dx + width * 0.1, dy - heightPx);
   ctx.closePath();
@@ -70,7 +70,7 @@ export function drawSandDune(
     dx - width * 0.4,
     dy - heightPx,
     dx + width * 0.2,
-    dy + isoDepth,
+    dy + isoDepth
   );
   duneGrad.addColorStop(0, colorLight);
   duneGrad.addColorStop(0.3, colorLight);
@@ -85,7 +85,7 @@ export function drawSandDune(
     dx - width * 0.25,
     dy - heightPx * 0.4,
     dx - width * 0.4,
-    dy,
+    dy
   );
   ctx.lineTo(dx - width * 0.4, dy + isoDepth * 0.3);
   ctx.bezierCurveTo(
@@ -94,7 +94,7 @@ export function drawSandDune(
     dx,
     dy + isoDepth * 0.5,
     dx + width * 0.1,
-    dy + isoDepth * 0.3,
+    dy + isoDepth * 0.3
   );
   ctx.lineTo(dx + width * 0.1, dy - heightPx);
   ctx.closePath();
@@ -112,7 +112,7 @@ export function drawSandDune(
     dx + width * 0.05,
     dy - heightPx * 1.02,
     dx + width * 0.2,
-    dy - heightPx * 0.6,
+    dy - heightPx * 0.6
   );
   ctx.stroke();
   // Secondary thinner ridge highlight
@@ -126,7 +126,7 @@ export function drawSandDune(
     dx + width * 0.06,
     dy - heightPx * 0.92,
     dx + width * 0.18,
-    dy - heightPx * 0.52,
+    dy - heightPx * 0.52
   );
   ctx.stroke();
 
@@ -144,7 +144,7 @@ export function drawSandDune(
       dx,
       rippleY + 1 + wavePhase,
       dx + width * 0.08 - r * 1.5,
-      rippleY - 0.5 + wavePhase,
+      rippleY - 0.5 + wavePhase
     );
     ctx.stroke();
   }
@@ -153,8 +153,7 @@ export function drawSandDune(
   ctx.fillStyle = "rgba(200, 170, 120, 0.25)";
   for (let g = 0; g < 12; g++) {
     const gx = dx - width * 0.3 + seededRandom(dx + g * 7) * width * 0.6;
-    const gy =
-      dy - heightPx * 0.6 + seededRandom(dx + g * 13) * heightPx * 0.8;
+    const gy = dy - heightPx * 0.6 + seededRandom(dx + g * 13) * heightPx * 0.8;
     ctx.beginPath();
     ctx.arc(gx, gy, 0.5 + seededRandom(dx + g * 17) * 0.5, 0, Math.PI * 2);
     ctx.fill();
@@ -187,7 +186,7 @@ export function drawGoldenPyramid(
   dc: WorldMapDrawContext,
   px: number,
   pyPct: number,
-  size: number,
+  size: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const py = getY(pyPct);
@@ -218,7 +217,7 @@ export function drawGoldenPyramid(
     baseLeftX,
     baseY,
     shadowApexX,
-    shadowApexY,
+    shadowApexY
   );
   wmShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
   wmShadowGrad.addColorStop(0.4, "rgba(0,0,0,0.18)");
@@ -234,7 +233,7 @@ export function drawGoldenPyramid(
     0,
     px,
     py + 5,
-    size * 1.1,
+    size * 1.1
   );
   sandBaseGrad.addColorStop(0, "rgba(210, 180, 130, 0.5)");
   sandBaseGrad.addColorStop(1, "rgba(210, 180, 130, 0)");
@@ -248,7 +247,7 @@ export function drawGoldenPyramid(
     px,
     py - size * 1.5,
     px + size,
-    py + 5,
+    py + 5
   );
   rightGrad.addColorStop(0, "#a08050");
   rightGrad.addColorStop(0.5, "#8b7040");
@@ -266,7 +265,7 @@ export function drawGoldenPyramid(
     px - size,
     py + 5,
     px,
-    py - size * 1.5,
+    py - size * 1.5
   );
   leftGrad.addColorStop(0, "#9a7a50");
   leftGrad.addColorStop(0.3, "#c9a86c");
@@ -347,7 +346,7 @@ export function drawGoldenPyramid(
         glyX + 1,
         glyY + 1.5,
         glyX + 3,
-        glyY,
+        glyY
       );
       ctx.moveTo(glyX - 3, glyY + 2);
       ctx.bezierCurveTo(
@@ -356,7 +355,7 @@ export function drawGoldenPyramid(
         glyX + 1,
         glyY + 3.5,
         glyX + 3,
-        glyY + 2,
+        glyY + 2
       );
     }
     ctx.stroke();
@@ -368,7 +367,7 @@ export function drawGoldenPyramid(
     px - size * 0.15,
     py - size * 1.5,
     px + size * 0.15,
-    py - size * 1.2,
+    py - size * 1.2
   );
   capGrad.addColorStop(0, `rgba(255, 230, 80, ${capGlow})`);
   capGrad.addColorStop(0.5, `rgba(255, 215, 0, ${capGlow})`);
@@ -407,7 +406,7 @@ export function drawGoldenPyramid(
     px,
     py - size * 1.5,
     px,
-    py - size * 2.5,
+    py - size * 2.5
   );
   rayGrad.addColorStop(0, `rgba(255, 230, 100, ${rayAlpha * 2})`);
   rayGrad.addColorStop(1, `rgba(255, 230, 100, 0)`);
@@ -425,7 +424,7 @@ export function drawSphinx(
   dc: WorldMapDrawContext,
   sx: number,
   syPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const sy = getY(syPct);
@@ -441,7 +440,7 @@ export function drawSphinx(
     8 * scale,
     spSeed + 90,
     0.12,
-    14,
+    14
   );
   ctx.fill();
 
@@ -452,7 +451,7 @@ export function drawSphinx(
     0,
     sx + 8 * scale,
     sy + 7 * scale,
-    26 * scale,
+    26 * scale
   );
   sandBury.addColorStop(0, "rgba(210, 180, 130, 0.55)");
   sandBury.addColorStop(0.6, "rgba(210, 180, 130, 0.3)");
@@ -466,7 +465,7 @@ export function drawSphinx(
     9 * scale,
     spSeed + 80,
     0.14,
-    14,
+    14
   );
   ctx.fill();
 
@@ -475,7 +474,7 @@ export function drawSphinx(
     sx - 24 * scale,
     sy - 10 * scale,
     sx + 24 * scale,
-    sy + 10 * scale,
+    sy + 10 * scale
   );
   bodyGrad.addColorStop(0, "#9a7a55");
   bodyGrad.addColorStop(0.2, "#c8a878");
@@ -492,7 +491,7 @@ export function drawSphinx(
     sx + 18 * scale,
     sy - 8 * scale,
     sx + 10 * scale,
-    sy - 9 * scale,
+    sy - 9 * scale
   );
   // Back/spine ridge
   ctx.bezierCurveTo(
@@ -501,7 +500,7 @@ export function drawSphinx(
     sx - 6 * scale,
     sy - 9 * scale,
     sx - 12 * scale,
-    sy - 6 * scale,
+    sy - 6 * scale
   );
   // Chest slopes down to paws
   ctx.bezierCurveTo(
@@ -510,7 +509,7 @@ export function drawSphinx(
     sx - 14 * scale,
     sy + 2 * scale,
     sx - 12 * scale,
-    sy + 6 * scale,
+    sy + 6 * scale
   );
   // Belly underside
   ctx.bezierCurveTo(
@@ -519,7 +518,7 @@ export function drawSphinx(
     sx + 10 * scale,
     sy + 9 * scale,
     sx + 20 * scale,
-    sy + 6 * scale,
+    sy + 6 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -536,7 +535,7 @@ export function drawSphinx(
     6 * scale,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.restore();
@@ -555,7 +554,7 @@ export function drawSphinx(
       (blLeftX + blRightX) / 2,
       blY + seededRandom(spSeed + bl * 5) * 1.5 * scale,
       blRightX,
-      blY + 0.5 * scale,
+      blY + 0.5 * scale
     );
     ctx.stroke();
   }
@@ -591,7 +590,7 @@ export function drawSphinx(
       (cx0 + cmx) / 2 + seededRandom(spSeed + c * 19) * 2 * scale,
       (cy0 + cmy) / 2,
       cmx,
-      cmy,
+      cmy
     );
     ctx.stroke();
     // Small branch off the crack
@@ -600,7 +599,7 @@ export function drawSphinx(
       ctx.moveTo(cmx, cmy);
       ctx.lineTo(
         cmx + (seededRandom(spSeed + c * 23) - 0.5) * 4 * scale,
-        cmy + seededRandom(spSeed + c * 25) * 3 * scale,
+        cmy + seededRandom(spSeed + c * 25) * 3 * scale
       );
       ctx.stroke();
     }
@@ -618,7 +617,7 @@ export function drawSphinx(
     sx - 18 * scale,
     sy + 5 * scale,
     sx - 20 * scale,
-    sy + 6 * scale,
+    sy + 6 * scale
   );
   ctx.bezierCurveTo(
     sx - 18 * scale,
@@ -626,7 +625,7 @@ export function drawSphinx(
     sx - 14 * scale,
     sy + 8 * scale,
     sx - 11 * scale,
-    sy + 6 * scale,
+    sy + 6 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -640,7 +639,7 @@ export function drawSphinx(
     sx - 17 * scale,
     sy + 3 * scale,
     sx - 19 * scale,
-    sy + 4 * scale,
+    sy + 4 * scale
   );
   ctx.bezierCurveTo(
     sx - 17 * scale,
@@ -648,7 +647,7 @@ export function drawSphinx(
     sx - 13 * scale,
     sy + 6 * scale,
     sx - 10 * scale,
-    sy + 4 * scale,
+    sy + 4 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -675,7 +674,7 @@ export function drawSphinx(
     sx + 22 * scale,
     sy - 7 * scale,
     sx + 18 * scale,
-    sy - 8 * scale,
+    sy - 8 * scale
   );
   ctx.stroke();
   ctx.strokeStyle = "#bfa070";
@@ -687,7 +686,7 @@ export function drawSphinx(
     sx - 16 * scale,
     sy - 6 * scale,
     sx - 10 * scale,
-    sy - 16 * scale,
+    sy - 16 * scale
   );
   chestGrad.addColorStop(0, "#b89868");
   chestGrad.addColorStop(0.5, "#cbb080");
@@ -701,7 +700,7 @@ export function drawSphinx(
     sx - 17 * scale,
     sy - 14 * scale,
     sx - 16 * scale,
-    sy - 18 * scale,
+    sy - 18 * scale
   );
   ctx.lineTo(sx - 12 * scale, sy - 18 * scale);
   ctx.bezierCurveTo(
@@ -710,7 +709,7 @@ export function drawSphinx(
     sx - 9 * scale,
     sy - 8 * scale,
     sx - 8 * scale,
-    sy - 5 * scale,
+    sy - 5 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -722,7 +721,7 @@ export function drawSphinx(
     0,
     sx - 14 * scale,
     sy - 20 * scale,
-    10 * scale,
+    10 * scale
   );
   headGrad.addColorStop(0, "#dcc090");
   headGrad.addColorStop(0.6, "#c4a878");
@@ -736,7 +735,7 @@ export function drawSphinx(
     sx - 11 * scale,
     sy - 27 * scale,
     sx - 14 * scale,
-    sy - 28 * scale,
+    sy - 28 * scale
   );
   ctx.bezierCurveTo(
     sx - 17 * scale,
@@ -744,7 +743,7 @@ export function drawSphinx(
     sx - 20 * scale,
     sy - 24 * scale,
     sx - 20 * scale,
-    sy - 19 * scale,
+    sy - 19 * scale
   );
   ctx.bezierCurveTo(
     sx - 20 * scale,
@@ -752,7 +751,7 @@ export function drawSphinx(
     sx - 16 * scale,
     sy - 15 * scale,
     sx - 10 * scale,
-    sy - 17 * scale,
+    sy - 17 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -765,13 +764,13 @@ export function drawSphinx(
     sx - 15 * scale,
     sy - 14.5 * scale,
     sx - 11 * scale,
-    sy - 16 * scale,
+    sy - 16 * scale
   );
   ctx.quadraticCurveTo(
     sx - 15 * scale,
     sy - 15.5 * scale,
     sx - 19 * scale,
-    sy - 17 * scale,
+    sy - 17 * scale
   );
   ctx.fill();
 
@@ -780,7 +779,7 @@ export function drawSphinx(
     sx - 22 * scale,
     sy - 28 * scale,
     sx - 8 * scale,
-    sy - 16 * scale,
+    sy - 16 * scale
   );
   nemesGrad.addColorStop(0, "#d4b060");
   nemesGrad.addColorStop(0.5, "#c9a050");
@@ -795,7 +794,7 @@ export function drawSphinx(
     sx - 20 * scale,
     sy - 30 * scale,
     sx - 14 * scale,
-    sy - 31 * scale,
+    sy - 31 * scale
   );
   ctx.bezierCurveTo(
     sx - 8 * scale,
@@ -803,7 +802,7 @@ export function drawSphinx(
     sx - 6 * scale,
     sy - 24 * scale,
     sx - 7 * scale,
-    sy - 18 * scale,
+    sy - 18 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -818,7 +817,7 @@ export function drawSphinx(
     sx - 22 * scale,
     sy - 6 * scale,
     sx - 20 * scale,
-    sy - 2 * scale,
+    sy - 2 * scale
   );
   ctx.lineTo(sx - 18 * scale, sy - 2 * scale);
   ctx.bezierCurveTo(
@@ -827,7 +826,7 @@ export function drawSphinx(
     sx - 20 * scale,
     sy - 13 * scale,
     sx - 19 * scale,
-    sy - 18 * scale,
+    sy - 18 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -842,7 +841,7 @@ export function drawSphinx(
     sx - 7 * scale,
     sy - 8 * scale,
     sx - 8 * scale,
-    sy - 4 * scale,
+    sy - 4 * scale
   );
   ctx.lineTo(sx - 10 * scale, sy - 4 * scale);
   ctx.bezierCurveTo(
@@ -851,7 +850,7 @@ export function drawSphinx(
     sx - 8 * scale,
     sy - 14 * scale,
     sx - 9 * scale,
-    sy - 18 * scale,
+    sy - 18 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -871,7 +870,7 @@ export function drawSphinx(
       (hsLeftX + hsRightX) / 2,
       hsY + 1 * scale,
       hsRightX,
-      hsY,
+      hsY
     );
     ctx.stroke();
   }
@@ -896,7 +895,7 @@ export function drawSphinx(
     sx - 13 * scale,
     sy - 35 * scale,
     sx - 12 * scale,
-    sy - 33 * scale,
+    sy - 33 * scale
   );
   ctx.bezierCurveTo(
     sx - 12.5 * scale,
@@ -904,7 +903,7 @@ export function drawSphinx(
     sx - 13.5 * scale,
     sy - 31.5 * scale,
     sx - 14 * scale,
-    sy - 31 * scale,
+    sy - 31 * scale
   );
   ctx.fill();
   ctx.fillStyle = "#a07830";
@@ -928,7 +927,7 @@ export function drawSphinx(
       1.2 * scale,
       eye === 0 ? -0.1 : 0.1,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Eyeball
@@ -941,7 +940,7 @@ export function drawSphinx(
       1 * scale,
       eye === 0 ? -0.1 : 0.1,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Pupil
@@ -960,7 +959,7 @@ export function drawSphinx(
       0.8 * scale,
       eye === 0 ? -0.1 : 0.1,
       Math.PI,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     // Kohl eyeliner extending outward
@@ -984,7 +983,7 @@ export function drawSphinx(
     sx - 16 * scale,
     sy - 17.5 * scale,
     sx - 14.5 * scale,
-    sy - 18 * scale,
+    sy - 18 * scale
   );
   ctx.bezierCurveTo(
     sx - 13.5 * scale,
@@ -992,7 +991,7 @@ export function drawSphinx(
     sx - 14 * scale,
     sy - 20 * scale,
     sx - 15.5 * scale,
-    sy - 20.5 * scale,
+    sy - 20.5 * scale
   );
   ctx.fill();
   ctx.strokeStyle = "rgba(70, 55, 35, 0.35)";
@@ -1010,7 +1009,7 @@ export function drawSphinx(
     sx - 13.5 * scale,
     sy - 16 * scale,
     sx - 11.5 * scale,
-    sy - 17 * scale,
+    sy - 17 * scale
   );
   ctx.stroke();
   // Upper lip highlight
@@ -1022,7 +1021,7 @@ export function drawSphinx(
     sx - 14.5 * scale,
     sy - 17 * scale,
     sx - 12 * scale,
-    sy - 17.5 * scale,
+    sy - 17.5 * scale
   );
   ctx.stroke();
 
@@ -1036,7 +1035,7 @@ export function drawSphinx(
     sx - 15 * scale,
     sy - 10 * scale,
     sx - 14 * scale,
-    sy - 9 * scale,
+    sy - 9 * scale
   );
   ctx.lineTo(sx - 13 * scale, sy - 10 * scale);
   ctx.bezierCurveTo(
@@ -1045,7 +1044,7 @@ export function drawSphinx(
     sx - 14 * scale,
     sy - 14 * scale,
     sx - 14 * scale,
-    sy - 16 * scale,
+    sy - 16 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1078,7 +1077,7 @@ export function drawSphinx(
       sx + ((x1 + x2) / 2) * scale + seededRandom(spSeed + x1) * 1.5 * scale,
       sy + ((y1 + y2) / 2) * scale,
       sx + x2 * scale,
-      sy + y2 * scale,
+      sy + y2 * scale
     );
     ctx.stroke();
   }
@@ -1099,7 +1098,7 @@ export function drawSphinx(
         spY,
         0.6 + seededRandom(spSeed + sp * 73) * 0.6,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1113,7 +1112,7 @@ export function drawSphinx(
     sx - 24 * scale,
     sy - 30 * scale,
     sx + 10 * scale,
-    sy + 5 * scale,
+    sy + 5 * scale
   );
   sunGrad.addColorStop(0, "#ffe880");
   sunGrad.addColorStop(0.4, "#ffe880");
@@ -1127,7 +1126,7 @@ export function drawPalmTree(
   dc: WorldMapDrawContext,
   tx: number,
   tyPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time } = dc;
   const ty = getY(tyPct);
@@ -1141,7 +1140,7 @@ export function drawPalmTree(
     5 * scale,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1156,7 +1155,7 @@ export function drawPalmTree(
     tx - 2 * scale,
     ty + 1 * scale,
     tx + 6 * scale,
-    ty + 4 * scale,
+    ty + 4 * scale
   );
   ctx.stroke();
   ctx.strokeStyle = "#3a6a25";
@@ -1167,7 +1166,7 @@ export function drawPalmTree(
     tx + 18 * scale,
     ty + 0,
     tx + 22 * scale,
-    ty + 3 * scale,
+    ty + 3 * scale
   );
   ctx.stroke();
   ctx.restore();
@@ -1177,7 +1176,7 @@ export function drawPalmTree(
     tx - 4 * scale,
     ty,
     tx + 4 * scale,
-    ty,
+    ty
   );
   trunkGrad.addColorStop(0, "#4a3518");
   trunkGrad.addColorStop(0.3, "#8a6840");
@@ -1194,7 +1193,7 @@ export function drawPalmTree(
     tx + 10 * scale,
     ty - 25 * scale,
     tx + 4 * scale,
-    ty - 40 * scale,
+    ty - 40 * scale
   );
   ctx.stroke();
 
@@ -1203,8 +1202,7 @@ export function drawPalmTree(
   ctx.lineWidth = 1.2;
   for (let r = 0; r < 8; r++) {
     const t = r / 8;
-    const ringX =
-      tx + (1 - t) * 0 + t * 4 * scale + Math.sin(t * Math.PI) * 6 * scale;
+    const ringX = tx + 0 + t * 4 * scale + Math.sin(t * Math.PI) * 6 * scale;
     const ringY = ty - t * 40 * scale;
     const ringW = (3.5 - t * 0.8) * scale;
     ctx.beginPath();
@@ -1232,7 +1230,7 @@ export function drawPalmTree(
     ["#226830", "#2e9040"],
   ];
   const frondAngles = [-2.4, -1.6, -0.9, -0.2, 0.5, 1.2, 1.9, 2.6];
-  const frondLengths = [0.95, 1.05, 1.12, 1.0, 1.1, 1.05, 0.92, 0.82];
+  const frondLengths = [0.95, 1.05, 1.12, 1, 1.1, 1.05, 0.92, 0.82];
   const crownX = tx + 4 * scale;
   const crownY = ty - 40 * scale;
 
@@ -1279,7 +1277,9 @@ export function drawPalmTree(
 
       const taper = 1 - Math.abs(t - 0.4) * 1.6;
       const leafLen = Math.max(0, (4 + taper * 7) * scale);
-      if (leafLen < 1.5 * scale) continue;
+      if (leafLen < 1.5 * scale) {
+        continue;
+      }
 
       const backAngle = 0.35;
       for (const side of [-1, 1] as const) {
@@ -1287,8 +1287,7 @@ export function drawPalmTree(
         const tipX = pt.x + Math.cos(baseAng) * leafLen * 0.3;
         const tipY = pt.y + Math.sin(baseAng) * leafLen + leafLen * 0.15;
         const cpX = pt.x + Math.cos(baseAng) * leafLen * 0.15;
-        const cpY =
-          pt.y + Math.sin(baseAng) * leafLen * 0.55 + leafLen * 0.05;
+        const cpY = pt.y + Math.sin(baseAng) * leafLen * 0.55 + leafLen * 0.05;
 
         ctx.fillStyle = side === -1 ? colorDark : colorLight;
         ctx.globalAlpha = 0.88 - t * 0.2;
@@ -1330,7 +1329,7 @@ export function drawOasis(
   dc: WorldMapDrawContext,
   ox: number,
   oyPct: number,
-  size: number,
+  size: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const oy = getY(oyPct);
@@ -1342,7 +1341,7 @@ export function drawOasis(
     size * 0.85,
     ox,
     oy,
-    size * 1.25,
+    size * 1.25
   );
   rimGrad.addColorStop(0, "rgba(120, 95, 60, 0.5)");
   rimGrad.addColorStop(1, "rgba(120, 95, 60, 0)");
@@ -1361,7 +1360,7 @@ export function drawOasis(
     ctx.moveTo(gx - 2, gy + 2);
     ctx.lineTo(
       gx + Math.sin(time * 2.5 + g * 0.8) * 1.5,
-      gy - 7 - Math.sin(time * 3 + g) * 2,
+      gy - 7 - Math.sin(time * 3 + g) * 2
     );
     ctx.lineTo(gx + 2, gy + 2);
     ctx.fill();
@@ -1371,15 +1370,15 @@ export function drawOasis(
   const waterGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, size);
   waterGrad.addColorStop(
     0,
-    `rgba(30, 100, 140, ${0.85 + Math.sin(time * 2) * 0.05})`,
+    `rgba(30, 100, 140, ${0.85 + Math.sin(time * 2) * 0.05})`
   );
   waterGrad.addColorStop(
     0.3,
-    `rgba(40, 140, 180, ${0.8 + Math.sin(time * 2.2) * 0.05})`,
+    `rgba(40, 140, 180, ${0.8 + Math.sin(time * 2.2) * 0.05})`
   );
   waterGrad.addColorStop(
     0.7,
-    `rgba(60, 170, 200, ${0.7 + Math.sin(time * 2.5) * 0.05})`,
+    `rgba(60, 170, 200, ${0.7 + Math.sin(time * 2.5) * 0.05})`
   );
   waterGrad.addColorStop(1, `rgba(100, 200, 220, 0.4)`);
   ctx.fillStyle = waterGrad;
@@ -1423,12 +1422,7 @@ export function drawOasis(
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(rx, ry);
-    ctx.quadraticCurveTo(
-      rx + reedSway,
-      ry - 10,
-      rx + reedSway * 1.3,
-      ry - 16,
-    );
+    ctx.quadraticCurveTo(rx + reedSway, ry - 10, rx + reedSway * 1.3, ry - 16);
     ctx.stroke();
     // Cattail head
     ctx.fillStyle = "#5a3a1a";
@@ -1467,7 +1461,7 @@ export function drawDesertCactus(
   dc: WorldMapDrawContext,
   x: number,
   yPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const y = getY(yPct);
@@ -1481,7 +1475,7 @@ export function drawDesertCactus(
     3.5 * scale,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1490,7 +1484,7 @@ export function drawDesertCactus(
     x - 5 * scale,
     y,
     x + 5 * scale,
-    y,
+    y
   );
   cactusGrad.addColorStop(0, "#1a5a2a");
   cactusGrad.addColorStop(0.25, "#2a7a38");
@@ -1508,7 +1502,7 @@ export function drawDesertCactus(
     x - 5.5 * scale,
     y - 22 * scale,
     x - 4 * scale,
-    y - 30 * scale,
+    y - 30 * scale
   );
   ctx.quadraticCurveTo(x, y - 34 * scale, x + 4 * scale, y - 30 * scale);
   ctx.bezierCurveTo(
@@ -1517,7 +1511,7 @@ export function drawDesertCactus(
     x + 6 * scale,
     y - 10 * scale,
     x + 5 * scale,
-    y,
+    y
   );
   ctx.closePath();
   ctx.fill();
@@ -1527,7 +1521,7 @@ export function drawDesertCactus(
     x - 14 * scale,
     y - 18 * scale,
     x - 8 * scale,
-    y - 18 * scale,
+    y - 18 * scale
   );
   armGradL.addColorStop(0, "#1a5a2a");
   armGradL.addColorStop(0.5, "#2d7a3a");
@@ -1539,7 +1533,7 @@ export function drawDesertCactus(
     x - 12 * scale,
     y - 16 * scale,
     x - 13 * scale,
-    y - 22 * scale,
+    y - 22 * scale
   );
   ctx.bezierCurveTo(
     x - 14 * scale,
@@ -1547,19 +1541,19 @@ export function drawDesertCactus(
     x - 12 * scale,
     y - 31 * scale,
     x - 10 * scale,
-    y - 30 * scale,
+    y - 30 * scale
   );
   ctx.quadraticCurveTo(
     x - 9 * scale,
     y - 27 * scale,
     x - 8 * scale,
-    y - 22 * scale,
+    y - 22 * scale
   );
   ctx.quadraticCurveTo(
     x - 7 * scale,
     y - 19 * scale,
     x - 4 * scale,
-    y - 21 * scale,
+    y - 21 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1569,7 +1563,7 @@ export function drawDesertCactus(
     x + 8 * scale,
     y - 12 * scale,
     x + 14 * scale,
-    y - 12 * scale,
+    y - 12 * scale
   );
   armGradR.addColorStop(0, "#1a5a2a");
   armGradR.addColorStop(0.5, "#2d7a3a");
@@ -1581,7 +1575,7 @@ export function drawDesertCactus(
     x + 10 * scale,
     y - 10 * scale,
     x + 11 * scale,
-    y - 16 * scale,
+    y - 16 * scale
   );
   ctx.bezierCurveTo(
     x + 12 * scale,
@@ -1589,19 +1583,19 @@ export function drawDesertCactus(
     x + 10 * scale,
     y - 25 * scale,
     x + 8 * scale,
-    y - 24 * scale,
+    y - 24 * scale
   );
   ctx.quadraticCurveTo(
     x + 7 * scale,
     y - 20 * scale,
     x + 6 * scale,
-    y - 16 * scale,
+    y - 16 * scale
   );
   ctx.quadraticCurveTo(
     x + 5 * scale,
     y - 13 * scale,
     x + 4 * scale,
-    y - 15 * scale,
+    y - 15 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1618,7 +1612,7 @@ export function drawDesertCactus(
       x + r * 1.2 * scale,
       y - 20 * scale,
       x + r * 0.8 * scale,
-      y - 29 * scale,
+      y - 29 * scale
     );
     ctx.stroke();
   }
@@ -1629,9 +1623,7 @@ export function drawDesertCactus(
   for (let sp = 0; sp < 16; sp++) {
     const spY = y - 3 * scale - sp * 1.9 * scale;
     const bodyWidth =
-      5 *
-      scale *
-      (1 - Math.abs(sp * 1.9 * scale - 15 * scale) / (16 * scale));
+      5 * scale * (1 - Math.abs(sp * 1.9 * scale - 15 * scale) / (16 * scale));
     // Left spines
     ctx.beginPath();
     ctx.moveTo(x - bodyWidth, spY);
@@ -1659,9 +1651,9 @@ export function drawDesertCactus(
 
   // Multiple bloom flowers in different colors
   const flowerColors = [
-    { outer: "#ff6b9d", inner: "#ffcc00" },
-    { outer: "#ff9f43", inner: "#ffe066" },
-    { outer: "#ee5a80", inner: "#ffb6c1" },
+    { inner: "#ffcc00", outer: "#ff6b9d" },
+    { inner: "#ffe066", outer: "#ff9f43" },
+    { inner: "#ffb6c1", outer: "#ee5a80" },
   ];
   // Top flower
   const fc0 = flowerColors[Math.floor(seededRandom(x + 1) * 3)];
@@ -1676,7 +1668,7 @@ export function drawDesertCactus(
       1.2 * scale,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1698,7 +1690,7 @@ export function drawDesertCactus(
       1 * scale,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1720,7 +1712,7 @@ export function drawDesertCactus(
       0.9 * scale,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1735,7 +1727,7 @@ export function drawCamel(
   cx: number,
   cyPct: number,
   scale: number,
-  facing: number,
+  facing: number
 ) {
   const { ctx, getY } = dc;
   const cy = getY(cyPct);
@@ -1788,7 +1780,7 @@ export function drawCamel(
       1 * scale,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1798,7 +1790,7 @@ export function drawCamel(
     -14 * scale,
     -8 * scale,
     14 * scale,
-    8 * scale,
+    8 * scale
   );
   camelGrad.addColorStop(0, "#b89060");
   camelGrad.addColorStop(0.3, "#d4b888");
@@ -1813,7 +1805,7 @@ export function drawCamel(
     -12 * scale,
     -8 * scale,
     -6 * scale,
-    -8 * scale,
+    -8 * scale
   );
   ctx.lineTo(10 * scale, -6 * scale);
   ctx.bezierCurveTo(
@@ -1822,7 +1814,7 @@ export function drawCamel(
     16 * scale,
     0,
     14 * scale,
-    6 * scale,
+    6 * scale
   );
   ctx.lineTo(-12 * scale, 6 * scale);
   ctx.bezierCurveTo(
@@ -1831,7 +1823,7 @@ export function drawCamel(
     -15 * scale,
     3 * scale,
     -14 * scale,
-    2 * scale,
+    2 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1846,7 +1838,7 @@ export function drawCamel(
     2 * scale,
     -18 * scale,
     4 * scale,
-    -8 * scale,
+    -8 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1859,7 +1851,7 @@ export function drawCamel(
     0,
     -16 * scale,
     2 * scale,
-    -10 * scale,
+    -10 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1885,7 +1877,7 @@ export function drawCamel(
     20 * scale,
     -16 * scale,
     18 * scale,
-    -24 * scale,
+    -24 * scale
   );
   ctx.lineTo(15 * scale, -24 * scale);
   ctx.bezierCurveTo(
@@ -1894,7 +1886,7 @@ export function drawCamel(
     14 * scale,
     -8 * scale,
     10 * scale,
-    -2 * scale,
+    -2 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1904,7 +1896,7 @@ export function drawCamel(
     14 * scale,
     -28 * scale,
     24 * scale,
-    -22 * scale,
+    -22 * scale
   );
   headGrad.addColorStop(0, "#d0b080");
   headGrad.addColorStop(1, "#b89868");
@@ -1917,7 +1909,7 @@ export function drawCamel(
     20 * scale,
     -30 * scale,
     24 * scale,
-    -26 * scale,
+    -26 * scale
   );
   ctx.bezierCurveTo(
     25 * scale,
@@ -1925,7 +1917,7 @@ export function drawCamel(
     22 * scale,
     -22 * scale,
     18 * scale,
-    -22 * scale,
+    -22 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1940,7 +1932,7 @@ export function drawCamel(
     2 * scale,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Nostril
@@ -1968,7 +1960,7 @@ export function drawCamel(
     3 * scale,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2041,7 +2033,7 @@ export function drawCamel(
 export function drawDesertCamp(
   dc: WorldMapDrawContext,
   cx: number,
-  cyPct: number,
+  cyPct: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const cy = getY(cyPct);
@@ -2056,7 +2048,7 @@ export function drawDesertCamp(
     cx - 18,
     cy + 5,
     cx + 18,
-    cy + 12,
+    cy + 12
   );
   carpetGrad.addColorStop(0, "#8b2020");
   carpetGrad.addColorStop(0.5, "#a83030");
@@ -2095,12 +2087,7 @@ export function drawDesertCamp(
   }
 
   // Tent body — ornate Bedouin shape with side drapes
-  const tentGrad = ctx.createLinearGradient(
-    cx - 24,
-    cy - 22,
-    cx + 24,
-    cy + 5,
-  );
+  const tentGrad = ctx.createLinearGradient(cx - 24, cy - 22, cx + 24, cy + 5);
   tentGrad.addColorStop(0, "#f5e6c8");
   tentGrad.addColorStop(0.3, "#eddcb8");
   tentGrad.addColorStop(0.7, "#e0ccA0");
@@ -2138,8 +2125,11 @@ export function drawDesertCamp(
   for (let z = 0; z < 8; z++) {
     const zx = cx - 14 + z * 4;
     const zy = cy - 5 + (z % 2 === 0 ? 0 : 2);
-    if (z === 0) ctx.moveTo(zx, zy);
-    else ctx.lineTo(zx, zy);
+    if (z === 0) {
+      ctx.moveTo(zx, zy);
+    } else {
+      ctx.lineTo(zx, zy);
+    }
   }
   ctx.stroke();
 
@@ -2210,7 +2200,7 @@ export function drawDesertCamp(
       0,
       lp.x,
       lp.y - 1,
-      8,
+      8
     );
     auraGrad.addColorStop(0, `rgba(255, 180, 60, ${lanternGlow * 0.3})`);
     auraGrad.addColorStop(1, "rgba(255, 150, 40, 0)");
@@ -2233,7 +2223,7 @@ export function drawDesertCamp(
       fireY + 3 + Math.sin(stAngle) * 3,
       2.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2258,7 +2248,7 @@ export function drawDesertCamp(
       fx + fw * 0.5,
       fireY - fh * 0.7,
       fx,
-      fireY - fh,
+      fireY - fh
     );
     ctx.bezierCurveTo(
       fx + fw * 0.3,
@@ -2266,7 +2256,7 @@ export function drawDesertCamp(
       fx + fw,
       fireY - fh * 0.2,
       fx + fw,
-      fireY + 1,
+      fireY + 1
     );
     ctx.closePath();
     ctx.fill();
@@ -2282,7 +2272,7 @@ export function drawDesertCamp(
       fireY - 10 - sparkLife * 8,
       0.8,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2293,7 +2283,7 @@ export function drawDesertCamp(
     0,
     fireX,
     fireY - 6,
-    25,
+    25
   );
   glowGrad.addColorStop(0, "rgba(255, 140, 40, 0.35)");
   glowGrad.addColorStop(0.5, "rgba(255, 100, 20, 0.1)");
@@ -2307,7 +2297,7 @@ export function drawDesertCamp(
 export function drawBurningWreck(
   dc: WorldMapDrawContext,
   wx: number,
-  wyPct: number,
+  wyPct: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const wy = getY(wyPct);
@@ -2359,7 +2349,7 @@ export function drawBurningWreck(
       fx + 2,
       wy - 10 - fh * 0.7,
       fx,
-      wy - 10 - fh,
+      wy - 10 - fh
     );
     ctx.bezierCurveTo(
       fx + 2,
@@ -2367,7 +2357,7 @@ export function drawBurningWreck(
       fx + 3.5,
       wy - 10 - fh * 0.3,
       fx + 3.5,
-      wy - 10,
+      wy - 10
     );
     ctx.closePath();
     ctx.fill();
@@ -2381,7 +2371,7 @@ export function drawBurningWreck(
       fx + 1,
       wy - 10 - fhInner * 0.8,
       fx,
-      wy - 10 - fhInner,
+      wy - 10 - fhInner
     );
     ctx.bezierCurveTo(
       fx + 1,
@@ -2389,7 +2379,7 @@ export function drawBurningWreck(
       fx + 2.5,
       wy - 10 - fhInner * 0.2,
       fx + 2.5,
-      wy - 10,
+      wy - 10
     );
     ctx.closePath();
     ctx.fill();
@@ -2402,7 +2392,7 @@ export function drawBurningWreck(
       fx,
       wy - 10 - fh - tipH * 0.3,
       fx + 1,
-      wy - 10 - fh * 0.5,
+      wy - 10 - fh * 0.5
     );
     ctx.fill();
   }
@@ -2419,7 +2409,7 @@ export function drawBurningWreck(
       wy - 22 - smokeLife * 10,
       smokeSize,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2435,7 +2425,7 @@ export function drawBurningWreck(
       wy - 14 - emberLife * 12,
       0.8,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2444,7 +2434,7 @@ export function drawBurningWreck(
   const heatGlow = ctx.createRadialGradient(wx, wy - 8, 0, wx, wy - 8, 22);
   heatGlow.addColorStop(
     0,
-    `rgba(255, 120, 30, ${0.12 + Math.sin(time * 3) * 0.04})`,
+    `rgba(255, 120, 30, ${0.12 + Math.sin(time * 3) * 0.04})`
   );
   heatGlow.addColorStop(1, "rgba(255, 80, 10, 0)");
   ctx.fillStyle = heatGlow;

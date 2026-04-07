@@ -1,6 +1,6 @@
+import { MAP_PATHS, WAVE_TIMER_BASE } from "../../constants";
 import type { Position } from "../../types";
 import { gridToWorldPath, worldToScreen, screenToWorld } from "../../utils";
-import { MAP_PATHS, WAVE_TIMER_BASE } from "../../constants";
 
 export interface WaveStartBubbleScreenData {
   pathKey: string;
@@ -49,7 +49,7 @@ export function getWaveStartBubblesScreenData(
   params: WaveStartBubbleLayoutParams,
   canvasWidth: number,
   canvasHeight: number,
-  dpr: number,
+  dpr: number
 ): WaveStartBubbleScreenData[] {
   const {
     gameState,
@@ -72,7 +72,9 @@ export function getWaveStartBubblesScreenData(
     currentWave < totalWaves &&
     nextWaveTimer > 0;
 
-  if (!canShowBubble) return [];
+  if (!canShowBubble) {
+    return [];
+  }
 
   const viewportWidth = canvasWidth / dpr;
   const viewportHeight = canvasHeight / dpr;
@@ -81,13 +83,19 @@ export function getWaveStartBubblesScreenData(
 
   for (let pathIndex = 0; pathIndex < pathCount; pathIndex++) {
     const pathKey = activeWaveSpawnPaths[pathIndex];
-    if (!pathKey) continue;
+    if (!pathKey) {
+      continue;
+    }
     const pathPoints = MAP_PATHS[pathKey] ?? [];
-    if (pathPoints.length === 0) continue;
+    if (pathPoints.length === 0) {
+      continue;
+    }
 
     const spawnNode = pathPoints[0];
     const nextNode = pathPoints[1] ?? spawnNode;
-    if (!spawnNode || !nextNode) continue;
+    if (!spawnNode || !nextNode) {
+      continue;
+    }
 
     const spawnWorld = gridToWorldPath(spawnNode);
     const nextWorld = gridToWorldPath(nextNode);
@@ -121,7 +129,7 @@ export function getWaveStartBubblesScreenData(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const preferredScreenPos = worldToScreen(
       preferredWorldPos,
@@ -129,7 +137,7 @@ export function getWaveStartBubblesScreenData(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
 
     const minX = Math.max(VIEW_MARGIN_X + radius, LEFT_SAFE_X + radius);
@@ -146,7 +154,7 @@ export function getWaveStartBubblesScreenData(
     const avoidCorners = (
       point: Position,
       axisDx: number,
-      axisDy: number,
+      axisDy: number
     ): Position => {
       const cornerPad = CORNER_MARGIN + radius * 0.35;
       const nearLeft = point.x <= minX + cornerPad;
@@ -154,7 +162,9 @@ export function getWaveStartBubblesScreenData(
       const nearTop = point.y <= minY + cornerPad;
       const nearBottom = point.y >= maxY - cornerPad;
       const nearCorner = (nearLeft || nearRight) && (nearTop || nearBottom);
-      if (!nearCorner) return point;
+      if (!nearCorner) {
+        return point;
+      }
 
       const adjusted = { ...point };
       if (Math.abs(axisDx) >= Math.abs(axisDy)) {
@@ -187,7 +197,7 @@ export function getWaveStartBubblesScreenData(
           start: number,
           delta: number,
           axisMin: number,
-          axisMax: number,
+          axisMax: number
         ): boolean => {
           if (Math.abs(delta) < EPSILON) {
             return start >= axisMin && start <= axisMax;
@@ -225,7 +235,7 @@ export function getWaveStartBubblesScreenData(
       screenPos = avoidCorners(
         clampToBounds(screenPos),
         preferredScreenPos.x - spawnScreenPos.x,
-        preferredScreenPos.y - spawnScreenPos.y,
+        preferredScreenPos.y - spawnScreenPos.y
       );
     }
 
@@ -235,27 +245,27 @@ export function getWaveStartBubblesScreenData(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
 
     const progress = Math.max(
       0,
-      Math.min(1, (WAVE_TIMER_BASE - nextWaveTimer) / WAVE_TIMER_BASE),
+      Math.min(1, (WAVE_TIMER_BASE - nextWaveTimer) / WAVE_TIMER_BASE)
     );
     const pathLabel =
       pathCount > 1
-        ? `Path ${String.fromCharCode(65 + Math.min(25, pathIndex))}`
+        ? `Path ${String.fromCodePoint(65 + Math.min(25, pathIndex))}`
         : "Path";
 
     bubbles.push({
       pathKey,
       pathLabel,
+      progress,
+      radius,
+      remainingMs: nextWaveTimer,
       screenPos,
       spawnScreenPos,
       worldPos,
-      radius,
-      progress,
-      remainingMs: nextWaveTimer,
     });
   }
 
@@ -271,9 +281,11 @@ export function getWaveStartBubblesScreenData(
 function separateOverlappingBubbles(
   bubbles: WaveStartBubbleScreenData[],
   viewportWidth: number,
-  viewportHeight: number,
+  viewportHeight: number
 ): void {
-  if (bubbles.length < 2) return;
+  if (bubbles.length < 2) {
+    return;
+  }
 
   for (let iter = 0; iter < SEPARATION_ITERATIONS; iter++) {
     for (let i = 0; i < bubbles.length; i++) {
@@ -285,7 +297,9 @@ function separateOverlappingBubbles(
         const dist = Math.hypot(dx, dy);
         const minDist = a.radius + b.radius + BUBBLE_SEPARATION_PAD;
 
-        if (dist >= minDist) continue;
+        if (dist >= minDist) {
+          continue;
+        }
 
         const overlap = minDist - dist;
         const pushX = dist > 0.01 ? (dx / dist) * overlap * 0.5 : overlap * 0.5;
@@ -307,11 +321,11 @@ function separateOverlappingBubbles(
       bubble.screenPos = {
         x: Math.max(
           VIEW_MARGIN_X + r,
-          Math.min(viewportWidth - VIEW_MARGIN_X - r, bubble.screenPos.x),
+          Math.min(viewportWidth - VIEW_MARGIN_X - r, bubble.screenPos.x)
         ),
         y: Math.max(
           TOP_SAFE_Y + r,
-          Math.min(viewportHeight - VIEW_MARGIN_Y - r, bubble.screenPos.y),
+          Math.min(viewportHeight - VIEW_MARGIN_Y - r, bubble.screenPos.y)
         ),
       };
     }
@@ -385,15 +399,15 @@ export function drawWaveStartBubble(params: DrawWaveStartBubbleParams): void {
     ctx.beginPath();
     ctx.moveTo(
       triCx + Math.cos(triAngle) * triSize,
-      triCy + Math.sin(triAngle) * triSize,
+      triCy + Math.sin(triAngle) * triSize
     );
     ctx.lineTo(
       triCx + Math.cos(triAngle + 2.4) * triSize * 0.65,
-      triCy + Math.sin(triAngle + 2.4) * triSize * 0.65,
+      triCy + Math.sin(triAngle + 2.4) * triSize * 0.65
     );
     ctx.lineTo(
       triCx + Math.cos(triAngle - 2.4) * triSize * 0.65,
-      triCy + Math.sin(triAngle - 2.4) * triSize * 0.65,
+      triCy + Math.sin(triAngle - 2.4) * triSize * 0.65
     );
     ctx.closePath();
     ctx.fill();
@@ -411,14 +425,14 @@ export function drawWaveStartBubble(params: DrawWaveStartBubbleParams): void {
     radius * 0.2,
     0,
     0,
-    radius * 1.04,
+    radius * 1.04
   );
   bodyGradient.addColorStop(0, "rgba(214, 214, 224, 0.98)");
   bodyGradient.addColorStop(
     0.18,
     isWaveStartHovered
       ? "rgba(138, 138, 152, 0.99)"
-      : "rgba(122, 122, 136, 0.98)",
+      : "rgba(122, 122, 136, 0.98)"
   );
   bodyGradient.addColorStop(0.55, "rgba(50, 50, 58, 0.98)");
   bodyGradient.addColorStop(1, "rgba(18, 18, 24, 0.98)");
@@ -432,7 +446,7 @@ export function drawWaveStartBubble(params: DrawWaveStartBubbleParams): void {
     0,
     -radius * 0.65,
     0,
-    radius * 0.65,
+    radius * 0.65
   );
   emblemGradient.addColorStop(0, "rgba(30, 30, 36, 1)");
   emblemGradient.addColorStop(1, "rgba(8, 8, 10, 1)");
@@ -473,7 +487,7 @@ export function drawWaveStartBubble(params: DrawWaveStartBubbleParams): void {
       0,
       ringRadius + radius * (0.22 + hoverPulse * 0.08),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -490,7 +504,7 @@ export function drawWaveStartBubble(params: DrawWaveStartBubbleParams): void {
     0,
     ringRadius,
     -Math.PI / 2,
-    -Math.PI / 2 + Math.PI * 2 * progress,
+    -Math.PI / 2 + Math.PI * 2 * progress
   );
   ctx.stroke();
   ctx.shadowBlur = 0;

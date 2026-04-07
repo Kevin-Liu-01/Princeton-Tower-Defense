@@ -1,4 +1,39 @@
 import type { MutableRefObject, Dispatch, SetStateAction } from "react";
+
+import {
+  HERO_DATA,
+  SPELL_DATA,
+  LEVEL_DATA,
+  MAP_PATHS,
+  INITIAL_PAW_POINTS,
+  INITIAL_LIVES,
+  WAVE_TIMER_BASE,
+  ENEMY_DATA,
+} from "../../constants";
+import { buildPhotoModeTowers } from "../../constants/photoModeTowers";
+import { acquireEnemy } from "../../game/entityPool";
+import {
+  isSandboxLevel,
+  resetSandboxWaves,
+  ensureSandboxWaves,
+} from "../../game/sandboxWaves";
+import {
+  getLevelWaves,
+  getLevelSpecialTowers,
+  getVaultHpMap,
+} from "../../game/setup";
+import {
+  clampLaneOffset,
+  pickFormationPattern,
+  getFormationLaneIndex,
+  ENEMY_LANE_OFFSETS,
+  ENEMY_SPAWN_LANE_JITTER,
+} from "../../game/spatial";
+import type { PausableTimeoutEntry } from "../../game/state";
+import { getFacingRightFromDelta } from "../../game/unitMovement";
+import { clearParticlePool } from "../../rendering";
+import { isMountainTerrainKind } from "../../rendering/maps/challengeTerrain";
+import { clearDamageNumbers } from "../../rendering/ui/damageNumbers";
 import type {
   Position,
   Enemy,
@@ -13,44 +48,10 @@ import type {
   HazardType,
   SpecialTowerType,
 } from "../../types";
-import type { PausableTimeoutEntry } from "../../game/state";
-import { acquireEnemy } from "../../game/entityPool";
+import { gridToWorldPath, generateId } from "../../utils";
+import type { GameEventLogAPI } from "../useGameEventLog";
 import type { EncounterQueueItem, UseTutorialReturn } from "../useTutorial";
 import type { WaveStartConfirmState } from "./waveStartBubbles";
-import type { GameEventLogAPI } from "../useGameEventLog";
-import {
-  HERO_DATA,
-  SPELL_DATA,
-  LEVEL_DATA,
-  MAP_PATHS,
-  INITIAL_PAW_POINTS,
-  INITIAL_LIVES,
-  WAVE_TIMER_BASE,
-  ENEMY_DATA,
-} from "../../constants";
-import { gridToWorldPath, generateId } from "../../utils";
-import { buildPhotoModeTowers } from "../../constants/photoModeTowers";
-import { clearDamageNumbers } from "../../rendering/ui/damageNumbers";
-import { clearParticlePool } from "../../rendering";
-import { isMountainTerrainKind } from "../../rendering/maps/challengeTerrain";
-import {
-  getLevelWaves,
-  getLevelSpecialTowers,
-  getVaultHpMap,
-} from "../../game/setup";
-import {
-  isSandboxLevel,
-  resetSandboxWaves,
-  ensureSandboxWaves,
-} from "../../game/sandboxWaves";
-import {
-  clampLaneOffset,
-  pickFormationPattern,
-  getFormationLaneIndex,
-  ENEMY_LANE_OFFSETS,
-  ENEMY_SPAWN_LANE_JITTER,
-} from "../../game/spatial";
-import { getFacingRightFromDelta } from "../../game/unitMovement";
 
 // ---------------------------------------------------------------------------
 // Shared parameter interface
@@ -219,7 +220,10 @@ export function resetGameStateImpl(params: ResetGameStateParams): void {
 
 export interface InitTutorialParams {
   selectedMap: string;
-  tutorial: Pick<UseTutorialReturn, "hasCompletedTutorial" | "getLevelEncounters">;
+  tutorial: Pick<
+    UseTutorialReturn,
+    "hasCompletedTutorial" | "getLevelEncounters"
+  >;
   setShowTutorial: Dispatch<SetStateAction<boolean>>;
   setEncounterExiting: Dispatch<SetStateAction<boolean>>;
   setEncounterQueue: Dispatch<SetStateAction<EncounterQueueItem[]>>;
@@ -238,10 +242,11 @@ export function initTutorialEncountersImpl(params: InitTutorialParams): void {
   const specialTowerTypes = (getLevelSpecialTowers(selectedMap) ?? []).map(
     (t) => t.type
   );
-  const hazardTypes = (levelData?.hazards ?? []).map(
-    (h) => h.type
+  const hazardTypes = (levelData?.hazards ?? []).map((h) => h.type);
+  const levelEncounters = tutorial.getLevelEncounters(
+    specialTowerTypes,
+    hazardTypes
   );
-  const levelEncounters = tutorial.getLevelEncounters(specialTowerTypes, hazardTypes);
 
   if (levelEncounters.length > 0) {
     params.setEncounterExiting(false);
@@ -289,11 +294,21 @@ export function validateWaveStartConfirmImpl(
   currentWave: number,
   activeWaveSpawnPaths: string[]
 ): WaveStartConfirmState | null {
-  if (!prev) return prev;
-  if (gameState !== "playing" || waveInProgress) return null;
-  if (prev.mapId !== selectedMap) return null;
-  if (prev.waveIndex !== currentWave) return null;
-  if (!activeWaveSpawnPaths.includes(prev.pathKey)) return null;
+  if (!prev) {
+    return prev;
+  }
+  if (gameState !== "playing" || waveInProgress) {
+    return null;
+  }
+  if (prev.mapId !== selectedMap) {
+    return null;
+  }
+  if (prev.waveIndex !== currentWave) {
+    return null;
+  }
+  if (!activeWaveSpawnPaths.includes(prev.pathKey)) {
+    return null;
+  }
   return prev;
 }
 
@@ -311,10 +326,18 @@ export function shouldClearWaveHover(
   nextWaveTimer: number,
   activeWaveSpawnPaths: string[]
 ): boolean {
-  if (!hoveredWaveBubblePathKey) return false;
-  if (gameState !== "playing" || waveInProgress || gameSpeed <= 0) return true;
-  if (currentWave >= totalWaves || nextWaveTimer <= 0) return true;
-  if (!activeWaveSpawnPaths.includes(hoveredWaveBubblePathKey)) return true;
+  if (!hoveredWaveBubblePathKey) {
+    return false;
+  }
+  if (gameState !== "playing" || waveInProgress || gameSpeed <= 0) {
+    return true;
+  }
+  if (currentWave >= totalWaves || nextWaveTimer <= 0) {
+    return true;
+  }
+  if (!activeWaveSpawnPaths.includes(hoveredWaveBubblePathKey)) {
+    return true;
+  }
   return false;
 }
 
@@ -338,54 +361,67 @@ export interface InitHeroParams {
 }
 
 export function initHeroAndSpellsImpl(params: InitHeroParams): void {
-  const { selectedHero, selectedMap, selectedSpells, activeWaveSpawnPaths, refs } = params;
+  const {
+    selectedHero,
+    selectedMap,
+    selectedSpells,
+    activeWaveSpawnPaths,
+    refs,
+  } = params;
 
   const heroData = HERO_DATA[selectedHero];
   const levelSettings = LEVEL_DATA[selectedMap];
   const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
   const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS.poe ?? [];
-  if (path.length === 0) return;
+  if (path.length === 0) {
+    return;
+  }
 
-  const defaultRespawnNode =
-    path[Math.max(0, path.length - 4)] ?? path[path.length - 1];
+  const defaultRespawnNode = path[Math.max(0, path.length - 4)] ?? path.at(-1);
   const heroSpawnNode = levelSettings?.heroSpawn ?? defaultRespawnNode;
-  if (!heroSpawnNode) return;
+  if (!heroSpawnNode) {
+    return;
+  }
 
   const startPos = gridToWorldPath(heroSpawnNode);
   params.setHero({
-    id: "hero",
-    type: selectedHero,
-    pos: startPos,
+    abilityCooldown: 0,
+    abilityReady: true,
+    attackAnim: 0,
+    dead: false,
+    facingRight: false,
     homePos: startPos,
     hp: heroData.hp,
+    id: "hero",
+    lastAttack: 0,
     maxHp: heroData.hp,
     moving: false,
-    lastAttack: 0,
-    abilityReady: true,
-    abilityCooldown: 0,
+    pos: startPos,
+    respawnTimer: 0,
     revived: false,
     rotation: Math.PI,
-    facingRight: false,
-    attackAnim: 0,
     selected: false,
-    dead: false,
-    respawnTimer: 0,
+    type: selectedHero,
   });
 
   params.setSpells(
     selectedSpells.map((type) => ({
-      type,
       cooldown: 0,
       maxCooldown: SPELL_DATA[type]?.cooldown ?? 0,
+      type,
     }))
   );
   params.setNextWaveTimer(WAVE_TIMER_BASE);
   params.setLevelStartTime(Date.now());
   params.setTimeSpent(0);
   refs.gameEventLogRef.current.clear();
-  refs.gameEventLogRef.current.log("game_start", `Started level ${selectedMap}`, {
-    map: selectedMap,
-  });
+  refs.gameEventLogRef.current.log(
+    "game_start",
+    `Started level ${selectedMap}`,
+    {
+      map: selectedMap,
+    }
+  );
 
   if (levelSettings?.camera) {
     params.setCameraOffset(levelSettings.camera.offset);
@@ -418,45 +454,64 @@ export function extendStatusEffectsAfterResume(
   const pauseDuration = params.refs.pausedAtRef.current
     ? Date.now() - params.refs.pausedAtRef.current
     : 0;
-  if (pauseDuration <= 0) return;
+  if (pauseDuration <= 0) {
+    return;
+  }
 
   params.refs.totalPausedTimeRef.current += pauseDuration;
 
   params.setTroops((prev) =>
     prev.map((troop) => {
       const updates: Partial<typeof troop> = {};
-      if (troop.burnUntil) updates.burnUntil = troop.burnUntil + pauseDuration;
-      if (troop.slowUntil) updates.slowUntil = troop.slowUntil + pauseDuration;
-      if (troop.poisonUntil)
+      if (troop.burnUntil) {
+        updates.burnUntil = troop.burnUntil + pauseDuration;
+      }
+      if (troop.slowUntil) {
+        updates.slowUntil = troop.slowUntil + pauseDuration;
+      }
+      if (troop.poisonUntil) {
         updates.poisonUntil = troop.poisonUntil + pauseDuration;
-      if (troop.stunUntil) updates.stunUntil = troop.stunUntil + pauseDuration;
-      return Object.keys(updates).length > 0
-        ? { ...troop, ...updates }
-        : troop;
+      }
+      if (troop.stunUntil) {
+        updates.stunUntil = troop.stunUntil + pauseDuration;
+      }
+      return Object.keys(updates).length > 0 ? { ...troop, ...updates } : troop;
     })
   );
 
   params.setHero((prev) => {
-    if (!prev) return prev;
+    if (!prev) {
+      return prev;
+    }
     const updates: Partial<typeof prev> = {};
-    if (prev.burnUntil) updates.burnUntil = prev.burnUntil + pauseDuration;
-    if (prev.slowUntil) updates.slowUntil = prev.slowUntil + pauseDuration;
-    if (prev.poisonUntil)
+    if (prev.burnUntil) {
+      updates.burnUntil = prev.burnUntil + pauseDuration;
+    }
+    if (prev.slowUntil) {
+      updates.slowUntil = prev.slowUntil + pauseDuration;
+    }
+    if (prev.poisonUntil) {
       updates.poisonUntil = prev.poisonUntil + pauseDuration;
-    if (prev.stunUntil) updates.stunUntil = prev.stunUntil + pauseDuration;
+    }
+    if (prev.stunUntil) {
+      updates.stunUntil = prev.stunUntil + pauseDuration;
+    }
     return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
   });
 
   params.setEnemies((prev) =>
     prev.map((enemy) => {
       const updates: Partial<typeof enemy> = {};
-      if (enemy.burnUntil) updates.burnUntil = enemy.burnUntil + pauseDuration;
-      if (enemy.stunUntil) updates.stunUntil = enemy.stunUntil + pauseDuration;
-      if (enemy.hexWardUntil)
+      if (enemy.burnUntil) {
+        updates.burnUntil = enemy.burnUntil + pauseDuration;
+      }
+      if (enemy.stunUntil) {
+        updates.stunUntil = enemy.stunUntil + pauseDuration;
+      }
+      if (enemy.hexWardUntil) {
         updates.hexWardUntil = enemy.hexWardUntil + pauseDuration;
-      return Object.keys(updates).length > 0
-        ? { ...enemy, ...updates }
-        : enemy;
+      }
+      return Object.keys(updates).length > 0 ? { ...enemy, ...updates } : enemy;
     })
   );
 
@@ -465,18 +520,19 @@ export function extendStatusEffectsAfterResume(
   params.setTowers((prev) =>
     prev.map((tower) => {
       const updates: Partial<typeof tower> = {};
-      if (tower.disabledUntil)
+      if (tower.disabledUntil) {
         updates.disabledUntil = tower.disabledUntil + pauseDuration;
-      if (tower.boostEnd) updates.boostEnd = tower.boostEnd + pauseDuration;
+      }
+      if (tower.boostEnd) {
+        updates.boostEnd = tower.boostEnd + pauseDuration;
+      }
       if (tower.debuffs && tower.debuffs.length > 0) {
         updates.debuffs = tower.debuffs.map((d) => ({
           ...d,
           until: d.until + pauseDuration,
         }));
       }
-      return Object.keys(updates).length > 0
-        ? { ...tower, ...updates }
-        : tower;
+      return Object.keys(updates).length > 0 ? { ...tower, ...updates } : tower;
     })
   );
 }
@@ -487,9 +543,9 @@ export function extendStatusEffectsAfterResume(
 
 export function buildSpellsFromSelection(selectedSpells: SpellType[]): Spell[] {
   return selectedSpells.map((type) => ({
-    type,
     cooldown: 0,
     maxCooldown: SPELL_DATA[type]?.cooldown ?? 0,
+    type,
   }));
 }
 
@@ -504,7 +560,10 @@ export interface StartWaveInnerParams {
   activeWaveSpawnPaths: string[];
   refs: Pick<
     GameLifecycleRefs,
-    "gameSpeedRef" | "spawnIntervalsRef" | "handledWaveCompletionRef" | "gameEventLogRef"
+    | "gameSpeedRef"
+    | "spawnIntervalsRef"
+    | "handledWaveCompletionRef"
+    | "gameEventLogRef"
   >;
   setWaveInProgress: Dispatch<SetStateAction<boolean>>;
   setCurrentWave: Dispatch<SetStateAction<number>>;
@@ -543,7 +602,7 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
   refs.gameEventLogRef.current.log(
     "wave_started",
     `Wave ${currentWave + 1} of ${levelWaves.length} started`,
-    { wave: currentWave + 1, totalWaves: levelWaves.length }
+    { totalWaves: levelWaves.length, wave: currentWave + 1 }
   );
   params.setWaveInProgress(true);
 
@@ -561,17 +620,16 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
     const startSpawning = () => {
       let spawned = 0;
       const spawnInterval = setInterval(() => {
-        if (refs.gameSpeedRef.current === 0) return;
+        if (refs.gameSpeedRef.current === 0) {
+          return;
+        }
         if (spawned >= group.count) {
           clearInterval(spawnInterval);
           return;
         }
-        const formationPattern = pickFormationPattern(
-          group.type,
-          group.count
-        );
+        const formationPattern = pickFormationPattern(group.type, group.count);
         const mirrorFormation =
-          (group.type.charCodeAt(0) + group.count) % 2 === 0;
+          (group.type.codePointAt(0) + group.count) % 2 === 0;
         const spawnLaneIndex = getFormationLaneIndex(
           formationPattern,
           spawned,
@@ -592,33 +650,33 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
           spawnPath && spawnPath.length >= 2
             ? getFacingRightFromDelta(
                 spawnPath[1].x - spawnPath[0].x,
-                spawnPath[1].y - spawnPath[0].y,
+                spawnPath[1].y - spawnPath[0].y
               )
             : false;
 
         const enemy = acquireEnemy({
-          id: generateId("enemy"),
-          type: group.type,
-          pathIndex: 0,
-          progress: 0,
-          hp: ENEMY_DATA[group.type].hp,
-          maxHp: ENEMY_DATA[group.type].hp,
-          speed: ENEMY_DATA[group.type].speed,
-          slowEffect: 0,
-          stunUntil: 0,
-          frozen: false,
           damageFlash: 0,
+          facingRight: initialFacing,
+          formationLane: spawnLaneIndex,
+          frozen: false,
+          hp: ENEMY_DATA[group.type].hp,
+          id: generateId("enemy"),
           inCombat: false,
-          lastTroopAttack: 0,
+          laneOffset,
           lastHeroAttack: 0,
           lastRangedAttack: 0,
-          spawnProgress: 1,
-          laneOffset,
-          formationLane: spawnLaneIndex,
-          slowed: false,
-          slowIntensity: 0,
+          lastTroopAttack: 0,
+          maxHp: ENEMY_DATA[group.type].hp,
+          pathIndex: 0,
           pathKey,
-          facingRight: initialFacing,
+          progress: 0,
+          slowEffect: 0,
+          slowIntensity: 0,
+          slowed: false,
+          spawnProgress: 1,
+          speed: ENEMY_DATA[group.type].speed,
+          stunUntil: 0,
+          type: group.type,
         });
         params.addEnemyEntity(enemy);
         spawned++;
@@ -684,7 +742,10 @@ export interface StartWaveParams {
   waveInProgress: boolean;
   currentWave: number;
   refs: Pick<GameLifecycleRefs, "tutorialBlockingRef">;
-  tutorial: Pick<UseTutorialReturn, "getUnseenEnemyEncounters" | "markEnemiesSeen">;
+  tutorial: Pick<
+    UseTutorialReturn,
+    "getUnseenEnemyEncounters" | "markEnemiesSeen"
+  >;
   startWaveInner: () => void;
   setEncounterExiting: Dispatch<SetStateAction<boolean>>;
   setEncounterQueue: Dispatch<SetStateAction<EncounterQueueItem[]>>;
@@ -694,14 +755,19 @@ export interface StartWaveParams {
 export function startWaveImpl(params: StartWaveParams): void {
   const { selectedMap, waveInProgress, currentWave, refs, tutorial } = params;
 
-  if (refs.tutorialBlockingRef.current) return;
+  if (refs.tutorialBlockingRef.current) {
+    return;
+  }
 
   if (isSandboxLevel(selectedMap)) {
     ensureSandboxWaves(currentWave);
   }
 
   const levelWaves = getLevelWaves(selectedMap);
-  if (waveInProgress || (!isSandboxLevel(selectedMap) && currentWave >= levelWaves.length)) {
+  if (
+    waveInProgress ||
+    (!isSandboxLevel(selectedMap) && currentWave >= levelWaves.length)
+  ) {
     params.startWaveInner();
     return;
   }
@@ -712,7 +778,7 @@ export function startWaveImpl(params: StartWaveParams): void {
     return;
   }
 
-  const waveEnemyTypes = Array.from(new Set(wave.map((g) => g.type)));
+  const waveEnemyTypes = [...new Set(wave.map((g) => g.type))];
   const unseenEncounters = tutorial.getUnseenEnemyEncounters(waveEnemyTypes);
 
   if (unseenEncounters.length > 0) {

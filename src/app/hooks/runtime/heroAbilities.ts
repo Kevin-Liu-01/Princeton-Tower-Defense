@@ -1,4 +1,14 @@
 import type { Dispatch, SetStateAction } from "react";
+
+import {
+  HERO_DATA,
+  TROOP_DATA,
+  HERO_ABILITY_COOLDOWNS,
+  HERO_COMBAT_STATS,
+  DEFAULT_TROOP_HP,
+} from "../../constants";
+import { getEnemyPosWithPath } from "../../game/setup";
+import { getEnemyDamageTaken } from "../../game/status";
 import type {
   Position,
   Enemy,
@@ -11,23 +21,7 @@ import type {
   HeroType,
   DeathCause,
 } from "../../types";
-import {
-  HERO_DATA,
-  TROOP_DATA,
-  HERO_ABILITY_COOLDOWNS,
-  HERO_COMBAT_STATS,
-  DEFAULT_TROOP_HP,
-} from "../../constants";
-import {
-  distance,
-  generateId,
-} from "../../utils";
-import {
-  getEnemyPosWithPath,
-} from "../../game/setup";
-import {
-  getEnemyDamageTaken,
-} from "../../game/status";
+import { distance, generateId } from "../../utils";
 import { gridToWorld } from "../../utils";
 import { isDefined } from "./runtimeConfig";
 
@@ -44,13 +38,19 @@ export interface HeroAbilityParams {
   setTroops: Setter<Troop[]>;
   setEffects: Setter<Effect[]>;
   addParticles: (pos: Position, type: Particle["type"], count: number) => void;
-  onEnemyKill: (enemy: Enemy, pos: Position, particleCount?: number, cause?: DeathCause) => void;
+  onEnemyKill: (
+    enemy: Enemy,
+    pos: Position,
+    particleCount?: number,
+    cause?: DeathCause
+  ) => void;
   addTroopEntities: (troops: Troop[]) => void;
   addTroopEntity: (troop: Troop) => void;
 }
 
 function triggerTigerRoar(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setEnemies, setEffects, addParticles } = p;
+  const { hero, enemies, selectedMap, setEnemies, setEffects, addParticles } =
+    p;
   const roarRadius = 180;
   const nearbyEnemies = enemies.filter(
     (e) => distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) < roarRadius
@@ -59,7 +59,7 @@ function triggerTigerRoar(p: HeroAbilityParams): void {
     setEnemies((prev) =>
       prev.map((enemy) =>
         enemy.id === e.id
-          ? { ...enemy, stunUntil: Date.now() + 3000, slowEffect: 0.5 }
+          ? { ...enemy, slowEffect: 0.5, stunUntil: Date.now() + 3000 }
           : enemy
       )
     );
@@ -69,9 +69,9 @@ function triggerTigerRoar(p: HeroAbilityParams): void {
     {
       id: generateId("roar"),
       pos: hero.pos,
-      type: "roar_wave",
       progress: 0,
       size: roarRadius,
+      type: "roar_wave",
     },
   ]);
   addParticles(hero.pos, "spark", 30);
@@ -79,7 +79,16 @@ function triggerTigerRoar(p: HeroAbilityParams): void {
 }
 
 function triggerTenorHighNote(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setEnemies, setTroops, setEffects, addParticles, onEnemyKill } = p;
+  const {
+    hero,
+    enemies,
+    selectedMap,
+    setEnemies,
+    setTroops,
+    setEffects,
+    addParticles,
+    onEnemyKill,
+  } = p;
   const noteRadius = 250;
   const healRadius = 200;
   const healAmount = 75;
@@ -99,9 +108,9 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
           }
           return {
             ...e,
+            damageFlash: 200,
             hp: newHp,
             stunUntil: Date.now() + 2000,
-            damageFlash: 200,
           };
         }
         return e;
@@ -115,8 +124,8 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
         addParticles(t.pos, "heal", 6);
         return {
           ...t,
-          hp: Math.min(t.maxHp, t.hp + healAmount),
           healFlash: Date.now(),
+          hp: Math.min(t.maxHp, t.hp + healAmount),
         };
       }
       return t;
@@ -128,9 +137,9 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
     {
       id: generateId("note"),
       pos: hero.pos,
-      type: "high_note",
       progress: 0,
       size: noteRadius,
+      type: "high_note",
     },
   ]);
   addParticles(hero.pos, "light", 35);
@@ -138,9 +147,17 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
 }
 
 function triggerMatheyShield(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setHero, setEnemies, setEffects, addParticles } = p;
+  const {
+    hero,
+    enemies,
+    selectedMap,
+    setHero,
+    setEnemies,
+    setEffects,
+    addParticles,
+  } = p;
   const tauntRadius = 150;
-  const duration = 10000;
+  const duration = 10_000;
 
   setHero((prev) =>
     prev
@@ -152,7 +169,7 @@ function triggerMatheyShield(p: HeroAbilityParams): void {
     prev.map((enemy) => {
       const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
       if (distance(hero.pos, enemyPos) < tauntRadius) {
-        return { ...enemy, taunted: true, tauntTarget: hero.id };
+        return { ...enemy, tauntTarget: hero.id, taunted: true };
       }
       return enemy;
     })
@@ -161,12 +178,12 @@ function triggerMatheyShield(p: HeroAbilityParams): void {
   setEffects((ef) => [
     ...ef,
     {
+      duration,
       id: generateId("shield"),
       pos: { ...hero.pos },
-      type: "fortress_shield",
       progress: 0,
       size: 80,
-      duration,
+      type: "fortress_shield",
     },
   ]);
   addParticles(hero.pos, "glow", 25);
@@ -174,19 +191,31 @@ function triggerMatheyShield(p: HeroAbilityParams): void {
 }
 
 function triggerRockyBoulderStrike(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setEnemies, setEffects, addParticles, onEnemyKill } = p;
+  const {
+    hero,
+    enemies,
+    selectedMap,
+    setEnemies,
+    setEffects,
+    addParticles,
+    onEnemyKill,
+  } = p;
   const throwRange = 350;
   const boulderDamage = 180;
   const maxBoulders = 5;
 
   const enemiesInRange = enemies
-    .filter((e) => !e.dead && distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= throwRange)
+    .filter(
+      (e) =>
+        !e.dead &&
+        distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= throwRange
+    )
     .map((e) => ({
-      enemy: e,
       dist: distance(hero.pos, getEnemyPosWithPath(e, selectedMap)),
+      enemy: e,
       pos: getEnemyPosWithPath(e, selectedMap),
     }))
-    .sort((a, b) => a.dist - b.dist)
+    .toSorted((a, b) => a.dist - b.dist)
     .slice(0, maxBoulders);
 
   if (enemiesInRange.length === 0) {
@@ -198,13 +227,13 @@ function triggerRockyBoulderStrike(p: HeroAbilityParams): void {
         {
           id: generateId("boulder"),
           pos: { ...hero.pos },
-          type: "boulder_strike",
           progress: 0,
           size: 40,
           targetPos: {
             x: hero.pos.x + Math.cos(angle) * dist,
             y: hero.pos.y + Math.sin(angle) * dist,
           },
+          type: "boulder_strike",
         },
       ]);
     }
@@ -217,10 +246,10 @@ function triggerRockyBoulderStrike(p: HeroAbilityParams): void {
     newEffects.push({
       id: generateId(`boulder-${idx}`),
       pos: { ...hero.pos },
-      type: "boulder_strike",
       progress: 0,
       size: 45,
       targetPos: { ...target.pos },
+      type: "boulder_strike",
     });
   });
 
@@ -238,9 +267,9 @@ function triggerRockyBoulderStrike(p: HeroAbilityParams): void {
           }
           return {
             ...e,
+            damageFlash: 300,
             hp: newHp,
             stunUntil: Date.now() + 800,
-            damageFlash: 300,
           };
         }
         return e;
@@ -257,7 +286,9 @@ function triggerScottInspiration(p: HeroAbilityParams): void {
   const boostRadius = 450;
   setTowers((prev) =>
     prev.map((t) => {
-      if (t.type === "club") return t;
+      if (t.type === "club") {
+        return t;
+      }
       const tWorldPos = gridToWorld(t.pos);
       if (distance(hero.pos, tWorldPos) <= boostRadius) {
         return {
@@ -272,12 +303,12 @@ function triggerScottInspiration(p: HeroAbilityParams): void {
   setEffects((ef) => [
     ...ef,
     {
+      duration: 8000,
       id: generateId("inspire"),
       pos: hero.pos,
-      type: "inspiration",
       progress: 0,
       size: 300,
-      duration: 8000,
+      type: "inspiration",
     },
   ]);
   addParticles(hero.pos, "light", 30);
@@ -295,25 +326,25 @@ function triggerCaptainRally(p: HeroAbilityParams): void {
   const newTroops: Troop[] = knightOffsets.map((offset, idx) => {
     const knightPos = { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y };
     return {
+      attackAnim: 0,
+      facingRight: true,
+      hp: summonedKnightHP,
       id: generateId("troop"),
+      knightVariant: idx % 3,
+      lastAttack: 0,
+      maxHp: summonedKnightHP,
+      moveRadius: HERO_COMBAT_STATS.captainKnightMoveRadius,
+      moving: false,
       ownerId: hero.id,
       ownerType: "hero_summon" as const,
-      type: "knight" as TroopType,
-      knightVariant: idx % 3,
       pos: knightPos,
-      hp: summonedKnightHP,
-      maxHp: summonedKnightHP,
-      moving: false,
-      targetPos: undefined,
-      targetEnemy: null,
       rallyPoint: null,
-      selected: false,
-      lastAttack: 0,
       rotation: 0,
-      facingRight: true,
-      attackAnim: 0,
+      selected: false,
       spawnPoint: knightPos,
-      moveRadius: HERO_COMBAT_STATS.captainKnightMoveRadius,
+      targetEnemy: null,
+      targetPos: undefined,
+      type: "knight" as TroopType,
       userTargetPos: knightPos,
     };
   });
@@ -323,9 +354,9 @@ function triggerCaptainRally(p: HeroAbilityParams): void {
     {
       id: generateId("summon"),
       pos: hero.pos,
-      type: "knight_summon",
       progress: 0,
       size: 80,
+      type: "knight_summon",
     },
   ]);
   addParticles(hero.pos, "spark", 25);
@@ -337,23 +368,23 @@ function triggerEngineerTurret(p: HeroAbilityParams): void {
   const turretPos = { x: hero.pos.x + 40, y: hero.pos.y };
   const turretHP = HERO_COMBAT_STATS.engineerTurretHp;
   const newTurret: Troop = {
-    id: generateId("turret"),
-    ownerId: hero.id,
-    type: "turret" as TroopType,
-    pos: turretPos,
-    hp: turretHP,
-    maxHp: turretHP,
-    moving: false,
-    targetPos: undefined,
-    targetEnemy: null,
-    rallyPoint: null,
-    selected: false,
-    lastAttack: 0,
-    rotation: 0,
-    facingRight: true,
     attackAnim: 0,
-    spawnPoint: turretPos,
+    facingRight: true,
+    hp: turretHP,
+    id: generateId("turret"),
+    lastAttack: 0,
+    maxHp: turretHP,
     moveRadius: 0,
+    moving: false,
+    ownerId: hero.id,
+    pos: turretPos,
+    rallyPoint: null,
+    rotation: 0,
+    selected: false,
+    spawnPoint: turretPos,
+    targetEnemy: null,
+    targetPos: undefined,
+    type: "turret" as TroopType,
   };
   addTroopEntity(newTurret);
   setEffects((ef) => [
@@ -361,9 +392,9 @@ function triggerEngineerTurret(p: HeroAbilityParams): void {
     {
       id: generateId("deploy"),
       pos: turretPos,
-      type: "turret_deploy",
       progress: 0,
       size: 60,
+      type: "turret_deploy",
     },
   ]);
   addParticles(turretPos, "spark", 30);
@@ -389,12 +420,12 @@ function triggerNassauBlueInferno(p: HeroAbilityParams): void {
   setEffects((ef) => [
     ...ef,
     {
+      color: "#3b82f6",
       id: generateId("blue-inferno"),
       pos: hero.pos,
-      type: "fire_nova",
       progress: 0,
       size: 150,
-      color: "#3b82f6",
+      type: "fire_nova",
     },
   ]);
   addParticles(hero.pos, "explosion", 30);
@@ -413,7 +444,7 @@ function triggerIvyVerdantColossus(p: HeroAbilityParams): void {
             abilityActive: false,
             abilityEnd: Date.now() + MORPH_WINDOW,
           }
-        : null,
+        : null
     );
   } else {
     setHero((prev) =>
@@ -425,19 +456,19 @@ function triggerIvyVerdantColossus(p: HeroAbilityParams): void {
             shieldActive: true,
             shieldEnd: Date.now() + 2000,
           }
-        : null,
+        : null
     );
   }
 
   setEffects((ef) => [
     ...ef,
     {
+      color: "#059669",
       id: generateId("colossus-transform"),
       pos: hero.pos,
-      type: "vine_storm",
       progress: 0,
       size: 200,
-      color: "#059669",
+      type: "vine_storm",
     },
   ]);
   addParticles(hero.pos, "glow", 35);
@@ -445,33 +476,40 @@ function triggerIvyVerdantColossus(p: HeroAbilityParams): void {
   addParticles(hero.pos, "explosion", 15);
 }
 
-const HERO_ABILITY_DISPATCH: Record<HeroType, (p: HeroAbilityParams) => void> = {
-  tiger: triggerTigerRoar,
-  tenor: triggerTenorHighNote,
-  mathey: triggerMatheyShield,
-  rocky: triggerRockyBoulderStrike,
-  scott: triggerScottInspiration,
-  captain: triggerCaptainRally,
-  engineer: triggerEngineerTurret,
-  nassau: triggerNassauBlueInferno,
-  ivy: triggerIvyVerdantColossus,
-};
+const HERO_ABILITY_DISPATCH: Record<HeroType, (p: HeroAbilityParams) => void> =
+  {
+    captain: triggerCaptainRally,
+    engineer: triggerEngineerTurret,
+    ivy: triggerIvyVerdantColossus,
+    mathey: triggerMatheyShield,
+    nassau: triggerNassauBlueInferno,
+    rocky: triggerRockyBoulderStrike,
+    scott: triggerScottInspiration,
+    tenor: triggerTenorHighNote,
+    tiger: triggerTigerRoar,
+  };
 
 export function triggerHeroAbilityImpl(p: HeroAbilityParams): void {
   const { hero, gameSpeed, setHero } = p;
-  if (gameSpeed === 0) return;
-  if (!hero || !hero.abilityReady || hero.dead) return;
+  if (gameSpeed === 0) {
+    return;
+  }
+  if (!hero || !hero.abilityReady || hero.dead) {
+    return;
+  }
 
   const dispatch = HERO_ABILITY_DISPATCH[hero.type];
-  if (dispatch) dispatch(p);
+  if (dispatch) {
+    dispatch(p);
+  }
 
   setHero((prev) =>
     prev
       ? {
-        ...prev,
-        abilityReady: false,
-        abilityCooldown: HERO_ABILITY_COOLDOWNS[hero.type],
-      }
+          ...prev,
+          abilityCooldown: HERO_ABILITY_COOLDOWNS[hero.type],
+          abilityReady: false,
+        }
       : null
   );
 }

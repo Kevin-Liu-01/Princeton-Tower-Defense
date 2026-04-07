@@ -13,12 +13,18 @@ export const gridToIso = (point: GridPoint): { x: number; y: number } => ({
   y: ISO_ORIGIN_Y + (point.x + point.y) * (ISO_TILE_HEIGHT / 2),
 });
 
-export const gridFloatToIso = (x: number, y: number): { x: number; y: number } => ({
+export const gridFloatToIso = (
+  x: number,
+  y: number
+): { x: number; y: number } => ({
   x: ISO_ORIGIN_X + (x - y) * (ISO_TILE_WIDTH / 2),
   y: ISO_ORIGIN_Y + (x + y) * (ISO_TILE_HEIGHT / 2),
 });
 
-export const isoToGridFloat = (x: number, y: number): { x: number; y: number } => {
+export const isoToGridFloat = (
+  x: number,
+  y: number
+): { x: number; y: number } => {
   const normalizedX = (x - ISO_ORIGIN_X) / (ISO_TILE_WIDTH / 2);
   const normalizedY = (y - ISO_ORIGIN_Y) / (ISO_TILE_HEIGHT / 2);
   return {

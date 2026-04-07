@@ -1,4 +1,5 @@
 import type { Position } from "../../types";
+import { getScenePressure } from "../performance";
 import {
   WEAPON_LIMITS,
   anchorWeaponToHand,
@@ -6,7 +7,6 @@ import {
   drawDetailedArm,
 } from "./troopHelpers";
 import type { ArmColors } from "./troopHelpers";
-import { getScenePressure } from "../performance";
 
 export function drawEliteTroop(
   ctx: CanvasRenderingContext2D,
@@ -17,7 +17,7 @@ export function drawEliteTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   const stance = Math.sin(time * 3) * 1.2;
   const breathe = Math.sin(time * 2) * 0.5;
@@ -62,7 +62,7 @@ export function drawEliteTroop(
     targetPos,
     Math.PI / 2,
     isAttacking ? 1.15 : 0.62,
-    WEAPON_LIMITS.rightPole,
+    WEAPON_LIMITS.rightPole
   );
   const halberdX = halbAnchor.weaponX;
   const halberdY = halbAnchor.weaponY;
@@ -86,11 +86,11 @@ export function drawEliteTroop(
       size * (0.05 + layerOffset),
       x,
       y + size * 0.1,
-      size * (0.6 + layerOffset),
+      size * (0.6 + layerOffset)
     );
     auraGrad.addColorStop(
       0,
-      `rgba(255, 108, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.1)})`,
+      `rgba(255, 108, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.1)})`
     );
     auraGrad.addColorStop(1, "rgba(255, 108, 0, 0)");
     ctx.fillStyle = auraGrad;
@@ -102,7 +102,7 @@ export function drawEliteTroop(
       size * (0.55 + layerOffset * 0.2),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -135,7 +135,7 @@ export function drawEliteTroop(
         size * (0.22 + ringPhase * 0.25),
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -145,13 +145,13 @@ export function drawEliteTroop(
   ctx.save();
   ctx.translate(
     x + weightShift * 0.35 + attackLunge * 0.18,
-    y + hipBounce * 0.15,
+    y + hipBounce * 0.15
   );
   ctx.rotate(bodyLean);
   ctx.scale(1.08 + attackDrive * 0.05, 1);
   ctx.translate(
     -(x + weightShift * 0.35 + attackLunge * 0.18),
-    -(y + hipBounce * 0.15),
+    -(y + hipBounce * 0.15)
   );
 
   // === ROYAL CAPE (multi-layered with rich fabric) ===
@@ -177,14 +177,14 @@ export function drawEliteTroop(
     capeCtrlLX + size * 0.015,
     capeCtrlLY + size * 0.025,
     capeBotLX + size * 0.015,
-    capeBotLY + size * 0.025,
+    capeBotLY + size * 0.025
   );
   ctx.lineTo(capeBotRX + size * 0.015, capeBotRY + size * 0.025);
   ctx.quadraticCurveTo(
     capeRX + size * 0.015,
     y + size * 0.2,
     capeRX + size * 0.015,
-    capeTopY + size * 0.025,
+    capeTopY + size * 0.025
   );
   ctx.closePath();
   ctx.fill();
@@ -194,7 +194,7 @@ export function drawEliteTroop(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   outerGrad.addColorStop(0, "#14082a");
   outerGrad.addColorStop(0.3, "#1a0c32");
@@ -214,7 +214,7 @@ export function drawEliteTroop(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   midGrad.addColorStop(0, "#2a1658");
   midGrad.addColorStop(0.3, "#221048");
@@ -227,14 +227,14 @@ export function drawEliteTroop(
     capeCtrlLX + size * 0.05,
     capeCtrlLY,
     capeBotLX + size * 0.04,
-    capeBotLY - size * 0.06,
+    capeBotLY - size * 0.06
   );
   ctx.lineTo(capeBotRX - size * 0.02, capeBotRY - size * 0.05);
   ctx.quadraticCurveTo(
     capeRX - size * 0.02,
     y + size * 0.18,
     capeRX - size * 0.02,
-    capeTopY + size * 0.01,
+    capeTopY + size * 0.01
   );
   ctx.closePath();
   ctx.fill();
@@ -244,7 +244,7 @@ export function drawEliteTroop(
     capeLX,
     y + size * 0.4,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   liningGrad.addColorStop(0, "#602018");
   liningGrad.addColorStop(0.5, "#883020");
@@ -256,14 +256,14 @@ export function drawEliteTroop(
     (capeBotLX + capeBotRX) * 0.5,
     capeBotLY + size * 0.01,
     capeBotRX - size * 0.01,
-    capeBotRY - size * 0.03,
+    capeBotRY - size * 0.03
   );
   ctx.lineTo(capeBotRX - size * 0.03, capeBotRY - size * 0.08);
   ctx.quadraticCurveTo(
     (capeBotLX + capeBotRX) * 0.5,
     capeBotLY - size * 0.06,
     capeBotLX + size * 0.04,
-    capeBotLY - size * 0.08,
+    capeBotLY - size * 0.08
   );
   ctx.closePath();
   ctx.fill();
@@ -281,7 +281,7 @@ export function drawEliteTroop(
       fTopX + cw * (1 - fT * 0.6),
       y + size * 0.28,
       fBotX,
-      capeBotLY - size * 0.08,
+      capeBotLY - size * 0.08
     );
     ctx.stroke();
   }
@@ -294,7 +294,7 @@ export function drawEliteTroop(
     capeLX + size * 0.06 + cw * 0.7,
     y + size * 0.28,
     capeBotLX + size * 0.08,
-    capeBotLY - size * 0.08,
+    capeBotLY - size * 0.08
   );
   ctx.stroke();
 
@@ -311,20 +311,20 @@ export function drawEliteTroop(
       x - rowW * 0.3 + rowOff,
       rowY - size * 0.025,
       x + rowOff,
-      rowY,
+      rowY
     );
     ctx.quadraticCurveTo(
       x + rowW * 0.3 + rowOff,
       rowY + size * 0.025,
       x + rowW * 0.6 + rowOff,
-      rowY,
+      rowY
     );
     ctx.stroke();
   }
 
   // Left edge trim (gold)
   ctx.strokeStyle = `rgba(255, 207, 122, ${0.55 + shimmer * 0.2})`;
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(capeLX, capeTopY);
   ctx.quadraticCurveTo(capeCtrlLX, capeCtrlLY, capeBotLX, capeBotLY);
@@ -332,7 +332,7 @@ export function drawEliteTroop(
 
   // Bottom hem (double gold trim)
   ctx.strokeStyle = `rgba(255, 207, 122, ${0.6 + shimmer * 0.18})`;
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(capeBotLX, capeBotLY);
   ctx.lineTo(capeBotRX, capeBotRY);
@@ -354,7 +354,7 @@ export function drawEliteTroop(
     capeTopY + size * 0.02,
     size * 0.038,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -366,7 +366,7 @@ export function drawEliteTroop(
     capeTopY + size * 0.014,
     size * 0.013,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -378,11 +378,11 @@ export function drawEliteTroop(
       isLeft
         ? x - stanceSpread + weightShift * 0.18
         : x + stanceSpread - weightShift * 0.18,
-      y + size * 0.3 + hipBounce,
+      y + size * 0.3 + hipBounce
     );
     ctx.rotate(
       side * (-0.07 + stance * 0.018) +
-        (isLeft ? -attackDrive * 0.06 : attackDrive * 0.06),
+        (isLeft ? -attackDrive * 0.06 : attackDrive * 0.06)
     );
 
     const lw = size * 0.14;
@@ -437,7 +437,7 @@ export function drawEliteTroop(
       size * 0.015,
       thighH * 0.3,
       -size * 0.01,
-      thighH * 0.45,
+      thighH * 0.45
     );
     ctx.stroke();
 
@@ -455,7 +455,7 @@ export function drawEliteTroop(
       0,
       0,
       kneeY,
-      size * 0.06,
+      size * 0.06
     );
     kneePlateGrad.addColorStop(0, "#c8d0e0");
     kneePlateGrad.addColorStop(0.5, "#a0a8b8");
@@ -498,7 +498,7 @@ export function drawEliteTroop(
         kneeY - size * 0.003,
         size * 0.004,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -510,7 +510,7 @@ export function drawEliteTroop(
       -hlw,
       greaveTop,
       hlw,
-      greaveTop,
+      greaveTop
     );
     greaveGrad.addColorStop(0, "#3a3e48");
     greaveGrad.addColorStop(0.15, "#6a7080");
@@ -564,7 +564,7 @@ export function drawEliteTroop(
       -size * 0.02,
       greaveTop + greaveH * 0.5,
       size * 0.01,
-      greaveTop + greaveH * 0.8,
+      greaveTop + greaveH * 0.8
     );
     ctx.stroke();
 
@@ -595,7 +595,7 @@ export function drawEliteTroop(
       -size * 0.03,
       bootTop + size * 0.035,
       size * 0.06,
-      size * 0.018,
+      size * 0.018
     );
     // Buckle highlight
     ctx.fillStyle = `rgba(255, 230, 140, ${0.4 + shimmer * 0.2})`;
@@ -603,7 +603,7 @@ export function drawEliteTroop(
       -size * 0.015,
       bootTop + size * 0.038,
       size * 0.03,
-      size * 0.012,
+      size * 0.012
     );
 
     // Boot toe plate segments
@@ -620,7 +620,7 @@ export function drawEliteTroop(
       -hlw - size * 0.01,
       bootTop + bootH - size * 0.015,
       lw + size * 0.02,
-      size * 0.015,
+      size * 0.015
     );
 
     ctx.restore();
@@ -642,7 +642,7 @@ export function drawEliteTroop(
     x - size * 0.2,
     y - size * 0.12,
     x + size * 0.2,
-    y + size * 0.32,
+    y + size * 0.32
   );
   plateGrad.addColorStop(0, "#3a3e4a");
   plateGrad.addColorStop(0.08, "#5a6070");
@@ -661,7 +661,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.16 + breathe * 0.3,
     x + size * 0.27,
-    y - size * 0.09 + breathe * 0.5,
+    y - size * 0.09 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.24, y + size * 0.32 + breathe);
   ctx.closePath();
@@ -677,7 +677,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.15 + breathe * 0.3,
     x + size * 0.265,
-    y - size * 0.08 + breathe * 0.5,
+    y - size * 0.08 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.24, y + size * 0.31 + breathe);
   ctx.stroke();
@@ -689,7 +689,7 @@ export function drawEliteTroop(
       x + side * size * 0.02,
       y - size * 0.12,
       x + side * size * 0.18,
-      y + size * 0.06,
+      y + size * 0.06
     );
     pecHL.addColorStop(0, `rgba(210, 220, 240, ${0.35 + shimmer * 0.15})`);
     pecHL.addColorStop(0.5, `rgba(180, 195, 220, ${0.18 + shimmer * 0.08})`);
@@ -702,7 +702,7 @@ export function drawEliteTroop(
       x + side * size * 0.15,
       y - size * 0.04 + breathe * 0.55,
       x + side * size * 0.18,
-      y + size * 0.06 + breathe * 0.65,
+      y + size * 0.06 + breathe * 0.65
     );
     ctx.stroke();
 
@@ -715,7 +715,7 @@ export function drawEliteTroop(
       x + side * size * 0.13,
       y + size * 0.08 + breathe * 0.7,
       x + side * size * 0.2,
-      y + size * 0.05 + breathe * 0.65,
+      y + size * 0.05 + breathe * 0.65
     );
     ctx.stroke();
   }
@@ -725,7 +725,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.1,
     x,
-    y + size * 0.14,
+    y + size * 0.14
   );
   sternGrad.addColorStop(0, `rgba(201, 162, 39, ${0.5 + shimmer * 0.2})`);
   sternGrad.addColorStop(0.5, `rgba(180, 145, 35, ${0.3 + shimmer * 0.1})`);
@@ -768,13 +768,13 @@ export function drawEliteTroop(
       x + side * size * 0.2,
       y + size * 0.02 + breathe * 0.6,
       x + side * size * 0.12,
-      y + size * 0.08 + breathe * 0.7,
+      y + size * 0.08 + breathe * 0.7
     );
     ctx.quadraticCurveTo(
       x + side * size * 0.06,
       y + size * 0.12 + breathe * 0.75,
       x + side * size * 0.15,
-      y + size * 0.16 + breathe * 0.8,
+      y + size * 0.16 + breathe * 0.8
     );
     ctx.stroke();
     // Tendril curls
@@ -785,7 +785,7 @@ export function drawEliteTroop(
       x + side * size * 0.2,
       y + size * 0.1 + breathe * 0.72,
       x + side * size * 0.18,
-      y + size * 0.14 + breathe * 0.78,
+      y + size * 0.14 + breathe * 0.78
     );
     ctx.stroke();
   }
@@ -798,7 +798,7 @@ export function drawEliteTroop(
     0,
     x - size * 0.03,
     y - size * 0.06 + breathe * 0.45,
-    size * 0.15,
+    size * 0.15
   );
   specGrad.addColorStop(0, `rgba(230, 235, 255, ${0.28 + shimmer * 0.18})`);
   specGrad.addColorStop(0.4, `rgba(210, 220, 245, ${0.12 + shimmer * 0.08})`);
@@ -812,7 +812,7 @@ export function drawEliteTroop(
     size * 0.16,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -833,7 +833,7 @@ export function drawEliteTroop(
         rivY - size * 0.002,
         size * 0.004,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -855,7 +855,7 @@ export function drawEliteTroop(
     x - size * 0.08,
     y - size * 0.02,
     x + size * 0.08,
-    y + size * 0.16,
+    y + size * 0.16
   );
   emblemGrad.addColorStop(0, "#dab32f");
   emblemGrad.addColorStop(0.5, "#e8c840");
@@ -897,7 +897,7 @@ export function drawEliteTroop(
     y + size * 0.072 + breathe,
     size * 0.008,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -907,7 +907,7 @@ export function drawEliteTroop(
     x - size * 0.21,
     y + size * 0.23 + breathe,
     x - size * 0.21,
-    y + size * 0.28 + breathe,
+    y + size * 0.28 + breathe
   );
   beltGrad.addColorStop(0, "#4a3a20");
   beltGrad.addColorStop(0.5, "#3a2a1a");
@@ -917,7 +917,7 @@ export function drawEliteTroop(
     x - size * 0.21,
     y + size * 0.23 + breathe,
     size * 0.42,
-    size * 0.05,
+    size * 0.05
   );
 
   // Belt trim lines
@@ -940,7 +940,7 @@ export function drawEliteTroop(
     y + size * 0.22 + breathe,
     size * 0.13,
     size * 0.06,
-    size * 0.01,
+    size * 0.01
   );
   ctx.fill();
   ctx.strokeStyle = "#9a8038";
@@ -954,7 +954,7 @@ export function drawEliteTroop(
     y + size * 0.232 + breathe,
     size * 0.09,
     size * 0.04,
-    size * 0.005,
+    size * 0.005
   );
   ctx.fill();
 
@@ -991,25 +991,25 @@ export function drawEliteTroop(
     stance,
     breathe,
     {
-      armorPeak: "#b8c0d4",
+      armorDark: "#5a6070",
       armorHigh: "#a0a8b8",
       armorMid: "#7a8298",
-      armorDark: "#5a6070",
+      armorPeak: "#b8c0d4",
       trimColor: "#c9a227",
     },
-    { plateCount: 5, widthFactor: 0.46, depthFactor: 0.15, topOffset: 0.26 },
+    { depthFactor: 0.15, plateCount: 5, topOffset: 0.26, widthFactor: 0.46 }
   );
 
   // === ARMS (connecting to shield and halberd) ===
   const eliteArmColors: ArmColors = {
-    upper: "#7a8298",
-    upperLight: "#a0a8b8",
-    upperDark: "#3a3e4a",
-    vambrace: "#a0a8b8",
-    vambraceLight: "#c4cce0",
     elbow: "#7a8298",
     hand: "#7a8298",
     trim: "#c9a227",
+    upper: "#7a8298",
+    upperDark: "#3a3e4a",
+    upperLight: "#a0a8b8",
+    vambrace: "#a0a8b8",
+    vambraceLight: "#c4cce0",
   };
 
   // Left arm → shield grip
@@ -1019,7 +1019,7 @@ export function drawEliteTroop(
   const eliteLShoulderY = y - size * 0.02 + breathe;
   const eliteArmToShieldAngle = Math.atan2(
     eliteShieldY - eliteLShoulderY,
-    eliteShieldX - eliteLShoulderX,
+    eliteShieldX - eliteLShoulderX
   );
 
   ctx.save();
@@ -1060,7 +1060,7 @@ export function drawEliteTroop(
     size * 0.055,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#9c8848";
@@ -1072,7 +1072,7 @@ export function drawEliteTroop(
     size * 0.04,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1126,7 +1126,7 @@ export function drawEliteTroop(
     size * 0.055,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#9c8848";
@@ -1138,7 +1138,7 @@ export function drawEliteTroop(
     size * 0.04,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1172,7 +1172,7 @@ export function drawEliteTroop(
   ctx.save();
   ctx.translate(
     x - size * 0.3,
-    y + size * 0.1 + breathe * 0.55 + hipBounce * 0.4,
+    y + size * 0.1 + breathe * 0.55 + hipBounce * 0.4
   );
   ctx.rotate(-0.22 + stance * 0.03 - attackDrive * 0.08);
   ctx.scale(0.9, 0.9);
@@ -1194,7 +1194,7 @@ export function drawEliteTroop(
     -size * 0.17,
     0,
     size * 0.17,
-    0,
+    0
   );
   shieldOuterGrad.addColorStop(0, "#1e2430");
   shieldOuterGrad.addColorStop(0.3, "#3a4460");
@@ -1217,7 +1217,7 @@ export function drawEliteTroop(
     0,
     -size * 0.22,
     0,
-    size * 0.22,
+    size * 0.22
   );
   shieldFieldGrad.addColorStop(0, "#2a3352");
   shieldFieldGrad.addColorStop(0.5, "#1e2744");
@@ -1289,7 +1289,7 @@ export function drawEliteTroop(
   ctx.closePath();
   ctx.stroke();
   ctx.strokeStyle = "#a38940";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.26);
   ctx.lineTo(-size * 0.14, -size * 0.15);
@@ -1307,7 +1307,7 @@ export function drawEliteTroop(
     size * 0.005,
     0,
     0,
-    size * 0.04,
+    size * 0.04
   );
   bossGrad.addColorStop(0, "#f0e8d0");
   bossGrad.addColorStop(0.4, "#c8a848");
@@ -1317,7 +1317,7 @@ export function drawEliteTroop(
   ctx.arc(0, -size * 0.01, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#d4b86a";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.stroke();
 
   // Corner rivets
@@ -1351,7 +1351,7 @@ export function drawEliteTroop(
 
   // Shield edge highlight (specular)
   ctx.strokeStyle = "rgba(180, 200, 230, 0.25)";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(-size * 0.01, -size * 0.28);
   ctx.lineTo(-size * 0.16, -size * 0.16);
@@ -1372,7 +1372,7 @@ export function drawEliteTroop(
     x - size * 0.1,
     y - size * 0.14,
     x + size * 0.1,
-    y - size * 0.14,
+    y - size * 0.14
   );
   gorgetGrad.addColorStop(0, armorDeep);
   gorgetGrad.addColorStop(0.25, armorDark);
@@ -1387,7 +1387,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.2,
     x + size * 0.115,
-    y - size * 0.17 + hb,
+    y - size * 0.17 + hb
   );
   ctx.lineTo(x + size * 0.09, y - size * 0.08 + hb);
   ctx.closePath();
@@ -1412,7 +1412,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.2,
     x + size * 0.115,
-    y - size * 0.17 + hb,
+    y - size * 0.17 + hb
   );
   ctx.lineTo(x + size * 0.09, y - size * 0.08 + hb);
   ctx.stroke();
@@ -1424,7 +1424,7 @@ export function drawEliteTroop(
     x - size * 0.17,
     y - size * 0.43 + hb,
     x + size * 0.17,
-    helmBottom,
+    helmBottom
   );
   helmGrad.addColorStop(0, armorDeep);
   helmGrad.addColorStop(0.15, armorDark);
@@ -1441,26 +1441,26 @@ export function drawEliteTroop(
     x - size * 0.175,
     y - size * 0.44 + hb * 0.5,
     x,
-    y - size * 0.46 + hb * 0.5,
+    y - size * 0.46 + hb * 0.5
   );
   ctx.quadraticCurveTo(
     x + size * 0.175,
     y - size * 0.44 + hb * 0.5,
     x + size * 0.145,
-    y - size * 0.3 + hb,
+    y - size * 0.3 + hb
   );
   ctx.lineTo(x + size * 0.14, helmBottom - size * 0.04);
   ctx.quadraticCurveTo(
     x + size * 0.1,
     helmBottom + size * 0.01,
     x,
-    helmBottom + size * 0.015,
+    helmBottom + size * 0.015
   );
   ctx.quadraticCurveTo(
     x - size * 0.1,
     helmBottom + size * 0.01,
     x - size * 0.14,
-    helmBottom - size * 0.04,
+    helmBottom - size * 0.04
   );
   ctx.closePath();
   ctx.fill();
@@ -1470,7 +1470,7 @@ export function drawEliteTroop(
     x - size * 0.015,
     helmCY,
     x + size * 0.015,
-    helmCY,
+    helmCY
   );
   ridgeGrad.addColorStop(0, armorDark);
   ridgeGrad.addColorStop(0.3, armorBright);
@@ -1497,7 +1497,7 @@ export function drawEliteTroop(
     x,
     browY + size * 0.01,
     x - size * 0.15,
-    browY + size * 0.02,
+    browY + size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -1518,7 +1518,7 @@ export function drawEliteTroop(
     size * 0.055,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = `rgba(255, 248, 210, ${0.06 + shimmer * 0.04})`;
@@ -1530,7 +1530,7 @@ export function drawEliteTroop(
     size * 0.025,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1541,7 +1541,7 @@ export function drawEliteTroop(
     x - size * 0.1,
     visorCY,
     x + size * 0.1,
-    visorCY,
+    visorCY
   );
   mouthGrad.addColorStop(0, armorDeep);
   mouthGrad.addColorStop(0.3, armorDark);
@@ -1566,13 +1566,13 @@ export function drawEliteTroop(
     x - size * 0.065,
     visorCY + size * 0.02,
     size * 0.13,
-    size * 0.008,
+    size * 0.008
   );
   ctx.fillRect(
     x - size * 0.05,
     visorCY + size * 0.035,
     size * 0.1,
-    size * 0.006,
+    size * 0.006
   );
 
   // === EYE GLOW (fiery orange, layered) ===
@@ -1594,7 +1594,7 @@ export function drawEliteTroop(
     eyeRy * 1.7,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -1605,7 +1605,7 @@ export function drawEliteTroop(
     eyeRy * 1.7,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -1632,7 +1632,7 @@ export function drawEliteTroop(
     eyeRy * 0.45,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -1643,7 +1643,7 @@ export function drawEliteTroop(
     eyeRy * 0.45,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1653,7 +1653,7 @@ export function drawEliteTroop(
       x + side * size * 0.09,
       y - size * 0.3 + hb,
       x + side * size * 0.17,
-      y - size * 0.2 + hb,
+      y - size * 0.2 + hb
     );
     cheekGrad.addColorStop(0, armorMid);
     cheekGrad.addColorStop(0.5, armorDark);
@@ -1675,7 +1675,7 @@ export function drawEliteTroop(
       y - size * 0.235 + hb,
       size * 0.007,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1692,7 +1692,7 @@ export function drawEliteTroop(
         size * 0.004,
         side * 0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1706,7 +1706,7 @@ export function drawEliteTroop(
   ctx.stroke();
   // Crown band inner highlight
   ctx.strokeStyle = `rgba(255, 240, 150, ${0.2 + shimmer * 0.1})`;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(x, helmCY, size * 0.14, Math.PI * 1.15, Math.PI * 1.85);
   ctx.stroke();
@@ -1722,7 +1722,7 @@ export function drawEliteTroop(
     ctx.moveTo(cpX - size * 0.008, cpY);
     ctx.lineTo(
       cpX + Math.cos(cpAngle) * cpH,
-      cpY + Math.sin(cpAngle) * cpH - size * 0.01,
+      cpY + Math.sin(cpAngle) * cpH - size * 0.01
     );
     ctx.lineTo(cpX + size * 0.008, cpY);
     ctx.closePath();
@@ -1744,7 +1744,7 @@ export function drawEliteTroop(
     y - size * 0.445 + hb * 0.5,
     size * 0.008,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -1758,7 +1758,7 @@ export function drawEliteTroop(
       y - size * 0.35 + hb,
       size * 0.007,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1772,13 +1772,13 @@ export function drawEliteTroop(
     x - size * 0.2 - capeWave * 2.5,
     y - size * 0.58,
     x - size * 0.28 - capeWave * 4,
-    y - size * 0.4 + breathe,
+    y - size * 0.4 + breathe
   );
   ctx.quadraticCurveTo(
     x - size * 0.15,
     y - size * 0.35,
     x - size * 0.02,
-    y - size * 0.4 + breathe,
+    y - size * 0.4 + breathe
   );
   ctx.closePath();
   ctx.fill();
@@ -1788,7 +1788,7 @@ export function drawEliteTroop(
     x,
     y - size * 0.55,
     x - size * 0.25,
-    y - size * 0.35,
+    y - size * 0.35
   );
   plumeGrad.addColorStop(0, "#ff7700");
   plumeGrad.addColorStop(0.3, "#ff5500");
@@ -1801,13 +1801,13 @@ export function drawEliteTroop(
     x - size * 0.2 - capeWave * 2.4 - plumeWhip * size * 0.035,
     y - size * 0.58,
     x - size * 0.28 - capeWave * 4 - plumeWhip * size * 0.045,
-    y - size * 0.38 + breathe,
+    y - size * 0.38 + breathe
   );
   ctx.quadraticCurveTo(
     x - size * 0.12,
     y - size * 0.34,
     x,
-    y - size * 0.4 + breathe,
+    y - size * 0.4 + breathe
   );
   ctx.closePath();
   ctx.fill();
@@ -1846,13 +1846,13 @@ export function drawEliteTroop(
     x - size * 0.06 - capeWave * 0.6,
     y - size * 0.47,
     x - size * 0.1 - capeWave * 0.9,
-    y - size * 0.37 + breathe,
+    y - size * 0.37 + breathe
   );
   ctx.quadraticCurveTo(
     x - size * 0.03,
     y - size * 0.35,
     x + size * 0.01,
-    y - size * 0.39 + breathe,
+    y - size * 0.39 + breathe
   );
   ctx.closePath();
   ctx.fill();
@@ -1869,7 +1869,7 @@ export function drawEliteTroop(
       tasselX + side * size * 0.028,
       tasselY + size * 0.08,
       tasselX + side * size * 0.02,
-      tasselY + size * 0.18,
+      tasselY + size * 0.18
     );
     ctx.stroke();
     ctx.fillStyle = "#d5a54c";
@@ -1879,7 +1879,7 @@ export function drawEliteTroop(
       tasselY + size * 0.17,
       size * 0.024,
       size * 0.03,
-      size * 0.008,
+      size * 0.008
     );
     ctx.fill();
   }
@@ -1892,7 +1892,7 @@ export function drawEliteTroop(
     x,
     y + size * 0.29 + breathe,
     x + size * 0.14,
-    y + size * 0.23 + breathe,
+    y + size * 0.23 + breathe
   );
   ctx.stroke();
   for (let link = 0; link < 3; link++) {
@@ -1949,7 +1949,7 @@ export function drawEliteTroop(
       -size * 0.42,
       size * 0.3,
       -Math.PI * 0.52,
-      -Math.PI * 0.52 + halberdSwing * 0.92,
+      -Math.PI * 0.52 + halberdSwing * 0.92
     );
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 248, 220, ${0.16 + attackDrive * 0.22})`;
@@ -1960,7 +1960,7 @@ export function drawEliteTroop(
       -size * 0.42,
       size * 0.25,
       -Math.PI * 0.52,
-      -Math.PI * 0.52 + halberdSwing * 0.88,
+      -Math.PI * 0.52 + halberdSwing * 0.88
     );
     ctx.stroke();
     for (let spark = 0; spark < 5; spark++) {
@@ -1973,7 +1973,7 @@ export function drawEliteTroop(
         -size * 0.42 + Math.sin(sparkAngle) * sparkRadius,
         size * 0.015,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1983,7 +1983,7 @@ export function drawEliteTroop(
     -size * 0.2,
     -size * 0.5,
     size * 0.02,
-    -size * 0.28,
+    -size * 0.28
   );
   crescentGrad.addColorStop(0, "#c3c9d8");
   crescentGrad.addColorStop(0.5, "#eef1ff");
@@ -2066,7 +2066,7 @@ export function drawEliteTroop(
     -size * 0.525,
     size * 0.08,
     size * 0.02,
-    size * 0.005,
+    size * 0.005
   );
   ctx.fill();
   ctx.fillStyle = "#c0c8d8";

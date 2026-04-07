@@ -22,7 +22,7 @@ function buildKey(
   upgrade: string | undefined,
   rotation: number,
   zoom: number,
-  time: number,
+  time: number
 ): string {
   const zq = quantize(zoom, 0.25);
   const rq = quantize(rotation, 0.15);
@@ -55,7 +55,7 @@ export function drawCachedTowerSprite(
   rotation: number,
   zoom: number,
   time: number,
-  drawTower: (offCtx: CanvasRenderingContext2D, cx: number, cy: number) => void,
+  drawTower: (offCtx: CanvasRenderingContext2D, cx: number, cy: number) => void
 ): void {
   const key = buildKey(type, level, upgrade, rotation, zoom, time);
 

@@ -1,43 +1,83 @@
 "use client";
 import React, { useRef, useEffect } from "react";
-import { setupSpriteCanvas } from "./hooks";
-import { drawRegionIcon, drawChallengeSigil, type RegionType } from "./regionIconDrawing";
+
+import { setupSpriteCanvas, SPRITE_PAD } from "./hooks";
+import { drawRegionIcon, drawChallengeSigil } from "./regionIconDrawing";
+import type { RegionType } from "./regionIconDrawing";
 
 export type { RegionType } from "./regionIconDrawing";
 
-const REGION_FRAME_PALETTES: Record<RegionType, {
-  ringLight: string; ringMid: string; ringDark: string;
-  border: string; edge: string; notch: string;
-  innerLight: string; innerDark: string;
-}> = {
+const REGION_FRAME_PALETTES: Record<
+  RegionType,
+  {
+    ringLight: string;
+    ringMid: string;
+    ringDark: string;
+    border: string;
+    edge: string;
+    notch: string;
+    innerLight: string;
+    innerDark: string;
+  }
+> = {
+  desert: {
+    border: "#C8A860",
+    edge: "rgba(220,185,100,0.25)",
+    innerDark: "#50381B",
+    innerLight: "#876431",
+    notch: "#D4B468",
+    ringDark: "#705828",
+    ringLight: "#BE9B5C",
+    ringMid: "#9A7A3C",
+  },
   grassland: {
-    ringLight: "#8AA858", ringMid: "#6A8840", ringDark: "#4A6828",
-    border: "#90B860", edge: "rgba(160,220,120,0.25)",
-    notch: "#A0C868", innerLight: "#5A7838", innerDark: "#3A5020",
+    border: "#90B860",
+    edge: "rgba(160,220,120,0.25)",
+    innerDark: "#3A5020",
+    innerLight: "#5A7838",
+    notch: "#A0C868",
+    ringDark: "#4A6828",
+    ringLight: "#8AA858",
+    ringMid: "#6A8840",
   },
   swamp: {
-    ringLight: "#6FAFA1", ringMid: "#508878", ringDark: "#346858",
-    border: "#6CBCAC", edge: "rgba(120,200,180,0.25)",
-    notch: "#80C8B8", innerLight: "#446F66", innerDark: "#24443D",
-  },
-  desert: {
-    ringLight: "#BE9B5C", ringMid: "#9A7A3C", ringDark: "#705828",
-    border: "#C8A860", edge: "rgba(220,185,100,0.25)",
-    notch: "#D4B468", innerLight: "#876431", innerDark: "#50381B",
-  },
-  winter: {
-    ringLight: "#78A4C8", ringMid: "#5880A0", ringDark: "#3A5E78",
-    border: "#80B0D0", edge: "rgba(140,190,240,0.25)",
-    notch: "#90C0E0", innerLight: "#486C8C", innerDark: "#274158",
+    border: "#6CBCAC",
+    edge: "rgba(120,200,180,0.25)",
+    innerDark: "#24443D",
+    innerLight: "#446F66",
+    notch: "#80C8B8",
+    ringDark: "#346858",
+    ringLight: "#6FAFA1",
+    ringMid: "#508878",
   },
   volcanic: {
-    ringLight: "#AA5238", ringMid: "#883828", ringDark: "#602018",
-    border: "#B85838", edge: "rgba(220,110,70,0.25)",
-    notch: "#CC6848", innerLight: "#7A3828", innerDark: "#4A1C10",
+    border: "#B85838",
+    edge: "rgba(220,110,70,0.25)",
+    innerDark: "#4A1C10",
+    innerLight: "#7A3828",
+    notch: "#CC6848",
+    ringDark: "#602018",
+    ringLight: "#AA5238",
+    ringMid: "#883828",
+  },
+  winter: {
+    border: "#80B0D0",
+    edge: "rgba(140,190,240,0.25)",
+    innerDark: "#274158",
+    innerLight: "#486C8C",
+    notch: "#90C0E0",
+    ringDark: "#3A5E78",
+    ringLight: "#78A4C8",
+    ringMid: "#5880A0",
   },
 };
 
-function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: RegionType, locked: boolean) {
+function drawRegionFrame(
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  type: RegionType,
+  locked: boolean
+) {
   const p = REGION_FRAME_PALETTES[type];
   const r = size * 0.14;
   const pad = 1.5;
@@ -67,12 +107,26 @@ function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: Regi
 
   ctx.strokeStyle = locked ? "rgba(100,100,100,0.15)" : p.edge;
   ctx.lineWidth = 1;
-  roundRect(ctx, pad + 2.5, pad + 2.5, size - pad * 2 - 5, size - pad * 2 - 5, r * 0.8);
+  roundRect(
+    ctx,
+    pad + 2.5,
+    pad + 2.5,
+    size - pad * 2 - 5,
+    size - pad * 2 - 5,
+    r * 0.8
+  );
   ctx.stroke();
 
   ctx.strokeStyle = "rgba(0,0,0,0.3)";
   ctx.lineWidth = 1;
-  roundRect(ctx, pad - 0.5, pad - 0.5, size - pad * 2 + 1, size - pad * 2 + 1, r + 0.5);
+  roundRect(
+    ctx,
+    pad - 0.5,
+    pad - 0.5,
+    size - pad * 2 + 1,
+    size - pad * 2 + 1,
+    r + 0.5
+  );
   ctx.stroke();
 
   if (!locked) {
@@ -81,8 +135,10 @@ function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: Regi
     const cy = size / 2;
     const half = size / 2 - pad - 1;
     const corners = [
-      [pad + 3, pad + 3], [size - pad - 3, pad + 3],
-      [pad + 3, size - pad - 3], [size - pad - 3, size - pad - 3],
+      [pad + 3, pad + 3],
+      [size - pad - 3, pad + 3],
+      [pad + 3, size - pad - 3],
+      [size - pad - 3, size - pad - 3],
     ];
     for (const [nx, ny] of corners) {
       ctx.beginPath();
@@ -90,8 +146,10 @@ function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: Regi
       ctx.fill();
     }
     const midpoints = [
-      [cx, pad + 1], [cx, size - pad - 1],
-      [pad + 1, cy], [size - pad - 1, cy],
+      [cx, pad + 1],
+      [cx, size - pad - 1],
+      [pad + 1, cy],
+      [size - pad - 1, cy],
     ];
     for (const [nx, ny] of midpoints) {
       ctx.beginPath();
@@ -101,7 +159,12 @@ function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: Regi
   }
 
   const inset = size * 0.15;
-  const innerGrad = ctx.createLinearGradient(inset, inset, size - inset, size - inset);
+  const innerGrad = ctx.createLinearGradient(
+    inset,
+    inset,
+    size - inset,
+    size - inset
+  );
   if (locked) {
     innerGrad.addColorStop(0, "#333028");
     innerGrad.addColorStop(1, "#201D18");
@@ -120,12 +183,26 @@ function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: Regi
 
   if (!locked) {
     ctx.fillStyle = "rgba(0,0,0,0.35)";
-    roundRect(ctx, inset + 1, inset + 1, size - inset * 2 - 2, size - inset * 2 - 2, r * 0.45);
+    roundRect(
+      ctx,
+      inset + 1,
+      inset + 1,
+      size - inset * 2 - 2,
+      size - inset * 2 - 2,
+      r * 0.45
+    );
     ctx.fill();
   }
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -148,13 +225,29 @@ export const RegionIcon: React.FC<{
   framed?: boolean;
   challenge?: boolean;
   sandbox?: boolean;
-}> = ({ type, size = 60, locked = false, framed = false, challenge = false, sandbox = false }) => {
+}> = ({
+  type,
+  size = 60,
+  locked = false,
+  framed = false,
+  challenge = false,
+  sandbox = false,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasSize = Math.ceil(size * SPRITE_PAD);
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = setupSpriteCanvas(canvas, size, size);
-    if (!ctx) return;
+    if (!canvas) {
+      return;
+    }
+    const ctx = setupSpriteCanvas(canvas, canvasSize, canvasSize);
+    if (!ctx) {
+      return;
+    }
+
+    const offset = (canvasSize - size) / 2;
+    ctx.translate(offset, offset);
+
     const cx = size / 2;
     const cy = size / 2;
 
@@ -170,7 +263,9 @@ export const RegionIcon: React.FC<{
       const s = framed ? size / 52 : size / 36;
       ctx.save();
       ctx.translate(cx, cy);
-      if (locked) ctx.globalAlpha = 0.35;
+      if (locked) {
+        ctx.globalAlpha = 0.35;
+      }
       ctx.fillStyle = "#D4A84B";
       ctx.beginPath();
       ctx.ellipse(0, 7 * s, 10 * s, 3.5 * s, 0, 0, Math.PI * 2);
@@ -209,7 +304,9 @@ export const RegionIcon: React.FC<{
       const sigScale = framed ? size / 48 : size / 32;
       ctx.save();
       ctx.translate(cx, cy);
-      if (locked) ctx.globalAlpha = 0.35;
+      if (locked) {
+        ctx.globalAlpha = 0.35;
+      }
       drawChallengeSigil(ctx, type, sigScale);
       ctx.restore();
       return;
@@ -221,6 +318,8 @@ export const RegionIcon: React.FC<{
     ctx.scale(iconScale, iconScale);
     drawRegionIcon(ctx, type);
     ctx.restore();
-  }, [type, size, locked, framed, challenge]);
-  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+  }, [type, size, canvasSize, locked, framed, challenge]);
+  return (
+    <canvas ref={canvasRef} style={{ height: canvasSize, width: canvasSize }} />
+  );
 };

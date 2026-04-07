@@ -1,4 +1,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+
+import { INITIAL_LIVES, WAVE_TIMER_BASE } from "../../constants";
+import { getGameSettings } from "../../hooks/useSettings";
 import type {
   DraggingTower,
   Effect,
@@ -13,17 +16,15 @@ import type {
   TowerType,
   Troop,
 } from "../../types";
-import { INITIAL_LIVES, WAVE_TIMER_BASE } from "../../constants";
 import { DEFAULT_CAMERA_OFFSET, DEFAULT_CAMERA_ZOOM } from "../setup";
-import { getGameSettings } from "../../hooks/useSettings";
 
-export type PausableTimeoutEntry = {
+export interface PausableTimeoutEntry {
   id: number;
   callback: () => void;
   remainingTime: number;
   startedAt: number;
   timeoutId: NodeJS.Timeout | null;
-};
+}
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
 
@@ -147,7 +148,7 @@ export function resetBattleState({
     setters.setCameraOffset(DEFAULT_CAMERA_OFFSET);
     const userZoom = getGameSettings().camera.defaultZoom;
     setters.setCameraZoom(
-      userZoom > 0 ? userZoom * DEFAULT_CAMERA_ZOOM : DEFAULT_CAMERA_ZOOM,
+      userZoom > 0 ? userZoom * DEFAULT_CAMERA_ZOOM : DEFAULT_CAMERA_ZOOM
     );
   }
 

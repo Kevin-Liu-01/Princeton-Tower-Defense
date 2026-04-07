@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
+import React, { useCallback } from "react";
+
+import { PANEL, GOLD, OVERLAY, dividerGradient } from "../system/theme";
 import { BaseModal } from "./BaseModal";
 import { OrnateFrame } from "./OrnateFrame";
-import { PANEL, GOLD, OVERLAY, dividerGradient } from "../system/theme";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -22,24 +23,30 @@ interface ConfirmModalProps {
 
 const VARIANT_STYLES = {
   danger: {
-    confirmBg: "linear-gradient(180deg, rgba(140,30,30,0.85), rgba(90,18,18,0.9))",
+    confirmBg:
+      "linear-gradient(180deg, rgba(140,30,30,0.85), rgba(90,18,18,0.9))",
     confirmBorder: "1.5px solid rgba(220,60,60,0.5)",
-    confirmShadow: "0 4px 12px rgba(140,30,30,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
+    confirmShadow:
+      "0 4px 12px rgba(140,30,30,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
     confirmText: "text-red-100",
-    titleIconClass: "text-red-400",
     iconBg: "linear-gradient(135deg, rgba(80,16,16,0.9), rgba(55,10,10,0.9))",
     iconBorder: "2px solid rgba(220,60,60,0.4)",
-    iconShadow: "0 4px 12px rgba(140,30,30,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+    iconShadow:
+      "0 4px 12px rgba(140,30,30,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+    titleIconClass: "text-red-400",
   },
   warning: {
-    confirmBg: "linear-gradient(180deg, rgba(160,115,20,0.85), rgba(110,75,15,0.9))",
+    confirmBg:
+      "linear-gradient(180deg, rgba(160,115,20,0.85), rgba(110,75,15,0.9))",
     confirmBorder: `1.5px solid ${GOLD.border40}`,
-    confirmShadow: "0 4px 12px rgba(160,115,20,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
+    confirmShadow:
+      "0 4px 12px rgba(160,115,20,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
     confirmText: "text-amber-100",
-    titleIconClass: "text-amber-400",
     iconBg: "linear-gradient(135deg, rgba(60,42,12,0.9), rgba(40,28,8,0.9))",
     iconBorder: `2px solid ${GOLD.border35}`,
-    iconShadow: "0 4px 12px rgba(160,115,20,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+    iconShadow:
+      "0 4px 12px rgba(160,115,20,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+    titleIconClass: "text-amber-400",
   },
 } as const;
 
@@ -85,7 +92,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           className="flex flex-col items-center gap-4 px-6 py-5"
           style={{
             background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`,
-            boxShadow: "0 20px 50px rgba(0,0,0,0.5), inset 0 0 22px rgba(245,158,11,0.04)",
+            boxShadow:
+              "0 20px 50px rgba(0,0,0,0.5), inset 0 0 22px rgba(245,158,11,0.04)",
           }}
         >
           {TitleIcon && (
@@ -105,7 +113,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             {title}
           </h2>
 
-          <div className="h-px w-full" style={{ background: dividerGradient }} />
+          <div
+            className="h-px w-full"
+            style={{ background: dividerGradient }}
+          />
 
           <p className="text-center text-sm leading-relaxed text-amber-200/60">
             {description}

@@ -1,4 +1,5 @@
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
+import type { MapTheme } from "../../types";
 import {
   drawIsometricPrism,
   drawIsometricPyramid,
@@ -10,7 +11,6 @@ import {
   MAX_SHADOW_RX,
   MAX_SHADOW_RY,
 } from "./shadowHelpers";
-import type { MapTheme } from "../../types";
 
 export interface LandmarkParams {
   ctx: CanvasRenderingContext2D;
@@ -41,65 +41,65 @@ export interface FortressPalette {
 }
 
 const FORTRESS_PALETTES: Record<MapTheme, FortressPalette> = {
-  grassland: {
-    stoneTop: "#d4c8a8",
-    stoneLit: "#baa880",
-    stoneMid: "#9a8a6a",
-    stoneDark: "#786850",
-    stoneDeep: "#584838",
-    mossGreen: "#4a7a30",
-    lichYellow: "#90a050",
-    bannerPrimary: "#2a6030",
-    bannerSecondary: "#3a8040",
-    shadowRgb: "35,30,18",
-  },
   desert: {
-    stoneTop: "#e0d0a8",
-    stoneLit: "#c8b080",
-    stoneMid: "#a89060",
-    stoneDark: "#887040",
-    stoneDeep: "#685028",
-    mossGreen: "#8a8a40",
-    lichYellow: "#c0b060",
     bannerPrimary: "#8a5020",
     bannerSecondary: "#a06830",
+    lichYellow: "#c0b060",
+    mossGreen: "#8a8a40",
     shadowRgb: "40,30,10",
+    stoneDark: "#887040",
+    stoneDeep: "#685028",
+    stoneLit: "#c8b080",
+    stoneMid: "#a89060",
+    stoneTop: "#e0d0a8",
   },
-  winter: {
-    stoneTop: "#b8c8d8",
-    stoneLit: "#8a9cb0",
-    stoneMid: "#6a8098",
-    stoneDark: "#4a6078",
-    stoneDeep: "#2a3a50",
-    mossGreen: "#506878",
-    lichYellow: "#8898a8",
-    bannerPrimary: "#1B3A5A",
-    bannerSecondary: "#2A5080",
-    shadowRgb: "15,20,30",
-  },
-  volcanic: {
-    stoneTop: "#908080",
-    stoneLit: "#706058",
-    stoneMid: "#584848",
-    stoneDark: "#403030",
-    stoneDeep: "#281818",
-    mossGreen: "#584830",
-    lichYellow: "#706040",
-    bannerPrimary: "#8a2000",
-    bannerSecondary: "#b03010",
-    shadowRgb: "30,10,5",
+  grassland: {
+    bannerPrimary: "#2a6030",
+    bannerSecondary: "#3a8040",
+    lichYellow: "#90a050",
+    mossGreen: "#4a7a30",
+    shadowRgb: "35,30,18",
+    stoneDark: "#786850",
+    stoneDeep: "#584838",
+    stoneLit: "#baa880",
+    stoneMid: "#9a8a6a",
+    stoneTop: "#d4c8a8",
   },
   swamp: {
-    stoneTop: "#a0a888",
-    stoneLit: "#808868",
-    stoneMid: "#687050",
-    stoneDark: "#505838",
-    stoneDeep: "#384020",
-    mossGreen: "#3a6830",
-    lichYellow: "#708040",
     bannerPrimary: "#2a4028",
     bannerSecondary: "#3a5838",
+    lichYellow: "#708040",
+    mossGreen: "#3a6830",
     shadowRgb: "15,25,10",
+    stoneDark: "#505838",
+    stoneDeep: "#384020",
+    stoneLit: "#808868",
+    stoneMid: "#687050",
+    stoneTop: "#a0a888",
+  },
+  volcanic: {
+    bannerPrimary: "#8a2000",
+    bannerSecondary: "#b03010",
+    lichYellow: "#706040",
+    mossGreen: "#584830",
+    shadowRgb: "30,10,5",
+    stoneDark: "#403030",
+    stoneDeep: "#281818",
+    stoneLit: "#706058",
+    stoneMid: "#584848",
+    stoneTop: "#908080",
+  },
+  winter: {
+    bannerPrimary: "#1B3A5A",
+    bannerSecondary: "#2A5080",
+    lichYellow: "#8898a8",
+    mossGreen: "#506878",
+    shadowRgb: "15,20,30",
+    stoneDark: "#4a6078",
+    stoneDeep: "#2a3a50",
+    stoneLit: "#8a9cb0",
+    stoneMid: "#6a8098",
+    stoneTop: "#b8c8d8",
   },
 };
 
@@ -118,7 +118,7 @@ function prismFaceOverlay(
   width: number,
   height: number,
   face: "left" | "right",
-  gradient: CanvasGradient,
+  gradient: CanvasGradient
 ): void {
   const iW = width * ISO_COS;
   const iD = width * ISO_SIN;
@@ -150,7 +150,7 @@ function drawIsoSkull3D(
   boneMid: string,
   boneDark: string,
   eyeColor?: string,
-  eyeAlpha?: number,
+  eyeAlpha?: number
 ): void {
   const r = radius;
   ctx.fillStyle = boneDark;
@@ -162,7 +162,7 @@ function drawIsoSkull3D(
     r * 1.15,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   const cranGrad = ctx.createRadialGradient(
@@ -171,7 +171,7 @@ function drawIsoSkull3D(
     0,
     x,
     y,
-    r * 1.05,
+    r * 1.05
   );
   cranGrad.addColorStop(0, boneWhite);
   cranGrad.addColorStop(0.55, boneMid);
@@ -240,7 +240,7 @@ function drawMultiFlame(
   midColor: string,
   coreColor: string,
   glowColor: string,
-  glowSize: number,
+  glowSize: number
 ): void {
   const f1 = Math.sin(time * 7.5 + idx * 2.1) * width * 0.28;
   const f2 = Math.cos(time * 5.8 + idx * 1.4) * width * 0.2;
@@ -253,13 +253,13 @@ function drawMultiFlame(
     x - width * 0.35 + f2,
     baseY - height * 0.65,
     x + f1,
-    baseY - height,
+    baseY - height
   );
   ctx.quadraticCurveTo(
     x + width * 0.4 - f2,
     baseY - height * 0.5,
     x + width * 0.95,
-    baseY,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -270,13 +270,13 @@ function drawMultiFlame(
     x - width * 0.15 + f3,
     baseY - height * 0.5,
     x + f1 * 0.6,
-    baseY - height * 0.78,
+    baseY - height * 0.78
   );
   ctx.quadraticCurveTo(
     x + width * 0.2 - f3,
     baseY - height * 0.35,
     x + width * 0.6,
-    baseY,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -287,13 +287,13 @@ function drawMultiFlame(
     x + f2 * 0.3,
     baseY - height * 0.32,
     x + f3 * 0.35,
-    baseY - height * 0.52,
+    baseY - height * 0.52
   );
   ctx.quadraticCurveTo(
     x + width * 0.1,
     baseY - height * 0.18,
     x + width * 0.28,
-    baseY,
+    baseY
   );
   ctx.closePath();
   ctx.fill();
@@ -308,7 +308,7 @@ function drawMortarLines(
   height: number,
   rows: number,
   color: string,
-  s: number,
+  s: number
 ): void {
   const iW = width * ISO_COS;
   const iD = width * ISO_SIN;
@@ -337,7 +337,7 @@ function drawRuinsBanner(
   poleH: number,
   bannerColor1: string,
   bannerColor2: string,
-  emblemStyle?: "cross" | "shield" | "star",
+  emblemStyle?: "cross" | "shield" | "star"
 ): void {
   // Pole with wood grain
   ctx.strokeStyle = "#5a4a3a";
@@ -370,7 +370,7 @@ function drawRuinsBanner(
   ctx.fill();
   // Animated banner with wind
   const bW1 = Math.sin(time * 2.2) * 1.8 * s;
-  const bW2 = Math.sin(time * 3.1 + 1) * 1.0 * s;
+  const bW2 = Math.sin(time * 3.1 + 1) * 1 * s;
   const bW3 = Math.cos(time * 2.7 + 0.5) * 0.6 * s;
   const bTop = fTop;
   const banG = ctx.createLinearGradient(px, bTop, px + 11 * s, bTop + 9 * s);
@@ -380,8 +380,18 @@ function drawRuinsBanner(
   ctx.fillStyle = banG;
   ctx.beginPath();
   ctx.moveTo(px + 0.5 * s, bTop);
-  ctx.quadraticCurveTo(px + 5 * s + bW1, bTop + 1 * s, px + 10 * s + bW1, bTop + 2.5 * s);
-  ctx.quadraticCurveTo(px + 8 * s + bW2, bTop + 5 * s, px + 10 * s + bW3, bTop + 7 * s);
+  ctx.quadraticCurveTo(
+    px + 5 * s + bW1,
+    bTop + 1 * s,
+    px + 10 * s + bW1,
+    bTop + 2.5 * s
+  );
+  ctx.quadraticCurveTo(
+    px + 8 * s + bW2,
+    bTop + 5 * s,
+    px + 10 * s + bW3,
+    bTop + 7 * s
+  );
   ctx.lineTo(px + 6 * s + bW2 * 0.5, bTop + 10 * s);
   ctx.lineTo(px + 4 * s - bW3, bTop + 8 * s);
   ctx.quadraticCurveTo(px + 2 * s, bTop + 6 * s, px + 0.5 * s, bTop + 7 * s);
@@ -395,7 +405,10 @@ function drawRuinsBanner(
     const fy = bTop + (8 + fr * 0.4) * s;
     ctx.beginPath();
     ctx.moveTo(fx, fy);
-    ctx.lineTo(fx + Math.sin(time * 3 + fr) * 0.8 * s, fy + (1.5 + Math.sin(fr * 2.1) * 0.5) * s);
+    ctx.lineTo(
+      fx + Math.sin(time * 3 + fr) * 0.8 * s,
+      fy + (1.5 + Math.sin(fr * 2.1) * 0.5) * s
+    );
     ctx.stroke();
   }
   // Banner emblem
@@ -443,7 +456,7 @@ function drawBrokenTower(
   seed: number,
   stoneTop: string,
   stoneLit: string,
-  stoneDark: string,
+  stoneDark: string
 ): void {
   const iW = tW * ISO_COS;
   const iD = tW * ISO_SIN;
@@ -453,7 +466,16 @@ function drawBrokenTower(
 
   // Main tower body
   drawIsometricPrism(ctx, tx, ty, tW, tW, tH, stoneTop, stoneLit, stoneDark);
-  drawMortarLines(ctx, tx, ty, tW, tH, Math.floor(tH / (5 * s)), "rgba(30,25,20,0.15)", s);
+  drawMortarLines(
+    ctx,
+    tx,
+    ty,
+    tW,
+    tH,
+    Math.floor(tH / (5 * s)),
+    "rgba(30,25,20,0.15)",
+    s
+  );
 
   // Weathering stain overlay on left face
   const stain = ctx.createLinearGradient(tx - iW, ty + iD, tx - iW, tTopY + iD);
@@ -475,7 +497,7 @@ function drawBrokenTower(
     for (let cs = 1; cs <= 5; cs++) {
       ctx.lineTo(
         crx + Math.sin(seed + cr * 3 + cs * 2.1) * 2 * s,
-        cry0 - cs * tH * 0.15,
+        cry0 - cs * tH * 0.15
       );
     }
     ctx.stroke();
@@ -507,16 +529,30 @@ function drawBrokenTower(
     const jx = tx + Math.cos(jAngle) * jDist * iW;
     const jy = topCY + Math.sin(jAngle) * jDist * iD;
     const bR = tW * (0.1 + Math.sin(seed + j * 1.3) * 0.04);
-    const jH = tW * breakH * 0.01 * (0.15 + 0.85 * Math.abs(Math.sin(seed + j * 2.7)));
+    const jH =
+      tW * breakH * 0.01 * (0.15 + 0.85 * Math.abs(Math.sin(seed + j * 2.7)));
     ctx.fillStyle = j % 3 === 0 ? stoneTop : j % 3 === 1 ? stoneLit : stoneDark;
-    drawOrganicBlobAt(ctx, jx, jy - jH * 0.4, bR * 1.1, jH * 0.6, seed + j * 2.7, 0.35);
+    drawOrganicBlobAt(
+      ctx,
+      jx,
+      jy - jH * 0.4,
+      bR * 1.1,
+      jH * 0.6,
+      seed + j * 2.7,
+      0.35
+    );
     ctx.fill();
   }
   // Extra organic rubble heap sitting on top face left region
   ctx.fillStyle = stoneDark;
   drawOrganicBlobAt(
-    ctx, tx - iW * 0.3, topCY + iD * 0.2,
-    iW * 0.5, iD * 0.6, seed + 5.1, 0.35,
+    ctx,
+    tx - iW * 0.3,
+    topCY + iD * 0.2,
+    iW * 0.5,
+    iD * 0.6,
+    seed + 5.1,
+    0.35
   );
   ctx.fill();
 
@@ -525,9 +561,13 @@ function drawBrokenTower(
     const t = (rb + 0.5) / 8;
     const spread = (t - 0.5) * 2;
     const rbx = tx + spread * iW * 0.8 + Math.sin(seed + rb * 1.7) * iW * 0.08;
-    const rby = baseFrontY + Math.abs(spread) * iD * 0.3 + (0.3 + Math.sin(seed + rb * 2.5) * 0.4) * iD * 0.15;
+    const rby =
+      baseFrontY +
+      Math.abs(spread) * iD * 0.3 +
+      (0.3 + Math.sin(seed + rb * 2.5) * 0.4) * iD * 0.15;
     const rbR = tW * 0.035 + Math.sin(seed + rb * 1.9) * tW * 0.015;
-    ctx.fillStyle = rb % 3 === 0 ? stoneTop : rb % 3 === 1 ? stoneLit : stoneDark;
+    ctx.fillStyle =
+      rb % 3 === 0 ? stoneTop : rb % 3 === 1 ? stoneLit : stoneDark;
     drawOrganicBlobAt(ctx, rbx, rby, rbR, rbR * 0.4, seed + rb * 3.1, 0.25);
     ctx.fill();
   }
@@ -535,7 +575,15 @@ function drawBrokenTower(
   // Moss on left face of tower (anchored to left face midpoint)
   const mossY = ty + iD - tH * 0.08;
   ctx.fillStyle = "rgba(65,90,40,0.2)";
-  drawOrganicBlobAt(ctx, tx - iW * 0.5, mossY, tW * 0.4, iD * 0.6, seed + 11, 0.3);
+  drawOrganicBlobAt(
+    ctx,
+    tx - iW * 0.5,
+    mossY,
+    tW * 0.4,
+    iD * 0.6,
+    seed + 11,
+    0.3
+  );
   ctx.fill();
 }
 
@@ -549,7 +597,7 @@ function drawRuinedWallSegment(
   seed: number,
   stoneTop: string,
   stoneLit: string,
-  stoneDark: string,
+  stoneDark: string
 ): void {
   const wI = wW * ISO_COS;
   const wD = wW * ISO_SIN;
@@ -557,7 +605,15 @@ function drawRuinedWallSegment(
 
   // Shadow/ground stain under the rubble pile
   ctx.fillStyle = `rgba(30,25,15,0.12)`;
-  drawOrganicBlobAt(ctx, wx, topCY + wD * 0.3, wI * 0.9, wD * 0.7, seed + 0.5, 0.2);
+  drawOrganicBlobAt(
+    ctx,
+    wx,
+    topCY + wD * 0.3,
+    wI * 0.9,
+    wD * 0.7,
+    seed + 0.5,
+    0.2
+  );
   ctx.fill();
 
   // Large rubble chunks filling the iso diamond footprint (back-to-front layering)
@@ -572,11 +628,26 @@ function drawRuinedWallSegment(
     const bH = wW * (0.05 + Math.sin(seed + i * 1.7) * 0.035);
     const blobSeed = seed + i * 3.1;
 
-    ctx.fillStyle = i % 4 === 0 ? stoneDark : i % 4 === 1 ? stoneLit : i % 4 === 2 ? stoneTop : stoneLit;
+    ctx.fillStyle =
+      i % 4 === 0
+        ? stoneDark
+        : i % 4 === 1
+          ? stoneLit
+          : i % 4 === 2
+            ? stoneTop
+            : stoneLit;
     drawOrganicBlobAt(ctx, bx, by - bH * 0.3, bW, bH * 0.5, blobSeed, 0.3);
     ctx.fill();
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, bx + wW * 0.005, by, bW * 0.8, bH * 0.25, blobSeed + 1, 0.2);
+    drawOrganicBlobAt(
+      ctx,
+      bx + wW * 0.005,
+      by,
+      bW * 0.8,
+      bH * 0.25,
+      blobSeed + 1,
+      0.2
+    );
     ctx.fill();
   }
 
@@ -592,7 +663,15 @@ function drawRuinedWallSegment(
     const jH = wW * (0.07 + Math.sin(seed + j * 1.9) * 0.05);
 
     ctx.fillStyle = j % 3 === 0 ? stoneTop : j % 3 === 1 ? stoneLit : stoneDark;
-    drawOrganicBlobAt(ctx, jx, jy - jH * 0.5, jW, jH * 0.4, seed + j * 4.7, 0.35);
+    drawOrganicBlobAt(
+      ctx,
+      jx,
+      jy - jH * 0.5,
+      jW,
+      jH * 0.4,
+      seed + j * 4.7,
+      0.35
+    );
     ctx.fill();
   }
 
@@ -610,10 +689,26 @@ function drawRuinedWallSegment(
 
   // Moss accents on rubble pile
   ctx.fillStyle = "rgba(65,90,40,0.14)";
-  drawOrganicBlobAt(ctx, wx - wI * 0.2, topCY - wD * 0.08, wW * 0.06, wW * 0.035, seed + 7, 0.25);
+  drawOrganicBlobAt(
+    ctx,
+    wx - wI * 0.2,
+    topCY - wD * 0.08,
+    wW * 0.06,
+    wW * 0.035,
+    seed + 7,
+    0.25
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(75,100,50,0.1)";
-  drawOrganicBlobAt(ctx, wx + wI * 0.15, topCY + wD * 0.2, wW * 0.05, wW * 0.025, seed + 9, 0.2);
+  drawOrganicBlobAt(
+    ctx,
+    wx + wI * 0.15,
+    topCY + wD * 0.2,
+    wW * 0.05,
+    wW * 0.025,
+    seed + 9,
+    0.2
+  );
   ctx.fill();
 }
 
@@ -625,7 +720,7 @@ function drawStoneGreeble(
   seed: number,
   stoneTop: string,
   stoneLit: string,
-  stoneDark: string,
+  stoneDark: string
 ): void {
   // Organic rubble scatter on isometric ground plane
   const count = 4 + Math.floor(Math.abs(Math.sin(seed * 1.7)) * 3);
@@ -639,7 +734,15 @@ function drawStoneGreeble(
     drawOrganicBlobAt(ctx, bx, by, bR * 1.2, bR * 0.6, seed + g * 3.1, 0.3);
     ctx.fill();
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, bx + bR * 0.35, by + bR * 0.25, bR * 0.9, bR * 0.4, seed + g * 3.1 + 1, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      bx + bR * 0.35,
+      by + bR * 0.25,
+      bR * 0.9,
+      bR * 0.4,
+      seed + g * 3.1 + 1,
+      0.25
+    );
     ctx.fill();
   }
 }
@@ -650,7 +753,7 @@ function drawIsoFaceParallelogram(
   cy: number,
   hw: number,
   hh: number,
-  skewX: number,
+  skewX: number
 ): void {
   ctx.beginPath();
   ctx.moveTo(cx - hw + skewX, cy - hh);
@@ -666,7 +769,7 @@ function drawArchedWindow(
   wy: number,
   s: number,
   width: number,
-  height: number,
+  height: number
 ): void {
   const w = width * s;
   const h = height * s;
@@ -707,7 +810,7 @@ function drawArrowSlit(
   ctx: CanvasRenderingContext2D,
   ax: number,
   ay: number,
-  s: number,
+  s: number
 ): void {
   const skew = 0.3 * s;
   // Stone frame (isometric parallelogram)
@@ -732,7 +835,7 @@ function drawDefensiveEmplacement(
   stoneTop: string,
   stoneLit: string,
   stoneDark: string,
-  hasBarrel?: boolean,
+  hasBarrel?: boolean
 ): void {
   // Platform
   const eW = 9 * s;
@@ -747,16 +850,30 @@ function drawDefensiveEmplacement(
     const t = (rb + 0.5) / 6;
     const spread = (t - 0.5) * 2;
     const rbx = ex + spread * eI * 0.8 + Math.sin(ex + rb * 1.9) * eI * 0.07;
-    const rby = eBaseFY + Math.abs(spread) * eD * 0.3 + (0.3 + Math.sin(ex + rb * 2.3) * 0.3) * eD * 0.15;
+    const rby =
+      eBaseFY +
+      Math.abs(spread) * eD * 0.3 +
+      (0.3 + Math.sin(ex + rb * 2.3) * 0.3) * eD * 0.15;
     const rbR = eW * (0.04 + Math.sin(ex + rb * 1.5) * 0.015);
-    ctx.fillStyle = rb % 3 === 0 ? stoneTop : rb % 3 === 1 ? stoneLit : stoneDark;
+    ctx.fillStyle =
+      rb % 3 === 0 ? stoneTop : rb % 3 === 1 ? stoneLit : stoneDark;
     drawOrganicBlobAt(ctx, rbx, rby, rbR, rbR * 0.4, ex + rb * 2.7, 0.25);
     ctx.fill();
   }
 
   // Parapet wall
   const pW = 7 * s;
-  drawIsometricPrism(ctx, ex, ey - 2 * s, pW, pW, 3 * s, stoneTop, stoneLit, stoneDark);
+  drawIsometricPrism(
+    ctx,
+    ex,
+    ey - 2 * s,
+    pW,
+    pW,
+    3 * s,
+    stoneTop,
+    stoneLit,
+    stoneDark
+  );
   drawMortarLines(ctx, ex, ey - 4 * s, pW, 5 * s, 2, "rgba(30,25,20,0.1)", s);
 
   // Organic rubble cap on parapet top (iso-projected)
@@ -764,19 +881,50 @@ function drawDefensiveEmplacement(
   const pDiso = pW * ISO_SIN;
   const pTopY = ey - 5 * s;
   ctx.fillStyle = stoneLit;
-  drawOrganicBlobAt(ctx, ex, pTopY + pDiso, pI * 0.8, pDiso * 0.8, ex * 0.7, 0.35);
+  drawOrganicBlobAt(
+    ctx,
+    ex,
+    pTopY + pDiso,
+    pI * 0.8,
+    pDiso * 0.8,
+    ex * 0.7,
+    0.35
+  );
   ctx.fill();
 
   // Merlon stubs as organic blobs (not prisms)
   ctx.fillStyle = stoneTop;
-  drawOrganicBlobAt(ctx, ex - pI * 0.6, pTopY + pDiso * 0.3, pW * 0.26, pW * 0.14, ex * 1.3, 0.3);
+  drawOrganicBlobAt(
+    ctx,
+    ex - pI * 0.6,
+    pTopY + pDiso * 0.3,
+    pW * 0.26,
+    pW * 0.14,
+    ex * 1.3,
+    0.3
+  );
   ctx.fill();
-  drawOrganicBlobAt(ctx, ex - pI * 0.1, pTopY + pDiso * 0.7, pW * 0.21, pW * 0.11, ex * 1.7, 0.25);
+  drawOrganicBlobAt(
+    ctx,
+    ex - pI * 0.1,
+    pTopY + pDiso * 0.7,
+    pW * 0.21,
+    pW * 0.11,
+    ex * 1.7,
+    0.25
+  );
   ctx.fill();
 
   // Embrasure gap (iso-projected dark slot)
   ctx.fillStyle = "rgba(10,6,3,0.4)";
-  drawIsoFaceParallelogram(ctx, ex, pTopY + pDiso * 0.5, pW * 0.21, pW * 0.14, pW * 0.03);
+  drawIsoFaceParallelogram(
+    ctx,
+    ex,
+    pTopY + pDiso * 0.5,
+    pW * 0.21,
+    pW * 0.14,
+    pW * 0.03
+  );
   ctx.fill();
 
   // Barrel (isometric cylinder approximation)
@@ -801,12 +949,29 @@ function drawDefensiveEmplacement(
     ctx.stroke();
     // Sack (organic blob on iso ground)
     ctx.fillStyle = "#8a7a5a";
-    drawOrganicBlobAt(ctx, bx + 2.5 * s, by + 0.5 * s, 1.5 * s, 0.7 * s, ex * 0.5, 0.2);
+    drawOrganicBlobAt(
+      ctx,
+      bx + 2.5 * s,
+      by + 0.5 * s,
+      1.5 * s,
+      0.7 * s,
+      ex * 0.5,
+      0.2
+    );
     ctx.fill();
   }
 
   // Scatter rubble as organic blobs
-  drawStoneGreeble(ctx, ex, ey + 2 * s, s, ex * 0.1, stoneTop, stoneLit, stoneDark);
+  drawStoneGreeble(
+    ctx,
+    ex,
+    ey + 2 * s,
+    s,
+    ex * 0.1,
+    stoneTop,
+    stoneLit,
+    stoneDark
+  );
 }
 
 function drawCollapsedArch(
@@ -816,7 +981,7 @@ function drawCollapsedArch(
   s: number,
   stoneTop: string,
   stoneMid: string,
-  stoneDark: string,
+  stoneDark: string
 ): void {
   const archR = 8 * s;
   const skew = archR * 0.08;
@@ -828,16 +993,21 @@ function drawCollapsedArch(
     const t = i / 8;
     const va = Math.PI + t * Math.PI * 0.7;
     const vx = ax + Math.cos(va) * archR * ISO_COS;
-    const vy = ay - 5 * s + Math.sin(va) * archR + Math.cos(va) * archR * ISO_SIN * 0.3;
-    if (i === 0) ctx.moveTo(vx, vy);
-    else ctx.lineTo(vx, vy);
+    const vy =
+      ay - 5 * s + Math.sin(va) * archR + Math.cos(va) * archR * ISO_SIN * 0.3;
+    if (i === 0) {
+      ctx.moveTo(vx, vy);
+    } else {
+      ctx.lineTo(vx, vy);
+    }
   }
   ctx.stroke();
   // Individual voussoir blobs along the arch
   for (let v = 0; v < 5; v++) {
     const va = Math.PI + (v / 6) * Math.PI * 0.7;
     const vx = ax + Math.cos(va) * archR * ISO_COS;
-    const vy = ay - 5 * s + Math.sin(va) * archR + Math.cos(va) * archR * ISO_SIN * 0.3;
+    const vy =
+      ay - 5 * s + Math.sin(va) * archR + Math.cos(va) * archR * ISO_SIN * 0.3;
     ctx.fillStyle = v % 2 === 0 ? stoneMid : stoneTop;
     drawOrganicBlobAt(ctx, vx, vy, 1.2 * s, 0.8 * s, v * 2.3 + ax * 0.01, 0.25);
     ctx.fill();
@@ -879,7 +1049,7 @@ function drawButtress(
   bH: number,
   stoneTop: string,
   stoneLit: string,
-  stoneDark: string,
+  stoneDark: string
 ): void {
   const bW = 3 * s;
   const iW = bW * ISO_COS;
@@ -923,7 +1093,7 @@ function drawCrackedSurface(
   cy: number,
   radius: number,
   s: number,
-  seed: number,
+  seed: number
 ): void {
   ctx.strokeStyle = "rgba(25,20,12,0.12)";
   ctx.lineWidth = 0.3 * s;
@@ -936,7 +1106,8 @@ function drawCrackedSurface(
     let px = crx;
     let py = cry;
     for (let seg = 0; seg < 4; seg++) {
-      const segA = startA + (seg + 1) * 0.4 + Math.sin(seed + cr + seg * 1.7) * 0.5;
+      const segA =
+        startA + (seg + 1) * 0.4 + Math.sin(seed + cr + seg * 1.7) * 0.5;
       const segR = radius * (0.15 + seg * 0.12);
       px = cx + Math.cos(segA) * segR;
       py = cy + Math.sin(segA) * segR * ISO_Y_RATIO;
@@ -950,7 +1121,7 @@ function drawCrackedSurface(
       const brA = startA + 1.2;
       ctx.lineTo(
         px + Math.cos(brA) * radius * 0.15,
-        py + Math.sin(brA) * radius * 0.15 * ISO_Y_RATIO,
+        py + Math.sin(brA) * radius * 0.15 * ISO_Y_RATIO
       );
       ctx.stroke();
     }
@@ -965,7 +1136,7 @@ function drawVineCluster(
   time: number,
   seed: number,
   vineH: number,
-  mossColor: string,
+  mossColor: string
 ): void {
   // Main vine stem with organic curves
   ctx.strokeStyle = mossColor;
@@ -976,23 +1147,25 @@ function drawVineCluster(
     const sway = Math.sin(time * 0.3 + seed + seg * 0.7) * 1.5 * s;
     ctx.quadraticCurveTo(
       vx + sway + Math.sin(seed + seg * 1.1) * 2.5 * s,
-      vy - (seg - 0.5) * vineH * s / 6,
+      vy - ((seg - 0.5) * vineH * s) / 6,
       vx + Math.sin(seed + seg * 1.7) * 2 * s,
-      vy - seg * vineH * s / 6,
+      vy - (seg * vineH * s) / 6
     );
   }
   ctx.stroke();
   // Branch vines
   ctx.lineWidth = 0.35 * s;
   for (let br = 0; br < 3; br++) {
-    const bry = vy - (br + 1) * vineH * s / 4;
+    const bry = vy - ((br + 1) * vineH * s) / 4;
     const brx = vx + Math.sin(seed + br * 1.7) * 2 * s;
     const brDir = br % 2 === 0 ? 1 : -1;
     ctx.beginPath();
     ctx.moveTo(brx, bry);
     ctx.quadraticCurveTo(
-      brx + brDir * 3 * s, bry - 1 * s,
-      brx + brDir * 4.5 * s, bry + 0.5 * s,
+      brx + brDir * 3 * s,
+      bry - 1 * s,
+      brx + brDir * 4.5 * s,
+      bry + 0.5 * s
     );
     ctx.stroke();
     // Leaf clusters on branches
@@ -1001,7 +1174,15 @@ function drawVineCluster(
       const lfx = brx + brDir * (1.5 + lf * 1.2) * s;
       const lfy = bry + Math.sin(seed + lf * 2.3) * 1 * s;
       ctx.beginPath();
-      ctx.ellipse(lfx, lfy, 1.3 * s, 0.7 * s, brDir * 0.4 + lf * 0.2, 0, Math.PI * 2);
+      ctx.ellipse(
+        lfx,
+        lfy,
+        1.3 * s,
+        0.7 * s,
+        brDir * 0.4 + lf * 0.2,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -1015,7 +1196,11 @@ function drawVineCluster(
     ctx.ellipse(
       tipX + Math.cos(tla) * 1.5 * s,
       tipY + Math.sin(tla) * 0.8 * s,
-      1.4 * s, 0.6 * s, tla * 0.3, 0, Math.PI * 2,
+      1.4 * s,
+      0.6 * s,
+      tla * 0.3,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1040,28 +1225,54 @@ export function renderFortress(p: LandmarkParams): void {
   const pal = getFortressPalette(mapTheme);
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 8 * s, s, 48 * s, 20 * s, 68 * s, 0.38, pal.shadowRgb, z);
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 8 * s,
+      s,
+      48 * s,
+      20 * s,
+      68 * s,
+      0.38,
+      pal.shadowRgb,
+      z
+    );
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   const seed = seedX * 7.3 + seedY * 11.1;
   const ifVar = variant % 3;
 
-  const { stoneTop, stoneLit, stoneMid, stoneDark, stoneDeep, mossGreen, lichYellow } = pal;
+  const {
+    stoneTop,
+    stoneLit,
+    stoneMid,
+    stoneDark,
+    stoneDeep,
+    mossGreen,
+    lichYellow,
+  } = pal;
 
   // Tiny rubble stones scattered around the perimeter
   const rubble = [
-    { x: -36, y: 9, sz: 0.9 }, { x: 32, y: 3, sz: 1.0 },
-    { x: -20, y: 14, sz: 0.8 }, { x: 38, y: 7, sz: 0.7 },
-    { x: -40, y: 5, sz: 0.7 }, { x: 14, y: 16, sz: 0.8 },
-    { x: -28, y: 12, sz: 0.6 }, { x: 24, y: 11, sz: 0.7 },
+    { sz: 0.9, x: -36, y: 9 },
+    { sz: 1, x: 32, y: 3 },
+    { sz: 0.8, x: -20, y: 14 },
+    { sz: 0.7, x: 38, y: 7 },
+    { sz: 0.7, x: -40, y: 5 },
+    { sz: 0.8, x: 14, y: 16 },
+    { sz: 0.6, x: -28, y: 12 },
+    { sz: 0.7, x: 24, y: 11 },
   ];
   for (let ri = 0; ri < rubble.length; ri++) {
     const rb = rubble[ri];
     const rx = cx + rb.x * s;
     const ry = cy + rb.y * s;
     const rR = rb.sz * s;
-    ctx.fillStyle = ri % 3 === 0 ? stoneMid : ri % 3 === 1 ? stoneLit : stoneTop;
+    ctx.fillStyle =
+      ri % 3 === 0 ? stoneMid : ri % 3 === 1 ? stoneLit : stoneTop;
     drawOrganicBlobAt(ctx, rx, ry, rR, rR * 0.4, seed + ri * 3.7, 0.2);
     ctx.fill();
   }
@@ -1071,8 +1282,16 @@ export function renderFortress(p: LandmarkParams): void {
     const ma = seed + mb * 2.3;
     const mx = cx + Math.sin(ma) * 22 * s;
     const my = cy + 5 * s + Math.cos(ma) * 7 * s;
-    ctx.fillStyle = `rgba(${70 + (mb * 7) % 30},${90 + (mb * 5) % 20},${40 + (mb * 3) % 20},0.07)`;
-    drawOrganicBlobAt(ctx, mx, my, (1.2 + Math.sin(ma) * 0.5) * s, (0.6 + Math.cos(ma) * 0.2) * s, ma, 0.2);
+    ctx.fillStyle = `rgba(${70 + ((mb * 7) % 30)},${90 + ((mb * 5) % 20)},${40 + ((mb * 3) % 20)},0.07)`;
+    drawOrganicBlobAt(
+      ctx,
+      mx,
+      my,
+      (1.2 + Math.sin(ma) * 0.5) * s,
+      (0.6 + Math.cos(ma) * 0.2) * s,
+      ma,
+      0.2
+    );
     ctx.fill();
   }
 
@@ -1082,14 +1301,43 @@ export function renderFortress(p: LandmarkParams): void {
     // Main curtain wall
     const wallW = 42 * s;
     const wallH = 12 * s;
-    drawRuinedWallSegment(ctx, cx, cy + 2 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
+    drawRuinedWallSegment(
+      ctx,
+      cx,
+      cy + 2 * s,
+      wallW,
+      wallH,
+      s,
+      seed,
+      stoneTop,
+      stoneDark,
+      stoneDeep
+    );
     const wI = wallW * ISO_COS;
     const wD = wallW * ISO_SIN;
     const wBase = cy + 2 * s;
 
     // Buttresses along wall (structural supports)
-    drawButtress(ctx, cx - wI * 0.35, wBase + wD * 0.65, s, 8 * s, stoneTop, stoneMid, stoneDark);
-    drawButtress(ctx, cx + wI * 0.4, wBase + wD * 0.6, s, 8 * s, stoneTop, stoneMid, stoneDark);
+    drawButtress(
+      ctx,
+      cx - wI * 0.35,
+      wBase + wD * 0.65,
+      s,
+      8 * s,
+      stoneTop,
+      stoneMid,
+      stoneDark
+    );
+    drawButtress(
+      ctx,
+      cx + wI * 0.4,
+      wBase + wD * 0.6,
+      s,
+      8 * s,
+      stoneTop,
+      stoneMid,
+      stoneDark
+    );
 
     // Arrow slits on wall faces, positioned on the iso face grid
     // Left face runs from (cx, wBase) → (cx-wI, wBase+wD) at bottom; height goes up
@@ -1114,10 +1362,26 @@ export function renderFortress(p: LandmarkParams): void {
         const mcx = cx - wI * t;
         const mcy = wallTopY + wD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, mcx, mcy, cR * 1.1, cR * 0.5, seed + i * 2.9, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          mcx,
+          mcy,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 2.9,
+          0.3
+        );
         ctx.fill();
         ctx.fillStyle = stoneTop;
-        drawOrganicBlobAt(ctx, mcx, mcy - cR * 0.3, cR * 0.7, cR * 0.3, seed + i * 2.9 + 1, 0.25);
+        drawOrganicBlobAt(
+          ctx,
+          mcx,
+          mcy - cR * 0.3,
+          cR * 0.7,
+          cR * 0.3,
+          seed + i * 2.9 + 1,
+          0.25
+        );
         ctx.fill();
       }
       if (!skipR) {
@@ -1125,23 +1389,60 @@ export function renderFortress(p: LandmarkParams): void {
         const mcx = cx + wI * t;
         const mcy = wallTopY + wD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, mcx, mcy, cR * 1.1, cR * 0.5, seed + i * 3.3, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          mcx,
+          mcy,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 3.3,
+          0.3
+        );
         ctx.fill();
         ctx.fillStyle = stoneTop;
-        drawOrganicBlobAt(ctx, mcx, mcy - cR * 0.3, cR * 0.7, cR * 0.3, seed + i * 3.3 + 1, 0.25);
+        drawOrganicBlobAt(
+          ctx,
+          mcx,
+          mcy - cR * 0.3,
+          cR * 0.7,
+          cR * 0.3,
+          seed + i * 3.3 + 1,
+          0.25
+        );
         ctx.fill();
       }
     }
 
     // Stone greeble scatter along wall top
-    drawStoneGreeble(ctx, cx - wI * 0.6, wallTopY + wD * 0.4 - 1 * s, s, seed + 10, stoneTop, stoneLit, stoneDark);
+    drawStoneGreeble(
+      ctx,
+      cx - wI * 0.6,
+      wallTopY + wD * 0.4 - 1 * s,
+      s,
+      seed + 10,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
 
     // Left tower (tall, broken top with exposed interior)
     const tLx = cx - 28 * s;
     const tLy = cy + 4 * s;
     const tW = 12 * s;
     const tH = 42 * s;
-    drawBrokenTower(ctx, tLx, tLy, tW, tH, 7, s, seed, stoneTop, stoneDark, stoneDeep);
+    drawBrokenTower(
+      ctx,
+      tLx,
+      tLy,
+      tW,
+      tH,
+      7,
+      s,
+      seed,
+      stoneTop,
+      stoneDark,
+      stoneDeep
+    );
     // Windows on left face: x centered on left face, y at face height
     // Left face center x: tLx - tW*ISO_COS*0.5, base y: tLy + tW*ISO_SIN
     const tLfX = tLx - tW * ISO_COS * 0.5;
@@ -1153,28 +1454,85 @@ export function renderFortress(p: LandmarkParams): void {
     const tD = tW * ISO_SIN;
     const ledgeLY = tLy + tD - tH * 0.55;
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, tLx - tI * 0.3, ledgeLY, tI * 0.7, tD * 0.6, seed + 44, 0.3);
+    drawOrganicBlobAt(
+      ctx,
+      tLx - tI * 0.3,
+      ledgeLY,
+      tI * 0.7,
+      tD * 0.6,
+      seed + 44,
+      0.3
+    );
     ctx.fill();
     ctx.fillStyle = stoneMid;
-    drawOrganicBlobAt(ctx, tLx, ledgeLY - tD * 0.15, tI * 0.5, tD * 0.4, seed + 45, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      tLx,
+      ledgeLY - tD * 0.15,
+      tI * 0.5,
+      tD * 0.4,
+      seed + 45,
+      0.25
+    );
     ctx.fill();
     // Banner on left tower
-    drawRuinsBanner(ctx, tLx, tLy - tH, s, time, 18, pal.bannerPrimary, pal.bannerSecondary, "shield");
+    drawRuinsBanner(
+      ctx,
+      tLx,
+      tLy - tH,
+      s,
+      time,
+      18,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "shield"
+    );
 
     // Right tower (shorter, more ruined, tilted feel from uneven jagging)
     const tRx = cx + 28 * s;
     const tRy = cy - 4 * s;
     const tRH = 34 * s;
-    drawBrokenTower(ctx, tRx, tRy, tW, tRH, 10, s, seed + 5, stoneTop, stoneDark, stoneDeep);
+    drawBrokenTower(
+      ctx,
+      tRx,
+      tRy,
+      tW,
+      tRH,
+      10,
+      s,
+      seed + 5,
+      stoneTop,
+      stoneDark,
+      stoneDeep
+    );
     // Window on right tower left face
     const tRfX = tRx - tW * ISO_COS * 0.5;
     const tRfBaseY = tRy + tW * ISO_SIN;
     drawArchedWindow(ctx, tRfX, tRfBaseY - tRH * 0.4, s, 2.3, 3.5);
     // Emplacement near right tower, on iso ground adjacent to base
     const tRBaseF = tRy + 2 * tW * ISO_SIN;
-    drawDefensiveEmplacement(ctx, tRx + tW * ISO_COS, tRBaseF, s, stoneTop, stoneMid, stoneDark, true);
+    drawDefensiveEmplacement(
+      ctx,
+      tRx + tW * ISO_COS,
+      tRBaseF,
+      s,
+      stoneTop,
+      stoneMid,
+      stoneDark,
+      true
+    );
     // Small pennant on right
-    drawRuinsBanner(ctx, tRx, tRy - tRH, s, time, 14, pal.bannerPrimary, pal.bannerSecondary, "cross");
+    drawRuinsBanner(
+      ctx,
+      tRx,
+      tRy - tRH,
+      s,
+      time,
+      14,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "cross"
+    );
 
     // Collapsed gate arch with voussoirs and rubble
     drawCollapsedArch(ctx, cx, cy - 2 * s, s, stoneTop, stoneMid, stoneDark);
@@ -1207,28 +1565,67 @@ export function renderFortress(p: LandmarkParams): void {
     ctx.rotate(-0.15);
     ctx.fillRect(-5 * s, -0.5 * s, 10 * s, 1 * s);
     ctx.restore();
-
   } else if (ifVar === 1) {
     // Variant 1: L-shaped ruined fortress with watchtower, staircase, and courtyard
 
     // Main curtain wall
     const wallW = 48 * s;
     const wallH = 11 * s;
-    drawRuinedWallSegment(ctx, cx - 6 * s, cy + 3 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
+    drawRuinedWallSegment(
+      ctx,
+      cx - 6 * s,
+      cy + 3 * s,
+      wallW,
+      wallH,
+      s,
+      seed,
+      stoneTop,
+      stoneDark,
+      stoneDeep
+    );
     const wI = wallW * ISO_COS;
     const wD = wallW * ISO_SIN;
 
     // Buttresses on main wall faces
     // Left face at t=0.5: (cx-6*s - wI*0.5, cy+3*s + wD*0.5)
-    drawButtress(ctx, cx - 6 * s - wI * 0.5, cy + 3 * s + wD * 0.5, s, 7 * s, stoneTop, stoneLit, stoneDark);
+    drawButtress(
+      ctx,
+      cx - 6 * s - wI * 0.5,
+      cy + 3 * s + wD * 0.5,
+      s,
+      7 * s,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
     // Right face at t=0.3: (cx-6*s + wI*0.3, cy+3*s + wD*0.3)
-    drawButtress(ctx, cx - 6 * s + wI * 0.3, cy + 3 * s + wD * 0.3, s, 7 * s, stoneTop, stoneLit, stoneDark);
+    drawButtress(
+      ctx,
+      cx - 6 * s + wI * 0.3,
+      cy + 3 * s + wD * 0.3,
+      s,
+      7 * s,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
 
     // Upper keep platform with organic rubble foundation
     const keepW = 32 * s;
     const keepH = 9 * s;
     // No heavy blob under keep — the wall prism itself provides the visual
-    drawRuinedWallSegment(ctx, cx + 4 * s, cy - 17 * s, keepW, keepH, s, seed + 3, stoneTop, stoneMid, stoneDark);
+    drawRuinedWallSegment(
+      ctx,
+      cx + 4 * s,
+      cy - 17 * s,
+      keepW,
+      keepH,
+      s,
+      seed + 3,
+      stoneTop,
+      stoneMid,
+      stoneDark
+    );
 
     // Crenellations on keep top face edges
     // Keep wall at (cx+4*s, cy-17*s) size keepW height keepH
@@ -1244,7 +1641,15 @@ export function renderFortress(p: LandmarkParams): void {
         const ccx = kCx - keepI * t;
         const ccy = keepTopY + keepD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, ccx, ccy, cR * 1.1, cR * 0.5, seed + i * 2.5, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          ccx,
+          ccy,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 2.5,
+          0.3
+        );
         ctx.fill();
       }
       if (Math.cos(seed + i * 2.7) > -0.3) {
@@ -1252,7 +1657,15 @@ export function renderFortress(p: LandmarkParams): void {
         const ccx = kCx + keepI * t;
         const ccy = keepTopY + keepD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, ccx, ccy, cR * 1.1, cR * 0.5, seed + i * 2.7, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          ccx,
+          ccy,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 2.7,
+          0.3
+        );
         ctx.fill();
       }
     }
@@ -1266,7 +1679,15 @@ export function renderFortress(p: LandmarkParams): void {
       drawOrganicBlobAt(ctx, stX, stY, stW, stW * 0.4, seed + step * 3.5, 0.2);
       ctx.fill();
       ctx.fillStyle = stoneDark;
-      drawOrganicBlobAt(ctx, stX + 0.5 * s, stY + 0.3 * s, stW * 0.7, stW * 0.25, seed + step * 3.5 + 1, 0.15);
+      drawOrganicBlobAt(
+        ctx,
+        stX + 0.5 * s,
+        stY + 0.3 * s,
+        stW * 0.7,
+        stW * 0.25,
+        seed + step * 3.5 + 1,
+        0.15
+      );
       ctx.fill();
     }
 
@@ -1275,7 +1696,19 @@ export function renderFortress(p: LandmarkParams): void {
     const tH = 50 * s;
     const tX = cx + 24 * s;
     const tY = cy - 2 * s;
-    drawBrokenTower(ctx, tX, tY, tW, tH, 8, s, seed + 1, stoneTop, stoneDeep, stoneDark);
+    drawBrokenTower(
+      ctx,
+      tX,
+      tY,
+      tW,
+      tH,
+      8,
+      s,
+      seed + 1,
+      stoneTop,
+      stoneDeep,
+      stoneDark
+    );
 
     // Tower windows at three levels on left face
     const wTfX = tX - tW * ISO_COS * 0.5;
@@ -1289,14 +1722,40 @@ export function renderFortress(p: LandmarkParams): void {
     const wTD = tW * ISO_SIN;
     const ledgeTY = tY + wTD - tH * 0.5;
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, tX - wTI * 0.3, ledgeTY, wTI * 0.7, wTD * 0.6, seed + 46, 0.3);
+    drawOrganicBlobAt(
+      ctx,
+      tX - wTI * 0.3,
+      ledgeTY,
+      wTI * 0.7,
+      wTD * 0.6,
+      seed + 46,
+      0.3
+    );
     ctx.fill();
     ctx.fillStyle = stoneMid;
-    drawOrganicBlobAt(ctx, tX, ledgeTY - wTD * 0.15, wTI * 0.5, wTD * 0.4, seed + 47, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      tX,
+      ledgeTY - wTD * 0.15,
+      wTI * 0.5,
+      wTD * 0.4,
+      seed + 47,
+      0.25
+    );
     ctx.fill();
 
     // Banner on watchtower
-    drawRuinsBanner(ctx, tX, tY - tH, s, time, 20, pal.bannerPrimary, pal.bannerSecondary, "star");
+    drawRuinsBanner(
+      ctx,
+      tX,
+      tY - tH,
+      s,
+      time,
+      20,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "star"
+    );
 
     // Arrow slits on main wall left face
     // Wall at (cx-6*s, cy+3*s) size wallW. Left face: (cx-6*s, cy+3*s) → (cx-6*s - wI, cy+3*s + wD)
@@ -1308,22 +1767,74 @@ export function renderFortress(p: LandmarkParams): void {
     }
 
     // Emplacement on keep top face: back vertex at (kCx, keepTopY)
-    drawDefensiveEmplacement(ctx, kCx, keepTopY, s, stoneTop, stoneMid, stoneDark, true);
+    drawDefensiveEmplacement(
+      ctx,
+      kCx,
+      keepTopY,
+      s,
+      stoneTop,
+      stoneMid,
+      stoneDark,
+      true
+    );
     // Pennant on keep emplacement
-    drawRuinsBanner(ctx, kCx, keepTopY - 6 * s, s, time, 13, pal.bannerPrimary, pal.bannerSecondary, "cross");
+    drawRuinsBanner(
+      ctx,
+      kCx,
+      keepTopY - 6 * s,
+      s,
+      time,
+      13,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "cross"
+    );
 
     // Stone greeble near staircase
-    drawStoneGreeble(ctx, cx + 8 * s, cy - 8 * s, s, seed + 15, stoneTop, stoneLit, stoneDark);
+    drawStoneGreeble(
+      ctx,
+      cx + 8 * s,
+      cy - 8 * s,
+      s,
+      seed + 15,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
 
     // Second emplacement at wall's left vertex (on ground near wall corner)
-    drawDefensiveEmplacement(ctx, cx - 6 * s - wI, cy + 3 * s + wD, s, stoneTop, stoneMid, stoneDark);
+    drawDefensiveEmplacement(
+      ctx,
+      cx - 6 * s - wI,
+      cy + 3 * s + wD,
+      s,
+      stoneTop,
+      stoneMid,
+      stoneDark
+    );
 
     // Moss growth blobs on lower wall
     ctx.fillStyle = "rgba(65,90,40,0.18)";
-    drawOrganicBlobAt(ctx, cx - 6 * s - wI * 0.5, cy + 3 * s + wD - wallH * 0.1, 7 * s, 4 * s, seed + 9, 0.22);
+    drawOrganicBlobAt(
+      ctx,
+      cx - 6 * s - wI * 0.5,
+      cy + 3 * s + wD - wallH * 0.1,
+      7 * s,
+      4 * s,
+      seed + 9,
+      0.22
+    );
     ctx.fill();
     ctx.fillStyle = "rgba(75,100,45,0.15)";
-    drawOrganicBlobAt(ctx, cx + 10 * s, cy - 10 * s, 5 * s, 3 * s, seed + 12, 0.2);
+    drawOrganicBlobAt(
+      ctx,
+      cx + 10 * s,
+      cy - 10 * s,
+      5 * s,
+      3 * s,
+      seed + 12,
+      0.2
+    );
     ctx.fill();
 
     // Wooden scaffold remains (two posts + crossbar)
@@ -1340,14 +1851,24 @@ export function renderFortress(p: LandmarkParams): void {
     ctx.moveTo(cx - 17 * s, cy - 10 * s);
     ctx.lineTo(cx - 9 * s, cy - 10 * s);
     ctx.stroke();
-
   } else {
     // Variant 2: Compact fortress ruin with central keep, twin bastions, courtyard well, and catapult platform
 
     // Main wall
     const wallW = 38 * s;
     const wallH = 11 * s;
-    drawRuinedWallSegment(ctx, cx, cy + 3 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
+    drawRuinedWallSegment(
+      ctx,
+      cx,
+      cy + 3 * s,
+      wallW,
+      wallH,
+      s,
+      seed,
+      stoneTop,
+      stoneDark,
+      stoneDeep
+    );
     const wI = wallW * ISO_COS;
     const wD = wallW * ISO_SIN;
 
@@ -1360,7 +1881,15 @@ export function renderFortress(p: LandmarkParams): void {
         const mcx2 = cx - wI * t;
         const mcy2 = wTopY + wD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, mcx2, mcy2, cR * 1.1, cR * 0.5, seed + i * 2.7, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          mcx2,
+          mcy2,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 2.7,
+          0.3
+        );
         ctx.fill();
       }
       if (Math.cos(seed + i * 3.3) > -0.2) {
@@ -1368,20 +1897,49 @@ export function renderFortress(p: LandmarkParams): void {
         const mcx2 = cx + wI * t;
         const mcy2 = wTopY + wD * t;
         ctx.fillStyle = stoneMid;
-        drawOrganicBlobAt(ctx, mcx2, mcy2, cR * 1.1, cR * 0.5, seed + i * 3.1, 0.3);
+        drawOrganicBlobAt(
+          ctx,
+          mcx2,
+          mcy2,
+          cR * 1.1,
+          cR * 0.5,
+          seed + i * 3.1,
+          0.3
+        );
         ctx.fill();
       }
     }
 
     // Buttress on left face at t=0.4: (cx - wI*0.4, cy+3*s + wD*0.4)
-    drawButtress(ctx, cx - wI * 0.4, cy + 3 * s + wD * 0.4, s, 7 * s, stoneTop, stoneLit, stoneDark);
+    drawButtress(
+      ctx,
+      cx - wI * 0.4,
+      cy + 3 * s + wD * 0.4,
+      s,
+      7 * s,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
 
     // Left bastion (squat, round-ish by stacking)
     const lBx = cx - 26 * s;
     const lBy = cy + 5 * s;
     const bW = 11 * s;
     const bH = 30 * s;
-    drawBrokenTower(ctx, lBx, lBy, bW, bH, 6, s, seed + 2, stoneTop, stoneDeep, stoneDark);
+    drawBrokenTower(
+      ctx,
+      lBx,
+      lBy,
+      bW,
+      bH,
+      6,
+      s,
+      seed + 2,
+      stoneTop,
+      stoneDeep,
+      stoneDark
+    );
     const bI = bW * ISO_COS;
     const bD = bW * ISO_SIN;
     // Bastion cap centered on tower top face
@@ -1390,33 +1948,90 @@ export function renderFortress(p: LandmarkParams): void {
     drawOrganicBlobAt(ctx, lBx, lCapCY, bI * 1.1, bD * 1.1, seed + 50, 0.3);
     ctx.fill();
     ctx.fillStyle = stoneTop;
-    drawOrganicBlobAt(ctx, lBx, lCapCY - bD * 0.2, bI * 0.85, bD * 0.85, seed + 51, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      lBx,
+      lCapCY - bD * 0.2,
+      bI * 0.85,
+      bD * 0.85,
+      seed + 51,
+      0.25
+    );
     ctx.fill();
     // Emplacement sits on tower top: y = tower's y - height (top back vertex)
-    drawDefensiveEmplacement(ctx, lBx, lBy - bH, s, stoneTop, stoneMid, stoneDark, true);
+    drawDefensiveEmplacement(
+      ctx,
+      lBx,
+      lBy - bH,
+      s,
+      stoneTop,
+      stoneMid,
+      stoneDark,
+      true
+    );
     // Window on left bastion left face
     drawArchedWindow(ctx, lBx - bI * 0.5, lBy + bD - bH * 0.4, s, 2, 3.5);
 
     // Right bastion
     const rBx = cx + 26 * s;
     const rBy = cy - 2 * s;
-    drawBrokenTower(ctx, rBx, rBy, bW, bH, 7, s, seed + 4, stoneTop, stoneDeep, stoneDark);
+    drawBrokenTower(
+      ctx,
+      rBx,
+      rBy,
+      bW,
+      bH,
+      7,
+      s,
+      seed + 4,
+      stoneTop,
+      stoneDeep,
+      stoneDark
+    );
     // Right bastion cap centered on tower top face
     const rCapCY = rBy - bH + bW * ISO_SIN;
     ctx.fillStyle = stoneLit;
     drawOrganicBlobAt(ctx, rBx, rCapCY, bI * 1.1, bD * 1.1, seed + 52, 0.3);
     ctx.fill();
     ctx.fillStyle = stoneTop;
-    drawOrganicBlobAt(ctx, rBx, rCapCY - bD * 0.2, bI * 0.85, bD * 0.85, seed + 53, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      rBx,
+      rCapCY - bD * 0.2,
+      bI * 0.85,
+      bD * 0.85,
+      seed + 53,
+      0.25
+    );
     ctx.fill();
-    drawDefensiveEmplacement(ctx, rBx, rBy - bH, s, stoneTop, stoneMid, stoneDark);
+    drawDefensiveEmplacement(
+      ctx,
+      rBx,
+      rBy - bH,
+      s,
+      stoneTop,
+      stoneMid,
+      stoneDark
+    );
     // Window on right bastion left face
     drawArchedWindow(ctx, rBx - bI * 0.5, rBy + bD - bH * 0.4, s, 2, 3.5);
 
     // Central broken keep (tallest, heavily damaged)
     const ckW = 14 * s;
     const ckH = 48 * s;
-    drawBrokenTower(ctx, cx, cy - 8 * s, ckW, ckH, 10, s, seed + 6, stoneLit, stoneDeep, stoneDark);
+    drawBrokenTower(
+      ctx,
+      cx,
+      cy - 8 * s,
+      ckW,
+      ckH,
+      10,
+      s,
+      seed + 6,
+      stoneLit,
+      stoneDeep,
+      stoneDark
+    );
 
     // Keep floor ledges at 35% and 65% height
     const ckI = ckW * ISO_COS;
@@ -1425,15 +2040,39 @@ export function renderFortress(p: LandmarkParams): void {
     // Ledge 1 at 35% height
     const kLedge1Y = keepBaseY + ckD - ckH * 0.35;
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, cx - ckI * 0.3, kLedge1Y, ckI * 0.65, ckD * 0.6, seed + 54, 0.3);
+    drawOrganicBlobAt(
+      ctx,
+      cx - ckI * 0.3,
+      kLedge1Y,
+      ckI * 0.65,
+      ckD * 0.6,
+      seed + 54,
+      0.3
+    );
     ctx.fill();
     ctx.fillStyle = stoneMid;
-    drawOrganicBlobAt(ctx, cx, kLedge1Y - ckD * 0.15, ckI * 0.45, ckD * 0.4, seed + 55, 0.25);
+    drawOrganicBlobAt(
+      ctx,
+      cx,
+      kLedge1Y - ckD * 0.15,
+      ckI * 0.45,
+      ckD * 0.4,
+      seed + 55,
+      0.25
+    );
     ctx.fill();
     // Ledge 2 at 65% height
     const kLedge2Y = keepBaseY + ckD - ckH * 0.65;
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, cx + ckI * 0.2, kLedge2Y, ckI * 0.5, ckD * 0.5, seed + 56, 0.28);
+    drawOrganicBlobAt(
+      ctx,
+      cx + ckI * 0.2,
+      kLedge2Y,
+      ckI * 0.5,
+      ckD * 0.5,
+      seed + 56,
+      0.28
+    );
     ctx.fill();
 
     // Keep windows on left face
@@ -1445,19 +2084,65 @@ export function renderFortress(p: LandmarkParams): void {
     }
 
     // Main banner on central keep
-    drawRuinsBanner(ctx, cx, cy - 8 * s - ckH, s, time, 20, pal.bannerPrimary, pal.bannerSecondary, "shield");
-    drawRuinsBanner(ctx, lBx, lBy - bH, s, time, 14, pal.bannerPrimary, pal.bannerSecondary, "cross");
-    drawRuinsBanner(ctx, rBx, rBy - bH, s, time, 12, pal.bannerPrimary, pal.bannerSecondary, "star");
+    drawRuinsBanner(
+      ctx,
+      cx,
+      cy - 8 * s - ckH,
+      s,
+      time,
+      20,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "shield"
+    );
+    drawRuinsBanner(
+      ctx,
+      lBx,
+      lBy - bH,
+      s,
+      time,
+      14,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "cross"
+    );
+    drawRuinsBanner(
+      ctx,
+      rBx,
+      rBy - bH,
+      s,
+      time,
+      12,
+      pal.bannerPrimary,
+      pal.bannerSecondary,
+      "star"
+    );
 
     // Courtyard well (organic stone ring)
     const wellX = cx + 6 * s;
     const wellY = cy + 1 * s;
     const wellR = 5 * s;
     ctx.fillStyle = stoneDark;
-    drawOrganicBlobAt(ctx, wellX, wellY + wellR * ISO_SIN * 0.5, wellR * ISO_COS * 1.3, wellR * ISO_SIN * 1.3, seed + 60, 0.2);
+    drawOrganicBlobAt(
+      ctx,
+      wellX,
+      wellY + wellR * ISO_SIN * 0.5,
+      wellR * ISO_COS * 1.3,
+      wellR * ISO_SIN * 1.3,
+      seed + 60,
+      0.2
+    );
     ctx.fill();
     ctx.fillStyle = stoneTop;
-    drawOrganicBlobAt(ctx, wellX, wellY - 2 * s + wellR * ISO_SIN * 0.5, wellR * ISO_COS * 1.1, wellR * ISO_SIN * 1.1, seed + 61, 0.18);
+    drawOrganicBlobAt(
+      ctx,
+      wellX,
+      wellY - 2 * s + wellR * ISO_SIN * 0.5,
+      wellR * ISO_COS * 1.1,
+      wellR * ISO_SIN * 1.1,
+      seed + 61,
+      0.18
+    );
     ctx.fill();
     // Well opening (dark iso diamond)
     ctx.fillStyle = "rgba(8,5,2,0.6)";
@@ -1485,7 +2170,15 @@ export function renderFortress(p: LandmarkParams): void {
     drawOrganicBlobAt(ctx, catX, catY + 1 * s, 9 * s, 4.5 * s, seed + 62, 0.22);
     ctx.fill();
     ctx.fillStyle = stoneTop;
-    drawOrganicBlobAt(ctx, catX, catY - 1 * s, 7.5 * s, 3.5 * s, seed + 63, 0.18);
+    drawOrganicBlobAt(
+      ctx,
+      catX,
+      catY - 1 * s,
+      7.5 * s,
+      3.5 * s,
+      seed + 63,
+      0.18
+    );
     ctx.fill();
     // Wooden frame remnants
     ctx.strokeStyle = "#6a5030";
@@ -1502,11 +2195,34 @@ export function renderFortress(p: LandmarkParams): void {
     ctx.stroke();
 
     // Stone greeble around courtyard
-    drawStoneGreeble(ctx, cx + 15 * s, cy + 3 * s, s, seed + 20, stoneTop, stoneLit, stoneDark);
-    drawStoneGreeble(ctx, cx - 20 * s, cy + 6 * s, s, seed + 22, stoneTop, stoneLit, stoneDark);
+    drawStoneGreeble(
+      ctx,
+      cx + 15 * s,
+      cy + 3 * s,
+      s,
+      seed + 20,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
+    drawStoneGreeble(
+      ctx,
+      cx - 20 * s,
+      cy + 6 * s,
+      s,
+      seed + 22,
+      stoneTop,
+      stoneLit,
+      stoneDark
+    );
 
     // Weathered stone overlays on central keep faces
-    const keepWeath = ctx.createLinearGradient(cx, cy - 8 * s, cx, cy - 8 * s - ckH);
+    const keepWeath = ctx.createLinearGradient(
+      cx,
+      cy - 8 * s,
+      cx,
+      cy - 8 * s - ckH
+    );
     keepWeath.addColorStop(0, "rgba(55,75,40,0.12)");
     keepWeath.addColorStop(0.3, "rgba(70,90,50,0.06)");
     keepWeath.addColorStop(0.6, "rgba(85,100,60,0.08)");
@@ -1522,9 +2238,11 @@ export function renderFortress(p: LandmarkParams): void {
       ctx,
       cx + Math.sin(seed + v * 2.1) * 24 * s,
       cy + 3 * s,
-      s, time, seed + v * 1.7,
+      s,
+      time,
+      seed + v * 1.7,
       3 + Math.sin(seed + v) * 1.5,
-      mossGreen,
+      mossGreen
     );
   }
 
@@ -1538,7 +2256,8 @@ export function renderFortress(p: LandmarkParams): void {
       cy - 12 * s + Math.cos(ua) * 8 * s,
       (2.5 + Math.sin(ua * 1.3) * 1) * s,
       (1.2 + Math.cos(ua * 1.5) * 0.4) * s,
-      ua, 0.3,
+      ua,
+      0.3
     );
     ctx.fill();
   }
@@ -1599,7 +2318,7 @@ export function renderSkullThrone(p: LandmarkParams): void {
       0,
       cx + 2 * s,
       cy + 8 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(60,10,10,0.45)");
     shGrad.addColorStop(0.35, "rgba(0,0,0,0.3)");
@@ -1609,7 +2328,9 @@ export function renderSkullThrone(p: LandmarkParams): void {
     ctx.ellipse(cx + 2 * s, cy + 8 * s, shRx, shRy, 0.08, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   const pulse = 0.5 + Math.sin(time * 2.2) * 0.25;
   const bW = "#e8e0d0";
@@ -1654,7 +2375,7 @@ export function renderSkullThrone(p: LandmarkParams): void {
     bL,
     bM,
     bD,
-    bSh,
+    bSh
   );
 
   // Large skull relief on the backrest center
@@ -1681,7 +2402,7 @@ function drawThroneAura(
   cx: number,
   cy: number,
   s: number,
-  pulse: number,
+  pulse: number
 ): void {
   const auraG = ctx.createRadialGradient(
     cx,
@@ -1689,7 +2410,7 @@ function drawThroneAura(
     3 * s,
     cx,
     cy - 16 * s,
-    46 * s,
+    46 * s
   );
   auraG.addColorStop(0, `rgba(180,20,20,${0.12 + pulse * 0.08})`);
   auraG.addColorStop(0.35, `rgba(100,10,10,${0.06 + pulse * 0.04})`);
@@ -1710,24 +2431,14 @@ function drawThroneBase(
   bM: string,
   bD: string,
   bSh: string,
-  bVDk: string,
+  bVDk: string
 ): void {
   // Tier 1: Wide base — broader to support the throne
   drawIsometricPrism(ctx, cx, cy, 36 * s, 36 * s, 3 * s, bD, bSh, bVDk);
   drawMortarLines(ctx, cx, cy, 36 * s, 3 * s, 2, "rgba(90,70,55,0.18)", s);
 
   // Tier 2: Inset step
-  drawIsometricPrism(
-    ctx,
-    cx,
-    cy - 3 * s,
-    28 * s,
-    28 * s,
-    4 * s,
-    bM,
-    bSh,
-    bD,
-  );
+  drawIsometricPrism(ctx, cx, cy - 3 * s, 28 * s, 28 * s, 4 * s, bM, bSh, bD);
   drawMortarLines(
     ctx,
     cx,
@@ -1736,7 +2447,7 @@ function drawThroneBase(
     4 * s,
     3,
     "rgba(80,65,50,0.15)",
-    s,
+    s
   );
 
   const t2Sheen = ctx.createLinearGradient(cx, cy - 3 * s, cx, cy - 7 * s);
@@ -1745,9 +2456,9 @@ function drawThroneBase(
   prismFaceOverlay(ctx, cx, cy - 3 * s, 28 * s, 4 * s, "left", t2Sheen);
 
   // Dense skull pile covering the base — the throne rises from skulls
-  const baseSkulls: Array<[number, number, number, number]> = [
-    [-18, 2, 3.0, 1],
-    [18, 2, 3.0, -1],
+  const baseSkulls: [number, number, number, number][] = [
+    [-18, 2, 3, 1],
+    [18, 2, 3, -1],
     [-11, 5, 3.4, 1],
     [11, 5, 3.4, -1],
     [0, 7, 3.8, 1],
@@ -1760,8 +2471,8 @@ function drawThroneBase(
     [-25, 1, 2.2, 1],
     [25, 1, 2.2, -1],
     [0, 1, 2.6, -1],
-    [-8, 8, 2.0, 1],
-    [8, 8, 2.0, -1],
+    [-8, 8, 2, 1],
+    [8, 8, 2, -1],
   ];
   for (const [dx, dy, sz, f] of baseSkulls) {
     drawIsoSkull3D(
@@ -1774,20 +2485,20 @@ function drawThroneBase(
       bM,
       bD,
       "#cc2020",
-      0.08 + pulse * 0.06,
+      0.08 + pulse * 0.06
     );
   }
 
   // Scattered bones woven between skulls
   ctx.lineCap = "round";
-  const scatteredBones: Array<[number, number, number]> = [
+  const scatteredBones: [number, number, number][] = [
     [-15, 4, 0.8],
     [15, 4, 1.2],
     [-5, 6, 0.5],
     [5, 2, 0.9],
     [-20, 3, 0.6],
     [20, -1, 0.7],
-    [-3, 8, 1.0],
+    [-3, 8, 1],
     [10, 6, 0.4],
     [-10, 1, 1.1],
   ];
@@ -1807,14 +2518,14 @@ function drawThroneBase(
       by - Math.sin(ang) * 1 * s,
       0.7 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.arc(
       bx + Math.cos(ang) * 2.5 * s,
       by + Math.sin(ang) * 1 * s,
       0.7 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1830,7 +2541,7 @@ function drawThroneSeat(
   bM: string,
   bD: string,
   bSh: string,
-  bL: string,
+  bL: string
 ): void {
   drawIsometricPrism(ctx, cx, seatBase, seatW, seatW, seatH, bM, bSh, bD);
   drawMortarLines(ctx, cx, seatBase, seatW, seatH, 3, bSh, s);
@@ -1851,7 +2562,7 @@ function drawThroneSeat(
     cx - seatI,
     seatBase + seatD,
     cx,
-    seatTop + seatD * 2,
+    seatTop + seatD * 2
   );
   seatSheen.addColorStop(0, "rgba(200,185,165,0.08)");
   seatSheen.addColorStop(1, "rgba(160,145,125,0)");
@@ -1864,7 +2575,7 @@ function drawThroneCushion(
   seatTop: number,
   seatI: number,
   seatD: number,
-  s: number,
+  s: number
 ): void {
   // Cushion base
   const cushG = ctx.createLinearGradient(cx, seatTop, cx, seatTop + 3 * s);
@@ -1891,7 +2602,7 @@ function drawThroneCushion(
     seatD * 0.25,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -1909,7 +2620,7 @@ function drawThroneBackrest(
   bL: string,
   bM: string,
   bD: string,
-  bSh: string,
+  bSh: string
 ): void {
   const bkI = bkW * ISO_COS;
   const bkD2 = bkW * ISO_SIN;
@@ -1921,7 +2632,7 @@ function drawThroneBackrest(
     cx - bkI,
     bkBase + bkD2,
     cx - bkTI,
-    bkTop + bkTD,
+    bkTop + bkTD
   );
   bkLG.addColorStop(0, bSh);
   bkLG.addColorStop(0.3, "#7a6a5a");
@@ -1941,7 +2652,7 @@ function drawThroneBackrest(
     cx + bkI,
     bkBase + bkD2,
     cx + bkTI,
-    bkTop + bkTD,
+    bkTop + bkTD
   );
   bkRG.addColorStop(0, bD);
   bkRG.addColorStop(0.3, "#8a7a6a");
@@ -2002,13 +2713,13 @@ function drawThroneBackrest(
   }
 
   // Embedded skulls on backrest flanks
-  const embSkulls: Array<[number, number, number]> = [
+  const embSkulls: [number, number, number][] = [
     [0.25, -0.55, 2.6],
     [0.25, 0.55, 2.6],
     [0.5, -0.65, 2.8],
     [0.5, 0.65, 2.8],
-    [0.75, -0.7, 3.0],
-    [0.75, 0.7, 3.0],
+    [0.75, -0.7, 3],
+    [0.75, 0.7, 3],
     [0.4, -0.3, 2.2],
     [0.4, 0.3, 2.2],
     [0.65, -0.4, 2.4],
@@ -2033,7 +2744,7 @@ function drawThroneSkullRelief(
   bW: string,
   bM: string,
   bD: string,
-  redGl: string,
+  redGl: string
 ): void {
   const r = 11 * s;
 
@@ -2050,7 +2761,7 @@ function drawThroneSkullRelief(
     0,
     cx,
     cy,
-    r * 1.1,
+    r * 1.1
   );
   cranG.addColorStop(0, bW);
   cranG.addColorStop(0.4, bM);
@@ -2127,7 +2838,7 @@ function drawThroneSkullRelief(
   // Individual teeth
   ctx.fillStyle = bW;
   const teethCount = 7;
-  const teethW = r * 0.8 / teethCount;
+  const teethW = (r * 0.8) / teethCount;
   for (let i = 0; i < teethCount; i++) {
     const tx = cx - r * 0.35 + i * teethW + teethW * 0.1;
     const ty = jawY - r * 0.02;
@@ -2154,7 +2865,7 @@ function drawThroneArmrests(
   pulse: number,
   bL: string,
   bM: string,
-  bD: string,
+  bD: string
 ): void {
   for (const side of [-1, 1]) {
     const ax = cx + side * seatI * 1.15;
@@ -2165,7 +2876,7 @@ function drawThroneArmrests(
       cx + side * seatI * 0.7,
       seatTop + seatD * 0.7,
       ax,
-      ay - 6 * s,
+      ay - 6 * s
     );
     armGrad.addColorStop(0, "#7a6a5a");
     armGrad.addColorStop(0.5, "#8a7a6a");
@@ -2177,14 +2888,14 @@ function drawThroneArmrests(
       cx + side * seatI * 1.05,
       ay + 2 * s,
       ax + side * 3 * s,
-      ay - 1 * s,
+      ay - 1 * s
     );
     ctx.lineTo(ax + side * 3 * s, ay - 10 * s);
     ctx.quadraticCurveTo(
-      cx + side * seatI * 1.0,
+      cx + side * seatI * 1,
       seatTop + seatD * 0.5 - 4 * s,
       cx + side * seatI * 0.7,
-      seatTop + seatD * 0.7 - 8 * s,
+      seatTop + seatD * 0.7 - 8 * s
     );
     ctx.closePath();
     ctx.fill();
@@ -2195,10 +2906,10 @@ function drawThroneArmrests(
     ctx.beginPath();
     ctx.moveTo(cx + side * seatI * 0.7, seatTop + seatD * 0.7 - 8 * s);
     ctx.quadraticCurveTo(
-      cx + side * seatI * 1.0,
+      cx + side * seatI * 1,
       seatTop + seatD * 0.5 - 4 * s,
       ax + side * 3 * s,
-      ay - 10 * s,
+      ay - 10 * s
     );
     ctx.stroke();
 
@@ -2208,10 +2919,10 @@ function drawThroneArmrests(
     ctx.beginPath();
     ctx.moveTo(cx + side * seatI * 0.75, seatTop + seatD * 0.75 - 4 * s);
     ctx.quadraticCurveTo(
-      cx + side * seatI * 1.0,
+      cx + side * seatI * 1,
       ay - 3 * s,
       ax + side * 2 * s,
-      ay - 5 * s,
+      ay - 5 * s
     );
     ctx.stroke();
 
@@ -2220,13 +2931,13 @@ function drawThroneArmrests(
       ctx,
       ax + side * 2 * s,
       ay - 5.5 * s,
-      4.0 * s,
+      4 * s,
       side,
       bL,
       bM,
       bD,
       "#cc2020",
-      0.4 + pulse * 0.35,
+      0.4 + pulse * 0.35
     );
   }
 }
@@ -2242,10 +2953,10 @@ function drawThroneCrown(
   bM: string,
   bD: string,
   bSh: string,
-  redGl: string,
+  redGl: string
 ): void {
   // Horn-like spikes flaring outward from the wide backrest top
-  const spikeData: Array<[number, number, number, number]> = [
+  const spikeData: [number, number, number, number][] = [
     [-22, 6, 10, -0.3],
     [-14, 3, 14, -0.15],
     [-6, 1, 17, -0.05],
@@ -2302,7 +3013,7 @@ function drawThroneEnergySpine(
   bkTD: number,
   s: number,
   pulse: number,
-  redGl: string,
+  redGl: string
 ): void {
   setShadowBlur(ctx, 8 * s, redGl);
 
@@ -2322,7 +3033,12 @@ function drawThroneEnergySpine(
   for (const side of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(cx, midY);
-    ctx.quadraticCurveTo(cx + side * 6 * s, midY - 4 * s, cx + side * 10 * s, midY - 2 * s);
+    ctx.quadraticCurveTo(
+      cx + side * 6 * s,
+      midY - 4 * s,
+      cx + side * 10 * s,
+      midY - 2 * s
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(cx, branchY + 4 * s);
@@ -2330,7 +3046,7 @@ function drawThroneEnergySpine(
       cx + side * 8 * s,
       branchY,
       cx + side * 14 * s,
-      branchY + 2 * s,
+      branchY + 2 * s
     );
     ctx.stroke();
   }
@@ -2352,13 +3068,13 @@ function drawThroneChains(
   bkTop: number,
   bkTD: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   ctx.lineCap = "round";
   for (const xOff of [-18, -8, 0, 8, 18]) {
     const chainTop = bkTop + bkTD + 4 * s;
     const chainLen = 12 + Math.abs(xOff) * 0.3;
-    const chainSway = Math.sin(time * 1.0 + xOff * 0.3) * 1.2 * s;
+    const chainSway = Math.sin(time * 1 + xOff * 0.3) * 1.2 * s;
 
     for (let link = 0; link < 4; link++) {
       const ly = chainTop + link * 3 * s;
@@ -2373,7 +3089,7 @@ function drawThroneChains(
         link % 2 === 0 ? 0.7 * s : 1.5 * s,
         link % 2 === 1 ? 0.25 : 0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.strokeStyle = "#505058";
@@ -2386,7 +3102,7 @@ function drawThroneChains(
         link % 2 === 0 ? 0.7 * s : 1.5 * s,
         link % 2 === 1 ? 0.25 : 0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -2399,7 +3115,7 @@ function drawThroneChains(
       chainTop + chainLen * s,
       1.3 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "#505058";
@@ -2413,7 +3129,7 @@ function drawThroneSouls(
   cx: number,
   bkTop: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   for (let i = 0; i < 8; i++) {
     const pt = (time * 0.4 + i * 0.38) % 2.5;
@@ -2459,7 +3175,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       0,
       cx + 4 * s,
       cy + 10 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(0,0,0,0.45)");
     shGrad.addColorStop(0.4, "rgba(0,0,0,0.2)");
@@ -2469,9 +3185,11 @@ export function renderWarMonument(p: LandmarkParams): void {
     ctx.ellipse(cx + 4 * s, cy + 10 * s, shRx, shRy, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
-  const pulse = 0.5 + Math.sin(time * 2.0) * 0.25;
+  const pulse = 0.5 + Math.sin(time * 2) * 0.25;
 
   // Scorched earth ring
   const earthGrad = ctx.createRadialGradient(
@@ -2480,7 +3198,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     8 * s,
     cx,
     cy + 2 * s,
-    42 * s,
+    42 * s
   );
   earthGrad.addColorStop(0, "rgba(30,25,20,0.4)");
   earthGrad.addColorStop(0.5, "rgba(20,15,10,0.2)");
@@ -2500,7 +3218,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     4 * s,
     "#353540",
     "#18181f",
-    "#262630",
+    "#262630"
   );
   drawIsometricPrism(
     ctx,
@@ -2511,7 +3229,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     4 * s,
     "#3a3a46",
     "#1c1c26",
-    "#2c2c38",
+    "#2c2c38"
   );
   drawIsometricPrism(
     ctx,
@@ -2522,7 +3240,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     3 * s,
     "#404050",
     "#202030",
-    "#30303e",
+    "#30303e"
   );
 
   // Gradient overlay on tier 1 for weathered stone look
@@ -2569,7 +3287,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     pillarH,
     "#484858",
     "#181824",
-    "#2a2a3a",
+    "#2a2a3a"
   );
 
   // Face gradient overlays for polished stone
@@ -2577,7 +3295,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     cx,
     pillarBase,
     cx,
-    pillarBase - pillarH,
+    pillarBase - pillarH
   );
   pillarSheen.addColorStop(0, "rgba(70,70,90,0.15)");
   pillarSheen.addColorStop(0.5, "rgba(50,50,70,0.06)");
@@ -2593,7 +3311,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     pillarH,
     9,
     "rgba(0,0,0,0.15)",
-    s,
+    s
   );
 
   // Carved skull reliefs on pillar
@@ -2609,7 +3327,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       1,
       "rgba(80,80,100,0.6)",
       "rgba(60,60,80,0.4)",
-      "rgba(40,40,60,0.3)",
+      "rgba(40,40,60,0.3)"
     );
   }
 
@@ -2623,7 +3341,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     18 * s,
     "#5a5a6c",
     "#1a1a26",
-    "#3a3a4c",
+    "#3a3a4c"
   );
   ctx.strokeStyle = `rgba(200,170,80,${0.3 + pulse * 0.2})`;
   ctx.lineWidth = 1 * s;
@@ -2643,7 +3361,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     cx - 12 * s,
     swordY,
     cx + 12 * s,
-    swordY,
+    swordY
   );
   bladeGrad.addColorStop(0, "#7a7a8a");
   bladeGrad.addColorStop(0.3, "#b0b0c0");
@@ -2713,7 +3431,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     `rgba(255,120,20,${0.55 + pulse * 0.3})`,
     `rgba(255,230,100,${0.7 + pulse * 0.2})`,
     "#ff6600",
-    16 * s,
+    16 * s
   );
 
   // Tattered war banners
@@ -2736,7 +3454,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       bx,
       by,
       bx + side * 10 * s,
-      by + 22 * s,
+      by + 22 * s
     );
     banGrad.addColorStop(0, side < 0 ? "#5a1818" : "#4a1515");
     banGrad.addColorStop(0.5, side < 0 ? "#3a0c0c" : "#300a0a");
@@ -2760,7 +3478,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       by + 10 * s,
       2.5 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2782,10 +3500,10 @@ export function renderWarMonument(p: LandmarkParams): void {
   // Shield trophies
   const t1I = baseI;
   [
-    { x: cx - t1I * 0.75, y: cy - 1 * s, f: 1 },
-    { x: cx + t1I * 0.75, y: cy - 2.5 * s, f: -1 },
-    { x: cx - t1I * 0.35, y: cy + baseD * 0.7, f: 1 },
-    { x: cx + t1I * 0.35, y: cy - baseD * 0.2, f: -1 },
+    { f: 1, x: cx - t1I * 0.75, y: cy - 1 * s },
+    { f: -1, x: cx + t1I * 0.75, y: cy - 2.5 * s },
+    { f: 1, x: cx - t1I * 0.35, y: cy + baseD * 0.7 },
+    { f: -1, x: cx + t1I * 0.35, y: cy - baseD * 0.2 },
   ].forEach(({ x: shX, y: shY, f }) => {
     const shW = 4 * s;
     const shH = 5 * s;
@@ -2836,7 +3554,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       `rgba(255,200,60,${0.5 + pulse * 0.3})`,
       `rgba(255,240,150,${0.6 + pulse * 0.2})`,
       "#ff6600",
-      8 * s,
+      8 * s
     );
   });
 
@@ -2858,7 +3576,7 @@ export function renderWarMonument(p: LandmarkParams): void {
       0.5 * s,
       la + Math.PI * 0.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2874,7 +3592,7 @@ export function renderWarMonument(p: LandmarkParams): void {
     ctx.lineTo(crX + Math.cos(seed * 2) * 4 * s, crY + Math.sin(seed) * 2 * s);
     ctx.lineTo(
       crX + Math.cos(seed * 2 + 0.5) * 6 * s,
-      crY + Math.sin(seed + 0.5) * 3 * s,
+      crY + Math.sin(seed + 0.5) * 3 * s
     );
     ctx.stroke();
   });
@@ -2922,7 +3640,7 @@ export function renderBoneAltar(p: LandmarkParams): void {
       0,
       cx,
       cy + 10 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(15,40,20,0.5)");
     shGrad.addColorStop(0.35, "rgba(0,0,0,0.28)");
@@ -2932,7 +3650,9 @@ export function renderBoneAltar(p: LandmarkParams): void {
     ctx.ellipse(cx, cy + 10 * s, shRx, shRy, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   const pulse = 0.5 + Math.sin(time * 2.2) * 0.3;
   const boneW = "#ddd4c4";
@@ -2948,7 +3668,7 @@ export function renderBoneAltar(p: LandmarkParams): void {
     4 * s,
     cx,
     cy + 4 * s,
-    48 * s,
+    48 * s
   );
   groundGrad.addColorStop(0, `rgba(40,80,30,${0.35 + pulse * 0.1})`);
   groundGrad.addColorStop(0.25, `rgba(50,25,60,${0.3 + pulse * 0.08})`);
@@ -2969,13 +3689,13 @@ export function renderBoneAltar(p: LandmarkParams): void {
     ctx.beginPath();
     ctx.moveTo(
       cx + Math.cos(angle) * 14 * s,
-      cy + 4 * s + Math.sin(angle) * 6 * s,
+      cy + 4 * s + Math.sin(angle) * 6 * s
     );
     ctx.quadraticCurveTo(
       cx + Math.cos(angle + 0.15) * vLen * 0.65,
       cy + 4 * s + Math.sin(angle + 0.15) * vLen * 0.3,
       cx + Math.cos(angle - 0.1) * vLen,
-      cy + 4 * s + Math.sin(angle - 0.1) * vLen * 0.45,
+      cy + 4 * s + Math.sin(angle - 0.1) * vLen * 0.45
     );
     ctx.stroke();
   }
@@ -2991,19 +3711,18 @@ export function renderBoneAltar(p: LandmarkParams): void {
   drawBonePileMiddle(ctx, cx, midY, s, boneW, boneL, boneSh, boneDk, boneVDk);
 
   // --- Skulls piled on the mound (back row first for depth) ---
-  const skullPositions: Array<{ x: number; y: number; r: number; f: number }> =
-    [
-      { x: cx - 10 * s, y: cy - 4 * s, r: 2.8 * s, f: 1 },
-      { x: cx + 8 * s, y: cy - 5 * s, r: 2.6 * s, f: -1 },
-      { x: cx + 1 * s, y: cy - 3 * s, r: 2.4 * s, f: 1 },
-      { x: cx - 6 * s, y: cy - 10 * s, r: 3.0 * s, f: 1 },
-      { x: cx + 7 * s, y: cy - 11 * s, r: 2.5 * s, f: -1 },
-      { x: cx - 14 * s, y: cy - 2 * s, r: 2.2 * s, f: 1 },
-      { x: cx + 14 * s, y: cy - 3 * s, r: 2.0 * s, f: -1 },
-      { x: cx, y: cy - 15 * s, r: 3.5 * s, f: 1 },
-      { x: cx - 4 * s, y: cy - 18 * s, r: 2.8 * s, f: -1 },
-      { x: cx + 5 * s, y: cy - 17 * s, r: 2.6 * s, f: 1 },
-    ];
+  const skullPositions: { x: number; y: number; r: number; f: number }[] = [
+    { f: 1, r: 2.8 * s, x: cx - 10 * s, y: cy - 4 * s },
+    { f: -1, r: 2.6 * s, x: cx + 8 * s, y: cy - 5 * s },
+    { f: 1, r: 2.4 * s, x: cx + 1 * s, y: cy - 3 * s },
+    { f: 1, r: 3 * s, x: cx - 6 * s, y: cy - 10 * s },
+    { f: -1, r: 2.5 * s, x: cx + 7 * s, y: cy - 11 * s },
+    { f: 1, r: 2.2 * s, x: cx - 14 * s, y: cy - 2 * s },
+    { f: -1, r: 2 * s, x: cx + 14 * s, y: cy - 3 * s },
+    { f: 1, r: 3.5 * s, x: cx, y: cy - 15 * s },
+    { f: -1, r: 2.8 * s, x: cx - 4 * s, y: cy - 18 * s },
+    { f: 1, r: 2.6 * s, x: cx + 5 * s, y: cy - 17 * s },
+  ];
   for (const sk of skullPositions) {
     const eyeGlow = `rgba(60,255,90,1)`;
     const eyeA = 0.35 + pulse * 0.45;
@@ -3017,7 +3736,7 @@ export function renderBoneAltar(p: LandmarkParams): void {
       boneL,
       boneSh,
       eyeGlow,
-      eyeA,
+      eyeA
     );
   }
 
@@ -3033,7 +3752,7 @@ export function renderBoneAltar(p: LandmarkParams): void {
     4 * s,
     -0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   const topEyeOff = 5.5 * 0.36 * s;
@@ -3071,7 +3790,7 @@ export function renderBoneAltar(p: LandmarkParams): void {
         4 * s,
         Math.sin(wPhase * 0.3) * 0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -3086,10 +3805,10 @@ function drawScatteredBones(
   seedX: number,
   boneL: string,
   boneSh: string,
-  boneDk: string,
+  boneDk: string
 ): void {
   ctx.lineCap = "round";
-  const outerBones: Array<{ a: number; d: number; len: number }> = [
+  const outerBones: { a: number; d: number; len: number }[] = [
     { a: 0.2, d: 32, len: 5 },
     { a: 0.9, d: 30, len: 4 },
     { a: 1.6, d: 34, len: 5.5 },
@@ -3114,11 +3833,11 @@ function drawScatteredBones(
     ctx.beginPath();
     ctx.moveTo(
       bx - Math.cos(bAng) * halfLen,
-      by - Math.sin(bAng) * halfLen * 0.5,
+      by - Math.sin(bAng) * halfLen * 0.5
     );
     ctx.lineTo(
       bx + Math.cos(bAng) * halfLen,
-      by + Math.sin(bAng) * halfLen * 0.5,
+      by + Math.sin(bAng) * halfLen * 0.5
     );
     ctx.stroke();
     ctx.strokeStyle = boneL;
@@ -3126,11 +3845,11 @@ function drawScatteredBones(
     ctx.beginPath();
     ctx.moveTo(
       bx - Math.cos(bAng) * halfLen,
-      by - Math.sin(bAng) * halfLen * 0.5,
+      by - Math.sin(bAng) * halfLen * 0.5
     );
     ctx.lineTo(
       bx + Math.cos(bAng) * halfLen,
-      by + Math.sin(bAng) * halfLen * 0.5,
+      by + Math.sin(bAng) * halfLen * 0.5
     );
     ctx.stroke();
     ctx.fillStyle = boneL;
@@ -3140,24 +3859,24 @@ function drawScatteredBones(
       by - Math.sin(bAng) * halfLen * 0.5,
       1.1 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.arc(
       bx + Math.cos(bAng) * halfLen,
       by + Math.sin(bAng) * halfLen * 0.5,
       1.1 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
 
   // Small skulls scattered around outer edge
-  const outerSkulls: Array<{ a: number; d: number; r: number }> = [
+  const outerSkulls: { a: number; d: number; r: number }[] = [
     { a: 0.5, d: 30, r: 1.8 },
-    { a: 2.0, d: 32, r: 1.6 },
+    { a: 2, d: 32, r: 1.6 },
     { a: 3.5, d: 28, r: 1.9 },
-    { a: 5.0, d: 33, r: 1.5 },
+    { a: 5, d: 33, r: 1.5 },
   ];
   for (const osk of outerSkulls) {
     const sx = cx + Math.cos(osk.a) * osk.d * s;
@@ -3170,7 +3889,7 @@ function drawScatteredBones(
       Math.cos(osk.a) > 0 ? -1 : 1,
       boneL,
       boneSh,
-      boneDk,
+      boneDk
     );
   }
 }
@@ -3184,7 +3903,7 @@ function drawBonePileMound(
   boneL: string,
   boneSh: string,
   boneDk: string,
-  boneVDk: string,
+  boneVDk: string
 ): void {
   // Isometric mound shape - dark base shadow
   const moundRx = 26 * s;
@@ -3198,7 +3917,7 @@ function drawBonePileMound(
     moundRy + 1 * s,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3209,7 +3928,7 @@ function drawBonePileMound(
     2 * s,
     cx,
     cy + 2 * s,
-    moundRx,
+    moundRx
   );
   moundGrad.addColorStop(0, boneW);
   moundGrad.addColorStop(0.35, boneL);
@@ -3241,19 +3960,19 @@ function drawBonePileMound(
   }
 
   // Rib bones sticking out of the pile at angles
-  const ribs: Array<{
+  const ribs: {
     x: number;
     y: number;
     angle: number;
     len: number;
     curve: number;
-  }> = [
-    { x: cx - 18 * s, y: cy - 1 * s, angle: -0.6, len: 12, curve: -4 },
-    { x: cx + 16 * s, y: cy - 2 * s, angle: 0.5, len: 11, curve: 3 },
-    { x: cx - 8 * s, y: cy - 6 * s, angle: -0.3, len: 10, curve: -3 },
-    { x: cx + 10 * s, y: cy - 5 * s, angle: 0.4, len: 9, curve: 4 },
-    { x: cx - 20 * s, y: cy + 3 * s, angle: -0.8, len: 8, curve: -2 },
-    { x: cx + 22 * s, y: cy + 1 * s, angle: 0.7, len: 7, curve: 2 },
+  }[] = [
+    { angle: -0.6, curve: -4, len: 12, x: cx - 18 * s, y: cy - 1 * s },
+    { angle: 0.5, curve: 3, len: 11, x: cx + 16 * s, y: cy - 2 * s },
+    { angle: -0.3, curve: -3, len: 10, x: cx - 8 * s, y: cy - 6 * s },
+    { angle: 0.4, curve: 4, len: 9, x: cx + 10 * s, y: cy - 5 * s },
+    { angle: -0.8, curve: -2, len: 8, x: cx - 20 * s, y: cy + 3 * s },
+    { angle: 0.7, curve: 2, len: 7, x: cx + 22 * s, y: cy + 1 * s },
   ];
   for (const rib of ribs) {
     const endX = rib.x + Math.cos(rib.angle) * rib.len * s;
@@ -3267,7 +3986,7 @@ function drawBonePileMound(
     ctx.quadraticCurveTo(cpX, cpY, endX, endY);
     ctx.stroke();
     ctx.strokeStyle = boneL;
-    ctx.lineWidth = 1.0 * s;
+    ctx.lineWidth = 1 * s;
     ctx.beginPath();
     ctx.moveTo(rib.x, rib.y);
     ctx.quadraticCurveTo(cpX, cpY, endX, endY);
@@ -3284,7 +4003,7 @@ function drawBonePileMiddle(
   boneL: string,
   boneSh: string,
   boneDk: string,
-  boneVDk: string,
+  boneVDk: string
 ): void {
   // Smaller mound on top of base
   const midRx = 16 * s;
@@ -3298,7 +4017,7 @@ function drawBonePileMiddle(
     midRy + 0.5 * s,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3308,7 +4027,7 @@ function drawBonePileMiddle(
     1 * s,
     cx,
     midY + 1 * s,
-    midRx,
+    midRx
   );
   midGrad.addColorStop(0, boneW);
   midGrad.addColorStop(0.4, boneL);
@@ -3325,7 +4044,7 @@ function drawBonePileMiddle(
     const bx = cx + (i - 1) * 8 * s;
     const by = midY + Math.sin(i * 1.5) * 2 * s;
     ctx.strokeStyle = boneSh;
-    ctx.lineWidth = 1.0 * s;
+    ctx.lineWidth = 1 * s;
     ctx.beginPath();
     ctx.moveTo(bx - 3 * s, by - 1.5 * s);
     ctx.lineTo(bx + 3 * s, by + 1.5 * s);
@@ -3350,24 +4069,24 @@ function drawBonePileFire(
   s: number,
   time: number,
   pulse: number,
-  seedX: number,
+  seedX: number
 ): void {
   // Multiple fire columns rising from the bone pile
-  const firePoints: Array<{
+  const firePoints: {
     x: number;
     y: number;
     w: number;
     h: number;
     idx: number;
     primary: "green" | "purple";
-  }> = [
-    { x: cx, y: cy - 22 * s, w: 9, h: 26, idx: 0, primary: "green" },
-    { x: cx - 12 * s, y: cy - 8 * s, w: 6, h: 18, idx: 1, primary: "purple" },
-    { x: cx + 11 * s, y: cy - 9 * s, w: 6, h: 17, idx: 2, primary: "green" },
-    { x: cx - 6 * s, y: cy - 14 * s, w: 5, h: 15, idx: 3, primary: "purple" },
-    { x: cx + 6 * s, y: cy - 13 * s, w: 5, h: 16, idx: 4, primary: "green" },
-    { x: cx - 18 * s, y: cy - 2 * s, w: 4, h: 12, idx: 5, primary: "green" },
-    { x: cx + 17 * s, y: cy - 3 * s, w: 4, h: 11, idx: 6, primary: "purple" },
+  }[] = [
+    { h: 26, idx: 0, primary: "green", w: 9, x: cx, y: cy - 22 * s },
+    { h: 18, idx: 1, primary: "purple", w: 6, x: cx - 12 * s, y: cy - 8 * s },
+    { h: 17, idx: 2, primary: "green", w: 6, x: cx + 11 * s, y: cy - 9 * s },
+    { h: 15, idx: 3, primary: "purple", w: 5, x: cx - 6 * s, y: cy - 14 * s },
+    { h: 16, idx: 4, primary: "green", w: 5, x: cx + 6 * s, y: cy - 13 * s },
+    { h: 12, idx: 5, primary: "green", w: 4, x: cx - 18 * s, y: cy - 2 * s },
+    { h: 11, idx: 6, primary: "purple", w: 4, x: cx + 17 * s, y: cy - 3 * s },
   ];
 
   for (const fp of firePoints) {
@@ -3386,7 +4105,7 @@ function drawBonePileFire(
         `rgba(50,255,80,${0.4 + pulse * 0.3})`,
         `rgba(180,255,200,${0.55 + pulse * 0.25})`,
         "#33ff66",
-        fh * 0.8,
+        fh * 0.8
       );
     } else {
       drawMultiFlame(
@@ -3401,7 +4120,7 @@ function drawBonePileFire(
         `rgba(140,60,220,${0.4 + pulse * 0.3})`,
         `rgba(200,140,255,${0.55 + pulse * 0.25})`,
         "#aa55ff",
-        fh * 0.8,
+        fh * 0.8
       );
     }
   }
@@ -3414,7 +4133,7 @@ function drawBonePileFire(
     2 * s,
     cx,
     cy - 10 * s,
-    30 * s,
+    30 * s
   );
   fireGlowGrad.addColorStop(0, `rgba(50,255,80,${0.12 + pulse * 0.08})`);
   fireGlowGrad.addColorStop(0.4, `rgba(140,80,220,${0.08 + pulse * 0.05})`);
@@ -3431,12 +4150,14 @@ function drawBonePileEmbers(
   cy: number,
   s: number,
   time: number,
-  seedX: number,
+  seedX: number
 ): void {
   for (let i = 0; i < 12; i++) {
     const phase = time * 2.5 + i * 1.3 + seedX * 0.5;
     const life = ((time * 0.8 + i * 0.7) % 3) / 3;
-    if (life > 0.95) continue;
+    if (life > 0.95) {
+      continue;
+    }
     const angle = (i / 12) * Math.PI * 2 + Math.sin(phase * 0.3) * 0.5;
     const dist = (8 + life * 22) * s;
     const ex = cx + Math.cos(angle) * dist + Math.sin(phase * 1.5) * 3 * s;
@@ -3478,7 +4199,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
       0,
       cx + 5 * s,
       cy + 10 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(0,0,0,0.4)");
     shGrad.addColorStop(0.4, "rgba(0,0,0,0.15)");
@@ -3488,7 +4209,9 @@ export function renderSunObelisk(p: LandmarkParams): void {
     ctx.ellipse(cx + 5 * s, cy + 10 * s, shRx, shRy, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   const pulse = 0.5 + Math.sin(time * 1.8) * 0.3;
 
@@ -3499,7 +4222,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     4 * s,
     cx,
     cy + 4 * s,
-    35 * s,
+    35 * s
   );
   sandGrad.addColorStop(0, "#c4a55a");
   sandGrad.addColorStop(0.3, "#b89848");
@@ -3532,7 +4255,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     4 * s,
     "#262626",
     "#080808",
-    "#181818",
+    "#181818"
   );
   drawIsometricPrism(
     ctx,
@@ -3543,7 +4266,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     3 * s,
     "#2a2a2a",
     "#0c0c0c",
-    "#1c1c1c",
+    "#1c1c1c"
   );
 
   // Gold trim
@@ -3572,7 +4295,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     soH,
     "#2c2c36",
     "#0c0c14",
-    "#1c1c28",
+    "#1c1c28"
   );
 
   // Polished obsidian sheen on left face
@@ -3644,7 +4367,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     16 * s,
     "#3a3a44",
     "#0a0a14",
-    "#2a2a34",
+    "#2a2a34"
   );
   const capGrad = ctx.createLinearGradient(cx, soTop - 16 * s, cx, soTop);
   capGrad.addColorStop(0, `rgba(255,210,60,${0.4 + pulse * 0.25})`);
@@ -3686,7 +4409,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     ctx.moveTo(cx + Math.cos(angle) * 5 * s, tipY + Math.sin(angle) * 3 * s);
     ctx.lineTo(
       cx + Math.cos(angle) * (5 * s + rayLen),
-      tipY + Math.sin(angle) * (3 * s + rayLen * 0.5),
+      tipY + Math.sin(angle) * (3 * s + rayLen * 0.5)
     );
     ctx.stroke();
   }
@@ -3700,7 +4423,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
       spx - 5 * s,
       spy,
       spx + 5 * s,
-      spy + 4 * s,
+      spy + 4 * s
     );
     spBodyGr.addColorStop(0, "#a08850");
     spBodyGr.addColorStop(0.5, "#8a7440");
@@ -3732,7 +4455,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
       spy - 3.5 * s,
       2 * s,
       Math.PI * 0.8,
-      Math.PI * 0.2,
+      Math.PI * 0.2
     );
     ctx.stroke();
     // Eyes with glow
@@ -3745,7 +4468,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
       0.5 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.ellipse(
       spx + (0.5 + 0.6 * side) * s,
@@ -3754,7 +4477,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
       0.5 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = `rgba(255,210,60,${0.2 + pulse * 0.15})`;
@@ -3764,14 +4487,14 @@ export function renderSunObelisk(p: LandmarkParams): void {
       spy - 2.8 * s,
       0.3 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.arc(
       spx + (0.5 + 0.6 * side) * s,
       spy - 2.8 * s,
       0.3 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Paws
@@ -3812,7 +4535,7 @@ export function renderSunObelisk(p: LandmarkParams): void {
     cx + soI + 6 * s,
     soBase + soD + 2 * s,
     cx + soI + 10 * s,
-    soBase + soD + 4 * s,
+    soBase + soD + 4 * s
   );
   ctx.lineTo(cx + soI + 1 * s, soBase + soD + 4 * s);
   ctx.closePath();
@@ -3872,7 +4595,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
       0,
       cx + 4 * s,
       cy + 12 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(0,20,60,0.45)");
     shGrad.addColorStop(0.4, "rgba(0,10,35,0.2)");
@@ -3882,7 +4605,9 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     ctx.ellipse(cx + 4 * s, cy + 12 * s, shRx, shRy, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   const pulse = 0.5 + Math.sin(time * 1.6) * 0.25;
   const fcBlack = "#060610";
@@ -3899,7 +4624,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     6 * s,
     cx,
     cy + 3 * s,
-    38 * s,
+    38 * s
   );
   frostGrad.addColorStop(0, "rgba(140,200,240,0.3)");
   frostGrad.addColorStop(0.3, "rgba(110,170,220,0.15)");
@@ -3933,7 +4658,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     fcWallH,
     fcMid,
     fcBlack,
-    fcDark,
+    fcDark
   );
   const fcWI = fcBaseW * ISO_COS;
   const fcWD = fcBaseW * ISO_SIN;
@@ -3974,7 +4699,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     1.5 * s,
     fcEdge,
     fcMid,
-    fcLight,
+    fcLight
   );
 
   // Frozen waterfall streaks
@@ -3986,7 +4711,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     cx - fcWI * 0.48,
     cy + fcWD * 0.4,
     cx - fcWI * 0.53,
-    cy + fcWD * 0.5 + 3 * s,
+    cy + fcWD * 0.5 + 3 * s
   );
   ctx.stroke();
 
@@ -4007,7 +4732,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
       14 * s,
       fcEdge,
       fcBlack,
-      fcMid,
+      fcMid
     );
 
     // Spire energy vein
@@ -4049,7 +4774,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     fcSpireH,
     fcLight,
     fcBlack,
-    fcDark,
+    fcDark
   );
 
   // Sheen overlay on central spire
@@ -4057,7 +4782,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     cx,
     fcFlankBase,
     cx,
-    fcFlankBase - fcSpireH,
+    fcFlankBase - fcSpireH
   );
   spireSheen.addColorStop(0, "rgba(40,40,80,0.15)");
   spireSheen.addColorStop(0.5, "rgba(30,30,60,0.06)");
@@ -4069,7 +4794,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     fcSpireW,
     fcSpireH,
     "left",
-    spireSheen,
+    spireSheen
   );
 
   // Energy veins on central spire
@@ -4092,7 +4817,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     20 * s,
     fcEdge,
     fcBlack,
-    fcMid,
+    fcMid
   );
 
   // Main spire aurora orb
@@ -4106,7 +4831,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     0,
     cx,
     mainPeakY,
-    14 * s,
+    14 * s
   );
   auroraGrad.addColorStop(0, `rgba(100,200,255,${0.45 + pulse * 0.25})`);
   auroraGrad.addColorStop(0.3, `rgba(120,170,255,${0.2 + pulse * 0.12})`);
@@ -4135,7 +4860,7 @@ export function renderFrostCitadel(p: LandmarkParams): void {
       cx,
       wy - 4 * s + Math.cos(wPh * 1.3) * 3 * s,
       cx + wSpread,
-      wy + Math.sin(wPh + 1) * 3 * s,
+      wy + Math.sin(wPh + 1) * 3 * s
     );
     ctx.stroke();
   }
@@ -4185,7 +4910,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
       0,
       cx,
       cy + 12 * s,
-      shRx,
+      shRx
     );
     shGrad.addColorStop(0, "rgba(20,0,40,0.45)");
     shGrad.addColorStop(0.3, "rgba(0,0,0,0.35)");
@@ -4196,9 +4921,11 @@ export function renderInfernalGate(p: LandmarkParams): void {
     ctx.ellipse(cx, cy + 12 * s, shRx, shRy, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
-  const pulse = 0.5 + Math.sin(time * 2.0) * 0.28;
+  const pulse = 0.5 + Math.sin(time * 2) * 0.28;
   const obsCore = "#0a0a14";
   const obsDk = "#101020";
   const obsMd = "#1c1c30";
@@ -4220,7 +4947,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
     obsDk,
     obsMd,
     obsLt,
-    obsSheen,
+    obsSheen
   );
 
   // Rune circle on the platform
@@ -4249,7 +4976,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
     obsLt,
     obsMd,
     obsDk,
-    obsCore,
+    obsCore
   );
   // Front pillar
   drawInfernalPillar(
@@ -4264,7 +4991,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
     obsLt,
     obsMd,
     obsDk,
-    obsCore,
+    obsCore
   );
 
   // --- Archway connecting pillars ---
@@ -4284,7 +5011,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
     pW,
     s,
     time,
-    pulse,
+    pulse
   );
 
   // --- Portal void inside the arch ---
@@ -4307,7 +5034,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
     pH,
     s,
     time,
-    seedX,
+    seedX
   );
 
   // --- Ambient particles ---
@@ -4325,7 +5052,7 @@ function drawInfernalFoundation(
   obsDk: string,
   obsMd: string,
   obsLt: string,
-  obsSheen: string,
+  obsSheen: string
 ): void {
   // Tier 1: Wide base slab
   drawIsometricPrism(ctx, cx, cy, 48 * s, 48 * s, 4 * s, obsMd, obsDk, obsCore);
@@ -4350,7 +5077,7 @@ function drawInfernalFoundation(
     4 * s,
     obsLt,
     obsMd,
-    obsDk,
+    obsDk
   );
   const t2I = 42 * s * ISO_COS;
   const t2D = 42 * s * ISO_SIN;
@@ -4372,7 +5099,7 @@ function drawInfernalFoundation(
     6 * s,
     obsLt,
     obsMd,
-    obsDk,
+    obsDk
   );
 
   // Obsidian sheen overlays on the inner platform faces
@@ -4409,11 +5136,11 @@ function drawInfernalFoundation(
   }
 
   // Corner skull ornaments on tier 2 edges
-  const cornerSkulls: Array<{ x: number; y: number; f: number }> = [
-    { x: cx - t2I, y: cy - 8 * s + t2D - 2 * s, f: 1 },
-    { x: cx + t2I, y: cy - 8 * s + t2D - 2 * s, f: -1 },
-    { x: cx, y: cy - 8 * s + t2D * 2 - 2 * s, f: 1 },
-    { x: cx, y: cy - 8 * s - 2 * s, f: -1 },
+  const cornerSkulls: { x: number; y: number; f: number }[] = [
+    { f: 1, x: cx - t2I, y: cy - 8 * s + t2D - 2 * s },
+    { f: -1, x: cx + t2I, y: cy - 8 * s + t2D - 2 * s },
+    { f: 1, x: cx, y: cy - 8 * s + t2D * 2 - 2 * s },
+    { f: -1, x: cx, y: cy - 8 * s - 2 * s },
   ];
   for (const csk of cornerSkulls) {
     drawIsoSkull3D(
@@ -4426,7 +5153,7 @@ function drawInfernalFoundation(
       "#908070",
       "#605040",
       "#aa44ff",
-      0.15 + pulse * 0.15,
+      0.15 + pulse * 0.15
     );
   }
 }
@@ -4436,7 +5163,7 @@ function drawInfernalGround(
   cx: number,
   cy: number,
   s: number,
-  pulse: number,
+  pulse: number
 ): void {
   const groundGrad = ctx.createRadialGradient(cx, cy, 6 * s, cx, cy, 52 * s);
   groundGrad.addColorStop(0, `rgba(40,10,60,${0.4 + pulse * 0.1})`);
@@ -4461,7 +5188,7 @@ function drawInfernalGround(
       cx + Math.cos(ang + 0.1) * crackLen * 0.6,
       cy + Math.sin(ang + 0.1) * crackLen * 0.28,
       cx + Math.cos(ang) * crackLen,
-      cy + Math.sin(ang) * crackLen * 0.45,
+      cy + Math.sin(ang) * crackLen * 0.45
     );
     ctx.stroke();
   }
@@ -4473,7 +5200,7 @@ function drawInfernalRuneCircle(
   cy: number,
   s: number,
   time: number,
-  pulse: number,
+  pulse: number
 ): void {
   setShadowBlur(ctx, 5 * s, "#8833cc");
   ctx.strokeStyle = `rgba(130,50,200,${0.12 + pulse * 0.12})`;
@@ -4510,7 +5237,7 @@ function drawInfernalPillar(
   obsLt: string,
   obsMd: string,
   obsDk: string,
-  obsCore: string,
+  obsCore: string
 ): void {
   // Pillar base plinth (wider footing)
   drawIsometricPrism(
@@ -4522,7 +5249,7 @@ function drawInfernalPillar(
     3 * s,
     obsMd,
     obsDk,
-    obsCore,
+    obsCore
   );
   // Main pillar body
   drawIsometricPrism(
@@ -4534,7 +5261,7 @@ function drawInfernalPillar(
     pH - 3 * s,
     obsLt,
     obsDk,
-    obsCore,
+    obsCore
   );
 
   // Obsidian reflective sheen
@@ -4573,7 +5300,7 @@ function drawInfernalPillar(
       "#988878",
       "#685848",
       "#aa44ff",
-      0.25 + pulse * 0.35,
+      0.25 + pulse * 0.35
     );
   }
   clearShadow(ctx);
@@ -4587,7 +5314,7 @@ function drawInfernalPillar(
     18 * s,
     obsLt,
     obsDk,
-    obsMd,
+    obsMd
   );
   ctx.fillStyle = `rgba(130,50,200,${0.12 + pulse * 0.12})`;
   ctx.beginPath();
@@ -4606,7 +5333,7 @@ function drawInfernalArch(
   _pW: number,
   s: number,
   _time: number,
-  pulse: number,
+  pulse: number
 ): void {
   // Thick arch body
   const archGrad = ctx.createLinearGradient(lPx, archTopL, rPx, archTopR);
@@ -4634,14 +5361,14 @@ function drawInfernalArch(
     archMidX,
     archMidY + 4 * s,
     rPx - 4 * s,
-    archTopR + 8 * s,
+    archTopR + 8 * s
   );
   ctx.lineTo(rPx - 4 * s, archTopR + 12 * s);
   ctx.quadraticCurveTo(
     archMidX,
     archMidY + 10 * s,
     lPx + 4 * s,
-    archTopL + 12 * s,
+    archTopL + 12 * s
   );
   ctx.closePath();
   ctx.fill();
@@ -4682,7 +5409,7 @@ function drawInfernalArch(
       "#908070",
       "#605040",
       "#aa44ff",
-      0.2 + pulse * 0.25,
+      0.2 + pulse * 0.25
     );
   }
 }
@@ -4693,7 +5420,7 @@ function drawObsidianPortal(
   portalCy: number,
   s: number,
   time: number,
-  pulse: number,
+  pulse: number
 ): void {
   // Deep void gradient
   const voidGrad = ctx.createRadialGradient(
@@ -4702,7 +5429,7 @@ function drawObsidianPortal(
     0,
     portalCx,
     portalCy,
-    15 * s,
+    15 * s
   );
   voidGrad.addColorStop(0, `rgba(60,0,100,${0.7 + pulse * 0.25})`);
   voidGrad.addColorStop(0.2, `rgba(40,0,70,${0.6 + pulse * 0.2})`);
@@ -4729,13 +5456,13 @@ function drawObsidianPortal(
     ctx.beginPath();
     ctx.moveTo(
       portalCx + Math.cos(swirlAng) * sr1,
-      portalCy + Math.sin(swirlAng) * sr1 * 1.3,
+      portalCy + Math.sin(swirlAng) * sr1 * 1.3
     );
     ctx.quadraticCurveTo(
       portalCx + Math.cos(swirlAng + 0.7) * sr2 * 0.65,
       portalCy + Math.sin(swirlAng + 0.7) * sr2 * 1.05,
       portalCx + Math.cos(swirlAng + 1.4) * sr2,
-      portalCy + Math.sin(swirlAng + 1.4) * sr2 * 1.3,
+      portalCy + Math.sin(swirlAng + 1.4) * sr2 * 1.3
     );
     ctx.stroke();
   }
@@ -4757,7 +5484,7 @@ function drawObsidianPortal(
       rR * 1.25 + Math.cos(rPhase) * 1.5 * s,
       rPhase * 0.15,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -4782,7 +5509,7 @@ function drawInfernalChains(
   rPy: number,
   pH: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   // Two chain catenary curves between pillars at different heights
   const chainConfigs = [
@@ -4825,7 +5552,7 @@ function drawInfernalChains(
         seg % 2 === 0 ? 1.2 * s : linkLen * 0.55,
         linkAngle,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -4843,7 +5570,7 @@ function drawInfernalChains(
       "#908070",
       "#605040",
       "#aa44ff",
-      0.2 + Math.sin(time * 2) * 0.15,
+      0.2 + Math.sin(time * 2) * 0.15
     );
   }
 }
@@ -4859,12 +5586,12 @@ function drawInfernalVines(
   pH: number,
   s: number,
   time: number,
-  seedX: number,
+  seedX: number
 ): void {
   ctx.lineCap = "round";
 
   // Vine configs: start from pillar positions, crawl upward
-  const vineSeeds: Array<{
+  const vineSeeds: {
     startX: number;
     startY: number;
     ctrlDx: number;
@@ -4872,80 +5599,80 @@ function drawInfernalVines(
     endDx: number;
     endDy: number;
     leaves: number;
-  }> = [
+  }[] = [
     {
-      startX: lPx - 6 * s,
-      startY: lPy,
       ctrlDx: -8,
       ctrlDy: -25,
       endDx: -4,
       endDy: -50,
       leaves: 4,
+      startX: lPx - 6 * s,
+      startY: lPy,
     },
     {
-      startX: lPx + 4 * s,
-      startY: lPy - 10 * s,
       ctrlDx: 6,
       ctrlDy: -30,
       endDx: 2,
       endDy: -55,
       leaves: 3,
+      startX: lPx + 4 * s,
+      startY: lPy - 10 * s,
     },
     {
-      startX: rPx + 6 * s,
-      startY: rPy,
       ctrlDx: 8,
       ctrlDy: -28,
       endDx: 5,
       endDy: -52,
       leaves: 4,
+      startX: rPx + 6 * s,
+      startY: rPy,
     },
     {
-      startX: rPx - 4 * s,
-      startY: rPy - 8 * s,
       ctrlDx: -6,
       ctrlDy: -32,
       endDx: -3,
       endDy: -48,
       leaves: 3,
+      startX: rPx - 4 * s,
+      startY: rPy - 8 * s,
     },
     // Vines on the arch
     {
-      startX: archMidX - 12 * s,
-      startY: archMidY + 10 * s,
       ctrlDx: -4,
       ctrlDy: 8,
       endDx: -14,
       endDy: 20,
       leaves: 3,
+      startX: archMidX - 12 * s,
+      startY: archMidY + 10 * s,
     },
     {
-      startX: archMidX + 12 * s,
-      startY: archMidY + 10 * s,
       ctrlDx: 4,
       ctrlDy: 8,
       endDx: 14,
       endDy: 18,
       leaves: 3,
+      startX: archMidX + 12 * s,
+      startY: archMidY + 10 * s,
     },
     // Vine draping down from arch center
     {
-      startX: archMidX,
-      startY: archMidY + 6 * s,
       ctrlDx: -3,
       ctrlDy: 12,
       endDx: -5,
       endDy: 28,
       leaves: 5,
+      startX: archMidX,
+      startY: archMidY + 6 * s,
     },
     {
-      startX: archMidX + 2 * s,
-      startY: archMidY + 6 * s,
       ctrlDx: 4,
       ctrlDy: 14,
       endDx: 6,
       endDy: 26,
       leaves: 4,
+      startX: archMidX + 2 * s,
+      startY: archMidY + 6 * s,
     },
   ];
 
@@ -4997,7 +5724,7 @@ function drawInfernalVines(
         leafSize * 0.45,
         leafSide * 0.4,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#2a6030";
@@ -5009,7 +5736,7 @@ function drawInfernalVines(
         leafSize * 0.3,
         leafSide * 0.4,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5024,13 +5751,15 @@ function drawInfernalParticles(
   s: number,
   time: number,
   seedX: number,
-  pulse: number,
+  pulse: number
 ): void {
   // Purple/violet embers drifting upward
   for (let i = 0; i < 10; i++) {
     const phase = time * 1.8 + i * 1.1 + seedX * 0.3;
     const life = ((time * 0.7 + i * 0.6) % 3.5) / 3.5;
-    if (life > 0.92) continue;
+    if (life > 0.92) {
+      continue;
+    }
     const angle = (i / 10) * Math.PI * 2 + Math.sin(phase * 0.3) * 0.6;
     const dist = (6 + life * 28) * s;
     const ex = cx + Math.cos(angle) * dist + Math.sin(phase * 1.2) * 3 * s;
@@ -5063,7 +5792,7 @@ function drawInfernalParticles(
         5 * s,
         Math.sin(wPhase * 0.25) * 0.35,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5076,7 +5805,7 @@ function drawInfernalParticles(
     5 * s,
     cx,
     cy - 20 * s,
-    50 * s,
+    50 * s
   );
   ambientGlow.addColorStop(0, `rgba(100,40,180,${0.06 + pulse * 0.04})`);
   ambientGlow.addColorStop(0.5, `rgba(60,20,120,${0.03 + pulse * 0.02})`);
@@ -5102,7 +5831,7 @@ function drawIsoFaceQuad(
   v: number,
   wu: number,
   wv: number,
-  face: "left" | "right",
+  face: "left" | "right"
 ): void {
   const iW = W * ISO_COS;
   const iD = D * ISO_SIN;
@@ -5136,7 +5865,7 @@ function drawWindowOnFace(
   frameColor: string,
   glassColor: string,
   sillColor: string,
-  arched: boolean = false,
+  arched: boolean = false
 ): void {
   const iW = W * ISO_COS;
   const iD = D * ISO_SIN;
@@ -5161,7 +5890,7 @@ function drawWindowOnFace(
     v - 0.008,
     wu + 0.01,
     wv + 0.016,
-    face,
+    face
   );
   ctx.fill();
 
@@ -5228,7 +5957,7 @@ function drawWindowOnFace(
     v - 0.01,
     wu + 0.006,
     sillH,
-    face,
+    face
   );
   ctx.fill();
 }
@@ -5257,7 +5986,7 @@ function drawWingSection(
     fTop: string;
     fLeft: string;
     fRight: string;
-  },
+  }
 ): void {
   const Ws = W * s;
   const Ds = D * s;
@@ -5277,7 +6006,7 @@ function drawWingSection(
     fndH,
     colors.fTop,
     colors.fLeft,
-    colors.fRight,
+    colors.fRight
   );
 
   // Walls
@@ -5290,7 +6019,7 @@ function drawWingSection(
     Hs,
     colors.sTop,
     colors.sLeft,
-    colors.sRight,
+    colors.sRight
   );
 
   // Mortar lines on left face
@@ -5311,12 +6040,12 @@ function drawWingSection(
   ctx.fillStyle = colors.sDark;
   ctx.globalAlpha = 0.35;
   ctx.beginPath();
-  drawIsoFaceQuad(ctx, bx, by, Ws, Ds, Hs, 0, 0, 0.04, 1.0, "left");
+  drawIsoFaceQuad(ctx, bx, by, Ws, Ds, Hs, 0, 0, 0.04, 1, "left");
   ctx.fill();
   ctx.beginPath();
-  drawIsoFaceQuad(ctx, bx, by, Ws, Ds, Hs, 0.96, 0, 0.04, 1.0, "left");
+  drawIsoFaceQuad(ctx, bx, by, Ws, Ds, Hs, 0.96, 0, 0.04, 1, "left");
   ctx.fill();
-  ctx.globalAlpha = 1.0;
+  ctx.globalAlpha = 1;
 
   // Cornice on left face (extended beyond wall like pavilion)
   ctx.fillStyle = colors.sCornice;
@@ -5558,7 +6287,7 @@ function drawWingSection(
         colors.sDark,
         colors.glass,
         colors.sLight,
-        true,
+        true
       );
     }
   }
@@ -5584,7 +6313,7 @@ function drawWingSection(
         colors.sDark,
         colors.glass,
         colors.sLight,
-        true,
+        true
       );
     }
   }
@@ -5634,20 +6363,20 @@ export function renderNassauHall(p: LandmarkParams): void {
 
   // === SHARED COLORS ===
   const C = {
-    sTop: "#A1887F",
-    sLeft: "#937363",
-    sRight: "#6D4C41",
+    fLeft: "#757575",
+    fRight: "#5D5D5D",
+    fTop: "#8D8D8D",
+    glass: "#1a1a2e",
+    rfDark: "#2D5A3A",
     rfFront: "#4A7C59",
     rfSide: "#3D6B4A",
     rfTop: "#5D8A6B",
-    rfDark: "#2D5A3A",
-    sDark: "#5D4037",
-    sLight: "#BCAAA4",
     sCornice: "#EFEBE9",
-    glass: "#1a1a2e",
-    fTop: "#8D8D8D",
-    fLeft: "#757575",
-    fRight: "#5D5D5D",
+    sDark: "#5D4037",
+    sLeft: "#937363",
+    sLight: "#BCAAA4",
+    sRight: "#6D4C41",
+    sTop: "#A1887F",
   };
   const pTop = "#A89080";
   const pLeft = "#8D6E63";
@@ -5667,10 +6396,12 @@ export function renderNassauHall(p: LandmarkParams): void {
       70 * s,
       0.3,
       "0,0,0",
-      z,
+      z
     );
   }
-  if (shadowOnly) return;
+  if (shadowOnly) {
+    return;
+  }
 
   // === 2. LEFT WING (behind pavilion — drawn first) ===
   drawWingSection(ctx, lwBx, lwBy, wingW, wingD, wingH, roofH, s, C);
@@ -5687,7 +6418,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     pavFndH,
     C.fTop,
     C.fLeft,
-    C.fRight,
+    C.fRight
   );
 
   // Walls
@@ -5700,7 +6431,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     pavH * s,
     pTop,
     pLeft,
-    pRight,
+    pRight
   );
 
   // Mortar
@@ -5720,8 +6451,8 @@ export function renderNassauHall(p: LandmarkParams): void {
     0,
     0,
     0.05,
-    1.0,
-    "left",
+    1,
+    "left"
   );
   ctx.fill();
   ctx.beginPath();
@@ -5735,8 +6466,8 @@ export function renderNassauHall(p: LandmarkParams): void {
     0.95,
     0,
     0.05,
-    1.0,
-    "left",
+    1,
+    "left"
   );
   ctx.fill();
 
@@ -5752,8 +6483,8 @@ export function renderNassauHall(p: LandmarkParams): void {
     0,
     0,
     0.05,
-    1.0,
-    "right",
+    1,
+    "right"
   );
   ctx.fill();
   ctx.beginPath();
@@ -5767,11 +6498,11 @@ export function renderNassauHall(p: LandmarkParams): void {
     0.95,
     0,
     0.05,
-    1.0,
-    "right",
+    1,
+    "right"
   );
   ctx.fill();
-  ctx.globalAlpha = 1.0;
+  ctx.globalAlpha = 1;
 
   // Cornice on left face
   ctx.fillStyle = C.sCornice;
@@ -5828,7 +6559,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     2 * s,
     "#D5D5D5",
     "#C0C0C0",
-    "#A8A8A8",
+    "#A8A8A8"
   );
 
   // Cupola prism (W = D for correct iso)
@@ -5841,7 +6572,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     cupH,
     "#F0F0F0",
     "#DEDEDE",
-    "#C0C0C0",
+    "#C0C0C0"
   );
 
   // Arched openings on left face
@@ -5863,7 +6594,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       "#D0D0D0",
       "#37474F",
       "#DEDEDE",
-      true,
+      true
     );
   }
 
@@ -5886,7 +6617,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       "#B8B8B8",
       "#2D3A42",
       "#C0C0C0",
-      true,
+      true
     );
   }
 
@@ -5901,7 +6632,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     cupID + 0.8 * s,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = "#C8C8C8";
@@ -5923,13 +6654,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx - domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx,
-    domePeak,
+    domePeak
   );
   ctx.quadraticCurveTo(
     bx + domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx + domeRx,
-    domeBase,
+    domeBase
   );
   ctx.ellipse(bx, domeBase, domeRx, domeRy, 0, 0, Math.PI);
   ctx.closePath();
@@ -5940,7 +6671,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx - domeRx,
     domePeak,
     bx + domeRx * 0.5,
-    domeBase + domeRy,
+    domeBase + domeRy
   );
   domeG.addColorStop(0, C.rfTop);
   domeG.addColorStop(0.3, C.rfFront);
@@ -5953,13 +6684,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx - domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx,
-    domePeak,
+    domePeak
   );
   ctx.quadraticCurveTo(
     bx + domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx + domeRx,
-    domeBase,
+    domeBase
   );
   ctx.ellipse(bx, domeBase, domeRx, domeRy, 0, 0, Math.PI);
   ctx.closePath();
@@ -5974,13 +6705,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx - domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx,
-    domePeak,
+    domePeak
   );
   ctx.quadraticCurveTo(
     bx + domeRx * 0.55,
     domePeak + domeH * 0.08,
     bx + domeRx,
-    domeBase,
+    domeBase
   );
   ctx.stroke();
 
@@ -6005,7 +6736,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       ribStartX * 0.25 + bx * 0.75,
       domePeak + domeH * 0.15,
       bx,
-      domePeak + domeH * 0.05,
+      domePeak + domeH * 0.05
     );
     ctx.stroke();
   }
@@ -6022,7 +6753,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     lanternH,
     "#F5F5F5",
     "#E0E0E0",
-    "#CCCCCC",
+    "#CCCCCC"
   );
 
   // Pediment (left face triangular gable)
@@ -6097,7 +6828,9 @@ export function renderNassauHall(p: LandmarkParams): void {
   // Pavilion windows (arched) on left face
   for (let row = 0; row < 2; row++) {
     for (let col = 0; col < 3; col++) {
-      if (row === 1 && col === 1) continue;
+      if (row === 1 && col === 1) {
+        continue;
+      }
       const u = 0.06 + col * 0.32;
       const v = row === 0 ? 0.52 : 0.1;
       drawWindowOnFace(
@@ -6116,7 +6849,7 @@ export function renderNassauHall(p: LandmarkParams): void {
         C.sDark,
         C.glass,
         C.sLight,
-        true,
+        true
       );
     }
   }
@@ -6142,7 +6875,7 @@ export function renderNassauHall(p: LandmarkParams): void {
         C.sDark,
         C.glass,
         C.sLight,
-        true,
+        true
       );
     }
   }
@@ -6166,7 +6899,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     dV - 0.01,
     dWU + 0.04,
     dWV + 0.03,
-    "left",
+    "left"
   );
   ctx.fill();
 
@@ -6220,7 +6953,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     dV,
     dWU,
     dWV,
-    "left",
+    "left"
   );
   ctx.fill();
 
@@ -6296,7 +7029,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       cVS,
       cWu + 0.02,
       0.025,
-      "left",
+      "left"
     );
     ctx.fill();
 
@@ -6321,7 +7054,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       cVS + 0.025,
       cWu,
       cVE - cVS - 0.025,
-      "left",
+      "left"
     );
     ctx.fill();
 
@@ -6353,7 +7086,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       cVE,
       cWu + 0.03,
       0.035,
-      "left",
+      "left"
     );
     ctx.fill();
 
@@ -6412,9 +7145,9 @@ export function renderNassauHall(p: LandmarkParams): void {
 
   // Princeton flag
   const flagAttachY = spireBase - spireH * 0.55;
-  const sway1 = Math.sin(time * 2.0) * 1.5 * s;
-  const sway2 = Math.sin(time * 2.0 + 1.2) * 2.2 * s;
-  const sway3 = Math.sin(time * 2.0 + 2.4) * 1.8 * s;
+  const sway1 = Math.sin(time * 2) * 1.5 * s;
+  const sway2 = Math.sin(time * 2 + 1.2) * 2.2 * s;
+  const sway3 = Math.sin(time * 2 + 2.4) * 1.8 * s;
   const flagW = 10 * s;
   const flagH = 5 * s;
 
@@ -6432,13 +7165,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx + flagW * 0.4,
     flagAttachY + sway1 * 0.3,
     bx + flagW,
-    flagAttachY + sway1 * 0.15,
+    flagAttachY + sway1 * 0.15
   );
   ctx.quadraticCurveTo(
     bx + flagW * 0.7,
     flagAttachY - flagH * 0.35 + sway2 * 0.3,
     bx + flagW,
-    flagAttachY - flagH * 0.35 + sway3 * 0.2,
+    flagAttachY - flagH * 0.35 + sway3 * 0.2
   );
   ctx.lineTo(bx + 1 * s, flagAttachY - flagH * 0.35);
   ctx.closePath();
@@ -6451,13 +7184,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx + flagW * 0.5,
     flagAttachY - flagH * 0.35 + sway2 * 0.25,
     bx + flagW,
-    flagAttachY - flagH * 0.35 + sway3 * 0.2,
+    flagAttachY - flagH * 0.35 + sway3 * 0.2
   );
   ctx.quadraticCurveTo(
     bx + flagW * 0.7,
     flagAttachY - flagH * 0.7 + sway3 * 0.3,
     bx + flagW,
-    flagAttachY - flagH * 0.7 + sway2 * 0.15,
+    flagAttachY - flagH * 0.7 + sway2 * 0.15
   );
   ctx.lineTo(bx + 1 * s, flagAttachY - flagH * 0.7);
   ctx.closePath();
@@ -6470,13 +7203,13 @@ export function renderNassauHall(p: LandmarkParams): void {
     bx + flagW * 0.5,
     flagAttachY - flagH * 0.7 + sway3 * 0.25,
     bx + flagW,
-    flagAttachY - flagH * 0.7 + sway2 * 0.15,
+    flagAttachY - flagH * 0.7 + sway2 * 0.15
   );
   ctx.quadraticCurveTo(
     bx + flagW * 0.7,
     flagAttachY - flagH + sway1 * 0.2,
     bx + flagW,
-    flagAttachY - flagH + sway1 * 0.1,
+    flagAttachY - flagH + sway1 * 0.1
   );
   ctx.lineTo(bx + 1 * s, flagAttachY - flagH);
   ctx.closePath();
@@ -6504,7 +7237,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       pedH,
       "#C4B5A5",
       "#A89585",
-      "#8D7565",
+      "#8D7565"
     );
 
     // Pedestal trim ring
@@ -6517,7 +7250,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0.8 * s,
       "#D5C8B8",
       "#BCAA98",
-      "#A08878",
+      "#A08878"
     );
 
     const topY = ty - pedH + pedW * ISO_SIN;
@@ -6537,7 +7270,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       bodyRy * 0.6,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6548,7 +7281,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0,
       tx,
       bodyY,
-      bodyRx,
+      bodyRx
     );
     haunchG.addColorStop(0, "#A89078");
     haunchG.addColorStop(0.6, "#8D7565");
@@ -6567,7 +7300,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     ctx.moveTo(tx + facing * legSpread - legW * 0.5, bodyY + bodyRy * 0.3);
     ctx.lineTo(
       tx + facing * legSpread + legW * 0.5,
-      bodyY + bodyRy * 0.3 + ((legW * ISO_SIN) / ISO_COS) * 0.5,
+      bodyY + bodyRy * 0.3 + ((legW * ISO_SIN) / ISO_COS) * 0.5
     );
     ctx.lineTo(tx + facing * legSpread + legW * 0.5, topY - 0.5 * s);
     ctx.lineTo(tx + facing * legSpread - legW * 0.5, topY - 0.5 * s);
@@ -6578,19 +7311,19 @@ export function renderNassauHall(p: LandmarkParams): void {
     ctx.beginPath();
     ctx.moveTo(
       tx + facing * (legSpread + 2.5 * s) - legW * 0.5,
-      bodyY + bodyRy * 0.1,
+      bodyY + bodyRy * 0.1
     );
     ctx.lineTo(
       tx + facing * (legSpread + 2.5 * s) + legW * 0.5,
-      bodyY + bodyRy * 0.1 + ((legW * ISO_SIN) / ISO_COS) * 0.5,
+      bodyY + bodyRy * 0.1 + ((legW * ISO_SIN) / ISO_COS) * 0.5
     );
     ctx.lineTo(
       tx + facing * (legSpread + 2.5 * s) + legW * 0.5,
-      topY - 0.5 * s,
+      topY - 0.5 * s
     );
     ctx.lineTo(
       tx + facing * (legSpread + 2.5 * s) - legW * 0.5,
-      topY - 0.5 * s,
+      topY - 0.5 * s
     );
     ctx.closePath();
     ctx.fill();
@@ -6605,7 +7338,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       1.8 * s,
       facing * 0.2,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6620,7 +7353,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0,
       headX,
       headY,
-      headR,
+      headR
     );
     headG.addColorStop(0, "#C4AA90");
     headG.addColorStop(0.5, "#A89078");
@@ -6640,7 +7373,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       1 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6669,7 +7402,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0.5 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.ellipse(
       headX + facing * 2.5 * s,
@@ -6678,7 +7411,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0.5 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6690,14 +7423,14 @@ export function renderNassauHall(p: LandmarkParams): void {
       headY - 0.7 * s,
       0.25 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.arc(
       headX + facing * 2.3 * s,
       headY - 0.7 * s,
       0.25 * s,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6711,7 +7444,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       0.35 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -6726,7 +7459,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       tx - facing * 5 * s + tw,
       bodyY - 4 * s,
       tx - facing * 3.5 * s,
-      bodyY - 7 * s,
+      bodyY - 7 * s
     );
     ctx.stroke();
 
@@ -6762,7 +7495,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       stepH,
       "#D5CCC4",
       "#B0A090",
-      "#8D7E72",
+      "#8D7E72"
     );
   }
   drawTigerStatue(statRX, statRY, -1);
@@ -6786,7 +7519,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     0,
     entrX,
     entrY,
-    8 * s,
+    8 * s
   );
   doorGlow.addColorStop(0, `rgba(255,200,120,${doorGlowA})`);
   doorGlow.addColorStop(1, "rgba(255,200,120,0)");
@@ -6799,7 +7532,7 @@ export function renderNassauHall(p: LandmarkParams): void {
     3 * s,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }

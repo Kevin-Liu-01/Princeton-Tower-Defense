@@ -17,7 +17,7 @@ function buildFilename(prefix: string, format: ScreenshotFormat): string {
   const ext = format === "image/jpeg" ? "jpg" : "png";
   const ts = new Date()
     .toISOString()
-    .replace(/[:.]/g, "-")
+    .replaceAll(/[:.]/g, "-")
     .replace("T", "_")
     .slice(0, 19);
   return `${prefix}_${ts}.${ext}`;
@@ -28,7 +28,7 @@ function downloadBlob(blob: Blob, filename: string): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  document.body.appendChild(a);
+  document.body.append(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);

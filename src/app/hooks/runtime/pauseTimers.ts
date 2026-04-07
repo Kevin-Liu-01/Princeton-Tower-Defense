@@ -1,4 +1,5 @@
 import type { MutableRefObject } from "react";
+
 import type { PausableTimeoutEntry } from "../../game/state";
 
 interface PauseTimerRefs {
@@ -42,14 +43,14 @@ export function clearAllTimersImpl({
 export function setPausableTimeoutImpl(
   refs: PauseTimerRefs,
   callback: () => void,
-  delay: number,
+  delay: number
 ): number {
   const id = ++refs.pausableTimeoutIdCounter.current;
   const now = Date.now();
 
   const entry: PausableTimeoutEntry = {
-    id,
     callback,
+    id,
     remainingTime: delay,
     startedAt: now,
     timeoutId: null,
@@ -62,7 +63,7 @@ export function setPausableTimeoutImpl(
 
   entry.timeoutId = setTimeout(() => {
     refs.pausableTimeoutsRef.current = refs.pausableTimeoutsRef.current.filter(
-      (timeout) => timeout.id !== id,
+      (timeout) => timeout.id !== id
     );
     callback();
   }, delay);
@@ -96,9 +97,10 @@ export function resumeAllTimeoutsImpl(refs: PauseTimerRefs): void {
     }
     entry.startedAt = now;
     entry.timeoutId = setTimeout(() => {
-      refs.pausableTimeoutsRef.current = refs.pausableTimeoutsRef.current.filter(
-        (timeout) => timeout.id !== entry.id,
-      );
+      refs.pausableTimeoutsRef.current =
+        refs.pausableTimeoutsRef.current.filter(
+          (timeout) => timeout.id !== entry.id
+        );
       entry.callback();
     }, entry.remainingTime);
   });

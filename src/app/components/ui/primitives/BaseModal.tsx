@@ -42,7 +42,7 @@ export const BaseModal: React.FC<BaseModalProps> = ({
         onClose();
       }
     },
-    [closeOnBackdropClick, onClose],
+    [closeOnBackdropClick, onClose]
   );
 
   useEffect(() => {

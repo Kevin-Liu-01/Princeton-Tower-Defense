@@ -4,7 +4,7 @@ import type { Position } from "../../types";
 // Path rendering now happens in the runtime static-layer pipeline.
 export function renderPath(
   _ctx: CanvasRenderingContext2D,
-  _points: Position[],
+  _points: Position[]
 ): void {
   void _ctx;
   void _points;

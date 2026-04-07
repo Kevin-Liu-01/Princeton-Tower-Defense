@@ -11,26 +11,57 @@ export type EnemyCategory =
   | "special";
 
 const SHARED_ENEMY_TYPES = new Set([
-  "frosh", "sophomore", "junior", "senior", "gradstudent",
-  "archer", "mage", "crossbowman", "warlock", "hexer",
-  "harpy", "wyvern",
-  "specter", "berserker", "necromancer", "shadow_knight", "cultist", "plaguebearer",
-  "banshee", "assassin", "infernal",
-  "athlete", "tiger_fan",
+  "frosh",
+  "sophomore",
+  "junior",
+  "senior",
+  "gradstudent",
+  "archer",
+  "mage",
+  "crossbowman",
+  "warlock",
+  "hexer",
+  "harpy",
+  "wyvern",
+  "specter",
+  "berserker",
+  "necromancer",
+  "shadow_knight",
+  "cultist",
+  "plaguebearer",
+  "banshee",
+  "assassin",
+  "infernal",
+  "athlete",
+  "tiger_fan",
   "mascot",
 ]);
 
 const ENEMY_CATEGORY_MAP: Record<string, EnemyCategory> = {
-  frosh: "academic", sophomore: "academic", junior: "academic",
-  senior: "academic", gradstudent: "academic",
-  archer: "ranged", mage: "ranged", crossbowman: "ranged",
-  warlock: "ranged", hexer: "ranged",
-  harpy: "flying", wyvern: "flying",
-  specter: "undead", berserker: "undead", necromancer: "undead",
-  shadow_knight: "undead", cultist: "undead", plaguebearer: "undead",
-  banshee: "elemental", assassin: "elemental", infernal: "elemental",
-  athlete: "forest", tiger_fan: "forest",
+  archer: "ranged",
+  assassin: "elemental",
+  athlete: "forest",
+  banshee: "elemental",
+  berserker: "undead",
+  crossbowman: "ranged",
+  cultist: "undead",
+  frosh: "academic",
+  gradstudent: "academic",
+  harpy: "flying",
+  hexer: "ranged",
+  infernal: "elemental",
+  junior: "academic",
+  mage: "ranged",
   mascot: "special",
+  necromancer: "undead",
+  plaguebearer: "undead",
+  senior: "academic",
+  shadow_knight: "undead",
+  sophomore: "academic",
+  specter: "undead",
+  tiger_fan: "forest",
+  warlock: "ranged",
+  wyvern: "flying",
 };
 
 interface RegionPalette {
@@ -42,46 +73,50 @@ interface RegionPalette {
 }
 
 const REGION_PALETTES: Record<string, RegionPalette> = {
-  swamp: {
-    primary: "#2d4a2d",
-    secondary: "#3a5a3a",
-    accent: "#6b8f3a",
-    dark: "#1a2e1a",
-    particleRgb: "107, 143, 58",
-  },
   desert: {
-    primary: "#c4a35a",
-    secondary: "#a88050",
     accent: "#daa520",
     dark: "#7a5c30",
     particleRgb: "218, 165, 32",
+    primary: "#c4a35a",
+    secondary: "#a88050",
   },
-  winter: {
-    primary: "#8ab0d0",
-    secondary: "#a0c4e0",
-    accent: "#c0e0ff",
-    dark: "#4a6888",
-    particleRgb: "160, 196, 224",
+  swamp: {
+    accent: "#6b8f3a",
+    dark: "#1a2e1a",
+    particleRgb: "107, 143, 58",
+    primary: "#2d4a2d",
+    secondary: "#3a5a3a",
   },
   volcanic: {
-    primary: "#8b3a2a",
-    secondary: "#a04030",
     accent: "#ff6633",
     dark: "#3a1510",
     particleRgb: "255, 102, 51",
+    primary: "#8b3a2a",
+    secondary: "#a04030",
+  },
+  winter: {
+    accent: "#c0e0ff",
+    dark: "#4a6888",
+    particleRgb: "160, 196, 224",
+    primary: "#8ab0d0",
+    secondary: "#a0c4e0",
   },
 };
 
-interface SwayConfig { speed: number; amtX: number; amtY: number }
+interface SwayConfig {
+  speed: number;
+  amtX: number;
+  amtY: number;
+}
 
 const CATEGORY_SWAY: Record<EnemyCategory, SwayConfig> = {
-  academic: { speed: 1.0, amtX: 0.003, amtY: 0.002 },
-  ranged:   { speed: 0.8, amtX: 0.003, amtY: 0.002 },
-  flying:   { speed: 0.9, amtX: 0.004, amtY: 0.003 },
-  undead:   { speed: 0.9, amtX: 0.004, amtY: 0.003 },
-  elemental:{ speed: 1.0, amtX: 0.004, amtY: 0.003 },
-  forest:   { speed: 0.95, amtX: 0.0035, amtY: 0.0025 },
-  special:  { speed: 0.8, amtX: 0.003, amtY: 0.002 },
+  academic: { amtX: 0.003, amtY: 0.002, speed: 1 },
+  elemental: { amtX: 0.004, amtY: 0.003, speed: 1 },
+  flying: { amtX: 0.004, amtY: 0.003, speed: 0.9 },
+  forest: { amtX: 0.0035, amtY: 0.0025, speed: 0.95 },
+  ranged: { amtX: 0.003, amtY: 0.002, speed: 0.8 },
+  special: { amtX: 0.003, amtY: 0.002, speed: 0.8 },
+  undead: { amtX: 0.004, amtY: 0.003, speed: 0.9 },
 };
 
 export function drawRegionOverlay(
@@ -92,31 +127,90 @@ export function drawRegionOverlay(
   enemyType: string,
   region: MapTheme,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
-  if (region === "grassland" || !SHARED_ENEMY_TYPES.has(enemyType)) return;
+  if (region === "grassland" || !SHARED_ENEMY_TYPES.has(enemyType)) {
+    return;
+  }
   const palette = REGION_PALETTES[region];
-  if (!palette) return;
+  if (!palette) {
+    return;
+  }
 
   const category = ENEMY_CATEGORY_MAP[enemyType];
-  if (!category) return;
+  if (!category) {
+    return;
+  }
 
   const cfg = CATEGORY_SWAY[category];
-  const bodySway = getIdleSway(time, cfg.speed, size * cfg.amtX, size * cfg.amtY);
+  const bodySway = getIdleSway(
+    time,
+    cfg.speed,
+    size * cfg.amtX,
+    size * cfg.amtY
+  );
 
   switch (region) {
-    case "swamp":
-      drawSwampOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
+    case "swamp": {
+      drawSwampOverlay(
+        ctx,
+        x,
+        y,
+        size,
+        category,
+        enemyType,
+        palette,
+        time,
+        zoom,
+        bodySway
+      );
       break;
-    case "desert":
-      drawDesertOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
+    }
+    case "desert": {
+      drawDesertOverlay(
+        ctx,
+        x,
+        y,
+        size,
+        category,
+        enemyType,
+        palette,
+        time,
+        zoom,
+        bodySway
+      );
       break;
-    case "winter":
-      drawWinterOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
+    }
+    case "winter": {
+      drawWinterOverlay(
+        ctx,
+        x,
+        y,
+        size,
+        category,
+        enemyType,
+        palette,
+        time,
+        zoom,
+        bodySway
+      );
       break;
-    case "volcanic":
-      drawVolcanicOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
+    }
+    case "volcanic": {
+      drawVolcanicOverlay(
+        ctx,
+        x,
+        y,
+        size,
+        category,
+        enemyType,
+        palette,
+        time,
+        zoom,
+        bodySway
+      );
       break;
+    }
   }
 }
 
@@ -134,7 +228,7 @@ function drawSwampOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
-  sway: { dx: number; dy: number },
+  sway: { dx: number; dy: number }
 ): void {
   const bx = x + sway.dx;
   const by = y + sway.dy;
@@ -156,8 +250,11 @@ function drawSwampOverlay(
 
 function drawDrippingMoss(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   ctx.strokeStyle = "rgba(60, 100, 40, 0.5)";
   ctx.lineWidth = 2 * zoom;
@@ -170,7 +267,7 @@ function drawDrippingMoss(
       mossX + Math.sin(time * 3 + i) * size * 0.03,
       y - size * 0.15 + dripLen * 0.5,
       mossX,
-      y - size * 0.15 + dripLen,
+      y - size * 0.15 + dripLen
     );
     ctx.stroke();
   }
@@ -182,23 +279,37 @@ function drawDrippingMoss(
     x + Math.sin(time) * size * 0.1,
     y + size * 0.45 + dripPhase * size * 0.1,
     size * 0.015 * (1 - dripPhase * 0.5),
-    0, Math.PI * 2,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 }
 
 function drawSwampHood(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Outer hood shell — dark mossy fabric
   ctx.fillStyle = "rgba(30, 55, 22, 0.62)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y - size * 0.42);
-  ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.58, x - size * 0.12, y - size * 0.72);
+  ctx.quadraticCurveTo(
+    x - size * 0.32,
+    y - size * 0.58,
+    x - size * 0.12,
+    y - size * 0.72
+  );
   ctx.quadraticCurveTo(x, y - size * 0.78, x + size * 0.12, y - size * 0.72);
-  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.58, x + size * 0.24, y - size * 0.42);
+  ctx.quadraticCurveTo(
+    x + size * 0.32,
+    y - size * 0.58,
+    x + size * 0.24,
+    y - size * 0.42
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -207,7 +318,12 @@ function drawSwampHood(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.18, y - size * 0.44);
   ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.56, x, y - size * 0.66);
-  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.56, x + size * 0.18, y - size * 0.44);
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    y - size * 0.56,
+    x + size * 0.18,
+    y - size * 0.44
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -226,11 +342,27 @@ function drawSwampHood(
   // Lichen/moss patches on fabric
   ctx.fillStyle = "rgba(90, 130, 50, 0.4)";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.1, y - size * 0.58, size * 0.035, size * 0.025, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.1,
+    y - size * 0.58,
+    size * 0.035,
+    size * 0.025,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(70, 110, 45, 0.35)";
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.08, y - size * 0.54, size * 0.025, size * 0.02, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.08,
+    y - size * 0.54,
+    size * 0.025,
+    size * 0.02,
+    0.4,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Rope tie at chin
@@ -254,7 +386,7 @@ function drawSwampHood(
       vx + drift,
       y - size * 0.44 + vLen * 0.5,
       vx + drift * 0.6,
-      y - size * 0.44 + vLen,
+      y - size * 0.44 + vLen
     );
     ctx.stroke();
   }
@@ -270,8 +402,11 @@ function drawSwampHood(
 
 function drawFungalGrowths(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Mushroom caps growing on shoulders
   const mushColors = ["#8b6f4e", "#6b8e23", "#9acd32"];
@@ -292,22 +427,45 @@ function drawFungalGrowths(
     // Spots
     ctx.fillStyle = "rgba(255, 255, 200, 0.5)";
     ctx.beginPath();
-    ctx.arc(mx - mSize * 0.3, my - mSize * 0.1 + bob, mSize * 0.15, 0, Math.PI * 2);
-    ctx.arc(mx + mSize * 0.2, my - mSize * 0.2 + bob, mSize * 0.1, 0, Math.PI * 2);
+    ctx.arc(
+      mx - mSize * 0.3,
+      my - mSize * 0.1 + bob,
+      mSize * 0.15,
+      0,
+      Math.PI * 2
+    );
+    ctx.arc(
+      mx + mSize * 0.2,
+      my - mSize * 0.2 + bob,
+      mSize * 0.1,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
   // Algae stain on torso
   ctx.fillStyle = "rgba(50, 100, 40, 0.2)";
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.05, y + size * 0.1, size * 0.12, size * 0.08, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.05,
+    y + size * 0.1,
+    size * 0.12,
+    size * 0.08,
+    0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
 function drawSwampWingMoss(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Trailing algae strands from wings
   ctx.strokeStyle = "rgba(60, 100, 40, 0.4)";
@@ -321,7 +479,7 @@ function drawSwampWingMoss(
       x + side * (size * 0.3 + wOffset) + Math.sin(time * 2 + w) * size * 0.05,
       y + size * 0.1,
       x + side * (size * 0.2 + wOffset),
-      y + size * 0.3 + Math.sin(time * 1.5 + w) * size * 0.05,
+      y + size * 0.3 + Math.sin(time * 1.5 + w) * size * 0.05
     );
     ctx.stroke();
   }
@@ -329,8 +487,11 @@ function drawSwampWingMoss(
 
 function drawSwampParticles(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Floating spore particles
   for (let i = 0; i < 4; i++) {
@@ -359,12 +520,16 @@ function drawDesertOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
-  sway: { dx: number; dy: number },
+  sway: { dx: number; dy: number }
 ): void {
   const bx = x + sway.dx;
   const by = y + sway.dy;
 
-  if (category === "ranged" || category === "undead" || category === "elemental") {
+  if (
+    category === "ranged" ||
+    category === "undead" ||
+    category === "elemental"
+  ) {
     drawDesertHeadWrap(ctx, bx, by, size, time, zoom);
   }
   if (category === "academic" || category === "forest") {
@@ -380,8 +545,11 @@ function drawDesertOverlay(
 
 function drawDesertHeadWrap(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   const windSway = Math.sin(time * 2.8) * size * 0.05;
 
@@ -390,7 +558,12 @@ function drawDesertHeadWrap(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.48);
   ctx.quadraticCurveTo(x - size * 0.26, y - size * 0.66, x, y - size * 0.74);
-  ctx.quadraticCurveTo(x + size * 0.26, y - size * 0.66, x + size * 0.22, y - size * 0.48);
+  ctx.quadraticCurveTo(
+    x + size * 0.26,
+    y - size * 0.66,
+    x + size * 0.22,
+    y - size * 0.48
+  );
   ctx.lineTo(x + size * 0.18, y - size * 0.42);
   ctx.quadraticCurveTo(x, y - size * 0.64, x - size * 0.18, y - size * 0.42);
   ctx.closePath();
@@ -401,7 +574,12 @@ function drawDesertHeadWrap(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.16, y - size * 0.5);
   ctx.quadraticCurveTo(x - size * 0.2, y - size * 0.6, x, y - size * 0.68);
-  ctx.quadraticCurveTo(x + size * 0.18, y - size * 0.58, x + size * 0.14, y - size * 0.48);
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    y - size * 0.58,
+    x + size * 0.14,
+    y - size * 0.48
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -417,13 +595,17 @@ function drawDesertHeadWrap(
   ctx.beginPath();
   ctx.moveTo(x + size * 0.18, y - size * 0.5);
   ctx.quadraticCurveTo(
-    x + size * 0.32 + windSway * 0.6, y - size * 0.35,
-    x + size * 0.28 + windSway, y - size * 0.15,
+    x + size * 0.32 + windSway * 0.6,
+    y - size * 0.35,
+    x + size * 0.28 + windSway,
+    y - size * 0.15
   );
   ctx.lineTo(x + size * 0.24 + windSway * 0.8, y - size * 0.12);
   ctx.quadraticCurveTo(
-    x + size * 0.26 + windSway * 0.4, y - size * 0.28,
-    x + size * 0.14, y - size * 0.44,
+    x + size * 0.26 + windSway * 0.4,
+    y - size * 0.28,
+    x + size * 0.14,
+    y - size * 0.44
   );
   ctx.closePath();
   ctx.fill();
@@ -468,8 +650,11 @@ function drawDesertHeadWrap(
 
 function drawDesertScarf(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Flowing desert scarf around neck
   const windSway = Math.sin(time * 2.5) * size * 0.04;
@@ -478,13 +663,12 @@ function drawDesertScarf(
   ctx.moveTo(x - size * 0.15, y - size * 0.3);
   ctx.quadraticCurveTo(x, y - size * 0.25, x + size * 0.15, y - size * 0.3);
   ctx.quadraticCurveTo(
-    x + size * 0.25 + windSway, y - size * 0.15,
-    x + size * 0.2 + windSway * 1.5, y + size * 0.05,
+    x + size * 0.25 + windSway,
+    y - size * 0.15,
+    x + size * 0.2 + windSway * 1.5,
+    y + size * 0.05
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.15, y - size * 0.1,
-    x, y - size * 0.2,
-  );
+  ctx.quadraticCurveTo(x + size * 0.15, y - size * 0.1, x, y - size * 0.2);
   ctx.closePath();
   ctx.fill();
 
@@ -501,8 +685,11 @@ function drawDesertScarf(
 
 function drawDesertFeatherBands(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Leather bands on wings with brass studs
   for (let side = -1; side <= 1; side += 2) {
@@ -516,16 +703,31 @@ function drawDesertFeatherBands(
     // Brass studs
     ctx.fillStyle = "rgba(218, 165, 32, 0.6)";
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.2, y - size * 0.22, size * 0.015, 0, Math.PI * 2);
-    ctx.arc(x + side * size * 0.28, y - size * 0.18, size * 0.015, 0, Math.PI * 2);
+    ctx.arc(
+      x + side * size * 0.2,
+      y - size * 0.22,
+      size * 0.015,
+      0,
+      Math.PI * 2
+    );
+    ctx.arc(
+      x + side * size * 0.28,
+      y - size * 0.18,
+      size * 0.015,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 }
 
 function drawDesertSandDust(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Sand particles kicked up around feet
   for (let i = 0; i < 5; i++) {
@@ -543,8 +745,11 @@ function drawDesertSandDust(
 
 function drawScarabAmulet(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Small golden scarab pendant on chest
   const glint = 0.5 + Math.sin(time * 4) * 0.3;
@@ -558,8 +763,24 @@ function drawScarabAmulet(
   ctx.fill();
   // Wings
   ctx.beginPath();
-  ctx.ellipse(ax - size * 0.025, ay, size * 0.02, size * 0.015, -0.4, 0, Math.PI * 2);
-  ctx.ellipse(ax + size * 0.025, ay, size * 0.02, size * 0.015, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(
+    ax - size * 0.025,
+    ay,
+    size * 0.02,
+    size * 0.015,
+    -0.4,
+    0,
+    Math.PI * 2
+  );
+  ctx.ellipse(
+    ax + size * 0.025,
+    ay,
+    size * 0.02,
+    size * 0.015,
+    0.4,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Glint
   ctx.fillStyle = `rgba(255, 240, 180, ${glint * 0.8})`;
@@ -582,15 +803,23 @@ function drawWinterOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
-  sway: { dx: number; dy: number },
+  sway: { dx: number; dy: number }
 ): void {
   const bx = x + sway.dx;
   const by = y + sway.dy;
 
-  if (category === "ranged" || category === "undead" || category === "elemental") {
+  if (
+    category === "ranged" ||
+    category === "undead" ||
+    category === "elemental"
+  ) {
     drawFurLinedHood(ctx, bx, by, size, time, zoom);
   }
-  if (category === "academic" || category === "forest" || category === "special") {
+  if (
+    category === "academic" ||
+    category === "forest" ||
+    category === "special"
+  ) {
     drawFurCollar(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
@@ -604,16 +833,29 @@ function drawWinterOverlay(
 
 function drawFurLinedHood(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Outer hood — heavy winter wool
   ctx.fillStyle = "rgba(60, 78, 100, 0.58)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.26, y - size * 0.42);
-  ctx.quadraticCurveTo(x - size * 0.34, y - size * 0.58, x - size * 0.14, y - size * 0.72);
+  ctx.quadraticCurveTo(
+    x - size * 0.34,
+    y - size * 0.58,
+    x - size * 0.14,
+    y - size * 0.72
+  );
   ctx.quadraticCurveTo(x, y - size * 0.78, x + size * 0.14, y - size * 0.72);
-  ctx.quadraticCurveTo(x + size * 0.34, y - size * 0.58, x + size * 0.26, y - size * 0.42);
+  ctx.quadraticCurveTo(
+    x + size * 0.34,
+    y - size * 0.58,
+    x + size * 0.26,
+    y - size * 0.42
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -622,7 +864,12 @@ function drawFurLinedHood(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.19, y - size * 0.44);
   ctx.quadraticCurveTo(x - size * 0.24, y - size * 0.56, x, y - size * 0.66);
-  ctx.quadraticCurveTo(x + size * 0.24, y - size * 0.56, x + size * 0.19, y - size * 0.44);
+  ctx.quadraticCurveTo(
+    x + size * 0.24,
+    y - size * 0.56,
+    x + size * 0.19,
+    y - size * 0.44
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -642,7 +889,7 @@ function drawFurLinedHood(
     const lightness = layer === 0 ? 210 : 235;
     ctx.fillStyle = `rgba(${lightness}, ${lightness - 10}, ${lightness - 20}, ${furBaseAlpha - layer * 0.1})`;
     for (let i = 0; i < count; i++) {
-      const angle = Math.PI * 0.12 + i * (Math.PI * 0.76 / (count - 1));
+      const angle = Math.PI * 0.12 + i * ((Math.PI * 0.76) / (count - 1));
       const furX = x + Math.cos(angle + Math.PI) * r;
       const furY = y - size * 0.44 + Math.sin(angle + Math.PI) * (r * 0.82);
       const tuftSize = size * (0.022 + ((i * 3 + layer * 5) % 7) * 0.002);
@@ -664,11 +911,21 @@ function drawFurLinedHood(
   ctx.setLineDash([2 * zoom, 3 * zoom]);
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y - size * 0.44);
-  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.56, x - size * 0.12, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x - size * 0.3,
+    y - size * 0.56,
+    x - size * 0.12,
+    y - size * 0.7
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.24, y - size * 0.44);
-  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.56, x + size * 0.12, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x + size * 0.3,
+    y - size * 0.56,
+    x + size * 0.12,
+    y - size * 0.7
+  );
   ctx.stroke();
   ctx.setLineDash([]);
 
@@ -676,17 +933,36 @@ function drawFurLinedHood(
   const frostAlpha = 0.3 + Math.sin(time * 2) * 0.1;
   ctx.fillStyle = `rgba(220, 235, 255, ${frostAlpha})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.06, y - size * 0.72, size * 0.04, size * 0.01, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.06,
+    y - size * 0.72,
+    size * 0.04,
+    size * 0.01,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.08, y - size * 0.7, size * 0.035, size * 0.008, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.08,
+    y - size * 0.7,
+    size * 0.035,
+    size * 0.008,
+    0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
 function drawFurCollar(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Thick fur collar around neck
   ctx.fillStyle = "rgba(200, 190, 175, 0.5)";
@@ -708,8 +984,11 @@ function drawFurCollar(
 
 function drawFrostWingTips(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Ice crystal formations on wing tips
   for (let side = -1; side <= 1; side += 2) {
@@ -730,8 +1009,11 @@ function drawFrostWingTips(
 
 function drawFrostCrystals(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Small ice crystals forming on the enemy
   const crystalAlpha = 0.35 + Math.sin(time * 2.5) * 0.15;
@@ -743,7 +1025,7 @@ function drawFrostCrystals(
     const cSize = size * 0.03;
     // 6-pointed crystal
     for (let arm = 0; arm < 3; arm++) {
-      const angle = arm * Math.PI / 3;
+      const angle = (arm * Math.PI) / 3;
       ctx.beginPath();
       ctx.moveTo(cx + Math.cos(angle) * cSize, cy + Math.sin(angle) * cSize);
       ctx.lineTo(cx - Math.cos(angle) * cSize, cy - Math.sin(angle) * cSize);
@@ -754,8 +1036,11 @@ function drawFrostCrystals(
 
 function drawBreathVapor(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Cold breath mist
   for (let i = 0; i < 3; i++) {
@@ -773,18 +1058,45 @@ function drawBreathVapor(
 
 function drawSnowDusting(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  ox: number, oy: number,
+  bx: number,
+  by: number,
+  ox: number,
+  oy: number,
   size: number,
-  time: number, zoom: number,
+  time: number,
+  zoom: number
 ): void {
   ctx.fillStyle = "rgba(240, 245, 255, 0.3)";
   ctx.beginPath();
-  ctx.ellipse(bx - size * 0.18, by - size * 0.22, size * 0.08, size * 0.015, -0.2, 0, Math.PI * 2);
-  ctx.ellipse(bx + size * 0.18, by - size * 0.22, size * 0.08, size * 0.015, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    bx - size * 0.18,
+    by - size * 0.22,
+    size * 0.08,
+    size * 0.015,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
+  ctx.ellipse(
+    bx + size * 0.18,
+    by - size * 0.22,
+    size * 0.08,
+    size * 0.015,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(bx, by - size * 0.55, size * 0.1, size * 0.012, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    bx,
+    by - size * 0.55,
+    size * 0.1,
+    size * 0.012,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   for (let i = 0; i < 3; i++) {
@@ -812,15 +1124,23 @@ function drawVolcanicOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
-  sway: { dx: number; dy: number },
+  sway: { dx: number; dy: number }
 ): void {
   const bx = x + sway.dx;
   const by = y + sway.dy;
 
-  if (category === "ranged" || category === "undead" || category === "elemental") {
+  if (
+    category === "ranged" ||
+    category === "undead" ||
+    category === "elemental"
+  ) {
     drawCharredCowl(ctx, bx, by, size, time, zoom);
   }
-  if (category === "academic" || category === "forest" || category === "special") {
+  if (
+    category === "academic" ||
+    category === "forest" ||
+    category === "special"
+  ) {
     drawAshCoating(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
@@ -833,16 +1153,29 @@ function drawVolcanicOverlay(
 
 function drawCharredCowl(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Outer cowl — charred heavy fabric
   ctx.fillStyle = "rgba(45, 22, 15, 0.6)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y - size * 0.42);
-  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.56, x - size * 0.12, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x - size * 0.3,
+    y - size * 0.56,
+    x - size * 0.12,
+    y - size * 0.7
+  );
   ctx.quadraticCurveTo(x, y - size * 0.76, x + size * 0.12, y - size * 0.7);
-  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.56, x + size * 0.24, y - size * 0.42);
+  ctx.quadraticCurveTo(
+    x + size * 0.3,
+    y - size * 0.56,
+    x + size * 0.24,
+    y - size * 0.42
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -851,7 +1184,12 @@ function drawCharredCowl(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.18, y - size * 0.44);
   ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.54, x, y - size * 0.64);
-  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.54, x + size * 0.18, y - size * 0.44);
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    y - size * 0.54,
+    x + size * 0.18,
+    y - size * 0.44
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -873,11 +1211,21 @@ function drawCharredCowl(
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.43);
-  ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.55, x - size * 0.1, y - size * 0.68);
+  ctx.quadraticCurveTo(
+    x - size * 0.28,
+    y - size * 0.55,
+    x - size * 0.1,
+    y - size * 0.68
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.22, y - size * 0.43);
-  ctx.quadraticCurveTo(x + size * 0.28, y - size * 0.55, x + size * 0.1, y - size * 0.68);
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y - size * 0.55,
+    x + size * 0.1,
+    y - size * 0.68
+  );
   ctx.stroke();
 
   // Burn holes with inner glow
@@ -892,22 +1240,54 @@ function drawCharredCowl(
     // Dark burnt ring
     ctx.fillStyle = `rgba(25, 10, 5, 0.5)`;
     ctx.beginPath();
-    ctx.ellipse(x + size * hp.hx, y + size * hp.hy, size * hp.rx, size * hp.ry, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x + size * hp.hx,
+      y + size * hp.hy,
+      size * hp.rx,
+      size * hp.ry,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     // Inner ember glow
     ctx.fillStyle = `rgba(220, 90, 20, ${hGlow})`;
     ctx.beginPath();
-    ctx.ellipse(x + size * hp.hx, y + size * hp.hy, size * hp.rx * 0.6, size * hp.ry * 0.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x + size * hp.hx,
+      y + size * hp.hy,
+      size * hp.rx * 0.6,
+      size * hp.ry * 0.6,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
   // Ash deposits on fabric
   ctx.fillStyle = "rgba(90, 80, 75, 0.3)";
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.05, y - size * 0.62, size * 0.04, size * 0.015, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.05,
+    y - size * 0.62,
+    size * 0.04,
+    size * 0.015,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.12, y - size * 0.5, size * 0.03, size * 0.012, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.12,
+    y - size * 0.5,
+    size * 0.03,
+    size * 0.012,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Heat shimmer lines near top
@@ -916,7 +1296,12 @@ function drawCharredCowl(
   ctx.lineWidth = 0.6 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.06, y - size * 0.72);
-  ctx.quadraticCurveTo(x - size * 0.02, y - size * 0.76, x + size * 0.04, y - size * 0.73);
+  ctx.quadraticCurveTo(
+    x - size * 0.02,
+    y - size * 0.76,
+    x + size * 0.04,
+    y - size * 0.73
+  );
   ctx.stroke();
 
   // Center fold scar
@@ -930,8 +1315,11 @@ function drawCharredCowl(
 
 function drawAshCoating(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Ash/soot coating on the body
   ctx.fillStyle = "rgba(60, 50, 45, 0.2)";
@@ -944,17 +1332,36 @@ function drawAshCoating(
   ctx.strokeStyle = `rgba(200, 80, 30, ${scorchGlow})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.1, y + size * 0.05, size * 0.06, size * 0.04, 0.5, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.1,
+    y + size * 0.05,
+    size * 0.06,
+    size * 0.04,
+    0.5,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.08, y + size * 0.15, size * 0.05, size * 0.035, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.08,
+    y + size * 0.15,
+    size * 0.05,
+    size * 0.035,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 }
 
 function drawEmberWingTrails(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Ember particle trails behind wings
   for (let side = -1; side <= 1; side += 2) {
@@ -974,8 +1381,11 @@ function drawEmberWingTrails(
 
 function drawLavaCracks(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Glowing lava-like cracks on body surface
   const crackGlow = 0.3 + Math.sin(time * 2) * 0.15;
@@ -1008,8 +1418,11 @@ function drawLavaCracks(
 
 function drawEmberParticles(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number
 ): void {
   // Rising ember/ash particles
   for (let i = 0; i < 5; i++) {

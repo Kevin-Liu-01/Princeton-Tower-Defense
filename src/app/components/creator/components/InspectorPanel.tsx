@@ -1,4 +1,3 @@
-import React from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -16,12 +15,24 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import type { CreatorDraftState, SelectionTarget, ToolMode, GridPoint } from "../types";
-import { TOOL_HINTS, OBJECTIVE_TYPE_STATS, TOOL_OPTIONS, TOWER_DISPLAY_NAMES } from "../constants";
+import React from "react";
+
+import type { TowerType } from "../../../types";
+import { LANDMARK_DECORATION_TYPES } from "../../../utils";
+import {
+  TOOL_HINTS,
+  OBJECTIVE_TYPE_STATS,
+  TOOL_OPTIONS,
+  TOWER_DISPLAY_NAMES,
+} from "../constants";
+import type {
+  CreatorDraftState,
+  SelectionTarget,
+  ToolMode,
+  GridPoint,
+} from "../types";
 import { formatPointLabel, formatAssetName } from "../utils/gridUtils";
 import { getPointFromSelection } from "../utils/selectionUtils";
-import { LANDMARK_DECORATION_TYPES } from "../../../utils";
-import type { TowerType } from "../../../types";
 
 interface InspectorPanelProps {
   draft: CreatorDraftState;
@@ -60,37 +71,62 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   onUpdateDecorationSize,
   onUpdateHazardRadius,
 }) => {
-  const selectedPoint = selection ? getPointFromSelection(selection, draft) : null;
+  const selectedPoint = selection
+    ? getPointFromSelection(selection, draft)
+    : null;
   const selectedDecoration =
-    selection?.kind === "decoration" ? draft.decorations[selection.index] : null;
+    selection?.kind === "decoration"
+      ? draft.decorations[selection.index]
+      : null;
   const selectedHazard =
     selection?.kind === "hazard" ? draft.hazards[selection.index] : null;
   const selectedObjective =
-    selection?.kind === "special_tower" ? draft.specialTowers[selection.index] : null;
+    selection?.kind === "special_tower"
+      ? draft.specialTowers[selection.index]
+      : null;
   const selectedTower =
     selection?.kind === "tower" ? draft.placedTowers[selection.index] : null;
 
   const activeToolHint = TOOL_HINTS[tool] ?? "";
 
   const selectionSummary = (() => {
-    if (!selection) return null;
-    if (selection.kind === "primary_path") return `Path A node ${selection.index + 1}`;
-    if (selection.kind === "secondary_path") return `Path B node ${selection.index + 1}`;
-    if (selection.kind === "hero_spawn") return "Hero Spawn";
+    if (!selection) {
+      return null;
+    }
+    if (selection.kind === "primary_path") {
+      return `Path A node ${selection.index + 1}`;
+    }
+    if (selection.kind === "secondary_path") {
+      return `Path B node ${selection.index + 1}`;
+    }
+    if (selection.kind === "hero_spawn") {
+      return "Hero Spawn";
+    }
     if (selection.kind === "special_tower") {
       return selectedObjective
         ? OBJECTIVE_TYPE_STATS[selectedObjective.type].title
         : "Objective";
     }
     if (selection.kind === "tower") {
-      return selectedTower ? TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ?? formatAssetName(selectedTower.type) : "Tower";
+      return selectedTower
+        ? (TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ??
+            formatAssetName(selectedTower.type))
+        : "Tower";
     }
     if (selection.kind === "hazard") {
-      return selectedHazard?.type ? formatAssetName(selectedHazard.type) : "Hazard";
+      return selectedHazard?.type
+        ? formatAssetName(selectedHazard.type)
+        : "Hazard";
     }
     const decoType = selectedDecoration?.type ?? selectedDecoration?.category;
-    const isLandmark = Boolean(decoType && LANDMARK_DECORATION_TYPES.has(decoType));
-    return decoType ? formatAssetName(decoType) : isLandmark ? "Landmark" : "Decoration";
+    const isLandmark = Boolean(
+      decoType && LANDMARK_DECORATION_TYPES.has(decoType)
+    );
+    return decoType
+      ? formatAssetName(decoType)
+      : isLandmark
+        ? "Landmark"
+        : "Decoration";
   })();
 
   return (
@@ -137,7 +173,10 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                   step={0.1}
                   value={selectedDecoration.size ?? 1}
                   onChange={(event) =>
-                    onUpdateDecorationSize(selection.index, Number(event.target.value))
+                    onUpdateDecorationSize(
+                      selection.index,
+                      Number(event.target.value)
+                    )
                   }
                   className="flex-1 accent-amber-500 h-1"
                 />
@@ -149,7 +188,9 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
             {selection.kind === "hazard" && selectedHazard && (
               <label className="flex items-center gap-2 px-0.5">
-                <span className="text-amber-300/70 text-[11px] w-10">Radius</span>
+                <span className="text-amber-300/70 text-[11px] w-10">
+                  Radius
+                </span>
                 <input
                   type="range"
                   min={0.5}
@@ -157,7 +198,10 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                   step={0.1}
                   value={selectedHazard.radius ?? 1.5}
                   onChange={(event) =>
-                    onUpdateHazardRadius(selection.index, Number(event.target.value))
+                    onUpdateHazardRadius(
+                      selection.index,
+                      Number(event.target.value)
+                    )
                   }
                   className="flex-1 accent-amber-500 h-1"
                 />
@@ -175,7 +219,9 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
             {selection.kind === "tower" && selectedTower && (
               <div className="text-[10px] text-amber-400/60 px-0.5 inline-flex items-center gap-1">
-                <Sword size={9} /> Pre-placed {TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ?? selectedTower.type}
+                <Sword size={9} /> Pre-placed{" "}
+                {TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ??
+                  selectedTower.type}
               </div>
             )}
 

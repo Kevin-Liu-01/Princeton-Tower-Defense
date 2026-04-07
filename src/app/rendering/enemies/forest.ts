@@ -1,5 +1,6 @@
-import { setShadowBlur, clearShadow } from "../performance";
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { MapTheme } from "../../types";
+import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawLeafSwirl,
   drawShiftingSegments,
@@ -9,7 +10,6 @@ import {
   drawEmberSparks,
 } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
-import type { MapTheme } from "../../types";
 import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
@@ -30,14 +30,14 @@ export function drawAthleteEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
   size *= 1.7;
   y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackBoost = isAttacking ? 1.35 : 1;
   const breath = getBreathScale(time, 1.8, 0.012);
-  const sway = getIdleSway(time, 1.0, size * 0.003, size * 0.002);
+  const sway = getIdleSway(time, 1, size * 0.003, size * 0.002);
   const runCycle = time * 14 * attackBoost;
   const armSwing = Math.sin(runCycle) * 0.45;
   const bounce = Math.abs(Math.sin(runCycle)) * 4 * zoom;
@@ -76,7 +76,7 @@ export function drawAthleteEnemy(
       size * 0.24,
       leanForward * 0.3,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.fillStyle = bodyColor;
@@ -95,7 +95,7 @@ export function drawAthleteEnemy(
     size * 0.04,
     cx - size * 0.15,
     y - size * 0.08 - bodyBob,
-    size * 0.6,
+    size * 0.6
   );
   motionGrad.addColorStop(0, `rgba(249, 160, 50, ${auraInt})`);
   motionGrad.addColorStop(0.4, `rgba(249, 115, 22, ${auraInt * 0.3})`);
@@ -109,7 +109,7 @@ export function drawAthleteEnemy(
     size * 0.28,
     0,
     0,
-    TAU,
+    TAU
   );
   ctx.fill();
 
@@ -133,7 +133,7 @@ export function drawAthleteEnemy(
     cx,
     y - size * 0.28,
     cx + capeWave,
-    y + size * 0.1,
+    y + size * 0.1
   );
   capeGrad.addColorStop(0, bodyColorDark);
   capeGrad.addColorStop(0.4, bodyColor);
@@ -143,16 +143,16 @@ export function drawAthleteEnemy(
   ctx.moveTo(cx - size * 0.14, y - size * 0.26 - bodyBob);
   ctx.quadraticCurveTo(
     cx - size * 0.2 + capeWave,
-    y + size * 0.0,
+    y + 0,
     cx - size * 0.22 + capeWave,
-    y + size * 0.12 - bodyBob,
+    y + size * 0.12 - bodyBob
   );
   ctx.lineTo(cx + size * 0.06 + capeWave * 0.5, y + size * 0.08 - bodyBob);
   ctx.quadraticCurveTo(
     cx + size * 0.04,
     y - size * 0.08 - bodyBob,
     cx + size * 0.14,
-    y - size * 0.26 - bodyBob,
+    y - size * 0.26 - bodyBob
   );
   ctx.closePath();
   ctx.fill();
@@ -162,13 +162,13 @@ export function drawAthleteEnemy(
     color: bronze,
     colorDark: bronzeDark,
     footColor: bronzeDark,
-    trimColor: bodyColor,
-    strideSpeed: 14 * attackBoost,
-    strideAmt: 0.4,
-    legLen: 0.24,
-    width: 0.08,
     footLen: 0.12,
+    legLen: 0.24,
+    strideAmt: 0.4,
+    strideSpeed: 14 * attackBoost,
     style: "armored",
+    trimColor: bodyColor,
+    width: 0.08,
   });
 
   // Dust sparks from boots
@@ -176,9 +176,9 @@ export function drawAthleteEnemy(
     color: "rgba(255, 180, 60, 0.6)",
     coreColor: "rgba(255, 220, 100, 0.3)",
     count: isAttacking ? 6 : 3,
-    speed: 2,
     maxAlpha: 0.5,
     sparkSize: 0.08,
+    speed: 2,
   });
 
   // Gladiator body — exposed muscular torso with harness (NOT plate cuirass)
@@ -192,7 +192,7 @@ export function drawAthleteEnemy(
     -size * 0.2,
     -size * 0.22,
     size * 0.2,
-    size * 0.16,
+    size * 0.16
   );
   torsoGrad.addColorStop(0, skinDark);
   torsoGrad.addColorStop(0.3, skinTone);
@@ -207,7 +207,7 @@ export function drawAthleteEnemy(
     -size * 0.22,
     -size * 0.1,
     -size * 0.18,
-    -size * 0.22,
+    -size * 0.22
   );
   ctx.bezierCurveTo(
     -size * 0.1,
@@ -215,7 +215,7 @@ export function drawAthleteEnemy(
     size * 0.1,
     -size * 0.26,
     size * 0.18,
-    -size * 0.22,
+    -size * 0.22
   );
   ctx.bezierCurveTo(
     size * 0.22,
@@ -223,7 +223,7 @@ export function drawAthleteEnemy(
     size * 0.24,
     size * 0.04,
     size * 0.2,
-    size * 0.14,
+    size * 0.14
   );
   ctx.closePath();
   ctx.fill();
@@ -296,7 +296,7 @@ export function drawAthleteEnemy(
       agX - size * 0.03,
       agY,
       agX + size * 0.03,
-      agY + size * 0.08,
+      agY + size * 0.08
     );
     agGrad.addColorStop(0, bronzeLight);
     agGrad.addColorStop(0.5, bronze);
@@ -310,25 +310,20 @@ export function drawAthleteEnemy(
       size * 0.035,
       side * 0.3,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
 
   // Leather waist guard (NOT armor skirt)
   ctx.fillStyle = bronzeDark;
-  ctx.fillRect(
-    cx - size * 0.16,
-    y + size * 0.0 - bodyBob,
-    size * 0.32,
-    size * 0.025,
-  );
+  ctx.fillRect(cx - size * 0.16, y + 0 - bodyBob, size * 0.32, size * 0.025);
   ctx.fillStyle = bronzeLight;
   ctx.fillRect(
     cx - size * 0.02,
     y - size * 0.005 - bodyBob,
     size * 0.04,
-    size * 0.035,
+    size * 0.035
   );
 
   // Arms (pumping while running)
@@ -341,18 +336,18 @@ export function drawAthleteEnemy(
     zoom,
     -1,
     {
+      attackExtra: isAttacking ? 0.2 : 0,
       color: skinTone,
       colorDark: skinDark,
+      elbowAngle: 0.35 + armSwing * 0.2,
+      foreLen: 0.14,
       handColor: skinDark,
+      shoulderAngle: leanForward - armSwing * 0.7,
+      style: "fleshy",
       trimColor: bodyColor,
       upperLen: 0.16,
-      foreLen: 0.14,
       width: 0.075,
-      shoulderAngle: leanForward - armSwing * 0.7,
-      elbowAngle: 0.35 + armSwing * 0.2,
-      attackExtra: isAttacking ? 0.2 : 0,
-      style: "fleshy",
-    },
+    }
   );
   drawPathArm(
     ctx,
@@ -363,18 +358,18 @@ export function drawAthleteEnemy(
     zoom,
     1,
     {
+      attackExtra: isAttacking ? 0.2 : 0,
       color: skinTone,
       colorDark: skinDark,
+      elbowAngle: 0.35 - armSwing * 0.2,
+      foreLen: 0.14,
       handColor: skinDark,
+      shoulderAngle: leanForward + armSwing * 0.7,
+      style: "fleshy",
       trimColor: bodyColor,
       upperLen: 0.16,
-      foreLen: 0.14,
       width: 0.075,
-      shoulderAngle: leanForward + armSwing * 0.7,
-      elbowAngle: 0.35 - armSwing * 0.2,
-      attackExtra: isAttacking ? 0.2 : 0,
-      style: "fleshy",
-    },
+    }
   );
 
   // HEAD — Winged bronze headband (NOT full armored helm)
@@ -388,7 +383,7 @@ export function drawAthleteEnemy(
     0,
     headX,
     headY,
-    size * 0.14,
+    size * 0.14
   );
   faceGrad.addColorStop(0, skinTone);
   faceGrad.addColorStop(0.7, skinDark);
@@ -409,7 +404,7 @@ export function drawAthleteEnemy(
       size * 0.016,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.fillStyle = bodyColor;
@@ -419,7 +414,7 @@ export function drawAthleteEnemy(
       headY - size * 0.015,
       size * 0.01,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.fillStyle = "#111";
@@ -429,7 +424,7 @@ export function drawAthleteEnemy(
       headY - size * 0.015,
       size * 0.005,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -440,7 +435,7 @@ export function drawAthleteEnemy(
     headX - size * 0.12,
     headY - size * 0.03,
     size * 0.24,
-    size * 0.025,
+    size * 0.025
   );
   ctx.globalAlpha = 1;
   // Determined jaw
@@ -456,7 +451,7 @@ export function drawAthleteEnemy(
     headX - size * 0.14,
     headY - size * 0.06,
     headX + size * 0.14,
-    headY - size * 0.06,
+    headY - size * 0.06
   );
   hbGrad.addColorStop(0, bronzeDark);
   hbGrad.addColorStop(0.3, bronzeLight);
@@ -470,13 +465,13 @@ export function drawAthleteEnemy(
     headX,
     headY - size * 0.08,
     headX + size * 0.14,
-    headY - size * 0.04,
+    headY - size * 0.04
   );
   ctx.quadraticCurveTo(
     headX,
     headY - size * 0.05,
     headX - size * 0.14,
-    headY - size * 0.04,
+    headY - size * 0.04
   );
   ctx.fill();
 
@@ -502,15 +497,15 @@ export function drawAthleteEnemy(
       wingX + ws * size * 0.12,
       wingY - size * 0.08 + wingFlutter,
       wingX + ws * size * 0.14,
-      wingY - size * 0.15 + wingFlutter,
+      wingY - size * 0.15 + wingFlutter
     );
     ctx.bezierCurveTo(
       wingX + ws * size * 0.1,
       wingY - size * 0.06 + wingFlutter,
       wingX + ws * size * 0.05,
-      wingY + size * 0.0,
+      wingY + 0,
       wingX,
-      wingY + size * 0.02,
+      wingY + size * 0.02
     );
     ctx.fill();
     ctx.strokeStyle = bodyColorDark;
@@ -533,13 +528,13 @@ export function drawAthleteEnemy(
     headX,
     headY - size * 0.18,
     headX + size * 0.1,
-    headY - size * 0.08,
+    headY - size * 0.08
   );
   ctx.quadraticCurveTo(
     headX,
     headY - size * 0.12,
     headX - size * 0.1,
-    headY - size * 0.08,
+    headY - size * 0.08
   );
   ctx.fill();
 
@@ -548,19 +543,19 @@ export function drawAthleteEnemy(
     color: "rgba(255, 180, 60, 0.5)",
     colorAlt: "rgba(255, 220, 80, 0.4)",
     count: 5,
-    speed: 3,
-    maxAlpha: isAttacking ? 0.55 : 0.35,
     leafSize: 0.1,
+    maxAlpha: isAttacking ? 0.55 : 0.35,
+    speed: 3,
   });
 
   drawOrbitingDebris(ctx, cx, y - size * 0.1 - bodyBob, size, time, zoom, {
     color: "rgba(255, 200, 80, 0.55)",
-    glowColor: "rgba(255, 220, 100, 0.25)",
     count: isAttacking ? 8 : 5,
-    speed: isAttacking ? 4 : 2.5,
-    particleSize: 0.014,
-    minRadius: 0.3,
+    glowColor: "rgba(255, 220, 100, 0.25)",
     maxRadius: 0.5,
+    minRadius: 0.3,
+    particleSize: 0.014,
+    speed: isAttacking ? 4 : 2.5,
     trailLen: 3,
   });
 
@@ -569,8 +564,8 @@ export function drawAthleteEnemy(
     colorAlt: bodyColorLight,
     count: 5,
     orbitRadius: 0.35,
+    orbitSpeed: 2,
     segmentSize: 0.022,
-    orbitSpeed: 2.0,
     shape: "diamond",
   });
 
@@ -584,7 +579,7 @@ export function drawAthleteEnemy(
       headY - size * 0.015,
       size * 0.008,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -608,11 +603,11 @@ export function drawAthleteEnemy(
       ctx.beginPath();
       ctx.moveTo(
         cx + Math.cos(rbAngle) * rbInner,
-        y + size * 0.1 + Math.sin(rbAngle) * rbInner * ISO_Y_RATIO,
+        y + size * 0.1 + Math.sin(rbAngle) * rbInner * ISO_Y_RATIO
       );
       ctx.lineTo(
         cx + Math.cos(rbAngle) * rbOuter,
-        y + size * 0.1 + Math.sin(rbAngle) * rbOuter * ISO_Y_RATIO,
+        y + size * 0.1 + Math.sin(rbAngle) * rbOuter * ISO_Y_RATIO
       );
       ctx.stroke();
     }
@@ -637,7 +632,7 @@ export function drawTigerFanEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -672,14 +667,14 @@ export function drawTigerFanEnemy(
     color: leather,
     colorDark: leatherDark,
     footColor: leatherDark,
-    trimColor: bodyColor,
-    strideSpeed: 7 * attackIntensity,
-    strideAmt: 0.25,
-    legLen: 0.22,
-    width: 0.09,
     footLen: 0.11,
-    style: "fleshy",
     garb: false,
+    legLen: 0.22,
+    strideAmt: 0.25,
+    strideSpeed: 7 * attackIntensity,
+    style: "fleshy",
+    trimColor: bodyColor,
+    width: 0.09,
   });
 
   // Fur loincloth / waist wrap (NOT armor skirt)
@@ -722,7 +717,7 @@ export function drawTigerFanEnemy(
     cx - size * 0.2,
     y - size * 0.3,
     cx + size * 0.2,
-    y + size * 0.06,
+    y + size * 0.06
   );
   torsoGrad.addColorStop(0, "#a08060");
   torsoGrad.addColorStop(0.4, "#c4a878");
@@ -737,7 +732,7 @@ export function drawTigerFanEnemy(
     cx - size * 0.24,
     y - size * 0.2 - bodyBob,
     cx - size * 0.18,
-    y - size * 0.3 - bodyBob,
+    y - size * 0.3 - bodyBob
   );
   ctx.bezierCurveTo(
     cx - size * 0.1,
@@ -745,7 +740,7 @@ export function drawTigerFanEnemy(
     cx + size * 0.1,
     y - size * 0.34 - bodyBob,
     cx + size * 0.18,
-    y - size * 0.3 - bodyBob,
+    y - size * 0.3 - bodyBob
   );
   ctx.bezierCurveTo(
     cx + size * 0.24,
@@ -753,7 +748,7 @@ export function drawTigerFanEnemy(
     cx + size * 0.26,
     y - size * 0.05 - bodyBob,
     cx + size * 0.22,
-    y + size * 0.06 - bodyBob,
+    y + size * 0.06 - bodyBob
   );
   ctx.closePath();
   ctx.fill();
@@ -763,7 +758,7 @@ export function drawTigerFanEnemy(
     cx - size * 0.25,
     y,
     cx + size * 0.25,
-    y,
+    y
   );
   vestGrad.addColorStop(0, furDark);
   vestGrad.addColorStop(0.15, fur);
@@ -812,7 +807,7 @@ export function drawTigerFanEnemy(
       baseX + side * size * 0.02,
       y - size * 0.12 - bodyBob,
       baseX,
-      y - size * 0.04 - bodyBob,
+      y - size * 0.04 - bodyBob
     );
     ctx.stroke();
     ctx.beginPath();
@@ -821,7 +816,7 @@ export function drawTigerFanEnemy(
       baseX + side * size * 0.05,
       y - size * 0.1 - bodyBob,
       baseX + side * size * 0.03,
-      y - size * 0.02 - bodyBob,
+      y - size * 0.02 - bodyBob
     );
     ctx.stroke();
   }
@@ -866,15 +861,15 @@ export function drawTigerFanEnemy(
       ctx.beginPath();
       ctx.moveTo(
         spX + Math.cos(sAngle) * size * 0.04,
-        spY + Math.sin(sAngle) * size * 0.03,
+        spY + Math.sin(sAngle) * size * 0.03
       );
       ctx.lineTo(
         spX + Math.cos(sAngle) * size * 0.08,
-        spY + Math.sin(sAngle) * size * 0.04 - size * 0.02,
+        spY + Math.sin(sAngle) * size * 0.04 - size * 0.02
       );
       ctx.lineTo(
         spX + Math.cos(sAngle) * size * 0.05,
-        spY + Math.sin(sAngle) * size * 0.035,
+        spY + Math.sin(sAngle) * size * 0.035
       );
       ctx.fill();
     }
@@ -882,12 +877,7 @@ export function drawTigerFanEnemy(
 
   // Leather belt with bone buckle
   ctx.fillStyle = leatherDark;
-  ctx.fillRect(
-    cx - size * 0.18,
-    y + size * 0.0 - bodyBob,
-    size * 0.36,
-    size * 0.025,
-  );
+  ctx.fillRect(cx - size * 0.18, y + 0 - bodyBob, size * 0.36, size * 0.025);
   ctx.fillStyle = "#e8d8c0";
   ctx.beginPath();
   ctx.arc(cx, y + size * 0.012 - bodyBob, size * 0.018, 0, TAU);
@@ -905,17 +895,9 @@ export function drawTigerFanEnemy(
     {
       color: leather,
       colorDark: leatherDark,
-      handColor: "#c4a878",
-      trimColor: bodyColor,
-      upperLen: 0.16,
-      foreLen: bannerForeLen,
-      width: 0.08,
-      shoulderAngle:
-        0.3 +
-        Math.sin(time * 3) * 0.04 +
-        (isAttacking ? -attackIntensity * 0.25 : 0),
       elbowAngle: 0.4 + (isAttacking ? -attackIntensity * 0.2 : 0),
-      style: "fleshy",
+      foreLen: bannerForeLen,
+      handColor: "#c4a878",
       onWeapon: (wCtx) => {
         const handY = bannerForeLen * size;
         wCtx.translate(0, handY * 0.6);
@@ -925,7 +907,7 @@ export function drawTigerFanEnemy(
           -shW,
           -shH * 0.3,
           shW,
-          shH * 0.3,
+          shH * 0.3
         );
         shGrad.addColorStop(0, leatherDark);
         shGrad.addColorStop(0.3, leather);
@@ -948,7 +930,7 @@ export function drawTigerFanEnemy(
         wCtx.beginPath();
         wCtx.moveTo(-shW * 0.8, -shH * 0.1);
         wCtx.quadraticCurveTo(0, -shH * 0.2, shW * 0.8, -shH * 0.1);
-        wCtx.quadraticCurveTo(0, shH * 0.0, -shW * 0.8, -shH * 0.1);
+        wCtx.quadraticCurveTo(0, 0, -shW * 0.8, -shH * 0.1);
         wCtx.fill();
         // Paw print boss
         const bossGrad = wCtx.createRadialGradient(0, 0, 0, 0, 0, size * 0.05);
@@ -971,12 +953,20 @@ export function drawTigerFanEnemy(
             Math.sin(tAngle) * size * 0.028 - size * 0.005,
             size * 0.009,
             0,
-            TAU,
+            TAU
           );
           wCtx.fill();
         }
       },
-    },
+      shoulderAngle:
+        0.3 +
+        Math.sin(time * 3) * 0.04 +
+        (isAttacking ? -attackIntensity * 0.25 : 0),
+      style: "fleshy",
+      trimColor: bodyColor,
+      upperLen: 0.16,
+      width: 0.08,
+    }
   );
 
   // HEAD — Tiger cowl/mask (drawn before banner so flag overlaps head)
@@ -990,7 +980,7 @@ export function drawTigerFanEnemy(
     0,
     headX,
     headY,
-    size * 0.14,
+    size * 0.14
   );
   faceGrad.addColorStop(0, "#e0c498");
   faceGrad.addColorStop(0.7, "#c4a070");
@@ -1010,12 +1000,12 @@ export function drawTigerFanEnemy(
       headX + side * size * 0.08,
       headY - size * 0.02,
       headX + side * size * 0.1,
-      headY + size * 0.04,
+      headY + size * 0.04
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(headX + side * size * 0.05, headY - size * 0.04);
-    ctx.lineTo(headX + side * size * 0.12, headY + size * 0.0);
+    ctx.lineTo(headX + side * size * 0.12, headY + 0);
     ctx.stroke();
   }
 
@@ -1030,7 +1020,7 @@ export function drawTigerFanEnemy(
       size * 0.016,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.fillStyle = bodyColorDark;
@@ -1040,7 +1030,7 @@ export function drawTigerFanEnemy(
       headY - size * 0.015,
       size * 0.01,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
     ctx.fillStyle = "#111";
@@ -1050,7 +1040,7 @@ export function drawTigerFanEnemy(
       headY - size * 0.015,
       size * 0.005,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -1068,7 +1058,7 @@ export function drawTigerFanEnemy(
     0,
     headX,
     headY,
-    size * 0.22,
+    size * 0.22
   );
   cowlGrad.addColorStop(0, bodyColor);
   cowlGrad.addColorStop(0.5, bodyColorDark);
@@ -1080,37 +1070,37 @@ export function drawTigerFanEnemy(
     headX - size * 0.2,
     headY - size * 0.08,
     headX - size * 0.14,
-    headY - size * 0.16,
+    headY - size * 0.16
   );
   ctx.quadraticCurveTo(
     headX,
     headY - size * 0.24,
     headX + size * 0.14,
-    headY - size * 0.16,
+    headY - size * 0.16
   );
   ctx.quadraticCurveTo(
     headX + size * 0.2,
     headY - size * 0.08,
     headX + size * 0.16,
-    headY + size * 0.04,
+    headY + size * 0.04
   );
   ctx.quadraticCurveTo(
     headX + size * 0.1,
     headY - size * 0.02,
     headX + size * 0.08,
-    headY - size * 0.06,
+    headY - size * 0.06
   );
   ctx.quadraticCurveTo(
     headX,
     headY - size * 0.1,
     headX - size * 0.08,
-    headY - size * 0.06,
+    headY - size * 0.06
   );
   ctx.quadraticCurveTo(
     headX - size * 0.1,
     headY - size * 0.02,
     headX - size * 0.16,
-    headY + size * 0.04,
+    headY + size * 0.04
   );
   ctx.fill();
 
@@ -1124,7 +1114,7 @@ export function drawTigerFanEnemy(
       headX + ps * size * 0.1,
       headY - size * 0.12,
       headX + ps * size * 0.08,
-      headY - size * 0.04,
+      headY - size * 0.04
     );
     ctx.stroke();
     ctx.beginPath();
@@ -1161,7 +1151,7 @@ export function drawTigerFanEnemy(
       headY - size * 0.015,
       size * 0.008,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }
@@ -1181,15 +1171,9 @@ export function drawTigerFanEnemy(
     {
       color: leather,
       colorDark: leatherDark,
-      handColor: "#c4a878",
-      trimColor: bodyColor,
-      upperLen: 0.16,
-      foreLen: bannerForeLen,
-      width: 0.08,
-      shoulderAngle:
-        -(armRaise + 0.55) + Math.sin(time * 4 * attackIntensity) * 0.06,
       elbowAngle: -0.25,
-      style: "fleshy",
+      foreLen: bannerForeLen,
+      handColor: "#c4a878",
       onWeapon: (wCtx) => {
         const handY = bannerForeLen * size;
         wCtx.translate(0, handY * 0.7);
@@ -1198,7 +1182,7 @@ export function drawTigerFanEnemy(
           -size * 0.015,
           0,
           size * 0.015,
-          0,
+          0
         );
         pGrad.addColorStop(0, "#4a3728");
         pGrad.addColorStop(0.4, "#8b6e5a");
@@ -1240,7 +1224,7 @@ export function drawTigerFanEnemy(
           bW * 0.7 - wave1,
           bTopY + (bBotY - bTopY) * 0.5,
           bW - wave2,
-          bTopY + (bBotY - bTopY) * 0.5,
+          bTopY + (bBotY - bTopY) * 0.5
         );
         wCtx.bezierCurveTo(
           bW * 0.8 - wave2,
@@ -1248,7 +1232,7 @@ export function drawTigerFanEnemy(
           bW * 0.4 - wave1,
           bBotY - size * 0.02,
           bannerSwing * size * 0.5,
-          bBotY,
+          bBotY
         );
         wCtx.closePath();
         wCtx.fill();
@@ -1282,7 +1266,13 @@ export function drawTigerFanEnemy(
           wCtx.stroke();
         }
       },
-    },
+      shoulderAngle:
+        -(armRaise + 0.55) + Math.sin(time * 4 * attackIntensity) * 0.06,
+      style: "fleshy",
+      trimColor: bodyColor,
+      upperLen: 0.16,
+      width: 0.08,
+    }
   );
 
   // War cry aura waves (drawn after banner)
@@ -1328,11 +1318,11 @@ export function drawTigerFanEnemy(
       ctx.beginPath();
       ctx.moveTo(
         cx + Math.cos(slAngle) * slInner,
-        y + size * 0.3 + Math.sin(slAngle) * slInner * ISO_Y_RATIO,
+        y + size * 0.3 + Math.sin(slAngle) * slInner * ISO_Y_RATIO
       );
       ctx.lineTo(
         cx + Math.cos(slAngle) * slOuter,
-        y + size * 0.3 + Math.sin(slAngle) * slOuter * ISO_Y_RATIO,
+        y + size * 0.3 + Math.sin(slAngle) * slOuter * ISO_Y_RATIO
       );
       ctx.stroke();
     }
@@ -1345,7 +1335,7 @@ export function drawTigerFanEnemy(
       size * 0.25 * slamForce,
       0,
       0,
-      TAU,
+      TAU
     );
     ctx.fill();
   }

@@ -21,7 +21,7 @@ function buildKey(
   size: number,
   zoom: number,
   time: number,
-  region: string,
+  region: string
 ): string {
   const sq = quantize(size, 0.5);
   const zq = quantize(zoom, 0.25);
@@ -53,7 +53,7 @@ export function drawCachedEnemySprite(
   zoom: number,
   time: number,
   region: string,
-  drawSprite: (offCtx: CanvasRenderingContext2D, cx: number, cy: number) => void,
+  drawSprite: (offCtx: CanvasRenderingContext2D, cx: number, cy: number) => void
 ): void {
   const key = buildKey(type, size, zoom, time, region);
 

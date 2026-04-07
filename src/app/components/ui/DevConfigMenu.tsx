@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, ChevronUp, Wrench } from "lucide-react";
-import type { GameState, WaveGroup } from "../../types";
-import type { GameProgress } from "../../hooks/useLocalStorage";
+import React, { useEffect, useMemo, useState } from "react";
+
 import { LEVEL_WAVES } from "../../constants/waves";
+import type { GameProgress } from "../../hooks/useLocalStorage";
+import type { GameState, WaveGroup } from "../../types";
 
 interface DevLevelOption {
   id: string;
@@ -65,7 +66,7 @@ function summarizeWaveGroups(groups: WaveGroup[]): string {
   for (const g of groups) {
     counts.set(g.type, (counts.get(g.type) ?? 0) + g.count);
   }
-  return Array.from(counts.entries())
+  return [...counts.entries()]
     .map(([type, count]) => `${count} ${type}`)
     .join(", ");
 }
@@ -106,11 +107,19 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   const [progressDraft, setProgressDraft] = useState<string>(() =>
     JSON.stringify(progress, null, 2)
   );
-  const [feedback, setFeedback] = useState<{ message: string; isError: boolean } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    isError: boolean;
+  } | null>(null);
 
   useEffect(() => {
-    if (!levelOptions.length) return;
-    if (!selectedLevelId || !levelOptions.some((option) => option.id === selectedLevelId)) {
+    if (!levelOptions.length) {
+      return;
+    }
+    if (
+      !selectedLevelId ||
+      !levelOptions.some((option) => option.id === selectedLevelId)
+    ) {
       setSelectedLevelId(levelOptions[0].id);
     }
   }, [levelOptions, selectedLevelId]);
@@ -138,21 +147,21 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
 
   const handleSetStars = () => {
     if (!selectedLevelId) {
-      setFeedback({ message: "Pick a level first.", isError: true });
+      setFeedback({ isError: true, message: "Pick a level first." });
       return;
     }
 
     const parsed = Number(starsInput);
     if (!Number.isFinite(parsed)) {
-      setFeedback({ message: "Stars must be a number.", isError: true });
+      setFeedback({ isError: true, message: "Stars must be a number." });
       return;
     }
 
     const normalizedStars = clampStars(parsed);
     onSetLevelStars(selectedLevelId, normalizedStars);
     setFeedback({
-      message: `Set ${selectedLevelId} to ${normalizedStars} star${normalizedStars === 1 ? "" : "s"}.`,
       isError: false,
+      message: `Set ${selectedLevelId} to ${normalizedStars} star${normalizedStars === 1 ? "" : "s"}.`,
     });
   };
 
@@ -162,23 +171,23 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
     try {
       parsed = JSON.parse(progressDraft);
     } catch {
-      setFeedback({ message: "Invalid JSON format.", isError: true });
+      setFeedback({ isError: true, message: "Invalid JSON format." });
       return;
     }
 
     const result = onReplaceProgress(parsed);
-    setFeedback({ message: result.message, isError: !result.ok });
+    setFeedback({ isError: !result.ok, message: result.message });
   };
 
   const handleGrantPawPoints = () => {
     const parsed = Math.round(Number(pawPointsInput));
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setFeedback({ message: "PawPoints amount must be > 0.", isError: true });
+      setFeedback({ isError: true, message: "PawPoints amount must be > 0." });
       return;
     }
 
     onGrantPawPoints(parsed);
-    setFeedback({ message: `Granted ${parsed} PawPoints.`, isError: false });
+    setFeedback({ isError: false, message: `Granted ${parsed} PawPoints.` });
   };
 
   return (
@@ -222,10 +231,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <button
                     type="button"
                     onClick={() => setDevPerfEnabled(!devPerfEnabled)}
-                    className={`rounded border px-2 py-1 font-mono ${devPerfEnabled
+                    className={`rounded border px-2 py-1 font-mono ${
+                      devPerfEnabled
                         ? "border-emerald-400/70 bg-emerald-900/60 text-emerald-100"
                         : "border-zinc-400/60 bg-zinc-900/60 text-zinc-200"
-                      }`}
+                    }`}
                   >
                     {devPerfEnabled ? "ON" : "OFF"}
                   </button>
@@ -233,17 +243,23 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                 {devPerfEnabled ? (
                   <div className="space-y-1 font-mono text-[11px] text-emerald-100">
                     <div>
-                      fps {devPerfSnapshot.fps} | frame {devPerfSnapshot.frameMs}ms
+                      fps {devPerfSnapshot.fps} | frame{" "}
+                      {devPerfSnapshot.frameMs}ms
                     </div>
                     <div>
-                      update {devPerfSnapshot.updateMs}ms | render {devPerfSnapshot.renderMs}ms
+                      update {devPerfSnapshot.updateMs}ms | render{" "}
+                      {devPerfSnapshot.renderMs}ms
                     </div>
                     <div>quality {devPerfSnapshot.quality}</div>
                     <div>
-                      towers {devPerfSnapshot.towers} | enemies {devPerfSnapshot.enemies} | troops {devPerfSnapshot.troops}
+                      towers {devPerfSnapshot.towers} | enemies{" "}
+                      {devPerfSnapshot.enemies} | troops{" "}
+                      {devPerfSnapshot.troops}
                     </div>
                     <div>
-                      proj {devPerfSnapshot.projectiles} | fx {devPerfSnapshot.effects} | particles {devPerfSnapshot.particles}
+                      proj {devPerfSnapshot.projectiles} | fx{" "}
+                      {devPerfSnapshot.effects} | particles{" "}
+                      {devPerfSnapshot.particles}
                     </div>
                   </div>
                 ) : null}
@@ -257,16 +273,18 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <button
                     type="button"
                     onClick={() => setPhotoModeEnabled(!photoModeEnabled)}
-                    className={`rounded border px-2 py-1 font-mono ${photoModeEnabled
+                    className={`rounded border px-2 py-1 font-mono ${
+                      photoModeEnabled
                         ? "border-fuchsia-400/70 bg-fuchsia-900/60 text-fuchsia-100"
                         : "border-zinc-400/60 bg-zinc-900/60 text-zinc-200"
-                      }`}
+                    }`}
                   >
                     {photoModeEnabled ? "ON" : "OFF"}
                   </button>
                 </div>
                 <div className="text-[10px] leading-snug text-fuchsia-200/60">
-                  Places strategic towers on every level for screenshots. Re-enter a level after toggling.
+                  Places strategic towers on every level for screenshots.
+                  Re-enter a level after toggling.
                 </div>
               </section>
 
@@ -279,7 +297,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <div className="mb-2 flex items-center justify-between rounded border border-blue-300/20 bg-blue-900/20 px-2 py-1">
                     <span className="font-mono text-[11px] text-blue-100">
                       Wave {Math.min(currentWave + 1, totalWaves)}/{totalWaves}
-                      {waveInProgress ? " (spawning)" : currentWave >= totalWaves ? " (done)" : " (idle)"}
+                      {waveInProgress
+                        ? " (spawning)"
+                        : currentWave >= totalWaves
+                          ? " (done)"
+                          : " (idle)"}
                     </span>
                     <button
                       type="button"
@@ -287,8 +309,8 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                       onClick={() => {
                         onSkipWave();
                         setFeedback({
-                          message: `Skipped to wave ${Math.min(currentWave + 2, totalWaves)}/${totalWaves}.`,
                           isError: false,
+                          message: `Skipped to wave ${Math.min(currentWave + 2, totalWaves)}/${totalWaves}.`,
                         });
                       }}
                       className="rounded border border-cyan-300/40 bg-cyan-900/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-800/50 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -304,7 +326,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                         onClick={() => setWaveBrowserOpen((prev) => !prev)}
                         className="flex w-full items-center gap-1 px-2 py-1 text-[11px] font-semibold text-violet-200 hover:bg-violet-900/30"
                       >
-                        {waveBrowserOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                        {waveBrowserOpen ? (
+                          <ChevronDown size={12} />
+                        ) : (
+                          <ChevronRight size={12} />
+                        )}
                         Wave Browser ({levelWaves.length} waves)
                       </button>
                       {waveBrowserOpen && (
@@ -333,8 +359,8 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                                     onClick={() => {
                                       onSkipToWave(idx);
                                       setFeedback({
-                                        message: `Jumped to wave ${idx + 1}/${totalWaves}.`,
                                         isError: false,
+                                        message: `Jumped to wave ${idx + 1}/${totalWaves}.`,
                                       });
                                     }}
                                     className="rounded border border-violet-400/40 bg-violet-900/40 px-1.5 py-0.5 text-[9px] font-semibold text-violet-100 hover:bg-violet-800/60 disabled:cursor-not-allowed disabled:opacity-30"
@@ -345,7 +371,12 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                                 <div className="min-w-0 flex-1 text-[10px] leading-snug text-violet-100/80">
                                   {summarizeWaveGroups(groups)}
                                   <span className="ml-1 text-violet-300/50">
-                                    ({groups.reduce((sum, g) => sum + g.count, 0)} total)
+                                    (
+                                    {groups.reduce(
+                                      (sum, g) => sum + g.count,
+                                      0
+                                    )}{" "}
+                                    total)
                                   </span>
                                 </div>
                               </div>
@@ -360,7 +391,10 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     type="button"
                     onClick={() => {
                       onKillAllEnemies();
-                      setFeedback({ message: "Killed all enemies on screen.", isError: false });
+                      setFeedback({
+                        isError: false,
+                        message: "Killed all enemies on screen.",
+                      });
                     }}
                     className="mb-2 w-full rounded border border-rose-300/40 bg-rose-900/40 px-2 py-1 font-semibold text-rose-100 hover:bg-rose-800/50"
                   >
@@ -371,7 +405,10 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     type="button"
                     onClick={() => {
                       onInstantVictory();
-                      setFeedback({ message: "Triggered instant victory.", isError: false });
+                      setFeedback({
+                        isError: false,
+                        message: "Triggered instant victory.",
+                      });
                     }}
                     className="mb-2 w-full rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
                   >
@@ -382,7 +419,10 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     type="button"
                     onClick={() => {
                       onInstantLose();
-                      setFeedback({ message: "Triggered instant lose.", isError: false });
+                      setFeedback({
+                        isError: false,
+                        message: "Triggered instant lose.",
+                      });
                     }}
                     className="mb-2 w-full rounded border border-red-300/40 bg-red-900/40 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/50"
                   >
@@ -395,7 +435,9 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                       min={1}
                       step={1}
                       value={pawPointsInput}
-                      onChange={(event) => setPawPointsInput(event.target.value)}
+                      onChange={(event) =>
+                        setPawPointsInput(event.target.value)
+                      }
                       className="rounded border border-blue-300/40 bg-black/60 px-2 py-1"
                     />
                     <button
@@ -460,9 +502,14 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (!selectedLevelId) return;
+                      if (!selectedLevelId) {
+                        return;
+                      }
                       onUnlockLevel(selectedLevelId);
-                      setFeedback({ message: `Unlocked ${selectedLevelId}.`, isError: false });
+                      setFeedback({
+                        isError: false,
+                        message: `Unlocked ${selectedLevelId}.`,
+                      });
                     }}
                     className="rounded border border-amber-300/40 bg-amber-900/40 px-2 py-1 font-semibold hover:bg-amber-800/50"
                   >
@@ -471,9 +518,14 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (!selectedLevelId) return;
+                      if (!selectedLevelId) {
+                        return;
+                      }
                       onLockLevel(selectedLevelId);
-                      setFeedback({ message: `Locked ${selectedLevelId}.`, isError: false });
+                      setFeedback({
+                        isError: false,
+                        message: `Locked ${selectedLevelId}.`,
+                      });
                     }}
                     className="rounded border border-red-300/40 bg-red-900/35 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/45"
                   >
@@ -501,14 +553,22 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                 </div>
 
                 <div className="mb-2 text-[11px] text-amber-200/90">
-                  Level: <span className="font-mono">{selectedLevelId || "(none)"}</span> | unlocked {levelIsUnlocked ? "yes" : "no"} | stars {currentStars}
+                  Level:{" "}
+                  <span className="font-mono">
+                    {selectedLevelId || "(none)"}
+                  </span>{" "}
+                  | unlocked {levelIsUnlocked ? "yes" : "no"} | stars{" "}
+                  {currentStars}
                 </div>
 
                 <button
                   type="button"
                   onClick={() => {
                     onUnlockAllLevels();
-                    setFeedback({ message: "Unlocked all levels.", isError: false });
+                    setFeedback({
+                      isError: false,
+                      message: "Unlocked all levels.",
+                    });
                   }}
                   className="mb-2 w-full rounded border border-amber-300/40 bg-amber-900/35 px-2 py-1 font-semibold hover:bg-amber-800/50"
                 >
@@ -516,14 +576,17 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                 </button>
 
                 <div className="mb-2 text-[11px] text-amber-300/85">
-                  Unlocked {progress.unlockedMaps.length}/{levelOptions.length} levels
+                  Unlocked {progress.unlockedMaps.length}/{levelOptions.length}{" "}
+                  levels
                 </div>
 
                 <div className="mb-1 flex items-center justify-between text-[11px] text-amber-200">
                   <span className="font-semibold">Data JSON</span>
                   <button
                     type="button"
-                    onClick={() => setProgressDraft(JSON.stringify(progress, null, 2))}
+                    onClick={() =>
+                      setProgressDraft(JSON.stringify(progress, null, 2))
+                    }
                     className="rounded border border-amber-300/40 px-2 py-0.5 font-semibold hover:bg-amber-900/50"
                   >
                     Reload
@@ -546,10 +609,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
 
               {feedback ? (
                 <div
-                  className={`rounded border px-2 py-1 text-[11px] ${feedback.isError
+                  className={`rounded border px-2 py-1 text-[11px] ${
+                    feedback.isError
                       ? "border-red-400/50 bg-red-950/50 text-red-200"
                       : "border-emerald-400/50 bg-emerald-950/50 text-emerald-200"
-                    }`}
+                  }`}
                 >
                   {feedback.message}
                 </div>

@@ -1,6 +1,4 @@
 "use client";
-import React, { useMemo } from "react";
-import Image from "next/image";
 import {
   Star,
   Swords,
@@ -14,16 +12,15 @@ import {
   Eye,
   Sparkles,
 } from "lucide-react";
-import type { LevelStars } from "../../types";
-import type { LevelStats } from "../../hooks/useLocalStorage";
+import Image from "next/image";
+import React, { useMemo } from "react";
+
 import { LEVEL_DATA } from "../../constants";
 import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
-import {
-  PANEL,
-  GOLD,
-} from "../ui/system/theme";
-import { WORLD_LEVELS, type LevelNode } from "./world-map/worldMapData";
+import type { LevelStats } from "../../hooks/useLocalStorage";
 import { RegionIcon } from "../../sprites";
+import type { LevelStars } from "../../types";
+import { PANEL, GOLD } from "../ui/system/theme";
 import {
   REGION_META,
   findLastPlayedLevel,
@@ -31,6 +28,8 @@ import {
   getCampaignLevels,
   getRegionProgressList,
 } from "./shared/worldMapRegions";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
+import type { LevelNode } from "./world-map/worldMapData";
 
 function getPreviewImage(levelId: string): string | undefined {
   return LEVEL_DATA[levelId]?.previewImage;
@@ -44,7 +43,12 @@ function MapPreviewBg({ src, fadeColor }: { src: string; fadeColor: string }) {
         src={src}
         alt=""
         className="absolute right-0 top-0 h-full w-[65%] object-cover object-center opacity-30"
-        style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }}
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)",
+        }}
       />
       <div
         className="absolute inset-0"
@@ -78,7 +82,6 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-
 function CampaignConqueredBanner({
   target,
   onSelect,
@@ -96,7 +99,8 @@ function CampaignConqueredBanner({
         {...(target ? { onClick: () => onSelect(target.id) } : {})}
         className={`w-full group relative rounded-xl overflow-hidden animate-wm-conquered-glow ${target ? "transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99]" : ""}`}
         style={{
-          background: "linear-gradient(135deg, rgba(20,80,50,0.88), rgba(12,55,32,0.88))",
+          background:
+            "linear-gradient(135deg, rgba(20,80,50,0.88), rgba(12,55,32,0.88))",
           border: "2px solid rgba(80,220,140,0.4)",
         }}
       >
@@ -127,7 +131,8 @@ function CampaignConqueredBanner({
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{
-                      background: "linear-gradient(135deg, rgba(40,130,80,0.7), rgba(25,90,55,0.7))",
+                      background:
+                        "linear-gradient(135deg, rgba(40,130,80,0.7), rgba(25,90,55,0.7))",
                       border: "1px solid rgba(100,220,150,0.3)",
                       boxShadow: "0 0 8px rgba(52,211,153,0.15)",
                     }}
@@ -142,13 +147,16 @@ function CampaignConqueredBanner({
                 </div>
                 <div className="text-[10px] text-emerald-400/60 mt-0.5">
                   {target
-                    ? `${REGION_META[target.region]?.displayName} \u00b7 Challenge`
+                    ? `${REGION_META[target.region]?.displayName} \u00B7 Challenge`
                     : "All challenges complete"}
                 </div>
               </div>
             </div>
             {target && (
-              <ChevronRight size={18} className="text-emerald-300/60 shrink-0 group-hover:text-emerald-200 group-hover:translate-x-1 transition-all duration-300" />
+              <ChevronRight
+                size={18}
+                className="text-emerald-300/60 shrink-0 group-hover:text-emerald-200 group-hover:translate-x-1 transition-all duration-300"
+              />
             )}
           </div>
         </div>
@@ -180,7 +188,9 @@ function RealmMasteryBanner({
         {thronePreview && (
           <MapPreviewBg
             src={thronePreview}
-            fadeColor={isPerfect ? "rgba(55,28,95,0.95)" : "rgba(115,80,12,0.95)"}
+            fadeColor={
+              isPerfect ? "rgba(55,28,95,0.95)" : "rgba(115,80,12,0.95)"
+            }
           />
         )}
         <div
@@ -199,7 +209,11 @@ function RealmMasteryBanner({
             )}
             <span
               className="text-[9px] font-bold uppercase tracking-[0.15em]"
-              style={{ color: isPerfect ? "rgba(200,170,240,0.9)" : "rgba(255,220,130,0.9)" }}
+              style={{
+                color: isPerfect
+                  ? "rgba(200,170,240,0.9)"
+                  : "rgba(255,220,130,0.9)",
+              }}
             >
               {isPerfect ? "Legendary" : "True Champion"}
             </span>
@@ -237,7 +251,11 @@ function RealmMasteryBanner({
               </div>
               <span
                 className="text-[9px] font-bold tabular-nums mt-0.5"
-                style={{ color: isPerfect ? "rgba(200,170,240,0.7)" : "rgba(255,210,100,0.7)" }}
+                style={{
+                  color: isPerfect
+                    ? "rgba(200,170,240,0.7)"
+                    : "rgba(255,210,100,0.7)",
+                }}
               >
                 {totalStars}/{maxStars}
               </span>
@@ -245,13 +263,21 @@ function RealmMasteryBanner({
             <div className="flex flex-col min-w-0">
               <div
                 className="text-[13px] font-bold leading-tight"
-                style={{ color: isPerfect ? "rgba(220,195,255,0.95)" : "rgba(255,235,180,0.95)" }}
+                style={{
+                  color: isPerfect
+                    ? "rgba(220,195,255,0.95)"
+                    : "rgba(255,235,180,0.95)",
+                }}
               >
                 {isPerfect ? "Every Star Claimed" : "Every Battle Won"}
               </div>
               <div
                 className="text-[10px] mt-0.5"
-                style={{ color: isPerfect ? "rgba(180,150,230,0.55)" : "rgba(255,210,100,0.55)" }}
+                style={{
+                  color: isPerfect
+                    ? "rgba(180,150,230,0.55)"
+                    : "rgba(255,210,100,0.55)",
+                }}
               >
                 {isPerfect
                   ? "A legend forged eternal"
@@ -288,9 +314,14 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   );
 
   const campaignLevels = getCampaignLevels();
-  const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
+  const totalStars = campaignLevels.reduce(
+    (a, l) => a + (levelStars[l.id] || 0),
+    0
+  );
   const maxStars = campaignLevels.length * 3;
-  const completedLevels = campaignLevels.filter((l) => (levelStars[l.id] || 0) > 0).length;
+  const completedLevels = campaignLevels.filter(
+    (l) => (levelStars[l.id] || 0) > 0
+  ).length;
   const totalLevels = campaignLevels.length;
 
   const recommended = useMemo(
@@ -298,11 +329,23 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
     [levelStars, unlockedSet]
   );
 
-  const totalBattles = Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0);
-  const totalWins = Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0);
-  const totalHearts = Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0);
+  const totalBattles = Object.values(levelStats).reduce(
+    (a, s) => a + (s.timesPlayed || 0),
+    0
+  );
+  const totalWins = Object.values(levelStats).reduce(
+    (a, s) => a + (s.timesWon || 0),
+    0
+  );
+  const totalHearts = Object.values(levelStats).reduce(
+    (a, s) => a + (s.bestHearts || 0),
+    0
+  );
 
-  const lastPlayed = useMemo(() => findLastPlayedLevel(levelStats), [levelStats]);
+  const lastPlayed = useMemo(
+    () => findLastPlayedLevel(levelStats),
+    [levelStats]
+  );
   const lastPlayedLevel = lastPlayed
     ? WORLD_LEVELS.find((l) => l.id === lastPlayed.id)
     : null;
@@ -311,24 +354,31 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
 
   const isCampaignBeaten = (levelStars[FINAL_CAMPAIGN_LEVEL] || 0) > 0;
   const isAllLevelsBeaten = campaignLevels.every(
-    (l) => (levelStars[l.id] || 0) > 0,
+    (l) => (levelStars[l.id] || 0) > 0
   );
 
   const nextChallenge = useMemo(() => {
-    if (!isCampaignBeaten || isAllLevelsBeaten) return null;
+    if (!isCampaignBeaten || isAllLevelsBeaten) {
+      return null;
+    }
     return (
       campaignLevels.find(
         (l) =>
           l.kind === "challenge" &&
           unlockedSet.has(l.id) &&
-          (levelStars[l.id] || 0) === 0,
+          (levelStars[l.id] || 0) === 0
       ) ?? null
     );
-  }, [campaignLevels, isCampaignBeaten, isAllLevelsBeaten, levelStars, unlockedSet]);
+  }, [
+    campaignLevels,
+    isCampaignBeaten,
+    isAllLevelsBeaten,
+    levelStars,
+    unlockedSet,
+  ]);
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-auto relative">
-
       {/* Top divider */}
       <div
         className="h-px flex-shrink-0 relative z-10"
@@ -353,9 +403,11 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             sizes="300px"
             className="object-cover opacity-[0.09] scale-110"
             style={{
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
               objectPosition: "center 40%",
-              maskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
             }}
           />
         </div>
@@ -365,9 +417,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <h2
             className="text-sm font-extrabold tracking-wider uppercase"
             style={{
-              background: "linear-gradient(180deg, #f5d060 0%, #d4a84a 40%, #a07830 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              background:
+                "linear-gradient(180deg, #f5d060 0%, #d4a84a 40%, #a07830 100%)",
               filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
             }}
           >
@@ -408,16 +461,17 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             <div
               className="h-full rounded-full transition-all duration-500 relative overflow-hidden"
               style={{
-                width: `${progressPct}%`,
                 background:
                   "linear-gradient(90deg, rgba(160,110,20,0.9), rgba(220,170,40,0.95), rgba(160,110,20,0.9))",
                 boxShadow: "0 0 10px rgba(220,170,40,0.35)",
+                width: `${progressPct}%`,
               }}
             >
               <div
                 className="absolute inset-0 animate-wm-progress-shimmer"
                 style={{
-                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
                   width: "40%",
                 }}
               />
@@ -451,28 +505,53 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         >
           <span className="flex items-center gap-1.5 text-[11px]">
             <Swords size={11} className="text-blue-400/80 shrink-0" />
-            <span className="text-blue-300 font-bold tabular-nums">{totalBattles}</span>
-            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Played</span>
+            <span className="text-blue-300 font-bold tabular-nums">
+              {totalBattles}
+            </span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
+              Played
+            </span>
           </span>
           <span className="text-amber-700/40 text-[10px]">|</span>
           <span className="flex items-center gap-1.5 text-[11px]">
             <Trophy size={11} className="text-emerald-400/80 shrink-0" />
-            <span className="text-emerald-300 font-bold tabular-nums">{totalWins}</span>
-            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Wins</span>
+            <span className="text-emerald-300 font-bold tabular-nums">
+              {totalWins}
+            </span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
+              Wins
+            </span>
           </span>
           <span className="text-amber-700/40 text-[10px]">|</span>
           <span className="flex items-center gap-1.5 text-[11px]">
             <Heart size={11} className="text-red-400 fill-red-400 shrink-0" />
-            <span className="text-red-300 font-bold tabular-nums">{totalHearts}</span>
-            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Lives</span>
+            <span className="text-red-300 font-bold tabular-nums">
+              {totalHearts}
+            </span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
+              Lives
+            </span>
           </span>
         </div>
 
         {/* Ornate bottom accent */}
         <div className="flex items-center justify-center gap-2 mt-2.5 relative z-10">
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-          <div className="w-1.5 h-1.5 rotate-45 rounded-[1px]" style={{ background: GOLD.border35 }} />
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+          <div
+            className="flex-1 h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${GOLD.border25})`,
+            }}
+          />
+          <div
+            className="w-1.5 h-1.5 rotate-45 rounded-[1px]"
+            style={{ background: GOLD.border35 }}
+          />
+          <div
+            className="flex-1 h-px"
+            style={{
+              background: `linear-gradient(90deg, ${GOLD.border25}, transparent)`,
+            }}
+          />
         </div>
       </div>
 
@@ -482,7 +561,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
       {isAllLevelsBeaten ? (
         <RealmMasteryBanner totalStars={totalStars} maxStars={maxStars} />
       ) : isCampaignBeaten ? (
-        <CampaignConqueredBanner target={nextChallenge} onSelect={onSelectLevel} />
+        <CampaignConqueredBanner
+          target={nextChallenge}
+          onSelect={onSelectLevel}
+        />
       ) : recommended ? (
         <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
           <button
@@ -530,7 +612,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     </div>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight
+                  size={18}
+                  className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-1 transition-all duration-300"
+                />
               </div>
             </div>
           </button>
@@ -546,84 +631,98 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         </div>
 
         <div className="space-y-2">
-          {regionData.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }, idx) => {
-            const meta = REGION_META[region];
-            const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
-            const isFullyComplete = stars === rMax && rMax > 0;
-            const regionPreview = targetLevel ? getPreviewImage(targetLevel.id) : undefined;
-            return (
-              <button
-                key={region}
-                onClick={() => {
-                  if (targetLevel) onSelectLevel(targetLevel.id);
-                }}
-                className="w-full text-left py-1 px-0.5 rounded-xl overflow-hidden transition-all hover:brightness-125 hover:scale-[1.02] active:scale-[0.99] relative"
-                style={{
-                  background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
-                  border: `1.5px solid ${isFullyComplete ? "rgba(220,170,40,0.55)" : meta.border}`,
-                  boxShadow: isFullyComplete
-                    ? `inset 0 0 12px ${meta.glow}, 0 0 14px rgba(220,170,40,0.15)`
-                    : `inset 0 0 12px ${meta.glow}`,
-                  animation: `wm-fade-in 0.4s ease-out ${idx * 70}ms both`,
-                }}
-              >
-                {regionPreview && (
-                  <MapPreviewBg src={regionPreview} fadeColor={meta.bgLight} />
-                )}
-                <div
-                  className="absolute inset-[2px] rounded-[10px] pointer-events-none"
-                  style={{
-                    border: `1px solid rgba(255,255,255,0.06)`,
+          {regionData.map(
+            (
+              { region, stars, maxStars: rMax, completed, total, targetLevel },
+              idx
+            ) => {
+              const meta = REGION_META[region];
+              const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
+              const isFullyComplete = stars === rMax && rMax > 0;
+              const regionPreview = targetLevel
+                ? getPreviewImage(targetLevel.id)
+                : undefined;
+              return (
+                <button
+                  key={region}
+                  onClick={() => {
+                    if (targetLevel) {
+                      onSelectLevel(targetLevel.id);
+                    }
                   }}
-                />
-                <div className="relative px-2.5 py-2 flex items-center gap-2">
-                  <div className="shrink-0">
-                    <RegionIcon type={region} size={28} framed />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[12px] font-bold text-amber-100 leading-tight">
-                        {meta.displayName}
-                      </span>
-                      <span className={`flex items-center gap-1 shrink-0 ml-1.5 ${isFullyComplete ? "animate-wm-star-breathe" : ""}`}>
-                        <Star
-                          size={10}
-                          className={
-                            stars > 0
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-stone-600"
-                          }
-                        />
-                        <span className="text-[9px] font-bold text-amber-300/70 tabular-nums">
-                          {stars}/{rMax}
+                  className="w-full text-left py-1 px-0.5 rounded-xl overflow-hidden transition-all hover:brightness-125 hover:scale-[1.02] active:scale-[0.99] relative"
+                  style={{
+                    animation: `wm-fade-in 0.4s ease-out ${idx * 70}ms both`,
+                    background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
+                    border: `1.5px solid ${isFullyComplete ? "rgba(220,170,40,0.55)" : meta.border}`,
+                    boxShadow: isFullyComplete
+                      ? `inset 0 0 12px ${meta.glow}, 0 0 14px rgba(220,170,40,0.15)`
+                      : `inset 0 0 12px ${meta.glow}`,
+                  }}
+                >
+                  {regionPreview && (
+                    <MapPreviewBg
+                      src={regionPreview}
+                      fadeColor={meta.bgLight}
+                    />
+                  )}
+                  <div
+                    className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+                    style={{
+                      border: `1px solid rgba(255,255,255,0.06)`,
+                    }}
+                  />
+                  <div className="relative px-2.5 py-2 flex items-center gap-2">
+                    <div className="shrink-0">
+                      <RegionIcon type={region} size={28} framed />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[12px] font-bold text-amber-100 leading-tight">
+                          {meta.displayName}
                         </span>
-                      </span>
-                    </div>
-                    <div
-                      className="h-1.5 rounded-full overflow-hidden"
-                      style={{
-                        background: "rgba(0,0,0,0.45)",
-                        border: "1px solid rgba(255,255,255,0.04)",
-                      }}
-                    >
+                        <span
+                          className={`flex items-center gap-1 shrink-0 ml-1.5 ${isFullyComplete ? "animate-wm-star-breathe" : ""}`}
+                        >
+                          <Star
+                            size={10}
+                            className={
+                              stars > 0
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-stone-600"
+                            }
+                          />
+                          <span className="text-[9px] font-bold text-amber-300/70 tabular-nums">
+                            {stars}/{rMax}
+                          </span>
+                        </span>
+                      </div>
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-1.5 rounded-full overflow-hidden"
                         style={{
-                          width: `${pct}%`,
-                          background: isFullyComplete
-                            ? "linear-gradient(90deg, rgba(220,170,40,0.9), rgba(250,200,60,0.95))"
-                            : `linear-gradient(90deg, ${meta.accent}cc, ${meta.accent}99)`,
-                          boxShadow: isFullyComplete
-                            ? "0 0 6px rgba(220,170,40,0.5)"
-                            : `0 0 4px ${meta.accent}44`,
+                          background: "rgba(0,0,0,0.45)",
+                          border: "1px solid rgba(255,255,255,0.04)",
                         }}
-                      />
+                      >
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            background: isFullyComplete
+                              ? "linear-gradient(90deg, rgba(220,170,40,0.9), rgba(250,200,60,0.95))"
+                              : `linear-gradient(90deg, ${meta.accent}cc, ${meta.accent}99)`,
+                            boxShadow: isFullyComplete
+                              ? "0 0 6px rgba(220,170,40,0.5)"
+                              : `0 0 4px ${meta.accent}44`,
+                            width: `${pct}%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            }
+          )}
         </div>
 
         {/* ═══════════════════════════════════════════════════
@@ -654,7 +753,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 style={{ border: `1px solid ${GOLD.innerBorder08}` }}
               />
               <div className="relative px-3.5 py-2.5">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
                     <MapPin size={14} className="text-amber-400/80 shrink-0" />
                     <span className="text-[13px] font-bold text-amber-100 truncate min-w-0">
@@ -709,9 +808,22 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-            <div className="w-1 h-1 rotate-45 rounded-[1px]" style={{ background: GOLD.border25 }} />
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+            <div
+              className="flex-1 h-px"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${GOLD.border25})`,
+              }}
+            />
+            <div
+              className="w-1 h-1 rotate-45 rounded-[1px]"
+              style={{ background: GOLD.border25 }}
+            />
+            <div
+              className="flex-1 h-px"
+              style={{
+                background: `linear-gradient(90deg, ${GOLD.border25}, transparent)`,
+              }}
+            />
           </div>
           <p
             className="text-[9px] leading-relaxed italic text-center px-2"

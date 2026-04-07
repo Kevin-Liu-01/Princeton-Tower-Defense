@@ -5,7 +5,11 @@ import {
   getLevelUniquePathSegments,
 } from "../../constants";
 import type { LevelKind, Position } from "../../types";
-import { distanceToLineSegment, gridToWorld, gridToWorldPath } from "../../utils";
+import {
+  distanceToLineSegment,
+  gridToWorld,
+  gridToWorldPath,
+} from "../../utils";
 
 const MOUNTAIN_TERRAIN_KINDS: ReadonlySet<LevelKind> = new Set([
   "challenge",
@@ -29,21 +33,22 @@ export interface ChallengeMountainGridBounds {
 }
 
 export const CHALLENGE_MOUNTAIN_RADII = {
-  top: TILE_SIZE * 3.1,
-  mid: TILE_SIZE * 4.8,
   base: TILE_SIZE * 7.4,
+  mid: TILE_SIZE * 4.8,
+  top: TILE_SIZE * 3.1,
 } as const;
 
 export const CHALLENGE_MOUNTAIN_DEPTH = {
-  terraceStep: 26,
-  cliffBase: 138,
   baseShadow: 176,
+  cliffBase: 138,
+  terraceStep: 26,
 } as const;
 
 export const CHALLENGE_MOUNTAIN_SKIRT_LAYERS = 11;
 export const CHALLENGE_PATH_OUTCROP_RADIUS = TILE_SIZE * 2.75;
 export const CHALLENGE_PATH_DECORATION_OUTCROP_RADIUS = TILE_SIZE * 1.95;
-export const CHALLENGE_DECORATION_RADIUS = CHALLENGE_PATH_DECORATION_OUTCROP_RADIUS;
+export const CHALLENGE_DECORATION_RADIUS =
+  CHALLENGE_PATH_DECORATION_OUTCROP_RADIUS;
 export const CHALLENGE_GRID_TOP_MARGIN_TILES = 0.72;
 export const CHALLENGE_GRID_DECORATION_MARGIN_TILES = 0.42;
 
@@ -51,10 +56,12 @@ const CHALLENGE_BOUNDS_GRID_MARGIN_TILES = 6;
 const CHALLENGE_BOUNDS_PATH_MARGIN_TILES = 6;
 const CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES = 18;
 
-export function getChallengePathSegments(mapId: string): ChallengePathSegment[] {
+export function getChallengePathSegments(
+  mapId: string
+): ChallengePathSegment[] {
   return getLevelUniquePathSegments(mapId).map((segment) => ({
-    start: gridToWorldPath(segment.start),
     end: gridToWorldPath(segment.end),
+    start: gridToWorldPath(segment.start),
   }));
 }
 
@@ -62,7 +69,9 @@ export function getDistanceToChallengePath(
   worldPos: Position,
   segments: ChallengePathSegment[]
 ): number {
-  if (segments.length === 0) return Number.POSITIVE_INFINITY;
+  if (segments.length === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
 
   let minDistance = Number.POSITIVE_INFINITY;
   for (const segment of segments) {
@@ -101,9 +110,12 @@ export function isWorldPosInChallengeMountainTop(
   if (isWorldPosWithinGridBounds(worldPos, CHALLENGE_GRID_TOP_MARGIN_TILES)) {
     return true;
   }
-  if (segments.length === 0) return false;
+  if (segments.length === 0) {
+    return false;
+  }
   return (
-    getDistanceToChallengePath(worldPos, segments) <= CHALLENGE_PATH_OUTCROP_RADIUS
+    getDistanceToChallengePath(worldPos, segments) <=
+    CHALLENGE_PATH_OUTCROP_RADIUS
   );
 }
 
@@ -116,7 +128,9 @@ export function isWorldPosInChallengeDecorationFootprint(
   ) {
     return true;
   }
-  if (segments.length === 0) return false;
+  if (segments.length === 0) {
+    return false;
+  }
   return (
     getDistanceToChallengePath(worldPos, segments) <=
     CHALLENGE_PATH_DECORATION_OUTCROP_RADIUS
@@ -128,9 +142,16 @@ export function isChallengeMountainTopCell(
   gy: number,
   segments: ChallengePathSegment[]
 ): boolean {
-  if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) return true;
-  if (segments.length === 0) return false;
-  return isWorldPosInChallengeMountainTop(gridToWorld({ x: gx, y: gy }), segments);
+  if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) {
+    return true;
+  }
+  if (segments.length === 0) {
+    return false;
+  }
+  return isWorldPosInChallengeMountainTop(
+    gridToWorld({ x: gx, y: gy }),
+    segments
+  );
 }
 
 export function getChallengeMountainGridBounds(
@@ -165,10 +186,10 @@ export function getChallengeMountainGridBounds(
   }
 
   return {
-    minX: Math.max(minX, -CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
     maxX: Math.min(maxX, GRID_WIDTH - 1 + CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
-    minY: Math.max(minY, -CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
     maxY: Math.min(maxY, GRID_HEIGHT - 1 + CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
+    minX: Math.max(minX, -CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
+    minY: Math.max(minY, -CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES),
   };
 }
 

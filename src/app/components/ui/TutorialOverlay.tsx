@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
 import { ChevronRight, SkipForward, BookOpen, ArrowRight } from "lucide-react";
-import { OrnateFrame } from "./primitives/OrnateFrame";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+
 import {
-  GOLD,
-  PANEL,
-  panelGradient,
-  dividerGradient,
-} from "./system/theme";
+  TOWER_DATA,
+  HERO_DATA,
+  TOWER_TAGS,
+  TOWER_QUICK_SUMMARY,
+} from "../../constants";
+import { TOWER_STATS } from "../../constants/towerStats";
 import type { TutorialStep } from "../../constants/tutorial";
 import { TUTORIAL_STEPS } from "../../constants/tutorial";
 import {
@@ -18,10 +19,10 @@ import {
   FramedSprite,
   TOWER_SPRITE_FRAME_THEME,
 } from "../../sprites";
-import { TOWER_DATA, HERO_DATA, TOWER_TAGS, TOWER_QUICK_SUMMARY } from "../../constants";
-import { TagBadge } from "./primitives/TagBadge";
-import { TOWER_STATS } from "../../constants/towerStats";
 import type { TowerType, SpellType, HeroType } from "../../types";
+import { OrnateFrame } from "./primitives/OrnateFrame";
+import { TagBadge } from "./primitives/TagBadge";
+import { GOLD, PANEL, panelGradient, dividerGradient } from "./system/theme";
 
 // =============================================================================
 // PROPS
@@ -50,18 +51,22 @@ interface HighlightRect {
 const PADDING = 8;
 
 function getHighlightElement(step: TutorialStep): HTMLElement | null {
-  if (!step.highlight) return null;
+  if (!step.highlight) {
+    return null;
+  }
   return document.querySelector(`[data-tutorial="${step.highlight}"]`);
 }
 
 function getHighlightRect(el: HTMLElement | null): HighlightRect | null {
-  if (!el) return null;
+  if (!el) {
+    return null;
+  }
   const r = el.getBoundingClientRect();
   return {
-    top: r.top - PADDING,
-    left: r.left - PADDING,
-    width: r.width + PADDING * 2,
     height: r.height + PADDING * 2,
+    left: r.left - PADDING,
+    top: r.top - PADDING,
+    width: r.width + PADDING * 2,
   };
 }
 
@@ -70,17 +75,19 @@ function getPanelPosition(
   highlight: HighlightRect | null
 ): React.CSSProperties {
   if (!highlight) {
-    return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+    return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
   }
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
   switch (step.position) {
-    case "top-right":
-      return { top: highlight.top + highlight.height + 12, right: 16 };
-    case "top-left":
-      return { top: highlight.top + highlight.height + 12, left: 16 };
+    case "top-right": {
+      return { right: 16, top: highlight.top + highlight.height + 12 };
+    }
+    case "top-left": {
+      return { left: 16, top: highlight.top + highlight.height + 12 };
+    }
     case "bottom-left": {
       const panelBottom = highlight.top - 12;
       return { bottom: vh - panelBottom, left: 16 };
@@ -91,11 +98,16 @@ function getPanelPosition(
     }
     case "bottom-center": {
       const panelBottom = highlight.top - 12;
-      return { bottom: vh - panelBottom, left: "50%", transform: "translateX(-50%)" };
+      return {
+        bottom: vh - panelBottom,
+        left: "50%",
+        transform: "translateX(-50%)",
+      };
     }
     case "center":
-    default:
-      return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+    default: {
+      return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+    }
   }
 }
 
@@ -103,7 +115,15 @@ function getPanelPosition(
 // TOWER CATALOG (for the build-towers step) — uses centralized tags
 // =============================================================================
 
-const TOWER_DISPLAY_ORDER: TowerType[] = ["cannon", "library", "lab", "arch", "club", "station", "mortar"];
+const TOWER_DISPLAY_ORDER: TowerType[] = [
+  "cannon",
+  "library",
+  "lab",
+  "arch",
+  "club",
+  "station",
+  "mortar",
+];
 
 function TowerCatalog() {
   return (
@@ -129,10 +149,16 @@ function TowerCatalog() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <span className="text-xs sm:text-sm font-bold text-amber-200 truncate">{towerData.name}</span>
-                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto flex-shrink-0">{towerData.cost} PP</span>
+                <span className="text-xs sm:text-sm font-bold text-amber-200 truncate">
+                  {towerData.name}
+                </span>
+                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto flex-shrink-0">
+                  {towerData.cost} PP
+                </span>
               </div>
-              <p className="text-[10px] sm:text-[12px] text-amber-100/70 leading-snug">{summary}</p>
+              <p className="text-[10px] sm:text-[12px] text-amber-100/70 leading-snug">
+                {summary}
+              </p>
               <div className="flex flex-wrap gap-0.5 mt-1">
                 {tags.map((tag) => (
                   <TagBadge key={tag} tag={tag} size={8} />
@@ -158,17 +184,53 @@ interface SpellCardInfo {
 }
 
 const SPELL_CARDS: SpellCardInfo[] = [
-  { type: "fireball", name: "Fireball", tagline: "Meteor shower dealing heavy AoE fire damage", color: "border-red-700/40" },
-  { type: "lightning", name: "Lightning", tagline: "Chain lightning leaps between enemies", color: "border-blue-700/40" },
-  { type: "freeze", name: "Freeze", tagline: "Freezes the most advanced enemies for several seconds", color: "border-cyan-700/40" },
-  { type: "hex_ward", name: "Hex Ward", tagline: "Marks enemies and reanimates fallen units as ghost allies", color: "border-fuchsia-700/40" },
-  { type: "payday", name: "Payday", tagline: "Instantly grants bonus Paw Points", color: "border-amber-700/40" },
-  { type: "reinforcements", name: "Reinforcements", tagline: "Drops soldiers anywhere on the map", color: "border-emerald-700/40" },
+  {
+    color: "border-red-700/40",
+    name: "Fireball",
+    tagline: "Meteor shower dealing heavy AoE fire damage",
+    type: "fireball",
+  },
+  {
+    color: "border-blue-700/40",
+    name: "Lightning",
+    tagline: "Chain lightning leaps between enemies",
+    type: "lightning",
+  },
+  {
+    color: "border-cyan-700/40",
+    name: "Freeze",
+    tagline: "Freezes the most advanced enemies for several seconds",
+    type: "freeze",
+  },
+  {
+    color: "border-fuchsia-700/40",
+    name: "Hex Ward",
+    tagline: "Marks enemies and reanimates fallen units as ghost allies",
+    type: "hex_ward",
+  },
+  {
+    color: "border-amber-700/40",
+    name: "Payday",
+    tagline: "Instantly grants bonus Paw Points",
+    type: "payday",
+  },
+  {
+    color: "border-emerald-700/40",
+    name: "Reinforcements",
+    tagline: "Drops soldiers anywhere on the map",
+    type: "reinforcements",
+  },
 ];
 
 const MAX_SPELLS = 3;
 
-function SpellCatalog({ selectedSpells, onSpellToggle }: { selectedSpells?: SpellType[]; onSpellToggle?: (spell: SpellType) => void }) {
+function SpellCatalog({
+  selectedSpells,
+  onSpellToggle,
+}: {
+  selectedSpells?: SpellType[];
+  onSpellToggle?: (spell: SpellType) => void;
+}) {
   const selected = selectedSpells ?? [];
   const isFull = selected.length >= MAX_SPELLS;
   return (
@@ -193,11 +255,17 @@ function SpellCatalog({ selectedSpells, onSpellToggle }: { selectedSpells?: Spel
               disabled={isDisabled}
               className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5 relative text-left transition-all duration-150"
               style={{
-                background: isSelected ? "rgba(251,191,36,0.1)" : "rgba(10,10,16,0.5)",
-                border: isSelected ? "2px solid rgba(251,191,36,0.5)" : "1px solid rgba(80,80,80,0.25)",
-                boxShadow: isSelected ? "0 0 10px rgba(251,191,36,0.15)" : "none",
-                opacity: isDisabled ? 0.4 : 1,
+                background: isSelected
+                  ? "rgba(251,191,36,0.1)"
+                  : "rgba(10,10,16,0.5)",
+                border: isSelected
+                  ? "2px solid rgba(251,191,36,0.5)"
+                  : "1px solid rgba(80,80,80,0.25)",
+                boxShadow: isSelected
+                  ? "0 0 10px rgba(251,191,36,0.15)"
+                  : "none",
                 cursor: isDisabled ? "not-allowed" : "pointer",
+                opacity: isDisabled ? 0.4 : 1,
               }}
             >
               {isSelected && (
@@ -207,8 +275,12 @@ function SpellCatalog({ selectedSpells, onSpellToggle }: { selectedSpells?: Spel
               )}
               <SpellSprite type={spell.type} size={30} />
               <div className="min-w-0">
-                <span className="text-[11px] sm:text-[13px] font-bold text-amber-200 block">{spell.name}</span>
-                <span className="text-[9px] sm:text-[11px] text-amber-200/40 leading-tight block">{spell.tagline}</span>
+                <span className="text-[11px] sm:text-[13px] font-bold text-amber-200 block">
+                  {spell.name}
+                </span>
+                <span className="text-[9px] sm:text-[11px] text-amber-200/40 leading-tight block">
+                  {spell.tagline}
+                </span>
               </div>
             </button>
           );
@@ -230,18 +302,69 @@ interface HeroCardInfo {
 }
 
 const HERO_CARDS: HeroCardInfo[] = [
-  { type: "tiger", role: "Brawler", tagline: "Fierce melee fighter. Roar stuns all nearby enemies.", roleColor: "bg-orange-900/60 text-orange-300 border-orange-700/40" },
-  { type: "tenor", role: "Ranged", tagline: "Sonic ranged attacker. High Note stuns & heals allies.", roleColor: "bg-pink-900/60 text-pink-300 border-pink-700/40" },
-  { type: "mathey", role: "Tank", tagline: "Armored defender. Goes invincible & taunts enemies.", roleColor: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40" },
-  { type: "rocky", role: "Artillery", tagline: "Hurls boulders from range. Massive AoE damage.", roleColor: "bg-stone-800/60 text-stone-300 border-stone-600/40" },
-  { type: "scott", role: "Support", tagline: "Boosts all tower damage +50% and range +25%.", roleColor: "bg-teal-900/60 text-teal-300 border-teal-700/40" },
-  { type: "captain", role: "Summoner", tagline: "Legendary commander. Summons armored knights.", roleColor: "bg-red-900/60 text-red-300 border-red-700/40" },
-  { type: "engineer", role: "Tech", tagline: "Deploys automated turrets to create crossfire.", roleColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
-  { type: "nassau", role: "Sky Guardian", tagline: "Flying phoenix. Rains fire and hunts aerial enemies.", roleColor: "bg-amber-900/60 text-amber-300 border-amber-700/40" },
-  { type: "ivy", role: "Controller", tagline: "Nature warden. Roots enemies with devastating vine storms.", roleColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40" },
+  {
+    role: "Brawler",
+    roleColor: "bg-orange-900/60 text-orange-300 border-orange-700/40",
+    tagline: "Fierce melee fighter. Roar stuns all nearby enemies.",
+    type: "tiger",
+  },
+  {
+    role: "Ranged",
+    roleColor: "bg-pink-900/60 text-pink-300 border-pink-700/40",
+    tagline: "Sonic ranged attacker. High Note stuns & heals allies.",
+    type: "tenor",
+  },
+  {
+    role: "Tank",
+    roleColor: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40",
+    tagline: "Armored defender. Goes invincible & taunts enemies.",
+    type: "mathey",
+  },
+  {
+    role: "Artillery",
+    roleColor: "bg-stone-800/60 text-stone-300 border-stone-600/40",
+    tagline: "Hurls boulders from range. Massive AoE damage.",
+    type: "rocky",
+  },
+  {
+    role: "Support",
+    roleColor: "bg-teal-900/60 text-teal-300 border-teal-700/40",
+    tagline: "Boosts all tower damage +50% and range +25%.",
+    type: "scott",
+  },
+  {
+    role: "Summoner",
+    roleColor: "bg-red-900/60 text-red-300 border-red-700/40",
+    tagline: "Legendary commander. Summons armored knights.",
+    type: "captain",
+  },
+  {
+    role: "Tech",
+    roleColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40",
+    tagline: "Deploys automated turrets to create crossfire.",
+    type: "engineer",
+  },
+  {
+    role: "Sky Guardian",
+    roleColor: "bg-amber-900/60 text-amber-300 border-amber-700/40",
+    tagline: "Flying phoenix. Rains fire and hunts aerial enemies.",
+    type: "nassau",
+  },
+  {
+    role: "Controller",
+    roleColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40",
+    tagline: "Nature warden. Roots enemies with devastating vine storms.",
+    type: "ivy",
+  },
 ];
 
-function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType | null; onHeroChange?: (hero: HeroType) => void }) {
+function HeroCatalog({
+  selectedHero,
+  onHeroChange,
+}: {
+  selectedHero?: HeroType | null;
+  onHeroChange?: (hero: HeroType) => void;
+}) {
   return (
     <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {HERO_CARDS.map((card) => {
@@ -256,42 +379,59 @@ function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType |
             className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2 relative w-full text-left transition-all duration-150"
             style={{
               background: isSelected ? `${heroColor}18` : "rgba(10,10,16,0.5)",
-              border: isSelected ? `2px solid ${heroColor}88` : `1px solid ${heroColor}44`,
+              border: isSelected
+                ? `2px solid ${heroColor}88`
+                : `1px solid ${heroColor}44`,
               boxShadow: isSelected ? `0 0 12px ${heroColor}30` : "none",
               cursor: "pointer",
             }}
           >
             {isSelected && (
-              <div className="absolute top-1 right-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                style={{ background: `${heroColor}30`, color: heroColor, border: `1px solid ${heroColor}55` }}>
+              <div
+                className="absolute top-1 right-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: `${heroColor}30`,
+                  border: `1px solid ${heroColor}55`,
+                  color: heroColor,
+                }}
+              >
                 Selected
               </div>
             )}
             <div
               className="flex-shrink-0 rounded-xl overflow-hidden mt-0.5"
               style={{
-                width: 42,
-                height: 42,
+                alignItems: "center",
                 background: `radial-gradient(circle, ${heroColor}22, rgba(6,6,10,0.9))`,
                 border: `1.5px solid ${heroColor}66`,
                 display: "flex",
-                alignItems: "center",
+                height: 42,
                 justifyContent: "center",
+                width: 42,
               }}
             >
               <HeroSprite type={card.type} size={34} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-                <span className="text-xs sm:text-sm font-bold text-amber-200">{heroData.name}</span>
-                <span className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
+                <span className="text-xs sm:text-sm font-bold text-amber-200">
+                  {heroData.name}
+                </span>
+                <span
+                  className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}
+                >
                   {card.role}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
+              <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">
+                {card.tagline}
+              </p>
               <div className="hidden sm:flex items-center gap-2 mt-1">
                 <span className="text-[11px] text-amber-400/50">
-                  <span className="font-semibold text-amber-300/60">{heroData.ability}</span> — {heroData.abilityDesc}
+                  <span className="font-semibold text-amber-300/60">
+                    {heroData.ability}
+                  </span>{" "}
+                  — {heroData.abilityDesc}
                 </span>
               </div>
             </div>
@@ -316,7 +456,13 @@ function TutorialUpgradeTree() {
   const levels = [1, 2, 3] as const;
 
   return (
-    <div className="mt-2 sm:mt-3 mb-1 rounded-lg border p-2 sm:p-2.5" style={{ background: "rgba(10,10,16,0.55)", borderColor: GOLD.innerBorder10 }}>
+    <div
+      className="mt-2 sm:mt-3 mb-1 rounded-lg border p-2 sm:p-2.5"
+      style={{
+        background: "rgba(10,10,16,0.55)",
+        borderColor: GOLD.innerBorder10,
+      }}
+    >
       <p className="text-[10px] sm:text-xs text-amber-300/60 font-semibold uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
         Example: {towerData.name}
       </p>
@@ -329,7 +475,10 @@ function TutorialUpgradeTree() {
           return (
             <React.Fragment key={lvl}>
               <div className="flex flex-col items-center">
-                <div className="rounded-lg overflow-hidden" style={{ border: `1.5px solid ${theme.border}` }}>
+                <div
+                  className="rounded-lg overflow-hidden"
+                  style={{ border: `1.5px solid ${theme.border}` }}
+                >
                   <FramedSprite size={34} theme={theme}>
                     <TowerSprite type={towerType} size={26} level={lvl} />
                   </FramedSprite>
@@ -338,7 +487,10 @@ function TutorialUpgradeTree() {
                   Lv{lvl}
                 </span>
               </div>
-              <ArrowRight size={16} className="flex-shrink-0 mx-1 text-amber-400/50" />
+              <ArrowRight
+                size={16}
+                className="flex-shrink-0 mx-1 text-amber-400/50"
+              />
             </React.Fragment>
           );
         })}
@@ -347,17 +499,29 @@ function TutorialUpgradeTree() {
         <div className="flex flex-col items-center gap-1">
           {(["A", "B"] as const).map((branch) => {
             const info = towerData.upgrades[branch];
-            const borderCol = branch === "A" ? "rgba(239,68,68,0.6)" : "rgba(59,130,246,0.6)";
-            const labelColor = branch === "A" ? "text-red-300" : "text-blue-300";
+            const borderCol =
+              branch === "A" ? "rgba(239,68,68,0.6)" : "rgba(59,130,246,0.6)";
+            const labelColor =
+              branch === "A" ? "text-red-300" : "text-blue-300";
             return (
               <div key={branch} className="flex items-center gap-1.5">
-                <div className="rounded-lg overflow-hidden" style={{ border: `1.5px solid ${borderCol}` }}>
+                <div
+                  className="rounded-lg overflow-hidden"
+                  style={{ border: `1.5px solid ${borderCol}` }}
+                >
                   <FramedSprite size={34} theme={theme}>
-                    <TowerSprite type={towerType} size={26} level={4} upgrade={branch} />
+                    <TowerSprite
+                      type={towerType}
+                      size={26}
+                      level={4}
+                      upgrade={branch}
+                    />
                   </FramedSprite>
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-[10px] font-semibold ${labelColor} leading-tight`}>
+                  <span
+                    className={`text-[10px] font-semibold ${labelColor} leading-tight`}
+                  >
                     {info.name}
                   </span>
                   <span className="text-[9px] text-amber-200/30 leading-tight max-w-[80px]">
@@ -387,7 +551,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [highlightRect, setHighlightRect] = useState<HighlightRect | null>(null);
+  const [highlightRect, setHighlightRect] = useState<HighlightRect | null>(
+    null
+  );
   const rafRef = useRef(0);
 
   const step = TUTORIAL_STEPS[currentStep];
@@ -397,13 +563,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // Continuously track the highlighted element's position
   useEffect(() => {
     function tick() {
-      if (!step) return;
+      if (!step) {
+        return;
+      }
       const el = getHighlightElement(step);
       const rect = getHighlightRect(el);
       setHighlightRect((prev) => {
-        if (!rect && !prev) return prev;
-        if (!rect) return null;
-        if (prev && prev.top === rect.top && prev.left === rect.left && prev.width === rect.width && prev.height === rect.height) return prev;
+        if (!rect && !prev) {
+          return prev;
+        }
+        if (!rect) {
+          return null;
+        }
+        if (
+          prev &&
+          prev.top === rect.top &&
+          prev.left === rect.left &&
+          prev.width === rect.width &&
+          prev.height === rect.height
+        ) {
+          return prev;
+        }
         return rect;
       });
       rafRef.current = requestAnimationFrame(tick);
@@ -413,7 +593,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   }, [step]);
 
   const handleNext = useCallback(() => {
-    if (isAnimating) return;
+    if (isAnimating) {
+      return;
+    }
     if (isLastStep) {
       onComplete();
       return;
@@ -443,7 +625,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNext, handleSkip]);
 
-  if (!step) return null;
+  if (!step) {
+    return null;
+  }
 
   const descriptionLines = step.description.split("\n").filter(Boolean);
   const panelStyle = getPanelPosition(step, highlightRect);
@@ -455,26 +639,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // Build the box-shadow spotlight cutout mask
   const overlayStyle: React.CSSProperties = highlightRect
     ? {
-      // Massive box-shadow covers everything except the cutout rect
-      boxShadow: `0 0 0 9999px rgba(0,0,0,0.72)`,
-      position: "fixed",
-      top: highlightRect.top,
-      left: highlightRect.left,
-      width: highlightRect.width,
-      height: highlightRect.height,
-      borderRadius: 12,
-      border: "2px solid rgba(251,191,36,0.45)",
-      pointerEvents: "none" as const,
-      zIndex: 300,
-      transition: "all 300ms cubic-bezier(0.4, 0, 0.2, 1)",
-    }
+        // Massive box-shadow covers everything except the cutout rect
+        border: "2px solid rgba(251,191,36,0.45)",
+        borderRadius: 12,
+        boxShadow: `0 0 0 9999px rgba(0,0,0,0.72)`,
+        height: highlightRect.height,
+        left: highlightRect.left,
+        pointerEvents: "none" as const,
+        position: "fixed",
+        top: highlightRect.top,
+        transition: "all 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        width: highlightRect.width,
+        zIndex: 300,
+      }
     : {
-      position: "fixed" as const,
-      inset: 0,
-      background: "rgba(0,0,0,0.72)",
-      pointerEvents: "none" as const,
-      zIndex: 300,
-    };
+        background: "rgba(0,0,0,0.72)",
+        inset: 0,
+        pointerEvents: "none" as const,
+        position: "fixed" as const,
+        zIndex: 300,
+      };
 
   return (
     <>
@@ -486,21 +670,25 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         <div
           className="pointer-events-none"
           style={{
+            borderRadius: 16,
+            boxShadow:
+              "0 0 24px rgba(251,191,36,0.3), inset 0 0 24px rgba(251,191,36,0.1)",
+            height: highlightRect.height + 8,
+            left: highlightRect.left - 4,
             position: "fixed",
             top: highlightRect.top - 4,
-            left: highlightRect.left - 4,
-            width: highlightRect.width + 8,
-            height: highlightRect.height + 8,
-            borderRadius: 16,
-            boxShadow: "0 0 24px rgba(251,191,36,0.3), inset 0 0 24px rgba(251,191,36,0.1)",
-            zIndex: 300,
             transition: "all 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+            width: highlightRect.width + 8,
+            zIndex: 300,
           }}
         />
       )}
 
       {/* Click blocker (allows clicks only in the tutorial panel) */}
-      <div className="fixed inset-0" style={{ zIndex: 301, pointerEvents: "none" }} />
+      <div
+        className="fixed inset-0"
+        style={{ pointerEvents: "none", zIndex: 301 }}
+      />
 
       {/* Tutorial panel */}
       <div
@@ -510,13 +698,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,
           boxShadow: `0 0 60px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
-          pointerEvents: "auto",
           opacity: isAnimating ? 0.3 : 1,
+          pointerEvents: "auto",
           transition: "opacity 150ms ease",
           zIndex: 302,
         }}
       >
-        <OrnateFrame className="relative w-full h-full overflow-hidden" cornerSize={40}>
+        <OrnateFrame
+          className="relative w-full h-full overflow-hidden"
+          cornerSize={40}
+        >
           {/* Header */}
           <div
             className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 border-b"
@@ -553,13 +744,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               </p>
             ))}
             {showTowerCatalog && <TowerCatalog />}
-            {showSpellCatalog && <SpellCatalog selectedSpells={selectedSpells} onSpellToggle={onSpellToggle} />}
+            {showSpellCatalog && (
+              <SpellCatalog
+                selectedSpells={selectedSpells}
+                onSpellToggle={onSpellToggle}
+              />
+            )}
             {showUpgradeTree && <TutorialUpgradeTree />}
-            {showHeroCatalog && <HeroCatalog selectedHero={selectedHero} onHeroChange={onHeroChange} />}
+            {showHeroCatalog && (
+              <HeroCatalog
+                selectedHero={selectedHero}
+                onHeroChange={onHeroChange}
+              />
+            )}
           </div>
 
           {/* Divider */}
-          <div className="mx-3 sm:mx-4" style={{ height: 1, background: dividerGradient }} />
+          <div
+            className="mx-3 sm:mx-4"
+            style={{ background: dividerGradient, height: 1 }}
+          />
 
           {/* Footer */}
           <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3">
@@ -570,14 +774,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                   key={i}
                   className="rounded-full transition-all duration-200"
                   style={{
-                    width: i === currentStep ? 12 : 5,
-                    height: 5,
                     background:
                       i === currentStep
                         ? "rgba(251,191,36,0.8)"
                         : i < currentStep
                           ? "rgba(251,191,36,0.35)"
                           : "rgba(255,255,255,0.15)",
+                    height: 5,
+                    width: i === currentStep ? 12 : 5,
                   }}
                 />
               ))}
@@ -596,7 +800,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 onClick={handleNext}
                 className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
                 style={{
-                  background: "linear-gradient(135deg, rgba(180,125,30,0.85), rgba(120,75,15,0.9))",
+                  background:
+                    "linear-gradient(135deg, rgba(180,125,30,0.85), rgba(120,75,15,0.9))",
                   border: `1px solid ${GOLD.border40}`,
                   boxShadow: `0 0 12px ${GOLD.glow07}`,
                 }}

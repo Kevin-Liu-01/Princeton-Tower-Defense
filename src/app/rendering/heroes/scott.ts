@@ -10,7 +10,7 @@ export function drawFScottHero(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -43,7 +43,7 @@ export function drawFScottHero(
     isAttacking,
     attackIntensity,
     goldPulse,
-    zoom,
+    zoom
   );
   drawGreenLight(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom, "behind");
@@ -54,7 +54,17 @@ export function drawFScottHero(
 
   drawCape(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawSuit(ctx, x, y, size, breathe, zoom);
-  drawScottSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, goldPulse);
+  drawScottSkirtArmor(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    goldPulse
+  );
   drawEpaulettes(ctx, x, y, size, time, zoom);
   drawAiguillette(ctx, x, y, size, time, zoom);
   drawVest(ctx, x, y, size, zoom);
@@ -69,7 +79,7 @@ export function drawFScottHero(
     isAttacking,
     attackPhase,
     penStrokeX,
-    penStrokeY,
+    penStrokeY
   );
   drawCapeWraps(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawHead(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
@@ -89,7 +99,7 @@ export function drawFScottHero(
     attackIntensity,
     penStrokeX,
     penStrokeY,
-    targetPos,
+    targetPos
   );
   drawFloatingWords(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
 }
@@ -105,7 +115,7 @@ function drawAura(
   isAttacking: boolean,
   attackIntensity: number,
   goldPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   const auraBase = isAttacking ? 0.45 : 0.24;
   const auraPulse = 0.85 + Math.sin(time * 3) * 0.15;
@@ -118,7 +128,7 @@ function drawAura(
       size * (0.08 + off),
       x,
       y - size * 0.1,
-      size * (0.95 + off * 0.3),
+      size * (0.95 + off * 0.3)
     );
     const a = (auraBase - layer * 0.06) * auraPulse;
     g.addColorStop(0, `rgba(218, 175, 55, ${a * 0.55})`);
@@ -134,7 +144,7 @@ function drawAura(
       size * (0.76 + off * 0.12),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -147,7 +157,7 @@ function drawAura(
       size * (0.5 + off),
       x,
       y - size * 0.1,
-      size * (1.05 + off * 0.2),
+      size * (1.05 + off * 0.2)
     );
     const a = (auraBase * 0.5 - layer * 0.04) * auraPulse;
     g.addColorStop(0, `rgba(52, 211, 153, ${a * 0.25})`);
@@ -162,7 +172,7 @@ function drawAura(
       size * (0.8 + off * 0.1),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -179,8 +189,11 @@ function drawAura(
       const va = angle + (v * Math.PI) / 2;
       const vx = x + Math.cos(va) * r;
       const vy = y - size * 0.1 + Math.sin(va) * rY;
-      if (v === 0) ctx.moveTo(vx, vy);
-      else ctx.lineTo(vx, vy);
+      if (v === 0) {
+        ctx.moveTo(vx, vy);
+      } else {
+        ctx.lineTo(vx, vy);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -192,7 +205,10 @@ function drawAura(
     const sparkDist = size * (0.4 + sparkPhase * 0.25);
     const sparkX = x + Math.cos(sparkAngle) * sparkDist;
     const sparkY =
-      y - size * 0.1 + Math.sin(sparkAngle) * sparkDist * 0.7 - sparkPhase * size * 0.1;
+      y -
+      size * 0.1 +
+      Math.sin(sparkAngle) * sparkDist * 0.7 -
+      sparkPhase * size * 0.1;
     const sparkAlpha = (1 - sparkPhase / 2) * 0.6 * goldPulse;
     const sparkR = size * (0.005 + Math.sin(time * 4 + p) * 0.003);
 
@@ -221,7 +237,7 @@ function drawGreenLight(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const glX = x;
   const glY = y - size * 0.92;
@@ -249,7 +265,7 @@ function drawGreenLight(
     glowR * 0.3,
     glX,
     glY,
-    glowR * 1.8,
+    glowR * 1.8
   );
   midG.addColorStop(0, `rgba(74, 222, 128, ${0.3 * intensity})`);
   midG.addColorStop(0.5, `rgba(34, 197, 94, ${0.15 * intensity})`);
@@ -278,7 +294,7 @@ function drawGreenLight(
     ctx.beginPath();
     ctx.moveTo(
       glX + Math.cos(angle) * glowR * 0.3,
-      glY + Math.sin(angle) * glowR * 0.3,
+      glY + Math.sin(angle) * glowR * 0.3
     );
     ctx.lineTo(glX + Math.cos(angle) * rayLen, glY + Math.sin(angle) * rayLen);
     ctx.stroke();
@@ -293,15 +309,19 @@ function drawFloatingLetters(
   time: number,
   goldPulse: number,
   zoom: number,
-  layer: "behind" | "front",
+  layer: "behind" | "front"
 ) {
   const letters = "GATSBY";
   for (let p = 0; p < 10; p++) {
     const pAngle = (time * 1.5 + (p * Math.PI * 2) / 10) % (Math.PI * 2);
     const depth = Math.sin(pAngle);
 
-    if (layer === "behind" && depth >= 0) continue;
-    if (layer === "front" && depth < 0) continue;
+    if (layer === "behind" && depth >= 0) {
+      continue;
+    }
+    if (layer === "front" && depth < 0) {
+      continue;
+    }
 
     const depthScale = 0.85 + depth * 0.2;
     const depthAlpha = 0.7 + depth * 0.3;
@@ -310,7 +330,8 @@ function drawFloatingLetters(
     const pRise = ((time * 0.5 + p * 0.4) % 1) * size * 0.25;
     const px = x + Math.cos(pAngle) * pDist;
     const py = y - size * 0.1 + depth * pDist * 0.4 - pRise;
-    const pAlpha = (0.6 - (pRise / (size * 0.25)) * 0.4) * goldPulse * depthAlpha;
+    const pAlpha =
+      (0.6 - (pRise / (size * 0.25)) * 0.4) * goldPulse * depthAlpha;
     ctx.fillStyle = `rgba(218, 175, 55, ${pAlpha})`;
     ctx.font = `italic ${Math.round(8 * zoom * depthScale)}px Georgia`;
     ctx.textAlign = "center";
@@ -327,7 +348,7 @@ function drawAttackRings(
   size: number,
   attackPhase: number,
   attackIntensity: number,
-  zoom: number,
+  zoom: number
 ) {
   for (let ring = 0; ring < 4; ring++) {
     const phase = (attackPhase * 2 + ring * 0.12) % 1;
@@ -342,7 +363,7 @@ function drawAttackRings(
       size * (0.65 + phase * 0.5),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -358,7 +379,7 @@ function drawCape(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const s = size;
   const wave1 = Math.sin(time * 2.2) * s * 0.04;
@@ -368,7 +389,7 @@ function drawCape(
 
   for (let side = -1; side <= 1; side += 2) {
     const flip = side;
-    const shoulderX = x + flip * s * 0.40;
+    const shoulderX = x + flip * s * 0.4;
     const shoulderY = y - s * 0.24;
     const capeBottomOuterY = y + s * 0.68;
     const capeBottomInnerY = y + s * 0.78;
@@ -382,22 +403,31 @@ function drawCape(
     ctx.beginPath();
     ctx.moveTo(shoulderX + flip * s * 0.02, shoulderY + s * 0.02);
     ctx.bezierCurveTo(
-      capeOuterX + w1 * 1.2 + flip * s * 0.04, shoulderY + s * 0.2,
-      capeOuterX + w2 * 1.3 + flip * s * 0.06, y + s * 0.35,
-      capeOuterX + w3 + flip * s * 0.03, capeBottomOuterY + s * 0.03,
+      capeOuterX + w1 * 1.2 + flip * s * 0.04,
+      shoulderY + s * 0.2,
+      capeOuterX + w2 * 1.3 + flip * s * 0.06,
+      y + s * 0.35,
+      capeOuterX + w3 + flip * s * 0.03,
+      capeBottomOuterY + s * 0.03
     );
     ctx.lineTo(x + flip * s * 0.22, capeBottomInnerY + s * 0.05);
     ctx.bezierCurveTo(
-      x + flip * s * 0.18, y + s * 0.3,
-      shoulderX - flip * s * 0.05, shoulderY + s * 0.15,
-      shoulderX + flip * s * 0.02, shoulderY + s * 0.02,
+      x + flip * s * 0.18,
+      y + s * 0.3,
+      shoulderX - flip * s * 0.05,
+      shoulderY + s * 0.15,
+      shoulderX + flip * s * 0.02,
+      shoulderY + s * 0.02
     );
     ctx.closePath();
     ctx.fill();
 
     // Main cape body — deep navy-black
     const capeGrad = ctx.createLinearGradient(
-      shoulderX, shoulderY, capeOuterX, capeBottomOuterY,
+      shoulderX,
+      shoulderY,
+      capeOuterX,
+      capeBottomOuterY
     );
     capeGrad.addColorStop(0, "#1a2240");
     capeGrad.addColorStop(0.2, "#1e2e48");
@@ -409,23 +439,31 @@ function drawCape(
     ctx.beginPath();
     ctx.moveTo(shoulderX, shoulderY);
     ctx.bezierCurveTo(
-      capeOuterX + w1, shoulderY + s * 0.15,
-      capeOuterX + w2 * 1.2, y + s * 0.3,
-      capeOuterX + w3, capeBottomOuterY,
+      capeOuterX + w1,
+      shoulderY + s * 0.15,
+      capeOuterX + w2 * 1.2,
+      y + s * 0.3,
+      capeOuterX + w3,
+      capeBottomOuterY
     );
     ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
     ctx.bezierCurveTo(
-      x + flip * s * 0.15, y + s * 0.25,
-      shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
-      shoulderX, shoulderY,
+      x + flip * s * 0.15,
+      y + s * 0.25,
+      shoulderX - flip * s * 0.08,
+      shoulderY + s * 0.12,
+      shoulderX,
+      shoulderY
     );
     ctx.closePath();
     ctx.fill();
 
     // Inner lining — emerald green satin, visible as inner fold
     const liningGrad = ctx.createLinearGradient(
-      shoulderX, shoulderY,
-      x + flip * s * 0.25, capeBottomInnerY,
+      shoulderX,
+      shoulderY,
+      x + flip * s * 0.25,
+      capeBottomInnerY
     );
     liningGrad.addColorStop(0, "#165428");
     liningGrad.addColorStop(0.3, "#22803a");
@@ -436,15 +474,21 @@ function drawCape(
     ctx.beginPath();
     ctx.moveTo(shoulderX - flip * s * 0.03, shoulderY + s * 0.04);
     ctx.bezierCurveTo(
-      x + flip * s * 0.35 + w1 * 0.5, y + s * 0.05,
-      x + flip * s * 0.28 + w2 * 0.4, y + s * 0.35,
-      x + flip * s * 0.22, capeBottomInnerY - s * 0.05,
+      x + flip * s * 0.35 + w1 * 0.5,
+      y + s * 0.05,
+      x + flip * s * 0.28 + w2 * 0.4,
+      y + s * 0.35,
+      x + flip * s * 0.22,
+      capeBottomInnerY - s * 0.05
     );
     ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
     ctx.bezierCurveTo(
-      x + flip * s * 0.15, y + s * 0.25,
-      shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
-      shoulderX - flip * s * 0.03, shoulderY + s * 0.04,
+      x + flip * s * 0.15,
+      y + s * 0.25,
+      shoulderX - flip * s * 0.08,
+      shoulderY + s * 0.12,
+      shoulderX - flip * s * 0.03,
+      shoulderY + s * 0.04
     );
     ctx.closePath();
     ctx.fill();
@@ -454,11 +498,13 @@ function drawCape(
     ctx.lineWidth = 1.2 * zoom;
     for (let fold = 0; fold < 4; fold++) {
       const t = 0.2 + fold * 0.2;
-      const foldStartX = shoulderX + flip * s * (0.02 + fold * 0.06) + wave1 * t;
+      const foldStartX =
+        shoulderX + flip * s * (0.02 + fold * 0.06) + wave1 * t;
       const foldStartY = shoulderY + s * 0.05 + fold * s * 0.03;
       const foldEndX = x + flip * s * (0.25 + fold * 0.08) + wave3 * (1 - t);
       const foldEndY = capeBottomInnerY - s * 0.1 + fold * s * 0.02;
-      const foldMidX = (foldStartX + foldEndX) * 0.5 + wave2 * (0.5 + fold * 0.2);
+      const foldMidX =
+        (foldStartX + foldEndX) * 0.5 + wave2 * (0.5 + fold * 0.2);
       const foldMidY = (foldStartY + foldEndY) * 0.5;
 
       ctx.beginPath();
@@ -475,9 +521,12 @@ function drawCape(
     ctx.beginPath();
     ctx.moveTo(shoulderX, shoulderY);
     ctx.bezierCurveTo(
-      capeOuterX + w1, shoulderY + s * 0.15,
-      capeOuterX + w2 * 1.2, y + s * 0.3,
-      capeOuterX + w3, capeBottomOuterY,
+      capeOuterX + w1,
+      shoulderY + s * 0.15,
+      capeOuterX + w2 * 1.2,
+      y + s * 0.3,
+      capeOuterX + w3,
+      capeBottomOuterY
     );
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -490,7 +539,8 @@ function drawCape(
     ctx.quadraticCurveTo(
       x + flip * s * 0.45,
       (capeBottomOuterY + capeBottomInnerY) * 0.5 + s * 0.04 + wave2 * 0.3,
-      x + flip * s * 0.2, capeBottomInnerY + s * 0.02,
+      x + flip * s * 0.2,
+      capeBottomInnerY + s * 0.02
     );
     ctx.stroke();
 
@@ -498,11 +548,13 @@ function drawCape(
     ctx.fillStyle = "#f0e0a0";
     for (let dot = 0; dot < 5; dot++) {
       const dt = dot / 4;
-      const dotX = capeOuterX + w3 +
-        (x + flip * s * 0.2 - capeOuterX - w3) * dt;
-      const dotY = capeBottomOuterY +
+      const dotX =
+        capeOuterX + w3 + (x + flip * s * 0.2 - capeOuterX - w3) * dt;
+      const dotY =
+        capeBottomOuterY +
         (capeBottomInnerY - capeBottomOuterY) * dt +
-        s * 0.01 + Math.sin(dt * Math.PI) * s * 0.03;
+        s * 0.01 +
+        Math.sin(dt * Math.PI) * s * 0.03;
       ctx.beginPath();
       ctx.arc(dotX, dotY, s * 0.009, 0, Math.PI * 2);
       ctx.fill();
@@ -518,15 +570,21 @@ function drawCape(
       ctx.beginPath();
       ctx.moveTo(shoulderX, shoulderY);
       ctx.bezierCurveTo(
-        capeOuterX + w1, shoulderY + s * 0.15,
-        capeOuterX + w2 * 1.2, y + s * 0.3,
-        capeOuterX + w3, capeBottomOuterY,
+        capeOuterX + w1,
+        shoulderY + s * 0.15,
+        capeOuterX + w2 * 1.2,
+        y + s * 0.3,
+        capeOuterX + w3,
+        capeBottomOuterY
       );
       ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
       ctx.bezierCurveTo(
-        x + flip * s * 0.15, y + s * 0.25,
-        shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
-        shoulderX, shoulderY,
+        x + flip * s * 0.15,
+        y + s * 0.25,
+        shoulderX - flip * s * 0.08,
+        shoulderY + s * 0.12,
+        shoulderX,
+        shoulderY
       );
       ctx.closePath();
       ctx.fill();
@@ -535,15 +593,20 @@ function drawCape(
 
   // Gold clasp chain connecting the two panels across the chest
   const claspY = y - s * 0.24;
-  const leftX = x - s * 0.40;
-  const rightX = x + s * 0.40;
+  const leftX = x - s * 0.4;
+  const rightX = x + s * 0.4;
   const sway = Math.sin(time * 2) * s * 0.008;
 
   ctx.strokeStyle = "rgba(60, 45, 10, 0.3)";
   ctx.lineWidth = 3.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(leftX, claspY + s * 0.01);
-  ctx.quadraticCurveTo(x, claspY + s * 0.1 + sway + s * 0.01, rightX, claspY + s * 0.01);
+  ctx.quadraticCurveTo(
+    x,
+    claspY + s * 0.1 + sway + s * 0.01,
+    rightX,
+    claspY + s * 0.01
+  );
   ctx.stroke();
 
   const chainGrad = ctx.createLinearGradient(leftX, claspY, rightX, claspY);
@@ -577,7 +640,7 @@ function drawCapeShoulderClasp(
   sy: number,
   s: number,
   _side: number,
-  zoom: number,
+  zoom: number
 ) {
   ctx.fillStyle = "#daa520";
   ctx.beginPath();
@@ -612,19 +675,19 @@ function drawCapeShoulderClasp(
     ctx.beginPath();
     ctx.moveTo(
       sx + Math.cos(angle) * s * 0.022,
-      sy + Math.sin(angle) * s * 0.022,
+      sy + Math.sin(angle) * s * 0.022
     );
     ctx.lineTo(
       sx + Math.cos(angle - 0.3) * s * 0.035,
-      sy + Math.sin(angle - 0.3) * s * 0.035,
+      sy + Math.sin(angle - 0.3) * s * 0.035
     );
     ctx.lineTo(
       sx + Math.cos(angle) * s * 0.042,
-      sy + Math.sin(angle) * s * 0.042,
+      sy + Math.sin(angle) * s * 0.042
     );
     ctx.lineTo(
       sx + Math.cos(angle + 0.3) * s * 0.035,
-      sy + Math.sin(angle + 0.3) * s * 0.035,
+      sy + Math.sin(angle + 0.3) * s * 0.035
     );
     ctx.closePath();
     ctx.fill();
@@ -640,7 +703,7 @@ function drawCapeWraps(
   _time: number,
   _zoom: number,
   _isAttacking: boolean,
-  _attackIntensity: number,
+  _attackIntensity: number
 ) {
   // no-op: wrap panels are now part of the Tenor-style drawCape
 }
@@ -653,7 +716,7 @@ function drawSuit(
   y: number,
   size: number,
   breathe: number,
-  zoom: number,
+  zoom: number
 ) {
   const shoulderW = size * 0.48;
   const waistW = size * 0.38;
@@ -665,7 +728,10 @@ function drawSuit(
 
   // Officer's tunic base — stiff, squared shoulders
   const tunicG = ctx.createLinearGradient(
-    x - shoulderW, neckY, x + shoulderW, hemY,
+    x - shoulderW,
+    neckY,
+    x + shoulderW,
+    hemY
   );
   tunicG.addColorStop(0, "#1e2e48");
   tunicG.addColorStop(0.25, "#142238");
@@ -679,25 +745,37 @@ function drawSuit(
   ctx.lineTo(x + size * 0.12, neckY - size * 0.02);
   ctx.lineTo(x + shoulderW, neckY + size * 0.08);
   ctx.bezierCurveTo(
-    x + shoulderW, chestY,
-    x + waistW * 1.02, waistY - size * 0.04,
-    x + waistW, waistY,
+    x + shoulderW,
+    chestY,
+    x + waistW * 1.02,
+    waistY - size * 0.04,
+    x + waistW,
+    waistY
   );
   ctx.bezierCurveTo(
-    x + waistW * 1.02, waistY + size * 0.06,
-    x + hemW, hemY - size * 0.08,
-    x + hemW, hemY,
+    x + waistW * 1.02,
+    waistY + size * 0.06,
+    x + hemW,
+    hemY - size * 0.08,
+    x + hemW,
+    hemY
   );
   ctx.lineTo(x - hemW, hemY);
   ctx.bezierCurveTo(
-    x - hemW, hemY - size * 0.08,
-    x - waistW * 1.02, waistY + size * 0.06,
-    x - waistW, waistY,
+    x - hemW,
+    hemY - size * 0.08,
+    x - waistW * 1.02,
+    waistY + size * 0.06,
+    x - waistW,
+    waistY
   );
   ctx.bezierCurveTo(
-    x - waistW * 1.02, waistY - size * 0.04,
-    x - shoulderW, chestY,
-    x - shoulderW, neckY + size * 0.08,
+    x - waistW * 1.02,
+    waistY - size * 0.04,
+    x - shoulderW,
+    chestY,
+    x - shoulderW,
+    neckY + size * 0.08
   );
   ctx.closePath();
   ctx.fill();
@@ -743,19 +821,28 @@ function drawSuit(
   ctx.beginPath();
   ctx.moveTo(x - crHW, crTop);
   ctx.bezierCurveTo(
-    x - crHW * 1.05, (crTop + crBot) / 2,
-    x - crHW * 0.95, crBot - size * 0.04,
-    x - crHW * 0.8, crBot,
+    x - crHW * 1.05,
+    (crTop + crBot) / 2,
+    x - crHW * 0.95,
+    crBot - size * 0.04,
+    x - crHW * 0.8,
+    crBot
   );
   ctx.bezierCurveTo(
-    x - crHW * 0.3, crBot + size * 0.02,
-    x + crHW * 0.3, crBot + size * 0.02,
-    x + crHW * 0.8, crBot,
+    x - crHW * 0.3,
+    crBot + size * 0.02,
+    x + crHW * 0.3,
+    crBot + size * 0.02,
+    x + crHW * 0.8,
+    crBot
   );
   ctx.bezierCurveTo(
-    x + crHW * 0.95, crBot - size * 0.04,
-    x + crHW * 1.05, (crTop + crBot) / 2,
-    x + crHW, crTop,
+    x + crHW * 0.95,
+    crBot - size * 0.04,
+    x + crHW * 1.05,
+    (crTop + crBot) / 2,
+    x + crHW,
+    crTop
   );
   ctx.closePath();
   ctx.fill();
@@ -793,8 +880,13 @@ function drawSuit(
   ctx.fillStyle = "rgba(180, 210, 240, 0.07)";
   ctx.beginPath();
   ctx.ellipse(
-    x - crHW * 0.2, midCR - size * 0.03,
-    crHW * 0.45, size * 0.055, -0.15, 0, Math.PI * 2,
+    x - crHW * 0.2,
+    midCR - size * 0.03,
+    crHW * 0.45,
+    size * 0.055,
+    -0.15,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -831,8 +923,11 @@ function drawSuit(
   ctx.fillStyle = buckG;
   ctx.beginPath();
   ctx.roundRect(
-    x - size * 0.03, beltY - size * 0.02,
-    size * 0.06, size * 0.04, size * 0.005,
+    x - size * 0.03,
+    beltY - size * 0.02,
+    size * 0.06,
+    size * 0.04,
+    size * 0.005
   );
   ctx.fill();
   ctx.strokeStyle = "#705510";
@@ -859,16 +954,43 @@ function drawScottSkirtArmor(
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
-  goldPulse: number,
+  goldPulse: number
 ) {
   const skirtTop = y + size * 0.44;
   const totalHeight = size * 0.32;
   const gapHalf = size * 0.06;
 
-  drawScottCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, goldPulse);
+  drawScottCenterBanner(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    skirtTop,
+    totalHeight,
+    gapHalf,
+    goldPulse
+  );
 
   for (let side = -1; side <= 1; side += 2) {
-    drawScottTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, 3, totalHeight / 3, totalHeight, gapHalf, goldPulse, isAttacking, attackIntensity);
+    drawScottTassetSide(
+      ctx,
+      x,
+      y,
+      size,
+      time,
+      zoom,
+      side,
+      skirtTop,
+      3,
+      totalHeight / 3,
+      totalHeight,
+      gapHalf,
+      goldPulse,
+      isAttacking,
+      attackIntensity
+    );
   }
 
   drawScottSkirtChain(ctx, x, size, zoom, skirtTop, gapHalf, goldPulse, time);
@@ -890,7 +1012,7 @@ function drawScottTassetSide(
   gapHalf: number,
   goldPulse: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const plateCount = 4;
   const plateOverlap = 0.22;
@@ -909,7 +1031,8 @@ function drawScottTassetSide(
     const innerW = gapHalf + p * size * 0.008;
     const outerW = size * (0.34 + p * 0.05);
 
-    const sway = Math.sin(time * 1.5 + p * 0.7 + side * 0.4) * size * 0.003 * (p + 1);
+    const sway =
+      Math.sin(time * 1.5 + p * 0.7 + side * 0.4) * size * 0.003 * (p + 1);
     const ix = x + side * innerW + sway;
     const ox = x + side * outerW + sway;
 
@@ -927,8 +1050,10 @@ function drawScottTassetSide(
 
     // Plate gradient — angled to follow the plate surface
     const pg = ctx.createLinearGradient(
-      ix, (innerTopY + innerBotY) / 2,
-      ox, (outerTopY + outerBotY) / 2,
+      ix,
+      (innerTopY + innerBotY) / 2,
+      ox,
+      (outerTopY + outerBotY) / 2
     );
     if (side === -1) {
       pg.addColorStop(0, "#3a4a68");
@@ -977,13 +1102,19 @@ function drawScottTassetSide(
     // Specular highlight strip across upper portion
     ctx.fillStyle = "rgba(180, 210, 240, 0.06)";
     const hlCx = (ix + ox) / 2;
-    const hlCy = ((innerTopY + outerTopY) / 2 + (innerBotY + outerBotY) / 2) * 0.5 - size * 0.01;
+    const hlCy =
+      ((innerTopY + outerTopY) / 2 + (innerBotY + outerBotY) / 2) * 0.5 -
+      size * 0.01;
     const hlAngle = Math.atan2(outerTopY - innerTopY, ox - ix);
     ctx.beginPath();
     ctx.ellipse(
-      hlCx, hlCy,
-      Math.abs(ox - ix) * 0.3, (innerBotY - innerTopY) * 0.15,
-      hlAngle, 0, Math.PI * 2,
+      hlCx,
+      hlCy,
+      Math.abs(ox - ix) * 0.3,
+      (innerBotY - innerTopY) * 0.15,
+      hlAngle,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -994,8 +1125,12 @@ function drawScottTassetSide(
     const rvtBotMid = innerBotY + rvtT * (outerBotY - innerBotY);
     const rvtY = (rvtTopMid + rvtBotMid) / 2;
     const rg = ctx.createRadialGradient(
-      rvtX - size * 0.002, rvtY - size * 0.002, 0,
-      rvtX, rvtY, size * 0.008,
+      rvtX - size * 0.002,
+      rvtY - size * 0.002,
+      0,
+      rvtX,
+      rvtY,
+      size * 0.008
     );
     rg.addColorStop(0, "#f0e0a0");
     rg.addColorStop(0.5, "#daa520");
@@ -1033,7 +1168,7 @@ function drawScottCenterBanner(
   skirtTop: number,
   totalHeight: number,
   gapHalf: number,
-  goldPulse: number,
+  goldPulse: number
 ) {
   const bannerTop = skirtTop + size * 0.04;
   const bannerBottom = skirtTop + totalHeight * 0.92;
@@ -1052,17 +1187,23 @@ function drawScottCenterBanner(
   ctx.moveTo(x - bannerHalfW, bannerTop);
   ctx.lineTo(x + bannerHalfW, bannerTop);
   ctx.bezierCurveTo(
-    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
-    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
-    x + bannerHalfW * 0.85, bannerBottom,
+    x + bannerHalfW + wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85,
+    bannerBottom
   );
   ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
   ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
   ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
   ctx.bezierCurveTo(
-    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
-    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
-    x - bannerHalfW, bannerTop,
+    x - bannerHalfW * 0.9 - wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW,
+    bannerTop
   );
   ctx.closePath();
   ctx.fill();
@@ -1083,7 +1224,13 @@ function drawScottCenterBanner(
   ctx.shadowBlur = 0;
   ctx.fillStyle = "#daa520";
   ctx.beginPath();
-  ctx.arc(x + size * 0.028, emblemY - size * 0.035, size * 0.006, 0, Math.PI * 2);
+  ctx.arc(
+    x + size * 0.028,
+    emblemY - size * 0.035,
+    size * 0.006,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 }
 
@@ -1095,7 +1242,7 @@ function drawScottSkirtChain(
   skirtTop: number,
   gapHalf: number,
   goldPulse: number,
-  time: number,
+  time: number
 ) {
   const chainY = skirtTop + size * 0.025;
   const leftAnchor = x - gapHalf + size * 0.01;
@@ -1110,8 +1257,12 @@ function drawScottSkirtChain(
     const ly = chainY + sag * sagT;
 
     const linkGrad = ctx.createRadialGradient(
-      lx - size * 0.002, ly - size * 0.002, 0,
-      lx, ly, size * 0.012,
+      lx - size * 0.002,
+      ly - size * 0.002,
+      0,
+      lx,
+      ly,
+      size * 0.012
     );
     linkGrad.addColorStop(0, "#f0e0a0");
     linkGrad.addColorStop(0.5, "#daa520");
@@ -1159,14 +1310,17 @@ function drawScottSkirtBelt(
   size: number,
   zoom: number,
   skirtTop: number,
-  goldPulse: number,
+  goldPulse: number
 ) {
   const beltHalfW = size * 0.43;
   const beltThick = size * 0.048;
   const vDip = size * 0.08;
 
   const beltGrad = ctx.createLinearGradient(
-    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+    x - beltHalfW,
+    skirtTop,
+    x + beltHalfW,
+    skirtTop
   );
   beltGrad.addColorStop(0, "#2a3a58");
   beltGrad.addColorStop(0.2, "#3a4a68");
@@ -1193,8 +1347,14 @@ function drawScottSkirtBelt(
   ctx.strokeStyle = "rgba(218, 175, 55, 0.4)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
-  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.moveTo(
+    x - beltHalfW + size * 0.01,
+    skirtTop - beltThick * 0.5 + size * 0.004
+  );
+  ctx.lineTo(
+    x + beltHalfW - size * 0.01,
+    skirtTop - beltThick * 0.5 + size * 0.004
+  );
   ctx.stroke();
 
   ctx.fillStyle = "#daa520";
@@ -1205,7 +1365,13 @@ function drawScottSkirtBelt(
   ctx.fill();
   ctx.fillStyle = "#f0e0a0";
   ctx.beginPath();
-  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.008,
+    skirtTop + vDip * 0.35 - size * 0.008,
+    size * 0.013,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 }
@@ -1220,7 +1386,7 @@ function drawHelmet(
   _time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const headY = y - size * 0.5;
   const capTop = headY - size * 0.36;
@@ -1238,19 +1404,28 @@ function drawHelmet(
   ctx.beginPath();
   ctx.moveTo(x - capHW * 0.7, bandY);
   ctx.bezierCurveTo(
-    x - capHW * 0.85, (capTop + bandY) / 2 + size * 0.02,
-    x - capHW * 0.88, (capTop + bandY) / 2 - size * 0.02,
-    x - capHW * 0.55, capTop + size * 0.02,
+    x - capHW * 0.85,
+    (capTop + bandY) / 2 + size * 0.02,
+    x - capHW * 0.88,
+    (capTop + bandY) / 2 - size * 0.02,
+    x - capHW * 0.55,
+    capTop + size * 0.02
   );
   ctx.bezierCurveTo(
-    x - capHW * 0.2, capTop - size * 0.01,
-    x + capHW * 0.2, capTop - size * 0.01,
-    x + capHW * 0.55, capTop + size * 0.02,
+    x - capHW * 0.2,
+    capTop - size * 0.01,
+    x + capHW * 0.2,
+    capTop - size * 0.01,
+    x + capHW * 0.55,
+    capTop + size * 0.02
   );
   ctx.bezierCurveTo(
-    x + capHW * 0.88, (capTop + bandY) / 2 - size * 0.02,
-    x + capHW * 0.85, (capTop + bandY) / 2 + size * 0.02,
-    x + capHW * 0.7, bandY,
+    x + capHW * 0.88,
+    (capTop + bandY) / 2 - size * 0.02,
+    x + capHW * 0.85,
+    (capTop + bandY) / 2 + size * 0.02,
+    x + capHW * 0.7,
+    bandY
   );
   ctx.closePath();
   ctx.fill();
@@ -1261,7 +1436,15 @@ function drawHelmet(
   // Crown top disc (flat top of peaked cap)
   ctx.fillStyle = "#101e30";
   ctx.beginPath();
-  ctx.ellipse(x, capTop + size * 0.02, capHW * 0.52, size * 0.025, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    capTop + size * 0.02,
+    capHW * 0.52,
+    size * 0.025,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 0.8 * zoom;
@@ -1269,7 +1452,12 @@ function drawHelmet(
 
   // Gold headband
   const bandH = size * 0.035;
-  const bandG = ctx.createLinearGradient(x - capHW, bandY, x + capHW, bandY + bandH);
+  const bandG = ctx.createLinearGradient(
+    x - capHW,
+    bandY,
+    x + capHW,
+    bandY + bandH
+  );
   bandG.addColorStop(0, "#8a6b20");
   bandG.addColorStop(0.3, "#daa520");
   bandG.addColorStop(0.5, "#f0e0a0");
@@ -1298,15 +1486,21 @@ function drawHelmet(
   ctx.beginPath();
   ctx.moveTo(x - capHW * 0.74, visorY);
   ctx.bezierCurveTo(
-    x - capHW * 0.5, visorY + size * 0.065,
-    x + capHW * 0.5, visorY + size * 0.065,
-    x + capHW * 0.74, visorY,
+    x - capHW * 0.5,
+    visorY + size * 0.065,
+    x + capHW * 0.5,
+    visorY + size * 0.065,
+    x + capHW * 0.74,
+    visorY
   );
   ctx.lineTo(x + capHW * 0.7, visorY - size * 0.005);
   ctx.bezierCurveTo(
-    x + capHW * 0.45, visorY + size * 0.045,
-    x - capHW * 0.45, visorY + size * 0.045,
-    x - capHW * 0.7, visorY - size * 0.005,
+    x + capHW * 0.45,
+    visorY + size * 0.045,
+    x - capHW * 0.45,
+    visorY + size * 0.045,
+    x - capHW * 0.7,
+    visorY - size * 0.005
   );
   ctx.closePath();
   ctx.fill();
@@ -1320,9 +1514,12 @@ function drawHelmet(
   ctx.beginPath();
   ctx.moveTo(x - capHW * 0.74, visorY);
   ctx.bezierCurveTo(
-    x - capHW * 0.5, visorY + size * 0.065,
-    x + capHW * 0.5, visorY + size * 0.065,
-    x + capHW * 0.74, visorY,
+    x - capHW * 0.5,
+    visorY + size * 0.065,
+    x + capHW * 0.5,
+    visorY + size * 0.065,
+    x + capHW * 0.74,
+    visorY
   );
   ctx.stroke();
 
@@ -1330,8 +1527,13 @@ function drawHelmet(
   ctx.fillStyle = "rgba(180, 210, 240, 0.1)";
   ctx.beginPath();
   ctx.ellipse(
-    x - size * 0.03, visorY + size * 0.02,
-    size * 0.08, size * 0.015, -0.1, 0, Math.PI * 2,
+    x - size * 0.03,
+    visorY + size * 0.02,
+    size * 0.08,
+    size * 0.015,
+    -0.1,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1360,7 +1562,12 @@ function drawHelmet(
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - capHW * 0.62, visorY + size * 0.01);
-  ctx.quadraticCurveTo(x, visorY + size * 0.1, x + capHW * 0.62, visorY + size * 0.01);
+  ctx.quadraticCurveTo(
+    x,
+    visorY + size * 0.1,
+    x + capHW * 0.62,
+    visorY + size * 0.01
+  );
   ctx.stroke();
 
   // Chinstrap button anchors
@@ -1368,8 +1575,11 @@ function drawHelmet(
     ctx.fillStyle = "#daa520";
     ctx.beginPath();
     ctx.arc(
-      x + side * capHW * 0.62, visorY + size * 0.01,
-      size * 0.005, 0, Math.PI * 2,
+      x + side * capHW * 0.62,
+      visorY + size * 0.01,
+      size * 0.005,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1377,16 +1587,25 @@ function drawHelmet(
   if (isAttacking) {
     const ga = 0.12 * attackIntensity;
     const gg = ctx.createRadialGradient(
-      x, (capTop + bandY) / 2, 0,
-      x, (capTop + bandY) / 2, capHW,
+      x,
+      (capTop + bandY) / 2,
+      0,
+      x,
+      (capTop + bandY) / 2,
+      capHW
     );
     gg.addColorStop(0, `rgba(218, 175, 55, ${ga})`);
     gg.addColorStop(1, "rgba(218, 175, 55, 0)");
     ctx.fillStyle = gg;
     ctx.beginPath();
     ctx.ellipse(
-      x, (capTop + bandY) / 2,
-      capHW * 0.8, (bandY - capTop) * 0.6, 0, 0, Math.PI * 2,
+      x,
+      (capTop + bandY) / 2,
+      capHW * 0.8,
+      (bandY - capTop) * 0.6,
+      0,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1399,14 +1618,16 @@ function drawStormCollar(
   x: number,
   y: number,
   size: number,
-  zoom: number,
+  zoom: number
 ) {
   const headY = y - size * 0.5;
 
   for (let side = -1; side <= 1; side += 2) {
     const gG = ctx.createLinearGradient(
-      x + side * size * 0.14, headY + size * 0.18,
-      x + side * size * 0.28, headY - size * 0.06,
+      x + side * size * 0.14,
+      headY + size * 0.18,
+      x + side * size * 0.28,
+      headY - size * 0.06
     );
     gG.addColorStop(0, "#3a4a68");
     gG.addColorStop(0.35, "#3a5070");
@@ -1416,15 +1637,21 @@ function drawStormCollar(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.12, headY + size * 0.24);
     ctx.bezierCurveTo(
-      x + side * size * 0.14, headY + size * 0.1,
-      x + side * size * 0.18, headY,
-      x + side * size * 0.2, headY - size * 0.08,
+      x + side * size * 0.14,
+      headY + size * 0.1,
+      x + side * size * 0.18,
+      headY,
+      x + side * size * 0.2,
+      headY - size * 0.08
     );
     ctx.lineTo(x + side * size * 0.24, headY - size * 0.12);
     ctx.bezierCurveTo(
-      x + side * size * 0.28, headY - size * 0.02,
-      x + side * size * 0.3, headY + size * 0.08,
-      x + side * size * 0.28, headY + size * 0.22,
+      x + side * size * 0.28,
+      headY - size * 0.02,
+      x + side * size * 0.3,
+      headY + size * 0.08,
+      x + side * size * 0.28,
+      headY + size * 0.22
     );
     ctx.lineTo(x + side * size * 0.24, headY + size * 0.26);
     ctx.closePath();
@@ -1445,8 +1672,13 @@ function drawStormCollar(
     ctx.fillStyle = "rgba(180, 210, 240, 0.06)";
     ctx.beginPath();
     ctx.ellipse(
-      x + side * size * 0.2, headY + size * 0.06,
-      size * 0.03, size * 0.08, side * 0.15, 0, Math.PI * 2,
+      x + side * size * 0.2,
+      headY + size * 0.06,
+      size * 0.03,
+      size * 0.08,
+      side * 0.15,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1454,8 +1686,11 @@ function drawStormCollar(
     ctx.fillStyle = "#daa520";
     ctx.beginPath();
     ctx.arc(
-      x + side * size * 0.22, headY - size * 0.1,
-      size * 0.006, 0, Math.PI * 2,
+      x + side * size * 0.22,
+      headY - size * 0.1,
+      size * 0.006,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1469,7 +1704,7 @@ function drawEpaulettes(
   y: number,
   size: number,
   _time: number,
-  zoom: number,
+  zoom: number
 ) {
   for (let side = -1; side <= 1; side += 2) {
     const epX = x + side * size * 0.42;
@@ -1509,8 +1744,13 @@ function drawEpaulettes(
     ctx.fillStyle = "rgba(180, 210, 240, 0.1)";
     ctx.beginPath();
     ctx.ellipse(
-      -size * 0.02, -size * 0.01,
-      size * 0.06, size * 0.02, -0.2, 0, Math.PI * 2,
+      -size * 0.02,
+      -size * 0.01,
+      size * 0.06,
+      size * 0.02,
+      -0.2,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1536,7 +1776,7 @@ function drawAiguillette(
   y: number,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const startX = x + size * 0.35;
   const startY = y - size * 0.18;
@@ -1557,7 +1797,7 @@ function drawAiguillette(
       startX - loopWidth * 0.5 + sway,
       startY + loopDepth + loop * size * 0.02,
       startX - loopWidth + sway * 0.5,
-      startY + loop * size * 0.04,
+      startY + loop * size * 0.04
     );
     ctx.stroke();
 
@@ -1574,7 +1814,7 @@ function drawAiguillette(
     startY + size * 0.04,
     size * 0.015,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1611,7 +1851,7 @@ function drawAiguillette(
     x + size * 0.08,
     y + size * 0.12,
     x + size * 0.14,
-    y + size * 0.08,
+    y + size * 0.08
   );
   ctx.stroke();
   // Watch fob
@@ -1647,7 +1887,7 @@ function drawAiguillette(
     0,
     x,
     y - size * 0.31,
-    size * 0.012,
+    size * 0.012
   );
   bg.addColorStop(0, "#f0e0a0");
   bg.addColorStop(0.5, "#daa520");
@@ -1690,11 +1930,13 @@ function drawVest(
   x: number,
   y: number,
   size: number,
-  zoom: number,
+  zoom: number
 ) {
   const vestGrad = ctx.createLinearGradient(
-    x - size * 0.15, y - size * 0.18,
-    x + size * 0.15, y + size * 0.3,
+    x - size * 0.15,
+    y - size * 0.18,
+    x + size * 0.15,
+    y + size * 0.3
   );
   vestGrad.addColorStop(0, "#1e2e48");
   vestGrad.addColorStop(0.3, "#142030");
@@ -1741,8 +1983,12 @@ function drawVest(
     ctx.arc(x + size * 0.005, by + size * 0.005, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
     const bg = ctx.createRadialGradient(
-      x - size * 0.005, by - size * 0.005, 0,
-      x, by, size * 0.02,
+      x - size * 0.005,
+      by - size * 0.005,
+      0,
+      x,
+      by,
+      size * 0.02
     );
     bg.addColorStop(0, "#f0e0a0");
     bg.addColorStop(0.5, "#daa520");
@@ -1767,7 +2013,7 @@ function drawShirtAndTie(
   size: number,
   isAttacking: boolean,
   attackIntensity: number,
-  zoom: number,
+  zoom: number
 ) {
   // Shirt
   ctx.fillStyle = "#ffffff";
@@ -1832,7 +2078,7 @@ function drawShirtAndTie(
     size * 0.028,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -1850,7 +2096,7 @@ function drawArms(
   isAttacking: boolean,
   attackPhase: number,
   penStrokeX: number,
-  penStrokeY: number,
+  penStrokeY: number
 ) {
   const upperLen = size * 0.16;
   const forearmLen = size * 0.16;
@@ -1861,7 +2107,7 @@ function drawArms(
     : -0.7 - Math.sin(time * 1.2) * 0.04 - Math.sin(time * 0.8) * 0.02;
   const leftElbow = isAttacking
     ? -0.95 - Math.sin(attackPhase * Math.PI) * 0.25
-    : -1.0 + Math.sin(time * 1.2) * 0.08 + Math.sin(time * 0.6) * 0.04;
+    : -1 + Math.sin(time * 1.2) * 0.08 + Math.sin(time * 0.6) * 0.04;
 
   ctx.save();
   ctx.translate(x - size * 0.36, y - size * 0.08);
@@ -1884,7 +2130,7 @@ function drawArms(
     size * 0.045,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = "#f5d0a8";
@@ -1896,7 +2142,7 @@ function drawArms(
     forearmLen + size * 0.04,
     size * 0.022,
     0.2 * Math.PI,
-    0.8 * Math.PI,
+    0.8 * Math.PI
   );
   ctx.stroke();
 
@@ -1938,7 +2184,7 @@ function drawArms(
     hx - size * 0.035,
     hy,
     hx - size * 0.03,
-    hy + size * 0.03,
+    hy + size * 0.03
   );
   ctx.stroke();
   ctx.beginPath();
@@ -1951,7 +2197,7 @@ function drawArms(
     hy + size * 0.035,
     size * 0.025,
     0.2 * Math.PI,
-    0.7 * Math.PI,
+    0.7 * Math.PI
   );
   ctx.stroke();
 
@@ -1962,7 +2208,7 @@ function drawUpperSleeve(
   ctx: CanvasRenderingContext2D,
   size: number,
   zoom: number,
-  dir: number,
+  dir: number
 ) {
   const len = size * 0.16;
   const sg = ctx.createLinearGradient(0, 0, dir * size * 0.06, len);
@@ -1985,7 +2231,7 @@ function drawUpperSleeve(
 function drawElbowJoint(
   ctx: CanvasRenderingContext2D,
   size: number,
-  _zoom: number,
+  _zoom: number
 ) {
   ctx.fillStyle = "#122030";
   ctx.beginPath();
@@ -2006,7 +2252,7 @@ function drawForearmSleeve(
   ctx: CanvasRenderingContext2D,
   size: number,
   zoom: number,
-  dir: number,
+  dir: number
 ) {
   const len = size * 0.16;
   const sg = ctx.createLinearGradient(0, 0, dir * size * 0.04, len);
@@ -2018,12 +2264,7 @@ function drawForearmSleeve(
   ctx.moveTo(-dir * size * 0.045, 0);
   ctx.quadraticCurveTo(dir * size * 0.05, len * 0.4, dir * size * 0.03, len);
   ctx.lineTo(-dir * size * 0.05, len - size * 0.01);
-  ctx.quadraticCurveTo(
-    -dir * size * 0.06,
-    len * 0.4,
-    -dir * size * 0.045,
-    0,
-  );
+  ctx.quadraticCurveTo(-dir * size * 0.06, len * 0.4, -dir * size * 0.045, 0);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#1a2840";
@@ -2061,7 +2302,7 @@ function drawForearmSleeve(
     0,
     -dir * size * 0.005,
     len - size * 0.025,
-    size * 0.01,
+    size * 0.01
   );
   buckleG.addColorStop(0, "#f0e0a0");
   buckleG.addColorStop(0.5, "#daa520");
@@ -2073,7 +2314,7 @@ function drawForearmSleeve(
     len - size * 0.03,
     size * 0.02,
     size * 0.018,
-    size * 0.002,
+    size * 0.002
   );
   ctx.fill();
   ctx.strokeStyle = "#705510";
@@ -2097,14 +2338,18 @@ function drawHead(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const headY = y - size * 0.5;
 
   // Face — angular, handsome 1920s gentleman
   const fg = ctx.createRadialGradient(
-    x - size * 0.03, headY - size * 0.04, 0,
-    x, headY, size * 0.28,
+    x - size * 0.03,
+    headY - size * 0.04,
+    0,
+    x,
+    headY,
+    size * 0.28
   );
   fg.addColorStop(0, "#ffe8d0");
   fg.addColorStop(0.4, "#ffe0bd");
@@ -2114,34 +2359,52 @@ function drawHead(
   ctx.beginPath();
   ctx.moveTo(x, headY - size * 0.27);
   ctx.bezierCurveTo(
-    x + size * 0.2, headY - size * 0.27,
-    x + size * 0.3, headY - size * 0.15,
-    x + size * 0.28, headY - size * 0.02,
+    x + size * 0.2,
+    headY - size * 0.27,
+    x + size * 0.3,
+    headY - size * 0.15,
+    x + size * 0.28,
+    headY - size * 0.02
   );
   ctx.bezierCurveTo(
-    x + size * 0.27, headY + size * 0.08,
-    x + size * 0.22, headY + size * 0.16,
-    x + size * 0.16, headY + size * 0.22,
+    x + size * 0.27,
+    headY + size * 0.08,
+    x + size * 0.22,
+    headY + size * 0.16,
+    x + size * 0.16,
+    headY + size * 0.22
   );
   ctx.bezierCurveTo(
-    x + size * 0.1, headY + size * 0.26,
-    x + size * 0.04, headY + size * 0.29,
-    x, headY + size * 0.3,
+    x + size * 0.1,
+    headY + size * 0.26,
+    x + size * 0.04,
+    headY + size * 0.29,
+    x,
+    headY + size * 0.3
   );
   ctx.bezierCurveTo(
-    x - size * 0.04, headY + size * 0.29,
-    x - size * 0.1, headY + size * 0.26,
-    x - size * 0.16, headY + size * 0.22,
+    x - size * 0.04,
+    headY + size * 0.29,
+    x - size * 0.1,
+    headY + size * 0.26,
+    x - size * 0.16,
+    headY + size * 0.22
   );
   ctx.bezierCurveTo(
-    x - size * 0.22, headY + size * 0.16,
-    x - size * 0.27, headY + size * 0.08,
-    x - size * 0.28, headY - size * 0.02,
+    x - size * 0.22,
+    headY + size * 0.16,
+    x - size * 0.27,
+    headY + size * 0.08,
+    x - size * 0.28,
+    headY - size * 0.02
   );
   ctx.bezierCurveTo(
-    x - size * 0.3, headY - size * 0.15,
-    x - size * 0.2, headY - size * 0.27,
-    x, headY - size * 0.27,
+    x - size * 0.3,
+    headY - size * 0.15,
+    x - size * 0.2,
+    headY - size * 0.27,
+    x,
+    headY - size * 0.27
   );
   ctx.closePath();
   ctx.fill();
@@ -2152,14 +2415,20 @@ function drawHead(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, headY + size * 0.06);
   ctx.bezierCurveTo(
-    x - size * 0.18, headY + size * 0.18,
-    x - size * 0.08, headY + size * 0.27,
-    x, headY + size * 0.3,
+    x - size * 0.18,
+    headY + size * 0.18,
+    x - size * 0.08,
+    headY + size * 0.27,
+    x,
+    headY + size * 0.3
   );
   ctx.bezierCurveTo(
-    x + size * 0.08, headY + size * 0.27,
-    x + size * 0.18, headY + size * 0.18,
-    x + size * 0.24, headY + size * 0.06,
+    x + size * 0.08,
+    headY + size * 0.27,
+    x + size * 0.18,
+    headY + size * 0.18,
+    x + size * 0.24,
+    headY + size * 0.06
   );
   ctx.stroke();
 
@@ -2168,17 +2437,25 @@ function drawHead(
     ctx.fillStyle = "rgba(255, 230, 200, 0.1)";
     ctx.beginPath();
     ctx.ellipse(
-      x + side * size * 0.14, headY + size * 0.01,
-      size * 0.07, size * 0.028,
-      side * 0.3, 0, Math.PI * 2,
+      x + side * size * 0.14,
+      headY + size * 0.01,
+      size * 0.07,
+      size * 0.028,
+      side * 0.3,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "rgba(200, 160, 120, 0.2)";
     ctx.beginPath();
     ctx.ellipse(
-      x + side * size * 0.16, headY + size * 0.06,
-      size * 0.05, size * 0.022,
-      side * 0.2, 0, Math.PI * 2,
+      x + side * size * 0.16,
+      headY + size * 0.06,
+      size * 0.05,
+      size * 0.022,
+      side * 0.2,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2188,9 +2465,13 @@ function drawHead(
     ctx.fillStyle = "rgba(190, 150, 110, 0.12)";
     ctx.beginPath();
     ctx.ellipse(
-      x + side * size * 0.22, headY - size * 0.08,
-      size * 0.04, size * 0.06,
-      side * 0.2, 0, Math.PI * 2,
+      x + side * size * 0.22,
+      headY - size * 0.08,
+      size * 0.04,
+      size * 0.06,
+      side * 0.2,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2205,7 +2486,7 @@ function drawHair(
   x: number,
   headY: number,
   size: number,
-  zoom: number,
+  zoom: number
 ) {
   // Slicked-back 1920s pompadour with volume on top
   // Back/base layer
@@ -2213,7 +2494,7 @@ function drawHair(
     x - size * 0.2,
     headY - size * 0.3,
     x + size * 0.15,
-    headY,
+    headY
   );
   baseG.addColorStop(0, "#1a0e08");
   baseG.addColorStop(0.4, "#2a1810");
@@ -2228,7 +2509,7 @@ function drawHair(
     x - size * 0.28,
     headY - size * 0.2,
     x - size * 0.18,
-    headY - size * 0.28,
+    headY - size * 0.28
   );
   ctx.bezierCurveTo(
     x - size * 0.08,
@@ -2236,7 +2517,7 @@ function drawHair(
     x + size * 0.05,
     headY - size * 0.36,
     x + size * 0.15,
-    headY - size * 0.3,
+    headY - size * 0.3
   );
   ctx.bezierCurveTo(
     x + size * 0.24,
@@ -2244,7 +2525,7 @@ function drawHair(
     x + size * 0.28,
     headY - size * 0.14,
     x + size * 0.26,
-    headY + size * 0.02,
+    headY + size * 0.02
   );
   ctx.bezierCurveTo(
     x + size * 0.24,
@@ -2252,7 +2533,7 @@ function drawHair(
     x + size * 0.2,
     headY + size * 0.1,
     x + size * 0.16,
-    headY + size * 0.06,
+    headY + size * 0.06
   );
   ctx.closePath();
   ctx.fill();
@@ -2262,7 +2543,7 @@ function drawHair(
     x - size * 0.1,
     headY - size * 0.35,
     x + size * 0.12,
-    headY - size * 0.18,
+    headY - size * 0.18
   );
   pompG.addColorStop(0, "#3a2515");
   pompG.addColorStop(0.4, "#4a3520");
@@ -2276,7 +2557,7 @@ function drawHair(
     x - size * 0.06,
     headY - size * 0.38,
     x + size * 0.06,
-    headY - size * 0.36,
+    headY - size * 0.36
   );
   ctx.bezierCurveTo(
     x + size * 0.16,
@@ -2284,7 +2565,7 @@ function drawHair(
     x + size * 0.22,
     headY - size * 0.28,
     x + size * 0.2,
-    headY - size * 0.2,
+    headY - size * 0.2
   );
   ctx.bezierCurveTo(
     x + size * 0.15,
@@ -2292,7 +2573,7 @@ function drawHair(
     x + size * 0.02,
     headY - size * 0.26,
     x - size * 0.08,
-    headY - size * 0.24,
+    headY - size * 0.24
   );
   ctx.closePath();
   ctx.fill();
@@ -2313,7 +2594,7 @@ function drawHair(
       startX + size * 0.24,
       startY - size * 0.02,
       startX + size * 0.32,
-      startY + size * 0.04,
+      startY + size * 0.04
     );
     ctx.stroke();
   }
@@ -2329,7 +2610,7 @@ function drawHair(
     x + size * 0.08,
     headY - size * 0.32,
     x + size * 0.16,
-    headY - size * 0.26,
+    headY - size * 0.26
   );
   ctx.stroke();
 
@@ -2343,7 +2624,7 @@ function drawHair(
     x + size * 0.1,
     headY - size * 0.28,
     x + size * 0.18,
-    headY - size * 0.22,
+    headY - size * 0.22
   );
   ctx.stroke();
 
@@ -2357,7 +2638,7 @@ function drawHair(
     x + size * 0.12,
     headY - size * 0.31,
     x + size * 0.17,
-    headY - size * 0.25,
+    headY - size * 0.25
   );
   ctx.stroke();
 
@@ -2371,7 +2652,7 @@ function drawHair(
     x - size * 0.27,
     headY + size * 0.1,
     x - size * 0.24,
-    headY + size * 0.14,
+    headY + size * 0.14
   );
   ctx.lineTo(x - size * 0.22, headY + size * 0.08);
   ctx.closePath();
@@ -2386,7 +2667,7 @@ function drawHair(
     x + size * 0.25,
     headY + size * 0.1,
     x + size * 0.22,
-    headY + size * 0.14,
+    headY + size * 0.14
   );
   ctx.lineTo(x + size * 0.2, headY + size * 0.08);
   ctx.closePath();
@@ -2401,7 +2682,7 @@ function drawEyes(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   // Socket shadows
   ctx.fillStyle = "rgba(180, 140, 100, 0.25)";
@@ -2413,7 +2694,7 @@ function drawEyes(
     size * 0.05,
     -0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.1,
@@ -2422,7 +2703,7 @@ function drawEyes(
     size * 0.05,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2436,7 +2717,7 @@ function drawEyes(
     size * 0.055,
     -0.08,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2447,7 +2728,7 @@ function drawEyes(
     size * 0.055,
     0.08,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2508,7 +2789,7 @@ function drawEyes(
     glassR * 0.85,
     -0.05,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2519,7 +2800,7 @@ function drawEyes(
     glassR * 0.85,
     0.05,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2533,7 +2814,7 @@ function drawEyes(
     glassR * 0.25,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2544,7 +2825,7 @@ function drawEyes(
     glassR * 0.25,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2559,7 +2840,7 @@ function drawEyes(
     glassR * 0.85,
     -0.05,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
   ctx.beginPath();
@@ -2570,7 +2851,7 @@ function drawEyes(
     glassR * 0.85,
     0.05,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -2585,7 +2866,7 @@ function drawEyes(
     x + size * 0.008,
     headY - size * 0.04,
     x + size * 0.02,
-    headY - size * 0.025,
+    headY - size * 0.025
   );
   ctx.stroke();
 
@@ -2612,7 +2893,7 @@ function drawEyes(
     x - size * 0.08,
     headY - size * 0.13,
     x - size * 0.04,
-    headY - size * 0.1,
+    headY - size * 0.1
   );
   ctx.stroke();
   ctx.beginPath();
@@ -2623,7 +2904,7 @@ function drawEyes(
     x + size * 0.08,
     headY - size * 0.13,
     x + size * 0.04,
-    headY - size * 0.1,
+    headY - size * 0.1
   );
   ctx.stroke();
 }
@@ -2633,7 +2914,7 @@ function drawNoseAndMouth(
   x: number,
   headY: number,
   size: number,
-  zoom: number,
+  zoom: number
 ) {
   // Nose bridge
   ctx.strokeStyle = "#c8a888";
@@ -2647,7 +2928,7 @@ function drawNoseAndMouth(
     x - size * 0.018,
     headY + size * 0.07,
     x - size * 0.022,
-    headY + size * 0.08,
+    headY + size * 0.08
   );
   ctx.stroke();
 
@@ -2660,7 +2941,7 @@ function drawNoseAndMouth(
     x,
     headY + size * 0.1,
     x + size * 0.025,
-    headY + size * 0.08,
+    headY + size * 0.08
   );
   ctx.stroke();
 
@@ -2690,7 +2971,7 @@ function drawNoseAndMouth(
     x,
     headY + size * 0.13,
     x,
-    headY + size * 0.13,
+    headY + size * 0.13
   );
   ctx.bezierCurveTo(
     x,
@@ -2698,7 +2979,7 @@ function drawNoseAndMouth(
     x + size * 0.02,
     headY + size * 0.125,
     x + size * 0.055,
-    headY + size * 0.14,
+    headY + size * 0.14
   );
   ctx.stroke();
 
@@ -2713,7 +2994,7 @@ function drawNoseAndMouth(
     x + size * 0.03,
     headY + size * 0.17,
     x + size * 0.06,
-    headY + size * 0.14,
+    headY + size * 0.14
   );
   ctx.stroke();
 
@@ -2735,7 +3016,7 @@ function drawBook(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  writeCycle: number,
+  writeCycle: number
 ) {
   // Book held at center of body, open and facing up
   const bookX = x - size * 0.02;
@@ -2820,10 +3101,7 @@ function drawBook(
       ctx.lineWidth = 0.7;
       ctx.beginPath();
       ctx.moveTo(bW * 0.06, ply);
-      ctx.lineTo(
-        bW * 0.06 + bW * (0.28 + Math.sin(pl * 2.3) * 0.09),
-        ply,
-      );
+      ctx.lineTo(bW * 0.06 + bW * (0.28 + Math.sin(pl * 2.3) * 0.09), ply);
       ctx.stroke();
     }
 
@@ -2851,7 +3129,7 @@ function drawBook(
         iy,
         size * 0.004,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2866,7 +3144,7 @@ function drawBook(
       ctx.moveTo(bW * 0.06, gly + liftOff);
       ctx.lineTo(
         bW * 0.06 + bW * (0.25 + Math.sin(gl * 1.7) * 0.08),
-        gly + liftOff,
+        gly + liftOff
       );
       ctx.stroke();
     }
@@ -2917,7 +3195,7 @@ function drawPen(
   attackIntensity: number,
   penStrokeX: number,
   penStrokeY: number,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   const attackRise = isAttacking ? Math.min(attackPhase * 3, 1) : 0;
   const quillFlourish = isAttacking
@@ -2941,7 +3219,7 @@ function drawPen(
       penAttackRot,
       Math.PI / 2,
       1.2,
-      WEAPON_LIMITS.rightMelee,
+      WEAPON_LIMITS.rightMelee
     );
   } else {
     penRot = penWriteRot;
@@ -2961,7 +3239,7 @@ function drawPen(
     -size * 0.02,
     -size * 0.2,
     size * 0.02,
-    -size * 0.2,
+    -size * 0.2
   );
   pg.addColorStop(0, "#0a0a0a");
   pg.addColorStop(0.2, "#2a2a2a");
@@ -2975,7 +3253,7 @@ function drawPen(
     -size * 0.2,
     size * 0.05,
     size * 0.28,
-    size * 0.008,
+    size * 0.008
   );
   ctx.fill();
 
@@ -3022,7 +3300,7 @@ function drawPen(
     -size * 0.012,
     -size * 0.24,
     size * 0.012,
-    -size * 0.24,
+    -size * 0.24
   );
   ng.addColorStop(0, "#8a6b20");
   ng.addColorStop(0.5, "#e8d48a");
@@ -3048,8 +3326,7 @@ function drawPen(
   if (isAttacking) {
     for (let d = 0; d < 6; d++) {
       const dropPhase = (attackPhase + d * 0.12) % 1;
-      const dy =
-        -size * 0.37 - dropPhase * size * 0.25 - d * size * 0.03;
+      const dy = -size * 0.37 - dropPhase * size * 0.25 - d * size * 0.03;
       const dx = Math.sin(time * 8 + d * 2.1) * size * 0.025 * dropPhase;
       const da = (1 - dropPhase) * 0.7;
       const dropR = size * (0.006 + (1 - dropPhase) * 0.008);
@@ -3089,7 +3366,7 @@ function drawFloatingWords(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const count = isAttacking ? 8 : 4;
   const fontPx = Math.round((isAttacking ? 12 : 9) * zoom);
@@ -3099,8 +3376,7 @@ function drawFloatingWords(
   for (let i = 0; i < count; i++) {
     const speed = isAttacking ? 0.8 : 0.5;
     const phase = (time * speed + i * 0.55) % 3;
-    const angle =
-      (i * Math.PI * 2) / count + time * (isAttacking ? 0.6 : 0.4);
+    const angle = (i * Math.PI * 2) / count + time * (isAttacking ? 0.6 : 0.4);
     const dist = size * (isAttacking ? 0.5 + phase * 0.2 : 0.45 + phase * 0.08);
     const wx = x + Math.cos(angle) * dist;
     const wy = y - size * 0.3 - phase * size * (isAttacking ? 0.3 : 0.2);

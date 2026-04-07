@@ -1,6 +1,11 @@
-import type { Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
-import { setShadowBlur, clearShadow, getPerformanceSettings, getScenePressure } from "../performance";
+import type { Position } from "../../types";
+import {
+  setShadowBlur,
+  clearShadow,
+  getPerformanceSettings,
+  getScenePressure,
+} from "../performance";
 
 let _simpleGrad = false;
 
@@ -27,90 +32,90 @@ interface IvyPalette {
 }
 
 const IVY_PALETTES: Record<string, IvyPalette> = {
-  grassland: {
-    glow: "52,211,153",
-    glowBright: "167,243,208",
-    glowWhite: "209,250,229",
-    glowDark: "5,150,105",
-    leaf: "74,222,128",
-    leafDark: "34,197,94",
-    vine: "16,185,129",
-    vineDark: "15,100,60",
-    rootVine: "30,100,50",
-    flower: "236,72,153",
-    pollen: "251,191,36",
-    shadowHex: "#34d399",
-    eyePupil: "#064e3b",
-    canopy: ["#15803d", "#16a34a", "#22c55e", "#4ade80"],
-    canopyStyle: "round",
-  },
   desert: {
-    glow: "218,165,32",
-    glowBright: "245,208,120",
-    glowWhite: "255,235,180",
-    glowDark: "160,120,20",
-    leaf: "154,180,72",
-    leafDark: "120,140,50",
-    vine: "140,160,60",
-    vineDark: "90,110,40",
-    rootVine: "100,85,40",
-    flower: "245,130,50",
-    pollen: "255,200,50",
-    shadowHex: "#daa520",
-    eyePupil: "#4a3a10",
     canopy: ["#5a6b20", "#7a8a30", "#9aaa40", "#baca60"],
     canopyStyle: "flat",
+    eyePupil: "#4a3a10",
+    flower: "245,130,50",
+    glow: "218,165,32",
+    glowBright: "245,208,120",
+    glowDark: "160,120,20",
+    glowWhite: "255,235,180",
+    leaf: "154,180,72",
+    leafDark: "120,140,50",
+    pollen: "255,200,50",
+    rootVine: "100,85,40",
+    shadowHex: "#daa520",
+    vine: "140,160,60",
+    vineDark: "90,110,40",
   },
-  winter: {
-    glow: "100,180,255",
-    glowBright: "180,220,255",
-    glowWhite: "220,240,255",
-    glowDark: "40,100,180",
-    leaf: "160,210,240",
-    leafDark: "100,170,210",
-    vine: "80,160,200",
-    vineDark: "50,100,150",
-    rootVine: "60,90,120",
-    flower: "180,140,220",
-    pollen: "220,210,255",
-    shadowHex: "#64b4ff",
-    eyePupil: "#102a50",
-    canopy: ["#1a4a3a", "#2a6050", "#3a7a68", "#5a9a88"],
-    canopyStyle: "conical",
-  },
-  volcanic: {
-    glow: "255,100,30",
-    glowBright: "255,160,80",
-    glowWhite: "255,220,160",
-    glowDark: "180,50,10",
-    leaf: "120,50,30",
-    leafDark: "80,30,15",
-    vine: "160,70,20",
-    vineDark: "100,40,15",
-    rootVine: "70,30,15",
-    flower: "255,60,20",
-    pollen: "255,180,40",
-    shadowHex: "#ff6420",
-    eyePupil: "#3a1005",
-    canopy: ["#2a1a10", "#3a2518", "#4a3020", "#5a3a28"],
-    canopyStyle: "ember",
+  grassland: {
+    canopy: ["#15803d", "#16a34a", "#22c55e", "#4ade80"],
+    canopyStyle: "round",
+    eyePupil: "#064e3b",
+    flower: "236,72,153",
+    glow: "52,211,153",
+    glowBright: "167,243,208",
+    glowDark: "5,150,105",
+    glowWhite: "209,250,229",
+    leaf: "74,222,128",
+    leafDark: "34,197,94",
+    pollen: "251,191,36",
+    rootVine: "30,100,50",
+    shadowHex: "#34d399",
+    vine: "16,185,129",
+    vineDark: "15,100,60",
   },
   swamp: {
-    glow: "0,200,180",
-    glowBright: "100,240,220",
-    glowWhite: "180,255,240",
-    glowDark: "0,120,100",
-    leaf: "40,140,80",
-    leafDark: "25,100,55",
-    vine: "20,150,110",
-    vineDark: "10,90,60",
-    rootVine: "20,70,50",
-    flower: "160,80,200",
-    pollen: "180,140,255",
-    shadowHex: "#00c8b4",
-    eyePupil: "#0a2a20",
     canopy: ["#0a3020", "#155038", "#207050", "#308a68"],
     canopyStyle: "weeping",
+    eyePupil: "#0a2a20",
+    flower: "160,80,200",
+    glow: "0,200,180",
+    glowBright: "100,240,220",
+    glowDark: "0,120,100",
+    glowWhite: "180,255,240",
+    leaf: "40,140,80",
+    leafDark: "25,100,55",
+    pollen: "180,140,255",
+    rootVine: "20,70,50",
+    shadowHex: "#00c8b4",
+    vine: "20,150,110",
+    vineDark: "10,90,60",
+  },
+  volcanic: {
+    canopy: ["#2a1a10", "#3a2518", "#4a3020", "#5a3a28"],
+    canopyStyle: "ember",
+    eyePupil: "#3a1005",
+    flower: "255,60,20",
+    glow: "255,100,30",
+    glowBright: "255,160,80",
+    glowDark: "180,50,10",
+    glowWhite: "255,220,160",
+    leaf: "120,50,30",
+    leafDark: "80,30,15",
+    pollen: "255,180,40",
+    rootVine: "70,30,15",
+    shadowHex: "#ff6420",
+    vine: "160,70,20",
+    vineDark: "100,40,15",
+  },
+  winter: {
+    canopy: ["#1a4a3a", "#2a6050", "#3a7a68", "#5a9a88"],
+    canopyStyle: "conical",
+    eyePupil: "#102a50",
+    flower: "180,140,220",
+    glow: "100,180,255",
+    glowBright: "180,220,255",
+    glowDark: "40,100,180",
+    glowWhite: "220,240,255",
+    leaf: "160,210,240",
+    leafDark: "100,170,210",
+    pollen: "220,210,255",
+    rootVine: "60,90,120",
+    shadowHex: "#64b4ff",
+    vine: "80,160,200",
+    vineDark: "50,100,150",
   },
 };
 
@@ -125,8 +130,10 @@ const MORPH_DURATION_MS = 1200;
 function getMorphProgress(abilityEnd: number): number {
   const now = Date.now();
   const remaining = abilityEnd - now;
-  if (remaining <= 0) return 1.0;
-  return 1.0 - remaining / MORPH_DURATION_MS;
+  if (remaining <= 0) {
+    return 1;
+  }
+  return 1 - remaining / MORPH_DURATION_MS;
 }
 
 function drawMorphTransition(
@@ -136,7 +143,7 @@ function drawMorphTransition(
   s: number,
   time: number,
   zoom: number,
-  morphT: number,
+  morphT: number
 ) {
   const coverage = morphT;
 
@@ -216,7 +223,7 @@ function drawNormalFormFull(
   zoom: number,
   isAttacking: boolean,
   atkPow: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const naturePulse = Math.sin(time * 2.5) * 0.5 + 0.5 + atkBurst * 0.25;
   const breathe = Math.sin(time * 1.8) * (3.5 + atkBurst * 3);
@@ -253,13 +260,23 @@ function drawNormalFormFull(
     zoom,
     naturePulse,
     magicPulse,
-    atkBurst,
+    atkBurst
   );
   drawHead(ctx, bx, by, s, time, zoom, naturePulse, magicPulse);
   drawHair(ctx, bx, by, s, time, zoom, naturePulse, atkBurst);
   drawCrown(ctx, bx, by, s, time, zoom, naturePulse, leafRustle, atkBurst);
   if (!_simpleGrad) {
-    drawNatureAura(ctx, x, y, s, time, naturePulse, isAttacking, zoom, atkBurst);
+    drawNatureAura(
+      ctx,
+      x,
+      y,
+      s,
+      time,
+      naturePulse,
+      isAttacking,
+      zoom,
+      atkBurst
+    );
     drawMagicParticles(ctx, x, y, s, time, zoom, naturePulse, atkBurst);
   }
   if (isAttacking) {
@@ -283,7 +300,7 @@ export function drawIvyHero(
   targetPos?: Position,
   abilityActive?: boolean,
   mapTheme?: string,
-  abilityEnd?: number,
+  abilityEnd?: number
 ) {
   P = IVY_PALETTES[mapTheme ?? "grassland"] ?? IVY_PALETTES.grassland;
   const perf = getPerformanceSettings();
@@ -302,7 +319,7 @@ export function drawIvyHero(
   const atkBurst = Math.sin(atkPow * Math.PI);
   const hasActiveAttack = atkPhase > 0;
 
-  const morphT = abilityEnd != null ? getMorphProgress(abilityEnd) : 1.0;
+  const morphT = abilityEnd != null ? getMorphProgress(abilityEnd) : 1;
   const isMorphing = morphT > 0 && morphT < 1;
 
   // Morphing TO Colossus
@@ -317,7 +334,7 @@ export function drawIvyHero(
         zoom,
         isAttacking,
         atkPow,
-        atkBurst,
+        atkBurst
       );
     } else {
       drawColossusForm(ctx, x, y, s, time, zoom, hasActiveAttack, atkBurst);
@@ -328,7 +345,7 @@ export function drawIvyHero(
 
   // Morphing FROM Colossus back to Warden
   if (!isColossus && isMorphing) {
-    const reverseT = 1.0 - morphT;
+    const reverseT = 1 - morphT;
     if (reverseT > 0.5) {
       drawColossusForm(ctx, x, y, s, time, zoom, hasActiveAttack, atkBurst);
     } else {
@@ -341,7 +358,7 @@ export function drawIvyHero(
         zoom,
         isAttacking,
         atkPow,
-        atkBurst,
+        atkBurst
       );
     }
     drawMorphTransition(ctx, x, y, s, time, zoom, reverseT);
@@ -374,7 +391,7 @@ function drawOrganicBlob(
   bumps: number,
   bumpAmp: number,
   seed: number,
-  rotation?: number,
+  rotation?: number
 ) {
   const rot = rotation ?? 0;
   const pts: { x: number; y: number }[] = [];
@@ -389,7 +406,7 @@ function drawOrganicBlob(
       y: cy + Math.sin(a + rot) * ry * w,
     });
   }
-  const last = pts[pts.length - 1];
+  const last = pts.at(-1);
   ctx.beginPath();
   ctx.moveTo((pts[0].x + last.x) / 2, (pts[0].y + last.y) / 2);
   for (let i = 0; i < pts.length; i++) {
@@ -398,7 +415,7 @@ function drawOrganicBlob(
       pts[i].x,
       pts[i].y,
       (pts[i].x + nxt.x) / 2,
-      (pts[i].y + nxt.y) / 2,
+      (pts[i].y + nxt.y) / 2
     );
   }
   ctx.closePath();
@@ -414,7 +431,7 @@ function drawColossusForm(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const y = yIn + s * 0.12;
   const pulse = Math.sin(time * 1.5) * 0.5 + 0.5;
@@ -439,7 +456,9 @@ function drawColossusForm(
 
   // Base: roots and atmospheric particles
   drawColossusRootLegs(ctx, bx, y, s, time, zoom, atkBurst);
-  if (!_simpleGrad) drawColossusVortex(ctx, x, y, s, time, zoom, atkBurst);
+  if (!_simpleGrad) {
+    drawColossusVortex(ctx, x, y, s, time, zoom, atkBurst);
+  }
 
   // Trunk body
   drawColossusTrunkBody(ctx, bx, y, s, time, zoom, pulse, atkBurst);
@@ -468,7 +487,7 @@ function drawColossusGroundEffect(
   time: number,
   zoom: number,
   pulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const groundY = y + s * 0.32;
   const isoY = ISO_Y_RATIO;
@@ -481,7 +500,7 @@ function drawColossusGroundEffect(
     s * 0.1,
     x,
     groundY,
-    aoOuterRx,
+    aoOuterRx
   );
   aoOuterGrad.addColorStop(0, "rgba(0,0,0,0.12)");
   aoOuterGrad.addColorStop(0.6, "rgba(0,0,0,0.04)");
@@ -499,7 +518,7 @@ function drawColossusGroundEffect(
     s * 0.05,
     x,
     groundY,
-    aoRx,
+    aoRx
   );
   aoGrad.addColorStop(0, "rgba(0,0,0,0.45)");
   aoGrad.addColorStop(0.3, "rgba(0,0,0,0.25)");
@@ -563,7 +582,7 @@ function drawColossusGroundEffect(
   ctx.stroke();
 
   ctx.strokeStyle = `rgba(${P.glowDark},${0.1 + pulse * 0.05})`;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(0, 0, circleR * 1.18, 0, Math.PI * 2);
   ctx.stroke();
@@ -610,7 +629,7 @@ function drawColossusGroundEffect(
         (rx + nrx) * 0.5 * 0.85,
         (ry + nry) * 0.5 * 0.85,
         nrx,
-        nry,
+        nry
       );
       ctx.stroke();
     }
@@ -672,7 +691,7 @@ function drawColossusGroundEffect(
         const fTipX = tipX + Math.cos(forkA) * forkLen;
         const fTipY = tipY + Math.sin(forkA) * forkLen * isoY;
         ctx.strokeStyle = `rgba(10,6,2,${crackAlpha * 0.6})`;
-        ctx.lineWidth = 1.0 * zoom;
+        ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(tipX, tipY);
         ctx.lineTo(fTipX, fTipY);
@@ -704,7 +723,7 @@ function drawColossusRootLegs(
   s: number,
   time: number,
   zoom: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const isoY = ISO_Y_RATIO;
   const groundY = y + s * 0.32;
@@ -751,7 +770,7 @@ function drawColossusRootLegs(
       kneeMidY + Math.sin(legAngle) * kneeOutward * isoY - kneeRise - kneeBob;
 
     // Draw the two leg segments (upper + lower)
-    drawRootLegSegment(ctx, hipX, hipY, kneeX, kneeY, s, rootWidth, 1.0, zoom);
+    drawRootLegSegment(ctx, hipX, hipY, kneeX, kneeY, s, rootWidth, 1, zoom);
     drawRootLegSegment(
       ctx,
       kneeX,
@@ -761,7 +780,7 @@ function drawColossusRootLegs(
       s,
       rootWidth * 0.8,
       0.7,
-      zoom,
+      zoom
     );
 
     // Glowing vein along entire leg
@@ -788,7 +807,7 @@ function drawColossusRootLegs(
       kneeR * 0.1,
       kneeX,
       kneeY,
-      kneeR,
+      kneeR
     );
     kneeGrad.addColorStop(0, "#7a5830");
     kneeGrad.addColorStop(0.5, "#5a4020");
@@ -817,7 +836,7 @@ function drawColossusRootLegs(
       footRy * 0.35,
       6,
       0.15,
-      seed + 11,
+      seed + 11
     );
     ctx.fill();
 
@@ -836,7 +855,7 @@ function drawColossusRootLegs(
         (footX + subTipX) / 2,
         (footY + subTipY) / 2 + s * 0.002,
         subTipX,
-        subTipY,
+        subTipY
       );
       ctx.stroke();
     }
@@ -851,7 +870,7 @@ function drawColossusRootLegs(
       footRy * 0.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -863,7 +882,7 @@ function drawColossusRootLegs(
       hipR * 0.1,
       hipX,
       hipY,
-      hipR,
+      hipR
     );
     hipGrad.addColorStop(0, "#7a5830");
     hipGrad.addColorStop(0.4, "#5a4020");
@@ -891,7 +910,7 @@ function drawColossusRootLegs(
         s * 0.01,
         7,
         0.2,
-        seed + 20 + i,
+        seed + 20 + i
       );
       ctx.fill();
     }
@@ -909,7 +928,7 @@ function drawRootLegSegment(
   s: number,
   widthFactor: number,
   taperStart: number,
-  zoom: number,
+  zoom: number
 ) {
   const segCount = 3;
   for (let seg = 0; seg < segCount; seg++) {
@@ -929,7 +948,7 @@ function drawRootLegSegment(
       px0 + nx * w0,
       py0 + ny * w0,
       px0 - nx * w0,
-      py0 - ny * w0,
+      py0 - ny * w0
     );
     segGrad.addColorStop(0, "#7a5830");
     segGrad.addColorStop(0.3, "#5a4020");
@@ -968,7 +987,7 @@ function drawColossusTrunkBody(
   time: number,
   zoom: number,
   pulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const trunkTop = y - s * 0.28;
   const trunkBot = y + s * 0.15;
@@ -992,7 +1011,7 @@ function drawColossusTrunkBody(
       s * 0.01,
       x,
       secY,
-      secRx,
+      secRx
     );
     secGrad.addColorStop(0, "#6a5028");
     secGrad.addColorStop(0.25, "#5a4020");
@@ -1008,7 +1027,7 @@ function drawColossusTrunkBody(
       secRy,
       12,
       0.12,
-      secSeed,
+      secSeed
     );
     ctx.fill();
   }
@@ -1020,7 +1039,7 @@ function drawColossusTrunkBody(
     s * 0.02,
     x,
     y - s * 0.05,
-    s * 0.25,
+    s * 0.25
   );
   trunkGrad.addColorStop(0, "rgba(90,64,32,0.5)");
   trunkGrad.addColorStop(0.3, "rgba(74,52,24,0.4)");
@@ -1035,7 +1054,7 @@ function drawColossusTrunkBody(
     x - botW * 1.1,
     trunkBot - s * 0.06,
     x - botW,
-    trunkBot,
+    trunkBot
   );
   ctx.lineTo(x + botW, trunkBot);
   ctx.bezierCurveTo(
@@ -1044,7 +1063,7 @@ function drawColossusTrunkBody(
     x + topW * 1.15,
     trunkTop + trunkH * 0.3,
     x + topW,
-    trunkTop,
+    trunkTop
   );
   ctx.closePath();
   ctx.fill();
@@ -1054,7 +1073,7 @@ function drawColossusTrunkBody(
     const gx = x - topW * 0.7 + i * topW * 0.23;
     const wobble = Math.sin(i * 2.3 + 0.5) * s * 0.01;
     ctx.strokeStyle = "rgba(15,10,4,0.5)";
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(gx + wobble, trunkTop + s * 0.02);
     ctx.bezierCurveTo(
@@ -1063,7 +1082,7 @@ function drawColossusTrunkBody(
       gx - wobble + s * 0.008,
       trunkTop + trunkH * 0.65,
       gx - wobble * 0.5,
-      trunkBot - s * 0.02,
+      trunkBot - s * 0.02
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(100,75,40,0.18)";
@@ -1076,7 +1095,7 @@ function drawColossusTrunkBody(
       gx - wobble + s * 0.008 - 1,
       trunkTop + trunkH * 0.65 - 0.5,
       gx - wobble * 0.5 - 1,
-      trunkBot - s * 0.02 - 0.5,
+      trunkBot - s * 0.02 - 0.5
     );
     ctx.stroke();
   }
@@ -1093,7 +1112,7 @@ function drawColossusTrunkBody(
       x + Math.sin(i * 1.7) * s * 0.02,
       cy + s * 0.004,
       x + cw,
-      cy,
+      cy
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(90,64,32,0.15)";
@@ -1104,7 +1123,7 @@ function drawColossusTrunkBody(
       x + Math.sin(i * 1.7) * s * 0.02,
       cy + s * 0.004 - 0.8,
       x + cw,
-      cy - 0.8,
+      cy - 0.8
     );
     ctx.stroke();
   }
@@ -1115,11 +1134,11 @@ function drawColossusTrunkBody(
   ctx.strokeStyle = `rgba(${P.glow},${veinAlpha})`;
   ctx.lineWidth = 1.8 * zoom;
   const veins = [
-    { sx: -0.08, sy: -0.22, ex: -0.14, ey: 0.08 },
-    { sx: 0.06, sy: -0.2, ex: 0.12, ey: 0.1 },
-    { sx: -0.02, sy: -0.25, ex: -0.05, ey: 0.05 },
-    { sx: 0.1, sy: -0.18, ex: 0.18, ey: 0.0 },
-    { sx: -0.1, sy: -0.15, ex: -0.18, ey: 0.02 },
+    { ex: -0.14, ey: 0.08, sx: -0.08, sy: -0.22 },
+    { ex: 0.12, ey: 0.1, sx: 0.06, sy: -0.2 },
+    { ex: -0.05, ey: 0.05, sx: -0.02, sy: -0.25 },
+    { ex: 0.18, ey: 0, sx: 0.1, sy: -0.18 },
+    { ex: -0.18, ey: 0.02, sx: -0.1, sy: -0.15 },
   ];
   for (const v of veins) {
     ctx.beginPath();
@@ -1130,7 +1149,7 @@ function drawColossusTrunkBody(
       x + (v.sx + v.ex) * 0.6 * s,
       y + (v.sy + v.ey) * 0.6 * s - s * 0.01,
       x + v.ex * s,
-      y + v.ey * s,
+      y + v.ey * s
     );
     ctx.stroke();
   }
@@ -1146,7 +1165,7 @@ function drawColossusTrunkBody(
     s * 0.022,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#1a1208";
@@ -1158,7 +1177,7 @@ function drawColossusTrunkBody(
     s * 0.015,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   setShadowBlur(ctx, 3 * zoom, P.shadowHex);
@@ -1171,7 +1190,7 @@ function drawColossusTrunkBody(
     s * 0.009,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   clearShadow(ctx);
@@ -1199,7 +1218,7 @@ function drawColossusTrunkBody(
       mr * 0.3,
       7,
       0.15,
-      m.seed + 5,
+      m.seed + 5
     );
     ctx.fill();
   }
@@ -1215,12 +1234,12 @@ function drawColossusTrunkBody(
     x + botW * 0.95,
     trunkBot - s * 0.1,
     x + botW - s * 0.02,
-    trunkBot - s * 0.02,
+    trunkBot - s * 0.02
   );
   ctx.stroke();
 
   ctx.strokeStyle = `rgba(90,64,32,${0.3 + pulse * 0.1})`;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - topW + s * 0.01, trunkTop + s * 0.04);
   ctx.bezierCurveTo(
@@ -1229,7 +1248,7 @@ function drawColossusTrunkBody(
     x - botW * 0.95,
     trunkBot - s * 0.1,
     x - botW + s * 0.02,
-    trunkBot - s * 0.02,
+    trunkBot - s * 0.02
   );
   ctx.stroke();
 }
@@ -1243,15 +1262,15 @@ function drawColossusBarkPlates(
   s: number,
   time: number,
   zoom: number,
-  pulse: number,
+  pulse: number
 ) {
   const plates = [
-    { cx: 0, cy: -0.12, w: 0.18, h: 0.1, rot: 0, seed: 30 },
-    { cx: -0.1, cy: -0.04, w: 0.12, h: 0.08, rot: -0.15, seed: 32 },
-    { cx: 0.1, cy: -0.04, w: 0.12, h: 0.08, rot: 0.15, seed: 34 },
-    { cx: 0, cy: 0.04, w: 0.15, h: 0.07, rot: 0, seed: 36 },
-    { cx: -0.08, cy: 0.1, w: 0.1, h: 0.06, rot: -0.1, seed: 38 },
-    { cx: 0.08, cy: 0.1, w: 0.1, h: 0.06, rot: 0.1, seed: 40 },
+    { cx: 0, cy: -0.12, h: 0.1, rot: 0, seed: 30, w: 0.18 },
+    { cx: -0.1, cy: -0.04, h: 0.08, rot: -0.15, seed: 32, w: 0.12 },
+    { cx: 0.1, cy: -0.04, h: 0.08, rot: 0.15, seed: 34, w: 0.12 },
+    { cx: 0, cy: 0.04, h: 0.07, rot: 0, seed: 36, w: 0.15 },
+    { cx: -0.08, cy: 0.1, h: 0.06, rot: -0.1, seed: 38, w: 0.1 },
+    { cx: 0.08, cy: 0.1, h: 0.06, rot: 0.1, seed: 40, w: 0.1 },
   ];
 
   for (let i = 0; i < plates.length; i++) {
@@ -1268,7 +1287,7 @@ function drawColossusBarkPlates(
       hh * 0.1,
       px,
       py,
-      hw,
+      hw
     );
     plateGrad.addColorStop(0, "#6a5430");
     plateGrad.addColorStop(0.4, "#5a4428");
@@ -1292,7 +1311,7 @@ function drawColossusBarkPlates(
       hh * 0.4,
       8,
       0.1,
-      p.seed + 1,
+      p.seed + 1
     );
     ctx.fill();
 
@@ -1308,7 +1327,7 @@ function drawColossusBarkPlates(
       0,
       Math.PI * 0.8,
       Math.PI * 0.2,
-      true,
+      true
     );
     ctx.stroke();
 
@@ -1319,7 +1338,7 @@ function drawColossusBarkPlates(
       const seamAlpha = 0.15 + pulse * 0.1 + Math.sin(time * 3 + i) * 0.05;
       setShadowBlur(ctx, 3 * zoom, P.shadowHex);
       ctx.strokeStyle = `rgba(${P.glow},${seamAlpha})`;
-      ctx.lineWidth = 1.0 * zoom;
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(px - s * 0.08, py + p.h * s * 0.5);
       ctx.lineTo(px + s * 0.08, py + p.h * s * 0.5);
@@ -1366,7 +1385,7 @@ function drawColossusBranchArms(
   time: number,
   zoom: number,
   atkBurst: number,
-  pulse: number,
+  pulse: number
 ) {
   const isoY = ISO_Y_RATIO;
 
@@ -1442,7 +1461,7 @@ function drawColossusBranchArms(
       -s * 0.012,
       armLen * 0.35,
       0,
-      armLen * 0.5,
+      armLen * 0.5
     );
     ctx.stroke();
     ctx.strokeStyle = `rgba(${P.glowBright},${0.1 + atkBurst * 0.08})`;
@@ -1455,16 +1474,16 @@ function drawColossusBranchArms(
       -s * 0.012,
       armLen * 0.35,
       0,
-      armLen * 0.5,
+      armLen * 0.5
     );
     ctx.stroke();
     clearShadow(ctx);
 
     // Foliage bush clusters along upper arm
     const upperBushes = [
-      { t: 0.15, offX: 1, rx: 0.04, ry: 0.03, seed: side * 20 + 40 },
-      { t: 0.35, offX: -1, rx: 0.045, ry: 0.032, seed: side * 20 + 55 },
-      { t: 0.55, offX: 1, rx: 0.038, ry: 0.026, seed: side * 20 + 68 },
+      { offX: 1, rx: 0.04, ry: 0.03, seed: side * 20 + 40, t: 0.15 },
+      { offX: -1, rx: 0.045, ry: 0.032, seed: side * 20 + 55, t: 0.35 },
+      { offX: 1, rx: 0.038, ry: 0.026, seed: side * 20 + 68, t: 0.55 },
     ];
     for (const ub of upperBushes) {
       const ubY = armLen * 0.02 + ub.t * armLen * 0.48;
@@ -1472,12 +1491,29 @@ function drawColossusBranchArms(
       const ubX = ub.offX * ubW * 0.85;
       const ci = P.canopy[Math.floor(ub.seed % 4)];
       const grad = ctx.createRadialGradient(
-        ubX, ubY, s * 0.004, ubX, ubY, s * ub.rx,
+        ubX,
+        ubY,
+        s * 0.004,
+        ubX,
+        ubY,
+        s * ub.rx
       );
       grad.addColorStop(0, `rgba(${hexToRgb(ci)},${0.65 + pulse * 0.1})`);
-      grad.addColorStop(1, `rgba(${hexToRgb(P.canopy[0])},${0.3 + pulse * 0.05})`);
+      grad.addColorStop(
+        1,
+        `rgba(${hexToRgb(P.canopy[0])},${0.3 + pulse * 0.05})`
+      );
       ctx.fillStyle = grad;
-      drawOrganicBlob(ctx, ubX, ubY, s * ub.rx, s * ub.ry, 7, 0.22, ub.seed + time * 0.04);
+      drawOrganicBlob(
+        ctx,
+        ubX,
+        ubY,
+        s * ub.rx,
+        s * ub.ry,
+        7,
+        0.22,
+        ub.seed + time * 0.04
+      );
       ctx.fill();
     }
 
@@ -1491,7 +1527,7 @@ function drawColossusBranchArms(
       elbowR * 0.1,
       0,
       0,
-      elbowR,
+      elbowR
     );
     elbowGrad.addColorStop(0, "#7a5830");
     elbowGrad.addColorStop(0.5, "#5a4020");
@@ -1514,7 +1550,9 @@ function drawColossusBranchArms(
     const impactJitter =
       atkBurst > 0.85 ? (Math.random() - 0.5) * s * 0.006 * atkBurst : 0;
     ctx.rotate(elbowBend);
-    if (impactJitter !== 0) ctx.translate(impactJitter, impactJitter);
+    if (impactJitter !== 0) {
+      ctx.translate(impactJitter, impactJitter);
+    }
     const foreLen = armLen * 0.5;
     const foreSegs = 3;
     for (let seg = 0; seg < foreSegs; seg++) {
@@ -1542,7 +1580,7 @@ function drawColossusBranchArms(
     // Forearm vein
     setShadowBlur(ctx, 3 * zoom, P.shadowHex);
     ctx.strokeStyle = `rgba(${P.glow},${0.22 + atkBurst * 0.18})`;
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.bezierCurveTo(
@@ -1551,16 +1589,16 @@ function drawColossusBranchArms(
       -s * 0.008,
       foreLen * 0.6,
       0,
-      foreLen * 0.9,
+      foreLen * 0.9
     );
     ctx.stroke();
     clearShadow(ctx);
 
     // Foliage clusters along forearm
     const foreArmBushes = [
-      { t: 0.2, offX: 1, rx: 0.035, ry: 0.025, seed: 60 },
-      { t: 0.5, offX: -1, rx: 0.04, ry: 0.028, seed: 72 },
-      { t: 0.75, offX: 1, rx: 0.032, ry: 0.022, seed: 85 },
+      { offX: 1, rx: 0.035, ry: 0.025, seed: 60, t: 0.2 },
+      { offX: -1, rx: 0.04, ry: 0.028, seed: 72, t: 0.5 },
+      { offX: 1, rx: 0.032, ry: 0.022, seed: 85, t: 0.75 },
     ];
     for (const fb of foreArmBushes) {
       const fbY = fb.t * foreLen;
@@ -1568,12 +1606,29 @@ function drawColossusBranchArms(
       const fbX = fb.offX * fbThick * 0.9;
       const ci = P.canopy[Math.floor(fb.seed % 4)];
       const grad = ctx.createRadialGradient(
-        fbX, fbY, s * 0.005, fbX, fbY, s * fb.rx,
+        fbX,
+        fbY,
+        s * 0.005,
+        fbX,
+        fbY,
+        s * fb.rx
       );
       grad.addColorStop(0, `rgba(${hexToRgb(ci)},${0.7 + pulse * 0.08})`);
-      grad.addColorStop(1, `rgba(${hexToRgb(P.canopy[0])},${0.35 + pulse * 0.05})`);
+      grad.addColorStop(
+        1,
+        `rgba(${hexToRgb(P.canopy[0])},${0.35 + pulse * 0.05})`
+      );
       ctx.fillStyle = grad;
-      drawOrganicBlob(ctx, fbX, fbY, s * fb.rx, s * fb.ry, 8, 0.2, fb.seed + time * 0.04);
+      drawOrganicBlob(
+        ctx,
+        fbX,
+        fbY,
+        s * fb.rx,
+        s * fb.ry,
+        8,
+        0.2,
+        fb.seed + time * 0.04
+      );
       ctx.fill();
     }
 
@@ -1581,7 +1636,7 @@ function drawColossusBranchArms(
     const fistY = foreLen * 0.85;
     const fistR = s * (0.09 + atkBurst * 0.025);
     const fistBlobs = [
-      { dx: 0, dy: 0, rx: 1.0, ry: 0.85, seed: side * 30 + 200 },
+      { dx: 0, dy: 0, rx: 1, ry: 0.85, seed: side * 30 + 200 },
       { dx: -0.35, dy: -0.25, rx: 0.7, ry: 0.6, seed: side * 30 + 210 },
       { dx: 0.3, dy: -0.15, rx: 0.65, ry: 0.55, seed: side * 30 + 220 },
       { dx: 0.1, dy: 0.35, rx: 0.6, ry: 0.5, seed: side * 30 + 230 },
@@ -1592,13 +1647,29 @@ function drawColossusBranchArms(
       const by = fistY + fb.dy * fistR;
       const ci = P.canopy[Math.min(bi, 3)];
       const grad = ctx.createRadialGradient(
-        bx - fb.rx * fistR * 0.15, by - fb.ry * fistR * 0.2, s * 0.005,
-        bx, by, fb.rx * fistR,
+        bx - fb.rx * fistR * 0.15,
+        by - fb.ry * fistR * 0.2,
+        s * 0.005,
+        bx,
+        by,
+        fb.rx * fistR
       );
       grad.addColorStop(0, `rgba(${hexToRgb(ci)},${0.75 + pulse * 0.1})`);
-      grad.addColorStop(1, `rgba(${hexToRgb(P.canopy[0])},${0.4 + pulse * 0.06})`);
+      grad.addColorStop(
+        1,
+        `rgba(${hexToRgb(P.canopy[0])},${0.4 + pulse * 0.06})`
+      );
       ctx.fillStyle = grad;
-      drawOrganicBlob(ctx, bx, by, fb.rx * fistR, fb.ry * fistR, 10, 0.22, fb.seed + time * 0.05);
+      drawOrganicBlob(
+        ctx,
+        bx,
+        by,
+        fb.rx * fistR,
+        fb.ry * fistR,
+        10,
+        0.22,
+        fb.seed + time * 0.05
+      );
       ctx.fill();
     }
     // Glow core inside fist bush
@@ -1631,7 +1702,7 @@ function drawColossusBranchArms(
         (bBaseX + bTipX) / 2 + Math.sin(time + b) * s * 0.004,
         (bBaseY + bTipY) / 2,
         bTipX,
-        bTipY,
+        bTipY
       );
       ctx.stroke();
 
@@ -1644,7 +1715,7 @@ function drawColossusBranchArms(
         s * 0.016 * isoY,
         6,
         0.2,
-        b * 5 + side * 9 + 70,
+        b * 5 + side * 9 + 70
       );
       ctx.fill();
     }
@@ -1679,7 +1750,7 @@ function drawColossusBranchArms(
       shR * 0.1,
       shoulderX,
       shoulderY,
-      shR,
+      shR
     );
     shGrad.addColorStop(0, "#7a5830");
     shGrad.addColorStop(0.35, "#5a4020");
@@ -1708,7 +1779,7 @@ function drawColossusBranchArms(
       s * 0.012,
       7,
       0.2,
-      side * 33 + 80,
+      side * 33 + 80
     );
     ctx.fill();
   }
@@ -1723,7 +1794,7 @@ function drawColossusFace(
   s: number,
   time: number,
   zoom: number,
-  pulse: number,
+  pulse: number
 ) {
   const faceY = y - s * 0.25;
 
@@ -1739,7 +1810,7 @@ function drawColossusFace(
     x + s * 0.04,
     faceY - s * 0.045,
     x + s * 0.13,
-    faceY - s * 0.015,
+    faceY - s * 0.015
   );
   ctx.stroke();
   ctx.strokeStyle = "rgba(100,75,40,0.35)";
@@ -1752,7 +1823,7 @@ function drawColossusFace(
     x + s * 0.04,
     faceY - s * 0.05,
     x + s * 0.12,
-    faceY - s * 0.02,
+    faceY - s * 0.02
   );
   ctx.stroke();
 
@@ -1783,7 +1854,7 @@ function drawColossusFace(
       0,
       eyeX,
       eyeY,
-      s * 0.035,
+      s * 0.035
     );
     eyeGrad.addColorStop(0, `rgba(${P.glowWhite},${eyeGlow})`);
     eyeGrad.addColorStop(0.2, `rgba(${P.glowBright},${eyeGlow * 0.85})`);
@@ -1808,7 +1879,7 @@ function drawColossusFace(
       eyeY - s * 0.004,
       s * 0.006,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1832,7 +1903,7 @@ function drawColossusFace(
     x,
     mouthY + s * 0.005,
     x - s * 0.035,
-    mouthY + s * 0.002,
+    mouthY + s * 0.002
   );
   ctx.fill();
   clearShadow(ctx);
@@ -1871,12 +1942,12 @@ function drawColossusFace(
 
   // Bark wrinkle lines radiating from eyes/mouth (shadow + highlight pairs)
   const wrinkles = [
-    { sx: -0.06, sy: -0.03, ex: -0.13, ey: 0.02 },
-    { sx: 0.06, sy: -0.03, ex: 0.13, ey: 0.02 },
-    { sx: -0.04, sy: 0.035, ex: -0.1, ey: 0.06 },
-    { sx: 0.04, sy: 0.035, ex: 0.1, ey: 0.06 },
-    { sx: -0.02, sy: -0.04, ex: -0.06, ey: -0.06 },
-    { sx: 0.02, sy: -0.04, ex: 0.06, ey: -0.06 },
+    { ex: -0.13, ey: 0.02, sx: -0.06, sy: -0.03 },
+    { ex: 0.13, ey: 0.02, sx: 0.06, sy: -0.03 },
+    { ex: -0.1, ey: 0.06, sx: -0.04, sy: 0.035 },
+    { ex: 0.1, ey: 0.06, sx: 0.04, sy: 0.035 },
+    { ex: -0.06, ey: -0.06, sx: -0.02, sy: -0.04 },
+    { ex: 0.06, ey: -0.06, sx: 0.02, sy: -0.04 },
   ];
   for (const w of wrinkles) {
     const wx1 = x + w.sx * s;
@@ -1908,7 +1979,7 @@ function drawColossusCanopy(
   time: number,
   zoom: number,
   pulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const isoY = ISO_Y_RATIO;
   const canopyY = y - s * 0.38;
@@ -1938,7 +2009,7 @@ function drawColossusCanopy(
       x + Math.cos(a) * bLen * 0.4,
       canopyY + Math.sin(a) * bLen * 0.3 * isoY - s * 0.02,
       bx2,
-      by2,
+      by2
     );
     ctx.stroke();
     // Highlight edge
@@ -1950,7 +2021,7 @@ function drawColossusCanopy(
       x + Math.cos(a) * bLen * 0.4 - 0.5,
       canopyY + Math.sin(a) * bLen * 0.3 * isoY - s * 0.02 - 0.5,
       bx2 - 0.5,
-      by2 - 0.5,
+      by2 - 0.5
     );
     ctx.stroke();
 
@@ -1968,7 +2039,7 @@ function drawColossusCanopy(
       ctx.moveTo(subX, subY);
       ctx.lineTo(
         subX + Math.cos(subA) * subLen,
-        subY + Math.sin(subA) * subLen * isoY,
+        subY + Math.sin(subA) * subLen * isoY
       );
       ctx.stroke();
       // Leaf blob at tip
@@ -1984,7 +2055,7 @@ function drawColossusCanopy(
           s * 0.01 * isoY,
           5,
           0.2,
-          i * 7 + sb * 3,
+          i * 7 + sb * 3
         );
         ctx.fill();
       }
@@ -2010,15 +2081,15 @@ function drawColossusCanopy(
         s * 0.01,
         bx,
         by,
-        b.rx * canopyR,
+        b.rx * canopyR
       );
       grad.addColorStop(
         0,
-        `rgba(${hexToRgb(P.canopy[ci])},${0.75 + pulse * 0.08})`,
+        `rgba(${hexToRgb(P.canopy[ci])},${0.75 + pulse * 0.08})`
       );
       grad.addColorStop(
         1,
-        `rgba(${hexToRgb(P.canopy[0])},${0.45 + pulse * 0.05})`,
+        `rgba(${hexToRgb(P.canopy[0])},${0.45 + pulse * 0.05})`
       );
       ctx.fillStyle = grad;
       drawOrganicBlob(
@@ -2029,7 +2100,7 @@ function drawColossusCanopy(
         b.ry * s,
         10,
         0.18,
-        b.seed + time * 0.05,
+        b.seed + time * 0.05
       );
       ctx.fill();
     }
@@ -2052,7 +2123,7 @@ function drawColossusCanopy(
         b.ry * s,
         9,
         0.15,
-        b.seed + time * 0.03,
+        b.seed + time * 0.03
       );
       ctx.fill();
     }
@@ -2071,7 +2142,7 @@ function drawColossusCanopy(
         s * 0.015 * isoY,
         6,
         0.2,
-        i * 3.1,
+        i * 3.1
       );
       ctx.fill();
     }
@@ -2092,7 +2163,7 @@ function drawColossusCanopy(
         s * 0.04,
         10,
         0.12,
-        120 + i * 3,
+        120 + i * 3
       );
       ctx.fill();
       const grad = ctx.createRadialGradient(
@@ -2101,11 +2172,11 @@ function drawColossusCanopy(
         s * 0.005,
         x,
         layerY,
-        layerW,
+        layerW
       );
       grad.addColorStop(
         0,
-        `rgba(${hexToRgb(P.canopy[ci])},${alpha + pulse * 0.08})`,
+        `rgba(${hexToRgb(P.canopy[ci])},${alpha + pulse * 0.08})`
       );
       grad.addColorStop(1, `rgba(${hexToRgb(P.canopy[0])},${alpha * 0.6})`);
       ctx.fillStyle = grad;
@@ -2117,7 +2188,7 @@ function drawColossusCanopy(
         s * (0.035 + (1 - t) * 0.015),
         10,
         0.15,
-        130 + i * 3 + time * 0.02,
+        130 + i * 3 + time * 0.02
       );
       ctx.fill();
       ctx.strokeStyle = `rgba(${P.glowBright},${0.3 + pulse * 0.12})`;
@@ -2130,7 +2201,7 @@ function drawColossusCanopy(
         s * 0.008,
         0,
         Math.PI * 0.15,
-        Math.PI * 0.85,
+        Math.PI * 0.85
       );
       ctx.stroke();
     }
@@ -2156,7 +2227,7 @@ function drawColossusCanopy(
       canopyR * 0.22,
       10,
       0.2,
-      140 + time * 0.02,
+      140 + time * 0.02
     );
     ctx.fill();
     ctx.fillStyle = `rgba(${hexToRgb(P.canopy[1])},${0.2 + pulse * 0.04})`;
@@ -2168,7 +2239,7 @@ function drawColossusCanopy(
       canopyR * 0.16,
       9,
       0.18,
-      145,
+      145
     );
     ctx.fill();
     ctx.fillStyle = `rgba(${hexToRgb(P.canopy[2])},${0.12 + pulse * 0.03})`;
@@ -2180,7 +2251,7 @@ function drawColossusCanopy(
       canopyR * 0.12,
       8,
       0.15,
-      148,
+      148
     );
     ctx.fill();
 
@@ -2206,11 +2277,11 @@ function drawColossusCanopy(
     }
   } else if (P.canopyStyle === "weeping") {
     const domeBlobs = [
-      { dx: 0, dy: 0, rx: 0.85, ry: 0.5, ci: 0, seed: 150 },
-      { dx: -0.15, dy: 0.01, rx: 0.55, ry: 0.35, ci: 1, seed: 152 },
-      { dx: 0.18, dy: 0.005, rx: 0.5, ry: 0.33, ci: 1, seed: 154 },
-      { dx: -0.05, dy: -0.01, rx: 0.6, ry: 0.38, ci: 2, seed: 156 },
-      { dx: 0.08, dy: -0.015, rx: 0.45, ry: 0.28, ci: 3, seed: 158 },
+      { ci: 0, dx: 0, dy: 0, rx: 0.85, ry: 0.5, seed: 150 },
+      { ci: 1, dx: -0.15, dy: 0.01, rx: 0.55, ry: 0.35, seed: 152 },
+      { ci: 1, dx: 0.18, dy: 0.005, rx: 0.5, ry: 0.33, seed: 154 },
+      { ci: 2, dx: -0.05, dy: -0.01, rx: 0.6, ry: 0.38, seed: 156 },
+      { ci: 3, dx: 0.08, dy: -0.015, rx: 0.45, ry: 0.28, seed: 158 },
     ];
     ctx.fillStyle = "rgba(0,0,0,0.1)";
     drawOrganicBlob(
@@ -2221,7 +2292,7 @@ function drawColossusCanopy(
       canopyR * 0.5,
       12,
       0.15,
-      149,
+      149
     );
     ctx.fill();
     for (const b of domeBlobs) {
@@ -2233,11 +2304,11 @@ function drawColossusCanopy(
         s * 0.01,
         bx,
         by,
-        b.rx * canopyR,
+        b.rx * canopyR
       );
       grad.addColorStop(
         0,
-        `rgba(${hexToRgb(P.canopy[b.ci])},${0.7 + pulse * 0.08})`,
+        `rgba(${hexToRgb(P.canopy[b.ci])},${0.7 + pulse * 0.08})`
       );
       grad.addColorStop(1, `rgba(${hexToRgb(P.canopy[0])},${0.35})`);
       ctx.fillStyle = grad;
@@ -2249,7 +2320,7 @@ function drawColossusCanopy(
         b.ry * canopyR,
         11,
         0.15,
-        b.seed + time * 0.03,
+        b.seed + time * 0.03
       );
       ctx.fill();
     }
@@ -2271,7 +2342,7 @@ function drawColossusCanopy(
         hangX + vineSway,
         hangTopY + hangLen * 0.6,
         hangX + vineSway * 1.5,
-        hangTopY + hangLen,
+        hangTopY + hangLen
       );
       ctx.stroke();
       // Vine highlight
@@ -2283,7 +2354,7 @@ function drawColossusCanopy(
         hangX + vineSway - 0.5,
         hangTopY + hangLen * 0.6 - 0.5,
         hangX + vineSway * 1.5 - 0.5,
-        hangTopY + hangLen - 0.5,
+        hangTopY + hangLen - 0.5
       );
       ctx.stroke();
 
@@ -2313,16 +2384,16 @@ function drawColossusCanopy(
         s * 0.014 * isoY,
         6,
         0.2,
-        i * 2.7,
+        i * 2.7
       );
       ctx.fill();
     }
   } else {
     // Round (grassland) — dome of organic blobs
     const backLayer = [
-      { dx: 0, dy: 0.015, rx: 0.75, ry: 0.5, ci: 0, seed: 160 },
-      { dx: -0.2, dy: 0.01, rx: 0.45, ry: 0.35, ci: 0, seed: 162 },
-      { dx: 0.22, dy: 0.01, rx: 0.42, ry: 0.33, ci: 0, seed: 164 },
+      { ci: 0, dx: 0, dy: 0.015, rx: 0.75, ry: 0.5, seed: 160 },
+      { ci: 0, dx: -0.2, dy: 0.01, rx: 0.45, ry: 0.35, seed: 162 },
+      { ci: 0, dx: 0.22, dy: 0.01, rx: 0.42, ry: 0.33, seed: 164 },
     ];
     ctx.fillStyle = "rgba(0,0,0,0.08)";
     drawOrganicBlob(
@@ -2333,7 +2404,7 @@ function drawColossusCanopy(
       canopyR * 0.45,
       12,
       0.12,
-      159,
+      159
     );
     ctx.fill();
     for (const b of backLayer) {
@@ -2348,14 +2419,14 @@ function drawColossusCanopy(
         b.ry * canopyR,
         11,
         0.15,
-        b.seed + time * 0.03,
+        b.seed + time * 0.03
       );
       ctx.fill();
     }
     const frontLayer = [
-      { dx: -0.1, dy: -0.005, rx: 0.55, ry: 0.4, ci: 1, seed: 170 },
-      { dx: 0.12, dy: 0.0, rx: 0.5, ry: 0.38, ci: 2, seed: 172 },
-      { dx: 0, dy: -0.015, rx: 0.45, ry: 0.3, ci: 3, seed: 174 },
+      { ci: 1, dx: -0.1, dy: -0.005, rx: 0.55, ry: 0.4, seed: 170 },
+      { ci: 2, dx: 0.12, dy: 0, rx: 0.5, ry: 0.38, seed: 172 },
+      { ci: 3, dx: 0, dy: -0.015, rx: 0.45, ry: 0.3, seed: 174 },
     ];
     for (const b of frontLayer) {
       const bx = x + b.dx * canopyR;
@@ -2366,15 +2437,15 @@ function drawColossusCanopy(
         s * 0.01,
         bx,
         by,
-        b.rx * canopyR,
+        b.rx * canopyR
       );
       grad.addColorStop(
         0,
-        `rgba(${hexToRgb(P.canopy[b.ci])},${0.7 + pulse * 0.1})`,
+        `rgba(${hexToRgb(P.canopy[b.ci])},${0.7 + pulse * 0.1})`
       );
       grad.addColorStop(
         1,
-        `rgba(${hexToRgb(P.canopy[Math.max(b.ci - 1, 0)])},${0.4})`,
+        `rgba(${hexToRgb(P.canopy[Math.max(b.ci - 1, 0)])},${0.4})`
       );
       ctx.fillStyle = grad;
       drawOrganicBlob(
@@ -2385,7 +2456,7 @@ function drawColossusCanopy(
         b.ry * canopyR,
         10,
         0.14,
-        b.seed + time * 0.04,
+        b.seed + time * 0.04
       );
       ctx.fill();
     }
@@ -2404,7 +2475,7 @@ function drawColossusCanopy(
         s * 0.016 * isoY,
         6,
         0.2,
-        i * 3.3 + 180,
+        i * 3.3 + 180
       );
       ctx.fill();
     }
@@ -2423,12 +2494,12 @@ function drawColossusCanopy(
   // Flowers/decorations (skip for ember) — isometric Y on orbit
   if (P.canopyStyle !== "ember") {
     const flowers = [
-      { a: 0.3, d: 0.6, color: P.flower },
-      { a: 1.5, d: 0.5, color: P.pollen },
-      { a: 2.8, d: 0.7, color: P.flower },
-      { a: 4.2, d: 0.55, color: P.pollen },
-      { a: 5.5, d: 0.65, color: P.glowBright },
-      { a: 3.6, d: 0.45, color: P.flower },
+      { a: 0.3, color: P.flower, d: 0.6 },
+      { a: 1.5, color: P.pollen, d: 0.5 },
+      { a: 2.8, color: P.flower, d: 0.7 },
+      { a: 4.2, color: P.pollen, d: 0.55 },
+      { a: 5.5, color: P.glowBright, d: 0.65 },
+      { a: 3.6, color: P.flower, d: 0.45 },
     ];
     for (const f of flowers) {
       const fAngle = f.a + time * 0.1;
@@ -2448,7 +2519,7 @@ function drawColossusCanopy(
           s * 0.003,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2466,7 +2537,7 @@ function drawColossusCanopy(
     0,
     x,
     canopyY,
-    canopyR * 0.6,
+    canopyR * 0.6
   );
   canopyGlow.addColorStop(0, `rgba(${P.glowBright},${0.15 + pulse * 0.08})`);
   canopyGlow.addColorStop(0.5, `rgba(${P.glow},${0.07 + pulse * 0.04})`);
@@ -2480,7 +2551,7 @@ function drawColossusCanopy(
     canopyR * 0.7 * isoY,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2518,7 +2589,7 @@ function drawColossusVortex(
   s: number,
   time: number,
   zoom: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const isoY = ISO_Y_RATIO;
   const vortexCenterY = y - s * 0.08;
@@ -2613,7 +2684,7 @@ function drawColossusEnergyPulse(
   time: number,
   zoom: number,
   pulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const isoY = ISO_Y_RATIO;
 
@@ -2638,8 +2709,11 @@ function drawColossusEnergyPulse(
     const r = s * (0.52 + Math.sin(a * 5 + time * 3) * 0.04);
     const px = x + Math.cos(a) * r;
     const py = y + Math.sin(a) * r * isoY;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.closePath();
   ctx.stroke();
@@ -2653,8 +2727,11 @@ function drawColossusEnergyPulse(
     const r = s * (0.38 + Math.sin(a * 6 + time * 4) * 0.03);
     const px = x + Math.cos(a) * r;
     const py = y + Math.sin(a) * r * isoY;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.closePath();
   ctx.stroke();
@@ -2678,20 +2755,20 @@ function drawColossusEnergyPulse(
     ringR * 0.75 * isoY,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
   // Spiraling energy diamonds — isometric orbits
   for (let i = 0; i < 10; i++) {
-    const phase = (time * 1.0 + i * 0.1) % 1;
+    const phase = (time * 1 + i * 0.1) % 1;
     const spiralA = time * 2 + i * ((Math.PI * 2) / 10);
     const spiralR = s * (0.2 + phase * 0.32);
     const px = x + Math.cos(spiralA) * spiralR;
     const py =
       y - s * 0.08 + Math.sin(spiralA) * spiralR * isoY - phase * s * 0.18;
     const pAlpha = Math.sin(phase * Math.PI) * (0.5 + atkBurst * 0.25);
-    const pSize = (1.4 + atkBurst * 1.0) * zoom;
+    const pSize = (1.4 + atkBurst * 1) * zoom;
 
     ctx.fillStyle = `rgba(${P.glowBright},${pAlpha})`;
     ctx.beginPath();
@@ -2723,7 +2800,7 @@ function drawColossusAttackWave(
   s: number,
   atkBurst: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const isoY = ISO_Y_RATIO;
   const groundY = y + s * 0.28;
@@ -2738,7 +2815,7 @@ function drawColossusAttackWave(
   ctx.stroke();
   // Inner shockwave ring
   ctx.strokeStyle = `rgba(${P.glowBright},${atkBurst * 0.2})`;
-  ctx.lineWidth = (1.5 + atkBurst * 1.0) * zoom;
+  ctx.lineWidth = (1.5 + atkBurst * 1) * zoom;
   ctx.beginPath();
   ctx.ellipse(x, groundY, waveR * 0.7, waveR * 0.7 * isoY, 0, 0, Math.PI * 2);
   ctx.stroke();
@@ -2786,7 +2863,7 @@ function drawColossusAttackWave(
         p0.x + nx * w0,
         p0.y + ny * w0,
         p0.x - nx * w0,
-        p0.y - ny * w0,
+        p0.y - ny * w0
       );
       segGrad.addColorStop(0, `rgba(90,64,32,${atkBurst * 0.7})`);
       segGrad.addColorStop(0.4, `rgba(61,42,20,${atkBurst * 0.55})`);
@@ -2838,7 +2915,7 @@ function drawColossusAttackWave(
       ctx.moveTo(emergeX, emergeY);
       ctx.lineTo(
         emergeX + Math.cos(crackA) * crackLen,
-        emergeY + Math.sin(crackA) * crackLen * isoY,
+        emergeY + Math.sin(crackA) * crackLen * isoY
       );
       ctx.stroke();
     }
@@ -2849,15 +2926,15 @@ function drawColossusAttackWave(
     ctx.beginPath();
     ctx.moveTo(
       tipX + Math.cos(a) * thornSize,
-      tipY + Math.sin(a) * thornSize * isoY,
+      tipY + Math.sin(a) * thornSize * isoY
     );
     ctx.lineTo(
       tipX + Math.cos(a + 2.3) * thornSize * 0.5,
-      tipY + Math.sin(a + 2.3) * thornSize * isoY,
+      tipY + Math.sin(a + 2.3) * thornSize * isoY
     );
     ctx.lineTo(
       tipX + Math.cos(a - 2.3) * thornSize * 0.5,
-      tipY + Math.sin(a - 2.3) * thornSize * isoY,
+      tipY + Math.sin(a - 2.3) * thornSize * isoY
     );
     ctx.closePath();
     ctx.fill();
@@ -2869,7 +2946,7 @@ function drawColossusAttackWave(
       tipY + Math.sin(a) * thornSize * isoY,
       zoom * 1.8,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     clearShadow(ctx);
@@ -2925,7 +3002,7 @@ function drawColossusAttackWave(
       x + Math.cos(cAngle) * cLen * 0.7,
       groundY + Math.sin(cAngle) * cLen * 0.7 * isoY,
       cTipX,
-      cTipY,
+      cTipY
     );
     ctx.stroke();
     // Highlight edge
@@ -2939,7 +3016,7 @@ function drawColossusAttackWave(
       x + Math.cos(cAngle) * cLen * 0.7 - 0.5,
       groundY + Math.sin(cAngle) * cLen * 0.7 * isoY - 0.5,
       cTipX - 0.5,
-      cTipY - 0.5,
+      cTipY - 0.5
     );
     ctx.stroke();
   }
@@ -2959,11 +3036,11 @@ function drawHealingAura(
   y: number,
   s: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const isoY = ISO_Y_RATIO;
   const healRadius = s * 2.8;
-  const pulse = Math.sin(time * 2.0) * 0.5 + 0.5;
+  const pulse = Math.sin(time * 2) * 0.5 + 0.5;
   const alpha = 0.08 + pulse * 0.07;
 
   ctx.save();
@@ -2973,7 +3050,7 @@ function drawHealingAura(
     healRadius * 0.3,
     x,
     y,
-    healRadius,
+    healRadius
   );
   grad.addColorStop(0, `rgba(${P.glow},${alpha * 0.6})`);
   grad.addColorStop(0.6, `rgba(${P.glow},${alpha * 0.3})`);
@@ -3011,7 +3088,7 @@ function drawMagicCircle(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const radius = s * (0.35 + atkBurst * 0.15);
   const circleY = y + s * 0.28;
@@ -3068,7 +3145,7 @@ function drawRootSystem(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const isoY = ISO_Y_RATIO;
   const groundY = y + s * 0.32;
@@ -3123,7 +3200,7 @@ function drawRootSystem(
         p0.x + nx * w0,
         p0.y + ny * w0,
         p0.x - nx * w0,
-        p0.y - ny * w0,
+        p0.y - ny * w0
       );
       const alpha = 0.75 + naturePulse * 0.1 + atkBurst * 0.1;
       segG.addColorStop(0, `rgba(90,65,35,${alpha * 0.6})`);
@@ -3155,8 +3232,9 @@ function drawRootSystem(
     ctx.lineWidth = 0.9 * zoom;
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
-    for (let seg = 1; seg <= segCount; seg++)
+    for (let seg = 1; seg <= segCount; seg++) {
       ctx.lineTo(pts[seg].x, pts[seg].y);
+    }
     ctx.stroke();
     clearShadow(ctx);
 
@@ -3182,7 +3260,7 @@ function drawRootSystem(
         (footX + subTipX) / 2,
         (footY + subTipY) / 2,
         subTipX,
-        subTipY,
+        subTipY
       );
       ctx.stroke();
     }
@@ -3197,7 +3275,7 @@ function drawRootSystem(
       fRy * 0.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -3209,7 +3287,7 @@ function drawRootSystem(
       knobR * 0.1,
       hipX,
       hipY,
-      knobR,
+      knobR
     );
     knobG.addColorStop(0, "#6a4828");
     knobG.addColorStop(0.5, "#4a3218");
@@ -3240,7 +3318,7 @@ function drawSegmentedTentacle(
   showLeaves: boolean,
   showThorns: boolean,
   showGlow: boolean,
-  attackLash: boolean,
+  attackLash: boolean
 ) {
   const pts: { x: number; y: number }[] = [];
   for (let i = 0; i <= segCount; i++) {
@@ -3280,7 +3358,7 @@ function drawSegmentedTentacle(
       p1.x + px * thick,
       p1.y + py * thick,
       p1.x - px * thick,
-      p1.y - py * thick,
+      p1.y - py * thick
     );
     const a = 0.65 + naturePulse * 0.1 + atkBurst * 0.12;
     segG.addColorStop(0, `rgba(${P.vineDark},${a * 0.55})`);
@@ -3300,7 +3378,7 @@ function drawSegmentedTentacle(
 
     if (i % 2 === 0 && i > 0) {
       ctx.strokeStyle = `rgba(${P.vineDark},${0.35 + atkBurst * 0.12})`;
-      ctx.lineWidth = Math.max(0.5, (1.6 - t * 1.0) * zoom);
+      ctx.lineWidth = Math.max(0.5, (1.6 - t * 1) * zoom);
       ctx.beginPath();
       ctx.moveTo(p1.x + px * thick * 0.9, p1.y + py * thick * 0.9);
       ctx.lineTo(p1.x - px * thick * 0.9, p1.y - py * thick * 0.9);
@@ -3325,12 +3403,12 @@ function drawSegmentedTentacle(
       ctx.beginPath();
       ctx.moveTo(
         thornBx - Math.cos(angle) * thornW,
-        thornBy - Math.sin(angle) * thornW,
+        thornBy - Math.sin(angle) * thornW
       );
       ctx.lineTo(thornTx, thornTy);
       ctx.lineTo(
         thornBx + Math.cos(angle) * thornW,
-        thornBy + Math.sin(angle) * thornW,
+        thornBy + Math.sin(angle) * thornW
       );
       ctx.closePath();
       ctx.fill();
@@ -3356,7 +3434,7 @@ function drawSegmentedTentacle(
         lox - leafSz * 0.2,
         loy - leafSz * 0.6,
         lox,
-        loy - leafSz * 0.25,
+        loy - leafSz * 0.25
       );
       ctx.bezierCurveTo(
         lox + leafSz * 0.2,
@@ -3364,7 +3442,7 @@ function drawSegmentedTentacle(
         lox + leafSz * 0.6,
         loy - leafSz * 0.1,
         lox,
-        loy + leafSz * 0.35,
+        loy + leafSz * 0.35
       );
       ctx.fill();
 
@@ -3383,7 +3461,9 @@ function drawSegmentedTentacle(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i <= segCount; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    for (let i = 1; i <= segCount; i++) {
+      ctx.lineTo(pts[i].x, pts[i].y);
+    }
     ctx.stroke();
 
     for (let i = 2; i < segCount; i += 3) {
@@ -3400,7 +3480,7 @@ function drawSegmentedTentacle(
   const tipEnd = pts[segCount];
   const prev = pts[segCount - 1];
   const tipA = Math.atan2(tipEnd.y - prev.y, tipEnd.x - prev.x);
-  const curlD = Math.sin(time * 2.0 + phase) * 0.7;
+  const curlD = Math.sin(time * 2 + phase) * 0.7;
 
   ctx.strokeStyle = `rgba(${P.glow},${0.2 + naturePulse * 0.1 + atkBurst * 0.1})`;
   ctx.lineWidth = (0.6 + atkBurst * 0.3) * zoom;
@@ -3412,7 +3492,7 @@ function drawSegmentedTentacle(
     const spirA = tipA + curlD + t * Math.PI * 2.5;
     ctx.lineTo(
       tipEnd.x + Math.cos(spirA) * spirR,
-      tipEnd.y + Math.sin(spirA) * spirR * 0.5,
+      tipEnd.y + Math.sin(spirA) * spirR * 0.5
     );
   }
   ctx.stroke();
@@ -3446,7 +3526,7 @@ function buildBranchPath(
   s: number,
   t: BranchDef,
   time: number,
-  atkBurst: number,
+  atkBurst: number
 ): { x: number; y: number }[] {
   const segCount = t.segs;
   const totalLen = s * t.len * (1 + atkBurst * 0.25);
@@ -3516,7 +3596,7 @@ function drawBranchSegments(
   zoom: number,
   naturePulse: number,
   atkBurst: number,
-  t: BranchDef,
+  t: BranchDef
 ) {
   const segCount = t.segs;
   const hasLeaves = t.hasLeaves !== false;
@@ -3536,7 +3616,7 @@ function drawBranchSegments(
       p0.x + px * thick,
       p0.y + py * thick,
       p0.x - px * thick,
-      p0.y - py * thick,
+      p0.y - py * thick
     );
     segG.addColorStop(0, `rgba(${P.vineDark},${al * 0.55})`);
     segG.addColorStop(0.25, `rgba(${P.vine},${al})`);
@@ -3574,7 +3654,7 @@ function drawBranchSegments(
             jR * 0.1,
             p0.x,
             p0.y,
-            jR,
+            jR
           );
           jGrad.addColorStop(0, `rgba(${P.vine},${al * 0.9})`);
           jGrad.addColorStop(0.5, `rgba(${P.vineDark},${al * 0.7})`);
@@ -3610,12 +3690,12 @@ function drawBranchSegments(
       ctx.beginPath();
       ctx.moveTo(
         thornBx - Math.cos(a) * thornW,
-        thornBy - Math.sin(a) * thornW,
+        thornBy - Math.sin(a) * thornW
       );
       ctx.lineTo(thornTx, thornTy);
       ctx.lineTo(
         thornBx + Math.cos(a) * thornW,
-        thornBy + Math.sin(a) * thornW,
+        thornBy + Math.sin(a) * thornW
       );
       ctx.closePath();
       ctx.fill();
@@ -3646,7 +3726,7 @@ function drawBranchSegments(
         lox - leafSz * 0.2,
         loy - leafSz * 0.6,
         lox,
-        loy - leafSz * 0.25,
+        loy - leafSz * 0.25
       );
       ctx.bezierCurveTo(
         lox + leafSz * 0.2,
@@ -3654,7 +3734,7 @@ function drawBranchSegments(
         lox + leafSz * 0.6,
         loy - leafSz * 0.1,
         lox,
-        loy + leafSz * 0.35,
+        loy + leafSz * 0.35
       );
       ctx.fill();
     }
@@ -3666,14 +3746,16 @@ function drawBranchSegments(
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  for (let seg = 1; seg <= segCount; seg++) ctx.lineTo(pts[seg].x, pts[seg].y);
+  for (let seg = 1; seg <= segCount; seg++) {
+    ctx.lineTo(pts[seg].x, pts[seg].y);
+  }
   ctx.stroke();
 
   // Glowing tip with curl
   const tipEnd = pts[segCount];
   const tipPrev = pts[segCount - 1];
   const tipA = Math.atan2(tipEnd.y - tipPrev.y, tipEnd.x - tipPrev.x);
-  const curlD = Math.sin(time * 2.0 + t.phase) * 0.7;
+  const curlD = Math.sin(time * 2 + t.phase) * 0.7;
   ctx.strokeStyle = `rgba(${P.glow},${0.2 + naturePulse * 0.1 + atkBurst * 0.1})`;
   ctx.lineWidth = (0.6 + atkBurst * 0.3) * zoom;
   ctx.beginPath();
@@ -3684,7 +3766,7 @@ function drawBranchSegments(
     const spirA = tipA + curlD + f * Math.PI * 2.5;
     ctx.lineTo(
       tipEnd.x + Math.cos(spirA) * spirR,
-      tipEnd.y + Math.sin(spirA) * spirR * 0.5,
+      tipEnd.y + Math.sin(spirA) * spirR * 0.5
     );
   }
   ctx.stroke();
@@ -3704,7 +3786,7 @@ function drawVineTentacles(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const spineX = x;
   const spineY = y - s * 0.12;
@@ -3712,162 +3794,162 @@ function drawVineTentacles(
   // 4 primary Doc-Ock tentacles (thick, long, jointed)
   const primary: BranchDef[] = [
     {
+      jointAngle: 0.45,
+      joints: [0.35, 0.65],
+      len: 0.7,
       outerAngle: Math.PI - 1.1,
+      phase: 0,
       rise: 0.42,
-      len: 0.7,
-      phase: 0.0,
       segs: 16,
       thick: 0.036,
-      joints: [0.35, 0.65],
-      jointAngle: 0.45,
     },
     {
+      jointAngle: 0.4,
+      joints: [0.3, 0.6],
+      len: 0.78,
       outerAngle: Math.PI - 0.45,
-      rise: 0.48,
-      len: 0.78,
       phase: 1.8,
-      segs: 18,
-      thick: 0.034,
-      joints: [0.3, 0.6],
-      jointAngle: 0.4,
-    },
-    {
-      outerAngle: -0.45,
       rise: 0.48,
-      len: 0.78,
-      phase: 3.2,
       segs: 18,
       thick: 0.034,
-      joints: [0.3, 0.6],
-      jointAngle: 0.4,
     },
     {
-      outerAngle: -1.1,
-      rise: 0.42,
+      jointAngle: 0.4,
+      joints: [0.3, 0.6],
+      len: 0.78,
+      outerAngle: -0.45,
+      phase: 3.2,
+      rise: 0.48,
+      segs: 18,
+      thick: 0.034,
+    },
+    {
+      jointAngle: 0.45,
+      joints: [0.35, 0.65],
       len: 0.7,
+      outerAngle: -1.1,
       phase: 4.6,
+      rise: 0.42,
       segs: 16,
       thick: 0.036,
-      joints: [0.35, 0.65],
-      jointAngle: 0.45,
     },
   ];
 
   // 4 medium branches — arch high behind the head with visible elbow joints
   const medium: BranchDef[] = [
     {
+      hasThorns: false,
+      jointAngle: 0.6,
+      joints: [0.4],
+      len: 0.55,
       outerAngle: Math.PI - 0.8,
-      rise: 0.55,
-      len: 0.55,
       phase: 0.9,
-      segs: 12,
-      thick: 0.026,
-      joints: [0.4],
-      jointAngle: 0.6,
-      hasThorns: false,
-    },
-    {
-      outerAngle: Math.PI - 0.2,
-      rise: 0.62,
-      len: 0.48,
-      phase: 2.5,
-      segs: 10,
-      thick: 0.024,
-      joints: [0.45, 0.75],
-      jointAngle: 0.55,
-    },
-    {
-      outerAngle: -0.2,
-      rise: 0.62,
-      len: 0.48,
-      phase: 4.1,
-      segs: 10,
-      thick: 0.024,
-      joints: [0.45, 0.75],
-      jointAngle: 0.55,
-    },
-    {
-      outerAngle: -0.8,
       rise: 0.55,
-      len: 0.55,
-      phase: 5.5,
       segs: 12,
       thick: 0.026,
-      joints: [0.4],
-      jointAngle: 0.6,
+    },
+    {
+      jointAngle: 0.55,
+      joints: [0.45, 0.75],
+      len: 0.48,
+      outerAngle: Math.PI - 0.2,
+      phase: 2.5,
+      rise: 0.62,
+      segs: 10,
+      thick: 0.024,
+    },
+    {
+      jointAngle: 0.55,
+      joints: [0.45, 0.75],
+      len: 0.48,
+      outerAngle: -0.2,
+      phase: 4.1,
+      rise: 0.62,
+      segs: 10,
+      thick: 0.024,
+    },
+    {
       hasThorns: false,
+      jointAngle: 0.6,
+      joints: [0.4],
+      len: 0.55,
+      outerAngle: -0.8,
+      phase: 5.5,
+      rise: 0.55,
+      segs: 12,
+      thick: 0.026,
     },
   ];
 
   // 6 small wispy branches — shorter, thinner, more erratic, rise high
   const small: BranchDef[] = [
     {
+      hasLeaves: false,
+      hasThorns: false,
+      jointAngle: 0.7,
+      joints: [0.5],
+      len: 0.38,
       outerAngle: Math.PI - 1.35,
-      rise: 0.35,
-      len: 0.38,
       phase: 0.5,
-      segs: 8,
-      thick: 0.018,
-      joints: [0.5],
-      jointAngle: 0.7,
-      hasLeaves: false,
-      hasThorns: false,
-    },
-    {
-      outerAngle: Math.PI - 0.65,
-      rise: 0.58,
-      len: 0.35,
-      phase: 1.3,
-      segs: 8,
-      thick: 0.016,
-      hasLeaves: false,
-      hasThorns: false,
-    },
-    {
-      outerAngle: Math.PI + 0.05,
-      rise: 0.68,
-      len: 0.32,
-      phase: 2.9,
-      segs: 7,
-      thick: 0.014,
-      joints: [0.4, 0.7],
-      jointAngle: 0.5,
-      hasLeaves: false,
-      hasThorns: false,
-    },
-    {
-      outerAngle: -0.05,
-      rise: 0.68,
-      len: 0.32,
-      phase: 3.7,
-      segs: 7,
-      thick: 0.014,
-      joints: [0.4, 0.7],
-      jointAngle: 0.5,
-      hasLeaves: false,
-      hasThorns: false,
-    },
-    {
-      outerAngle: -0.65,
-      rise: 0.58,
-      len: 0.35,
-      phase: 5.0,
-      segs: 8,
-      thick: 0.016,
-      hasLeaves: false,
-      hasThorns: false,
-    },
-    {
-      outerAngle: -1.35,
       rise: 0.35,
-      len: 0.38,
-      phase: 5.8,
       segs: 8,
       thick: 0.018,
-      joints: [0.5],
-      jointAngle: 0.7,
+    },
+    {
       hasLeaves: false,
       hasThorns: false,
+      len: 0.35,
+      outerAngle: Math.PI - 0.65,
+      phase: 1.3,
+      rise: 0.58,
+      segs: 8,
+      thick: 0.016,
+    },
+    {
+      hasLeaves: false,
+      hasThorns: false,
+      jointAngle: 0.5,
+      joints: [0.4, 0.7],
+      len: 0.32,
+      outerAngle: Math.PI + 0.05,
+      phase: 2.9,
+      rise: 0.68,
+      segs: 7,
+      thick: 0.014,
+    },
+    {
+      hasLeaves: false,
+      hasThorns: false,
+      jointAngle: 0.5,
+      joints: [0.4, 0.7],
+      len: 0.32,
+      outerAngle: -0.05,
+      phase: 3.7,
+      rise: 0.68,
+      segs: 7,
+      thick: 0.014,
+    },
+    {
+      hasLeaves: false,
+      hasThorns: false,
+      len: 0.35,
+      outerAngle: -0.65,
+      phase: 5,
+      rise: 0.58,
+      segs: 8,
+      thick: 0.016,
+    },
+    {
+      hasLeaves: false,
+      hasThorns: false,
+      jointAngle: 0.7,
+      joints: [0.5],
+      len: 0.38,
+      outerAngle: -1.35,
+      phase: 5.8,
+      rise: 0.35,
+      segs: 8,
+      thick: 0.018,
     },
   ];
 
@@ -3889,7 +3971,7 @@ function drawLeafCape(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const vineWave =
     Math.sin(time * (1.2 + atkBurst * 2)) * (0.15 + atkBurst * 0.1);
@@ -3911,7 +3993,7 @@ function drawLeafCape(
     x - s * 0.34,
     y + s * 0.3,
     x - capeW,
-    y + s * 0.44,
+    y + s * 0.44
   );
   ctx.lineTo(x + capeW, y + s * 0.44);
   ctx.bezierCurveTo(
@@ -3920,7 +4002,7 @@ function drawLeafCape(
     x + s * 0.38,
     y + s * 0.08 - vineWave * s * 0.04,
     x + s * 0.2,
-    y - s * 0.16,
+    y - s * 0.16
   );
   ctx.closePath();
   ctx.fill();
@@ -3945,16 +4027,16 @@ function drawLeafCape(
   ctx.strokeStyle = `rgba(${P.vine},${0.12 + naturePulse * 0.06 + atkBurst * 0.06})`;
   ctx.lineWidth = 0.6 * zoom;
   const embroideryLeaves = [
-    { cx: -0.08, cy: 0.0, angle: 0.3, sz: 0.04 },
-    { cx: 0.06, cy: 0.05, angle: -0.4, sz: 0.035 },
-    { cx: -0.12, cy: 0.12, angle: 0.5, sz: 0.04 },
-    { cx: 0.1, cy: 0.15, angle: -0.2, sz: 0.038 },
-    { cx: -0.04, cy: 0.22, angle: 0.1, sz: 0.032 },
-    { cx: 0.02, cy: -0.04, angle: -0.6, sz: 0.03 },
-    { cx: -0.15, cy: 0.06, angle: 0.7, sz: 0.028 },
-    { cx: 0.13, cy: 0.25, angle: -0.3, sz: 0.035 },
-    { cx: 0.0, cy: 0.1, angle: 0.0, sz: 0.04 },
-    { cx: -0.06, cy: 0.28, angle: 0.4, sz: 0.03 },
+    { angle: 0.3, cx: -0.08, cy: 0, sz: 0.04 },
+    { angle: -0.4, cx: 0.06, cy: 0.05, sz: 0.035 },
+    { angle: 0.5, cx: -0.12, cy: 0.12, sz: 0.04 },
+    { angle: -0.2, cx: 0.1, cy: 0.15, sz: 0.038 },
+    { angle: 0.1, cx: -0.04, cy: 0.22, sz: 0.032 },
+    { angle: -0.6, cx: 0.02, cy: -0.04, sz: 0.03 },
+    { angle: 0.7, cx: -0.15, cy: 0.06, sz: 0.028 },
+    { angle: -0.3, cx: 0.13, cy: 0.25, sz: 0.035 },
+    { angle: 0, cx: 0, cy: 0.1, sz: 0.04 },
+    { angle: 0.4, cx: -0.06, cy: 0.28, sz: 0.03 },
   ];
   for (const leaf of embroideryLeaves) {
     const lx = x + leaf.cx * s;
@@ -3988,7 +4070,7 @@ function drawLeafCape(
       x + side * s * 0.32,
       y + s * 0.3,
       x + side * capeW,
-      y + s * 0.44,
+      y + s * 0.44
     );
     ctx.stroke();
   }
@@ -4009,42 +4091,42 @@ function drawLeafCape(
     tolX - s * 0.025,
     tolY - s * 0.065,
     tolX - s * 0.02,
-    tolY - s * 0.07,
+    tolY - s * 0.07
   );
   ctx.moveTo(tolX, tolY - s * 0.04);
   ctx.quadraticCurveTo(
     tolX + s * 0.025,
     tolY - s * 0.065,
     tolX + s * 0.02,
-    tolY - s * 0.07,
+    tolY - s * 0.07
   );
   ctx.moveTo(tolX, tolY - s * 0.02);
   ctx.quadraticCurveTo(
     tolX - s * 0.02,
     tolY - s * 0.04,
     tolX - s * 0.015,
-    tolY - s * 0.05,
+    tolY - s * 0.05
   );
   ctx.moveTo(tolX, tolY - s * 0.02);
   ctx.quadraticCurveTo(
     tolX + s * 0.02,
     tolY - s * 0.04,
     tolX + s * 0.015,
-    tolY - s * 0.05,
+    tolY - s * 0.05
   );
   ctx.moveTo(tolX, tolY + s * 0.04);
   ctx.quadraticCurveTo(
     tolX - s * 0.02,
     tolY + s * 0.06,
     tolX - s * 0.025,
-    tolY + s * 0.065,
+    tolY + s * 0.065
   );
   ctx.moveTo(tolX, tolY + s * 0.04);
   ctx.quadraticCurveTo(
     tolX + s * 0.02,
     tolY + s * 0.06,
     tolX + s * 0.025,
-    tolY + s * 0.065,
+    tolY + s * 0.065
   );
   ctx.stroke();
 
@@ -4069,7 +4151,7 @@ function drawLeafCape(
       hx,
       hy + hSize * 1.6,
       hx + hSize,
-      hy + hSize * 0.8,
+      hy + hSize * 0.8
     );
     ctx.closePath();
     ctx.fill();
@@ -4093,7 +4175,7 @@ function drawLeafCape(
       0,
       clX,
       clY,
-      clR,
+      clR
     );
     clG.addColorStop(0, `rgb(${P.glowWhite})`);
     clG.addColorStop(0.3, `rgb(${P.glowBright})`);
@@ -4128,7 +4210,7 @@ function drawSkirt(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const skirtTop = y + s * 0.05;
   const skirtBot = y + s * 0.32;
@@ -4152,7 +4234,7 @@ function drawSkirt(
     x - s * 0.24 + leftSway,
     skirtBot - s * 0.04,
     x - s * 0.2 + leftSway,
-    skirtBot,
+    skirtBot
   );
   ctx.lineTo(x + s * 0.2 + rightSway, skirtBot);
   ctx.bezierCurveTo(
@@ -4161,7 +4243,7 @@ function drawSkirt(
     x + s * 0.22 + rightSway,
     skirtTop + s * 0.08,
     x + s * 0.13,
-    skirtTop,
+    skirtTop
   );
   ctx.closePath();
   ctx.fill();
@@ -4185,13 +4267,13 @@ function drawSkirt(
         lx - leafSz * 0.6,
         ry + leafSz * 0.2,
         lx,
-        ry + leafSz * 0.6,
+        ry + leafSz * 0.6
       );
       ctx.quadraticCurveTo(
         lx + leafSz * 0.6,
         ry + leafSz * 0.2,
         lx,
-        ry - leafSz * 0.3,
+        ry - leafSz * 0.3
       );
       ctx.fill();
     }
@@ -4207,7 +4289,7 @@ function drawSkirt(
       x + rowW * 0.3,
       ry + s * 0.006,
       x + rowW,
-      ry + s * 0.008,
+      ry + s * 0.008
     );
     ctx.stroke();
   }
@@ -4215,7 +4297,7 @@ function drawSkirt(
   // Vine belt at waistline with gem buckle
   const beltY = skirtTop + s * 0.01;
   ctx.strokeStyle = `rgba(${P.vineDark},${0.5 + naturePulse * 0.15})`;
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - s * 0.13, beltY);
   ctx.bezierCurveTo(
@@ -4224,7 +4306,7 @@ function drawSkirt(
     x + s * 0.04,
     beltY + s * 0.004,
     x + s * 0.13,
-    beltY,
+    beltY
   );
   ctx.stroke();
 
@@ -4235,7 +4317,7 @@ function drawSkirt(
     0,
     x,
     beltY,
-    buckleR,
+    buckleR
   );
   buckleG.addColorStop(0, `rgb(${P.glowWhite})`);
   buckleG.addColorStop(0.5, P.shadowHex);
@@ -4285,7 +4367,7 @@ function drawBody(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const bodyW = s * (0.17 + breathe * 0.002 + atkBurst * 0.01) * 1.15;
   const bodyH = s * (0.26 + breathe * 0.003 + atkBurst * 0.015) * 1.1;
@@ -4297,7 +4379,14 @@ function drawBody(
   ctx.fill();
 
   // ── BASE TORSO ────────────────────────────────────────────────────
-  const bodyGrad = ctx.createRadialGradient(x, y - s * 0.03, s * 0.03, x, y + s * 0.01, bodyH);
+  const bodyGrad = ctx.createRadialGradient(
+    x,
+    y - s * 0.03,
+    s * 0.03,
+    x,
+    y + s * 0.01,
+    bodyH
+  );
   bodyGrad.addColorStop(0, "#2d6a48");
   bodyGrad.addColorStop(0.2, "#1e5235");
   bodyGrad.addColorStop(0.5, "#164028");
@@ -4310,9 +4399,9 @@ function drawBody(
 
   // ── BARK TEXTURE OVERLAY — curved plate boundaries ────────────────
   const plateBounds = [
-    { sx: 0, sy: -0.2, ex: 0, ey: 0.18 },
-    { sx: -0.08, sy: -0.18, ex: -0.06, ey: 0.16 },
-    { sx: 0.08, sy: -0.18, ex: 0.06, ey: 0.16 },
+    { ex: 0, ey: 0.18, sx: 0, sy: -0.2 },
+    { ex: -0.06, ey: 0.16, sx: -0.08, sy: -0.18 },
+    { ex: 0.06, ey: 0.16, sx: 0.08, sy: -0.18 },
   ];
   for (let i = 0; i < plateBounds.length; i++) {
     const pb = plateBounds[i];
@@ -4327,7 +4416,7 @@ function drawBody(
       x + pb.ex * s - s * 0.004 + drift,
       y + (pb.sy + pb.ey) * 0.7 * s,
       x + pb.ex * s + drift,
-      y + pb.ey * s,
+      y + pb.ey * s
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(60,100,70,0.12)";
@@ -4340,18 +4429,18 @@ function drawBody(
       x + pb.ex * s - s * 0.004 + drift + 0.5,
       y + (pb.sy + pb.ey) * 0.7 * s + 0.5,
       x + pb.ex * s + drift + 0.5,
-      y + pb.ey * s + 0.5,
+      y + pb.ey * s + 0.5
     );
     ctx.stroke();
   }
 
   // ── STRUCTURED BARK PLATE ARMOR ───────────────────────────────────
   const barkPlates = [
-    { cx: 0, cy: -0.07, w: 0.1, h: 0.12, label: "chest" },
-    { cx: -0.08, cy: 0.0, w: 0.065, h: 0.1, label: "leftSide" },
-    { cx: 0.08, cy: 0.0, w: 0.065, h: 0.1, label: "rightSide" },
-    { cx: -0.035, cy: 0.1, w: 0.06, h: 0.065, label: "lowerLeft" },
-    { cx: 0.035, cy: 0.1, w: 0.06, h: 0.065, label: "lowerRight" },
+    { cx: 0, cy: -0.07, h: 0.12, label: "chest", w: 0.1 },
+    { cx: -0.08, cy: 0, h: 0.1, label: "leftSide", w: 0.065 },
+    { cx: 0.08, cy: 0, h: 0.1, label: "rightSide", w: 0.065 },
+    { cx: -0.035, cy: 0.1, h: 0.065, label: "lowerLeft", w: 0.06 },
+    { cx: 0.035, cy: 0.1, h: 0.065, label: "lowerRight", w: 0.06 },
   ];
   for (let pi = 0; pi < barkPlates.length; pi++) {
     const bp = barkPlates[pi];
@@ -4423,7 +4512,7 @@ function drawBody(
       px + pw * 0.05,
       py + ph * 0.1,
       px + pw * 0.25,
-      py + ph * 0.2,
+      py + ph * 0.2
     );
     ctx.stroke();
   }
@@ -4439,13 +4528,28 @@ function drawBody(
     const kx = x + pk.kx * s;
     const ky = y + pk.ky * s;
     const kSz = s * (0.01 + Math.sin(ki * 4.3) * 0.002);
-    const kG = ctx.createRadialGradient(kx - kSz * 0.2, ky - kSz * 0.2, kSz * 0.1, kx, ky, kSz);
+    const kG = ctx.createRadialGradient(
+      kx - kSz * 0.2,
+      ky - kSz * 0.2,
+      kSz * 0.1,
+      kx,
+      ky,
+      kSz
+    );
     kG.addColorStop(0, "#5a7858");
     kG.addColorStop(0.5, "#2a4830");
     kG.addColorStop(1, "#1a3018");
     ctx.fillStyle = kG;
     ctx.beginPath();
-    ctx.ellipse(kx, ky, kSz, kSz * 0.65, Math.sin(ki * 3) * 0.5, 0, Math.PI * 2);
+    ctx.ellipse(
+      kx,
+      ky,
+      kSz,
+      kSz * 0.65,
+      Math.sin(ki * 3) * 0.5,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.strokeStyle = "rgba(5,15,8,0.25)";
     ctx.lineWidth = 0.4 * zoom;
@@ -4457,26 +4561,27 @@ function drawBody(
   // ── VEIN LINES along plate edges ──────────────────────────────────
   setShadowBlur(ctx, 3 * zoom, P.shadowHex);
   const veinPaths = [
-    { sx: -0.09, sy: -0.04, ex: 0.09, ey: -0.04 },
-    { sx: -0.05, sy: -0.13, ex: 0.0, ey: -0.01 },
-    { sx: 0.05, sy: -0.13, ex: 0.0, ey: -0.01 },
-    { sx: -0.1, sy: -0.01, ex: -0.06, ey: 0.13 },
-    { sx: 0.1, sy: -0.01, ex: 0.06, ey: 0.13 },
-    { sx: -0.035, sy: 0.06, ex: 0.035, ey: 0.06 },
+    { ex: 0.09, ey: -0.04, sx: -0.09, sy: -0.04 },
+    { ex: 0, ey: -0.01, sx: -0.05, sy: -0.13 },
+    { ex: 0, ey: -0.01, sx: 0.05, sy: -0.13 },
+    { ex: -0.06, ey: 0.13, sx: -0.1, sy: -0.01 },
+    { ex: 0.06, ey: 0.13, sx: 0.1, sy: -0.01 },
+    { ex: 0.035, ey: 0.06, sx: -0.035, sy: 0.06 },
   ];
   for (let vi = 0; vi < veinPaths.length; vi++) {
     const vn = veinPaths[vi];
     const pulse = Math.sin(time * 2.8 + vi * 0.8) * 0.06;
     const vAlpha = 0.15 + naturePulse * 0.12 + atkBurst * 0.15 + pulse;
     ctx.strokeStyle = `rgba(${P.glow},${vAlpha})`;
-    ctx.lineWidth = (0.8 + Math.sin(time * 3 + vi) * 0.2 + atkBurst * 0.3) * zoom;
+    ctx.lineWidth =
+      (0.8 + Math.sin(time * 3 + vi) * 0.2 + atkBurst * 0.3) * zoom;
     ctx.beginPath();
     ctx.moveTo(x + vn.sx * s, y + vn.sy * s);
     ctx.quadraticCurveTo(
       x + (vn.sx + vn.ex) * 0.5 * s,
       y + (vn.sy + vn.ey) * 0.5 * s + s * 0.008,
       x + vn.ex * s,
-      y + vn.ey * s,
+      y + vn.ey * s
     );
     ctx.stroke();
 
@@ -4503,7 +4608,8 @@ function drawBody(
   ctx.fill();
 
   // ── RIM HIGHLIGHT following plate structure ────────────────────────
-  const rimAlpha = 0.2 + naturePulse * 0.14 + atkBurst * 0.16 + Math.sin(time * 2) * 0.04;
+  const rimAlpha =
+    0.2 + naturePulse * 0.14 + atkBurst * 0.16 + Math.sin(time * 2) * 0.04;
   ctx.strokeStyle = `rgba(110,231,183,${rimAlpha})`;
   ctx.lineWidth = (1.3 + atkBurst * 0.6 + Math.sin(time * 3) * 0.2) * zoom;
   ctx.beginPath();
@@ -4516,7 +4622,7 @@ function drawBody(
     { dx: 0.1, dy: -0.08, r: 0.012 },
     { dx: -0.08, dy: 0.06, r: 0.011 },
     { dx: 0.08, dy: 0.06, r: 0.011 },
-    { dx: 0.0, dy: 0.14, r: 0.01 },
+    { dx: 0, dy: 0.14, r: 0.01 },
   ];
   for (let mi = 0; mi < mossPts.length; mi++) {
     const mp = mossPts[mi];
@@ -4525,7 +4631,16 @@ function drawBody(
     const mGrow = Math.sin(time * 1.5 + mi * 1.2) * 0.15;
     const mr = (mp.r + mGrow * 0.003) * s;
     ctx.fillStyle = `rgba(${P.leafDark},${0.22 + Math.sin(time * 2 + mi * 0.8) * 0.05 + atkBurst * 0.08})`;
-    drawOrganicBlob(ctx, mx, my, mr, mr * 0.6, 7, 0.2, mi * 3.3 + 310 + time * 0.3);
+    drawOrganicBlob(
+      ctx,
+      mx,
+      my,
+      mr,
+      mr * 0.6,
+      7,
+      0.2,
+      mi * 3.3 + 310 + time * 0.3
+    );
     ctx.fill();
   }
 }
@@ -4541,7 +4656,7 @@ function drawBranchCorset(
   zoom: number,
   naturePulse: number,
   mossGlow: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   for (const side of [-1, 1]) {
     for (let b = 0; b < 7; b++) {
@@ -4555,7 +4670,7 @@ function drawBranchCorset(
         x + side * s * 0.02,
         bY,
         x + side * bW * 0.7,
-        bY + s * 0.03,
+        bY + s * 0.03
       );
       bGrad.addColorStop(0, `rgba(82,56,28,${0.6 + b * 0.05})`);
       bGrad.addColorStop(0.5, `rgba(65,42,22,${0.55 + b * 0.05})`);
@@ -4571,7 +4686,7 @@ function drawBranchCorset(
         x + side * bW * 0.85 + curve,
         bY + s * 0.005 + breathShift,
         x + side * bW * 0.7,
-        bY + s * 0.03 + breathShift,
+        bY + s * 0.03 + breathShift
       );
       ctx.stroke();
 
@@ -4585,7 +4700,7 @@ function drawBranchCorset(
         x + side * bW * 0.75 + curve,
         bY + s * 0.002 + breathShift,
         x + side * bW * 0.6,
-        bY + s * 0.025 + breathShift,
+        bY + s * 0.025 + breathShift
       );
       ctx.stroke();
 
@@ -4601,7 +4716,7 @@ function drawBranchCorset(
           by,
           s * (0.004 + Math.sin(k * 2.3) * 0.001),
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4621,7 +4736,7 @@ function drawBranchCorset(
           spx + Math.cos(spDir) * spLen * 0.6,
           spy + Math.sin(spDir) * spLen * 0.4,
           spx + Math.cos(spDir) * spLen,
-          spy + Math.sin(spDir) * spLen,
+          spy + Math.sin(spDir) * spLen
         );
         ctx.stroke();
       }
@@ -4647,9 +4762,9 @@ function drawBranchCorset(
   const gemPositions = [
     { dx: -0.06, dy: -0.12 },
     { dx: 0.06, dy: -0.07 },
-    { dx: -0.04, dy: 0.0 },
+    { dx: -0.04, dy: 0 },
     { dx: 0.04, dy: 0.06 },
-    { dx: 0.0, dy: -0.04 },
+    { dx: 0, dy: -0.04 },
     { dx: -0.07, dy: 0.08 },
   ];
   for (let g = 0; g < gemPositions.length; g++) {
@@ -4663,7 +4778,7 @@ function drawBranchCorset(
       0,
       gx,
       gy,
-      gr,
+      gr
     );
     gemG.addColorStop(0, `rgb(${P.glowWhite})`);
     gemG.addColorStop(0.5, P.shadowHex);
@@ -4684,7 +4799,7 @@ function drawBranchCorset(
   const runeGlow = 0.45 + naturePulse * 0.6 + atkBurst * 0.3;
   setShadowBlur(ctx, (6 + atkBurst * 6) * zoom, P.shadowHex);
   ctx.strokeStyle = `rgba(${P.glow},${runeGlow})`;
-  ctx.lineWidth = (2.0 + atkBurst * 0.5) * zoom;
+  ctx.lineWidth = (2 + atkBurst * 0.5) * zoom;
 
   ctx.beginPath();
   ctx.moveTo(x, y + s * 0.01);
@@ -4697,14 +4812,14 @@ function drawBranchCorset(
     x - s * 0.055,
     y - s * 0.16,
     x - s * 0.045,
-    y - s * 0.18,
+    y - s * 0.18
   );
   ctx.moveTo(x, y - s * 0.12);
   ctx.quadraticCurveTo(
     x + s * 0.055,
     y - s * 0.16,
     x + s * 0.045,
-    y - s * 0.18,
+    y - s * 0.18
   );
   ctx.moveTo(x, y - s * 0.09);
   ctx.quadraticCurveTo(x - s * 0.045, y - s * 0.12, x - s * 0.04, y - s * 0.14);
@@ -4719,14 +4834,14 @@ function drawBranchCorset(
     x - s * 0.018,
     y - s * 0.06,
     x - s * 0.015,
-    y - s * 0.07,
+    y - s * 0.07
   );
   ctx.moveTo(x, y - s * 0.04);
   ctx.quadraticCurveTo(
     x + s * 0.018,
     y - s * 0.06,
     x + s * 0.015,
-    y - s * 0.07,
+    y - s * 0.07
   );
   ctx.stroke();
 
@@ -4736,28 +4851,28 @@ function drawBranchCorset(
     x - s * 0.04,
     y + s * 0.035,
     x - s * 0.05,
-    y + s * 0.045,
+    y + s * 0.045
   );
   ctx.moveTo(x, y + s * 0.01);
   ctx.quadraticCurveTo(
     x + s * 0.04,
     y + s * 0.035,
     x + s * 0.05,
-    y + s * 0.045,
+    y + s * 0.045
   );
   ctx.moveTo(x, y + s * 0.02);
   ctx.quadraticCurveTo(
     x - s * 0.025,
     y + s * 0.04,
     x - s * 0.035,
-    y + s * 0.05,
+    y + s * 0.05
   );
   ctx.moveTo(x, y + s * 0.02);
   ctx.quadraticCurveTo(
     x + s * 0.025,
     y + s * 0.04,
     x + s * 0.035,
-    y + s * 0.05,
+    y + s * 0.05
   );
   ctx.stroke();
 
@@ -4783,7 +4898,7 @@ function drawBranchCorset(
     { dx: 0.1, dy: 0.04, r: 0.011 },
     { dx: -0.04, dy: 0.1, r: 0.01 },
     { dx: 0.03, dy: 0.09, r: 0.013 },
-    { dx: 0.0, dy: -0.17, r: 0.01 },
+    { dx: 0, dy: -0.17, r: 0.01 },
     { dx: -0.12, dy: -0.06, r: 0.009 },
     { dx: 0.11, dy: -0.01, r: 0.01 },
   ];
@@ -4801,7 +4916,7 @@ function drawBranchCorset(
       mr * 0.6,
       7,
       0.2,
-      i * 3.3 + 310 + time * 0.2,
+      i * 3.3 + 310 + time * 0.2
     );
     ctx.fill();
   }
@@ -4818,7 +4933,7 @@ function drawShoulders(
   zoom: number,
   naturePulse: number,
   mossGlow: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   for (const side of [-1, 1]) {
     const sx = x + side * s * 0.2;
@@ -4847,12 +4962,12 @@ function drawShoulders(
       ctx.beginPath();
       ctx.moveTo(
         bpx + Math.cos(spPerp) * spWidth,
-        bpy + Math.sin(spPerp) * spWidth,
+        bpy + Math.sin(spPerp) * spWidth
       );
       ctx.lineTo(tpx, tpy);
       ctx.lineTo(
         bpx - Math.cos(spPerp) * spWidth,
-        bpy - Math.sin(spPerp) * spWidth,
+        bpy - Math.sin(spPerp) * spWidth
       );
       ctx.closePath();
       ctx.fill();
@@ -4862,7 +4977,7 @@ function drawShoulders(
       ctx.beginPath();
       ctx.moveTo(
         bpx + Math.cos(spPerp) * spWidth * 0.5,
-        bpy + Math.sin(spPerp) * spWidth * 0.5,
+        bpy + Math.sin(spPerp) * spWidth * 0.5
       );
       ctx.lineTo(tpx, tpy);
       ctx.stroke();
@@ -4874,7 +4989,7 @@ function drawShoulders(
       paulR * 0.05,
       sx,
       sy,
-      paulR,
+      paulR
     );
     paulGrad.addColorStop(0, "#5e4c2c");
     paulGrad.addColorStop(0.2, "#4e3c22");
@@ -4890,7 +5005,7 @@ function drawShoulders(
       paulR * 0.55,
       12,
       0.15,
-      side * 13 + 320 + time * 0.08,
+      side * 13 + 320 + time * 0.08
     );
     ctx.fill();
 
@@ -4903,7 +5018,7 @@ function drawShoulders(
       paulR * 0.25,
       8,
       0.1,
-      side * 7 + 325,
+      side * 7 + 325
     );
     ctx.fill();
 
@@ -4917,7 +5032,7 @@ function drawShoulders(
       paulR * 0.56,
       12,
       0.15,
-      side * 13 + 320 + time * 0.08,
+      side * 13 + 320 + time * 0.08
     );
     ctx.stroke();
 
@@ -4925,7 +5040,7 @@ function drawShoulders(
       const vwAngle =
         (vw / 3) * Math.PI * 0.6 +
         side * 0.2 +
-        Math.sin(time * 1.0 + vw * 1.2) * 0.08;
+        Math.sin(time * 1 + vw * 1.2) * 0.08;
       ctx.strokeStyle = `rgba(${P.vine},${0.3 + naturePulse * 0.1 + vw * 0.05})`;
       ctx.lineWidth = (0.8 + vw * 0.15) * zoom;
       ctx.beginPath();
@@ -4936,7 +5051,7 @@ function drawShoulders(
         paulR * (0.42 - vw * 0.04),
         side * 0.3 + vwAngle,
         0,
-        Math.PI * 1.4,
+        Math.PI * 1.4
       );
       ctx.stroke();
     }
@@ -4973,7 +5088,7 @@ function drawShoulders(
       0,
       sx,
       sy,
-      s * 0.008,
+      s * 0.008
     );
     runeGemG.addColorStop(0, `rgb(${P.glowWhite})`);
     runeGemG.addColorStop(0.5, P.shadowHex);
@@ -5002,7 +5117,7 @@ function drawShoulders(
           s * 0.003,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5045,7 +5160,7 @@ function drawArms(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const armSwing = isAttacking ? Math.sin(atkBurst * Math.PI * 3) * 0.5 : 0;
 
@@ -5063,7 +5178,7 @@ function drawArms(
     armGrad.addColorStop(0.7, "#164028");
     armGrad.addColorStop(1, "#123820");
     ctx.strokeStyle = armGrad;
-    ctx.lineWidth = (5.0 + atkBurst * 0.6) * zoom;
+    ctx.lineWidth = (5 + atkBurst * 0.6) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(shX, shY);
@@ -5073,7 +5188,7 @@ function drawArms(
       midX,
       midY,
       elX,
-      elY,
+      elY
     );
     ctx.stroke();
 
@@ -5087,7 +5202,7 @@ function drawArms(
       midX - side * s * 0.005,
       midY - s * 0.003,
       elX - side * s * 0.005,
-      elY,
+      elY
     );
     ctx.stroke();
 
@@ -5106,15 +5221,15 @@ function drawArms(
         vy,
         Math.abs(s * (0.015 + vinePhase * 0.5)),
         -0.3,
-        Math.PI + 0.3,
+        Math.PI + 0.3
       );
       ctx.stroke();
     }
 
     const gauntPlates = [
-      { t: 0.5, rx: 0.024, ry: 0.016 },
-      { t: 0.7, rx: 0.026, ry: 0.018 },
-      { t: 0.85, rx: 0.02, ry: 0.014 },
+      { rx: 0.024, ry: 0.016, t: 0.5 },
+      { rx: 0.026, ry: 0.018, t: 0.7 },
+      { rx: 0.02, ry: 0.014, t: 0.85 },
     ];
     for (let g = 0; g < gauntPlates.length; g++) {
       const gp = gauntPlates[g];
@@ -5126,7 +5241,7 @@ function drawArms(
         s * 0.002,
         gx,
         gy,
-        gp.rx * s,
+        gp.rx * s
       );
       gauntGrad.addColorStop(0, "#5e4c2c");
       gauntGrad.addColorStop(0.4, "#4a3820");
@@ -5141,7 +5256,7 @@ function drawArms(
         gp.ry * s,
         8,
         0.15,
-        side * 11 + 340 + g * 7,
+        side * 11 + 340 + g * 7
       );
       ctx.fill();
 
@@ -5183,7 +5298,7 @@ function drawArms(
         -s * 0.002,
         -leafSz * 0.8,
         0,
-        -leafSz,
+        -leafSz
       );
       ctx.bezierCurveTo(
         s * 0.002,
@@ -5191,7 +5306,7 @@ function drawArms(
         s * 0.004,
         -leafSz * 0.3,
         0,
-        0,
+        0
       );
       ctx.fill();
       ctx.restore();
@@ -5206,7 +5321,7 @@ function drawArms(
         0,
         handX,
         handY,
-        s * 0.028,
+        s * 0.028
       );
       handGrad.addColorStop(0, "#2a6a48");
       handGrad.addColorStop(0.5, "#1e5235");
@@ -5225,11 +5340,11 @@ function drawArms(
         ctx.beginPath();
         ctx.moveTo(
           handX + Math.cos(fAngle) * s * 0.015,
-          handY + Math.sin(fAngle) * s * 0.02,
+          handY + Math.sin(fAngle) * s * 0.02
         );
         ctx.lineTo(
           handX + Math.cos(fAngle) * (s * 0.015 + fLen),
-          handY + Math.sin(fAngle) * (s * 0.02 + fLen),
+          handY + Math.sin(fAngle) * (s * 0.02 + fLen)
         );
         ctx.stroke();
       }
@@ -5248,12 +5363,13 @@ function drawCrookedStaff(
   zoom: number,
   naturePulse: number,
   magicPulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   ctx.save();
 
   // Lean the staff further outward with idle sway
-  const staffSway = Math.sin(time * 1.2 + 0.5) * 0.04 + Math.sin(time * 2.1) * 0.015;
+  const staffSway =
+    Math.sin(time * 1.2 + 0.5) * 0.04 + Math.sin(time * 2.1) * 0.015;
   const anchorX = x - s * 0.12;
   const anchorY = y + s * 0.06;
   ctx.translate(anchorX, anchorY);
@@ -5294,7 +5410,7 @@ function drawCrookedStaff(
       p0.x + px * w0,
       p0.y + py * w0,
       p0.x - px * w0,
-      p0.y - py * w0,
+      p0.y - py * w0
     );
     segG.addColorStop(0, "#7a5830");
     segG.addColorStop(0.3, "#5a4020");
@@ -5338,7 +5454,7 @@ function drawCrookedStaff(
       kSize * 0.1,
       kp.x,
       kp.y,
-      kSize,
+      kSize
     );
     kGrad.addColorStop(0, "#6a4828");
     kGrad.addColorStop(0.5, "#3a2510");
@@ -5352,7 +5468,7 @@ function drawCrookedStaff(
       kSize * 0.7,
       Math.sin(kt * 5) * 0.6,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(15,10,4,0.3)";
@@ -5364,11 +5480,11 @@ function drawCrookedStaff(
 
   // Sub-branches sprouting from the main shaft
   const subBranches = [
-    { at: 0.3, side: 1, len: 0.08, angle: 0.6 },
-    { at: 0.5, side: -1, len: 0.1, angle: -0.5 },
-    { at: 0.65, side: 1, len: 0.07, angle: 0.7 },
-    { at: 0.8, side: -1, len: 0.09, angle: -0.65 },
-    { at: 0.55, side: 1, len: 0.06, angle: 0.4 },
+    { angle: 0.6, at: 0.3, len: 0.08, side: 1 },
+    { angle: -0.5, at: 0.5, len: 0.1, side: -1 },
+    { angle: 0.7, at: 0.65, len: 0.07, side: 1 },
+    { angle: -0.65, at: 0.8, len: 0.09, side: -1 },
+    { angle: 0.4, at: 0.55, len: 0.06, side: 1 },
   ];
   for (const br of subBranches) {
     const idx = Math.floor(br.at * SEG_COUNT);
@@ -5381,7 +5497,7 @@ function drawCrookedStaff(
     const tipY = bp.y + Math.sin(brA) * brLen;
 
     ctx.strokeStyle = "#4a3418";
-    ctx.lineWidth = (2.0 - br.at * 0.6) * zoom;
+    ctx.lineWidth = (2 - br.at * 0.6) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(bp.x, bp.y);
@@ -5391,7 +5507,7 @@ function drawCrookedStaff(
         Math.sin(time * 0.8 + br.at * 5) * s * 0.003,
       bp.y + Math.sin(brA) * brLen * 0.5,
       tipX,
-      tipY,
+      tipY
     );
     ctx.stroke();
 
@@ -5433,12 +5549,12 @@ function drawCrookedStaff(
   const topA = Math.atan2(topPt.y - prePt.y, topPt.x - prePt.x);
 
   const prongs = [
-    { da: -0.6, len: 0.1, curve: -0.35 },
-    { da: -0.15, len: 0.12, curve: 0.1 },
-    { da: 0.45, len: 0.09, curve: 0.4 },
+    { curve: -0.35, da: -0.6, len: 0.1 },
+    { curve: 0.1, da: -0.15, len: 0.12 },
+    { curve: 0.4, da: 0.45, len: 0.09 },
   ];
   ctx.strokeStyle = "#4a3018";
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.lineCap = "round";
   for (const p of prongs) {
     const pA = topA + p.da;
@@ -5450,7 +5566,7 @@ function drawCrookedStaff(
       topPt.x + Math.cos(pA + p.curve) * s * p.len * 0.5,
       topPt.y + Math.sin(pA + p.curve) * s * p.len * 0.5,
       tipPx,
-      tipPy,
+      tipPy
     );
     ctx.stroke();
   }
@@ -5467,7 +5583,7 @@ function drawCrookedStaff(
     0,
     crystalX,
     crystalY,
-    crystalR,
+    crystalR
   );
   cGrad.addColorStop(0, `rgba(${P.glowWhite},${0.95 + magicPulse * 0.05})`);
   cGrad.addColorStop(0.2, `rgb(${P.glowBright})`);
@@ -5481,8 +5597,11 @@ function drawCrookedStaff(
     const cr = i % 2 === 0 ? crystalR : crystalR * 0.85;
     const cx = crystalX + Math.cos(a) * cr;
     const cy = crystalY + Math.sin(a) * cr;
-    if (i === 0) ctx.moveTo(cx, cy);
-    else ctx.lineTo(cx, cy);
+    if (i === 0) {
+      ctx.moveTo(cx, cy);
+    } else {
+      ctx.lineTo(cx, cy);
+    }
   }
   ctx.closePath();
   ctx.fill();
@@ -5497,7 +5616,7 @@ function drawCrookedStaff(
     ctx.moveTo(crystalX, crystalY);
     ctx.lineTo(
       crystalX + Math.cos(a) * crystalR * 0.85,
-      crystalY + Math.sin(a) * crystalR * 0.85,
+      crystalY + Math.sin(a) * crystalR * 0.85
     );
     ctx.stroke();
   }
@@ -5511,7 +5630,7 @@ function drawCrookedStaff(
     crystalY,
     crystalR * (2.5 + atkBurst * 0.6),
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -5522,7 +5641,7 @@ function drawCrookedStaff(
     crystalY - crystalR * 0.3,
     crystalR * 0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -5539,7 +5658,7 @@ function drawHead(
   time: number,
   zoom: number,
   naturePulse: number,
-  magicPulse: number,
+  magicPulse: number
 ) {
   const headY = y - s * 0.33;
 
@@ -5575,7 +5694,7 @@ function drawHead(
       helmetCX + perpX * helmetRX,
       helmetCY + perpY * helmetRY,
       helmetCX - perpX * helmetRX * 0.3,
-      helmetCY - perpY * helmetRY * 0.3,
+      helmetCY - perpY * helmetRY * 0.3
     );
     const sh = i % 2 === 0 ? 0 : 10;
     segG.addColorStop(0, `rgb(${74 + sh},${96 + sh},${64 + sh})`);
@@ -5591,7 +5710,7 @@ function drawHead(
       helmetCX + Math.cos(aMid) * helmetRX * 1.12,
       helmetCY + Math.sin(aMid) * helmetRY * 1.12,
       ox1,
-      oy1,
+      oy1
     );
     ctx.lineTo(ix1, iy1);
     ctx.closePath();
@@ -5623,14 +5742,22 @@ function drawHead(
       kSz * 0.1,
       kx,
       ky,
-      kSz,
+      kSz
     );
     kGrad.addColorStop(0, "#5a7858");
     kGrad.addColorStop(0.5, "#2a4030");
     kGrad.addColorStop(1, "#1a2818");
     ctx.fillStyle = kGrad;
     ctx.beginPath();
-    ctx.ellipse(kx, ky, kSz, kSz * 0.65, Math.sin(ka * 5) * 0.6, 0, Math.PI * 2);
+    ctx.ellipse(
+      kx,
+      ky,
+      kSz,
+      kSz * 0.65,
+      Math.sin(ka * 5) * 0.6,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.strokeStyle = "rgba(5,15,8,0.3)";
     ctx.lineWidth = 0.5 * zoom;
@@ -5641,7 +5768,7 @@ function drawHead(
 
   // Vine wraps spiraling around helmet
   ctx.strokeStyle = `rgba(${P.vine},${0.4 + naturePulse * 0.12})`;
-  ctx.lineWidth = (1.0 + naturePulse * 0.2) * zoom;
+  ctx.lineWidth = (1 + naturePulse * 0.2) * zoom;
   for (let v = 0; v < 4; v++) {
     const startA = -Math.PI * 0.4 + v * Math.PI * 0.55;
     ctx.beginPath();
@@ -5652,7 +5779,7 @@ function drawHead(
       helmetRY * (0.92 + v * 0.04),
       0,
       startA,
-      startA + Math.PI * 0.35,
+      startA + Math.PI * 0.35
     );
     ctx.stroke();
   }
@@ -5671,8 +5798,22 @@ function drawHead(
     ctx.rotate(leafDir);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(leafLen * 0.3, -leafLen * 0.3, leafLen * 0.7, -leafLen * 0.25, leafLen, 0);
-    ctx.bezierCurveTo(leafLen * 0.7, leafLen * 0.25, leafLen * 0.3, leafLen * 0.3, 0, 0);
+    ctx.bezierCurveTo(
+      leafLen * 0.3,
+      -leafLen * 0.3,
+      leafLen * 0.7,
+      -leafLen * 0.25,
+      leafLen,
+      0
+    );
+    ctx.bezierCurveTo(
+      leafLen * 0.7,
+      leafLen * 0.25,
+      leafLen * 0.3,
+      leafLen * 0.3,
+      0,
+      0
+    );
     ctx.fill();
     ctx.strokeStyle = `rgba(${P.vineDark},0.3)`;
     ctx.lineWidth = 0.3 * zoom;
@@ -5695,7 +5836,7 @@ function drawHead(
     0,
     x,
     faceCY,
-    faceH * 1.1,
+    faceH * 1.1
   );
   faceGrad.addColorStop(0, "#c09878");
   faceGrad.addColorStop(0.15, "#b08868");
@@ -5706,10 +5847,38 @@ function drawHead(
   ctx.fillStyle = faceGrad;
   ctx.beginPath();
   ctx.moveTo(x, faceCY - faceH);
-  ctx.bezierCurveTo(x + faceW * 0.7, faceCY - faceH, x + faceW, faceCY - faceH * 0.5, x + faceW, faceCY);
-  ctx.bezierCurveTo(x + faceW, faceCY + faceH * 0.4, x + faceW * 0.5, faceCY + faceH * 0.8, x, faceCY + faceH + chinTaper);
-  ctx.bezierCurveTo(x - faceW * 0.5, faceCY + faceH * 0.8, x - faceW, faceCY + faceH * 0.4, x - faceW, faceCY);
-  ctx.bezierCurveTo(x - faceW, faceCY - faceH * 0.5, x - faceW * 0.7, faceCY - faceH, x, faceCY - faceH);
+  ctx.bezierCurveTo(
+    x + faceW * 0.7,
+    faceCY - faceH,
+    x + faceW,
+    faceCY - faceH * 0.5,
+    x + faceW,
+    faceCY
+  );
+  ctx.bezierCurveTo(
+    x + faceW,
+    faceCY + faceH * 0.4,
+    x + faceW * 0.5,
+    faceCY + faceH * 0.8,
+    x,
+    faceCY + faceH + chinTaper
+  );
+  ctx.bezierCurveTo(
+    x - faceW * 0.5,
+    faceCY + faceH * 0.8,
+    x - faceW,
+    faceCY + faceH * 0.4,
+    x - faceW,
+    faceCY
+  );
+  ctx.bezierCurveTo(
+    x - faceW,
+    faceCY - faceH * 0.5,
+    x - faceW * 0.7,
+    faceCY - faceH,
+    x,
+    faceCY - faceH
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -5721,7 +5890,14 @@ function drawHead(
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - lw, ly);
-    ctx.bezierCurveTo(x - lw * 0.3, ly + s * 0.003, x + lw * 0.3, ly - s * 0.002, x + lw, ly);
+    ctx.bezierCurveTo(
+      x - lw * 0.3,
+      ly + s * 0.003,
+      x + lw * 0.3,
+      ly - s * 0.002,
+      x + lw,
+      ly
+    );
     ctx.stroke();
   }
 
@@ -5743,12 +5919,29 @@ function drawHead(
     ctx.fillStyle = "rgba(240,230,215,0.15)";
     ctx.beginPath();
     ctx.moveTo(eyeX - s * 0.032 * eyeScale, eyeY);
-    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.02 * eyeScale, eyeX + s * 0.032 * eyeScale, eyeY);
-    ctx.quadraticCurveTo(eyeX, eyeY + s * 0.016 * eyeScale, eyeX - s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(
+      eyeX,
+      eyeY - s * 0.02 * eyeScale,
+      eyeX + s * 0.032 * eyeScale,
+      eyeY
+    );
+    ctx.quadraticCurveTo(
+      eyeX,
+      eyeY + s * 0.016 * eyeScale,
+      eyeX - s * 0.032 * eyeScale,
+      eyeY
+    );
     ctx.fill();
 
     const irisR = s * 0.016;
-    const irisG = ctx.createRadialGradient(eyeX, eyeY, irisR * 0.15, eyeX, eyeY, irisR);
+    const irisG = ctx.createRadialGradient(
+      eyeX,
+      eyeY,
+      irisR * 0.15,
+      eyeX,
+      eyeY,
+      irisR
+    );
     irisG.addColorStop(0, P.eyePupil);
     irisG.addColorStop(0.3, `rgb(${P.glowDark})`);
     irisG.addColorStop(0.65, `rgb(${P.glow})`);
@@ -5762,8 +5955,18 @@ function drawHead(
     ctx.fillStyle = `rgba(${P.glow},${0.88 + naturePulse * 0.12})`;
     ctx.beginPath();
     ctx.moveTo(eyeX - s * 0.032 * eyeScale, eyeY);
-    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.02 * eyeScale, eyeX + s * 0.032 * eyeScale, eyeY);
-    ctx.quadraticCurveTo(eyeX, eyeY + s * 0.016 * eyeScale, eyeX - s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(
+      eyeX,
+      eyeY - s * 0.02 * eyeScale,
+      eyeX + s * 0.032 * eyeScale,
+      eyeY
+    );
+    ctx.quadraticCurveTo(
+      eyeX,
+      eyeY + s * 0.016 * eyeScale,
+      eyeX - s * 0.032 * eyeScale,
+      eyeY
+    );
     ctx.fill();
 
     ctx.fillStyle = P.eyePupil;
@@ -5773,33 +5976,55 @@ function drawHead(
 
     ctx.fillStyle = `rgba(255,255,255,${0.7 + magicPulse * 0.25})`;
     ctx.beginPath();
-    ctx.arc(eyeX + side * s * 0.007, eyeY - s * 0.006, s * 0.004, 0, Math.PI * 2);
+    ctx.arc(
+      eyeX + side * s * 0.007,
+      eyeY - s * 0.006,
+      s * 0.004,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.fillStyle = `rgba(255,255,255,${0.3 + magicPulse * 0.15})`;
     ctx.beginPath();
-    ctx.arc(eyeX - side * s * 0.004, eyeY + s * 0.004, s * 0.002, 0, Math.PI * 2);
+    ctx.arc(
+      eyeX - side * s * 0.004,
+      eyeY + s * 0.004,
+      s * 0.002,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     ctx.strokeStyle = "rgba(40,25,10,0.4)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(eyeX - side * s * 0.022, eyeY - s * 0.014);
-    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.025, eyeX + side * s * 0.025, eyeY - s * 0.016);
+    ctx.quadraticCurveTo(
+      eyeX,
+      eyeY - s * 0.025,
+      eyeX + side * s * 0.025,
+      eyeY - s * 0.016
+    );
     ctx.stroke();
 
     setShadowBlur(ctx, 2 * zoom, P.shadowHex);
     ctx.strokeStyle = `rgba(${P.glow},${0.3 + naturePulse * 0.15})`;
     ctx.lineWidth = 0.5 * zoom;
     const markDefs = [
-      { sx: -0.01, sy: 0.012, cx: 0.005, cy: 0.024, ex: 0.022, ey: 0.02 },
-      { sx: -0.005, sy: 0.017, cx: 0.008, cy: 0.03, ex: 0.02, ey: 0.028 },
-      { sx: -0.008, sy: 0.008, cx: 0.01, cy: 0.018, ex: 0.028, ey: 0.014 },
-      { sx: 0.0, sy: 0.022, cx: 0.01, cy: 0.036, ex: 0.015, ey: 0.034 },
+      { cx: 0.005, cy: 0.024, ex: 0.022, ey: 0.02, sx: -0.01, sy: 0.012 },
+      { cx: 0.008, cy: 0.03, ex: 0.02, ey: 0.028, sx: -0.005, sy: 0.017 },
+      { cx: 0.01, cy: 0.018, ex: 0.028, ey: 0.014, sx: -0.008, sy: 0.008 },
+      { cx: 0.01, cy: 0.036, ex: 0.015, ey: 0.034, sx: 0, sy: 0.022 },
     ];
     for (const m of markDefs) {
       ctx.beginPath();
       ctx.moveTo(eyeX + side * m.sx * s, eyeY + m.sy * s);
-      ctx.quadraticCurveTo(eyeX + side * m.cx * s, eyeY + m.cy * s, eyeX + side * m.ex * s, eyeY + m.ey * s);
+      ctx.quadraticCurveTo(
+        eyeX + side * m.cx * s,
+        eyeY + m.cy * s,
+        eyeX + side * m.ex * s,
+        eyeY + m.ey * s
+      );
       ctx.stroke();
     }
     clearShadow(ctx);
@@ -5839,8 +6064,11 @@ function drawHead(
     const cr = i % 2 === 0 ? gemR : gemR * 0.8;
     const gx = gemX + Math.cos(ga) * cr;
     const gy = gemY + Math.sin(ga) * cr;
-    if (i === 0) ctx.moveTo(gx, gy);
-    else ctx.lineTo(gx, gy);
+    if (i === 0) {
+      ctx.moveTo(gx, gy);
+    } else {
+      ctx.lineTo(gx, gy);
+    }
   }
   ctx.closePath();
   ctx.fill();
@@ -5852,7 +6080,10 @@ function drawHead(
     const fa = (i / 8) * Math.PI * 2;
     ctx.beginPath();
     ctx.moveTo(gemX, gemY);
-    ctx.lineTo(gemX + Math.cos(fa) * gemR * 0.8, gemY + Math.sin(fa) * gemR * 0.8);
+    ctx.lineTo(
+      gemX + Math.cos(fa) * gemR * 0.8,
+      gemY + Math.sin(fa) * gemR * 0.8
+    );
     ctx.stroke();
   }
 
@@ -5875,7 +6106,7 @@ function drawHead(
       0,
       x + side * s * 0.04,
       headY + s * 0.01,
-      s * 0.025,
+      s * 0.025
     );
     chG.addColorStop(0, "rgba(210,170,130,0.15)");
     chG.addColorStop(0.5, "rgba(180,130,90,0.08)");
@@ -5889,7 +6120,7 @@ function drawHead(
       s * 0.015,
       side * 0.2,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -5946,25 +6177,25 @@ function drawHair(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const headY = y - s * 0.33;
   const hairSpeed = 1.5 + atkBurst * 3;
   const hairSway = 0.03 + atkBurst * 0.025;
 
   const strands = [
-    { sx: -0.08, angle: 2.3, len: 0.3 },
-    { sx: -0.1, angle: 2.5, len: 0.35 },
-    { sx: -0.06, angle: 2.1, len: 0.28 },
-    { sx: 0.08, angle: 0.8, len: 0.3 },
-    { sx: 0.1, angle: 0.6, len: 0.35 },
-    { sx: 0.06, angle: 0.9, len: 0.28 },
-    { sx: -0.03, angle: 2.8, len: 0.22 },
-    { sx: 0.03, angle: 0.3, len: 0.22 },
-    { sx: -0.11, angle: 2.65, len: 0.32 },
-    { sx: 0.11, angle: 0.45, len: 0.32 },
-    { sx: -0.12, angle: 2.4, len: 0.26 },
-    { sx: 0.12, angle: 0.7, len: 0.26 },
+    { angle: 2.3, len: 0.3, sx: -0.08 },
+    { angle: 2.5, len: 0.35, sx: -0.1 },
+    { angle: 2.1, len: 0.28, sx: -0.06 },
+    { angle: 0.8, len: 0.3, sx: 0.08 },
+    { angle: 0.6, len: 0.35, sx: 0.1 },
+    { angle: 0.9, len: 0.28, sx: 0.06 },
+    { angle: 2.8, len: 0.22, sx: -0.03 },
+    { angle: 0.3, len: 0.22, sx: 0.03 },
+    { angle: 2.65, len: 0.32, sx: -0.11 },
+    { angle: 0.45, len: 0.32, sx: 0.11 },
+    { angle: 2.4, len: 0.26, sx: -0.12 },
+    { angle: 0.7, len: 0.26, sx: 0.12 },
   ];
 
   for (let i = 0; i < strands.length; i++) {
@@ -5992,7 +6223,7 @@ function drawHair(
       endX - sway * 0.2,
       endY - s * st.len * 0.15,
       endX,
-      endY,
+      endY
     );
     ctx.stroke();
 
@@ -6009,7 +6240,7 @@ function drawHair(
         s * 0.005,
         st.angle + Math.sin(time * 2.5 + i) * 0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6055,14 +6286,14 @@ function drawCrown(
   zoom: number,
   naturePulse: number,
   leafRustle: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const headY = y - s * 0.33;
   const crownBase = headY - s * 0.1;
 
   // Crown band
   ctx.strokeStyle = "#5a3e20";
-  ctx.lineWidth = (3.0 + atkBurst * 0.4) * zoom;
+  ctx.lineWidth = (3 + atkBurst * 0.4) * zoom;
   ctx.beginPath();
   ctx.ellipse(
     x,
@@ -6071,14 +6302,14 @@ function drawCrown(
     s * 0.03,
     0,
     Math.PI * 0.08,
-    Math.PI * 0.92,
+    Math.PI * 0.92
   );
   ctx.stroke();
 
   for (const side of [-1, 1]) {
     const baseX = x + side * s * 0.06;
     const sway =
-      Math.sin(time * (1.0 + atkBurst * 2) + side * 0.5) *
+      Math.sin(time * (1 + atkBurst * 2) + side * 0.5) *
       s *
       (0.008 + atkBurst * 0.006);
 
@@ -6096,7 +6327,7 @@ function drawCrown(
       baseX + side * s * 0.14 + sway * 0.5,
       crownBase - s * 0.17,
       tip1X,
-      tip1Y,
+      tip1Y
     );
     ctx.stroke();
 
@@ -6110,19 +6341,19 @@ function drawCrown(
       baseX + side * s * 0.08 + sway * 0.3,
       crownBase - s * 0.14,
       tip2X,
-      tip2Y,
+      tip2Y
     );
     ctx.stroke();
 
     // 7 sub-branches per side
     const subs = [
-      { t: 0.2, ang: side * 0.5, len: 0.05 },
-      { t: 0.35, ang: side * 0.65, len: 0.055 },
-      { t: 0.5, ang: side * 0.4, len: 0.05 },
-      { t: 0.65, ang: side * -0.3, len: 0.04 },
-      { t: 0.45, ang: side * -0.45, len: 0.035 },
-      { t: 0.8, ang: side * 0.55, len: 0.045 },
-      { t: 0.9, ang: side * 0.3, len: 0.035 },
+      { ang: side * 0.5, len: 0.05, t: 0.2 },
+      { ang: side * 0.65, len: 0.055, t: 0.35 },
+      { ang: side * 0.4, len: 0.05, t: 0.5 },
+      { ang: side * -0.3, len: 0.04, t: 0.65 },
+      { ang: side * -0.45, len: 0.035, t: 0.45 },
+      { ang: side * 0.55, len: 0.045, t: 0.8 },
+      { ang: side * 0.3, len: 0.035, t: 0.9 },
     ];
     for (const sb of subs) {
       const bx = baseX + (tip1X - baseX) * sb.t + sway * sb.t;
@@ -6139,7 +6370,7 @@ function drawCrown(
       ctx.moveTo(bx, by);
       ctx.lineTo(
         bx + Math.cos(subAngle) * subLen,
-        by + Math.sin(subAngle) * subLen,
+        by + Math.sin(subAngle) * subLen
       );
       ctx.stroke();
 
@@ -6167,7 +6398,7 @@ function drawCrown(
           lox - lSize * 0.2,
           loy - lSize * 0.7,
           lox,
-          loy - lSize * 0.3,
+          loy - lSize * 0.3
         );
         ctx.bezierCurveTo(
           lox + lSize * 0.2,
@@ -6175,7 +6406,7 @@ function drawCrown(
           lox + lSize * 0.7,
           loy - lSize * 0.1,
           lox,
-          loy + lSize * 0.4,
+          loy + lSize * 0.4
         );
         ctx.fill();
       }
@@ -6214,7 +6445,7 @@ function drawCrown(
         vtx + dSway,
         vty + dLen * 0.5,
         vtx + dSway * 1.5,
-        vty + dLen,
+        vty + dLen
       );
       ctx.stroke();
     }
@@ -6230,11 +6461,11 @@ function drawCrown(
         0,
         tip.x,
         tip.y,
-        s * (0.03 + atkBurst * 0.012),
+        s * (0.03 + atkBurst * 0.012)
       );
       tG.addColorStop(
         0,
-        `rgba(${P.glowBright},${0.45 + naturePulse * 0.25 + atkBurst * 0.15})`,
+        `rgba(${P.glowBright},${0.45 + naturePulse * 0.25 + atkBurst * 0.15})`
       );
       tG.addColorStop(1, `rgba(${P.glow},0)`);
       ctx.fillStyle = tG;
@@ -6278,7 +6509,7 @@ function drawCrown(
         s * (0.007 - ring * 0.001) * bloomScale,
         pa,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6320,7 +6551,7 @@ function drawNatureAura(
   naturePulse: number,
   isAttacking: boolean,
   zoom: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const auraR = s * (0.6 + naturePulse * 0.1 + atkBurst * 0.2);
   const auraA = 0.08 + naturePulse * 0.04 + atkBurst * 0.06;
@@ -6427,7 +6658,7 @@ function drawMagicParticles(
   time: number,
   zoom: number,
   naturePulse: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const particleCount = 8 + Math.floor(atkBurst * 8);
   for (let i = 0; i < particleCount; i++) {
@@ -6460,7 +6691,7 @@ function drawAttackVines(
   s: number,
   atkBurst: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const waveR = s * 0.65 * atkBurst;
   ctx.save();
@@ -6506,7 +6737,7 @@ function drawAttackVines(
       atkBurst > 0.3,
       true,
       true,
-      true,
+      true
     );
   }
 
@@ -6542,7 +6773,7 @@ function drawAttackVines(
       x,
       y + s * 0.27,
       x + Math.cos(cAngle) * cLen,
-      y + s * 0.27 + Math.sin(cAngle) * cLen * 0.3,
+      y + s * 0.27 + Math.sin(cAngle) * cLen * 0.3
     );
     crG.addColorStop(0, `rgba(${P.glowBright},${crackAlpha})`);
     crG.addColorStop(0.5, `rgba(${P.glow},${crackAlpha * 0.6})`);
@@ -6557,7 +6788,7 @@ function drawAttackVines(
       x + Math.cos(cAngle) * cLen * 0.7,
       y + s * 0.27 + Math.sin(cAngle) * cLen * 0.2,
       x + Math.cos(cAngle) * cLen,
-      y + s * 0.27 + Math.sin(cAngle) * cLen * 0.3,
+      y + s * 0.27 + Math.sin(cAngle) * cLen * 0.3
     );
     ctx.stroke();
 
@@ -6579,8 +6810,8 @@ function drawAttackVines(
 
 function hexToRgb(hex: string): string {
   const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
+  const r = Number.parseInt(h.slice(0, 2), 16);
+  const g = Number.parseInt(h.slice(2, 4), 16);
+  const b = Number.parseInt(h.slice(4, 6), 16);
   return `${r},${g},${b}`;
 }

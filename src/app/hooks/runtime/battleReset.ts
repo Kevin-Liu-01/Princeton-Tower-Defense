@@ -1,4 +1,10 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+
+import { INITIAL_PAW_POINTS } from "../../constants";
+import { getVaultHpMap, getLevelStartingPawPoints } from "../../game/setup";
+import type { PausableTimeoutEntry } from "../../game/state";
+import { resetBattleState } from "../../game/state";
+import { clearParticlePool } from "../../rendering";
 import type {
   Position,
   Tower,
@@ -14,11 +20,6 @@ import type {
   GameState,
   SpecialTower,
 } from "../../types";
-import type { PausableTimeoutEntry } from "../../game/state";
-import { resetBattleState } from "../../game/state";
-import { clearParticlePool } from "../../rendering";
-import { getVaultHpMap, getLevelStartingPawPoints } from "../../game/setup";
-import { INITIAL_PAW_POINTS } from "../../constants";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
 
@@ -84,63 +85,63 @@ export function performBattleResetImpl(
     resetCamera: boolean;
     resetResultStats: boolean;
     specialTowerHpValue: Record<string, number>;
-  },
+  }
 ): void {
   resetBattleState({
     clearAllTimers: deps.clearAllTimers,
-    setters: {
-      setGameState: deps.setGameState,
-      setPawPoints: deps.setPawPoints,
-      setLives: deps.setLives,
-      setCurrentWave: deps.setCurrentWave,
-      setNextWaveTimer: deps.setNextWaveTimer,
-      setTowers: deps.setTowers,
-      setEnemies: deps.setEnemies,
-      setHero: deps.setHero,
-      setTroops: deps.setTroops,
-      setProjectiles: deps.setProjectiles,
-      setEffects: deps.setEffects,
-      clearParticlePool,
-      setSelectedTower: deps.setSelectedTower,
-      setBuildingTower: deps.setBuildingTower,
-      setDraggingTower: deps.setDraggingTower,
-      setIsPanning: deps.setIsPanning,
-      setPanStart: deps.setPanStart,
-      setPanStartOffset: deps.setPanStartOffset,
-      setRepositioningTower: deps.setRepositioningTower,
-      setRepositionPreviewPos: deps.setRepositionPreviewPos,
-      setWaveInProgress: deps.setWaveInProgress,
-      setPlacingTroop: deps.setPlacingTroop,
-      setTargetingSpell: deps.setTargetingSpell,
-      setSpells: deps.setSpells,
-      setGameSpeed: deps.setGameSpeed,
-      setGoldSpellActive: deps.setGoldSpellActive,
-      setInspectorActive: deps.setInspectorActive,
-      setSelectedInspectEnemy: deps.setSelectedInspectEnemy,
-      setPreviousGameSpeed: deps.setPreviousGameSpeed,
-      setSpecialTowerHp: deps.setSpecialTowerHp,
-      setLevelStartTime: deps.setLevelStartTime,
-      setCameraOffset: deps.setCameraOffset,
-      setCameraZoom: deps.setCameraZoom,
-      setStarsEarned: deps.setStarsEarned,
-      setTimeSpent: deps.setTimeSpent,
-    },
-    refs: {
-      gameEndHandledRef: deps.gameEndHandledRef,
-      prevGameSpeedRef: deps.prevGameSpeedRef,
-      pausedAtRef: deps.pausedAtRef,
-      totalPausedTimeRef: deps.totalPausedTimeRef,
-      pausableTimeoutsRef: deps.pausableTimeoutsRef,
-      lastBarracksSpawnRef: deps.lastBarracksSpawnRef,
-      gameResetTimeRef: deps.gameResetTimeRef,
-    },
     options: {
-      targetGameState: options.targetGameState,
-      startingPawPoints: options.startingPawPoints,
       levelStartTime: options.levelStartTimeValue,
       resetCamera: options.resetCamera,
       resetResultStats: options.resetResultStats,
       specialTowerHp: options.specialTowerHpValue,
+      startingPawPoints: options.startingPawPoints,
+      targetGameState: options.targetGameState,
+    },
+    refs: {
+      gameEndHandledRef: deps.gameEndHandledRef,
+      gameResetTimeRef: deps.gameResetTimeRef,
+      lastBarracksSpawnRef: deps.lastBarracksSpawnRef,
+      pausableTimeoutsRef: deps.pausableTimeoutsRef,
+      pausedAtRef: deps.pausedAtRef,
+      prevGameSpeedRef: deps.prevGameSpeedRef,
+      totalPausedTimeRef: deps.totalPausedTimeRef,
+    },
+    setters: {
+      clearParticlePool,
+      setBuildingTower: deps.setBuildingTower,
+      setCameraOffset: deps.setCameraOffset,
+      setCameraZoom: deps.setCameraZoom,
+      setCurrentWave: deps.setCurrentWave,
+      setDraggingTower: deps.setDraggingTower,
+      setEffects: deps.setEffects,
+      setEnemies: deps.setEnemies,
+      setGameSpeed: deps.setGameSpeed,
+      setGameState: deps.setGameState,
+      setGoldSpellActive: deps.setGoldSpellActive,
+      setHero: deps.setHero,
+      setInspectorActive: deps.setInspectorActive,
+      setIsPanning: deps.setIsPanning,
+      setLevelStartTime: deps.setLevelStartTime,
+      setLives: deps.setLives,
+      setNextWaveTimer: deps.setNextWaveTimer,
+      setPanStart: deps.setPanStart,
+      setPanStartOffset: deps.setPanStartOffset,
+      setPawPoints: deps.setPawPoints,
+      setPlacingTroop: deps.setPlacingTroop,
+      setPreviousGameSpeed: deps.setPreviousGameSpeed,
+      setProjectiles: deps.setProjectiles,
+      setRepositionPreviewPos: deps.setRepositionPreviewPos,
+      setRepositioningTower: deps.setRepositioningTower,
+      setSelectedInspectEnemy: deps.setSelectedInspectEnemy,
+      setSelectedTower: deps.setSelectedTower,
+      setSpecialTowerHp: deps.setSpecialTowerHp,
+      setSpells: deps.setSpells,
+      setStarsEarned: deps.setStarsEarned,
+      setTargetingSpell: deps.setTargetingSpell,
+      setTimeSpent: deps.setTimeSpent,
+      setTowers: deps.setTowers,
+      setTroops: deps.setTroops,
+      setWaveInProgress: deps.setWaveInProgress,
     },
   });
   deps.setBattleOutcome(null);
@@ -153,24 +154,30 @@ export function performBattleResetImpl(
   deps.enemiesFirstAppearedRef.current = 0;
 }
 
-export function resetGameImpl(deps: BattleResetDeps, selectedMap: string): void {
+export function resetGameImpl(
+  deps: BattleResetDeps,
+  selectedMap: string
+): void {
   performBattleResetImpl(deps, {
-    targetGameState: "menu",
-    startingPawPoints: INITIAL_PAW_POINTS,
     levelStartTimeValue: 0,
     resetCamera: true,
     resetResultStats: true,
     specialTowerHpValue: getVaultHpMap(selectedMap),
+    startingPawPoints: INITIAL_PAW_POINTS,
+    targetGameState: "menu",
   });
 }
 
-export function retryLevelImpl(deps: BattleResetDeps, selectedMap: string): void {
+export function retryLevelImpl(
+  deps: BattleResetDeps,
+  selectedMap: string
+): void {
   performBattleResetImpl(deps, {
-    targetGameState: "playing",
-    startingPawPoints: getLevelStartingPawPoints(selectedMap),
     levelStartTimeValue: Date.now(),
     resetCamera: false,
     resetResultStats: false,
     specialTowerHpValue: getVaultHpMap(selectedMap),
+    startingPawPoints: getLevelStartingPawPoints(selectedMap),
+    targetGameState: "playing",
   });
 }

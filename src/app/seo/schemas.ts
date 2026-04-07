@@ -22,17 +22,14 @@ const GAME_ID = `${SITE_URL}/#game`;
 
 function getPersonSchema() {
   return {
-    "@type": "Person",
     "@id": PERSON_ID,
-    name: SITE_AUTHOR,
-    url: AUTHOR_URL,
-    sameAs: [...AUTHOR_SAME_AS],
-    jobTitle: "Software Engineer",
+    "@type": "Person",
     alumniOf: {
       "@type": "CollegeOrUniversity",
       name: "Princeton University",
       url: "https://www.princeton.edu",
     },
+    jobTitle: "Software Engineer",
     knowsAbout: [
       "React",
       "Next.js",
@@ -46,44 +43,71 @@ function getPersonSchema() {
       "WebGL",
       "Full-Stack Development",
     ],
+    name: SITE_AUTHOR,
+    sameAs: [...AUTHOR_SAME_AS],
+    url: AUTHOR_URL,
   };
 }
 
 function getWebSiteSchema() {
   return {
-    "@type": "WebSite",
     "@id": WEBSITE_ID,
-    url: SITE_URL,
-    name: SITE_NAME,
+    "@type": "WebSite",
     description: SITE_DESCRIPTION,
-    publisher: { "@id": PERSON_ID },
     inLanguage: "en-US",
+    name: SITE_NAME,
+    publisher: { "@id": PERSON_ID },
+    url: SITE_URL,
   };
 }
 
 function getVideoGameSchema() {
   return {
-    "@type": "VideoGame",
     "@id": GAME_ID,
-    name: SITE_NAME,
-    url: SITE_URL,
-    description: SITE_DESCRIPTION,
-    genre: ["Tower Defense", "Strategy", "Casual"],
-    gamePlatform: ["Web Browser", "Desktop Browser", "Mobile Browser"],
+    "@type": "VideoGame",
+    abstract:
+      `${SITE_NAME} features ${GAME_STATS.levels} handcrafted levels across ${GAME_STATS.regions} themed regions ` +
+      `(${REGION_NAMES.join(", ")}), ${GAME_STATS.towers} upgradeable towers with dual upgrade paths, ` +
+      `${GAME_STATS.heroes} hero units, ${GAME_STATS.spells} castable spells, ${GAME_STATS.enemyTypes}+ enemy types, ` +
+      `and a full custom level creator with sharing support.`,
     applicationCategory: "Game",
-    operatingSystem: "Any (Browser-based)",
-    datePublished: "2024-12-01",
+    author: { "@id": PERSON_ID },
+    characterAttribute: HERO_NAMES.map((hero) => ({
+      "@type": "Thing",
+      description: `A playable hero character in ${SITE_NAME} with unique active abilities`,
+      name: hero,
+    })),
     dateModified: new Date().toISOString().split("T")[0],
+    datePublished: "2024-12-01",
+    description: SITE_DESCRIPTION,
+    gameItem: TOWER_NAMES.map((tower) => ({
+      "@type": "Thing",
+      description: `A buildable tower in ${SITE_NAME} inspired by a Princeton University campus landmark`,
+      name: tower,
+    })),
+    gamePlatform: ["Web Browser", "Desktop Browser", "Mobile Browser"],
+    genre: ["Tower Defense", "Strategy", "Casual"],
+    image: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
+    inLanguage: "en",
+    isAccessibleForFree: true,
+    mainEntityOfPage: { "@id": WEBSITE_ID },
+    name: SITE_NAME,
+    numberOfPlayers: { "@type": "QuantitativeValue", value: 1 },
     offers: {
       "@type": "Offer",
+      availability: "https://schema.org/InStock",
       price: "0",
       priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
     },
-    author: { "@id": PERSON_ID },
+    operatingSystem: "Any (Browser-based)",
+    playMode: "SinglePlayer",
+    potentialAction: SPELL_NAMES.map((spell) => ({
+      "@type": "PlayAction",
+      description: `Use the ${spell} spell to aid your tower defenses`,
+      name: `Cast ${spell}`,
+    })),
     publisher: { "@id": PERSON_ID },
-    mainEntityOfPage: { "@id": WEBSITE_ID },
-    image: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
+    sameAs: [GITHUB_URL],
     screenshot: [
       `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
       `${SITE_URL}/images/new/gameplay_desert_ui.png`,
@@ -92,47 +116,16 @@ function getVideoGameSchema() {
       `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
       `${SITE_URL}/images/promo/homepage.png`,
     ],
-    numberOfPlayers: { "@type": "QuantitativeValue", value: 1 },
-    playMode: "SinglePlayer",
-    gameItem: TOWER_NAMES.map((tower) => ({
-      "@type": "Thing",
-      name: tower,
-      description: `A buildable tower in ${SITE_NAME} inspired by a Princeton University campus landmark`,
-    })),
-    characterAttribute: HERO_NAMES.map((hero) => ({
-      "@type": "Thing",
-      name: hero,
-      description: `A playable hero character in ${SITE_NAME} with unique active abilities`,
-    })),
-    potentialAction: SPELL_NAMES.map((spell) => ({
-      "@type": "PlayAction",
-      name: `Cast ${spell}`,
-      description: `Use the ${spell} spell to aid your tower defenses`,
-    })),
-    abstract:
-      `${SITE_NAME} features ${GAME_STATS.levels} handcrafted levels across ${GAME_STATS.regions} themed regions ` +
-      `(${REGION_NAMES.join(", ")}), ${GAME_STATS.towers} upgradeable towers with dual upgrade paths, ` +
-      `${GAME_STATS.heroes} hero units, ${GAME_STATS.spells} castable spells, ${GAME_STATS.enemyTypes}+ enemy types, ` +
-      `and a full custom level creator with sharing support.`,
-    inLanguage: "en",
-    isAccessibleForFree: true,
-    sameAs: [GITHUB_URL],
+    url: SITE_URL,
   };
 }
 
 function getWebApplicationSchema() {
   return {
     "@type": "WebApplication",
-    name: SITE_NAME,
-    url: SITE_URL,
     applicationCategory: "GameApplication",
-    operatingSystem: "Any",
+    author: { "@id": PERSON_ID },
     browserRequirements: "Requires JavaScript and HTML5 Canvas support",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
     featureList: [
       `${GAME_STATS.towers} unique towers inspired by Princeton campus landmarks, each with 2 upgrade paths`,
       `${GAME_STATS.heroes} summonable hero characters with active abilities`,
@@ -146,7 +139,14 @@ function getWebApplicationSchema() {
       "Environmental hazards: lava, quicksand, blizzard zones, poison fog, and more",
       "Isometric HTML5 Canvas rendering with no downloads or plugins required",
     ],
-    author: { "@id": PERSON_ID },
+    name: SITE_NAME,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    operatingSystem: "Any",
+    url: SITE_URL,
   };
 }
 
@@ -156,7 +156,6 @@ function getFAQSchema() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "What is Princeton Tower Defense?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -165,10 +164,10 @@ function getFAQSchema() {
             "against waves of enemies. The game features 26 levels across 5 themed regions, " +
             "7 upgradeable towers with dual upgrade paths, 9 hero characters, 6 spells, and a custom level creator.",
         },
+        name: "What is Princeton Tower Defense?",
       },
       {
         "@type": "Question",
-        name: "How many towers are in Princeton Tower Defense?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -176,20 +175,20 @@ function getFAQSchema() {
             `${TOWER_NAMES.join(", ")}. Each tower has two distinct upgrade paths. For example, Nassau Cannon can upgrade into ` +
             "a rapid-fire Gatling Gun or a burn-damage Flamethrower, and Dinky Station can summon ranged Centaurs or tanky Royal Cavalry.",
         },
+        name: "How many towers are in Princeton Tower Defense?",
       },
       {
         "@type": "Question",
-        name: "Is Princeton Tower Defense free to play?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
             "Yes, Princeton Tower Defense is completely free to play in any modern web browser. No download, installation, or account required. " +
             "The game runs on HTML5 Canvas and works on desktop and mobile browsers.",
         },
+        name: "Is Princeton Tower Defense free to play?",
       },
       {
         "@type": "Question",
-        name: "What regions and maps are in Princeton Tower Defense?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -201,10 +200,10 @@ function getFAQSchema() {
             "and Volcanic Depths (lava with Lava Fields, Caldera Basin, Obsidian Throne). " +
             "Each region also includes challenge maps with special tower restrictions.",
         },
+        name: "What regions and maps are in Princeton Tower Defense?",
       },
       {
         "@type": "Question",
-        name: "Can I create custom levels in Princeton Tower Defense?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -213,10 +212,10 @@ function getFAQSchema() {
             "set theme-specific decorations and environmental hazards, pre-place towers, and compose custom enemy waves. " +
             "Choose from 5 map themes: grassland, swamp, desert, winter, and volcanic.",
         },
+        name: "Can I create custom levels in Princeton Tower Defense?",
       },
       {
         "@type": "Question",
-        name: "What heroes are available in Princeton Tower Defense?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -224,10 +223,10 @@ function getFAQSchema() {
             "Each hero has unique active abilities and can be deployed on the battlefield to support your tower defenses. " +
             "Heroes gain experience and can turn the tide during difficult waves.",
         },
+        name: "What heroes are available in Princeton Tower Defense?",
       },
       {
         "@type": "Question",
-        name: "What makes Princeton Tower Defense different from other tower defense games?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -236,10 +235,10 @@ function getFAQSchema() {
             "environmental hazards like lava geysers and quicksand, special objective structures, challenge maps with tower restrictions, " +
             "and a full custom level creator. It's built entirely with React and HTML5 Canvas with isometric rendering and no game engine.",
         },
+        name: "What makes Princeton Tower Defense different from other tower defense games?",
       },
       {
         "@type": "Question",
-        name: "What technology is Princeton Tower Defense built with?",
         acceptedAnswer: {
           "@type": "Answer",
           text:
@@ -249,6 +248,7 @@ function getFAQSchema() {
             "quality-aware rendering adjusts detail based on runtime performance, and the UI uses Tailwind CSS with Radix Themes. " +
             "Created by Kevin Liu (kevin-liu.tech).",
         },
+        name: "What technology is Princeton Tower Defense built with?",
       },
     ],
   };
@@ -260,27 +260,27 @@ function getBreadcrumbSchema() {
     itemListElement: [
       {
         "@type": "ListItem",
-        position: 1,
-        name: "Home",
         item: SITE_URL,
+        name: "Home",
+        position: 1,
       },
       {
         "@type": "ListItem",
-        position: 2,
-        name: "Codex",
         item: `${SITE_URL}/codex`,
+        name: "Codex",
+        position: 2,
       },
       {
         "@type": "ListItem",
-        position: 2,
-        name: "Level Creator",
         item: `${SITE_URL}/creator`,
+        name: "Level Creator",
+        position: 2,
       },
       {
         "@type": "ListItem",
-        position: 2,
-        name: "Credits",
         item: `${SITE_URL}/credits`,
+        name: "Credits",
+        position: 2,
       },
     ],
   };
@@ -289,13 +289,13 @@ function getBreadcrumbSchema() {
 function getSoftwareSourceCodeSchema() {
   return {
     "@type": "SoftwareSourceCode",
-    name: SITE_NAME,
-    codeRepository: GITHUB_URL,
-    programmingLanguage: ["TypeScript", "React 19", "Next.js 16"],
-    runtimePlatform: "Web Browser",
     author: { "@id": PERSON_ID },
+    codeRepository: GITHUB_URL,
     dateCreated: "2024-12-01",
     license: "https://opensource.org/licenses/MIT",
+    name: SITE_NAME,
+    programmingLanguage: ["TypeScript", "React 19", "Next.js 16"],
+    runtimePlatform: "Web Browser",
     targetProduct: { "@id": GAME_ID },
   };
 }

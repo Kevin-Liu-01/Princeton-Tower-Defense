@@ -27,13 +27,14 @@ export interface StepTowardTargetResult {
 export function getFacingRightFromDelta(
   dx: number,
   dy: number,
-  fallbackFacingRight: boolean = true,
+  fallbackFacingRight: boolean = true
 ): boolean {
   // In 2:1 isometric projection, screenX ∝ (worldX - worldY).
   // "Facing right on screen" means the screen-space X component is positive.
   const screenDx = dx - dy;
-  if (!Number.isFinite(screenDx) || Math.abs(screenDx) <= EPSILON)
+  if (!Number.isFinite(screenDx) || Math.abs(screenDx) <= EPSILON) {
     return fallbackFacingRight;
+  }
   return screenDx >= 0;
 }
 
@@ -54,25 +55,28 @@ export function stepTowardTarget({
 
   if (distance <= minStopDistance + EPSILON) {
     return {
+      distance,
+      facingRight,
       pos: { ...current },
       reached: true,
       rotation,
-      facingRight,
-      distance,
     };
   }
 
-  const maxStepDistance = Math.max(0, (speed * deltaTime) / GAME_TICK_NORMALIZER);
+  const maxStepDistance = Math.max(
+    0,
+    (speed * deltaTime) / GAME_TICK_NORMALIZER
+  );
   const availableDistance = Math.max(0, distance - minStopDistance);
   const traveled = Math.min(maxStepDistance, availableDistance);
 
   if (traveled <= EPSILON) {
     return {
+      distance,
+      facingRight,
       pos: { ...current },
       reached: true,
       rotation,
-      facingRight,
-      distance,
     };
   }
 
@@ -83,11 +87,11 @@ export function stepTowardTarget({
   const remainingDistance = Math.max(0, distance - traveled);
 
   return {
+    distance,
+    facingRight,
     pos: nextPos,
     reached: remainingDistance <= minStopDistance + EPSILON,
     rotation,
-    facingRight,
-    distance,
   };
 }
 
@@ -103,7 +107,9 @@ export function clampPositionToRadius(
   const dx = pos.x - anchorPos.x;
   const dy = pos.y - anchorPos.y;
   const dist = Math.hypot(dx, dy);
-  if (dist <= radius || dist <= EPSILON) return pos;
+  if (dist <= radius || dist <= EPSILON) {
+    return pos;
+  }
 
   return {
     x: anchorPos.x + (dx / dist) * radius,
@@ -115,7 +121,7 @@ const deterministicFallbackVector = (idA: string, idB: string): Position => {
   const signature = `${idA}:${idB}`;
   let hash = 0;
   for (let i = 0; i < signature.length; i++) {
-    hash = (hash << 5) - hash + signature.charCodeAt(i);
+    hash = (hash << 5) - hash + signature.codePointAt(i);
     hash |= 0;
   }
   const angle = ((Math.abs(hash) % 6283) / 1000) % (Math.PI * 2);
@@ -128,7 +134,9 @@ export function computeSeparationForces(
   maxForce: number = 1.25
 ): Map<string, Position> {
   const forces = new Map<string, Position>();
-  if (units.length <= 1 || minDistance <= EPSILON) return forces;
+  if (units.length <= 1 || minDistance <= EPSILON) {
+    return forces;
+  }
 
   const minDistSq = minDistance * minDistance;
   const addForce = (id: string, fx: number, fy: number) => {
@@ -143,7 +151,9 @@ export function computeSeparationForces(
       const dx = a.pos.x - b.pos.x;
       const dy = a.pos.y - b.pos.y;
       const distSq = dx * dx + dy * dy;
-      if (distSq >= minDistSq) continue;
+      if (distSq >= minDistSq) {
+        continue;
+      }
 
       if (distSq <= EPSILON) {
         const fallback = deterministicFallbackVector(a.id, b.id);
@@ -164,7 +174,9 @@ export function computeSeparationForces(
 
   forces.forEach((force, id) => {
     const magnitude = Math.hypot(force.x, force.y);
-    if (magnitude <= maxForce || magnitude <= EPSILON) return;
+    if (magnitude <= maxForce || magnitude <= EPSILON) {
+      return;
+    }
     forces.set(id, {
       x: (force.x / magnitude) * maxForce,
       y: (force.y / magnitude) * maxForce,
@@ -178,9 +190,11 @@ export function constrainToNearPath(
   pos: Position,
   nearestPathPoint: Position,
   distToPath: number,
-  maxDistance: number,
+  maxDistance: number
 ): Position {
-  if (distToPath <= maxDistance) return pos;
+  if (distToPath <= maxDistance) {
+    return pos;
+  }
   const ratio = maxDistance / distToPath;
   return {
     x: nearestPathPoint.x + (pos.x - nearestPathPoint.x) * ratio,
@@ -220,15 +234,18 @@ export function stepAlongWaypoints({
 }: StepAlongWaypointsInput): StepAlongWaypointsResult {
   if (waypoints.length === 0) {
     return {
+      facingRight: true,
       pos: { ...current },
       reached: true,
       rotation: 0,
-      facingRight: true,
       waypointsConsumed: 0,
     };
   }
 
-  const maxStepDistance = Math.max(0, (speed * deltaTime) / GAME_TICK_NORMALIZER);
+  const maxStepDistance = Math.max(
+    0,
+    (speed * deltaTime) / GAME_TICK_NORMALIZER
+  );
   let remaining = maxStepDistance;
   let pos = current;
   let consumed = 0;
@@ -250,7 +267,13 @@ export function stepAlongWaypoints({
     if (dist <= effectiveStop + EPSILON) {
       consumed = i + 1;
       if (isLast) {
-        return { pos: { ...pos }, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+        return {
+          facingRight,
+          pos: { ...pos },
+          reached: true,
+          rotation,
+          waypointsConsumed: consumed,
+        };
       }
       continue;
     }
@@ -260,7 +283,13 @@ export function stepAlongWaypoints({
 
     if (traveled <= EPSILON) {
       if (isLast) {
-        return { pos: { ...pos }, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+        return {
+          facingRight,
+          pos: { ...pos },
+          reached: true,
+          rotation,
+          waypointsConsumed: consumed,
+        };
       }
       continue;
     }
@@ -276,16 +305,22 @@ export function stepAlongWaypoints({
     if (leftover <= effectiveStop + EPSILON) {
       consumed = i + 1;
       if (isLast) {
-        return { pos, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+        return {
+          facingRight,
+          pos,
+          reached: true,
+          rotation,
+          waypointsConsumed: consumed,
+        };
       }
     }
   }
 
-  const finalTarget = waypoints[waypoints.length - 1];
+  const finalTarget = waypoints.at(-1);
   const finalDist = Math.hypot(finalTarget.x - pos.x, finalTarget.y - pos.y);
   const reached = finalDist <= Math.max(0, stopDistance) + EPSILON;
 
-  return { pos, reached, rotation, facingRight, waypointsConsumed: consumed };
+  return { facingRight, pos, reached, rotation, waypointsConsumed: consumed };
 }
 
 function computeRepulsionFromNeighbors(
@@ -294,7 +329,9 @@ function computeRepulsionFromNeighbors(
   minDistance: number,
   maxForce: number = 0.9
 ): Position {
-  if (neighbors.length === 0 || minDistance <= EPSILON) return { x: 0, y: 0 };
+  if (neighbors.length === 0 || minDistance <= EPSILON) {
+    return { x: 0, y: 0 };
+  }
 
   let fx = 0;
   let fy = 0;
@@ -305,10 +342,12 @@ function computeRepulsionFromNeighbors(
     const dx = origin.x - neighbor.pos.x;
     const dy = origin.y - neighbor.pos.y;
     const distSq = dx * dx + dy * dy;
-    if (distSq >= minDistSq) continue;
+    if (distSq >= minDistSq) {
+      continue;
+    }
 
     if (distSq <= EPSILON) {
-      const angle = (i * 2.399963229728653) % (Math.PI * 2);
+      const angle = (i * 2.399_963_229_728_653) % (Math.PI * 2);
       fx += Math.cos(angle);
       fy += Math.sin(angle);
       continue;
@@ -322,7 +361,11 @@ function computeRepulsionFromNeighbors(
   }
 
   const magnitude = Math.hypot(fx, fy);
-  if (magnitude <= EPSILON) return { x: 0, y: 0 };
-  if (magnitude <= maxForce) return { x: fx, y: fy };
+  if (magnitude <= EPSILON) {
+    return { x: 0, y: 0 };
+  }
+  if (magnitude <= maxForce) {
+    return { x: fx, y: fy };
+  }
   return { x: (fx / magnitude) * maxForce, y: (fy / magnitude) * maxForce };
 }

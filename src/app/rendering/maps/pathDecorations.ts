@@ -1,7 +1,7 @@
 import type { Position } from "../../types";
-import type { RegionTheme } from "./staticLayer";
 import { hexToRgb, hexToRgba } from "../../utils";
 import { createSeededRandom } from "../../utils/seededRandom";
+import type { RegionTheme } from "./staticLayer";
 
 const ISO_T = 0.5;
 
@@ -26,14 +26,14 @@ export interface IsoStonePalette {
 
 export function buildStonePalettes(
   pathColors: string[],
-  alpha: number,
+  alpha: number
 ): IsoStonePalette[] {
   return pathColors.map((hex) => {
     const { r, g, b } = hexToRgb(hex);
     return {
-      top: `rgba(${Math.min(255, r + 22)},${Math.min(255, g + 22)},${Math.min(255, b + 22)},${alpha})`,
       left: `rgba(${Math.max(0, r - 12)},${Math.max(0, g - 12)},${Math.max(0, b - 12)},${alpha * 0.85})`,
       right: `rgba(${Math.max(0, r - 32)},${Math.max(0, g - 32)},${Math.max(0, b - 32)},${alpha * 0.72})`,
+      top: `rgba(${Math.min(255, r + 22)},${Math.min(255, g + 22)},${Math.min(255, b + 22)},${alpha})`,
     };
   });
 }
@@ -46,7 +46,7 @@ export function drawIsoPathStone(
   h: number,
   topColor: string,
   leftColor: string,
-  rightColor: string,
+  rightColor: string
 ): void {
   const hd = hw * ISO_T;
 
@@ -92,7 +92,7 @@ function traceIsoBlobPath(
   cy: number,
   hw: number,
   hd: number,
-  wobble: number,
+  wobble: number
 ): void {
   ctx.moveTo(cx, cy - hd);
   ctx.bezierCurveTo(
@@ -101,7 +101,7 @@ function traceIsoBlobPath(
     cx + hw * 0.85 + wobble * 0.3,
     cy - hd * 0.12,
     cx + hw,
-    cy,
+    cy
   );
   ctx.bezierCurveTo(
     cx + hw * 0.85 - wobble * 0.3,
@@ -109,7 +109,7 @@ function traceIsoBlobPath(
     cx + hw * 0.5 - wobble,
     cy + hd * 0.5 + wobble * 0.4,
     cx,
-    cy + hd,
+    cy + hd
   );
   ctx.bezierCurveTo(
     cx - hw * 0.5 + wobble,
@@ -117,7 +117,7 @@ function traceIsoBlobPath(
     cx - hw * 0.85 + wobble * 0.3,
     cy + hd * 0.12,
     cx - hw,
-    cy,
+    cy
   );
   ctx.bezierCurveTo(
     cx - hw * 0.85 - wobble * 0.3,
@@ -125,7 +125,7 @@ function traceIsoBlobPath(
     cx - hw * 0.5 - wobble,
     cy - hd * 0.5 + wobble * 0.4,
     cx,
-    cy - hd,
+    cy - hd
   );
 }
 
@@ -136,7 +136,7 @@ export function fillIsoBlob(
   hw: number,
   hd: number,
   color: string,
-  wobble: number = 0,
+  wobble: number = 0
 ): void {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -152,7 +152,7 @@ export function drawDetailedIsoStone(
   h: number,
   topColor: string,
   leftColor: string,
-  rightColor: string,
+  rightColor: string
 ): void {
   const hd = hw * ISO_T;
 
@@ -180,7 +180,7 @@ function drawGrassShoot(
   y: number,
   bladeH: number,
   lean: number,
-  color: string,
+  color: string
 ): void {
   const w = bladeH * 0.22;
   ctx.fillStyle = color;
@@ -197,7 +197,7 @@ function drawStuckArrow(
   x: number,
   y: number,
   cameraZoom: number,
-  rand: () => number,
+  rand: () => number
 ): void {
   const h = (6 + rand() * 6) * cameraZoom;
   const tiltX = (rand() - 0.5) * 4 * cameraZoom;
@@ -206,8 +206,15 @@ function drawStuckArrow(
   const tipY = y - h;
 
   // Shadow blob on ground
-  fillIsoBlob(ctx, x + cameraZoom, y + 0.5 * cameraZoom,
-    2.5 * cameraZoom, 1.2 * cameraZoom, "rgba(0,0,0,0.08)", cameraZoom * 0.15);
+  fillIsoBlob(
+    ctx,
+    x + cameraZoom,
+    y + 0.5 * cameraZoom,
+    2.5 * cameraZoom,
+    1.2 * cameraZoom,
+    "rgba(0,0,0,0.08)",
+    cameraZoom * 0.15
+  );
 
   // Shaft
   ctx.strokeStyle = `rgba(100,70,35,${shaftAlpha})`;
@@ -245,7 +252,7 @@ function drawStuckSword(
   y: number,
   cameraZoom: number,
   rand: () => number,
-  theme: { path: string[] },
+  theme: { path: string[] }
 ): void {
   const h = (8 + rand() * 7) * cameraZoom;
   const tiltX = (rand() - 0.5) * 3 * cameraZoom;
@@ -258,8 +265,15 @@ function drawStuckSword(
   const guardX = x + tiltX * 0.65;
 
   // Shadow on ground
-  fillIsoBlob(ctx, x + 1.2 * cameraZoom, y + 0.6 * cameraZoom,
-    3 * cameraZoom, 1.5 * cameraZoom, "rgba(0,0,0,0.09)", cameraZoom * 0.2);
+  fillIsoBlob(
+    ctx,
+    x + 1.2 * cameraZoom,
+    y + 0.6 * cameraZoom,
+    3 * cameraZoom,
+    1.5 * cameraZoom,
+    "rgba(0,0,0,0.09)",
+    cameraZoom * 0.2
+  );
 
   // Blade (from ground up to guard)
   ctx.strokeStyle = `rgba(160,160,170,${alpha})`;
@@ -307,7 +321,7 @@ function drawIsoCrater(
   cx: number,
   cy: number,
   hw: number,
-  theme: RegionTheme,
+  theme: RegionTheme
 ): void {
   const hd = hw * ISO_T;
   const depth = hw * 0.22;
@@ -320,7 +334,7 @@ function drawIsoCrater(
     hw * 1.08,
     hd * 1.12,
     hexToRgba(theme.path[0], 0.08),
-    w,
+    w
   );
 
   fillIsoBlob(
@@ -330,7 +344,7 @@ function drawIsoCrater(
     hw * 0.75,
     hd * 0.75,
     hexToRgba(theme.path[2], 0.14),
-    w * 0.6,
+    w * 0.6
   );
 
   fillIsoBlob(
@@ -340,13 +354,13 @@ function drawIsoCrater(
     hw * 0.35,
     hd * 0.3,
     "rgba(0,0,0,0.06)",
-    w * 0.3,
+    w * 0.3
   );
 
   ctx.strokeStyle = "rgba(255,255,255,0.05)";
   ctx.lineWidth = Math.max(0.3, hw * 0.06);
   ctx.beginPath();
-  ctx.moveTo(cx - hw * 1.0, cy);
+  ctx.moveTo(cx - hw * 1, cy);
   ctx.quadraticCurveTo(cx - hw * 0.3, cy - hd * 0.8, cx, cy - hd * 1.05);
   ctx.stroke();
 }
@@ -374,7 +388,7 @@ function drawLayeredPathEllipse(
     highlight?: string;
   },
   shadowOffsetX: number,
-  shadowOffsetY: number,
+  shadowOffsetY: number
 ): void {
   const w = rx * 0.08;
 
@@ -385,7 +399,7 @@ function drawLayeredPathEllipse(
     rx,
     ry,
     colors.shadow,
-    w,
+    w
   );
   fillIsoBlob(ctx, x, y, rx, ry, colors.base, w);
 
@@ -397,7 +411,7 @@ function drawLayeredPathEllipse(
       rx * 0.62,
       ry * 0.58,
       colors.inner,
-      w * 0.5,
+      w * 0.5
     );
   }
 
@@ -409,7 +423,7 @@ function drawLayeredPathEllipse(
       rx * 0.42,
       ry * 0.32,
       colors.highlight,
-      w * 0.3,
+      w * 0.3
     );
   }
 }
@@ -420,18 +434,19 @@ function traceEdgeBand(
   ctx: CanvasRenderingContext2D,
   screenCenter: Position[],
   edge: Position[],
-  innerBlend: number,
+  innerBlend: number
 ): void {
   const len = screenCenter.length;
   ctx.moveTo(edge[0].x, edge[0].y);
-  for (let i = 1; i < len; i++) ctx.lineTo(edge[i].x, edge[i].y);
+  for (let i = 1; i < len; i++) {
+    ctx.lineTo(edge[i].x, edge[i].y);
+  }
   for (let i = len - 1; i >= 0; i--) {
     const p = lerpPos(screenCenter[i], edge[i], innerBlend);
     ctx.lineTo(p.x, p.y);
   }
   ctx.closePath();
 }
-
 
 function drawSurfaceTexture(p: PathDecorationParams): void {
   const { ctx, screenLeft, screenRight, theme, cameraZoom, mapSeed } = p;
@@ -440,12 +455,14 @@ function drawSurfaceTexture(p: PathDecorationParams): void {
   const { r: pr, g: pg, b: pb } = hexToRgb(theme.path[1]);
 
   for (let i = 0; i < len; i += 2) {
-    if (rand() > 0.35) continue;
+    if (rand() > 0.35) {
+      continue;
+    }
     const t = 0.15 + rand() * 0.7;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const ox = pos.x + (rand() - 0.5) * 8 * cameraZoom;
     const oy = pos.y + (rand() - 0.5) * 4 * cameraZoom;
@@ -467,7 +484,7 @@ function drawSurfaceTexture(p: PathDecorationParams): void {
         h,
         `rgba(${Math.min(255, pr + 18)},${Math.min(255, pg + 18)},${Math.min(255, pb + 18)},0.5)`,
         `rgba(${Math.max(0, pr - 10)},${Math.max(0, pg - 10)},${Math.max(0, pb - 10)},0.4)`,
-        `rgba(${Math.max(0, pr - 25)},${Math.max(0, pg - 25)},${Math.max(0, pb - 25)},0.35)`,
+        `rgba(${Math.max(0, pr - 25)},${Math.max(0, pg - 25)},${Math.max(0, pb - 25)},0.35)`
       );
     } else {
       // Flat scuff / wear mark
@@ -513,9 +530,13 @@ function drawEdgeBorderStones(p: PathDecorationParams): void {
   const vegColors = getEdgeVegetationColors(theme);
 
   for (let i = 0; i < len; i += 3) {
-    if (rand() > 0.5) continue;
+    if (rand() > 0.5) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -605,7 +626,7 @@ function drawCobblestonePattern(p: PathDecorationParams): void {
       const pos = lerpPos(
         screenLeft[clampIdx(i, screenLeft)],
         screenRight[clampIdx(i, screenRight)],
-        t,
+        t
       );
       const stoneHW = (4 + rand() * 5) * cameraZoom;
       const stoneHD = stoneHW * ISO_T;
@@ -630,9 +651,13 @@ function drawGrassTufts(p: PathDecorationParams): void {
   const grassColors = ["#4a8c3f", "#3a7a30", "#5a9c4f", "#2d6b22"];
 
   for (let i = 0; i < len; i += 5) {
-    if (rand() > 0.55) continue;
+    if (rand() > 0.55) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -665,9 +690,13 @@ function drawWildflowers(p: PathDecorationParams): void {
   const flowerColors = ["#e8c840", "#c84090", "#e8e8e8", "#d06030", "#9060c0"];
 
   for (let i = 0; i < len; i += 8) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -695,12 +724,14 @@ function drawWornDirtPatches(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 730);
 
   for (let i = 0; i < len; i += 12) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const t = 0.2 + rand() * 0.6;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const patchW = (8 + rand() * 10) * cameraZoom;
     const patchH = (5 + rand() * 7) * cameraZoom;
@@ -716,13 +747,13 @@ function drawWornDirtPatches(p: PathDecorationParams): void {
       patchH * 0.4,
       rotation,
       {
-        shadow: hexToRgba(theme.ground[2], 0.05 + rand() * 0.04),
         base: hexToRgba(theme.ground[1], 0.09 + rand() * 0.05),
-        inner: hexToRgba(theme.ground[2], 0.03 + rand() * 0.03),
         highlight: hexToRgba(theme.path[0], 0.03 + rand() * 0.03),
+        inner: hexToRgba(theme.ground[2], 0.03 + rand() * 0.03),
+        shadow: hexToRgba(theme.ground[2], 0.05 + rand() * 0.04),
       },
       1.2 * cameraZoom,
-      0.7 * cameraZoom,
+      0.7 * cameraZoom
     );
   }
 }
@@ -734,9 +765,13 @@ function drawPathEdgeMoss(p: PathDecorationParams): void {
   const mossColors = ["#3a6a28", "#2e5a1e", "#4a7a34", "#345a22"];
 
   for (let i = 0; i < len; i += 4) {
-    if (rand() > 0.6) continue;
+    if (rand() > 0.6) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -759,9 +794,13 @@ function drawScatteredLeafLitter(p: PathDecorationParams): void {
   const leafColors = ["#5a4020", "#6a5030", "#4a3818", "#7a6a40"];
 
   for (let i = 0; i < len; i += 7) {
-    if (rand() > 0.45) continue;
+    if (rand() > 0.45) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -801,19 +840,21 @@ function drawSandDriftLines(p: PathDecorationParams): void {
   ctx.lineWidth = 1.5 * cameraZoom;
 
   for (let i = 4; i < len - 4; i += 7) {
-    if (rand() > 0.55) continue;
+    if (rand() > 0.55) {
+      continue;
+    }
     const startT = rand() * 0.3;
     const endT = 0.7 + rand() * 0.3;
     const startPos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      startT,
+      startT
     );
     const endIdx = Math.min(i + 3, len - 1);
     const endPos = lerpPos(
       screenLeft[clampIdx(endIdx, screenLeft)],
       screenRight[clampIdx(endIdx, screenRight)],
-      endT,
+      endT
     );
     const midX = (startPos.x + endPos.x) / 2 + (rand() - 0.5) * 8 * cameraZoom;
     const midY = (startPos.y + endPos.y) / 2 + (rand() - 0.5) * 4 * cameraZoom;
@@ -834,12 +875,14 @@ function drawCrackedEarth(p: PathDecorationParams): void {
   ctx.lineWidth = 1 * cameraZoom;
 
   for (let i = 5; i < len - 5; i += 12) {
-    if (rand() > 0.5) continue;
+    if (rand() > 0.5) {
+      continue;
+    }
     const t = 0.2 + rand() * 0.6;
     const cp = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const crackLen = (8 + rand() * 12) * cameraZoom;
     const a1 = rand() * Math.PI * 2;
@@ -849,12 +892,12 @@ function drawCrackedEarth(p: PathDecorationParams): void {
     ctx.beginPath();
     ctx.moveTo(
       cp.x + Math.cos(a1) * crackLen,
-      cp.y + Math.sin(a1) * crackLen * 0.5,
+      cp.y + Math.sin(a1) * crackLen * 0.5
     );
     ctx.lineTo(cp.x, cp.y);
     ctx.lineTo(
       cp.x + Math.cos(a2) * crackLen * 0.7,
-      cp.y + Math.sin(a2) * crackLen * 0.35,
+      cp.y + Math.sin(a2) * crackLen * 0.35
     );
     ctx.stroke();
 
@@ -862,7 +905,7 @@ function drawCrackedEarth(p: PathDecorationParams): void {
     ctx.moveTo(cp.x, cp.y);
     ctx.lineTo(
       cp.x + Math.cos(a3) * crackLen * 0.5,
-      cp.y + Math.sin(a3) * crackLen * 0.25,
+      cp.y + Math.sin(a3) * crackLen * 0.25
     );
     ctx.stroke();
   }
@@ -882,9 +925,13 @@ function drawSandAccumulation(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 820);
 
   for (let i = 0; i < len; i += 10) {
-    if (rand() > 0.45) continue;
+    if (rand() > 0.45) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -905,9 +952,13 @@ function drawDesertDebris(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 830);
 
   for (let i = 0; i < len; i += 15) {
-    if (rand() > 0.3) continue;
+    if (rand() > 0.3) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const dx = side[i].x + (rand() - 0.5) * 4 * cameraZoom;
     const dy = side[i].y + (rand() - 0.5) * 2 * cameraZoom;
@@ -919,11 +970,11 @@ function drawDesertDebris(p: PathDecorationParams): void {
     ctx.beginPath();
     ctx.moveTo(
       dx - Math.cos(angle) * boneLen,
-      dy - Math.sin(angle) * boneLen * 0.5,
+      dy - Math.sin(angle) * boneLen * 0.5
     );
     ctx.lineTo(
       dx + Math.cos(angle) * boneLen,
-      dy + Math.sin(angle) * boneLen * 0.5,
+      dy + Math.sin(angle) * boneLen * 0.5
     );
     ctx.stroke();
 
@@ -936,7 +987,7 @@ function drawDesertDebris(p: PathDecorationParams): void {
         dy - Math.sin(angle) * boneLen * 0.5,
         knobSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -945,7 +996,7 @@ function drawDesertDebris(p: PathDecorationParams): void {
         dy + Math.sin(angle) * boneLen * 0.5,
         knobSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -967,9 +1018,13 @@ function drawSnowBanks(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 900);
 
   for (let i = 0; i < len; i += 4) {
-    if (rand() > 0.55) continue;
+    if (rand() > 0.55) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -986,7 +1041,7 @@ function drawSnowBanks(p: PathDecorationParams): void {
       moundW,
       moundH * 0.32,
       "rgba(80, 100, 140, 0.12)",
-      snowW,
+      snowW
     );
     fillIsoBlob(
       ctx,
@@ -995,7 +1050,7 @@ function drawSnowBanks(p: PathDecorationParams): void {
       moundW,
       moundH * 0.32,
       `rgba(225, 238, 255, ${0.4 + rand() * 0.2})`,
-      snowW,
+      snowW
     );
     fillIsoBlob(
       ctx,
@@ -1004,7 +1059,7 @@ function drawSnowBanks(p: PathDecorationParams): void {
       moundW * 0.45,
       moundH * 0.18,
       `rgba(255, 255, 255, ${0.25 + rand() * 0.12})`,
-      snowW * 0.4,
+      snowW * 0.4
     );
   }
 }
@@ -1015,12 +1070,14 @@ function drawIcePatches(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 910);
 
   for (let i = 0; i < len; i += 14) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const t = 0.2 + rand() * 0.6;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const iceW = (8 + rand() * 14) * cameraZoom;
     const iceH = (5 + rand() * 8) * cameraZoom;
@@ -1038,7 +1095,7 @@ function drawIcePatches(p: PathDecorationParams): void {
       iceW * 0.3,
       iceH * 0.1,
       `rgba(255, 255, 255, ${0.12 + rand() * 0.08})`,
-      iceWobble * 0.3,
+      iceWobble * 0.3
     );
   }
 }
@@ -1052,9 +1109,13 @@ function drawFrostCrystals(p: PathDecorationParams): void {
   ctx.lineWidth = 0.8 * cameraZoom;
 
   for (let i = 0; i < len; i += 8) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -1069,11 +1130,11 @@ function drawFrostCrystals(p: PathDecorationParams): void {
       ctx.beginPath();
       ctx.moveTo(
         fx - Math.cos(angle) * crystalSize,
-        fy - Math.sin(angle) * crystalSize * 0.5,
+        fy - Math.sin(angle) * crystalSize * 0.5
       );
       ctx.lineTo(
         fx + Math.cos(angle) * crystalSize,
-        fy + Math.sin(angle) * crystalSize * 0.5,
+        fy + Math.sin(angle) * crystalSize * 0.5
       );
       ctx.stroke();
     }
@@ -1086,12 +1147,14 @@ function drawPackedSnowTexture(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 930);
 
   for (let i = 0; i < len; i += 3) {
-    if (rand() > 0.3) continue;
+    if (rand() > 0.3) {
+      continue;
+    }
     const t = 0.15 + rand() * 0.7;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const size = (1.5 + rand() * 2.5) * cameraZoom;
     const ox = pos.x + (rand() - 0.5) * 8 * cameraZoom;
@@ -1106,13 +1169,13 @@ function drawPackedSnowTexture(p: PathDecorationParams): void {
       size * 0.5,
       rotation,
       {
-        shadow: `rgba(150, 170, 195, ${0.03 + rand() * 0.03})`,
         base: `rgba(200, 215, 235, ${0.05 + rand() * 0.04})`,
-        inner: `rgba(215, 228, 245, ${0.03 + rand() * 0.03})`,
         highlight: `rgba(255, 255, 255, ${0.05 + rand() * 0.04})`,
+        inner: `rgba(215, 228, 245, ${0.03 + rand() * 0.03})`,
+        shadow: `rgba(150, 170, 195, ${0.03 + rand() * 0.03})`,
       },
       0.8 * cameraZoom,
-      0.45 * cameraZoom,
+      0.45 * cameraZoom
     );
   }
 }
@@ -1132,12 +1195,14 @@ function drawLavaVeins(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 1000);
 
   for (let i = 6; i < len - 6; i += 10) {
-    if (rand() > 0.45) continue;
+    if (rand() > 0.45) {
+      continue;
+    }
     const t = 0.2 + rand() * 0.6;
     const startPos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const veinLen = (10 + rand() * 20) * cameraZoom;
     const angle = rand() * Math.PI;
@@ -1175,12 +1240,14 @@ function drawEmberSpots(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 1010);
 
   for (let i = 0; i < len; i += 4) {
-    if (rand() > 0.3) continue;
+    if (rand() > 0.3) {
+      continue;
+    }
     const t = 0.1 + rand() * 0.8;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const ox = pos.x + (rand() - 0.5) * 10 * cameraZoom;
     const oy = pos.y + (rand() - 0.5) * 5 * cameraZoom;
@@ -1207,9 +1274,13 @@ function drawCharredEdgeRocks(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 1020);
 
   for (let i = 0; i < len; i += 6) {
-    if (rand() > 0.5) continue;
+    if (rand() > 0.5) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -1238,7 +1309,7 @@ function drawCharredEdgeRocks(p: PathDecorationParams): void {
       h,
       `rgba(45,25,15,${a})`,
       `rgba(30,15,10,${a})`,
-      `rgba(20,8,5,${a})`,
+      `rgba(20,8,5,${a})`
     );
 
     ctx.fillStyle = `rgba(200,60,20,${0.1 + rand() * 0.1})`;
@@ -1257,12 +1328,14 @@ function drawAshPatches(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 1030);
 
   for (let i = 0; i < len; i += 8) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const t = 0.1 + rand() * 0.8;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const patchW = (6 + rand() * 10) * cameraZoom;
     const patchH = (4 + rand() * 6) * cameraZoom;
@@ -1278,13 +1351,13 @@ function drawAshPatches(p: PathDecorationParams): void {
       patchH * 0.4,
       rotation,
       {
-        shadow: `rgba(20, 18, 16, ${0.04 + rand() * 0.03})`,
         base: `rgba(60, 55, 50, ${0.07 + rand() * 0.05})`,
-        inner: `rgba(42, 38, 35, ${0.04 + rand() * 0.03})`,
         highlight: `rgba(120, 110, 100, ${0.025 + rand() * 0.02})`,
+        inner: `rgba(42, 38, 35, ${0.04 + rand() * 0.03})`,
+        shadow: `rgba(20, 18, 16, ${0.04 + rand() * 0.03})`,
       },
       1.1 * cameraZoom,
-      0.6 * cameraZoom,
+      0.6 * cameraZoom
     );
   }
 }
@@ -1304,12 +1377,14 @@ function drawMudPuddles(p: PathDecorationParams): void {
   const rand = createSeededRandom(mapSeed + 1100);
 
   for (let i = 0; i < len; i += 10) {
-    if (rand() > 0.45) continue;
+    if (rand() > 0.45) {
+      continue;
+    }
     const t = 0.2 + rand() * 0.6;
     const pos = lerpPos(
       screenLeft[clampIdx(i, screenLeft)],
       screenRight[clampIdx(i, screenRight)],
-      t,
+      t
     );
     const puddleW = (8 + rand() * 14) * cameraZoom;
     const puddleH = (5 + rand() * 8) * cameraZoom;
@@ -1325,7 +1400,7 @@ function drawMudPuddles(p: PathDecorationParams): void {
       puddleW,
       puddleH * 0.38,
       puddleColor,
-      puddleWobble,
+      puddleWobble
     );
 
     fillIsoBlob(
@@ -1335,7 +1410,7 @@ function drawMudPuddles(p: PathDecorationParams): void {
       puddleW * 0.55,
       puddleH * 0.16,
       `rgba(50, 70, 40, ${0.06 + rand() * 0.05})`,
-      puddleWobble * 0.3,
+      puddleWobble * 0.3
     );
   }
 }
@@ -1351,9 +1426,13 @@ function drawMossPatches(p: PathDecorationParams): void {
   ];
 
   for (let i = 0; i < len; i += 5) {
-    if (rand() > 0.5) continue;
+    if (rand() > 0.5) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -1376,9 +1455,13 @@ function drawRootTendrils(p: PathDecorationParams): void {
   ctx.lineWidth = 1.2 * cameraZoom;
 
   for (let i = 0; i < len; i += 9) {
-    if (rand() > 0.4) continue;
+    if (rand() > 0.4) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -1411,9 +1494,13 @@ function drawSwampAccents(p: PathDecorationParams): void {
   ];
 
   for (let i = 0; i < len; i += 12) {
-    if (rand() > 0.35) continue;
+    if (rand() > 0.35) {
+      continue;
+    }
     const side = rand() > 0.5 ? screenLeft : screenRight;
-    if (i >= side.length) continue;
+    if (i >= side.length) {
+      continue;
+    }
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
@@ -1438,7 +1525,7 @@ function drawSwampAccents(p: PathDecorationParams): void {
         capSize * 0.15,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     } else {
@@ -1479,7 +1566,9 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
     // Gravel cluster — a spray of micro-pebbles
     if (roll < 0.18) {
       const side = rand() > 0.5 ? screenLeft : screenRight;
-      if (i >= side.length) continue;
+      if (i >= side.length) {
+        continue;
+      }
       const edgeP = side[i];
       const centerP = screenCenter[i];
       const bx = edgeP.x + (centerP.x - edgeP.x) * (0.02 + rand() * 0.15);
@@ -1503,14 +1592,14 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
       const pos = lerpPos(
         screenLeft[clampIdx(i, screenLeft)],
         screenRight[clampIdx(i, screenRight)],
-        t,
+        t
       );
       drawStuckArrow(
         ctx,
         pos.x + (rand() - 0.5) * 10 * cameraZoom,
         pos.y + (rand() - 0.5) * 5 * cameraZoom,
         cameraZoom,
-        rand,
+        rand
       );
       continue;
     }
@@ -1521,7 +1610,7 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
       const pos = lerpPos(
         screenLeft[clampIdx(i, screenLeft)],
         screenRight[clampIdx(i, screenRight)],
-        t,
+        t
       );
       drawStuckSword(
         ctx,
@@ -1529,7 +1618,7 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
         pos.y + (rand() - 0.5) * 4 * cameraZoom,
         cameraZoom,
         rand,
-        theme,
+        theme
       );
       continue;
     }
@@ -1540,7 +1629,7 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
       const pos = lerpPos(
         screenLeft[clampIdx(i, screenLeft)],
         screenRight[clampIdx(i, screenRight)],
-        t,
+        t
       );
       const sx = pos.x + (rand() - 0.5) * 8 * cameraZoom;
       const sy = pos.y + (rand() - 0.5) * 4 * cameraZoom;
@@ -1552,11 +1641,11 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
       ctx.beginPath();
       ctx.moveTo(
         sx - Math.cos(angle) * slashLen * 0.5,
-        sy - Math.sin(angle) * slashLen * 0.25,
+        sy - Math.sin(angle) * slashLen * 0.25
       );
       ctx.lineTo(
         sx + Math.cos(angle) * slashLen * 0.5,
-        sy + Math.sin(angle) * slashLen * 0.25,
+        sy + Math.sin(angle) * slashLen * 0.25
       );
       ctx.stroke();
 
@@ -1567,7 +1656,7 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
         slashLen * 0.3,
         slashLen * 0.12,
         hexToRgba(theme.path[1], 0.08),
-        slashLen * 0.02,
+        slashLen * 0.02
       );
       continue;
     }
@@ -1575,7 +1664,9 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
     // Rubble fragment — small broken isometric chunk
     if (roll < 0.54) {
       const side = rand() > 0.5 ? screenLeft : screenRight;
-      if (i >= side.length) continue;
+      if (i >= side.length) {
+        continue;
+      }
       const edgeP = side[i];
       const centerP = screenCenter[i];
       const rx = edgeP.x + (centerP.x - edgeP.x) * (0.03 + rand() * 0.12);
@@ -1599,7 +1690,7 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
           r2h,
           pal.top,
           pal.left,
-          pal.right,
+          pal.right
         );
       }
       continue;
@@ -1608,7 +1699,9 @@ function drawRoadsideDebris(p: PathDecorationParams): void {
     // Edge vegetation — grass/weed shoots
     if (roll < 0.66) {
       const side = rand() > 0.5 ? screenLeft : screenRight;
-      if (i >= side.length) continue;
+      if (i >= side.length) {
+        continue;
+      }
       const edgeP = side[i];
       const centerP = screenCenter[i];
       const bx = edgeP.x + (edgeP.x - centerP.x) * (0.01 + rand() * 0.06);
@@ -1636,10 +1729,12 @@ export function drawBatchedPathEdgeBlend(
     screenLeft: Position[];
     screenRight: Position[];
   }[],
-  theme: RegionTheme,
+  theme: RegionTheme
 ): void {
   const valid = roads.filter((r) => r.screenCenter.length >= 2);
-  if (valid.length === 0) return;
+  if (valid.length === 0) {
+    return;
+  }
 
   ctx.fillStyle = hexToRgba(theme.ground[2], 0.06);
   ctx.beginPath();
@@ -1667,8 +1762,11 @@ export function drawBatchedPathEdgeBlend(
     const len = screenCenter.length;
     for (let i = 0; i < len; i++) {
       const lx = lerpPos(screenCenter[i], screenLeft[i], 0.22);
-      if (i === 0) ctx.moveTo(lx.x, lx.y);
-      else ctx.lineTo(lx.x, lx.y);
+      if (i === 0) {
+        ctx.moveTo(lx.x, lx.y);
+      } else {
+        ctx.lineTo(lx.x, lx.y);
+      }
     }
     for (let i = len - 1; i >= 0; i--) {
       const rx = lerpPos(screenCenter[i], screenRight[i], 0.22);
@@ -1680,27 +1778,34 @@ export function drawBatchedPathEdgeBlend(
 }
 
 export function drawPathDecorations(params: PathDecorationParams): void {
-  if (params.screenCenter.length < 2) return;
+  if (params.screenCenter.length < 2) {
+    return;
+  }
 
   drawSurfaceTexture(params);
   drawEdgeBorderStones(params);
   drawRoadsideDebris(params);
 
   switch (params.themeName) {
-    case "grassland":
+    case "grassland": {
       drawGrasslandPathDetails(params);
       break;
-    case "desert":
+    }
+    case "desert": {
       drawDesertPathDetails(params);
       break;
-    case "winter":
+    }
+    case "winter": {
       drawWinterPathDetails(params);
       break;
-    case "volcanic":
+    }
+    case "volcanic": {
       drawVolcanicPathDetails(params);
       break;
-    case "swamp":
+    }
+    case "swamp": {
       drawSwampPathDetails(params);
       break;
+    }
   }
 }

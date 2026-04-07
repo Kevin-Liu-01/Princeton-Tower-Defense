@@ -1,4 +1,5 @@
 import React from "react";
+
 import type { GridPoint } from "../types";
 import { gridToIso } from "../utils/isoMath";
 

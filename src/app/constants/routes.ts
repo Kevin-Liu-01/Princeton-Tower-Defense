@@ -1,5 +1,8 @@
 import type { CodexTabId } from "../components/menus/CodexModal";
-import { WORLD_LEVELS, DEV_LEVELS } from "../components/menus/world-map/worldMapData";
+import {
+  WORLD_LEVELS,
+  DEV_LEVELS,
+} from "../components/menus/world-map/worldMapData";
 
 export type RouteTarget =
   | { type: "home" }
@@ -25,31 +28,37 @@ const CODEX_TABS: ReadonlySet<string> = new Set<CodexTabId>([
 ]);
 
 const MODAL_ROUTES: Record<string, RouteTarget> = {
+  about: { type: "credits" },
   codex: { type: "codex" },
   creator: { type: "creator" },
   credits: { type: "credits" },
-  about: { type: "credits" },
   settings: { type: "settings" },
 };
 
 export function parseRoute(slug: string[] | undefined): RouteTarget | null {
-  if (!slug || slug.length === 0) return { type: "home" };
+  if (!slug || slug.length === 0) {
+    return { type: "home" };
+  }
 
   const first = slug[0].toLowerCase();
 
   if (first === "codex") {
     const tab = slug[1]?.toLowerCase();
-    if (tab && !CODEX_TABS.has(tab)) return null;
-    return { type: "codex", tab: (tab as CodexTabId) ?? undefined };
+    if (tab && !CODEX_TABS.has(tab)) {
+      return null;
+    }
+    return { tab: (tab as CodexTabId) ?? undefined, type: "codex" };
   }
 
   if (first in MODAL_ROUTES) {
-    if (slug.length > 1) return null;
+    if (slug.length > 1) {
+      return null;
+    }
     return MODAL_ROUTES[first];
   }
 
   if (slug.length === 1 && ALL_LEVEL_IDS.has(first)) {
-    return { type: "level", levelId: first };
+    return { levelId: first, type: "level" };
   }
 
   return null;
@@ -61,17 +70,23 @@ export function isValidRoute(slug: string[]): boolean {
 
 export function routeToPath(target: RouteTarget): string {
   switch (target.type) {
-    case "home":
+    case "home": {
       return "/";
-    case "level":
+    }
+    case "level": {
       return `/${target.levelId}`;
-    case "codex":
+    }
+    case "codex": {
       return target.tab ? `/codex/${target.tab}` : "/codex";
-    case "creator":
+    }
+    case "creator": {
       return "/creator";
-    case "credits":
+    }
+    case "credits": {
       return "/credits";
-    case "settings":
+    }
+    case "settings": {
       return "/settings";
+    }
   }
 }

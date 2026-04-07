@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useCallback } from "react";
 import { X, ExternalLink, Github, Globe } from "lucide-react";
+import React, { useEffect, useCallback } from "react";
+
 import { LANDING_THEME } from "./landingConstants";
 
 const T = LANDING_THEME;
@@ -14,7 +15,9 @@ function SectionLabel({ text }: { text: string }) {
     <div className="flex items-center gap-3">
       <div
         className="h-px flex-1"
-        style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.3), transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.3), transparent)`,
+        }}
       />
       <span
         className="text-[10px] font-bold uppercase tracking-[0.25em]"
@@ -24,7 +27,9 @@ function SectionLabel({ text }: { text: string }) {
       </span>
       <div
         className="h-px flex-1"
-        style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.3), transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.3), transparent)`,
+        }}
       />
     </div>
   );
@@ -68,10 +73,7 @@ function LinkButton({
         >
           {label}
         </div>
-        <div
-          className="text-xs"
-          style={{ color: `rgba(${T.accentRgb},0.35)` }}
-        >
+        <div className="text-xs" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
           {description}
         </div>
       </div>
@@ -96,14 +98,18 @@ const TECH_ITEMS = [
 export function LandingCreditsModal({ onClose }: LandingCreditsModalProps) {
   const handleBackdrop = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) onClose();
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
     },
-    [onClose],
+    [onClose]
   );
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -118,16 +124,18 @@ export function LandingCreditsModal({ onClose }: LandingCreditsModalProps) {
       <div
         className="relative w-full max-w-lg max-h-[85dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{
+          animation: "landing-credits-enter 0.3s ease-out",
           background: `linear-gradient(160deg, rgba(${T.bgRgb},0.98) 0%, rgba(20,14,6,0.99) 100%)`,
           border: `1.5px solid rgba(${T.accentDarkRgb},0.3)`,
           boxShadow: `0 0 60px rgba(${T.accentRgb},0.1), 0 25px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)`,
-          animation: "landing-credits-enter 0.3s ease-out",
         }}
       >
         {/* Top edge glow */}
         <div
           className="absolute top-0 inset-x-0 h-px"
-          style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.3), transparent)` }}
+          style={{
+            background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.3), transparent)`,
+          }}
         />
 
         {/* Header */}
@@ -209,10 +217,11 @@ export function LandingCreditsModal({ onClose }: LandingCreditsModalProps) {
               className="text-xs leading-relaxed"
               style={{ color: `rgba(${T.accentRgb},0.55)` }}
             >
-              Princeton Tower Defense is a technical experiment pushing the browser&apos;s
-              native Canvas 2D API to its limits &mdash; a fully performant isometric pseudo-3D
-              game engine with zero WebGL, zero game framework dependencies, and zero external
-              rendering libraries.
+              Princeton Tower Defense is a technical experiment pushing the
+              browser&apos;s native Canvas 2D API to its limits &mdash; a fully
+              performant isometric pseudo-3D game engine with zero WebGL, zero
+              game framework dependencies, and zero external rendering
+              libraries.
             </p>
           </div>
 

@@ -1,6 +1,12 @@
-import type { Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
-import { setShadowBlur, clearShadow, getPerformanceSettings, getCachedLinearGradient, getScenePressure } from "../performance";
+import type { Position } from "../../types";
+import {
+  setShadowBlur,
+  clearShadow,
+  getPerformanceSettings,
+  getCachedLinearGradient,
+  getScenePressure,
+} from "../performance";
 import { drawArmoredSkirt } from "../troops/troopHelpers";
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
@@ -18,9 +24,7 @@ const MORPH_OUT_TAIL_MS = MORPH_OUT_DURATION_MS - MORPH_OUT_LEAD_MS;
 let _cachedAbilityEnd: number | undefined;
 
 function easeInOutQuart(t: number): number {
-  return t < 0.5
-    ? 8 * t * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 4) / 2;
+  return t < 0.5 ? 8 * t * t * t * t : 1 - (-2 * t + 2) ** 4 / 2;
 }
 
 function getMorphProgress(abilityEnd: number): number {
@@ -28,7 +32,9 @@ function getMorphProgress(abilityEnd: number): number {
   const abilityStart = abilityEnd - BLUE_INFERNO_DURATION_MS;
   const elapsed = now - abilityStart;
 
-  if (elapsed < 0) return 0;
+  if (elapsed < 0) {
+    return 0;
+  }
 
   if (elapsed < MORPH_IN_DURATION_MS) {
     return easeInOutQuart(elapsed / MORPH_IN_DURATION_MS);
@@ -38,29 +44,35 @@ function getMorphProgress(abilityEnd: number): number {
   const morphOutElapsed = now - morphOutStart;
 
   if (morphOutElapsed >= 0) {
-    if (morphOutElapsed >= MORPH_OUT_DURATION_MS) return 0;
+    if (morphOutElapsed >= MORPH_OUT_DURATION_MS) {
+      return 0;
+    }
     return 1 - easeInOutQuart(morphOutElapsed / MORPH_OUT_DURATION_MS);
   }
 
-  return 1.0;
+  return 1;
 }
 
 function getMorphDirection(abilityEnd: number): "morphIn" | "morphOut" {
   const now = Date.now();
-  if (now >= abilityEnd - MORPH_OUT_LEAD_MS) return "morphOut";
+  if (now >= abilityEnd - MORPH_OUT_LEAD_MS) {
+    return "morphOut";
+  }
   return "morphIn";
 }
 
 function drawFireMorphTransition(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, s: number,
-  time: number, zoom: number, morphT: number,
-  direction: "morphIn" | "morphOut",
+  x: number,
+  y: number,
+  s: number,
+  time: number,
+  zoom: number,
+  morphT: number,
+  direction: "morphIn" | "morphOut"
 ) {
   const toBlue = direction === "morphIn";
-  const intensity = morphT < 0.5
-    ? morphT * 2
-    : (1 - morphT) * 2;
+  const intensity = morphT < 0.5 ? morphT * 2 : (1 - morphT) * 2;
 
   // Fire vortex ring — smooth expanding/contracting
   const vortexR = s * (0.25 + intensity * 0.35 + Math.sin(time * 3) * 0.02);
@@ -102,10 +114,7 @@ function drawFireMorphTransition(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(ox, oy);
-    ctx.quadraticCurveTo(
-      (ox + ix) / 2 + sway, (oy + iy) / 2 + sway,
-      ix, iy,
-    );
+    ctx.quadraticCurveTo((ox + ix) / 2 + sway, (oy + iy) / 2 + sway, ix, iy);
     ctx.stroke();
   }
 
@@ -173,7 +182,7 @@ export function drawNassauHero(
   attackPhase: number = 0,
   targetPos?: Position,
   abilityActive?: boolean,
-  abilityEnd?: number,
+  abilityEnd?: number
 ) {
   const s = size;
   const blue = abilityActive ?? false;
@@ -183,14 +192,20 @@ export function drawNassauHero(
   }
   const effectiveEnd = abilityEnd ?? _cachedAbilityEnd;
 
-  if (_cachedAbilityEnd != null && Date.now() > _cachedAbilityEnd + MORPH_OUT_TAIL_MS) {
+  if (
+    _cachedAbilityEnd != null &&
+    Date.now() > _cachedAbilityEnd + MORPH_OUT_TAIL_MS
+  ) {
     _cachedAbilityEnd = undefined;
   }
 
   const morphT = effectiveEnd != null ? getMorphProgress(effectiveEnd) : -1;
 
   if (morphT > 0 && morphT < 1) {
-    const direction = effectiveEnd != null ? getMorphDirection(effectiveEnd) : "morphIn" as const;
+    const direction =
+      effectiveEnd != null
+        ? getMorphDirection(effectiveEnd)
+        : ("morphIn" as const);
 
     const blueAlpha = morphT;
     const normalAlpha = 1 - morphT;
@@ -225,7 +240,7 @@ function drawNassauForm(
   zoom: number,
   attackPhase: number,
   targetPos: Position | undefined,
-  blue: boolean,
+  blue: boolean
 ) {
   const perf = getPerformanceSettings();
   const pressure = getScenePressure();
@@ -263,28 +278,120 @@ function drawNassauForm(
     drawHeatDistortion(ctx, bx, cy, s, time, zoom, smoothAtk, blue);
   }
   drawFireTrail(ctx, bx, cy, s, time, flamePulse, zoom, smoothAtk, blue);
-  drawTailPlumage(ctx, bx, cy, s, time, zoom, flamePulse, isAttacking, smoothAtk, blue);
+  drawTailPlumage(
+    ctx,
+    bx,
+    cy,
+    s,
+    time,
+    zoom,
+    flamePulse,
+    isAttacking,
+    smoothAtk,
+    blue
+  );
   // Both wings render below the body
-  drawWings(ctx, bx, cy, s, time, zoom, wingFlap, isAttacking, attackIntensity, "back", blue);
-  drawWings(ctx, bx, cy, s, time, zoom, wingFlap, isAttacking, attackIntensity, "front", blue);
+  drawWings(
+    ctx,
+    bx,
+    cy,
+    s,
+    time,
+    zoom,
+    wingFlap,
+    isAttacking,
+    attackIntensity,
+    "back",
+    blue
+  );
+  drawWings(
+    ctx,
+    bx,
+    cy,
+    s,
+    time,
+    zoom,
+    wingFlap,
+    isAttacking,
+    attackIntensity,
+    "front",
+    blue
+  );
   if (!_simpleGrad) {
     drawWingFireCascade(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, blue);
   }
   // Body and armor render on top of both wings
   drawCapeStraps(ctx, bx, cy, s, time, zoom, flamePulse, blue);
-  drawBody(ctx, bx, cy, s, breathe, time, flamePulse, zoom, bodyGlow, isAttacking, smoothAtk, blue);
+  drawBody(
+    ctx,
+    bx,
+    cy,
+    s,
+    breathe,
+    time,
+    flamePulse,
+    zoom,
+    bodyGlow,
+    isAttacking,
+    smoothAtk,
+    blue
+  );
   drawArmorPlates(ctx, bx, cy, s, time, zoom, flamePulse, gemPulse, blue);
   drawHarness(ctx, bx, cy, s, time, zoom, gemPulse, blue);
   // Talons render before the skirt so skirt overlaps them
   drawTalons(ctx, bx, cy, s, time, zoom, isAttacking, attackIntensity);
-  drawArmoredSkirt(ctx, bx, cy, s, zoom, Math.sin(time * 3) * 1.2, breathe, blue
-    ? { armorPeak: "#93c5fd", armorHigh: "#3b82f6", armorMid: "#1e40af", armorDark: "#1e3a8a", trimColor: "#bfdbfe" }
-    : { armorPeak: "#f0a040", armorHigh: "#c07020", armorMid: "#8a4a10", armorDark: "#5a2a08", trimColor: "#ffd080" },
-    { plateCount: 7, widthFactor: 0.52, depthFactor: 0.14, topOffset: 0.14 },
+  drawArmoredSkirt(
+    ctx,
+    bx,
+    cy,
+    s,
+    zoom,
+    Math.sin(time * 3) * 1.2,
+    breathe,
+    blue
+      ? {
+          armorDark: "#1e3a8a",
+          armorHigh: "#3b82f6",
+          armorMid: "#1e40af",
+          armorPeak: "#93c5fd",
+          trimColor: "#bfdbfe",
+        }
+      : {
+          armorDark: "#5a2a08",
+          armorHigh: "#c07020",
+          armorMid: "#8a4a10",
+          armorPeak: "#f0a040",
+          trimColor: "#ffd080",
+        },
+    { depthFactor: 0.14, plateCount: 7, topOffset: 0.14, widthFactor: 0.52 }
   );
-  drawShoulderPauldrons(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, gemPulse, blue);
+  drawShoulderPauldrons(
+    ctx,
+    bx,
+    cy,
+    s,
+    time,
+    zoom,
+    wingFlap,
+    flamePulse,
+    gemPulse,
+    blue
+  );
   drawNeck(ctx, bx, headY, s, time, zoom, flamePulse, targetPos, blue);
-  drawHelmet(ctx, bx, headY, s, time, zoom, flamePulse, gemPulse, isAttacking, attackIntensity, targetPos, blue);
+  drawHelmet(
+    ctx,
+    bx,
+    headY,
+    s,
+    time,
+    zoom,
+    flamePulse,
+    gemPulse,
+    isAttacking,
+    attackIntensity,
+    targetPos,
+    blue
+  );
   if (!_simpleGrad) {
     drawFireAura(ctx, bx, cy, s, time, flamePulse, isAttacking, zoom, blue);
   }
@@ -301,7 +408,7 @@ function drawBlueInfernoAura(
   y: number,
   s: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const pulseR = s * (0.9 + Math.sin(time * 6) * 0.15);
   const grad = ctx.createRadialGradient(x, y, s * 0.1, x, y, pulseR);
@@ -338,7 +445,7 @@ function drawHeatDistortion(
   time: number,
   zoom: number,
   atkBurst: number = 0,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const count = 5 + Math.floor(atkBurst * 4) + (blue ? 4 : 0);
   for (let i = 0; i < count; i++) {
@@ -361,7 +468,7 @@ function drawHeatDistortion(
       s * (0.03 + atkBurst * 0.01),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -378,20 +485,21 @@ function drawFireTrail(
   flamePulse: number,
   zoom: number,
   atkBurst: number = 0,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const count = 15 + Math.floor(atkBurst * 10) + (blue ? 8 : 0);
-  const speed = 2.0 + atkBurst * 2.0 + (blue ? 1.5 : 0);
+  const speed = 2 + atkBurst * 2 + (blue ? 1.5 : 0);
   const spread = 0.18 + atkBurst * 0.12;
   const sizeBoost = 1.1 + atkBurst * 0.7 + (blue ? 0.4 : 0);
-  const PHI = 1.618033988749895;
+  const PHI = 1.618_033_988_749_895;
 
   for (let i = 0; i < count; i++) {
     const trailPhase = (time * speed + i * PHI * 0.15) % 1;
     const smoothPhase = trailPhase * trailPhase * (3 - 2 * trailPhase);
     const trailY = y + s * 0.35 + smoothPhase * s * (0.7 + atkBurst * 0.3);
-    const lateralWave = Math.sin(time * 2.0 + i * PHI * 0.9) * 0.7
-      + Math.sin(time * 1.3 + i * PHI * 0.5) * 0.3;
+    const lateralWave =
+      Math.sin(time * 2 + i * PHI * 0.9) * 0.7 +
+      Math.sin(time * 1.3 + i * PHI * 0.5) * 0.3;
     const trailX = x + lateralWave * s * spread * (0.3 + trailPhase * 0.7);
     const trailAlpha =
       (1 - trailPhase) * (0.5 + atkBurst * 0.25) * (0.7 + flamePulse * 0.3);
@@ -402,14 +510,24 @@ function drawFireTrail(
         ? `rgba(147, 197, 253, ${trailAlpha * 0.7})`
         : `rgba(255, 160, 40, ${trailAlpha * 0.7})`;
     } else {
-      const grad = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, trailSize);
+      const grad = ctx.createRadialGradient(
+        trailX,
+        trailY,
+        0,
+        trailX,
+        trailY,
+        trailSize
+      );
       if (blue) {
         grad.addColorStop(0, `rgba(224, 240, 255, ${trailAlpha})`);
         grad.addColorStop(0.35, `rgba(96, 165, 250, ${trailAlpha * 0.7})`);
         grad.addColorStop(0.7, `rgba(59, 130, 246, ${trailAlpha * 0.4})`);
         grad.addColorStop(1, "rgba(29, 78, 216, 0)");
       } else {
-        grad.addColorStop(0, `rgba(255, ${230 - Math.floor(atkBurst * 40)}, ${120 - Math.floor(atkBurst * 60)}, ${trailAlpha})`);
+        grad.addColorStop(
+          0,
+          `rgba(255, ${230 - Math.floor(atkBurst * 40)}, ${120 - Math.floor(atkBurst * 60)}, ${trailAlpha})`
+        );
         grad.addColorStop(0.35, `rgba(255, 160, 40, ${trailAlpha * 0.7})`);
         grad.addColorStop(0.7, `rgba(220, 70, 10, ${trailAlpha * 0.4})`);
         grad.addColorStop(1, "rgba(150, 30, 0, 0)");
@@ -426,14 +544,23 @@ function drawFireTrail(
 
 function drawFeatherBarbs(
   ctx: CanvasRenderingContext2D,
-  baseX: number, baseY: number,
-  tipX: number, tipY: number,
-  perpNx: number, perpNy: number,
-  featherLen: number, vaneWidth: number,
-  side: number, zoom: number, blue: boolean,
-  alpha: number, barbCount: number,
+  baseX: number,
+  baseY: number,
+  tipX: number,
+  tipY: number,
+  perpNx: number,
+  perpNy: number,
+  featherLen: number,
+  vaneWidth: number,
+  side: number,
+  zoom: number,
+  blue: boolean,
+  alpha: number,
+  barbCount: number
 ) {
-  if (alpha < 0.02) return;
+  if (alpha < 0.02) {
+    return;
+  }
   ctx.strokeStyle = blue
     ? `rgba(30, 58, 138, ${alpha})`
     : `rgba(100, 40, 5, ${alpha})`;
@@ -452,7 +579,7 @@ function drawFeatherBarbs(
     ctx.moveTo(mx, my);
     ctx.lineTo(
       mx + perpNx * barbLen * 0.9 * side + dx * 0.06,
-      my + perpNy * barbLen * 0.9 + dy * 0.06,
+      my + perpNy * barbLen * 0.9 + dy * 0.06
     );
     ctx.stroke();
 
@@ -460,7 +587,7 @@ function drawFeatherBarbs(
     ctx.moveTo(mx, my);
     ctx.lineTo(
       mx - perpNx * barbLen * 0.3 * side + dx * 0.06,
-      my - perpNy * barbLen * 0.3 + dy * 0.06,
+      my - perpNy * barbLen * 0.3 + dy * 0.06
     );
     ctx.stroke();
   }
@@ -468,13 +595,22 @@ function drawFeatherBarbs(
 
 function drawMembraneFeatherLines(
   ctx: CanvasRenderingContext2D,
-  shoulderX: number, shoulderY: number,
-  elbowX: number, elbowY: number,
-  humCpX: number, humCpY: number,
-  innerTrailY: number, flapAngle: number,
-  ripple: number, s: number, side: number,
-  wingSpread: number, innerRatio: number,
-  zoom: number, blue: boolean, atkBurst: number,
+  shoulderX: number,
+  shoulderY: number,
+  elbowX: number,
+  elbowY: number,
+  humCpX: number,
+  humCpY: number,
+  innerTrailY: number,
+  flapAngle: number,
+  ripple: number,
+  s: number,
+  side: number,
+  wingSpread: number,
+  innerRatio: number,
+  zoom: number,
+  blue: boolean,
+  atkBurst: number
 ) {
   const rowCount = 8;
   ctx.lineWidth = 0.6 * zoom;
@@ -482,7 +618,9 @@ function drawMembraneFeatherLines(
   for (let row = 0; row < rowCount; row++) {
     const rowT = (row + 1) / (rowCount + 1);
     const alpha = 0.2 + atkBurst * 0.05 - Math.abs(rowT - 0.5) * 0.12;
-    if (alpha < 0.03) continue;
+    if (alpha < 0.03) {
+      continue;
+    }
 
     ctx.strokeStyle = blue
       ? `rgba(30, 64, 175, ${alpha})`
@@ -493,11 +631,17 @@ function drawMembraneFeatherLines(
     for (let seg = 0; seg <= segments; seg++) {
       const spanT = seg / segments;
       const u = 1 - spanT;
-      const boneX = u * u * shoulderX + 2 * u * spanT * humCpX + spanT * spanT * elbowX;
-      const boneY = u * u * shoulderY + 2 * u * spanT * humCpY + spanT * spanT * elbowY;
-      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+      const boneX =
+        u * u * shoulderX + 2 * u * spanT * humCpX + spanT * spanT * elbowX;
+      const boneY =
+        u * u * shoulderY + 2 * u * spanT * humCpY + spanT * spanT * elbowY;
+      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.1;
       const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
-      const trailBotY = spanT * spanT * spanT * elbowY + 3 * spanT * spanT * u * innerBotCp1Y + 3 * spanT * u * u * innerBotCp2Y + u * u * u * innerTrailY;
+      const trailBotY =
+        spanT * spanT * spanT * elbowY +
+        3 * spanT * spanT * u * innerBotCp1Y +
+        3 * spanT * u * u * innerBotCp2Y +
+        u * u * u * innerTrailY;
       const lx = boneX;
       const ly = boneY + (trailBotY - boneY) * rowT;
 
@@ -524,13 +668,26 @@ function drawMembraneFeatherLines(
 
     const bx1 = u1 * u1 * shoulderX + 2 * u1 * t1 * humCpX + t1 * t1 * elbowX;
     const bx2 = u2 * u2 * shoulderX + 2 * u2 * t2 * humCpX + t2 * t2 * elbowX;
-    const bxM = uM * uM * shoulderX + 2 * uM * tMid * humCpX + tMid * tMid * elbowX;
+    const bxM =
+      uM * uM * shoulderX + 2 * uM * tMid * humCpX + tMid * tMid * elbowX;
 
-    const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+    const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.1;
     const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
-    const by1 = t1 * t1 * t1 * elbowY + 3 * t1 * t1 * u1 * innerBotCp1Y + 3 * t1 * u1 * u1 * innerBotCp2Y + u1 * u1 * u1 * innerTrailY;
-    const by2 = t2 * t2 * t2 * elbowY + 3 * t2 * t2 * u2 * innerBotCp1Y + 3 * t2 * u2 * u2 * innerBotCp2Y + u2 * u2 * u2 * innerTrailY;
-    const byM = tMid * tMid * tMid * elbowY + 3 * tMid * tMid * uM * innerBotCp1Y + 3 * tMid * uM * uM * innerBotCp2Y + uM * uM * uM * innerTrailY;
+    const by1 =
+      t1 * t1 * t1 * elbowY +
+      3 * t1 * t1 * u1 * innerBotCp1Y +
+      3 * t1 * u1 * u1 * innerBotCp2Y +
+      u1 * u1 * u1 * innerTrailY;
+    const by2 =
+      t2 * t2 * t2 * elbowY +
+      3 * t2 * t2 * u2 * innerBotCp1Y +
+      3 * t2 * u2 * u2 * innerBotCp2Y +
+      u2 * u2 * u2 * innerTrailY;
+    const byM =
+      tMid * tMid * tMid * elbowY +
+      3 * tMid * tMid * uM * innerBotCp1Y +
+      3 * tMid * uM * uM * innerBotCp2Y +
+      uM * uM * uM * innerTrailY;
 
     const alpha = 0.18 - sc * 0.015;
     ctx.strokeStyle = blue
@@ -545,15 +702,24 @@ function drawMembraneFeatherLines(
 
 function drawOuterMembraneFeatherLines(
   ctx: CanvasRenderingContext2D,
-  elbowX: number, elbowY: number,
-  wingTipX: number, wingTipY: number,
-  radCpX: number, radCpY: number,
-  outerStartX: number, outerStartTopY: number,
-  outerStartBotY: number, outerTrailY: number,
+  elbowX: number,
+  elbowY: number,
+  wingTipX: number,
+  wingTipY: number,
+  radCpX: number,
+  radCpY: number,
+  outerStartX: number,
+  outerStartTopY: number,
+  outerStartBotY: number,
+  outerTrailY: number,
   outerSpan: number,
-  flapAngle: number, ripple: number,
-  s: number, side: number, zoom: number,
-  blue: boolean, atkBurst: number,
+  flapAngle: number,
+  ripple: number,
+  s: number,
+  side: number,
+  zoom: number,
+  blue: boolean,
+  atkBurst: number
 ) {
   const rowCount = 10;
   ctx.lineWidth = 0.6 * zoom;
@@ -561,7 +727,9 @@ function drawOuterMembraneFeatherLines(
   for (let row = 0; row < rowCount; row++) {
     const rowT = (row + 1) / (rowCount + 1);
     const alpha = 0.22 + atkBurst * 0.05 - Math.abs(rowT - 0.5) * 0.12;
-    if (alpha < 0.03) continue;
+    if (alpha < 0.03) {
+      continue;
+    }
 
     ctx.strokeStyle = blue
       ? `rgba(30, 64, 175, ${alpha})`
@@ -572,11 +740,17 @@ function drawOuterMembraneFeatherLines(
     for (let seg = 0; seg <= segments; seg++) {
       const spanT = seg / segments;
       const u = 1 - spanT;
-      const boneX = u * u * elbowX + 2 * u * spanT * radCpX + spanT * spanT * wingTipX;
-      const boneY = u * u * elbowY + 2 * u * spanT * radCpY + spanT * spanT * wingTipY;
-      const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
+      const boneX =
+        u * u * elbowX + 2 * u * spanT * radCpX + spanT * spanT * wingTipX;
+      const boneY =
+        u * u * elbowY + 2 * u * spanT * radCpY + spanT * spanT * wingTipY;
+      const outerBotCp1Y = elbowY + s * 0.2 + flapAngle * s * 0.38;
       const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
-      const trailBotY = spanT * spanT * spanT * wingTipY + 3 * spanT * spanT * u * outerBotCp1Y + 3 * spanT * u * u * outerBotCp2Y + u * u * u * outerStartBotY;
+      const trailBotY =
+        spanT * spanT * spanT * wingTipY +
+        3 * spanT * spanT * u * outerBotCp1Y +
+        3 * spanT * u * u * outerBotCp2Y +
+        u * u * u * outerStartBotY;
       const lx = boneX;
       const ly = boneY + (trailBotY - boneY) * rowT;
 
@@ -603,15 +777,28 @@ function drawOuterMembraneFeatherLines(
 
     const bx1 = u1 * u1 * elbowX + 2 * u1 * t1 * radCpX + t1 * t1 * wingTipX;
     const bx2 = u2 * u2 * elbowX + 2 * u2 * t2 * radCpX + t2 * t2 * wingTipX;
-    const bxM = uM * uM * elbowX + 2 * uM * tMid * radCpX + tMid * tMid * wingTipX;
+    const bxM =
+      uM * uM * elbowX + 2 * uM * tMid * radCpX + tMid * tMid * wingTipX;
 
-    const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
+    const outerBotCp1Y = elbowY + s * 0.2 + flapAngle * s * 0.38;
     const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
-    const by1 = t1 * t1 * t1 * wingTipY + 3 * t1 * t1 * u1 * outerBotCp1Y + 3 * t1 * u1 * u1 * outerBotCp2Y + u1 * u1 * u1 * outerStartBotY;
-    const by2 = t2 * t2 * t2 * wingTipY + 3 * t2 * t2 * u2 * outerBotCp1Y + 3 * t2 * u2 * u2 * outerBotCp2Y + u2 * u2 * u2 * outerStartBotY;
-    const byM = tMid * tMid * tMid * wingTipY + 3 * tMid * tMid * uM * outerBotCp1Y + 3 * tMid * uM * uM * outerBotCp2Y + uM * uM * uM * outerStartBotY;
+    const by1 =
+      t1 * t1 * t1 * wingTipY +
+      3 * t1 * t1 * u1 * outerBotCp1Y +
+      3 * t1 * u1 * u1 * outerBotCp2Y +
+      u1 * u1 * u1 * outerStartBotY;
+    const by2 =
+      t2 * t2 * t2 * wingTipY +
+      3 * t2 * t2 * u2 * outerBotCp1Y +
+      3 * t2 * u2 * u2 * outerBotCp2Y +
+      u2 * u2 * u2 * outerStartBotY;
+    const byM =
+      tMid * tMid * tMid * wingTipY +
+      3 * tMid * tMid * uM * outerBotCp1Y +
+      3 * tMid * uM * uM * outerBotCp2Y +
+      uM * uM * uM * outerStartBotY;
 
-    const alpha = 0.20 - sc * 0.012;
+    const alpha = 0.2 - sc * 0.012;
     ctx.strokeStyle = blue
       ? `rgba(30, 58, 138, ${alpha})`
       : `rgba(100, 40, 5, ${alpha})`;
@@ -635,13 +822,13 @@ function drawWings(
   isAttacking: boolean,
   attackIntensity: number,
   layer: "back" | "front",
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const atkBurst = isAttacking ? Math.sin(attackIntensity * Math.PI) : 0;
   const smoothWingAtk = atkBurst * atkBurst;
-  const flapAngle =
-    wingFlap + (isAttacking ? smoothWingAtk * 0.25 : 0);
-  const wingSpread = s * (1.3 + flapAngle * flapAngle * 0.64 + smoothWingAtk * 0.15);
+  const flapAngle = wingFlap + (isAttacking ? smoothWingAtk * 0.25 : 0);
+  const wingSpread =
+    s * (1.3 + flapAngle * flapAngle * 0.64 + smoothWingAtk * 0.15);
   const side = layer === "back" ? 1 : -1;
 
   ctx.save();
@@ -652,18 +839,20 @@ function drawWings(
 
   const innerRatio = 0.38;
   const elbowX = shoulderX + side * wingSpread * innerRatio;
-  const elbowY = shoulderY - s * 0.12 + flapAngle * s * 0.22 + smoothWingAtk * s * 0.02;
+  const elbowY =
+    shoulderY - s * 0.12 + flapAngle * s * 0.22 + smoothWingAtk * s * 0.02;
 
   // Outer wing flap is phase-delayed for whip-like bend up→down at the joint
   const outerSin = Math.sin(time * 5.5 - 0.85);
   const innerSin = Math.sin(time * 5.5);
-  const flapAmp = Math.abs(innerSin) > 0.1
-    ? Math.abs(wingFlap / innerSin)
-    : 0.7;
-  const outerFlapAngle = outerSin * flapAmp + (isAttacking ? smoothWingAtk * 0.25 : 0);
+  const flapAmp =
+    Math.abs(innerSin) > 0.1 ? Math.abs(wingFlap / innerSin) : 0.7;
+  const outerFlapAngle =
+    outerSin * flapAmp + (isAttacking ? smoothWingAtk * 0.25 : 0);
 
   const wingTipX = elbowX + side * wingSpread * (1 - innerRatio);
-  const wingTipY = elbowY - s * 0.22 + outerFlapAngle * s * 0.65 + smoothWingAtk * s * 0.06;
+  const wingTipY =
+    elbowY - s * 0.22 + outerFlapAngle * s * 0.65 + smoothWingAtk * s * 0.06;
 
   const ripple = isAttacking
     ? Math.sin(attackIntensity * Math.PI + time * 2) * s * 0.005
@@ -676,7 +865,12 @@ function drawWings(
     0.12 + flapAngle * 0.05 + atkBurst * 0.15 + (blue ? 0.1 : 0);
   const glowR = wingSpread * (0.5 + atkBurst * 0.15);
   const glowGrad = ctx.createRadialGradient(
-    glowCx, glowCy, 0, glowCx, glowCy, glowR,
+    glowCx,
+    glowCy,
+    0,
+    glowCx,
+    glowCy,
+    glowR
   );
   if (blue) {
     glowGrad.addColorStop(0, `rgba(96, 165, 250, ${glowIntensity})`);
@@ -695,28 +889,28 @@ function drawWings(
   // ─── Inner membrane (shoulder → elbow) ───
   const innerTrailY = shoulderY + s * 0.38;
   const innerGrad = ctx.createLinearGradient(
-    shoulderX, shoulderY, elbowX, elbowY,
+    shoulderX,
+    shoulderY,
+    elbowX,
+    elbowY
   );
   if (blue) {
     innerGrad.addColorStop(0, "rgba(15, 40, 130, 0.96)");
     innerGrad.addColorStop(0.2, "rgba(25, 65, 190, 0.93)");
     innerGrad.addColorStop(0.45, "rgba(50, 115, 235, 0.90)");
     innerGrad.addColorStop(0.7, "rgba(85, 155, 248, 0.86)");
-    innerGrad.addColorStop(
-      1,
-      `rgba(140, 195, 253, ${0.75 + atkBurst * 0.1})`,
-    );
+    innerGrad.addColorStop(1, `rgba(140, 195, 253, ${0.75 + atkBurst * 0.1})`);
   } else {
     innerGrad.addColorStop(0, "rgba(110, 40, 5, 0.96)");
     innerGrad.addColorStop(0.2, "rgba(160, 65, 10, 0.93)");
     innerGrad.addColorStop(0.45, "rgba(210, 105, 25, 0.90)");
     innerGrad.addColorStop(
       0.7,
-      `rgba(245, ${155 + Math.floor(atkBurst * 35)}, ${45 + Math.floor(atkBurst * 35)}, 0.86)`,
+      `rgba(245, ${155 + Math.floor(atkBurst * 35)}, ${45 + Math.floor(atkBurst * 35)}, 0.86)`
     );
     innerGrad.addColorStop(
       1,
-      `rgba(255, ${200 + Math.floor(atkBurst * 30)}, ${80 + Math.floor(atkBurst * 45)}, ${0.75 + atkBurst * 0.1})`,
+      `rgba(255, ${200 + Math.floor(atkBurst * 30)}, ${80 + Math.floor(atkBurst * 45)}, ${0.75 + atkBurst * 0.1})`
     );
   }
 
@@ -725,19 +919,19 @@ function drawWings(
   ctx.moveTo(shoulderX, shoulderY);
   ctx.bezierCurveTo(
     shoulderX + side * wingSpread * innerRatio * 0.35,
-    shoulderY - s * (0.55 - flapAngle * 0.10) + ripple,
+    shoulderY - s * (0.55 - flapAngle * 0.1) + ripple,
     shoulderX + side * wingSpread * innerRatio * 0.7,
-    elbowY - s * 0.20 + ripple * 0.7,
+    elbowY - s * 0.2 + ripple * 0.7,
     elbowX,
-    elbowY,
+    elbowY
   );
   ctx.bezierCurveTo(
     shoulderX + side * wingSpread * innerRatio * 0.7,
-    elbowY + s * 0.24 + flapAngle * s * 0.10,
+    elbowY + s * 0.24 + flapAngle * s * 0.1,
     shoulderX + side * wingSpread * innerRatio * 0.35,
     innerTrailY + flapAngle * s * 0.07,
     shoulderX,
-    innerTrailY,
+    innerTrailY
   );
   ctx.closePath();
   ctx.fill();
@@ -745,8 +939,10 @@ function drawWings(
   // Inner membrane dark underside shadow (darker toward body/trailing edge)
   {
     const innerShadowG = ctx.createLinearGradient(
-      shoulderX, shoulderY - s * 0.3,
-      shoulderX, innerTrailY + s * 0.1,
+      shoulderX,
+      shoulderY - s * 0.3,
+      shoulderX,
+      innerTrailY + s * 0.1
     );
     if (blue) {
       innerShadowG.addColorStop(0, "rgba(10, 20, 60, 0)");
@@ -766,17 +962,19 @@ function drawWings(
     ctx.moveTo(shoulderX, shoulderY);
     ctx.bezierCurveTo(
       shoulderX + side * wingSpread * innerRatio * 0.35,
-      shoulderY - s * (0.55 - flapAngle * 0.10) + ripple,
+      shoulderY - s * (0.55 - flapAngle * 0.1) + ripple,
       shoulderX + side * wingSpread * innerRatio * 0.7,
-      elbowY - s * 0.20 + ripple * 0.7,
-      elbowX, elbowY,
+      elbowY - s * 0.2 + ripple * 0.7,
+      elbowX,
+      elbowY
     );
     ctx.bezierCurveTo(
       shoulderX + side * wingSpread * innerRatio * 0.7,
-      elbowY + s * 0.24 + flapAngle * s * 0.10,
+      elbowY + s * 0.24 + flapAngle * s * 0.1,
       shoulderX + side * wingSpread * innerRatio * 0.35,
       innerTrailY + flapAngle * s * 0.07,
-      shoulderX, innerTrailY,
+      shoulderX,
+      innerTrailY
     );
     ctx.closePath();
     ctx.fill();
@@ -786,8 +984,12 @@ function drawWings(
   {
     const foldR = wingSpread * innerRatio * 0.45;
     const foldG = ctx.createRadialGradient(
-      shoulderX, shoulderY + s * 0.05, 0,
-      shoulderX, shoulderY + s * 0.05, foldR,
+      shoulderX,
+      shoulderY + s * 0.05,
+      0,
+      shoulderX,
+      shoulderY + s * 0.05,
+      foldR
     );
     if (blue) {
       foldG.addColorStop(0, "rgba(5, 10, 40, 0.30)");
@@ -809,9 +1011,7 @@ function drawWings(
     const bandCount = 4;
     for (let b = 0; b < bandCount; b++) {
       const bandT = (b + 1) / (bandCount + 1);
-      const alpha = blue
-        ? 0.08 + b * 0.02
-        : 0.10 + b * 0.025;
+      const alpha = blue ? 0.08 + b * 0.02 : 0.1 + b * 0.025;
       ctx.strokeStyle = blue
         ? `rgba(12, 25, 80, ${alpha})`
         : `rgba(80, 28, 4, ${alpha})`;
@@ -823,14 +1023,27 @@ function drawWings(
         const u = 1 - spanT;
         const humCpXLocal = (shoulderX + elbowX) / 2;
         const humCpYLocal = (shoulderY + elbowY) / 2 - s * 0.06 + ripple * 0.4;
-        const boneX = u * u * shoulderX + 2 * u * spanT * humCpXLocal + spanT * spanT * elbowX;
-        const boneY = u * u * shoulderY + 2 * u * spanT * humCpYLocal + spanT * spanT * elbowY;
-        const innerBotCpY1 = elbowY + s * 0.24 + flapAngle * s * 0.10;
+        const boneX =
+          u * u * shoulderX +
+          2 * u * spanT * humCpXLocal +
+          spanT * spanT * elbowX;
+        const boneY =
+          u * u * shoulderY +
+          2 * u * spanT * humCpYLocal +
+          spanT * spanT * elbowY;
+        const innerBotCpY1 = elbowY + s * 0.24 + flapAngle * s * 0.1;
         const innerBotCpY2 = innerTrailY + flapAngle * s * 0.07;
-        const trailBotY = spanT * spanT * spanT * elbowY + 3 * spanT * spanT * u * innerBotCpY1 + 3 * spanT * u * u * innerBotCpY2 + u * u * u * innerTrailY;
+        const trailBotY =
+          spanT * spanT * spanT * elbowY +
+          3 * spanT * spanT * u * innerBotCpY1 +
+          3 * spanT * u * u * innerBotCpY2 +
+          u * u * u * innerTrailY;
         const ly = boneY + (trailBotY - boneY) * bandT;
-        if (seg === 0) ctx.moveTo(boneX, ly);
-        else ctx.lineTo(boneX, ly);
+        if (seg === 0) {
+          ctx.moveTo(boneX, ly);
+        } else {
+          ctx.lineTo(boneX, ly);
+        }
       }
       ctx.stroke();
     }
@@ -841,11 +1054,14 @@ function drawWings(
   const elbowOverlap = side * wingSpread * 0.22;
   const outerStartX = elbowX - elbowOverlap;
   const outerStartTopY = elbowY - s * 0.06;
-  const outerTrailY = elbowY + s * 0.30;
+  const outerTrailY = elbowY + s * 0.3;
   const outerStartBotY = outerTrailY + s * 0.04;
   const outerSpan = wingSpread * (1 - innerRatio) + wingSpread * 0.14;
   const outerGrad = ctx.createLinearGradient(
-    elbowX, elbowY, wingTipX, wingTipY,
+    elbowX,
+    elbowY,
+    wingTipX,
+    wingTipY
   );
   if (blue) {
     outerGrad.addColorStop(0, "rgba(30, 75, 200, 0.95)");
@@ -854,31 +1070,25 @@ function drawWings(
     outerGrad.addColorStop(0.55, "rgba(120, 185, 252, 0.86)");
     outerGrad.addColorStop(
       0.78,
-      `rgba(175, 215, 254, ${0.72 + atkBurst * 0.12})`,
+      `rgba(175, 215, 254, ${0.72 + atkBurst * 0.12})`
     );
-    outerGrad.addColorStop(
-      1,
-      `rgba(215, 238, 255, ${0.55 + atkBurst * 0.18})`,
-    );
+    outerGrad.addColorStop(1, `rgba(215, 238, 255, ${0.55 + atkBurst * 0.18})`);
   } else {
     outerGrad.addColorStop(0, "rgba(170, 75, 12, 0.95)");
     outerGrad.addColorStop(0.15, "rgba(210, 105, 22, 0.93)");
     outerGrad.addColorStop(
       0.35,
-      `rgba(240, ${150 + Math.floor(atkBurst * 30)}, ${40 + Math.floor(atkBurst * 30)}, 0.90)`,
+      `rgba(240, ${150 + Math.floor(atkBurst * 30)}, ${40 + Math.floor(atkBurst * 30)}, 0.90)`
     );
     outerGrad.addColorStop(
       0.55,
-      `rgba(255, ${190 + Math.floor(atkBurst * 30)}, ${70 + Math.floor(atkBurst * 40)}, 0.86)`,
+      `rgba(255, ${190 + Math.floor(atkBurst * 30)}, ${70 + Math.floor(atkBurst * 40)}, 0.86)`
     );
     outerGrad.addColorStop(
       0.78,
-      `rgba(255, ${230 + Math.floor(atkBurst * 15)}, ${130 + Math.floor(atkBurst * 30)}, ${0.72 + atkBurst * 0.12})`,
+      `rgba(255, ${230 + Math.floor(atkBurst * 15)}, ${130 + Math.floor(atkBurst * 30)}, ${0.72 + atkBurst * 0.12})`
     );
-    outerGrad.addColorStop(
-      1,
-      `rgba(255, 250, 190, ${0.55 + atkBurst * 0.18})`,
-    );
+    outerGrad.addColorStop(1, `rgba(255, 250, 190, ${0.55 + atkBurst * 0.18})`);
   }
 
   ctx.fillStyle = outerGrad;
@@ -886,19 +1096,19 @@ function drawWings(
   ctx.moveTo(outerStartX, outerStartTopY);
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.35,
-    elbowY - s * (0.40 - outerFlapAngle * 0.22) + ripple * 0.5,
+    elbowY - s * (0.4 - outerFlapAngle * 0.22) + ripple * 0.5,
     outerStartX + side * outerSpan * 0.7,
     wingTipY - s * 0.04 + ripple * 0.3,
     wingTipX,
-    wingTipY,
+    wingTipY
   );
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.85,
-    elbowY + s * 0.20 + outerFlapAngle * s * 0.42,
+    elbowY + s * 0.2 + outerFlapAngle * s * 0.42,
     outerStartX + side * outerSpan * 0.4,
-    outerTrailY + outerFlapAngle * s * 0.20,
+    outerTrailY + outerFlapAngle * s * 0.2,
     outerStartX,
-    outerStartBotY,
+    outerStartBotY
   );
   ctx.closePath();
   ctx.fill();
@@ -907,8 +1117,10 @@ function drawWings(
   {
     const outerMidY = (elbowY + wingTipY) * 0.5;
     const outerShadowG = ctx.createLinearGradient(
-      elbowX, outerMidY - s * 0.3,
-      elbowX, outerTrailY + s * 0.15,
+      elbowX,
+      outerMidY - s * 0.3,
+      elbowX,
+      outerTrailY + s * 0.15
     );
     if (blue) {
       outerShadowG.addColorStop(0, "rgba(10, 20, 60, 0)");
@@ -928,17 +1140,19 @@ function drawWings(
     ctx.moveTo(outerStartX, outerStartTopY);
     ctx.bezierCurveTo(
       outerStartX + side * outerSpan * 0.35,
-      elbowY - s * (0.40 - outerFlapAngle * 0.22) + ripple * 0.5,
+      elbowY - s * (0.4 - outerFlapAngle * 0.22) + ripple * 0.5,
       outerStartX + side * outerSpan * 0.7,
       wingTipY - s * 0.04 + ripple * 0.3,
-      wingTipX, wingTipY,
+      wingTipX,
+      wingTipY
     );
     ctx.bezierCurveTo(
       outerStartX + side * outerSpan * 0.85,
-      elbowY + s * 0.20 + outerFlapAngle * s * 0.42,
+      elbowY + s * 0.2 + outerFlapAngle * s * 0.42,
       outerStartX + side * outerSpan * 0.4,
-      outerTrailY + outerFlapAngle * s * 0.20,
-      outerStartX, outerStartBotY,
+      outerTrailY + outerFlapAngle * s * 0.2,
+      outerStartX,
+      outerStartBotY
     );
     ctx.closePath();
     ctx.fill();
@@ -948,8 +1162,12 @@ function drawWings(
   {
     const elbFoldR = wingSpread * (1 - innerRatio) * 0.35;
     const elbFoldG = ctx.createRadialGradient(
-      elbowX + side * s * 0.02, elbowY + s * 0.08, 0,
-      elbowX + side * s * 0.02, elbowY + s * 0.08, elbFoldR,
+      elbowX + side * s * 0.02,
+      elbowY + s * 0.08,
+      0,
+      elbowX + side * s * 0.02,
+      elbowY + s * 0.08,
+      elbFoldR
     );
     if (blue) {
       elbFoldG.addColorStop(0, "rgba(5, 10, 40, 0.25)");
@@ -962,7 +1180,13 @@ function drawWings(
     }
     ctx.fillStyle = elbFoldG;
     ctx.beginPath();
-    ctx.arc(elbowX + side * s * 0.02, elbowY + s * 0.08, elbFoldR, 0, Math.PI * 2);
+    ctx.arc(
+      elbowX + side * s * 0.02,
+      elbowY + s * 0.08,
+      elbFoldR,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -973,9 +1197,7 @@ function drawWings(
     const radCpYLocal = (elbowY + wingTipY) / 2 - s * 0.05 + ripple * 0.2;
     for (let b = 0; b < outerBandCount; b++) {
       const bandT = (b + 1) / (outerBandCount + 1);
-      const alpha = blue
-        ? 0.07 + b * 0.018
-        : 0.09 + b * 0.022;
+      const alpha = blue ? 0.07 + b * 0.018 : 0.09 + b * 0.022;
       ctx.strokeStyle = blue
         ? `rgba(12, 25, 80, ${alpha})`
         : `rgba(80, 28, 4, ${alpha})`;
@@ -985,14 +1207,27 @@ function drawWings(
       for (let seg = 0; seg <= segs; seg++) {
         const spanT = seg / segs;
         const u = 1 - spanT;
-        const boneX = u * u * elbowX + 2 * u * spanT * radCpXLocal + spanT * spanT * wingTipX;
-        const boneY = u * u * elbowY + 2 * u * spanT * radCpYLocal + spanT * spanT * wingTipY;
-        const outerBotCpY1 = elbowY + s * 0.20 + outerFlapAngle * s * 0.42;
-        const outerBotCpY2 = outerTrailY + outerFlapAngle * s * 0.20;
-        const trailBotY = spanT * spanT * spanT * wingTipY + 3 * spanT * spanT * u * outerBotCpY1 + 3 * spanT * u * u * outerBotCpY2 + u * u * u * outerStartBotY;
+        const boneX =
+          u * u * elbowX +
+          2 * u * spanT * radCpXLocal +
+          spanT * spanT * wingTipX;
+        const boneY =
+          u * u * elbowY +
+          2 * u * spanT * radCpYLocal +
+          spanT * spanT * wingTipY;
+        const outerBotCpY1 = elbowY + s * 0.2 + outerFlapAngle * s * 0.42;
+        const outerBotCpY2 = outerTrailY + outerFlapAngle * s * 0.2;
+        const trailBotY =
+          spanT * spanT * spanT * wingTipY +
+          3 * spanT * spanT * u * outerBotCpY1 +
+          3 * spanT * u * u * outerBotCpY2 +
+          u * u * u * outerStartBotY;
         const ly = boneY + (trailBotY - boneY) * bandT;
-        if (seg === 0) ctx.moveTo(boneX, ly);
-        else ctx.lineTo(boneX, ly);
+        if (seg === 0) {
+          ctx.moveTo(boneX, ly);
+        } else {
+          ctx.lineTo(boneX, ly);
+        }
       }
       ctx.stroke();
     }
@@ -1004,16 +1239,17 @@ function drawWings(
     ctx.strokeStyle = blue
       ? `rgba(180, 215, 255, ${hlAlphaBase + atkBurst * 0.06})`
       : `rgba(255, 235, 160, ${hlAlphaBase + atkBurst * 0.06})`;
-    ctx.lineWidth = (2.0 + atkBurst * 0.5) * zoom;
+    ctx.lineWidth = (2 + atkBurst * 0.5) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(outerStartX, outerStartTopY);
     ctx.bezierCurveTo(
       outerStartX + side * outerSpan * 0.35,
-      elbowY - s * (0.40 - outerFlapAngle * 0.22) + ripple * 0.5,
+      elbowY - s * (0.4 - outerFlapAngle * 0.22) + ripple * 0.5,
       outerStartX + side * outerSpan * 0.7,
       wingTipY - s * 0.04 + ripple * 0.3,
-      wingTipX, wingTipY,
+      wingTipX,
+      wingTipY
     );
     ctx.stroke();
   }
@@ -1021,20 +1257,19 @@ function drawWings(
   // ─── Elbow joint knuckle ───
   const knR = s * (0.04 + atkBurst * 0.012);
   const knGrad = ctx.createRadialGradient(
-    elbowX, elbowY, 0, elbowX, elbowY, knR,
+    elbowX,
+    elbowY,
+    0,
+    elbowX,
+    elbowY,
+    knR
   );
   if (blue) {
-    knGrad.addColorStop(
-      0,
-      `rgba(147, 197, 253, ${0.7 + atkBurst * 0.15})`,
-    );
+    knGrad.addColorStop(0, `rgba(147, 197, 253, ${0.7 + atkBurst * 0.15})`);
     knGrad.addColorStop(0.5, "rgba(59, 130, 246, 0.6)");
     knGrad.addColorStop(1, "rgba(29, 78, 216, 0.3)");
   } else {
-    knGrad.addColorStop(
-      0,
-      `rgba(255, 210, 100, ${0.7 + atkBurst * 0.15})`,
-    );
+    knGrad.addColorStop(0, `rgba(255, 210, 100, ${0.7 + atkBurst * 0.15})`);
     knGrad.addColorStop(0.5, "rgba(220, 120, 30, 0.6)");
     knGrad.addColorStop(1, "rgba(160, 70, 10, 0.3)");
   }
@@ -1055,7 +1290,7 @@ function drawWings(
     (shoulderX + elbowX) / 2,
     (shoulderY + elbowY) / 2 - s * 0.06 + ripple * 0.4,
     elbowX,
-    elbowY,
+    elbowY
   );
   ctx.stroke();
 
@@ -1070,7 +1305,7 @@ function drawWings(
     (elbowX + wingTipX) / 2,
     (elbowY + wingTipY) / 2 - s * 0.05 + ripple * 0.2,
     wingTipX,
-    wingTipY,
+    wingTipY
   );
   ctx.stroke();
 
@@ -1078,14 +1313,14 @@ function drawWings(
   ctx.strokeStyle = blue
     ? `rgba(37, 99, 235, ${0.4 + atkBurst * 0.1})`
     : `rgba(140, 60, 8, ${0.4 + atkBurst * 0.1})`;
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(shoulderX, shoulderY + s * 0.04);
   ctx.quadraticCurveTo(
     (shoulderX + elbowX) / 2 + side * s * 0.01,
     (shoulderY + elbowY) / 2 + s * 0.02 + ripple * 0.3,
     elbowX,
-    elbowY + s * 0.03,
+    elbowY + s * 0.03
   );
   ctx.stroke();
 
@@ -1095,7 +1330,7 @@ function drawWings(
     (elbowX + wingTipX) / 2,
     (elbowY + wingTipY) / 2 + s * 0.02 + ripple * 0.15,
     wingTipX - side * wingSpread * 0.08,
-    wingTipY + s * 0.03,
+    wingTipY + s * 0.03
   );
   ctx.stroke();
 
@@ -1118,7 +1353,10 @@ function drawWings(
     const htgLen = Math.sqrt(htgX * htgX + htgY * htgY) || 1;
     let hpX = -htgY / htgLen;
     let hpY = htgX / htgLen;
-    if (hpY < 0) { hpX = -hpX; hpY = -hpY; }
+    if (hpY < 0) {
+      hpX = -hpX;
+      hpY = -hpY;
+    }
 
     const fLen = s * (0.19 + fT * 0.16);
     const fAng = Math.atan2(hpY, hpX) + side * (0.22 + fT * 0.25);
@@ -1143,10 +1381,10 @@ function drawWings(
       cG.addColorStop(0.7, `rgba(90, 160, 250, ${0.68 - fT * 0.05})`);
       cG.addColorStop(1, `rgba(140, 200, 253, ${0.52 + smoothWingAtk * 0.1})`);
     } else {
-      cG.addColorStop(0, `rgba(110, 38, 5, ${0.90 - fT * 0.08})`);
+      cG.addColorStop(0, `rgba(110, 38, 5, ${0.9 - fT * 0.08})`);
       cG.addColorStop(0.2, `rgba(160, 68, 12, ${0.86 - fT * 0.07})`);
-      cG.addColorStop(0.45, `rgba(210, 110, 25, ${0.80 - fT * 0.06})`);
-      cG.addColorStop(0.7, `rgba(245, 170, 50, ${0.70 - fT * 0.05})`);
+      cG.addColorStop(0.45, `rgba(210, 110, 25, ${0.8 - fT * 0.06})`);
+      cG.addColorStop(0.7, `rgba(245, 170, 50, ${0.7 - fT * 0.05})`);
       cG.addColorStop(1, `rgba(255, 215, 95, ${0.52 + smoothWingAtk * 0.1})`);
     }
 
@@ -1158,23 +1396,24 @@ function drawWings(
     ctx.bezierCurveTo(
       aX + dx * 0.2 + pNx * leadW * 1.15 * side,
       aY + dy * 0.2 + pNy * leadW * 1.15,
-      aX + dx * 0.5 + pNx * leadW * 1.0 * side,
-      aY + dy * 0.5 + pNy * leadW * 1.0,
+      aX + dx * 0.5 + pNx * leadW * 1 * side,
+      aY + dy * 0.5 + pNy * leadW * 1,
       aX + dx * 0.78 + pNx * leadW * 0.45 * side,
-      aY + dy * 0.78 + pNy * leadW * 0.45,
+      aY + dy * 0.78 + pNy * leadW * 0.45
     );
     // Pointed tip
     ctx.quadraticCurveTo(
       aX + dx * 0.92 + pNx * leadW * 0.12 * side,
       aY + dy * 0.92 + pNy * leadW * 0.12,
-      tX, tY,
+      tX,
+      tY
     );
     // Trailing edge (narrow, follows shaft closely)
     ctx.quadraticCurveTo(
       aX + dx * 0.88 - pNx * trailW * 0.15 * side,
       aY + dy * 0.88 - pNy * trailW * 0.15,
       aX + dx * 0.6 - pNx * trailW * 0.4 * side,
-      aY + dy * 0.6 - pNy * trailW * 0.4,
+      aY + dy * 0.6 - pNy * trailW * 0.4
     );
     ctx.bezierCurveTo(
       aX + dx * 0.35 - pNx * trailW * 0.45 * side,
@@ -1182,7 +1421,7 @@ function drawWings(
       aX + dx * 0.12 - pNx * trailW * 0.3 * side,
       aY + dy * 0.12 - pNy * trailW * 0.3,
       aX - pNx * trailW * 0.1 * side,
-      aY - pNy * trailW * 0.1,
+      aY - pNy * trailW * 0.1
     );
     ctx.closePath();
     ctx.fill();
@@ -1200,14 +1439,10 @@ function drawWings(
       aX + dx * 0.6 - pNx * trailW * 0.38 * side,
       aY + dy * 0.6 - pNy * trailW * 0.38,
       aX + dx * 0.85 - pNx * trailW * 0.12 * side,
-      aY + dy * 0.85 - pNy * trailW * 0.12,
+      aY + dy * 0.85 - pNy * trailW * 0.12
     );
     ctx.lineTo(tX, tY);
-    ctx.quadraticCurveTo(
-      aX + dx * 0.65,
-      aY + dy * 0.65,
-      aX, aY,
-    );
+    ctx.quadraticCurveTo(aX + dx * 0.65, aY + dy * 0.65, aX, aY);
     ctx.closePath();
     ctx.fill();
 
@@ -1225,11 +1460,11 @@ function drawWings(
         aX + dx * 0.45 + pNx * leadW * 0.95 * side,
         aY + dy * 0.45 + pNy * leadW * 0.95,
         aX + dx * 0.7 + pNx * leadW * 0.5 * side,
-        aY + dy * 0.7 + pNy * leadW * 0.5,
+        aY + dy * 0.7 + pNy * leadW * 0.5
       );
       ctx.lineTo(
         aX + dx * 0.55 + pNx * leadW * 0.3 * side,
-        aY + dy * 0.55 + pNy * leadW * 0.3,
+        aY + dy * 0.55 + pNy * leadW * 0.3
       );
       ctx.bezierCurveTo(
         aX + dx * 0.35 + pNx * leadW * 0.45 * side,
@@ -1237,7 +1472,7 @@ function drawWings(
         aX + dx * 0.15 + pNx * leadW * 0.5 * side,
         aY + dy * 0.15 + pNy * leadW * 0.5,
         aX + pNx * trailW * 0.2 * side,
-        aY + pNy * trailW * 0.2,
+        aY + pNy * trailW * 0.2
       );
       ctx.closePath();
       ctx.fill();
@@ -1247,14 +1482,15 @@ function drawWings(
     ctx.strokeStyle = blue
       ? `rgba(15, 35, 120, ${0.35 - fT * 0.06})`
       : `rgba(90, 35, 5, ${0.38 - fT * 0.06})`;
-    ctx.lineWidth = (1.0 - fT * 0.2) * zoom;
+    ctx.lineWidth = (1 - fT * 0.2) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(aX, aY);
     ctx.quadraticCurveTo(
       aX + dx * 0.5 + pNx * leadW * 0.12 * side,
       aY + dy * 0.5 + pNy * leadW * 0.12,
-      tX, tY,
+      tX,
+      tY
     );
     ctx.stroke();
   }
@@ -1266,15 +1502,46 @@ function drawWings(
 
   // ─── Feather contour lines on inner membrane ───
   drawMembraneFeatherLines(
-    ctx, shoulderX, shoulderY, elbowX, elbowY, humCpX, humCpY,
-    innerTrailY, flapAngle, ripple, s, side, wingSpread, innerRatio, zoom, blue, atkBurst,
+    ctx,
+    shoulderX,
+    shoulderY,
+    elbowX,
+    elbowY,
+    humCpX,
+    humCpY,
+    innerTrailY,
+    flapAngle,
+    ripple,
+    s,
+    side,
+    wingSpread,
+    innerRatio,
+    zoom,
+    blue,
+    atkBurst
   );
 
   // ─── Feather contour lines on outer membrane ───
   drawOuterMembraneFeatherLines(
-    ctx, elbowX, elbowY, wingTipX, wingTipY, radCpX, radCpY,
-    outerStartX, outerStartTopY, outerStartBotY, outerTrailY, outerSpan,
-    outerFlapAngle, ripple, s, side, zoom, blue, atkBurst,
+    ctx,
+    elbowX,
+    elbowY,
+    wingTipX,
+    wingTipY,
+    radCpX,
+    radCpY,
+    outerStartX,
+    outerStartTopY,
+    outerStartBotY,
+    outerTrailY,
+    outerSpan,
+    outerFlapAngle,
+    ripple,
+    s,
+    side,
+    zoom,
+    blue,
+    atkBurst
   );
 
   const primCount = 14;
@@ -1283,15 +1550,20 @@ function drawWings(
     const boneT = featherT * 0.92;
 
     const rU = 1 - boneT;
-    const attachX = rU * rU * elbowX + 2 * rU * boneT * radCpX + boneT * boneT * wingTipX;
-    const attachY = rU * rU * elbowY + 2 * rU * boneT * radCpY + boneT * boneT * wingTipY;
+    const attachX =
+      rU * rU * elbowX + 2 * rU * boneT * radCpX + boneT * boneT * wingTipX;
+    const attachY =
+      rU * rU * elbowY + 2 * rU * boneT * radCpY + boneT * boneT * wingTipY;
 
     const rtgX = 2 * rU * (radCpX - elbowX) + 2 * boneT * (wingTipX - radCpX);
     const rtgY = 2 * rU * (radCpY - elbowY) + 2 * boneT * (wingTipY - radCpY);
     const rtgLen = Math.sqrt(rtgX * rtgX + rtgY * rtgY) || 1;
     let rpX = -rtgY / rtgLen;
     let rpY = rtgX / rtgLen;
-    if (rpY < 0) { rpX = -rpX; rpY = -rpY; }
+    if (rpY < 0) {
+      rpX = -rpX;
+      rpY = -rpY;
+    }
 
     const featherLen = s * (0.28 + featherT * 0.32);
     const featherAngle = Math.atan2(rpY, rpX) + side * (0.22 + featherT * 0.42);
@@ -1299,8 +1571,8 @@ function drawWings(
     const tipX = attachX + Math.cos(featherAngle) * featherLen + featherSway;
     const tipY = attachY + Math.sin(featherAngle) * featherLen;
 
-    const leadW = s * (0.055 + (1 - featherT) * 0.030);
-    const trailW = leadW * 0.30;
+    const leadW = s * (0.055 + (1 - featherT) * 0.03);
+    const trailW = leadW * 0.3;
     const perpNx = -Math.sin(featherAngle);
     const perpNy = Math.cos(featherAngle);
 
@@ -1313,21 +1585,36 @@ function drawWings(
       fGrad.addColorStop(0.15, `rgba(28, 65, 185, ${0.88 - featherT * 0.07})`);
       fGrad.addColorStop(0.35, `rgba(50, 110, 235, ${0.82 - featherT * 0.06})`);
       fGrad.addColorStop(0.55, `rgba(85, 155, 248, ${0.74 - featherT * 0.05})`);
-      fGrad.addColorStop(0.78, `rgba(135, 195, 253, ${0.62 + smoothWingAtk * 0.08})`);
-      fGrad.addColorStop(1, `rgba(200, 230, 255, ${0.48 + smoothWingAtk * 0.12})`);
+      fGrad.addColorStop(
+        0.78,
+        `rgba(135, 195, 253, ${0.62 + smoothWingAtk * 0.08})`
+      );
+      fGrad.addColorStop(
+        1,
+        `rgba(200, 230, 255, ${0.48 + smoothWingAtk * 0.12})`
+      );
     } else {
       fGrad.addColorStop(0, `rgba(100, 35, 5, ${0.92 - featherT * 0.08})`);
       fGrad.addColorStop(0.15, `rgba(150, 60, 10, ${0.88 - featherT * 0.07})`);
       fGrad.addColorStop(0.35, `rgba(205, 100, 22, ${0.82 - featherT * 0.06})`);
       fGrad.addColorStop(0.55, `rgba(240, 160, 45, ${0.74 - featherT * 0.05})`);
-      fGrad.addColorStop(0.78, `rgba(255, 210, 85, ${0.62 + smoothWingAtk * 0.08})`);
-      fGrad.addColorStop(1, `rgba(255, 245, 155, ${0.48 + smoothWingAtk * 0.12})`);
+      fGrad.addColorStop(
+        0.78,
+        `rgba(255, 210, 85, ${0.62 + smoothWingAtk * 0.08})`
+      );
+      fGrad.addColorStop(
+        1,
+        `rgba(255, 245, 155, ${0.48 + smoothWingAtk * 0.12})`
+      );
     }
 
     // Asymmetric feather vane: wide leading edge, narrow trailing edge, pointed tip
     ctx.fillStyle = fGrad;
     ctx.beginPath();
-    ctx.moveTo(attachX + perpNx * trailW * 0.25 * side, attachY + perpNy * trailW * 0.25);
+    ctx.moveTo(
+      attachX + perpNx * trailW * 0.25 * side,
+      attachY + perpNy * trailW * 0.25
+    );
     // Leading edge (wide, smooth curve outward)
     ctx.bezierCurveTo(
       attachX + dx * 0.18 + perpNx * leadW * 1.2 * side,
@@ -1335,7 +1622,7 @@ function drawWings(
       attachX + dx * 0.45 + perpNx * leadW * 1.05 * side,
       attachY + dy * 0.45 + perpNy * leadW * 1.05,
       attachX + dx * 0.72 + perpNx * leadW * 0.55 * side,
-      attachY + dy * 0.72 + perpNy * leadW * 0.55,
+      attachY + dy * 0.72 + perpNy * leadW * 0.55
     );
     // Pointed tip
     ctx.bezierCurveTo(
@@ -1343,7 +1630,8 @@ function drawWings(
       attachY + dy * 0.88 + perpNy * leadW * 0.2,
       attachX + dx * 0.96 + perpNx * leadW * 0.05 * side,
       attachY + dy * 0.96 + perpNy * leadW * 0.05,
-      tipX, tipY,
+      tipX,
+      tipY
     );
     // Trailing edge (narrow, follows shaft)
     ctx.bezierCurveTo(
@@ -1352,7 +1640,7 @@ function drawWings(
       attachX + dx * 0.7 - perpNx * trailW * 0.38 * side,
       attachY + dy * 0.7 - perpNy * trailW * 0.38,
       attachX + dx * 0.45 - perpNx * trailW * 0.45 * side,
-      attachY + dy * 0.45 - perpNy * trailW * 0.45,
+      attachY + dy * 0.45 - perpNy * trailW * 0.45
     );
     ctx.bezierCurveTo(
       attachX + dx * 0.22 - perpNx * trailW * 0.38 * side,
@@ -1360,25 +1648,28 @@ function drawWings(
       attachX + dx * 0.08 - perpNx * trailW * 0.2 * side,
       attachY + dy * 0.08 - perpNy * trailW * 0.2,
       attachX - perpNx * trailW * 0.08 * side,
-      attachY - perpNy * trailW * 0.08,
+      attachY - perpNy * trailW * 0.08
     );
     ctx.closePath();
     ctx.fill();
 
     // Dark underside shadow on trailing half
-    const shAlpha = blue ? 0.10 + featherT * 0.04 : 0.14 + featherT * 0.05;
+    const shAlpha = blue ? 0.1 + featherT * 0.04 : 0.14 + featherT * 0.05;
     ctx.fillStyle = blue
       ? `rgba(8, 15, 50, ${shAlpha})`
       : `rgba(50, 15, 0, ${shAlpha})`;
     ctx.beginPath();
-    ctx.moveTo(attachX - perpNx * trailW * 0.08 * side, attachY - perpNy * trailW * 0.08);
+    ctx.moveTo(
+      attachX - perpNx * trailW * 0.08 * side,
+      attachY - perpNy * trailW * 0.08
+    );
     ctx.bezierCurveTo(
       attachX + dx * 0.2 - perpNx * trailW * 0.35 * side,
       attachY + dy * 0.2 - perpNy * trailW * 0.35,
       attachX + dx * 0.55 - perpNx * trailW * 0.42 * side,
       attachY + dy * 0.55 - perpNy * trailW * 0.42,
       attachX + dx * 0.85 - perpNx * trailW * 0.15 * side,
-      attachY + dy * 0.85 - perpNy * trailW * 0.15,
+      attachY + dy * 0.85 - perpNy * trailW * 0.15
     );
     ctx.lineTo(tipX, tipY);
     ctx.bezierCurveTo(
@@ -1386,7 +1677,8 @@ function drawWings(
       attachY + dy * 0.7 + perpNy * leadW * 0.08,
       attachX + dx * 0.35,
       attachY + dy * 0.35,
-      attachX, attachY,
+      attachX,
+      attachY
     );
     ctx.closePath();
     ctx.fill();
@@ -1398,18 +1690,21 @@ function drawWings(
         ? `rgba(180, 218, 255, ${hlAlpha})`
         : `rgba(255, 232, 150, ${hlAlpha})`;
       ctx.beginPath();
-      ctx.moveTo(attachX + perpNx * trailW * 0.2 * side, attachY + perpNy * trailW * 0.2);
+      ctx.moveTo(
+        attachX + perpNx * trailW * 0.2 * side,
+        attachY + perpNy * trailW * 0.2
+      );
       ctx.bezierCurveTo(
         attachX + dx * 0.18 + perpNx * leadW * 1.15 * side,
         attachY + dy * 0.18 + perpNy * leadW * 1.15,
-        attachX + dx * 0.42 + perpNx * leadW * 1.0 * side,
-        attachY + dy * 0.42 + perpNy * leadW * 1.0,
+        attachX + dx * 0.42 + perpNx * leadW * 1 * side,
+        attachY + dy * 0.42 + perpNy * leadW * 1,
         attachX + dx * 0.65 + perpNx * leadW * 0.55 * side,
-        attachY + dy * 0.65 + perpNy * leadW * 0.55,
+        attachY + dy * 0.65 + perpNy * leadW * 0.55
       );
       ctx.lineTo(
         attachX + dx * 0.5 + perpNx * leadW * 0.35 * side,
-        attachY + dy * 0.5 + perpNy * leadW * 0.35,
+        attachY + dy * 0.5 + perpNy * leadW * 0.35
       );
       ctx.bezierCurveTo(
         attachX + dx * 0.3 + perpNx * leadW * 0.5 * side,
@@ -1417,7 +1712,7 @@ function drawWings(
         attachX + dx * 0.12 + perpNx * leadW * 0.5 * side,
         attachY + dy * 0.12 + perpNy * leadW * 0.5,
         attachX + perpNx * trailW * 0.15 * side,
-        attachY + perpNy * trailW * 0.15,
+        attachY + perpNy * trailW * 0.15
       );
       ctx.closePath();
       ctx.fill();
@@ -1434,20 +1729,41 @@ function drawWings(
     ctx.quadraticCurveTo(
       attachX + dx * 0.5 + perpNx * leadW * 0.1 * side,
       attachY + dy * 0.5 + perpNy * leadW * 0.1,
-      tipX, tipY,
+      tipX,
+      tipY
     );
     ctx.stroke();
 
     // Subtle tip glow
-    const tipGlowR = s * (0.022 + (1 - featherT) * 0.014 + smoothWingAtk * 0.008);
-    const tipGlow = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, tipGlowR);
+    const tipGlowR =
+      s * (0.022 + (1 - featherT) * 0.014 + smoothWingAtk * 0.008);
+    const tipGlow = ctx.createRadialGradient(
+      tipX,
+      tipY,
+      0,
+      tipX,
+      tipY,
+      tipGlowR
+    );
     if (blue) {
-      tipGlow.addColorStop(0, `rgba(210, 235, 255, ${0.40 + smoothWingAtk * 0.10})`);
-      tipGlow.addColorStop(0.45, `rgba(90, 160, 250, ${0.15 + smoothWingAtk * 0.06})`);
+      tipGlow.addColorStop(
+        0,
+        `rgba(210, 235, 255, ${0.4 + smoothWingAtk * 0.1})`
+      );
+      tipGlow.addColorStop(
+        0.45,
+        `rgba(90, 160, 250, ${0.15 + smoothWingAtk * 0.06})`
+      );
       tipGlow.addColorStop(1, "rgba(50, 110, 230, 0)");
     } else {
-      tipGlow.addColorStop(0, `rgba(255, 240, 130, ${0.40 + smoothWingAtk * 0.10})`);
-      tipGlow.addColorStop(0.45, `rgba(255, 155, 40, ${0.15 + smoothWingAtk * 0.06})`);
+      tipGlow.addColorStop(
+        0,
+        `rgba(255, 240, 130, ${0.4 + smoothWingAtk * 0.1})`
+      );
+      tipGlow.addColorStop(
+        0.45,
+        `rgba(255, 155, 40, ${0.15 + smoothWingAtk * 0.06})`
+      );
       tipGlow.addColorStop(1, "rgba(200, 60, 10, 0)");
     }
     ctx.fillStyle = tipGlow;
@@ -1467,27 +1783,38 @@ function drawWings(
     if (flameT < innerRatio) {
       const localT = flameT / innerRatio;
       const u = 1 - localT;
-      edgeX = u * u * shoulderX + 2 * u * localT * humCpX + localT * localT * elbowX;
-      const boneY = u * u * shoulderY + 2 * u * localT * humCpY + localT * localT * elbowY;
+      edgeX =
+        u * u * shoulderX + 2 * u * localT * humCpX + localT * localT * elbowX;
+      const boneY =
+        u * u * shoulderY + 2 * u * localT * humCpY + localT * localT * elbowY;
       edgeTopY = boneY - s * 0.08 * u + ripple * localT;
-      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.1;
       const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
-      edgeBotY = localT * localT * localT * elbowY + 3 * localT * localT * u * innerBotCp1Y + 3 * localT * u * u * innerBotCp2Y + u * u * u * innerTrailY;
+      edgeBotY =
+        localT * localT * localT * elbowY +
+        3 * localT * localT * u * innerBotCp1Y +
+        3 * localT * u * u * innerBotCp2Y +
+        u * u * u * innerTrailY;
     } else {
       const localT = (flameT - innerRatio) / (1 - innerRatio);
       const u = 1 - localT;
-      edgeX = u * u * elbowX + 2 * u * localT * radCpX + localT * localT * wingTipX;
-      const boneY = u * u * elbowY + 2 * u * localT * radCpY + localT * localT * wingTipY;
+      edgeX =
+        u * u * elbowX + 2 * u * localT * radCpX + localT * localT * wingTipX;
+      const boneY =
+        u * u * elbowY + 2 * u * localT * radCpY + localT * localT * wingTipY;
       edgeTopY = boneY - s * 0.04 * u + ripple * u * 0.5;
-      const outerBotCp1Y = elbowY + s * 0.20 + outerFlapAngle * s * 0.42;
-      const outerBotCp2Y = outerTrailY + outerFlapAngle * s * 0.20;
-      edgeBotY = localT * localT * localT * wingTipY + 3 * localT * localT * u * outerBotCp1Y + 3 * localT * u * u * outerBotCp2Y + u * u * u * outerStartBotY;
+      const outerBotCp1Y = elbowY + s * 0.2 + outerFlapAngle * s * 0.42;
+      const outerBotCp2Y = outerTrailY + outerFlapAngle * s * 0.2;
+      edgeBotY =
+        localT * localT * localT * wingTipY +
+        3 * localT * localT * u * outerBotCp1Y +
+        3 * localT * u * u * outerBotCp2Y +
+        u * u * u * outerStartBotY;
     }
 
     const flameY =
       edgeTopY +
-      (edgeBotY - edgeTopY) *
-        (0.1 + Math.sin(time * 5.5 + fl * 1.2) * 0.1) +
+      (edgeBotY - edgeTopY) * (0.1 + Math.sin(time * 5.5 + fl * 1.2) * 0.1) +
       flapAngle * 0.08 * flameT * s;
     const flameSize =
       s *
@@ -1501,15 +1828,28 @@ function drawWings(
         ? `rgba(147, 197, 253, ${flameAlpha * 0.7})`
         : `rgba(255, 200, 60, ${flameAlpha * 0.7})`;
     } else {
-      const ffGrad = ctx.createRadialGradient(edgeX, flameY, 0, edgeX, flameY, flameSize);
+      const ffGrad = ctx.createRadialGradient(
+        edgeX,
+        flameY,
+        0,
+        edgeX,
+        flameY,
+        flameSize
+      );
       if (blue) {
         ffGrad.addColorStop(0, `rgba(224, 240, 255, ${flameAlpha})`);
         ffGrad.addColorStop(0.25, `rgba(147, 197, 253, ${flameAlpha * 0.85})`);
         ffGrad.addColorStop(0.55, `rgba(59, 130, 246, ${flameAlpha * 0.5})`);
         ffGrad.addColorStop(1, "rgba(29, 78, 216, 0)");
       } else {
-        ffGrad.addColorStop(0, `rgba(255, 255, ${210 + Math.floor(atkBurst * 40)}, ${flameAlpha})`);
-        ffGrad.addColorStop(0.25, `rgba(255, ${200 + Math.floor(atkBurst * 40)}, 60, ${flameAlpha * 0.85})`);
+        ffGrad.addColorStop(
+          0,
+          `rgba(255, 255, ${210 + Math.floor(atkBurst * 40)}, ${flameAlpha})`
+        );
+        ffGrad.addColorStop(
+          0.25,
+          `rgba(255, ${200 + Math.floor(atkBurst * 40)}, 60, ${flameAlpha * 0.85})`
+        );
         ffGrad.addColorStop(0.55, `rgba(255, 130, 30, ${flameAlpha * 0.5})`);
         ffGrad.addColorStop(1, "rgba(200, 50, 10, 0)");
       }
@@ -1528,13 +1868,20 @@ function drawWings(
       const spBoneT = onInner ? 0.3 + sp * 0.3 : 0.2 + (sp - 2) * 0.2;
       const spU = 1 - spBoneT;
       const spBaseX = onInner
-        ? spU * spU * shoulderX + 2 * spU * spBoneT * humCpX + spBoneT * spBoneT * elbowX
-        : spU * spU * elbowX + 2 * spU * spBoneT * radCpX + spBoneT * spBoneT * wingTipX;
+        ? spU * spU * shoulderX +
+          2 * spU * spBoneT * humCpX +
+          spBoneT * spBoneT * elbowX
+        : spU * spU * elbowX +
+          2 * spU * spBoneT * radCpX +
+          spBoneT * spBoneT * wingTipX;
       const spBaseY = onInner
-        ? spU * spU * shoulderY + 2 * spU * spBoneT * humCpY + spBoneT * spBoneT * elbowY
-        : spU * spU * elbowY + 2 * spU * spBoneT * radCpY + spBoneT * spBoneT * wingTipY;
-      const spX =
-        spBaseX + Math.sin(time * 3.5 + sp * 2.5) * s * 0.03;
+        ? spU * spU * shoulderY +
+          2 * spU * spBoneT * humCpY +
+          spBoneT * spBoneT * elbowY
+        : spU * spU * elbowY +
+          2 * spU * spBoneT * radCpY +
+          spBoneT * spBoneT * wingTipY;
+      const spX = spBaseX + Math.sin(time * 3.5 + sp * 2.5) * s * 0.03;
       const spY = spBaseY + s * (0.15 + spT * 0.35);
       const spAlpha = (1 - spT) * 0.5 * smoothWingAtk;
       const spSize = (1 - spT) * s * 0.015;
@@ -1562,22 +1909,22 @@ function drawWingFireCascade(
   zoom: number,
   wingFlap: number,
   flamePulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const flapAngle = wingFlap;
   const wingSpread = s * (1.3 + flapAngle * flapAngle * 0.64);
   const outerSinC = Math.sin(time * 5.5 - 0.85);
   const innerSinC = Math.sin(time * 5.5);
-  const flapAmpC = Math.abs(innerSinC) > 0.1
-    ? Math.abs(wingFlap / innerSinC)
-    : 0.7;
+  const flapAmpC =
+    Math.abs(innerSinC) > 0.1 ? Math.abs(wingFlap / innerSinC) : 0.7;
   const outerFlapC = outerSinC * flapAmpC;
 
   for (let side = -1; side <= 1; side += 2) {
     const wingBaseX = x + side * s * 0.14;
     const wingBaseY = y - s * 0.06;
     const wingTipX = wingBaseX + side * wingSpread;
-    const wingTipY = wingBaseY - s * 0.34 + flapAngle * s * 0.22 + outerFlapC * s * 0.65;
+    const wingTipY =
+      wingBaseY - s * 0.34 + flapAngle * s * 0.22 + outerFlapC * s * 0.65;
     const headX = x;
     const headY = y - s * 0.38;
 
@@ -1597,7 +1944,10 @@ function drawWingFireCascade(
       } else {
         const ht = (t - 0.65) / 0.35;
         px = wingBaseX + (headX - wingBaseX) * ht;
-        py = wingBaseY + (headY - wingBaseY) * ht - Math.sin(ht * Math.PI) * s * 0.06;
+        py =
+          wingBaseY +
+          (headY - wingBaseY) * ht -
+          Math.sin(ht * Math.PI) * s * 0.06;
       }
 
       // Animated drift
@@ -1608,7 +1958,8 @@ function drawWingFireCascade(
 
       // Size tapers toward the head, biggest at wingtip
       const sizeFactor = 1 - t * 0.6;
-      const orbSize = s * (0.035 + sizeFactor * 0.025) * (0.8 + flamePulse * 0.2);
+      const orbSize =
+        s * (0.035 + sizeFactor * 0.025) * (0.8 + flamePulse * 0.2);
       const orbAlpha = (0.5 + flamePulse * 0.2) * (1 - t * 0.45);
 
       if (_simpleGrad) {
@@ -1645,17 +1996,24 @@ function drawWingFireCascade(
       if (baseT < 0.65) {
         const wt = baseT / 0.65;
         spx = wingTipX + (wingBaseX - wingTipX) * wt;
-        spy = wingTipY + (wingBaseY - wingTipY) * wt - Math.sin(wt * Math.PI) * s * 0.15;
+        spy =
+          wingTipY +
+          (wingBaseY - wingTipY) * wt -
+          Math.sin(wt * Math.PI) * s * 0.15;
       } else {
         const ht = (baseT - 0.65) / 0.35;
         spx = wingBaseX + (headX - wingBaseX) * ht;
-        spy = wingBaseY + (headY - wingBaseY) * ht - Math.sin(ht * Math.PI) * s * 0.06;
+        spy =
+          wingBaseY +
+          (headY - wingBaseY) * ht -
+          Math.sin(ht * Math.PI) * s * 0.06;
       }
 
       spx += Math.sin(time * 4 + i * 1.7 + side * 2) * s * 0.02;
       spy -= sparkPhase * s * 0.12;
 
-      const sparkAlpha = Math.sin(sparkPhase * Math.PI) * 0.55 * (1 - baseT * 0.3);
+      const sparkAlpha =
+        Math.sin(sparkPhase * Math.PI) * 0.55 * (1 - baseT * 0.3);
       const sparkSize = (1.5 + (1 - sparkPhase) * 1.5) * zoom;
 
       ctx.fillStyle = blue
@@ -1667,14 +2025,31 @@ function drawWingFireCascade(
     }
 
     // Soft glow trail connecting the fire orbs
-    const trailGrad = ctx.createLinearGradient(wingTipX, wingTipY, headX, headY);
+    const trailGrad = ctx.createLinearGradient(
+      wingTipX,
+      wingTipY,
+      headX,
+      headY
+    );
     if (blue) {
-      trailGrad.addColorStop(0, `rgba(96, 165, 250, ${0.12 + flamePulse * 0.06})`);
-      trailGrad.addColorStop(0.5, `rgba(59, 130, 246, ${0.06 + flamePulse * 0.03})`);
+      trailGrad.addColorStop(
+        0,
+        `rgba(96, 165, 250, ${0.12 + flamePulse * 0.06})`
+      );
+      trailGrad.addColorStop(
+        0.5,
+        `rgba(59, 130, 246, ${0.06 + flamePulse * 0.03})`
+      );
       trailGrad.addColorStop(1, "rgba(29, 78, 216, 0)");
     } else {
-      trailGrad.addColorStop(0, `rgba(255, 180, 50, ${0.12 + flamePulse * 0.06})`);
-      trailGrad.addColorStop(0.5, `rgba(255, 120, 20, ${0.06 + flamePulse * 0.03})`);
+      trailGrad.addColorStop(
+        0,
+        `rgba(255, 180, 50, ${0.12 + flamePulse * 0.06})`
+      );
+      trailGrad.addColorStop(
+        0.5,
+        `rgba(255, 120, 20, ${0.06 + flamePulse * 0.03})`
+      );
       trailGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
     }
     ctx.strokeStyle = trailGrad;
@@ -1683,9 +2058,12 @@ function drawWingFireCascade(
     ctx.beginPath();
     ctx.moveTo(wingTipX, wingTipY - s * 0.02);
     ctx.bezierCurveTo(
-      wingBaseX + side * wingSpread * 0.4, wingBaseY - s * 0.35 + flapAngle * s * 0.18,
-      wingBaseX + side * s * 0.05, wingBaseY - s * 0.15,
-      headX, headY,
+      wingBaseX + side * wingSpread * 0.4,
+      wingBaseY - s * 0.35 + flapAngle * s * 0.18,
+      wingBaseX + side * s * 0.05,
+      wingBaseY - s * 0.15,
+      headX,
+      headY
     );
     ctx.stroke();
   }
@@ -1694,13 +2072,13 @@ function drawWingFireCascade(
 // ─── TAIL PLUMAGE (grand trailing feathers) ─────────────────────────────────
 
 const TAIL_FEATHER_DEFS = [
-  { angle: -0.28, lenScale: 0.82, widthScale: 0.70, phase: 0.0 },
-  { angle: -0.16, lenScale: 0.95, widthScale: 0.85, phase: 0.8 },
-  { angle: -0.06, lenScale: 1.00, widthScale: 1.00, phase: 1.6 },
-  { angle:  0.00, lenScale: 1.02, widthScale: 0.95, phase: 2.4 },
-  { angle:  0.06, lenScale: 0.98, widthScale: 0.92, phase: 3.2 },
-  { angle:  0.16, lenScale: 0.90, widthScale: 0.80, phase: 4.0 },
-  { angle:  0.28, lenScale: 0.78, widthScale: 0.65, phase: 4.8 },
+  { angle: -0.28, lenScale: 0.82, phase: 0, widthScale: 0.7 },
+  { angle: -0.16, lenScale: 0.95, phase: 0.8, widthScale: 0.85 },
+  { angle: -0.06, lenScale: 1, phase: 1.6, widthScale: 1 },
+  { angle: 0, lenScale: 1.02, phase: 2.4, widthScale: 0.95 },
+  { angle: 0.06, lenScale: 0.98, phase: 3.2, widthScale: 0.92 },
+  { angle: 0.16, lenScale: 0.9, phase: 4, widthScale: 0.8 },
+  { angle: 0.28, lenScale: 0.78, phase: 4.8, widthScale: 0.65 },
 ];
 
 function drawSingleTailFeather(
@@ -1721,7 +2099,7 @@ function drawSingleTailFeather(
   blue: boolean,
   zoom: number,
   absNorm: number,
-  atkBurst: number,
+  atkBurst: number
 ) {
   const dx = tipX - baseX;
   const dy = tipY - baseY;
@@ -1729,27 +2107,45 @@ function drawSingleTailFeather(
   const perpX = -dy / shaftLen;
   const perpY = dx / shaftLen;
 
-  const litBoost = isLeft ? 0.10 : 0;
+  const litBoost = isLeft ? 0.1 : 0;
   const shadBoost = isLeft ? 0 : 0.08;
 
   const fGrad = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
   if (blue) {
     fGrad.addColorStop(0, "#0c1f42");
     fGrad.addColorStop(0.15, `rgba(20, 55, 160, ${0.94 + litBoost})`);
-    fGrad.addColorStop(0.35, `rgba(45, 100, 220, ${0.90 + litBoost})`);
+    fGrad.addColorStop(0.35, `rgba(45, 100, 220, ${0.9 + litBoost})`);
     fGrad.addColorStop(0.55, `rgba(80, 150, 245, ${0.82 + flamePulse * 0.08})`);
-    fGrad.addColorStop(0.75, `rgba(140, 195, 252, ${0.65 + flamePulse * 0.15})`);
-    fGrad.addColorStop(0.92, `rgba(200, 225, 255, ${0.45 + flamePulse * 0.25})`);
-    fGrad.addColorStop(1, `rgba(230, 242, 255, ${0.3 + flamePulse * 0.3 + atkBurst * 0.15})`);
+    fGrad.addColorStop(
+      0.75,
+      `rgba(140, 195, 252, ${0.65 + flamePulse * 0.15})`
+    );
+    fGrad.addColorStop(
+      0.92,
+      `rgba(200, 225, 255, ${0.45 + flamePulse * 0.25})`
+    );
+    fGrad.addColorStop(
+      1,
+      `rgba(230, 242, 255, ${0.3 + flamePulse * 0.3 + atkBurst * 0.15})`
+    );
   } else {
     fGrad.addColorStop(0, "#3a1600");
     fGrad.addColorStop(0.12, `rgba(90, 40, 8, ${0.95 + litBoost})`);
     fGrad.addColorStop(0.28, `rgba(140, 65, 12, ${0.92 + litBoost})`);
     fGrad.addColorStop(0.45, `rgba(190, 100, 20, ${0.88 + litBoost})`);
-    fGrad.addColorStop(0.60, `rgba(220, 145, 40, ${0.80 + flamePulse * 0.08})`);
-    fGrad.addColorStop(0.75, `rgba(240, ${180 + Math.floor(atkBurst * 30)}, ${60 + Math.floor(atkBurst * 20)}, ${0.68 + flamePulse * 0.12})`);
-    fGrad.addColorStop(0.90, `rgba(255, ${210 + Math.floor(atkBurst * 25)}, ${100 + Math.floor(atkBurst * 40)}, ${0.50 + flamePulse * 0.2})`);
-    fGrad.addColorStop(1, `rgba(255, ${235 + Math.floor(atkBurst * 15)}, ${150 + Math.floor(atkBurst * 50)}, ${0.35 + flamePulse * 0.25 + atkBurst * 0.15})`);
+    fGrad.addColorStop(0.6, `rgba(220, 145, 40, ${0.8 + flamePulse * 0.08})`);
+    fGrad.addColorStop(
+      0.75,
+      `rgba(240, ${180 + Math.floor(atkBurst * 30)}, ${60 + Math.floor(atkBurst * 20)}, ${0.68 + flamePulse * 0.12})`
+    );
+    fGrad.addColorStop(
+      0.9,
+      `rgba(255, ${210 + Math.floor(atkBurst * 25)}, ${100 + Math.floor(atkBurst * 40)}, ${0.5 + flamePulse * 0.2})`
+    );
+    fGrad.addColorStop(
+      1,
+      `rgba(255, ${235 + Math.floor(atkBurst * 15)}, ${150 + Math.floor(atkBurst * 50)}, ${0.35 + flamePulse * 0.25 + atkBurst * 0.15})`
+    );
   }
 
   ctx.fillStyle = fGrad;
@@ -1761,7 +2157,7 @@ function drawSingleTailFeather(
     cp2X + perpX * midHW * 0.9,
     cp2Y + perpY * midHW * 0.9,
     tipX + perpX * tipHW,
-    tipY + perpY * tipHW,
+    tipY + perpY * tipHW
   );
   ctx.lineTo(tipX - perpX * tipHW, tipY - perpY * tipHW);
   ctx.bezierCurveTo(
@@ -1770,7 +2166,7 @@ function drawSingleTailFeather(
     cp1X - perpX * midHW * 0.7,
     cp1Y - perpY * midHW * 0.7,
     baseX - perpX * baseHW,
-    baseY - perpY * baseHW,
+    baseY - perpY * baseHW
   );
   ctx.closePath();
   ctx.fill();
@@ -1787,7 +2183,7 @@ function drawSingleTailFeather(
     cp2X + perpX * midHW * 0.65,
     cp2Y + perpY * midHW * 0.65,
     tipX + perpX * tipHW * 0.4,
-    tipY + perpY * tipHW * 0.4,
+    tipY + perpY * tipHW * 0.4
   );
   ctx.lineTo(tipX, tipY);
   ctx.bezierCurveTo(
@@ -1796,7 +2192,7 @@ function drawSingleTailFeather(
     cp1X + perpX * midHW * 0.25,
     cp1Y + perpY * midHW * 0.25,
     baseX + perpX * baseHW * 0.1,
-    baseY + perpY * baseHW * 0.1,
+    baseY + perpY * baseHW * 0.1
   );
   ctx.closePath();
   ctx.fill();
@@ -1811,7 +2207,7 @@ function drawSingleTailFeather(
       cp2X - perpX * midHW * 0.45,
       cp2Y - perpY * midHW * 0.45,
       tipX - perpX * tipHW * 0.4,
-      tipY - perpY * tipHW * 0.4,
+      tipY - perpY * tipHW * 0.4
     );
     ctx.lineTo(tipX, tipY);
     ctx.bezierCurveTo(
@@ -1820,14 +2216,14 @@ function drawSingleTailFeather(
       cp1X - perpX * midHW * 0.12,
       cp1Y - perpY * midHW * 0.12,
       baseX,
-      baseY,
+      baseY
     );
     ctx.closePath();
     ctx.fill();
   }
 
   ctx.strokeStyle = blue
-    ? `rgba(12, 30, 80, ${0.30 - absNorm * 0.06})`
+    ? `rgba(12, 30, 80, ${0.3 - absNorm * 0.06})`
     : `rgba(80, 30, 5, ${0.28 - absNorm * 0.06})`;
   ctx.lineWidth = (0.9 + atkBurst * 0.2 - absNorm * 0.25) * zoom;
   ctx.lineCap = "round";
@@ -1845,9 +2241,10 @@ function drawTailFeatherGlow(
   flamePulse: number,
   atkBurst: number,
   absNorm: number,
-  blue: boolean,
+  blue: boolean
 ) {
-  const glowR = s * (0.05 + atkBurst * 0.04 + (blue ? 0.018 : 0) + (1 - absNorm) * 0.015);
+  const glowR =
+    s * (0.05 + atkBurst * 0.04 + (blue ? 0.018 : 0) + (1 - absNorm) * 0.015);
   const glow = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, glowR);
   if (blue) {
     glow.addColorStop(0, `rgba(210, 235, 255, ${0.7 + flamePulse * 0.2})`);
@@ -1855,7 +2252,10 @@ function drawTailFeatherGlow(
     glow.addColorStop(0.7, `rgba(50, 110, 230, ${0.15 + flamePulse * 0.08})`);
     glow.addColorStop(1, "rgba(25, 60, 180, 0)");
   } else {
-    glow.addColorStop(0, `rgba(255, ${235 + Math.floor(atkBurst * 15)}, ${170 + Math.floor(atkBurst * 40)}, ${0.65 + flamePulse * 0.2})`);
+    glow.addColorStop(
+      0,
+      `rgba(255, ${235 + Math.floor(atkBurst * 15)}, ${170 + Math.floor(atkBurst * 40)}, ${0.65 + flamePulse * 0.2})`
+    );
     glow.addColorStop(0.3, `rgba(255, 200, 80, ${0.35 + flamePulse * 0.15})`);
     glow.addColorStop(0.6, `rgba(230, 140, 35, ${0.15 + flamePulse * 0.08})`);
     glow.addColorStop(1, "rgba(160, 60, 10, 0)");
@@ -1876,10 +2276,11 @@ function drawTailPlumage(
   flamePulse: number,
   isAttacking: boolean = false,
   atkBurst: number = 0,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
-  const tailBaseY = y + s * 0.20;
-  const featherCount = TAIL_FEATHER_DEFS.length + Math.floor(atkBurst * 3) + (blue ? 2 : 0);
+  const tailBaseY = y + s * 0.2;
+  const featherCount =
+    TAIL_FEATHER_DEFS.length + Math.floor(atkBurst * 3) + (blue ? 2 : 0);
   const spreadMult = 1.05 + atkBurst * 0.5;
   const lenMult = 1.45 + atkBurst * 0.5;
   const swayFreq = 2.2 + atkBurst * 0.8;
@@ -1889,14 +2290,30 @@ function drawTailPlumage(
   const tailIsoRatio = ISO_Y_RATIO * 1.5;
 
   const baseGlowR = s * (0.12 + atkBurst * 0.06);
-  const baseGlow = ctx.createRadialGradient(x, tailBaseY, 0, x, tailBaseY, baseGlowR);
+  const baseGlow = ctx.createRadialGradient(
+    x,
+    tailBaseY,
+    0,
+    x,
+    tailBaseY,
+    baseGlowR
+  );
   if (blue) {
-    baseGlow.addColorStop(0, `rgba(140, 190, 255, ${0.25 + flamePulse * 0.12})`);
-    baseGlow.addColorStop(0.5, `rgba(50, 100, 220, ${0.12 + flamePulse * 0.06})`);
+    baseGlow.addColorStop(
+      0,
+      `rgba(140, 190, 255, ${0.25 + flamePulse * 0.12})`
+    );
+    baseGlow.addColorStop(
+      0.5,
+      `rgba(50, 100, 220, ${0.12 + flamePulse * 0.06})`
+    );
     baseGlow.addColorStop(1, "rgba(20, 50, 150, 0)");
   } else {
-    baseGlow.addColorStop(0, `rgba(255, 210, 100, ${0.30 + flamePulse * 0.12})`);
-    baseGlow.addColorStop(0.5, `rgba(220, 130, 30, ${0.15 + flamePulse * 0.06})`);
+    baseGlow.addColorStop(0, `rgba(255, 210, 100, ${0.3 + flamePulse * 0.12})`);
+    baseGlow.addColorStop(
+      0.5,
+      `rgba(220, 130, 30, ${0.15 + flamePulse * 0.06})`
+    );
     baseGlow.addColorStop(1, "rgba(140, 50, 5, 0)");
   }
   ctx.fillStyle = baseGlow;
@@ -1907,7 +2324,9 @@ function drawTailPlumage(
   const defs = buildFeatherDefs(featherCount);
   const centerIdx = (featherCount - 1) / 2;
   const indices: number[] = [];
-  for (let i = 0; i < featherCount; i++) indices.push(i);
+  for (let i = 0; i < featherCount; i++) {
+    indices.push(i);
+  }
   indices.sort((a, b) => Math.abs(b - centerIdx) - Math.abs(a - centerIdx));
 
   for (const i of indices) {
@@ -1918,17 +2337,19 @@ function drawTailPlumage(
     const fanAngle = def.angle * Math.PI * spreadMult;
     const wavePhase = def.phase;
 
-    const primarySway = Math.sin(time * swayFreq + wavePhase) * 0.6
-      + Math.sin(time * swayFreq * 0.55 + wavePhase * 1.3 + 0.7) * 0.25
-      + Math.sin(time * waveFreq * 0.4 + wavePhase * 0.4 + 1.8) * 0.15;
+    const primarySway =
+      Math.sin(time * swayFreq + wavePhase) * 0.6 +
+      Math.sin(time * swayFreq * 0.55 + wavePhase * 1.3 + 0.7) * 0.25 +
+      Math.sin(time * waveFreq * 0.4 + wavePhase * 0.4 + 1.8) * 0.15;
     const sway = primarySway * s * swayAmp * (0.35 + absNorm * 0.65);
 
-    const primaryFlutter = Math.sin(time * swayFreq * 0.6 + wavePhase + 1.0) * 0.5
-      + Math.sin(time * waveFreq * 1.1 + wavePhase * 0.7 + 0.5) * 0.3
-      + Math.sin(time * waveFreq * 0.3 + wavePhase * 1.5 + 2.2) * 0.2;
+    const primaryFlutter =
+      Math.sin(time * swayFreq * 0.6 + wavePhase + 1) * 0.5 +
+      Math.sin(time * waveFreq * 1.1 + wavePhase * 0.7 + 0.5) * 0.3 +
+      Math.sin(time * waveFreq * 0.3 + wavePhase * 1.5 + 2.2) * 0.2;
     const flutter = primaryFlutter * s * waveAmp * (0.25 + absNorm * 0.75);
 
-    const featherLen = s * (0.50 + (1 - absNorm) * 0.20) * def.lenScale * lenMult;
+    const featherLen = s * (0.5 + (1 - absNorm) * 0.2) * def.lenScale * lenMult;
 
     const rawDx = Math.sin(fanAngle) * featherLen;
     const rawDy = Math.cos(fanAngle) * featherLen;
@@ -1938,43 +2359,77 @@ function drawTailPlumage(
     const sCurveStrength = s * 0.04 * (0.6 + absNorm * 0.4);
     const sCurveDir = norm >= 0 ? 1 : -1;
 
-    const cp1X = x + rawDx * 0.30 + sway * 0.25
-      - sCurveDir * sCurveStrength * 0.8
-      + Math.sin(time * swayFreq * 0.5 + wavePhase * 0.4) * s * 0.008;
-    const cp1Y = tailBaseY + rawDy * 0.30 * tailIsoRatio
-      + flutter * 0.15
-      + Math.sin(time * swayFreq * 0.45 + wavePhase * 0.3) * s * 0.008;
+    const cp1X =
+      x +
+      rawDx * 0.3 +
+      sway * 0.25 -
+      sCurveDir * sCurveStrength * 0.8 +
+      Math.sin(time * swayFreq * 0.5 + wavePhase * 0.4) * s * 0.008;
+    const cp1Y =
+      tailBaseY +
+      rawDy * 0.3 * tailIsoRatio +
+      flutter * 0.15 +
+      Math.sin(time * swayFreq * 0.45 + wavePhase * 0.3) * s * 0.008;
 
-    const cp2X = x + rawDx * 0.65 + sway * 0.6
-      + sCurveDir * sCurveStrength * 1.2
-      + Math.sin(time * waveFreq * 0.7 + wavePhase * 0.6) * s * 0.006;
-    const cp2Y = tailBaseY + rawDy * 0.65 * tailIsoRatio
-      + flutter * 0.5
-      + Math.sin(time * waveFreq * 0.6 + wavePhase * 0.5) * s * 0.006;
+    const cp2X =
+      x +
+      rawDx * 0.65 +
+      sway * 0.6 +
+      sCurveDir * sCurveStrength * 1.2 +
+      Math.sin(time * waveFreq * 0.7 + wavePhase * 0.6) * s * 0.006;
+    const cp2Y =
+      tailBaseY +
+      rawDy * 0.65 * tailIsoRatio +
+      flutter * 0.5 +
+      Math.sin(time * waveFreq * 0.6 + wavePhase * 0.5) * s * 0.006;
 
     const baseHW = s * (0.035 + atkBurst * 0.01) * def.widthScale;
-    const midHW = s * (0.075 + atkBurst * 0.02 + (1 - absNorm) * 0.018) * def.widthScale;
-    const tipHW = s * 0.010 * def.widthScale;
+    const midHW =
+      s * (0.075 + atkBurst * 0.02 + (1 - absNorm) * 0.018) * def.widthScale;
+    const tipHW = s * 0.01 * def.widthScale;
 
     const isLeft = norm < 0;
 
     drawSingleTailFeather(
-      ctx, x, tailBaseY, tipX, tipY,
-      cp1X, cp1Y, cp2X, cp2Y,
-      baseHW, midHW, tipHW,
-      isLeft, flamePulse, blue, zoom, absNorm, atkBurst,
+      ctx,
+      x,
+      tailBaseY,
+      tipX,
+      tipY,
+      cp1X,
+      cp1Y,
+      cp2X,
+      cp2Y,
+      baseHW,
+      midHW,
+      tipHW,
+      isLeft,
+      flamePulse,
+      blue,
+      zoom,
+      absNorm,
+      atkBurst
     );
 
-    drawTailFeatherGlow(ctx, tipX, tipY, s, flamePulse, atkBurst, absNorm, blue);
+    drawTailFeatherGlow(
+      ctx,
+      tipX,
+      tipY,
+      s,
+      flamePulse,
+      atkBurst,
+      absNorm,
+      blue
+    );
   }
 
   if (isAttacking) {
     for (let e = 0; e < 8; e++) {
       const ePhase = (time * 3.5 + e * 0.12) % 1;
       const eAngle = (e / 8) * Math.PI * 0.6 - Math.PI * 0.3;
-      const eDist = s * (0.18 + ePhase * 0.40);
-      const eX = x + Math.sin(eAngle) * eDist
-        + Math.sin(time * 5 + e * 2.2) * s * 0.02;
+      const eDist = s * (0.18 + ePhase * 0.4);
+      const eX =
+        x + Math.sin(eAngle) * eDist + Math.sin(time * 5 + e * 2.2) * s * 0.02;
       const eY = tailBaseY + Math.cos(eAngle) * eDist * tailIsoRatio;
       const eAlpha = (1 - ePhase) * 0.45 * atkBurst;
       const eSize = (1 - ePhase) * s * 0.016;
@@ -1999,13 +2454,18 @@ function buildFeatherDefs(count: number): typeof TAIL_FEATHER_DEFS {
     const t = (i + 1) / (extra + 1);
     const srcIdx = Math.floor(t * (TAIL_FEATHER_DEFS.length - 1));
     const srcA = TAIL_FEATHER_DEFS[srcIdx];
-    const srcB = TAIL_FEATHER_DEFS[Math.min(srcIdx + 1, TAIL_FEATHER_DEFS.length - 1)];
+    const srcB =
+      TAIL_FEATHER_DEFS[Math.min(srcIdx + 1, TAIL_FEATHER_DEFS.length - 1)];
     const blend = t * (TAIL_FEATHER_DEFS.length - 1) - srcIdx;
     result.push({
-      angle: srcA.angle + (srcB.angle - srcA.angle) * blend + (Math.random() - 0.5) * 0.04,
+      angle:
+        srcA.angle +
+        (srcB.angle - srcA.angle) * blend +
+        (Math.random() - 0.5) * 0.04,
       lenScale: srcA.lenScale + (srcB.lenScale - srcA.lenScale) * blend * 0.9,
-      widthScale: srcA.widthScale + (srcB.widthScale - srcA.widthScale) * blend * 0.85,
       phase: srcA.phase + (srcB.phase - srcA.phase) * blend + i * 0.5,
+      widthScale:
+        srcA.widthScale + (srcB.widthScale - srcA.widthScale) * blend * 0.85,
     });
   }
   return result;
@@ -2021,7 +2481,7 @@ function drawCapeStraps(
   time: number,
   zoom: number,
   flamePulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   for (let side = -1; side <= 1; side += 2) {
     const strapX = x + side * s * 0.13;
@@ -2034,7 +2494,7 @@ function drawCapeStraps(
       strapX,
       strapTopY,
       strapX + sway,
-      strapBotY,
+      strapBotY
     );
     strapGrad.addColorStop(0, "#6b3a12");
     strapGrad.addColorStop(0.3, "#8b4a18");
@@ -2050,7 +2510,7 @@ function drawCapeStraps(
       strapX + sway * 0.6,
       (strapTopY + strapBotY) / 2,
       strapX + sway,
-      strapBotY,
+      strapBotY
     );
     ctx.stroke();
 
@@ -2063,7 +2523,7 @@ function drawCapeStraps(
       strapX + sway * 0.6 - side * 1.2 * zoom,
       (strapTopY + strapBotY) / 2,
       strapX + sway - side * 1.2 * zoom,
-      strapBotY,
+      strapBotY
     );
     ctx.stroke();
 
@@ -2097,7 +2557,7 @@ function drawBody(
   bodyGlow: number,
   isAttacking: boolean = false,
   atkBurst: number = 0,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const bodyW = s * (0.24 + breathe * 0.002 + atkBurst * 0.015);
   const bodyH = s * (0.33 + breathe * 0.003 + atkBurst * 0.02);
@@ -2105,7 +2565,12 @@ function drawBody(
 
   // 3-face isometric body construction: top, front-left, front-right
   // Back shadow face (darkest, drawn first)
-  const backGrad = ctx.createLinearGradient(x, y - bodyH * 0.5, x, y + bodyH * 0.3);
+  const backGrad = ctx.createLinearGradient(
+    x,
+    y - bodyH * 0.5,
+    x,
+    y + bodyH * 0.3
+  );
   if (blue) {
     backGrad.addColorStop(0, "#0f2a5c");
     backGrad.addColorStop(0.5, "#1a3a6e");
@@ -2117,7 +2582,15 @@ function drawBody(
   }
   ctx.fillStyle = backGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + isoBodyD * 0.2, bodyW * 0.95, bodyH * 0.9, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y + isoBodyD * 0.2,
+    bodyW * 0.95,
+    bodyH * 0.9,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Front-right face (darker side)
@@ -2133,7 +2606,15 @@ function drawBody(
   }
   ctx.fillStyle = rightGrad;
   ctx.beginPath();
-  ctx.ellipse(x + bodyW * 0.04, y + isoBodyD * 0.08, bodyW * 0.88, bodyH * 0.85, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + bodyW * 0.04,
+    y + isoBodyD * 0.08,
+    bodyW * 0.88,
+    bodyH * 0.85,
+    0.12,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Front-left face (mid-tone)
@@ -2149,7 +2630,15 @@ function drawBody(
   }
   ctx.fillStyle = leftGrad;
   ctx.beginPath();
-  ctx.ellipse(x - bodyW * 0.04, y + isoBodyD * 0.04, bodyW * 0.84, bodyH * 0.82, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - bodyW * 0.04,
+    y + isoBodyD * 0.04,
+    bodyW * 0.84,
+    bodyH * 0.82,
+    -0.1,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Top face (lightest) — core body with hot center when attacking
@@ -2159,7 +2648,7 @@ function drawBody(
     s * (0.04 + atkBurst * 0.03),
     x,
     y + s * 0.02,
-    s * 0.34,
+    s * 0.34
   );
   if (blue) {
     bodyGrad.addColorStop(0, "#e0f0ff");
@@ -2217,9 +2706,10 @@ function drawBody(
 
       // Feather body — darker for lower rows (isometric shadow)
       const isLeft = fx < x;
-      const shade = (row < 4 ? 0.09 : row < 7 ? 0.06 : 0.04)
-        + atkBurst * 0.03
-        + (isLeft ? 0.01 : -0.01);
+      const shade =
+        (row < 4 ? 0.09 : row < 7 ? 0.06 : 0.04) +
+        atkBurst * 0.03 +
+        (isLeft ? 0.01 : -0.01);
       ctx.fillStyle = blue
         ? `rgba(30, 64, 175, ${shade + Math.sin(time * 2 + row + f) * 0.02})`
         : `rgba(139, 58, 0, ${shade + Math.sin(time * 2 + row + f) * 0.02})`;
@@ -2234,7 +2724,15 @@ function drawBody(
           ? `rgba(147, 197, 253, ${hlAlpha})`
           : `rgba(255, 200, 80, ${hlAlpha})`;
         ctx.beginPath();
-        ctx.ellipse(fx + fSway - fWidth * 0.2, rowY - fHeight * 0.3, fWidth * 0.4, fHeight * 0.5, -0.2, 0, Math.PI);
+        ctx.ellipse(
+          fx + fSway - fWidth * 0.2,
+          rowY - fHeight * 0.3,
+          fWidth * 0.4,
+          fHeight * 0.5,
+          -0.2,
+          0,
+          Math.PI
+        );
         ctx.fill();
       }
     }
@@ -2247,7 +2745,12 @@ function drawBody(
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(x - rowWidth * 0.9, rowY + s * 0.005);
-      ctx.quadraticCurveTo(x, rowY + s * 0.008, x + rowWidth * 0.9, rowY + s * 0.005);
+      ctx.quadraticCurveTo(
+        x,
+        rowY + s * 0.008,
+        x + rowWidth * 0.9,
+        rowY + s * 0.005
+      );
       ctx.stroke();
     }
   }
@@ -2258,7 +2761,8 @@ function drawBody(
     const scaleRowW = s * (0.14 - row * 0.025);
     const scalesInRow = 5 - row;
     for (let sc = 0; sc < scalesInRow; sc++) {
-      const scX = x - scaleRowW + (sc / Math.max(scalesInRow - 1, 1)) * scaleRowW * 2;
+      const scX =
+        x - scaleRowW + (sc / Math.max(scalesInRow - 1, 1)) * scaleRowW * 2;
       const scW = s * 0.03;
       const scH = s * 0.018;
       const scShade = 0.12 + row * 0.02;
@@ -2282,7 +2786,7 @@ function drawBody(
     0,
     x,
     y,
-    coreRadius,
+    coreRadius
   );
   if (blue) {
     innerGlow.addColorStop(0, `rgba(224, 240, 255, ${0.3 * corePower})`);
@@ -2292,7 +2796,7 @@ function drawBody(
   } else {
     innerGlow.addColorStop(
       0,
-      `rgba(255, ${240 + Math.floor(atkBurst * 15)}, ${160 + Math.floor(atkBurst * 60)}, ${0.25 * corePower})`,
+      `rgba(255, ${240 + Math.floor(atkBurst * 15)}, ${160 + Math.floor(atkBurst * 60)}, ${0.25 * corePower})`
     );
     innerGlow.addColorStop(0.3, `rgba(255, 210, 80, ${0.15 * corePower})`);
     innerGlow.addColorStop(0.6, `rgba(255, 150, 30, ${0.08 * corePower})`);
@@ -2312,7 +2816,7 @@ function drawBody(
       0,
       x,
       y,
-      s * 0.14,
+      s * 0.14
     );
     if (blue) {
       flashGrad.addColorStop(0, `rgba(224, 240, 255, ${flashAlpha})`);
@@ -2341,7 +2845,7 @@ function drawArmorPlates(
   zoom: number,
   flamePulse: number,
   gemPulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   // Avian keel breast plate (rounded, keeled like a bird sternum)
   const keelW = s * 0.17;
@@ -2350,8 +2854,12 @@ function drawArmorPlates(
   const keelMid = y - s * 0.02;
 
   const breastGrad = ctx.createRadialGradient(
-    x - keelW * 0.15, keelMid - s * 0.04, s * 0.03,
-    x, keelMid, keelW * 1.1,
+    x - keelW * 0.15,
+    keelMid - s * 0.04,
+    s * 0.03,
+    x,
+    keelMid,
+    keelW * 1.1
   );
   if (blue) {
     breastGrad.addColorStop(0, "#93c5fd");
@@ -2371,24 +2879,36 @@ function drawArmorPlates(
   ctx.beginPath();
   ctx.moveTo(x, keelTop);
   ctx.bezierCurveTo(
-    x + keelW * 0.7, keelTop + s * 0.01,
-    x + keelW, keelMid - s * 0.06,
-    x + keelW * 0.85, keelMid,
+    x + keelW * 0.7,
+    keelTop + s * 0.01,
+    x + keelW,
+    keelMid - s * 0.06,
+    x + keelW * 0.85,
+    keelMid
   );
   ctx.bezierCurveTo(
-    x + keelW * 0.7, keelMid + s * 0.06,
-    x + keelW * 0.35, keelBot - s * 0.03,
-    x, keelBot,
+    x + keelW * 0.7,
+    keelMid + s * 0.06,
+    x + keelW * 0.35,
+    keelBot - s * 0.03,
+    x,
+    keelBot
   );
   ctx.bezierCurveTo(
-    x - keelW * 0.35, keelBot - s * 0.03,
-    x - keelW * 0.7, keelMid + s * 0.06,
-    x - keelW * 0.85, keelMid,
+    x - keelW * 0.35,
+    keelBot - s * 0.03,
+    x - keelW * 0.7,
+    keelMid + s * 0.06,
+    x - keelW * 0.85,
+    keelMid
   );
   ctx.bezierCurveTo(
-    x - keelW, keelMid - s * 0.06,
-    x - keelW * 0.7, keelTop + s * 0.01,
-    x, keelTop,
+    x - keelW,
+    keelMid - s * 0.06,
+    x - keelW * 0.7,
+    keelTop + s * 0.01,
+    x,
+    keelTop
   );
   ctx.closePath();
   ctx.fill();
@@ -2398,14 +2918,19 @@ function drawArmorPlates(
   ctx.stroke();
 
   // Lit edge highlight (left = lit)
-  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.35)" : "rgba(255, 220, 100, 0.35)";
+  ctx.strokeStyle = blue
+    ? "rgba(147, 197, 253, 0.35)"
+    : "rgba(255, 220, 100, 0.35)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - keelW * 0.3, keelTop + s * 0.01);
   ctx.bezierCurveTo(
-    x - keelW * 0.8, keelTop + s * 0.04,
-    x - keelW * 0.9, keelMid - s * 0.03,
-    x - keelW * 0.75, keelMid + s * 0.03,
+    x - keelW * 0.8,
+    keelTop + s * 0.04,
+    x - keelW * 0.9,
+    keelMid - s * 0.03,
+    x - keelW * 0.75,
+    keelMid + s * 0.03
   );
   ctx.stroke();
 
@@ -2415,15 +2940,20 @@ function drawArmorPlates(
   ctx.beginPath();
   ctx.moveTo(x + keelW * 0.3, keelTop + s * 0.01);
   ctx.bezierCurveTo(
-    x + keelW * 0.8, keelTop + s * 0.04,
-    x + keelW * 0.9, keelMid - s * 0.03,
-    x + keelW * 0.75, keelMid + s * 0.03,
+    x + keelW * 0.8,
+    keelTop + s * 0.04,
+    x + keelW * 0.9,
+    keelMid - s * 0.03,
+    x + keelW * 0.75,
+    keelMid + s * 0.03
   );
   ctx.stroke();
 
   // Feathered contour lines (curved, following keel shape)
   const contourAlpha = 0.2;
-  ctx.strokeStyle = blue ? `rgba(30, 58, 138, ${contourAlpha})` : `rgba(90, 58, 16, ${contourAlpha})`;
+  ctx.strokeStyle = blue
+    ? `rgba(30, 58, 138, ${contourAlpha})`
+    : `rgba(90, 58, 16, ${contourAlpha})`;
   ctx.lineWidth = 1 * zoom;
   for (let c = 0; c < 3; c++) {
     const cFrac = 0.3 + c * 0.2;
@@ -2440,7 +2970,12 @@ function drawArmorPlates(
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - keelW * 0.55, keelTop + s * 0.02);
-  ctx.quadraticCurveTo(x, keelTop - s * 0.01, x + keelW * 0.55, keelTop + s * 0.02);
+  ctx.quadraticCurveTo(
+    x,
+    keelTop - s * 0.01,
+    x + keelW * 0.55,
+    keelTop + s * 0.02
+  );
   ctx.stroke();
 
   // Keel ridge (central vertical line)
@@ -2450,7 +2985,9 @@ function drawArmorPlates(
   ctx.moveTo(x, keelTop + s * 0.03);
   ctx.lineTo(x, keelBot - s * 0.02);
   ctx.stroke();
-  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.2)" : "rgba(255, 200, 80, 0.2)";
+  ctx.strokeStyle = blue
+    ? "rgba(147, 197, 253, 0.2)"
+    : "rgba(255, 200, 80, 0.2)";
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - s * 0.003, keelTop + s * 0.04);
@@ -2469,7 +3006,14 @@ function drawArmorPlates(
   ctx.stroke();
 
   // Medallion disc
-  const medGrad = ctx.createRadialGradient(x - medR * 0.15, medY - medR * 0.15, 0, x, medY, medR);
+  const medGrad = ctx.createRadialGradient(
+    x - medR * 0.15,
+    medY - medR * 0.15,
+    0,
+    x,
+    medY,
+    medR
+  );
   if (blue) {
     medGrad.addColorStop(0, "#bfdbfe");
     medGrad.addColorStop(0.25, "#60a5fa");
@@ -2494,7 +3038,9 @@ function drawArmorPlates(
   ctx.beginPath();
   ctx.arc(x, medY, medR, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.45)" : "rgba(255, 230, 120, 0.45)";
+  ctx.strokeStyle = blue
+    ? "rgba(147, 197, 253, 0.45)"
+    : "rgba(255, 230, 120, 0.45)";
   ctx.lineWidth = 0.6 * zoom;
   ctx.beginPath();
   ctx.arc(x, medY, medR * 0.88, 0, Math.PI * 2);
@@ -2505,7 +3051,9 @@ function drawArmorPlates(
     const nAngle = (n / 12) * Math.PI * 2;
     const nX = x + Math.cos(nAngle) * medR * 1.05;
     const nY = medY + Math.sin(nAngle) * medR * 1.05;
-    ctx.fillStyle = blue ? "rgba(96, 165, 250, 0.3)" : "rgba(180, 140, 40, 0.3)";
+    ctx.fillStyle = blue
+      ? "rgba(96, 165, 250, 0.3)"
+      : "rgba(180, 140, 40, 0.3)";
     ctx.beginPath();
     ctx.arc(nX, nY, s * 0.003, 0, Math.PI * 2);
     ctx.fill();
@@ -2522,19 +3070,19 @@ function drawArmorPlates(
     x + medR * 0.5,
     medY - medR * 0.1,
     x + medR * 0.3,
-    medY + medR * 0.45,
+    medY + medR * 0.45
   );
   ctx.quadraticCurveTo(
     x,
     medY + medR * 0.2,
     x - medR * 0.3,
-    medY + medR * 0.45,
+    medY + medR * 0.45
   );
   ctx.quadraticCurveTo(
     x - medR * 0.5,
     medY - medR * 0.1,
     x,
-    medY - medR * 0.65,
+    medY - medR * 0.65
   );
   ctx.closePath();
   ctx.fill();
@@ -2549,13 +3097,13 @@ function drawArmorPlates(
     x + medR * 0.25,
     medY,
     x + medR * 0.12,
-    medY + medR * 0.25,
+    medY + medR * 0.25
   );
   ctx.quadraticCurveTo(
     x,
     medY + medR * 0.1,
     x - medR * 0.12,
-    medY + medR * 0.25,
+    medY + medR * 0.25
   );
   ctx.quadraticCurveTo(x - medR * 0.25, medY, x, medY - medR * 0.35);
   ctx.closePath();
@@ -2590,14 +3138,22 @@ function drawArmorPlates(
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(scrollX, scrollY);
-    ctx.quadraticCurveTo(scrollX + side * s * 0.015, scrollY + s * 0.012, scrollX + side * s * 0.005, scrollY + s * 0.02);
+    ctx.quadraticCurveTo(
+      scrollX + side * s * 0.015,
+      scrollY + s * 0.012,
+      scrollX + side * s * 0.005,
+      scrollY + s * 0.02
+    );
     ctx.stroke();
   }
 
   // Lower keel guard (pointed tail-ward extension)
   const abdY = y + s * 0.11;
   const abdGrad = ctx.createLinearGradient(
-    x - s * 0.06, abdY, x + s * 0.06, abdY + s * 0.06,
+    x - s * 0.06,
+    abdY,
+    x + s * 0.06,
+    abdY + s * 0.06
   );
   if (blue) {
     abdGrad.addColorStop(0, "#1e40af");
@@ -2616,21 +3172,29 @@ function drawArmorPlates(
   ctx.beginPath();
   ctx.moveTo(x - s * 0.08, abdY);
   ctx.bezierCurveTo(
-    x - s * 0.07, abdY + s * 0.03,
-    x - s * 0.02, abdY + s * 0.055,
-    x, abdY + s * 0.065,
+    x - s * 0.07,
+    abdY + s * 0.03,
+    x - s * 0.02,
+    abdY + s * 0.055,
+    x,
+    abdY + s * 0.065
   );
   ctx.bezierCurveTo(
-    x + s * 0.02, abdY + s * 0.055,
-    x + s * 0.07, abdY + s * 0.03,
-    x + s * 0.08, abdY,
+    x + s * 0.02,
+    abdY + s * 0.055,
+    x + s * 0.07,
+    abdY + s * 0.03,
+    x + s * 0.08,
+    abdY
   );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = blue ? "#1e3a8a" : "#3a2208";
   ctx.lineWidth = 1 * zoom;
   ctx.stroke();
-  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.2)" : "rgba(255, 210, 80, 0.2)";
+  ctx.strokeStyle = blue
+    ? "rgba(147, 197, 253, 0.2)"
+    : "rgba(255, 210, 80, 0.2)";
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, abdY + s * 0.01);
@@ -2648,11 +3212,13 @@ function drawHarness(
   time: number,
   zoom: number,
   gemPulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   // X-shaped harness across chest
   const strapBase = blue ? "#1e3a8a" : "#5a3010";
-  const strapHighlight = blue ? "rgba(59, 130, 246, 0.5)" : "rgba(120, 80, 20, 0.5)";
+  const strapHighlight = blue
+    ? "rgba(59, 130, 246, 0.5)"
+    : "rgba(120, 80, 20, 0.5)";
   const rivetPeak = blue ? "#bfdbfe" : "#ffe080";
   const rivetMid = blue ? "#3b82f6" : "#daa520";
   const rivetDark = blue ? "#1e40af" : "#8a6020";
@@ -2689,7 +3255,7 @@ function drawHarness(
         0,
         rx,
         ry,
-        s * 0.008,
+        s * 0.008
       );
       rivetGrad.addColorStop(0, rivetPeak);
       rivetGrad.addColorStop(0.5, rivetMid);
@@ -2737,15 +3303,15 @@ function drawShoulderPauldrons(
   wingFlap: number,
   flamePulse: number,
   gemPulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const flapAngle = wingFlap;
 
   for (let side = -1; side <= 1; side += 2) {
     // Position tracks the wing shoulder joint, lifts/drops with flap
     // Negative flapAngle = wings up → pad moves up (lower Y); positive = wings down → pad drops
-    const flapLift = flapAngle * s * 0.10;
-    const sx = x + side * s * 0.20;
+    const flapLift = flapAngle * s * 0.1;
+    const sx = x + side * s * 0.2;
     const sy = y - s * 0.14 + flapLift;
 
     // Guard angle tilts to follow wing: sweeps upward from the shoulder
@@ -2761,26 +3327,41 @@ function drawShoulderPauldrons(
 
     // Pointed wing-guard shape (elongated teardrop angled outward)
     ctx.fillStyle = blue
-      ? getCachedLinearGradient(ctx, `nassau-guard-flip-blue-${s}`, 0, gW, 0, -gW, [
-          [0, "#1e40af"], [0.2, "#2563eb"], [0.5, "#3b82f6"], [0.8, "#2563eb"], [1, "#1e40af"],
-        ])
+      ? getCachedLinearGradient(
+          ctx,
+          `nassau-guard-flip-blue-${s}`,
+          0,
+          gW,
+          0,
+          -gW,
+          [
+            [0, "#1e40af"],
+            [0.2, "#2563eb"],
+            [0.5, "#3b82f6"],
+            [0.8, "#2563eb"],
+            [1, "#1e40af"],
+          ]
+        )
       : getCachedLinearGradient(ctx, `nassau-guard-flip-${s}`, 0, gW, 0, -gW, [
-          [0, "#6a4510"], [0.2, "#a07020"], [0.5, "#c49030"], [0.8, "#8a5a18"], [1, "#5a3810"],
+          [0, "#6a4510"],
+          [0.2, "#a07020"],
+          [0.5, "#c49030"],
+          [0.8, "#8a5a18"],
+          [1, "#5a3810"],
         ]);
     ctx.beginPath();
     ctx.moveTo(-gL * 0.3, 0);
     ctx.bezierCurveTo(
-      -gL * 0.15, -gW * 0.9,
-      gL * 0.3, -gW * 0.7,
-      gL * 0.8, -gW * 0.15,
+      -gL * 0.15,
+      -gW * 0.9,
+      gL * 0.3,
+      -gW * 0.7,
+      gL * 0.8,
+      -gW * 0.15
     );
     ctx.lineTo(gL, 0);
     ctx.lineTo(gL * 0.8, gW * 0.15);
-    ctx.bezierCurveTo(
-      gL * 0.3, gW * 0.7,
-      -gL * 0.15, gW * 0.9,
-      -gL * 0.3, 0,
-    );
+    ctx.bezierCurveTo(gL * 0.3, gW * 0.7, -gL * 0.15, gW * 0.9, -gL * 0.3, 0);
     ctx.closePath();
     ctx.fill();
 
@@ -2790,14 +3371,19 @@ function drawShoulderPauldrons(
     ctx.stroke();
 
     // Lit edge highlight (after Y-flip, negative Y = visual top in isometric)
-    ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.35)" : "rgba(255, 220, 100, 0.35)";
+    ctx.strokeStyle = blue
+      ? "rgba(147, 197, 253, 0.35)"
+      : "rgba(255, 220, 100, 0.35)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(-gL * 0.2, gW * 0.3);
     ctx.bezierCurveTo(
-      gL * 0.2, gW * 0.65,
-      gL * 0.55, gW * 0.4,
-      gL * 0.8, gW * 0.12,
+      gL * 0.2,
+      gW * 0.65,
+      gL * 0.55,
+      gW * 0.4,
+      gL * 0.8,
+      gW * 0.12
     );
     ctx.stroke();
 
@@ -2807,9 +3393,12 @@ function drawShoulderPauldrons(
     ctx.beginPath();
     ctx.moveTo(-gL * 0.2, -gW * 0.3);
     ctx.bezierCurveTo(
-      gL * 0.2, -gW * 0.65,
-      gL * 0.55, -gW * 0.4,
-      gL * 0.8, -gW * 0.12,
+      gL * 0.2,
+      -gW * 0.65,
+      gL * 0.55,
+      -gW * 0.4,
+      gL * 0.8,
+      -gW * 0.12
     );
     ctx.stroke();
 
@@ -2834,7 +3423,9 @@ function drawShoulderPauldrons(
     ctx.moveTo(-gL * 0.25, 0);
     ctx.lineTo(gL * 0.85, 0);
     ctx.stroke();
-    ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.25)" : "rgba(255, 200, 80, 0.25)";
+    ctx.strokeStyle = blue
+      ? "rgba(147, 197, 253, 0.25)"
+      : "rgba(255, 200, 80, 0.25)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(-gL * 0.2, -s * 0.004);
@@ -2844,7 +3435,12 @@ function drawShoulderPauldrons(
     // Fire gem at the guard base
     const gemR = s * 0.022;
     const gemGrad = ctx.createRadialGradient(
-      -gL * 0.08, 0, 0, -gL * 0.05, 0, gemR,
+      -gL * 0.08,
+      0,
+      0,
+      -gL * 0.05,
+      0,
+      gemR
     );
     if (blue) {
       gemGrad.addColorStop(0, "#bfdbfe");
@@ -2875,7 +3471,12 @@ function drawShoulderPauldrons(
       const rvX = gL * (0.15 + r * 0.22);
       const rvR = s * 0.007;
       const rvG = ctx.createRadialGradient(
-        rvX - rvR * 0.3, -rvR * 0.3, 0, rvX, 0, rvR,
+        rvX - rvR * 0.3,
+        -rvR * 0.3,
+        0,
+        rvX,
+        0,
+        rvR
       );
       if (blue) {
         rvG.addColorStop(0, "#bfdbfe");
@@ -2932,7 +3533,7 @@ function drawNeck(
   zoom: number,
   flamePulse: number,
   targetPos?: Position,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const headY = y - s * 0.38;
   // Lean the neck top toward the target, clamped vertically
@@ -2942,8 +3543,12 @@ function drawNeck(
     let angle = Math.atan2(targetPos.y - headY, targetPos.x - x);
     // Clamp vertical lean to ±45°
     let rel = angle - Math.PI;
-    while (rel > Math.PI) rel -= Math.PI * 2;
-    while (rel < -Math.PI) rel += Math.PI * 2;
+    while (rel > Math.PI) {
+      rel -= Math.PI * 2;
+    }
+    while (rel < -Math.PI) {
+      rel += Math.PI * 2;
+    }
     const maxTilt = Math.PI * 0.25;
     rel = Math.max(-maxTilt, Math.min(maxTilt, rel));
     angle = rel + Math.PI;
@@ -2973,14 +3578,14 @@ function drawNeck(
     neckTopX - s * 0.03,
     neckTopY + s * 0.06,
     neckTopX - s * 0.055,
-    neckTopY,
+    neckTopY
   );
   ctx.lineTo(neckTopX + s * 0.055, neckTopY);
   ctx.quadraticCurveTo(
     neckTopX + s * 0.03,
     neckTopY + s * 0.06,
     x + s * 0.065,
-    y - s * 0.2,
+    y - s * 0.2
   );
   ctx.closePath();
   ctx.fill();
@@ -3018,7 +3623,7 @@ function drawNeck(
     s * 0.02,
     0,
     Math.PI,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 }
@@ -3037,7 +3642,7 @@ function drawHelmet(
   isAttacking: boolean,
   attackIntensity: number,
   targetPos?: Position,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const headY = y - s * 0.38;
   const headTilt = isAttacking
@@ -3053,8 +3658,12 @@ function drawHelmet(
   const MAX_TILT = Math.PI * 0.25;
   let headRotation = facingAngle - Math.PI;
   // Normalize to [-PI, PI]
-  while (headRotation > Math.PI) headRotation -= Math.PI * 2;
-  while (headRotation < -Math.PI) headRotation += Math.PI * 2;
+  while (headRotation > Math.PI) {
+    headRotation -= Math.PI * 2;
+  }
+  while (headRotation < -Math.PI) {
+    headRotation += Math.PI * 2;
+  }
   headRotation = Math.max(-MAX_TILT, Math.min(MAX_TILT, headRotation));
 
   ctx.save();
@@ -3082,13 +3691,13 @@ function drawHelmet(
     ctx.beginPath();
     ctx.moveTo(
       hx + Math.cos(angle) * hs * 0.06,
-      headY + Math.sin(angle) * hs * 0.04,
+      headY + Math.sin(angle) * hs * 0.04
     );
     ctx.quadraticCurveTo(
       hx + Math.cos(angle) * featherLen * 0.6 + sway * 0.5,
       headY + Math.sin(angle) * featherLen * 0.6,
       tipX,
-      tipY,
+      tipY
     );
     ctx.stroke();
 
@@ -3117,7 +3726,7 @@ function drawHelmet(
     hs * 0.03,
     hx,
     headY,
-    headW * 1.2,
+    headW * 1.2
   );
   if (blue) {
     headGrad.addColorStop(0, "#e0f0ff");
@@ -3161,7 +3770,7 @@ function drawHelmet(
     hx - headW,
     helmTop,
     hx + headW,
-    helmBot,
+    helmBot
   );
   helmGrad.addColorStop(0, "#6a4510");
   helmGrad.addColorStop(0.15, "#8a6018");
@@ -3176,21 +3785,21 @@ function drawHelmet(
     hx - headW * 1.15,
     headY - headH * 0.55,
     hx - headW * 0.6,
-    helmTop,
+    helmTop
   );
   ctx.lineTo(hx + headW * 0.6, helmTop);
   ctx.quadraticCurveTo(
     hx + headW * 1.15,
     headY - headH * 0.55,
     hx + headW * 1.05,
-    helmBot,
+    helmBot
   );
   ctx.quadraticCurveTo(hx + headW * 0.5, helmBot + hs * 0.01, hx, helmBot);
   ctx.quadraticCurveTo(
     hx - headW * 0.5,
     helmBot + hs * 0.01,
     hx - headW * 1.05,
-    helmBot,
+    helmBot
   );
   ctx.closePath();
   ctx.fill();
@@ -3208,7 +3817,7 @@ function drawHelmet(
       gpX,
       gpY,
       gpX + side * hs * 0.02,
-      gpY + hs * 0.06,
+      gpY + hs * 0.06
     );
     gpGrad.addColorStop(0, "#a07020");
     gpGrad.addColorStop(0.5, "#8a6018");
@@ -3220,7 +3829,7 @@ function drawHelmet(
       gpX + side * hs * 0.04,
       gpY + hs * 0.03,
       gpX + side * hs * 0.02,
-      gpY + hs * 0.065,
+      gpY + hs * 0.065
     );
     ctx.lineTo(gpX - side * hs * 0.01, gpY + hs * 0.055);
     ctx.quadraticCurveTo(gpX - side * hs * 0.02, gpY + hs * 0.02, gpX, gpY);
@@ -3238,7 +3847,7 @@ function drawHelmet(
       gpY + hs * 0.03,
       hs * 0.006,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3270,7 +3879,7 @@ function drawHelmet(
         lx + side * hs * 0.005,
         (helmTop + helmBot) / 2,
         lx,
-        helmBot - hs * 0.005,
+        helmBot - hs * 0.005
       );
       ctx.stroke();
     }
@@ -3288,7 +3897,7 @@ function drawHelmet(
     hs * 0.02,
     0,
     Math.PI * 0.05,
-    Math.PI * 0.95,
+    Math.PI * 0.95
   );
   ctx.stroke();
   ctx.strokeStyle = `rgba(255, 230, 120, 0.3)`;
@@ -3301,7 +3910,7 @@ function drawHelmet(
     hs * 0.015,
     0,
     Math.PI * 0.1,
-    Math.PI * 0.9,
+    Math.PI * 0.9
   );
   ctx.stroke();
 
@@ -3371,17 +3980,33 @@ function drawHelmet(
   // Outer fire bloom (large pulsing glow)
   const bloomR = hs * (0.14 + eyePulse * 0.04) * (blue ? 1.15 : 1);
   ctx.save();
-  setShadowBlur(ctx, bloomR * 0.6, blue ? "rgba(96, 165, 250, 0.8)" : "rgba(255, 160, 30, 0.8)");
+  setShadowBlur(
+    ctx,
+    bloomR * 0.6,
+    blue ? "rgba(96, 165, 250, 0.8)" : "rgba(255, 160, 30, 0.8)"
+  );
   const bloomGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, bloomR);
   if (blue) {
     bloomGrad.addColorStop(0, `rgba(224, 240, 255, ${0.55 + eyePulse * 0.25})`);
-    bloomGrad.addColorStop(0.25, `rgba(147, 197, 253, ${0.35 + eyePulse * 0.15})`);
-    bloomGrad.addColorStop(0.55, `rgba(59, 130, 246, ${0.15 + eyePulse * 0.08})`);
+    bloomGrad.addColorStop(
+      0.25,
+      `rgba(147, 197, 253, ${0.35 + eyePulse * 0.15})`
+    );
+    bloomGrad.addColorStop(
+      0.55,
+      `rgba(59, 130, 246, ${0.15 + eyePulse * 0.08})`
+    );
     bloomGrad.addColorStop(1, "rgba(29, 78, 216, 0)");
   } else {
     bloomGrad.addColorStop(0, `rgba(255, 255, 200, ${0.55 + eyePulse * 0.25})`);
-    bloomGrad.addColorStop(0.25, `rgba(255, 200, 60, ${0.35 + eyePulse * 0.15})`);
-    bloomGrad.addColorStop(0.55, `rgba(255, 100, 20, ${0.15 + eyePulse * 0.08})`);
+    bloomGrad.addColorStop(
+      0.25,
+      `rgba(255, 200, 60, ${0.35 + eyePulse * 0.15})`
+    );
+    bloomGrad.addColorStop(
+      0.55,
+      `rgba(255, 100, 20, ${0.15 + eyePulse * 0.08})`
+    );
     bloomGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
   }
   ctx.fillStyle = bloomGrad;
@@ -3395,7 +4020,7 @@ function drawHelmet(
   for (let w = 0; w < wispCount; w++) {
     const wPhase = (time * 3.5 + w * 1.3) % 1;
     const wAngle = -0.4 + w * 0.25 + Math.sin(time * 5 + w * 2) * 0.3;
-    const wDist = hs * (0.03 + wPhase * 0.10);
+    const wDist = hs * (0.03 + wPhase * 0.1);
     const wx = eyeX + Math.cos(wAngle) * wDist;
     const wy = eyeY + Math.sin(wAngle) * wDist - wPhase * hs * 0.04;
     const wAlpha = (1 - wPhase) * (0.6 + eyePulse * 0.3);
@@ -3418,18 +4043,28 @@ function drawHelmet(
 
   // Intense sclera with bloom
   ctx.save();
-  setShadowBlur(ctx, eyeW * 2, blue ? "rgba(147, 197, 253, 0.9)" : "rgba(255, 200, 60, 0.9)");
+  setShadowBlur(
+    ctx,
+    eyeW * 2,
+    blue ? "rgba(147, 197, 253, 0.9)" : "rgba(255, 200, 60, 0.9)"
+  );
   const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, eyeW);
   if (blue) {
     eyeGrad.addColorStop(0, "#ffffff");
     eyeGrad.addColorStop(0.25, "#e0f0ff");
-    eyeGrad.addColorStop(0.55, `rgba(147, 197, 253, ${0.92 + eyeFlicker * 0.08})`);
+    eyeGrad.addColorStop(
+      0.55,
+      `rgba(147, 197, 253, ${0.92 + eyeFlicker * 0.08})`
+    );
     eyeGrad.addColorStop(0.8, `rgba(59, 130, 246, ${0.85 + eyePulse * 0.1})`);
     eyeGrad.addColorStop(1, "rgba(29, 78, 216, 0.7)");
   } else {
     eyeGrad.addColorStop(0, "#ffffff");
     eyeGrad.addColorStop(0.25, "#fffae0");
-    eyeGrad.addColorStop(0.55, `rgba(255, 220, 80, ${0.92 + eyeFlicker * 0.08})`);
+    eyeGrad.addColorStop(
+      0.55,
+      `rgba(255, 220, 80, ${0.92 + eyeFlicker * 0.08})`
+    );
     eyeGrad.addColorStop(0.8, `rgba(255, 140, 30, ${0.85 + eyePulse * 0.1})`);
     eyeGrad.addColorStop(1, "rgba(200, 60, 0, 0.7)");
   }
@@ -3441,7 +4076,14 @@ function drawHelmet(
 
   // Iris — blazing ring
   const irisR = eyeH * 0.65;
-  const irisGrad = ctx.createRadialGradient(eyeX, eyeY, irisR * 0.3, eyeX, eyeY, irisR);
+  const irisGrad = ctx.createRadialGradient(
+    eyeX,
+    eyeY,
+    irisR * 0.3,
+    eyeX,
+    eyeY,
+    irisR
+  );
   if (blue) {
     irisGrad.addColorStop(0, `rgba(96, 165, 250, ${0.3 + eyeFlicker * 0.2})`);
     irisGrad.addColorStop(0.5, `rgba(29, 78, 216, ${0.9 + eyePulse * 0.1})`);
@@ -3459,7 +4101,7 @@ function drawHelmet(
   // Pupil — vertical slit
   ctx.fillStyle = `rgba(10, 2, 0, ${0.85 + eyeFlicker * 0.1})`;
   ctx.beginPath();
-  ctx.ellipse(eyeX, eyeY, eyeH * 0.12, eyeH * 0.50, 0, 0, Math.PI * 2);
+  ctx.ellipse(eyeX, eyeY, eyeH * 0.12, eyeH * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Hot specular highlights (pulsing)
@@ -3474,7 +4116,11 @@ function drawHelmet(
 
   // Eye outline with glow
   ctx.save();
-  setShadowBlur(ctx, 4 * zoom, blue ? "rgba(96, 165, 250, 0.5)" : "rgba(255, 140, 20, 0.5)");
+  setShadowBlur(
+    ctx,
+    4 * zoom,
+    blue ? "rgba(96, 165, 250, 0.5)" : "rgba(255, 140, 20, 0.5)"
+  );
   ctx.strokeStyle = blue
     ? `rgba(30, 64, 175, ${0.6 + eyePulse * 0.2})`
     : `rgba(180, 60, 0, ${0.6 + eyePulse * 0.2})`;
@@ -3486,7 +4132,7 @@ function drawHelmet(
 
   // Brow ridge — heavier
   ctx.strokeStyle = `rgba(120, 50, 5, 0.5)`;
-  ctx.lineWidth = 2.0 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(eyeX - eyeW * 1.3, eyeY - eyeH * 1.1);
@@ -3494,7 +4140,7 @@ function drawHelmet(
     eyeX,
     eyeY - eyeH * 1.6,
     eyeX + eyeW * 1.1,
-    eyeY - eyeH * 0.85,
+    eyeY - eyeH * 0.85
   );
   ctx.stroke();
 
@@ -3510,7 +4156,7 @@ function drawHelmet(
     beakBaseX,
     beakBaseY - hs * 0.02,
     beakTipX,
-    beakTipY,
+    beakTipY
   );
   ubGrad.addColorStop(0, "#dda020");
   ubGrad.addColorStop(0.2, "#cc8800");
@@ -3526,7 +4172,7 @@ function drawHelmet(
     beakBaseX - beakLen * 0.7,
     beakBaseY - hs * 0.02,
     beakTipX,
-    beakTipY,
+    beakTipY
   );
   // Hook curve at tip
   ctx.bezierCurveTo(
@@ -3535,7 +4181,7 @@ function drawHelmet(
     beakTipX + hs * 0.035,
     beakTipY + hs * 0.015,
     beakBaseX - beakLen * 0.35,
-    beakBaseY + hs * 0.01,
+    beakBaseY + hs * 0.01
   );
   ctx.lineTo(beakBaseX, beakBaseY + hs * 0.005);
   ctx.closePath();
@@ -3552,7 +4198,7 @@ function drawHelmet(
     beakBaseX - beakLen * 0.65,
     beakBaseY - hs * 0.018,
     beakTipX + hs * 0.01,
-    beakTipY - hs * 0.003,
+    beakTipY - hs * 0.003
   );
   ctx.stroke();
 
@@ -3561,7 +4207,7 @@ function drawHelmet(
     beakBaseX,
     beakBaseY,
     beakTipX + hs * 0.05,
-    beakBaseY + hs * 0.02,
+    beakBaseY + hs * 0.02
   );
   lmGrad.addColorStop(0, "#bb8810");
   lmGrad.addColorStop(0.5, "#997700");
@@ -3575,7 +4221,7 @@ function drawHelmet(
     beakBaseX - beakLen * 0.55,
     beakBaseY + hs * 0.03,
     beakBaseX - beakLen * 0.38,
-    beakBaseY + hs * 0.015,
+    beakBaseY + hs * 0.015
   );
   ctx.lineTo(beakBaseX, beakBaseY + hs * 0.005);
   ctx.closePath();
@@ -3592,7 +4238,7 @@ function drawHelmet(
     beakBaseX - beakLen * 0.55,
     beakBaseY + hs * 0.014,
     beakBaseX - beakLen * 0.35,
-    beakBaseY + hs * 0.012,
+    beakBaseY + hs * 0.012
   );
   ctx.stroke();
 
@@ -3606,7 +4252,7 @@ function drawHelmet(
     hs * 0.005,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3621,7 +4267,7 @@ function drawHelmet(
     beakBaseX - beakLen * 0.7,
     beakBaseY - hs * 0.02,
     beakTipX,
-    beakTipY,
+    beakTipY
   );
   ctx.stroke();
 
@@ -3630,7 +4276,7 @@ function drawHelmet(
   for (let i = 0; i < cheekCount; i++) {
     const angle = Math.PI * 0.3 + i * 0.16;
     const fLen = hs * (0.09 + i * 0.014);
-    const sway = Math.sin(time * 2.8 + i * 1.0) * hs * 0.01;
+    const sway = Math.sin(time * 2.8 + i * 1) * hs * 0.01;
     const tipFX = hx + Math.cos(angle) * fLen + sway;
     const tipFY = headY + Math.sin(angle) * fLen;
 
@@ -3645,7 +4291,7 @@ function drawHelmet(
       hx + Math.cos(angle) * fLen * 0.5,
       headY + Math.sin(angle) * fLen * 0.5,
       tipFX,
-      tipFY,
+      tipFY
     );
     ctx.stroke();
   }
@@ -3659,7 +4305,7 @@ function drawHelmet(
     eyeX - eyeW * 1.5,
     eyeY + eyeH * 2.5,
     eyeX - eyeW * 2.2,
-    eyeY + eyeH * 2.0,
+    eyeY + eyeH * 2
   );
   ctx.stroke();
   ctx.beginPath();
@@ -3668,7 +4314,7 @@ function drawHelmet(
     eyeX - eyeW * 1.2,
     eyeY + eyeH * 2.8,
     eyeX - eyeW * 1.8,
-    eyeY + eyeH * 2.5,
+    eyeY + eyeH * 2.5
   );
   ctx.stroke();
 
@@ -3688,7 +4334,7 @@ function drawHelmetPlume(
   time: number,
   zoom: number,
   flamePulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const plumeBaseY = headY - s * 0.13;
 
@@ -3700,7 +4346,7 @@ function drawHelmetPlume(
     0,
     hx,
     plumeBaseY - s * 0.12,
-    backGlowR,
+    backGlowR
   );
   if (blue) {
     backGlow.addColorStop(0, `rgba(96, 165, 250, ${0.25 + flamePulse * 0.15})`);
@@ -3731,22 +4377,22 @@ function drawHelmetPlume(
       flameGrad.addColorStop(0.3, `rgba(59, 130, 246, 0.75)`);
       flameGrad.addColorStop(
         0.6,
-        `rgba(147, 197, 253, ${0.55 + flamePulse * 0.2})`,
+        `rgba(147, 197, 253, ${0.55 + flamePulse * 0.2})`
       );
       flameGrad.addColorStop(
         1,
-        `rgba(224, 240, 255, ${0.25 + flamePulse * 0.25})`,
+        `rgba(224, 240, 255, ${0.25 + flamePulse * 0.25})`
       );
     } else {
       flameGrad.addColorStop(0, `rgba(200, 80, 10, 0.85)`);
       flameGrad.addColorStop(0.3, `rgba(230, 126, 34, 0.75)`);
       flameGrad.addColorStop(
         0.6,
-        `rgba(255, 180, 50, ${0.55 + flamePulse * 0.2})`,
+        `rgba(255, 180, 50, ${0.55 + flamePulse * 0.2})`
       );
       flameGrad.addColorStop(
         1,
-        `rgba(255, 240, 120, ${0.25 + flamePulse * 0.25})`,
+        `rgba(255, 240, 120, ${0.25 + flamePulse * 0.25})`
       );
     }
 
@@ -3757,13 +4403,13 @@ function drawHelmetPlume(
       hx + spread * s * 0.16 + sway * 0.6,
       plumeBaseY - plumeLen * 0.5,
       tipX,
-      tipY,
+      tipY
     );
     ctx.quadraticCurveTo(
       hx + spread * s * 0.1 - sway * 0.3,
       plumeBaseY - plumeLen * 0.3,
       hx - spread * s * 0.04,
-      plumeBaseY,
+      plumeBaseY
     );
     ctx.closePath();
     ctx.fill();
@@ -3776,20 +4422,20 @@ function drawHelmetPlume(
     hx,
     plumeBaseY,
     hx + coreSway,
-    plumeBaseY - corePlumeLen,
+    plumeBaseY - corePlumeLen
   );
   if (blue) {
     coreGrad.addColorStop(0, `rgba(147, 197, 253, 0.75)`);
     coreGrad.addColorStop(
       0.5,
-      `rgba(224, 240, 255, ${0.55 + flamePulse * 0.2})`,
+      `rgba(224, 240, 255, ${0.55 + flamePulse * 0.2})`
     );
     coreGrad.addColorStop(1, `rgba(191, 219, 254, 0)`);
   } else {
     coreGrad.addColorStop(0, `rgba(255, 220, 100, 0.75)`);
     coreGrad.addColorStop(
       0.5,
-      `rgba(255, 255, 200, ${0.55 + flamePulse * 0.2})`,
+      `rgba(255, 255, 200, ${0.55 + flamePulse * 0.2})`
     );
     coreGrad.addColorStop(1, `rgba(255, 240, 180, 0)`);
   }
@@ -3801,13 +4447,13 @@ function drawHelmetPlume(
     hx + coreSway,
     plumeBaseY - corePlumeLen * 0.6,
     hx + coreSway,
-    plumeBaseY - corePlumeLen,
+    plumeBaseY - corePlumeLen
   );
   ctx.quadraticCurveTo(
     hx + coreSway,
     plumeBaseY - corePlumeLen * 0.6,
     hx + s * 0.018,
-    plumeBaseY,
+    plumeBaseY
   );
   ctx.closePath();
   ctx.fill();
@@ -3840,7 +4486,7 @@ function drawTalons(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const talonY = y + s * 0.3;
   const talonSpread = isAttacking
@@ -3853,7 +4499,12 @@ function drawTalons(
     const legTopY = y + s * 0.18;
 
     // Upper leg (thigh) with muscle definition
-    const thighGrad = ctx.createLinearGradient(legTopX, legTopY, talonX, talonY - s * 0.06);
+    const thighGrad = ctx.createLinearGradient(
+      legTopX,
+      legTopY,
+      talonX,
+      talonY - s * 0.06
+    );
     thighGrad.addColorStop(0, "#bb8800");
     thighGrad.addColorStop(0.3, "#aa7200");
     thighGrad.addColorStop(0.7, "#996600");
@@ -3864,8 +4515,10 @@ function drawTalons(
     ctx.beginPath();
     ctx.moveTo(legTopX, legTopY);
     ctx.quadraticCurveTo(
-      legTopX + side * s * 0.03, legTopY + s * 0.06,
-      talonX, talonY - s * 0.06,
+      legTopX + side * s * 0.03,
+      legTopY + s * 0.06,
+      talonX,
+      talonY - s * 0.06
     );
     ctx.stroke();
 
@@ -3887,7 +4540,12 @@ function drawTalons(
     const greaveTop = talonY - s * 0.12;
     const greaveBot = talonY - s * 0.01;
     const greaveW = s * 0.05;
-    const gG = ctx.createLinearGradient(talonX - greaveW, greaveTop, talonX + greaveW, greaveBot);
+    const gG = ctx.createLinearGradient(
+      talonX - greaveW,
+      greaveTop,
+      talonX + greaveW,
+      greaveBot
+    );
     gG.addColorStop(0, "#2a2218");
     gG.addColorStop(0.25, "#4a3a28");
     gG.addColorStop(0.5, "#5a4a38");
@@ -3896,9 +4554,19 @@ function drawTalons(
     ctx.fillStyle = gG;
     ctx.beginPath();
     ctx.moveTo(talonX - greaveW, greaveTop);
-    ctx.quadraticCurveTo(talonX - greaveW * 1.15, (greaveTop + greaveBot) * 0.5, talonX - greaveW * 0.9, greaveBot);
+    ctx.quadraticCurveTo(
+      talonX - greaveW * 1.15,
+      (greaveTop + greaveBot) * 0.5,
+      talonX - greaveW * 0.9,
+      greaveBot
+    );
     ctx.lineTo(talonX + greaveW * 0.9, greaveBot);
-    ctx.quadraticCurveTo(talonX + greaveW * 1.15, (greaveTop + greaveBot) * 0.5, talonX + greaveW, greaveTop);
+    ctx.quadraticCurveTo(
+      talonX + greaveW * 1.15,
+      (greaveTop + greaveBot) * 0.5,
+      talonX + greaveW,
+      greaveTop
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -3928,7 +4596,14 @@ function drawTalons(
     // Rivets on greave
     for (let r = 0; r < 2; r++) {
       const rvY = greaveTop + s * 0.02 + r * (greaveBot - greaveTop - s * 0.04);
-      const rvG = ctx.createRadialGradient(talonX - s * 0.002, rvY - s * 0.002, 0, talonX, rvY, s * 0.007);
+      const rvG = ctx.createRadialGradient(
+        talonX - s * 0.002,
+        rvY - s * 0.002,
+        0,
+        talonX,
+        rvY,
+        s * 0.007
+      );
       rvG.addColorStop(0, "#f0d860");
       rvG.addColorStop(0.5, "#daa520");
       rvG.addColorStop(1, "#8a7010");
@@ -3939,7 +4614,14 @@ function drawTalons(
     }
 
     // Ankle joint
-    const ankleG = ctx.createRadialGradient(talonX, talonY, 0, talonX, talonY, s * 0.035);
+    const ankleG = ctx.createRadialGradient(
+      talonX,
+      talonY,
+      0,
+      talonX,
+      talonY,
+      s * 0.035
+    );
     ankleG.addColorStop(0, "#bb9030");
     ankleG.addColorStop(0.5, "#997020");
     ankleG.addColorStop(1, "#775015");
@@ -3962,9 +4644,10 @@ function drawTalons(
 
       // Toe segment
       const toeGrad = ctx.createLinearGradient(
-        talonX, talonY,
+        talonX,
+        talonY,
         talonX + Math.cos(clawAngle) * toeLen,
-        talonY + Math.sin(clawAngle) * toeLen,
+        talonY + Math.sin(clawAngle) * toeLen
       );
       toeGrad.addColorStop(0, "#aa8020");
       toeGrad.addColorStop(0.5, "#997020");
@@ -3976,7 +4659,7 @@ function drawTalons(
       ctx.moveTo(talonX, talonY);
       ctx.lineTo(
         talonX + Math.cos(clawAngle) * toeLen,
-        talonY + Math.sin(clawAngle) * toeLen,
+        talonY + Math.sin(clawAngle) * toeLen
       );
       ctx.stroke();
 
@@ -3998,14 +4681,31 @@ function drawTalons(
       ctx.translate(cBaseX, cBaseY);
       ctx.rotate(clawAngle - Math.PI * 0.15);
 
-      ctx.fillStyle = getCachedLinearGradient(ctx, `nassau-claw-${s}`, 0, 0, 0, clawLen, [
-        [0, "#4a4a4a"], [0.2, "#2a2a2a"], [0.6, "#1a1a1a"], [0.9, "#808080"], [1, "#cccccc"],
-      ]);
+      ctx.fillStyle = getCachedLinearGradient(
+        ctx,
+        `nassau-claw-${s}`,
+        0,
+        0,
+        0,
+        clawLen,
+        [
+          [0, "#4a4a4a"],
+          [0.2, "#2a2a2a"],
+          [0.6, "#1a1a1a"],
+          [0.9, "#808080"],
+          [1, "#cccccc"],
+        ]
+      );
 
       const cW = s * 0.018;
       ctx.beginPath();
       ctx.moveTo(-cW, 0);
-      ctx.quadraticCurveTo(-cW * 0.8, clawLen * 0.5, -cW * 0.15, clawLen * 0.85);
+      ctx.quadraticCurveTo(
+        -cW * 0.8,
+        clawLen * 0.5,
+        -cW * 0.15,
+        clawLen * 0.85
+      );
       ctx.quadraticCurveTo(0, clawLen * 1.02, cW * 0.15, clawLen * 0.85);
       ctx.quadraticCurveTo(cW * 0.8, clawLen * 0.5, cW, 0);
       ctx.closePath();
@@ -4032,7 +4732,7 @@ function drawTalons(
     ctx.moveTo(talonX, talonY);
     ctx.lineTo(
       talonX + Math.cos(rearAngle) * rearLen,
-      talonY + Math.sin(rearAngle) * rearLen,
+      talonY + Math.sin(rearAngle) * rearLen
     );
     ctx.stroke();
 
@@ -4059,7 +4759,7 @@ function drawBeltArmor(
   zoom: number,
   flamePulse: number,
   gemPulse: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const beltY = y + s * 0.14;
   const beltHW = s * 0.22;
@@ -4067,7 +4767,12 @@ function drawBeltArmor(
   const vDip = s * 0.04;
 
   // Belt body — ornate gold-trimmed band
-  const beltGrad = ctx.createLinearGradient(x - beltHW, beltY, x + beltHW, beltY);
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHW,
+    beltY,
+    x + beltHW,
+    beltY
+  );
   beltGrad.addColorStop(0, "#5a3a10");
   beltGrad.addColorStop(0.15, "#8a6020");
   beltGrad.addColorStop(0.3, "#c09040");
@@ -4099,7 +4804,12 @@ function drawBeltArmor(
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x - beltHW + s * 0.01, beltY + beltH * 0.3);
-  ctx.quadraticCurveTo(x, beltY + beltH * 0.3 + vDip * 0.6, x + beltHW - s * 0.01, beltY + beltH * 0.3);
+  ctx.quadraticCurveTo(
+    x,
+    beltY + beltH * 0.3 + vDip * 0.6,
+    x + beltHW - s * 0.01,
+    beltY + beltH * 0.3
+  );
   ctx.stroke();
 
   // Belt rivets
@@ -4107,7 +4817,14 @@ function drawBeltArmor(
     const t = (r + 0.5) / 5;
     const rvX = x - beltHW + t * beltHW * 2;
     const rvY = beltY;
-    const rvG = ctx.createRadialGradient(rvX - s * 0.002, rvY - s * 0.002, 0, rvX, rvY, s * 0.006);
+    const rvG = ctx.createRadialGradient(
+      rvX - s * 0.002,
+      rvY - s * 0.002,
+      0,
+      rvX,
+      rvY,
+      s * 0.006
+    );
     rvG.addColorStop(0, "#f0d860");
     rvG.addColorStop(0.5, "#daa520");
     rvG.addColorStop(1, "#8a7010");
@@ -4119,15 +4836,28 @@ function drawBeltArmor(
 
   // Center buckle gem
   const buckleR = s * 0.025;
-  const buckleGrad = ctx.createRadialGradient(x, beltY + vDip * 0.25, 0, x, beltY + vDip * 0.25, buckleR);
+  const buckleGrad = ctx.createRadialGradient(
+    x,
+    beltY + vDip * 0.25,
+    0,
+    x,
+    beltY + vDip * 0.25,
+    buckleR
+  );
   if (blue) {
     buckleGrad.addColorStop(0, `rgba(224, 240, 255, ${0.9 + gemPulse * 0.1})`);
-    buckleGrad.addColorStop(0.3, `rgba(96, 165, 250, ${0.85 + gemPulse * 0.1})`);
+    buckleGrad.addColorStop(
+      0.3,
+      `rgba(96, 165, 250, ${0.85 + gemPulse * 0.1})`
+    );
     buckleGrad.addColorStop(0.7, `rgba(37, 99, 235, 0.8)`);
     buckleGrad.addColorStop(1, `rgba(29, 78, 216, 0.5)`);
   } else {
     buckleGrad.addColorStop(0, `rgba(255, 220, 100, ${0.9 + gemPulse * 0.1})`);
-    buckleGrad.addColorStop(0.3, `rgba(255, 140, 30, ${0.85 + gemPulse * 0.1})`);
+    buckleGrad.addColorStop(
+      0.3,
+      `rgba(255, 140, 30, ${0.85 + gemPulse * 0.1})`
+    );
     buckleGrad.addColorStop(0.7, `rgba(200, 60, 10, 0.8)`);
     buckleGrad.addColorStop(1, `rgba(120, 20, 0, 0.5)`);
   }
@@ -4141,7 +4871,13 @@ function drawBeltArmor(
   // Gem specular
   ctx.fillStyle = "rgba(255, 255, 240, 0.5)";
   ctx.beginPath();
-  ctx.arc(x - buckleR * 0.3, beltY + vDip * 0.25 - buckleR * 0.3, buckleR * 0.25, 0, Math.PI * 2);
+  ctx.arc(
+    x - buckleR * 0.3,
+    beltY + vDip * 0.25 - buckleR * 0.3,
+    buckleR * 0.25,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Buckle frame
@@ -4165,7 +4901,12 @@ function drawBeltArmor(
       const tabW = s * 0.022;
       const sway = Math.sin(time * 1.8 + tab * 0.6 + side * 0.3) * s * 0.002;
 
-      const tabG = ctx.createLinearGradient(tabX - tabW, tabTopY, tabX + tabW, tabBotY);
+      const tabG = ctx.createLinearGradient(
+        tabX - tabW,
+        tabTopY,
+        tabX + tabW,
+        tabBotY
+      );
       tabG.addColorStop(0, "#4a3a28");
       tabG.addColorStop(0.3, "#5a4a38");
       tabG.addColorStop(0.7, "#3a2a18");
@@ -4186,7 +4927,13 @@ function drawBeltArmor(
       // Gold rivet on tab
       ctx.fillStyle = "#daa520";
       ctx.beginPath();
-      ctx.arc(tabX + sway * 0.5, tabTopY + s * 0.015, s * 0.004, 0, Math.PI * 2);
+      ctx.arc(
+        tabX + sway * 0.5,
+        tabTopY + s * 0.015,
+        s * 0.004,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -4203,7 +4950,7 @@ function drawFireAura(
   flamePulse: number,
   isAttacking: boolean,
   zoom: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const auraRadius =
     s * (0.7 + flamePulse * 0.15 + (isAttacking ? 0.2 : 0) + (blue ? 0.18 : 0));
@@ -4247,7 +4994,7 @@ function drawFireAura(
       0,
       emberX,
       emberY,
-      emberSize,
+      emberSize
     );
     if (blue) {
       embGrad.addColorStop(0, `rgba(224, 240, 255, ${emberAlpha})`);
@@ -4289,13 +5036,15 @@ function drawAttackFlare(
   attackIntensity: number,
   time: number,
   zoom: number,
-  blue: boolean = false,
+  blue: boolean = false
 ) {
   const rawPhase = Math.sin(attackIntensity * Math.PI);
   const flarePhase = rawPhase * rawPhase;
   const flareRadius = s * (0.5 + (blue ? 0.12 : 0)) * flarePhase;
 
-  if (flareRadius < 0.5) return;
+  if (flareRadius < 0.5) {
+    return;
+  }
 
   const flareGrad = ctx.createRadialGradient(
     x,
@@ -4303,7 +5052,7 @@ function drawAttackFlare(
     0,
     x,
     y - s * 0.1,
-    flareRadius,
+    flareRadius
   );
   if (blue) {
     flareGrad.addColorStop(0, `rgba(224, 240, 255, ${0.55 * flarePhase})`);
@@ -4339,11 +5088,11 @@ function drawAttackFlare(
     ctx.beginPath();
     ctx.moveTo(
       x + Math.cos(angle) * innerR,
-      y - s * 0.1 + Math.sin(angle) * innerR,
+      y - s * 0.1 + Math.sin(angle) * innerR
     );
     ctx.lineTo(
       x + Math.cos(angle) * (innerR + lineLen),
-      y - s * 0.1 + Math.sin(angle) * (innerR + lineLen),
+      y - s * 0.1 + Math.sin(angle) * (innerR + lineLen)
     );
     ctx.stroke();
   }

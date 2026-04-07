@@ -20,11 +20,11 @@ const DECORATION_RENDERERS = new Map<string, DecorationRenderFn>();
  */
 export function registerDecorationRenderer(
   type: string,
-  renderer: DecorationRenderFn,
+  renderer: DecorationRenderFn
 ): void {
   if (DECORATION_RENDERERS.has(type)) {
     console.warn(
-      `[decorationRegistry] Overwriting existing renderer for "${type}"`,
+      `[decorationRegistry] Overwriting existing renderer for "${type}"`
     );
   }
   DECORATION_RENDERERS.set(type, renderer);
@@ -36,7 +36,7 @@ export function registerDecorationRenderer(
  * should fall through to the legacy switch/case).
  */
 export function getDecorationRenderer(
-  type: string,
+  type: string
 ): DecorationRenderFn | undefined {
   return DECORATION_RENDERERS.get(type);
 }

@@ -1,7 +1,6 @@
+import { ISO_PRISM_D_FACTOR } from "../../constants";
 import type { Tower, Position } from "../../types";
-import {
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
+import { traceIsoFlushRect } from "../isoFlush";
 import {
   drawIsometricPrism,
   drawIsoOctPrism,
@@ -9,12 +8,11 @@ import {
   drawIsometricRailing,
   drawIsoFlushVent,
 } from "./towerHelpers";
-import { traceIsoFlushRect } from "../isoFlush";
 
 export function getEllipseHalfBounds(
   rx: number,
   ry: number,
-  rotation: number,
+  rotation: number
 ): [number, number, number, number] {
   const sinR = Math.sin(rotation);
   const cosR = Math.cos(rotation);
@@ -53,7 +51,7 @@ export function drawLibraryOrbitalEffects(
   time: number,
   attackPulse: number,
   shakeY: number,
-  tower: Tower,
+  tower: Tower
 ) {
   const sX = screenPos.x;
 
@@ -76,7 +74,7 @@ export function drawLibraryOrbitalEffects(
       ringRY + 0.2 * zoom,
       0,
       drawFront ? 0 : Math.PI,
-      drawFront ? Math.PI : Math.PI * 2,
+      drawFront ? Math.PI : Math.PI * 2
     );
     ctx.stroke();
 
@@ -91,7 +89,7 @@ export function drawLibraryOrbitalEffects(
       ringRY,
       0,
       drawFront ? 0 : Math.PI,
-      drawFront ? Math.PI : Math.PI * 2,
+      drawFront ? Math.PI : Math.PI * 2
     );
     ctx.stroke();
   }
@@ -99,8 +97,10 @@ export function drawLibraryOrbitalEffects(
   // Level 2+: Floating ancient tomes (isometric orbit with depth sorting)
   if (tower.level >= 2) {
     for (let i = 0; i < tower.level; i++) {
-      const bookAngle = time * 1.0 + i * ((Math.PI * 2) / tower.level);
-      if (Math.sin(bookAngle) >= 0 !== drawFront) continue;
+      const bookAngle = time * 1 + i * ((Math.PI * 2) / tower.level);
+      if (Math.sin(bookAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const bookRadius = 30 * zoom;
       const bookX = sX + Math.cos(bookAngle) * bookRadius;
@@ -118,7 +118,7 @@ export function drawLibraryOrbitalEffects(
         3.5 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -143,7 +143,7 @@ export function drawLibraryOrbitalEffects(
         8 * zoom - 1 * zoom,
         -5 * zoom + pageOffset,
         1 * zoom,
-        10 * zoom,
+        10 * zoom
       );
 
       ctx.fillStyle = `rgba(${glowColor}, ${0.6 + Math.sin(time * 5 + i) * 0.2})`;
@@ -189,7 +189,9 @@ export function drawLibraryOrbitalEffects(
     // Knowledge orbs / wisps (depth-sorted by orbit angle)
     for (let orb = 0; orb < 5; orb++) {
       const orbAngle = time * 0.6 + (orb * (Math.PI * 2)) / 5;
-      if (Math.sin(orbAngle) >= 0 !== drawFront) continue;
+      if (Math.sin(orbAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const orbVertical = Math.sin(time * 1.5 + orb * 1.2) * 20 * zoom;
       const orbRadius = (25 + Math.sin(time * 0.8 + orb) * 10) * zoom;
@@ -237,7 +239,7 @@ export function drawLibraryOrbitalEffects(
     const [bbS, bbE, bfS, bfE] = getEllipseHalfBounds(
       barrierRX,
       barrierRY,
-      barrierRotation,
+      barrierRotation
     );
     ctx.beginPath();
     ctx.ellipse(
@@ -247,13 +249,15 @@ export function drawLibraryOrbitalEffects(
       barrierRY,
       barrierRotation,
       drawFront ? bfS : bbS,
-      drawFront ? bfE : bbE,
+      drawFront ? bfE : bbE
     );
     ctx.stroke();
 
     for (let i = 0; i < 6; i++) {
       const nodeAngle = (i / 6) * Math.PI * 2 + time * 1.2;
-      if (Math.sin(nodeAngle) >= 0 !== drawFront) continue;
+      if (Math.sin(nodeAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const nodeX = sX + Math.cos(nodeAngle) * 24 * zoom;
       const nodeY = topY - 15 * zoom + Math.sin(nodeAngle) * 12 * zoom;
@@ -269,7 +273,9 @@ export function drawLibraryOrbitalEffects(
 
     for (let i = 0; i < 4; i++) {
       const crystalAngle = time * 0.8 + (i / 4) * Math.PI * 2;
-      if (Math.sin(crystalAngle) >= 0 !== drawFront) continue;
+      if (Math.sin(crystalAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const crystalRadius = 35 + Math.sin(time * 2 + i) * 5;
       const crystalX = sX + Math.cos(crystalAngle) * crystalRadius * zoom;
@@ -303,7 +309,7 @@ export function drawLibraryOrbitalEffects(
     const [abS, abE, afS, afE] = getEllipseHalfBounds(
       ampRX,
       ampRY,
-      ampRotation,
+      ampRotation
     );
     ctx.beginPath();
     ctx.ellipse(
@@ -313,13 +319,15 @@ export function drawLibraryOrbitalEffects(
       ampRY,
       ampRotation,
       drawFront ? afS : abS,
-      drawFront ? afE : abE,
+      drawFront ? afE : abE
     );
     ctx.stroke();
 
     for (let i = 0; i < 5; i++) {
       const runeAngle = (i / 5) * Math.PI * 2 + time * 1.5;
-      if (Math.sin(runeAngle) >= 0 !== drawFront) continue;
+      if (Math.sin(runeAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const rx = sX + Math.cos(runeAngle) * 24 * zoom;
       const ry = topY - 18 * zoom + Math.sin(runeAngle) * 12 * zoom;
@@ -335,7 +343,9 @@ export function drawLibraryOrbitalEffects(
   if (tower.level === 4 && tower.upgrade === "B") {
     for (let i = 0; i < 6; i++) {
       const crystalAngle = (i * Math.PI) / 3 + time * 0.5;
-      if (Math.sin(crystalAngle) >= 0 !== drawFront) continue;
+      if (Math.sin(crystalAngle) >= 0 !== drawFront) {
+        continue;
+      }
 
       const cx = sX + Math.cos(crystalAngle) * 25 * zoom;
       const cy = topY - 10 * zoom + Math.sin(crystalAngle) * 12 * zoom;
@@ -352,7 +362,7 @@ export function drawLibraryOrbitalEffects(
         crystalSize * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -366,7 +376,6 @@ export function drawLibraryOrbitalEffects(
       ctx.closePath();
       ctx.fill();
     }
-
   }
 }
 
@@ -377,7 +386,7 @@ export function renderLibraryTower(
   tower: Tower,
   zoom: number,
   time: number,
-  colors: { base: string; dark: string; light: string; accent: string },
+  colors: { base: string; dark: string; light: string; accent: string }
 ) {
   void colors;
 
@@ -387,23 +396,27 @@ export function renderLibraryTower(
 
   // Stone palette: cool shadows → warm highlights (mimics real outdoor stone lighting)
   const st = {
-    void: uc("#1a0606", "#060810", "#0c0810"),
-    mortar: uc("#2a0e08", "#0a141e", "#181420"),
-    dark: uc("#3e1c10", "#18242e", "#2a2630"),
-    mid: uc("#54301e", "#283840", "#423e3e"),
     base: uc("#6c442e", "#3c4e58", "#5c5650"),
+    dark: uc("#3e1c10", "#18242e", "#2a2630"),
     light: uc("#885e42", "#546872", "#78705e"),
+    mid: uc("#54301e", "#283840", "#423e3e"),
+    mortar: uc("#2a0e08", "#0a141e", "#181420"),
     pale: uc("#8e6c4e", "#607880", "#7e7864"),
     palest: uc("#a28260", "#728a92", "#948c78"),
     top: uc("#e0ba92", "#a8bcc6", "#d2c8a8"),
+    void: uc("#1a0606", "#060810", "#0c0810"),
   };
   const gd = {
     main: uc("#d48028", "#7eb0cc", "#d4a428"),
-    sub: uc("#c06c1e", "#6c9cba", "#c29420"),
     rgba: uc("212, 128, 40", "126, 176, 204", "212, 164, 40"),
+    sub: uc("#c06c1e", "#6c9cba", "#c29420"),
   };
   const railRgba = uc("100, 68, 46", "56, 72, 86", "82, 76, 66");
-  const mortarHl = uc("rgba(130, 92, 68,", "rgba(78, 98, 116,", "rgba(110, 100, 88,");
+  const mortarHl = uc(
+    "rgba(130, 92, 68,",
+    "rgba(78, 98, 116,",
+    "rgba(110, 100, 88,"
+  );
   const tileRgba = uc("80, 58, 40", "42, 56, 70", "68, 62, 54");
   const stTint = {
     a: uc("144, 100, 80", "102, 118, 132", "130, 120, 110"),
@@ -481,7 +494,7 @@ export function renderLibraryTower(
     st.mid,
     st.dark,
     st.mortar,
-    zoom,
+    zoom
   );
 
   // Middle step — dressed stone
@@ -495,7 +508,7 @@ export function renderLibraryTower(
     st.base,
     st.mid,
     st.dark,
-    zoom,
+    zoom
   );
 
   // Upper step — polished foundation with rune trim
@@ -509,7 +522,7 @@ export function renderLibraryTower(
     st.light,
     st.base,
     st.mid,
-    zoom,
+    zoom
   );
 
   // Mystical rune circle inscribed on upper step
@@ -526,7 +539,7 @@ export function renderLibraryTower(
     fndRY,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
   // Inner rune circle
@@ -540,7 +553,7 @@ export function renderLibraryTower(
     fndRY * 0.7,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -586,13 +599,13 @@ export function renderLibraryTower(
       5,
       12,
       {
-        top: st.pale,
         left: st.base,
-        right: st.mid,
         leftBack: st.light,
+        right: st.mid,
         rightBack: st.base,
+        top: st.pale,
       },
-      zoom,
+      zoom
     );
 
     // Pillar cap (pyramid)
@@ -640,7 +653,7 @@ export function renderLibraryTower(
       waveRadius * zoom * 0.35,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -652,7 +665,7 @@ export function renderLibraryTower(
       ctx.moveTo(sX, screenPos.y + shakeY + 5 * zoom);
       ctx.lineTo(
         sX + Math.cos(crackAngle) * 35 * zoom,
-        screenPos.y + shakeY + 5 * zoom + Math.sin(crackAngle) * 17 * zoom,
+        screenPos.y + shakeY + 5 * zoom + Math.sin(crackAngle) * 17 * zoom
       );
       ctx.stroke();
     }
@@ -667,7 +680,7 @@ export function renderLibraryTower(
         0,
         sX,
         screenPos.y + 5 * zoom,
-        25 * zoom,
+        25 * zoom
       );
       flashGrad.addColorStop(0, `${mainColor} ${flashAlpha})`);
       flashGrad.addColorStop(0.5, `rgba(${glowColor}, ${flashAlpha * 0.3})`);
@@ -681,7 +694,7 @@ export function renderLibraryTower(
         12 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -703,7 +716,7 @@ export function renderLibraryTower(
           ringRadius * zoom * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -755,7 +768,7 @@ export function renderLibraryTower(
           ctx.moveTo(seg1X, seg1Y);
           ctx.lineTo(
             seg1X + Math.cos(branchAngle) * crackLength * 0.25 * zoom,
-            seg1Y + Math.sin(branchAngle) * crackLength * 0.12 * zoom,
+            seg1Y + Math.sin(branchAngle) * crackLength * 0.12 * zoom
           );
           ctx.stroke();
           ctx.lineWidth = 2 * zoom;
@@ -771,7 +784,7 @@ export function renderLibraryTower(
           screenPos.y + 5 * zoom + Math.sin(markAngle) * markR * 0.5,
           2 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -814,7 +827,7 @@ export function renderLibraryTower(
           dustX,
           dustBaseY,
           dustX,
-          dustBaseY - dustH,
+          dustBaseY - dustH
         );
         dustGrad.addColorStop(0, `rgba(140, 120, 100, ${dustAlpha})`);
         dustGrad.addColorStop(1, `rgba(140, 120, 100, 0)`);
@@ -862,7 +875,7 @@ export function renderLibraryTower(
     auraSize * zoom * 0.5,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -878,7 +891,7 @@ export function renderLibraryTower(
       20 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -893,13 +906,13 @@ export function renderLibraryTower(
     baseWidth,
     lowerBodyHeight,
     {
-      top: st.light,
       left: st.base,
-      right: st.mid,
       leftBack: st.pale,
+      right: st.mid,
       rightBack: st.light,
+      top: st.light,
     },
-    zoom,
+    zoom
   );
 
   // Ambient occlusion overlays on lower body faces
@@ -907,7 +920,10 @@ export function renderLibraryTower(
     const aoBodyH = lowerBodyHeight * zoom;
     // Left face — vertical darkening gradient (darker at bottom)
     const aoLeft = ctx.createLinearGradient(
-      sX - w, screenPos.y - aoBodyH, sX - w, screenPos.y,
+      sX - w,
+      screenPos.y - aoBodyH,
+      sX - w,
+      screenPos.y
     );
     aoLeft.addColorStop(0, "rgba(0, 0, 0, 0)");
     aoLeft.addColorStop(0.7, "rgba(0, 0, 0, 0.06)");
@@ -923,7 +939,10 @@ export function renderLibraryTower(
 
     // Right face — vertical darkening + slightly more shadow
     const aoRight = ctx.createLinearGradient(
-      sX + w, screenPos.y - aoBodyH, sX + w, screenPos.y,
+      sX + w,
+      screenPos.y - aoBodyH,
+      sX + w,
+      screenPos.y
     );
     aoRight.addColorStop(0, "rgba(0, 0, 0, 0.04)");
     aoRight.addColorStop(0.7, "rgba(0, 0, 0, 0.1)");
@@ -947,8 +966,12 @@ export function renderLibraryTower(
 
     // Corner darkening on front-bottom vertex
     const aoCorner = ctx.createRadialGradient(
-      sX, screenPos.y + d, 0,
-      sX, screenPos.y + d, aoBodyH * 0.3,
+      sX,
+      screenPos.y + d,
+      0,
+      sX,
+      screenPos.y + d,
+      aoBodyH * 0.3
     );
     aoCorner.addColorStop(0, "rgba(0, 0, 0, 0.12)");
     aoCorner.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -974,12 +997,12 @@ export function renderLibraryTower(
     32,
     16,
     {
-      rail: st.mid,
-      topRail: st.light,
       backPanel: `rgba(${railRgba}, 0.35)`,
       frontPanel: `rgba(${railRgba}, 0.25)`,
+      rail: st.mid,
+      topRail: st.light,
     },
-    zoom,
+    zoom
   );
 
   // Stone block pattern on lower body — flush isometric mortar joints
@@ -995,16 +1018,13 @@ export function renderLibraryTower(
     for (let col = 0; col < 3; col++) {
       const u1 = Math.max(0, col / 3 + stagger);
       const u2 = Math.min(1, (col + 1) / 3 + stagger);
-      if (u1 >= u2) continue;
+      if (u1 >= u2) {
+        continue;
+      }
 
       const shade = (row * 3 + col) % 3;
       const alpha = shade === 0 ? 0.08 : shade === 1 ? 0.12 : 0.05;
-      const tint =
-        shade === 0
-          ? stTint.a
-          : shade === 1
-            ? stTint.b
-            : stTint.c;
+      const tint = shade === 0 ? stTint.a : shade === 1 ? stTint.b : stTint.c;
 
       // Left face block (parallelogram flush with wall)
       ctx.fillStyle = `rgba(${tint}, ${alpha})`;
@@ -1064,10 +1084,12 @@ export function renderLibraryTower(
   for (let row = 0; row <= numMortarRows; row++) {
     const frac1 = row / (numMortarRows + 1);
     const frac2 = (row + 1) / (numMortarRows + 1);
-    const stagger = row % 2 === 0 ? 0.0 : 1 / 6;
+    const stagger = row % 2 === 0 ? 0 : 1 / 6;
     for (let col = 1; col < 3; col++) {
       const u = col / 3 + stagger;
-      if (u > 0.95 || u < 0.05) continue;
+      if (u > 0.95 || u < 0.05) {
+        continue;
+      }
 
       // Left face vertical joint
       const ljX = sX - w * (1 - u);
@@ -1090,7 +1112,7 @@ export function renderLibraryTower(
     sX - w,
     screenPos.y - bodyH,
     sX,
-    screenPos.y,
+    screenPos.y
   );
   leftWeatherGrad.addColorStop(0, "rgba(30, 20, 10, 0.12)");
   leftWeatherGrad.addColorStop(0.5, "rgba(30, 20, 10, 0.04)");
@@ -1148,7 +1170,7 @@ export function renderLibraryTower(
       scX + side * 3 * zoom,
       scY - 4 * zoom,
       lanternTipX,
-      scY - 1 * zoom,
+      scY - 1 * zoom
     );
     ctx.stroke();
     // Scroll flourish at bracket end
@@ -1159,7 +1181,7 @@ export function renderLibraryTower(
       scY - 1.5 * zoom,
       1 * zoom,
       0,
-      Math.PI * 1.2,
+      Math.PI * 1.2
     );
     ctx.stroke();
 
@@ -1226,7 +1248,7 @@ export function renderLibraryTower(
       lSize * 0.8,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Hot core
@@ -1239,7 +1261,7 @@ export function renderLibraryTower(
       lSize * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -1251,7 +1273,7 @@ export function renderLibraryTower(
       0,
       scX + side * 2 * zoom,
       scY,
-      6 * zoom,
+      6 * zoom
     );
     spillGrad.addColorStop(0, `rgba(255, 200, 120, ${flameFlicker * 0.12})`);
     spillGrad.addColorStop(1, "rgba(255, 200, 120, 0)");
@@ -1341,8 +1363,12 @@ export function renderLibraryTower(
 
   // Outer stone frame — beveled molding ring
   const frameGrad = ctx.createRadialGradient(
-    screenPos.x - 2 * zoom, roseY - 2 * zoom, roseRadius,
-    screenPos.x, roseY, roseRadius + 3 * zoom,
+    screenPos.x - 2 * zoom,
+    roseY - 2 * zoom,
+    roseRadius,
+    screenPos.x,
+    roseY,
+    roseRadius + 3 * zoom
   );
   frameGrad.addColorStop(0, st.mid);
   frameGrad.addColorStop(0.5, st.pale);
@@ -1366,10 +1392,17 @@ export function renderLibraryTower(
 
   // Background glow — intense radial bloom
   const roseGlowGrad = ctx.createRadialGradient(
-    screenPos.x, roseY, 0,
-    screenPos.x, roseY, roseRadius * 1.3,
+    screenPos.x,
+    roseY,
+    0,
+    screenPos.x,
+    roseY,
+    roseRadius * 1.3
   );
-  roseGlowGrad.addColorStop(0, `rgba(${glowColor}, ${Math.min(1, roseGlow * 1.2)})`);
+  roseGlowGrad.addColorStop(
+    0,
+    `rgba(${glowColor}, ${Math.min(1, roseGlow * 1.2)})`
+  );
   roseGlowGrad.addColorStop(0.4, `rgba(${glowColor}, ${roseGlow * 0.85})`);
   roseGlowGrad.addColorStop(0.75, `rgba(${glowColor}, ${roseGlow * 0.35})`);
   roseGlowGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
@@ -1421,7 +1454,7 @@ export function renderLibraryTower(
     ctx.moveTo(screenPos.x, roseY);
     ctx.lineTo(
       screenPos.x + Math.cos(petalAngle) * roseRadius,
-      roseY + Math.sin(petalAngle) * roseRadius,
+      roseY + Math.sin(petalAngle) * roseRadius
     );
     ctx.stroke();
 
@@ -1434,7 +1467,7 @@ export function renderLibraryTower(
       roseY + Math.sin(midAngle) * innerR * 0.5,
       innerR * 0.4,
       midAngle - Math.PI * 0.5,
-      midAngle + Math.PI * 0.5,
+      midAngle + Math.PI * 0.5
     );
     ctx.stroke();
 
@@ -1446,7 +1479,7 @@ export function renderLibraryTower(
       roseY + Math.sin(midAngle) * cuspR,
       roseRadius * 0.18,
       midAngle + Math.PI * 0.3,
-      midAngle + Math.PI * 1.7,
+      midAngle + Math.PI * 1.7
     );
     ctx.stroke();
   }
@@ -1462,7 +1495,13 @@ export function renderLibraryTower(
   ctx.strokeStyle = st.pale;
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, roseY, roseRadius + 2.5 * zoom, Math.PI * 1.1, Math.PI * 1.6);
+  ctx.arc(
+    screenPos.x,
+    roseY,
+    roseRadius + 2.5 * zoom,
+    Math.PI * 1.1,
+    Math.PI * 1.6
+  );
   ctx.stroke();
 
   // Center gem with faceted highlight — blazing bright
@@ -1486,7 +1525,7 @@ export function renderLibraryTower(
     0.6 * zoom,
     -0.4,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1499,7 +1538,9 @@ export function renderLibraryTower(
     const glyphFade =
       Math.max(0, 1 - Math.abs(glyphCycle - i * 0.6) * 2.5) *
       (0.6 + attackPulse * 0.4);
-    if (glyphFade <= 0) continue;
+    if (glyphFade <= 0) {
+      continue;
+    }
 
     const side = i < 3 ? -1 : 1;
     const idx = i % 3;
@@ -1555,7 +1596,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.2,
     entranceX + doorW,
-    entranceY - doorH * 0.6,
+    entranceY - doorH * 0.6
   );
   ctx.lineTo(entranceX + doorW, entranceY);
   ctx.closePath();
@@ -1570,7 +1611,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.35,
     entranceX + doorW + 2.5 * zoom,
-    entranceY - doorH * 0.52,
+    entranceY - doorH * 0.52
   );
   ctx.lineTo(entranceX + doorW + 2.5 * zoom, entranceY);
   ctx.lineTo(entranceX + doorW + 0.5 * zoom, entranceY);
@@ -1579,7 +1620,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.18,
     entranceX - doorW - 0.5 * zoom,
-    entranceY - doorH * 0.56,
+    entranceY - doorH * 0.56
   );
   ctx.lineTo(entranceX - doorW - 0.5 * zoom, entranceY);
   ctx.closePath();
@@ -1595,7 +1636,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.35,
     entranceX + doorW + 2.5 * zoom,
-    entranceY - doorH * 0.52,
+    entranceY - doorH * 0.52
   );
   ctx.lineTo(entranceX + doorW + 2.5 * zoom, entranceY);
   ctx.stroke();
@@ -1610,7 +1651,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.18,
     entranceX + doorW + 0.5 * zoom,
-    entranceY - doorH * 0.56,
+    entranceY - doorH * 0.56
   );
   ctx.lineTo(entranceX + doorW + 0.5 * zoom, entranceY);
   ctx.stroke();
@@ -1623,9 +1664,15 @@ export function renderLibraryTower(
     const outerPeak = doorH * 1.35;
     const innerPeak = doorH * 1.18;
     const ox = entranceX - outerW + vt * 2 * outerW;
-    const oy = entranceY - doorH * 0.52 - Math.sin(vt * Math.PI) * (outerPeak - doorH * 0.52) * 0.35;
+    const oy =
+      entranceY -
+      doorH * 0.52 -
+      Math.sin(vt * Math.PI) * (outerPeak - doorH * 0.52) * 0.35;
     const ix = entranceX - innerW + vt * 2 * innerW;
-    const iy = entranceY - doorH * 0.56 - Math.sin(vt * Math.PI) * (innerPeak - doorH * 0.56) * 0.35;
+    const iy =
+      entranceY -
+      doorH * 0.56 -
+      Math.sin(vt * Math.PI) * (innerPeak - doorH * 0.56) * 0.35;
     ctx.strokeStyle = st.mid;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
@@ -1637,7 +1684,7 @@ export function renderLibraryTower(
   // Keystone at arch apex (larger, more ornate)
   ctx.fillStyle = st.palest;
   ctx.beginPath();
-  ctx.moveTo(entranceX, entranceY - doorH * 1.0);
+  ctx.moveTo(entranceX, entranceY - doorH * 1);
   ctx.lineTo(entranceX - 3 * zoom, entranceY - doorH * 0.82);
   ctx.lineTo(entranceX - 2.5 * zoom, entranceY - doorH * 0.78);
   ctx.lineTo(entranceX + 2.5 * zoom, entranceY - doorH * 0.78);
@@ -1660,7 +1707,7 @@ export function renderLibraryTower(
     0,
     entranceX,
     entranceY - doorH * 0.4,
-    doorW * 1.2,
+    doorW * 1.2
   );
   doorGrad.addColorStop(0, `rgba(255, 200, 120, ${doorGlow})`);
   doorGrad.addColorStop(0.6, `rgba(255, 160, 60, ${doorGlow * 0.5})`);
@@ -1673,7 +1720,7 @@ export function renderLibraryTower(
     entranceX,
     entranceY - doorH * 1.1,
     entranceX + doorW - 1.5 * zoom,
-    entranceY - doorH * 0.55,
+    entranceY - doorH * 0.55
   );
   ctx.lineTo(entranceX + doorW - 1.5 * zoom, entranceY);
   ctx.closePath();
@@ -1746,17 +1793,17 @@ export function renderLibraryTower(
       torchX + tSide * 3 * zoom,
       torchY - 1 * zoom,
       torchX + tSide * 1 * zoom,
-      torchY - 3 * zoom,
+      torchY - 3 * zoom
     );
     ctx.stroke();
 
     // Torch bowl (cup shape)
     ctx.fillStyle = st.light;
     ctx.beginPath();
-    ctx.moveTo(torchX + tSide * 0 * zoom - 2.5 * zoom, torchY - 2 * zoom);
-    ctx.lineTo(torchX + tSide * 0 * zoom + 2.5 * zoom, torchY - 2 * zoom);
-    ctx.lineTo(torchX + tSide * 0 * zoom + 2 * zoom, torchY - 4 * zoom);
-    ctx.lineTo(torchX + tSide * 0 * zoom - 2 * zoom, torchY - 4 * zoom);
+    ctx.moveTo(torchX + 0 * zoom - 2.5 * zoom, torchY - 2 * zoom);
+    ctx.lineTo(torchX + 0 * zoom + 2.5 * zoom, torchY - 2 * zoom);
+    ctx.lineTo(torchX + 0 * zoom + 2 * zoom, torchY - 4 * zoom);
+    ctx.lineTo(torchX + 0 * zoom - 2 * zoom, torchY - 4 * zoom);
     ctx.closePath();
     ctx.fill();
 
@@ -1777,7 +1824,7 @@ export function renderLibraryTower(
       flameH * 0.7,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1790,13 +1837,13 @@ export function renderLibraryTower(
       torchX + fl2 * zoom * 4,
       torchY - flameH - 2 * zoom,
       torchX,
-      torchY - flameH - 4 * zoom,
+      torchY - flameH - 4 * zoom
     );
     ctx.quadraticCurveTo(
       torchX - fl2 * zoom * 3,
       torchY - flameH - 2 * zoom,
       torchX + 2 * zoom,
-      torchY - 4 * zoom,
+      torchY - 4 * zoom
     );
     ctx.closePath();
     ctx.fill();
@@ -1810,13 +1857,13 @@ export function renderLibraryTower(
       torchX,
       torchY - flameH * 0.5 - 2 * zoom,
       torchX,
-      torchY - flameH * 0.6 - 3 * zoom,
+      torchY - flameH * 0.6 - 3 * zoom
     );
     ctx.quadraticCurveTo(
       torchX,
       torchY - flameH * 0.5 - 2 * zoom,
       torchX + 1 * zoom,
-      torchY - 4.5 * zoom,
+      torchY - 4.5 * zoom
     );
     ctx.closePath();
     ctx.fill();
@@ -1836,7 +1883,7 @@ export function renderLibraryTower(
         1.5 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1871,7 +1918,10 @@ export function renderLibraryTower(
 
     // Buttress front face (main visible face)
     const buttFaceGrad = ctx.createLinearGradient(
-      bx, screenPos.y, bxOuter, bTop,
+      bx,
+      screenPos.y,
+      bxOuter,
+      bTop
     );
     buttFaceGrad.addColorStop(0, st.base);
     buttFaceGrad.addColorStop(0.5, st.light);
@@ -1954,7 +2004,7 @@ export function renderLibraryTower(
       screenPos.x + side * w * 1.35,
       screenPos.y - lowerBodyHeight * zoom * 0.8,
       screenPos.x + side * w * 0.9,
-      bTop - 2 * zoom,
+      bTop - 2 * zoom
     );
     ctx.stroke();
     ctx.lineWidth = 2 * zoom;
@@ -1965,7 +2015,7 @@ export function renderLibraryTower(
       screenPos.x + side * w * 1.32,
       screenPos.y - lowerBodyHeight * zoom * 0.77,
       screenPos.x + side * w * 0.92,
-      bTop,
+      bTop
     );
     ctx.stroke();
 
@@ -1978,7 +2028,7 @@ export function renderLibraryTower(
       screenPos.x + side * w * 1.28,
       screenPos.y - lowerBodyHeight * zoom * 0.42,
       screenPos.x + side * w * 0.95,
-      screenPos.y - lowerBodyHeight * zoom * 0.58,
+      screenPos.y - lowerBodyHeight * zoom * 0.58
     );
     ctx.stroke();
     ctx.strokeStyle = st.pale;
@@ -1989,7 +2039,7 @@ export function renderLibraryTower(
       screenPos.x + side * w * 1.25,
       screenPos.y - lowerBodyHeight * zoom * 0.4,
       screenPos.x + side * w * 0.96,
-      screenPos.y - lowerBodyHeight * zoom * 0.57,
+      screenPos.y - lowerBodyHeight * zoom * 0.57
     );
     ctx.stroke();
 
@@ -2000,7 +2050,13 @@ export function renderLibraryTower(
     ctx.shadowColor = `rgb(${glowColor})`;
     ctx.shadowBlur = 4 * zoom * buttressGlow;
     ctx.beginPath();
-    ctx.arc(pinnCX, screenPos.y - lowerBodyHeight * zoom * 0.6, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      pinnCX,
+      screenPos.y - lowerBodyHeight * zoom * 0.6,
+      2.5 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
 
@@ -2043,7 +2099,7 @@ export function renderLibraryTower(
       3 * zoom * gScale,
       side * 0.25,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2057,7 +2113,7 @@ export function renderLibraryTower(
       2 * zoom * gScale,
       side * 0.2,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2071,7 +2127,7 @@ export function renderLibraryTower(
       2 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2083,7 +2139,7 @@ export function renderLibraryTower(
       gY - 2 * zoom * gScale,
       3 * zoom * gScale,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2106,7 +2162,7 @@ export function renderLibraryTower(
       gX + side * 3 * zoom * gScale,
       gY - 8 * zoom * gScale,
       gX + side * 4 * zoom * gScale,
-      gY - 9 * zoom * gScale,
+      gY - 9 * zoom * gScale
     );
     ctx.stroke();
     ctx.beginPath();
@@ -2115,31 +2171,31 @@ export function renderLibraryTower(
       gX + side * 8 * zoom * gScale,
       gY - 8 * zoom * gScale,
       gX + side * 9 * zoom * gScale,
-      gY - 8 * zoom * gScale,
+      gY - 8 * zoom * gScale
     );
     ctx.stroke();
 
     // Gargoyle wings (larger, more dramatic folded shape)
     ctx.fillStyle = "#444450";
     ctx.beginPath();
-    ctx.moveTo(gX + side * 0 * zoom, gY - 1 * zoom);
+    ctx.moveTo(gX + 0 * zoom, gY - 1 * zoom);
     ctx.quadraticCurveTo(
       gX - side * 3 * zoom,
       gY - 7 * zoom,
       gX + side * 2 * zoom,
-      gY - 6 * zoom,
+      gY - 6 * zoom
     );
     ctx.lineTo(gX + side * 4 * zoom, gY - 4 * zoom);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#3c3c48";
     ctx.beginPath();
-    ctx.moveTo(gX + side * 0 * zoom, gY);
+    ctx.moveTo(gX + 0 * zoom, gY);
     ctx.quadraticCurveTo(
       gX - side * 4 * zoom,
       gY - 4 * zoom,
       gX + side * 1 * zoom,
-      gY - 5 * zoom,
+      gY - 5 * zoom
     );
     ctx.closePath();
     ctx.fill();
@@ -2153,7 +2209,7 @@ export function renderLibraryTower(
       gX - side * 6 * zoom,
       gY - 2 * zoom,
       gX - side * 5 * zoom,
-      gY - 4 * zoom,
+      gY - 4 * zoom
     );
     ctx.stroke();
 
@@ -2168,7 +2224,7 @@ export function renderLibraryTower(
       gY - 2.5 * zoom * gScale,
       1.2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.beginPath();
@@ -2177,7 +2233,7 @@ export function renderLibraryTower(
       gY - 2.5 * zoom * gScale,
       1.2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -2251,7 +2307,7 @@ export function renderLibraryTower(
         crocketY,
         0.9 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -2260,7 +2316,7 @@ export function renderLibraryTower(
         crocketY,
         0.8 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2272,7 +2328,13 @@ export function renderLibraryTower(
     ctx.fill();
     ctx.fillStyle = "rgba(255, 230, 150, 0.4)";
     ctx.beginPath();
-    ctx.arc(pinnX - 0.4 * zoom, pinnBaseY - lpH - 2 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      pinnX - 0.4 * zoom,
+      pinnBaseY - lpH - 2 * zoom,
+      0.6 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Pinnacle glow during attack
@@ -2292,33 +2354,129 @@ export function renderLibraryTower(
   const glowIntensity = 0.5 + Math.sin(time * 2) * 0.3 + attackPulse;
   const libraryWindowColors = {
     frame: st.dark,
-    void: `${mainColor} ${glowIntensity * 0.9})`,
     sill: st.dark,
+    void: `${mainColor} ${glowIntensity * 0.9})`,
   };
   const isUpgraded = tower.level === 4 && !!tower.upgrade;
 
-  type WinPos = { cx: number; cy: number; ww: number; wh: number; s: number };
+  interface WinPos {
+    cx: number;
+    cy: number;
+    ww: number;
+    wh: number;
+    s: number;
+  }
   const lowerWins: WinPos[] = [];
 
   if (isUpgraded) {
     const twinW = 3.5;
     const twinH = 8;
-    drawIsoGothicWindow(ctx, sX - w * 0.82, windowYBase + 0.18 * d, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX - w * 0.18, windowYBase + 0.82 * d, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + w * 0.82, windowYBase + 0.18 * d, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + w * 0.18, windowYBase + 0.82 * d, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(
+      ctx,
+      sX - w * 0.82,
+      windowYBase + 0.18 * d,
+      twinW,
+      twinH,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX - w * 0.18,
+      windowYBase + 0.82 * d,
+      twinW,
+      twinH,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + w * 0.82,
+      windowYBase + 0.18 * d,
+      twinW,
+      twinH,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + w * 0.18,
+      windowYBase + 0.82 * d,
+      twinW,
+      twinH,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
     lowerWins.push(
-      { cx: sX - w * 0.82, cy: windowYBase + 0.18 * d, ww: twinW, wh: twinH, s: 0.5 },
-      { cx: sX - w * 0.18, cy: windowYBase + 0.82 * d, ww: twinW, wh: twinH, s: 0.5 },
-      { cx: sX + w * 0.82, cy: windowYBase + 0.18 * d, ww: twinW, wh: twinH, s: -0.5 },
-      { cx: sX + w * 0.18, cy: windowYBase + 0.82 * d, ww: twinW, wh: twinH, s: -0.5 },
+      {
+        cx: sX - w * 0.82,
+        cy: windowYBase + 0.18 * d,
+        s: 0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX - w * 0.18,
+        cy: windowYBase + 0.82 * d,
+        s: 0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX + w * 0.82,
+        cy: windowYBase + 0.18 * d,
+        s: -0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX + w * 0.18,
+        cy: windowYBase + 0.82 * d,
+        s: -0.5,
+        wh: twinH,
+        ww: twinW,
+      }
     );
   } else {
-    drawIsoGothicWindow(ctx, sX - w * 0.5, windowYBase + 0.5 * d, 5, 10, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + w * 0.5, windowYBase + 0.5 * d, 5, 10, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(
+      ctx,
+      sX - w * 0.5,
+      windowYBase + 0.5 * d,
+      5,
+      10,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + w * 0.5,
+      windowYBase + 0.5 * d,
+      5,
+      10,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
     lowerWins.push(
-      { cx: sX - w * 0.5, cy: windowYBase + 0.5 * d, ww: 5, wh: 10, s: 0.5 },
-      { cx: sX + w * 0.5, cy: windowYBase + 0.5 * d, ww: 5, wh: 10, s: -0.5 },
+      { cx: sX - w * 0.5, cy: windowYBase + 0.5 * d, s: 0.5, wh: 10, ww: 5 },
+      { cx: sX + w * 0.5, cy: windowYBase + 0.5 * d, s: -0.5, wh: 10, ww: 5 }
     );
   }
 
@@ -2362,15 +2520,19 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(wp.cx, wp.cy - peak + 3 * zoom);
     ctx.quadraticCurveTo(
-      wp.cx - hw * 0.4, wp.cy - hh + (-hw * 0.4) * wp.s,
-      wp.cx - hw + zoom, wp.cy - hh + (-hw + zoom) * wp.s,
+      wp.cx - hw * 0.4,
+      wp.cy - hh + -hw * 0.4 * wp.s,
+      wp.cx - hw + zoom,
+      wp.cy - hh + (-hw + zoom) * wp.s
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(wp.cx, wp.cy - peak + 3 * zoom);
     ctx.quadraticCurveTo(
-      wp.cx + hw * 0.4, wp.cy - hh + (hw * 0.4) * wp.s,
-      wp.cx + hw - zoom, wp.cy - hh + (hw - zoom) * wp.s,
+      wp.cx + hw * 0.4,
+      wp.cy - hh + hw * 0.4 * wp.s,
+      wp.cx + hw - zoom,
+      wp.cy - hh + (hw - zoom) * wp.s
     );
     ctx.stroke();
   }
@@ -2388,7 +2550,7 @@ export function renderLibraryTower(
     (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2401,7 +2563,7 @@ export function renderLibraryTower(
     (baseWidth + 6) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2414,7 +2576,7 @@ export function renderLibraryTower(
     (baseWidth + 4) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2427,13 +2589,29 @@ export function renderLibraryTower(
   ctx.strokeStyle = st.dark;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 2 * zoom, stoneRY + 1 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    sX,
+    plateY - 2 * zoom,
+    stoneRX + 2 * zoom,
+    stoneRY + 1 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // Stone tablet surface (darker than plate, like inlaid stone)
   ctx.fillStyle = st.base;
   ctx.beginPath();
-  ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 1 * zoom, stoneRY + 0.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    sX,
+    plateY - 2 * zoom,
+    stoneRX + 1 * zoom,
+    stoneRY + 0.5 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.fillStyle = st.light;
   ctx.beginPath();
@@ -2444,7 +2622,15 @@ export function renderLibraryTower(
   ctx.strokeStyle = `${mainColor} ${runeGlow * 0.6})`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.ellipse(sX, plateY - 3 * zoom, stoneRX * 0.85, stoneRY * 0.85, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    sX,
+    plateY - 3 * zoom,
+    stoneRX * 0.85,
+    stoneRY * 0.85,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // Central arcane inscription text
@@ -2481,7 +2667,7 @@ export function renderLibraryTower(
       baseWidth * zoom * 0.2,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -2499,7 +2685,7 @@ export function renderLibraryTower(
       railX - 4 * zoom + (dx > 0 ? 6 * zoom : 0),
       railTop,
       2 * zoom,
-      railH,
+      railH
     );
 
     // Main rail body
@@ -2512,7 +2698,7 @@ export function renderLibraryTower(
       railX - 4 * zoom + (dx < 0 ? 0 : 6 * zoom),
       railTop,
       2 * zoom,
-      railH,
+      railH
     );
 
     // Rail cap (chamfered top)
@@ -2536,7 +2722,7 @@ export function renderLibraryTower(
         rivetY + 0.5 * zoom,
         1.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Rivet
@@ -2552,7 +2738,7 @@ export function renderLibraryTower(
         rivetY - 0.4 * zoom,
         0.6 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2582,13 +2768,13 @@ export function renderLibraryTower(
     baseWidth - 4,
     baseHeight * 0.4,
     {
-      top: st.pale,
       left: st.light,
-      right: st.base,
       leftBack: st.palest,
+      right: st.base,
       rightBack: st.pale,
+      top: st.pale,
     },
-    zoom,
+    zoom
   );
 
   // Ambient occlusion on upper body faces
@@ -2596,7 +2782,12 @@ export function renderLibraryTower(
     const aoUW = (baseWidth - 4) * zoom * 0.5;
     const aoUD = (baseWidth - 4) * zoom * ISO_PRISM_D_FACTOR;
     const aoUH = baseHeight * 0.4 * zoom;
-    const aoLeft = ctx.createLinearGradient(sX - aoUW, pistonTopY - aoUH, sX - aoUW, pistonTopY);
+    const aoLeft = ctx.createLinearGradient(
+      sX - aoUW,
+      pistonTopY - aoUH,
+      sX - aoUW,
+      pistonTopY
+    );
     aoLeft.addColorStop(0, "rgba(0, 0, 0, 0)");
     aoLeft.addColorStop(0.7, "rgba(0, 0, 0, 0.05)");
     aoLeft.addColorStop(1, "rgba(0, 0, 0, 0.15)");
@@ -2608,7 +2799,12 @@ export function renderLibraryTower(
     ctx.lineTo(sX - aoUW, pistonTopY - aoUH);
     ctx.closePath();
     ctx.fill();
-    const aoRight = ctx.createLinearGradient(sX + aoUW, pistonTopY - aoUH, sX + aoUW, pistonTopY);
+    const aoRight = ctx.createLinearGradient(
+      sX + aoUW,
+      pistonTopY - aoUH,
+      sX + aoUW,
+      pistonTopY
+    );
     aoRight.addColorStop(0, "rgba(0, 0, 0, 0.03)");
     aoRight.addColorStop(0.7, "rgba(0, 0, 0, 0.08)");
     aoRight.addColorStop(1, "rgba(0, 0, 0, 0.18)");
@@ -2637,7 +2833,15 @@ export function renderLibraryTower(
   // Left half of top face matches left face
   ctx.fillStyle = st.light;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.ellipse(
+    screenPos.x,
+    connY,
+    connRX,
+    connRY,
+    0,
+    Math.PI * 0.5,
+    Math.PI * 1.5
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -2646,7 +2850,9 @@ export function renderLibraryTower(
   for (let seg = 0; seg < lipSegments; seg++) {
     const a0 = (seg / lipSegments) * Math.PI;
     const a1 = ((seg + 1) / lipSegments) * Math.PI;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    if (Math.sin((a0 + a1) / 2) <= 0) {
+      continue;
+    }
     const x0 = screenPos.x + Math.cos(a0) * connRX;
     const y0 = connY + Math.sin(a0) * connRY;
     const x1 = screenPos.x + Math.cos(a1) * connRX;
@@ -2666,7 +2872,15 @@ export function renderLibraryTower(
   ctx.strokeStyle = `rgba(${gd.rgba}, 0.5)`;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, connY - 0.5 * zoom, connRX * 0.96, connRY * 0.96, 0, 0, Math.PI);
+  ctx.ellipse(
+    screenPos.x,
+    connY - 0.5 * zoom,
+    connRX * 0.96,
+    connRY * 0.96,
+    0,
+    0,
+    Math.PI
+  );
   ctx.stroke();
 
   // Lower gold trim along bottom edge of lip
@@ -2677,8 +2891,11 @@ export function renderLibraryTower(
     const a = (i / 24) * Math.PI;
     const px = screenPos.x + Math.cos(a) * connRX;
     const py = connY + Math.sin(a) * connRY + connDepth;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
   }
   ctx.stroke();
 
@@ -2714,15 +2931,12 @@ export function renderLibraryTower(
     for (let col = 0; col < 3; col++) {
       const u1 = Math.max(0, col / 3 + uStagger);
       const u2 = Math.min(1, (col + 1) / 3 + uStagger);
-      if (u1 >= u2) continue;
+      if (u1 >= u2) {
+        continue;
+      }
       const shade = (row * 3 + col) % 3;
       const alpha = shade === 0 ? 0.04 : shade === 1 ? 0.06 : 0.02;
-      const tint =
-        shade === 0
-          ? stTint.a
-          : shade === 1
-            ? stTint.b
-            : stTint.c;
+      const tint = shade === 0 ? stTint.a : shade === 1 ? stTint.b : stTint.c;
       ctx.fillStyle = `rgba(${tint}, ${alpha})`;
       ctx.beginPath();
       ctx.moveTo(sX - uw * (1 - u1), pistonTopY + u1 * ud - uf1 * upperH);
@@ -2813,8 +3027,8 @@ export function renderLibraryTower(
       const vy = ventBaseY + (1 - ventU) * d;
 
       drawIsoFlushVent(ctx, vx, vy, 4, 3, face, zoom, {
-        frameColor: st.dark,
         bgColor: st.void,
+        frameColor: st.dark,
         slatColor: st.base,
         slats: 3,
       });
@@ -2896,7 +3110,7 @@ export function renderLibraryTower(
         crocketY,
         0.9 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = st.light;
@@ -2906,7 +3120,7 @@ export function renderLibraryTower(
         crocketY,
         0.8 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2918,7 +3132,13 @@ export function renderLibraryTower(
     ctx.fill();
     ctx.fillStyle = "rgba(255, 230, 150, 0.4)";
     ctx.beginPath();
-    ctx.arc(pinnX - 0.4 * zoom, pinnY - pinnH - 2 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      pinnX - 0.4 * zoom,
+      pinnY - pinnH - 2 * zoom,
+      0.6 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -3022,13 +3242,13 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(
       p0.x + (p1.x - p0.x) * 0.2,
-      p0.y + (p1.y - p0.y) * 0.2 - 1 * zoom,
+      p0.y + (p1.y - p0.y) * 0.2 - 1 * zoom
     );
     ctx.quadraticCurveTo(
       midRailX,
       midRailY - railH * 0.8,
       p0.x + (p1.x - p0.x) * 0.8,
-      p0.y + (p1.y - p0.y) * 0.8 - 1 * zoom,
+      p0.y + (p1.y - p0.y) * 0.8 - 1 * zoom
     );
     ctx.stroke();
   }
@@ -3085,7 +3305,7 @@ export function renderLibraryTower(
     time,
     attackPulse,
     shakeY,
-    tower,
+    tower
   );
 
   // ========== ENHANCED GOTHIC SPIRE ==========
@@ -3161,9 +3381,8 @@ export function renderLibraryTower(
     const lEdgeX = sX - spireW * (1 - t);
     const lEdgeY = topY + (apexY - topY) * t;
     const bEdgeY = topY - spireD * (1 - t) + (apexY - topY) * t;
-    ctx.strokeStyle = c % 2 === 0
-      ? `rgba(${stTint.b}, 0.15)`
-      : `rgba(${stTint.a}, 0.07)`;
+    ctx.strokeStyle =
+      c % 2 === 0 ? `rgba(${stTint.b}, 0.15)` : `rgba(${stTint.a}, 0.07)`;
     ctx.beginPath();
     ctx.moveTo(lEdgeX, lEdgeY);
     ctx.lineTo(sX, bEdgeY);
@@ -3176,9 +3395,8 @@ export function renderLibraryTower(
     const rEdgeX = sX + spireW * (1 - t);
     const rEdgeY = topY + (apexY - topY) * t;
     const bEdgeY = topY - spireD * (1 - t) + (apexY - topY) * t;
-    ctx.strokeStyle = c % 2 === 0
-      ? "rgba(5, 3, 0, 0.15)"
-      : "rgba(10, 5, 2, 0.06)";
+    ctx.strokeStyle =
+      c % 2 === 0 ? "rgba(5, 3, 0, 0.15)" : "rgba(10, 5, 2, 0.06)";
     ctx.beginPath();
     ctx.moveTo(sX, bEdgeY);
     ctx.lineTo(rEdgeX, rEdgeY);
@@ -3186,9 +3404,7 @@ export function renderLibraryTower(
   }
 
   // Front-left roof face with gradient (lit side — catches upper-left light)
-  const leftRoofGrad = ctx.createLinearGradient(
-    sX - spireW, topY, sX, apexY,
-  );
+  const leftRoofGrad = ctx.createLinearGradient(sX - spireW, topY, sX, apexY);
   leftRoofGrad.addColorStop(0, st.mid);
   leftRoofGrad.addColorStop(0.4, st.dark);
   leftRoofGrad.addColorStop(1, st.mortar);
@@ -3201,9 +3417,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Front-right roof face with gradient (shadow side)
-  const rightRoofGrad = ctx.createLinearGradient(
-    sX + spireW, topY, sX, apexY,
-  );
+  const rightRoofGrad = ctx.createLinearGradient(sX + spireW, topY, sX, apexY);
   rightRoofGrad.addColorStop(0, st.mortar);
   rightRoofGrad.addColorStop(0.4, st.void);
   rightRoofGrad.addColorStop(1, st.void);
@@ -3222,9 +3436,8 @@ export function renderLibraryTower(
     const lEdgeX = sX - spireW * (1 - t);
     const lEdgeY = topY + (apexY - topY) * t;
     const fEdgeY = topY + spireD * (1 - t) + (apexY - topY) * t;
-    ctx.strokeStyle = c % 2 === 0
-      ? `rgba(${stTint.b}, 0.25)`
-      : `rgba(${stTint.a}, 0.12)`;
+    ctx.strokeStyle =
+      c % 2 === 0 ? `rgba(${stTint.b}, 0.25)` : `rgba(${stTint.a}, 0.12)`;
     ctx.beginPath();
     ctx.moveTo(lEdgeX, lEdgeY);
     ctx.lineTo(sX, fEdgeY);
@@ -3237,9 +3450,8 @@ export function renderLibraryTower(
     const rEdgeX = sX + spireW * (1 - t);
     const rEdgeY = topY + (apexY - topY) * t;
     const fEdgeY = topY + spireD * (1 - t) + (apexY - topY) * t;
-    ctx.strokeStyle = c % 2 === 0
-      ? "rgba(10, 5, 0, 0.2)"
-      : "rgba(20, 10, 5, 0.08)";
+    ctx.strokeStyle =
+      c % 2 === 0 ? "rgba(10, 5, 0, 0.2)" : "rgba(20, 10, 5, 0.08)";
     ctx.beginPath();
     ctx.moveTo(sX, fEdgeY);
     ctx.lineTo(rEdgeX, rEdgeY);
@@ -3255,7 +3467,9 @@ export function renderLibraryTower(
     const nTicks = Math.max(1, Math.floor(3 * (1 - t1)));
     for (let s = 0; s < nTicks; s++) {
       const u = (s + (c % 2) * 0.5 + 0.5) / (nTicks + 1);
-      if (u < 0.1 || u > 0.9) continue;
+      if (u < 0.1 || u > 0.9) {
+        continue;
+      }
       const x1L = sX - spireW * (1 - t1);
       const y1L = topY + (apexY - topY) * t1;
       const y1F = topY + spireD * (1 - t1) + (apexY - topY) * t1;
@@ -3362,7 +3576,7 @@ export function renderLibraryTower(
   // Ridge crockets — symmetric decorative stone buds along all 4 ridges
   for (let rc = 0; rc < 7; rc++) {
     const t = 0.08 + rc * 0.12;
-    const crSize = (1.0 - t * 0.3) * zoom;
+    const crSize = (1 - t * 0.3) * zoom;
     const crOff = 1.2 * zoom;
 
     // Front ridge: runs from roofFront to apex along x=sX
@@ -3400,8 +3614,8 @@ export function renderLibraryTower(
     const lDirX = sX - roofLeft.x;
     const lDirY = apexY - roofLeft.y;
     const lLen = Math.sqrt(lDirX * lDirX + lDirY * lDirY) || 1;
-    const lPerpX = -lDirY / lLen * crOff * 0.6;
-    const lPerpY = lDirX / lLen * crOff * 0.6;
+    const lPerpX = (-lDirY / lLen) * crOff * 0.6;
+    const lPerpY = (lDirX / lLen) * crOff * 0.6;
     ctx.fillStyle = st.top;
     ctx.beginPath();
     ctx.arc(lrX + lPerpX, lrY + lPerpY, crSize * 0.7, 0, Math.PI * 2);
@@ -3416,8 +3630,8 @@ export function renderLibraryTower(
     const rDirX = sX - roofRight.x;
     const rDirY = apexY - roofRight.y;
     const rLen = Math.sqrt(rDirX * rDirX + rDirY * rDirY) || 1;
-    const rPerpX = -rDirY / rLen * crOff * 0.6;
-    const rPerpY = rDirX / rLen * crOff * 0.6;
+    const rPerpX = (-rDirY / rLen) * crOff * 0.6;
+    const rPerpY = (rDirX / rLen) * crOff * 0.6;
     ctx.fillStyle = st.base;
     ctx.beginPath();
     ctx.arc(rrX + rPerpX, lrY + rPerpY, crSize * 0.7, 0, Math.PI * 2);
@@ -3463,7 +3677,12 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(dlcx - dW * 0.45, dlcy + dH * 0.25);
     ctx.lineTo(dlcx - dW * 0.45, dlcy - dH * 0.1);
-    ctx.quadraticCurveTo(dlcx - dW * 0.05, dlcy - dH * 0.35, dlcx + dW * 0.2, dlcy - dH * 0.06);
+    ctx.quadraticCurveTo(
+      dlcx - dW * 0.05,
+      dlcy - dH * 0.35,
+      dlcx + dW * 0.2,
+      dlcy - dH * 0.06
+    );
     ctx.lineTo(dlcx + dW * 0.2, dlcy + dH * 0.25);
     ctx.closePath();
     ctx.fill();
@@ -3500,7 +3719,12 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(drcx + dW * 0.45, drcy + dH * 0.25);
     ctx.lineTo(drcx + dW * 0.45, drcy - dH * 0.1);
-    ctx.quadraticCurveTo(drcx + dW * 0.05, drcy - dH * 0.35, drcx - dW * 0.2, drcy - dH * 0.06);
+    ctx.quadraticCurveTo(
+      drcx + dW * 0.05,
+      drcy - dH * 0.35,
+      drcx - dW * 0.2,
+      drcy - dH * 0.06
+    );
     ctx.lineTo(drcx - dW * 0.2, drcy + dH * 0.25);
     ctx.closePath();
     ctx.fill();
@@ -3517,7 +3741,8 @@ export function renderLibraryTower(
     const lBandY = topY + (apexY - topY) * t;
     const fBandY = topY + spireD * (1 - t) + (apexY - topY) * t;
     const rBandX = sX + spireW * (1 - t);
-    const bandRuneGlow = 0.3 + Math.sin(time * 3 + band) * 0.2 + attackPulse * 0.25;
+    const bandRuneGlow =
+      0.3 + Math.sin(time * 3 + band) * 0.2 + attackPulse * 0.25;
     ctx.strokeStyle = `rgba(${glowColor}, ${bandRuneGlow * 0.4})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
@@ -3577,11 +3802,11 @@ export function renderLibraryTower(
     ctx.moveTo(sX, crystalCenterY - crystalSize * 1.2);
     ctx.lineTo(
       sX + Math.cos(fAngle1) * crystalSize,
-      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5,
+      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5
     );
     ctx.lineTo(
       sX + Math.cos(fAngle2) * crystalSize,
-      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5,
+      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5
     );
     ctx.closePath();
     ctx.fill();
@@ -3592,11 +3817,11 @@ export function renderLibraryTower(
     ctx.moveTo(sX, crystalCenterY + crystalSize * 1.2);
     ctx.lineTo(
       sX + Math.cos(fAngle1) * crystalSize,
-      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5,
+      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5
     );
     ctx.lineTo(
       sX + Math.cos(fAngle2) * crystalSize,
-      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5,
+      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5
     );
     ctx.closePath();
     ctx.fill();
@@ -3612,7 +3837,7 @@ export function renderLibraryTower(
     crystalSize * 0.2,
     -0.4,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3687,11 +3912,11 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(
       sX + Math.cos(hAngle) * (clockR - markerLen),
-      clockCenterY + Math.sin(hAngle) * (clockR - markerLen),
+      clockCenterY + Math.sin(hAngle) * (clockR - markerLen)
     );
     ctx.lineTo(
       sX + Math.cos(hAngle) * (clockR - 0.5 * zoom),
-      clockCenterY + Math.sin(hAngle) * (clockR - 0.5 * zoom),
+      clockCenterY + Math.sin(hAngle) * (clockR - 0.5 * zoom)
     );
     ctx.lineWidth = h % 3 === 0 ? 0.7 * zoom : 0.4 * zoom;
     ctx.stroke();
@@ -3705,7 +3930,7 @@ export function renderLibraryTower(
   ctx.moveTo(sX, clockCenterY);
   ctx.lineTo(
     sX + Math.cos(hourAngle) * clockR * 0.45,
-    clockCenterY + Math.sin(hourAngle) * clockR * 0.45,
+    clockCenterY + Math.sin(hourAngle) * clockR * 0.45
   );
   ctx.stroke();
   ctx.lineWidth = 0.5 * zoom;
@@ -3713,7 +3938,7 @@ export function renderLibraryTower(
   ctx.moveTo(sX, clockCenterY);
   ctx.lineTo(
     sX + Math.cos(minuteAngle) * clockR * 0.65,
-    clockCenterY + Math.sin(minuteAngle) * clockR * 0.65,
+    clockCenterY + Math.sin(minuteAngle) * clockR * 0.65
   );
   ctx.stroke();
 
@@ -3734,7 +3959,7 @@ export function renderLibraryTower(
     0,
     sX,
     topY + 6 * zoom,
-    7 * zoom,
+    7 * zoom
   );
   coreGrad.addColorStop(0, `${mainColor} ${glowIntensity})`);
   if (tower.level > 3 && tower.upgrade === "A") {
@@ -3768,7 +3993,7 @@ export function renderLibraryTower(
     ctx.moveTo(sX, topY + 6 * zoom);
     ctx.lineTo(
       sX + Math.cos(angle) * 6 * zoom,
-      topY + 6 * zoom + Math.sin(angle) * 6 * zoom,
+      topY + 6 * zoom + Math.sin(angle) * 6 * zoom
     );
     ctx.stroke();
   }
@@ -3788,7 +4013,7 @@ export function renderLibraryTower(
     time,
     attackPulse,
     shakeY,
-    tower,
+    tower
   );
 
   // Energy orb at tip
@@ -3802,7 +4027,7 @@ export function renderLibraryTower(
     0,
     sX,
     topY - spireHeight - 10 * zoom,
-    orbSize * 1.5,
+    orbSize * 1.5
   );
   outerGrad.addColorStop(0, `${mainColor} ${orbGlow * 0.3})`);
   outerGrad.addColorStop(0.5, `rgba(${glowColor}, ${orbGlow * 0.15})`);
@@ -3819,7 +4044,7 @@ export function renderLibraryTower(
     0,
     sX,
     topY - spireHeight - 10 * zoom,
-    orbSize,
+    orbSize
   );
 
   if (tower.level <= 3) {
@@ -3882,7 +4107,7 @@ export function renderLibraryTower(
         topY -
           spireHeight -
           10 * zoom +
-          Math.sin(tendrilAngle + 0.3) * tendrilLen * 0.5,
+          Math.sin(tendrilAngle + 0.3) * tendrilLen * 0.5
       );
       ctx.stroke();
     }
@@ -3904,7 +4129,7 @@ export function renderLibraryTower(
       6 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3918,22 +4143,112 @@ export function renderLibraryTower(
   if (isUpgraded) {
     const twinW = 3.5;
     const twinH = 8;
-    drawIsoGothicWindow(ctx, sX - uw * 0.7, topWinYBase + 0.3 * ud, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX - uw * 0.3, topWinYBase + 0.7 * ud, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + uw * 0.7, topWinYBase + 0.3 * ud, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + uw * 0.3, topWinYBase + 0.7 * ud, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(
+      ctx,
+      sX - uw * 0.7,
+      topWinYBase + 0.3 * ud,
+      twinW,
+      twinH,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX - uw * 0.3,
+      topWinYBase + 0.7 * ud,
+      twinW,
+      twinH,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + uw * 0.7,
+      topWinYBase + 0.3 * ud,
+      twinW,
+      twinH,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + uw * 0.3,
+      topWinYBase + 0.7 * ud,
+      twinW,
+      twinH,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
     upperWins.push(
-      { cx: sX - uw * 0.7, cy: topWinYBase + 0.3 * ud, ww: twinW, wh: twinH, s: 0.5 },
-      { cx: sX - uw * 0.3, cy: topWinYBase + 0.7 * ud, ww: twinW, wh: twinH, s: 0.5 },
-      { cx: sX + uw * 0.7, cy: topWinYBase + 0.3 * ud, ww: twinW, wh: twinH, s: -0.5 },
-      { cx: sX + uw * 0.3, cy: topWinYBase + 0.7 * ud, ww: twinW, wh: twinH, s: -0.5 },
+      {
+        cx: sX - uw * 0.7,
+        cy: topWinYBase + 0.3 * ud,
+        s: 0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX - uw * 0.3,
+        cy: topWinYBase + 0.7 * ud,
+        s: 0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX + uw * 0.7,
+        cy: topWinYBase + 0.3 * ud,
+        s: -0.5,
+        wh: twinH,
+        ww: twinW,
+      },
+      {
+        cx: sX + uw * 0.3,
+        cy: topWinYBase + 0.7 * ud,
+        s: -0.5,
+        wh: twinH,
+        ww: twinW,
+      }
     );
   } else {
-    drawIsoGothicWindow(ctx, sX - uw * 0.5, topWinYBase + 0.5 * ud, 5, 10, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
-    drawIsoGothicWindow(ctx, sX + uw * 0.5, topWinYBase + 0.5 * ud, 5, 10, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(
+      ctx,
+      sX - uw * 0.5,
+      topWinYBase + 0.5 * ud,
+      5,
+      10,
+      "left",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
+    drawIsoGothicWindow(
+      ctx,
+      sX + uw * 0.5,
+      topWinYBase + 0.5 * ud,
+      5,
+      10,
+      "right",
+      zoom,
+      mainColor,
+      glowIntensity,
+      libraryWindowColors
+    );
     upperWins.push(
-      { cx: sX - uw * 0.5, cy: topWinYBase + 0.5 * ud, ww: 5, wh: 10, s: 0.5 },
-      { cx: sX + uw * 0.5, cy: topWinYBase + 0.5 * ud, ww: 5, wh: 10, s: -0.5 },
+      { cx: sX - uw * 0.5, cy: topWinYBase + 0.5 * ud, s: 0.5, wh: 10, ww: 5 },
+      { cx: sX + uw * 0.5, cy: topWinYBase + 0.5 * ud, s: -0.5, wh: 10, ww: 5 }
     );
   }
 
@@ -3973,15 +4288,19 @@ export function renderLibraryTower(
     ctx.beginPath();
     ctx.moveTo(wp.cx, wp.cy - peak + 3 * zoom);
     ctx.quadraticCurveTo(
-      wp.cx - hw * 0.4, wp.cy - hh + (-hw * 0.4) * wp.s,
-      wp.cx - hw + zoom, wp.cy - hh + (-hw + zoom) * wp.s,
+      wp.cx - hw * 0.4,
+      wp.cy - hh + -hw * 0.4 * wp.s,
+      wp.cx - hw + zoom,
+      wp.cy - hh + (-hw + zoom) * wp.s
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(wp.cx, wp.cy - peak + 3 * zoom);
     ctx.quadraticCurveTo(
-      wp.cx + hw * 0.4, wp.cy - hh + (hw * 0.4) * wp.s,
-      wp.cx + hw - zoom, wp.cy - hh + (hw - zoom) * wp.s,
+      wp.cx + hw * 0.4,
+      wp.cy - hh + hw * 0.4 * wp.s,
+      wp.cx + hw - zoom,
+      wp.cy - hh + (hw - zoom) * wp.s
     );
     ctx.stroke();
   }

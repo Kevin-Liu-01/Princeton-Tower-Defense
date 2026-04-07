@@ -4,11 +4,11 @@
 // Gated by the user's damageNumbers setting ("off" | "simple" | "animated").
 // =============================================================================
 
-import type { Position } from "../../types";
+import { ISO_Y_RATIO } from "../../constants";
 import type { DamageNumberStyle } from "../../constants/settings";
+import type { Position } from "../../types";
 import { worldToScreen } from "../../utils";
 import { drawOutlinedText } from "../helpers";
-import { ISO_Y_RATIO } from "../../constants";
 
 // -----------------------------------------------------------------------------
 // Damage Event Queue
@@ -35,18 +35,20 @@ export function emitDamageNumber(
   worldPos: Position,
   amount: number,
   source: DamageNumberEvent["source"],
-  isCritical: boolean = false,
+  isCritical: boolean = false
 ): void {
-  if (amount <= 0) return;
+  if (amount <= 0) {
+    return;
+  }
 
   const event: DamageNumberEvent = {
-    id: `dmg-${++eventIdCounter}`,
-    worldPos: { ...worldPos },
     amount: Math.round(amount),
+    duration: ANIMATED_DURATION,
+    id: `dmg-${++eventIdCounter}`,
     isCritical,
     source,
     spawnTime: performance.now(),
-    duration: ANIMATED_DURATION,
+    worldPos: { ...worldPos },
   };
 
   activeEvents.push(event);
@@ -64,12 +66,12 @@ export function clearDamageNumbers(): void {
 // -----------------------------------------------------------------------------
 
 const SOURCE_COLORS: Record<DamageNumberEvent["source"], string> = {
-  tower:  "#6db8ff",
-  hero:   "#ffd700",
-  troop:  "#ffb366",
-  spell:  "#c084fc",
-  burn:   "#ff6b35",
-  aoe:    "#ff4444",
+  aoe: "#ff4444",
+  burn: "#ff6b35",
+  hero: "#ffd700",
+  spell: "#c084fc",
+  tower: "#6db8ff",
+  troop: "#ffb366",
 };
 
 const CRITICAL_COLOR = "#ff2222";
@@ -85,9 +87,11 @@ export function renderDamageNumbers(
   dpr: number,
   style: DamageNumberStyle,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
-  if (style === "off" || activeEvents.length === 0) return;
+  if (style === "off" || activeEvents.length === 0) {
+    return;
+  }
 
   const now = performance.now();
   const zoom = cameraZoom ?? 1;
@@ -100,13 +104,20 @@ export function renderDamageNumbers(
   for (let i = 0; i < activeEvents.length; i++) {
     const ev = activeEvents[i];
     const elapsed = now - ev.spawnTime;
-    if (elapsed >= maxDur) continue;
+    if (elapsed >= maxDur) {
+      continue;
+    }
 
     activeEvents[writeIdx++] = ev;
     const t = elapsed / maxDur; // 0→1
 
     const screenPos = worldToScreen(
-      ev.worldPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom,
+      ev.worldPos,
+      canvasWidth,
+      canvasHeight,
+      dpr,
+      cameraOffset,
+      cameraZoom
     );
 
     const baseColor = ev.isCritical ? CRITICAL_COLOR : SOURCE_COLORS[ev.source];
@@ -128,14 +139,23 @@ function renderSimpleDamageNumber(
   ev: DamageNumberEvent,
   t: number,
   zoom: number,
-  color: string,
+  color: string
 ): void {
   const alpha = 1 - t;
   const offsetY = -t * 25 * zoom;
 
   ctx.globalAlpha = alpha;
   const fontSize = (ev.isCritical ? 16 : 13) * zoom;
-  drawOutlinedText(ctx, `-${ev.amount}`, screen.x, screen.y + offsetY, fontSize, color, "#000", 2 * zoom);
+  drawOutlinedText(
+    ctx,
+    `-${ev.amount}`,
+    screen.x,
+    screen.y + offsetY,
+    fontSize,
+    color,
+    "#000",
+    2 * zoom
+  );
   ctx.globalAlpha = 1;
 }
 
@@ -145,7 +165,7 @@ function renderAnimatedDamageNumber(
   ev: DamageNumberEvent,
   t: number,
   zoom: number,
-  color: string,
+  color: string
 ): void {
   // Phase 1: pop up and scale (0→0.15)
   // Phase 2: float and fade (0.15→1)
@@ -159,7 +179,7 @@ function renderAnimatedDamageNumber(
   const alpha = 1 - fadePhase * fadePhase;
 
   // Rise trajectory: fast then slow (ease-out)
-  const rise = (1 - Math.pow(1 - t, 2)) * 40 * zoom;
+  const rise = (1 - (1 - t) ** 2) * 40 * zoom;
   // Slight horizontal drift for crits
   const drift = ev.isCritical ? Math.sin(t * 4) * 6 * zoom : 0;
 

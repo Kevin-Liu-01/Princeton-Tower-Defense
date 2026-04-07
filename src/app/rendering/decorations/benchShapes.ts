@@ -19,7 +19,7 @@ function isoBox(
   top: Fill,
   left: Fill,
   right: Fill,
-  s: number,
+  s: number
 ): void {
   // Left face
   ctx.fillStyle = left;
@@ -72,7 +72,7 @@ function slatLinesOnTop(
   hw: number,
   hd: number,
   n: number,
-  s: number,
+  s: number
 ): void {
   ctx.strokeStyle = "rgba(0,0,0,0.16)";
   ctx.lineWidth = 0.35 * s;
@@ -98,7 +98,7 @@ function faceHorizontalLines(
   h: number,
   n: number,
   s: number,
-  color: string = "rgba(0,0,0,0.14)",
+  color: string = "rgba(0,0,0,0.14)"
 ): void {
   ctx.strokeStyle = color;
   ctx.lineWidth = 0.35 * s;
@@ -120,7 +120,7 @@ function woodGrainOnTop(
   hw: number,
   hd: number,
   s: number,
-  color: string = "rgba(80,55,30,0.08)",
+  color: string = "rgba(80,55,30,0.08)"
 ): void {
   ctx.strokeStyle = color;
   ctx.lineWidth = 0.25 * s;
@@ -133,7 +133,7 @@ function woodGrainOnTop(
       gx + hw * 0.05,
       topY + off,
       gx + hw * 0.1,
-      topY + hd * 0.5 + off,
+      topY + hd * 0.5 + off
     );
     ctx.stroke();
   }
@@ -145,7 +145,7 @@ function drawBolt(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  r: number,
+  r: number
 ): void {
   ctx.fillStyle = "rgba(60,60,60,0.5)";
   ctx.beginPath();
@@ -167,7 +167,7 @@ function stoneJointsOnFace(
   bry: number,
   h: number,
   rows: number,
-  s: number,
+  s: number
 ): void {
   ctx.strokeStyle = "rgba(0,0,0,0.1)";
   ctx.lineWidth = 0.4 * s;
@@ -200,7 +200,7 @@ function parkBench(
   ctx: CanvasRenderingContext2D,
   bx: number,
   by: number,
-  s: number,
+  s: number
 ): void {
   // Warm wood palette
   const wTop = "#C49A6C";
@@ -230,11 +230,21 @@ function parkBench(
   // --- Backrest panel ---
   const brY = seatTopY - (seatHD - backHD);
 
-  const brLG = ctx.createLinearGradient(bx - backHW, brY - backH, bx - backHW, brY);
+  const brLG = ctx.createLinearGradient(
+    bx - backHW,
+    brY - backH,
+    bx - backHW,
+    brY
+  );
   brLG.addColorStop(0, wLit);
   brLG.addColorStop(0.5, wMid);
   brLG.addColorStop(1, wDk);
-  const brRG = ctx.createLinearGradient(bx + backHW, brY - backH, bx + backHW, brY);
+  const brRG = ctx.createLinearGradient(
+    bx + backHW,
+    brY - backH,
+    bx + backHW,
+    brY
+  );
   brRG.addColorStop(0, wShd);
   brRG.addColorStop(1, "#3E2E1F");
   isoBox(ctx, bx, brY, backHW, backHD, backH, wTop, brLG, brRG, s);
@@ -250,25 +260,51 @@ function parkBench(
     const gy = brY - backH * (0.2 + g * 0.3);
     ctx.beginPath();
     ctx.moveTo(bx - backHW * 0.1, gy + backHD * 0.8);
-    ctx.quadraticCurveTo(bx - backHW * 0.5, gy + backHD * 0.5, bx - backHW * 0.9, gy + backHD * 0.3);
+    ctx.quadraticCurveTo(
+      bx - backHW * 0.5,
+      gy + backHD * 0.5,
+      bx - backHW * 0.9,
+      gy + backHD * 0.3
+    );
     ctx.stroke();
   }
 
   // Top rail — slightly wider than backrest
   const railH = 1.5 * s;
   const railY = brY - backH;
-  const railTG = ctx.createLinearGradient(bx - backHW, railY, bx + backHW, railY);
+  const railTG = ctx.createLinearGradient(
+    bx - backHW,
+    railY,
+    bx + backHW,
+    railY
+  );
   railTG.addColorStop(0, wTop);
   railTG.addColorStop(0.4, "#D4AA7C");
   railTG.addColorStop(1, "#B08858");
-  isoBox(ctx, bx, railY, backHW + 0.8 * s, backHD + 0.3 * s, railH, railTG, wLit, wDk, s);
+  isoBox(
+    ctx,
+    bx,
+    railY,
+    backHW + 0.8 * s,
+    backHD + 0.3 * s,
+    railH,
+    railTG,
+    wLit,
+    wDk,
+    s
+  );
 
   // --- Cast iron side frames ---
   for (const dir of [-1, 1] as const) {
     const lx = bx + dir * (seatHW - legHW);
 
     // Main upright
-    const legLG = ctx.createLinearGradient(lx - legHW, by, lx - legHW, by - legH);
+    const legLG = ctx.createLinearGradient(
+      lx - legHW,
+      by,
+      lx - legHW,
+      by - legH
+    );
     legLG.addColorStop(0, iLit);
     legLG.addColorStop(1, iMid);
     isoBox(ctx, lx, by, legHW, legHD, legH + seatThk, iHi, legLG, iDk, s);
@@ -279,24 +315,52 @@ function parkBench(
     const fcy = by - legH * 0.45;
     // Main scroll curve
     ctx.beginPath();
-    ctx.arc(lx - legHW * 0.2, fcy + legHD * 0.35, 2.2 * s, Math.PI * 0.3, Math.PI * 1.5);
+    ctx.arc(
+      lx - legHW * 0.2,
+      fcy + legHD * 0.35,
+      2.2 * s,
+      Math.PI * 0.3,
+      Math.PI * 1.5
+    );
     ctx.stroke();
     // Inner scroll
     ctx.beginPath();
-    ctx.arc(lx - legHW * 0.2, fcy - 2 * s + legHD * 0.5, 1.3 * s, -Math.PI * 0.2, Math.PI * 1.1);
+    ctx.arc(
+      lx - legHW * 0.2,
+      fcy - 2 * s + legHD * 0.5,
+      1.3 * s,
+      -Math.PI * 0.2,
+      Math.PI * 1.1
+    );
     ctx.stroke();
     // S-curve connector
     ctx.lineWidth = 0.5 * s;
     ctx.beginPath();
     ctx.moveTo(lx - legHW * 0.3, fcy + legHD * 0.35 + 2.2 * s);
-    ctx.quadraticCurveTo(lx - legHW * 0.1, fcy + legHD * 0.35 + 3 * s, lx, fcy + legHD * 0.35 + 2.5 * s);
+    ctx.quadraticCurveTo(
+      lx - legHW * 0.1,
+      fcy + legHD * 0.35 + 3 * s,
+      lx,
+      fcy + legHD * 0.35 + 2.5 * s
+    );
     ctx.stroke();
 
     // Foot pad (wider base)
     const fpLG = ctx.createLinearGradient(lx - legHW, by, lx + legHW, by);
     fpLG.addColorStop(0, iMid);
     fpLG.addColorStop(1, iDk);
-    isoBox(ctx, lx, by + 0.3 * s, legHW + 0.6 * s, legHD + 0.3 * s, 0.6 * s, iHi, fpLG, iDk, s);
+    isoBox(
+      ctx,
+      lx,
+      by + 0.3 * s,
+      legHW + 0.6 * s,
+      legHD + 0.3 * s,
+      0.6 * s,
+      iHi,
+      fpLG,
+      iDk,
+      s
+    );
 
     // Bolts connecting seat to frame
     const boltY = seatY - seatThk * 0.5;
@@ -305,11 +369,21 @@ function parkBench(
   }
 
   // --- Seat planks ---
-  const sLG = ctx.createLinearGradient(bx - seatHW, seatTopY, bx - seatHW, seatY);
+  const sLG = ctx.createLinearGradient(
+    bx - seatHW,
+    seatTopY,
+    bx - seatHW,
+    seatY
+  );
   sLG.addColorStop(0, wLit);
   sLG.addColorStop(0.5, wMid);
   sLG.addColorStop(1, wDk);
-  const sTG = ctx.createLinearGradient(bx - seatHW, seatTopY, bx + seatHW, seatTopY);
+  const sTG = ctx.createLinearGradient(
+    bx - seatHW,
+    seatTopY,
+    bx + seatHW,
+    seatTopY
+  );
   sTG.addColorStop(0, wTop);
   sTG.addColorStop(0.3, "#C49A6C");
   sTG.addColorStop(0.7, "#B8885C");
@@ -339,7 +413,7 @@ function logBench(
   ctx: CanvasRenderingContext2D,
   bx: number,
   by: number,
-  s: number,
+  s: number
 ): void {
   const barkDk = "#3E2723";
   const barkMd = "#5D4037";
@@ -375,7 +449,9 @@ function logBench(
     ctx.lineWidth = 0.4 * s;
     for (let b = 0; b < 4; b++) {
       const angle = 0.3 + b * 0.6;
-      if (angle > Math.PI) break;
+      if (angle > Math.PI) {
+        break;
+      }
       const bx2 = sx + Math.cos(angle) * stR;
       ctx.beginPath();
       ctx.moveTo(bx2, by + Math.sin(angle) * stR * T);
@@ -383,7 +459,7 @@ function logBench(
         bx2 + (b % 2 === 0 ? 0.3 : -0.3) * s,
         by - stH * 0.5,
         bx2 + (b % 2 === 0 ? -0.2 : 0.4) * s,
-        by - stH + Math.sin(angle) * stR * T,
+        by - stH + Math.sin(angle) * stR * T
       );
       ctx.stroke();
     }
@@ -438,11 +514,27 @@ function logBench(
     if (dir === -1) {
       ctx.fillStyle = "rgba(76,175,80,0.25)";
       ctx.beginPath();
-      ctx.ellipse(sx - stR * 0.5, by - stH * 0.4, 1.8 * s, 1 * s, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx - stR * 0.5,
+        by - stH * 0.4,
+        1.8 * s,
+        1 * s,
+        0.2,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.fillStyle = "rgba(56,142,60,0.18)";
       ctx.beginPath();
-      ctx.ellipse(sx - stR * 0.3, by - stH * 0.25, 1.2 * s, 0.7 * s, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx - stR * 0.3,
+        by - stH * 0.25,
+        1.2 * s,
+        0.7 * s,
+        -0.1,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -461,7 +553,12 @@ function logBench(
   ctx.moveTo(bx - logHW, logY);
   ctx.lineTo(bx - logHW, logY - logR * 0.4);
   ctx.quadraticCurveTo(bx - logHW, logY - logR * 1.4, bx, logY - logR * 1.5);
-  ctx.quadraticCurveTo(bx + logHW, logY - logR * 1.4, bx + logHW, logY - logR * 0.4);
+  ctx.quadraticCurveTo(
+    bx + logHW,
+    logY - logR * 1.4,
+    bx + logHW,
+    logY - logR * 0.4
+  );
   ctx.lineTo(bx + logHW, logY);
   ctx.closePath();
   ctx.fill();
@@ -474,12 +571,22 @@ function logBench(
     const barkY = logY - logR * (0.3 + bt * 0.8);
     ctx.beginPath();
     ctx.moveTo(bx - logHW * 0.9, barkY + 0.5 * s);
-    ctx.quadraticCurveTo(bx, barkY - 0.3 * s, bx + logHW * 0.9, barkY + 0.3 * s);
+    ctx.quadraticCurveTo(
+      bx,
+      barkY - 0.3 * s,
+      bx + logHW * 0.9,
+      barkY + 0.3 * s
+    );
     ctx.stroke();
   }
 
   // Flat top face (sawn surface)
-  const logTopGrad = ctx.createLinearGradient(bx - logHW, logY - logR, bx + logHW, logY - logR);
+  const logTopGrad = ctx.createLinearGradient(
+    bx - logHW,
+    logY - logR,
+    bx + logHW,
+    logY - logR
+  );
   logTopGrad.addColorStop(0, woodIn);
   logTopGrad.addColorStop(0.3, "#D4C4B4");
   logTopGrad.addColorStop(0.7, "#C8B8A8");
@@ -501,7 +608,7 @@ function logBench(
       gx + logHW * 0.04,
       logY - logR * 0.7 + sway,
       gx + logHW * 0.08,
-      logY - logR * 0.7 + logR * T * 0.5,
+      logY - logR * 0.7 + logR * T * 0.5
     );
     ctx.stroke();
   }
@@ -518,7 +625,15 @@ function logBench(
   ctx.strokeStyle = "rgba(220,200,180,0.1)";
   ctx.lineWidth = 0.4 * s;
   ctx.beginPath();
-  ctx.ellipse(bx, logY - logR * 0.7, logHW * 0.95, logR * T * 1.1, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(
+    bx,
+    logY - logR * 0.7,
+    logHW * 0.95,
+    logR * T * 1.1,
+    0,
+    Math.PI,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // End-grain cross-section (right end of log)
@@ -533,7 +648,15 @@ function logBench(
   for (let r = 1; r <= 3; r++) {
     const rf = r / 4;
     ctx.beginPath();
-    ctx.ellipse(endX, endY, logR * 0.7 * rf, logR * 0.9 * rf, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      endX,
+      endY,
+      logR * 0.7 * rf,
+      logR * 0.9 * rf,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
   }
   ctx.strokeStyle = barkDk;
@@ -568,7 +691,7 @@ function ironBench(
   ctx: CanvasRenderingContext2D,
   bx: number,
   by: number,
-  s: number,
+  s: number
 ): void {
   const iDk = "#1A1A2E";
   const iMid = "#2C2C44";
@@ -595,7 +718,12 @@ function ironBench(
     const lx = bx + dir * (frameHW - legW);
 
     // Main leg upright
-    const legLG = ctx.createLinearGradient(lx - legW, by, lx - legW, by - seatH);
+    const legLG = ctx.createLinearGradient(
+      lx - legW,
+      by,
+      lx - legW,
+      by - seatH
+    );
     legLG.addColorStop(0, iLt);
     legLG.addColorStop(0.5, iMid);
     legLG.addColorStop(1, iLt);
@@ -607,30 +735,66 @@ function ironBench(
     const fcy = by - seatH * 0.42;
     // Large scroll
     ctx.beginPath();
-    ctx.arc(lx - legW * 0.2, fcy + legD * 0.3, 2.2 * s, Math.PI * 0.25, Math.PI * 1.5);
+    ctx.arc(
+      lx - legW * 0.2,
+      fcy + legD * 0.3,
+      2.2 * s,
+      Math.PI * 0.25,
+      Math.PI * 1.5
+    );
     ctx.stroke();
     // Small inner scroll
     ctx.beginPath();
-    ctx.arc(lx - legW * 0.2, fcy - 2.2 * s + legD * 0.45, 1.3 * s, -Math.PI * 0.2, Math.PI * 1.0);
+    ctx.arc(
+      lx - legW * 0.2,
+      fcy - 2.2 * s + legD * 0.45,
+      1.3 * s,
+      -Math.PI * 0.2,
+      Math.PI * 1
+    );
     ctx.stroke();
     // Connecting flourish
     ctx.lineWidth = 0.5 * s;
     ctx.beginPath();
     ctx.moveTo(lx - legW * 0.3, fcy + legD * 0.3 + 2.2 * s);
-    ctx.quadraticCurveTo(lx, fcy + legD * 0.3 + 3 * s, lx + legW * 0.2, fcy + legD * 0.3 + 2 * s);
+    ctx.quadraticCurveTo(
+      lx,
+      fcy + legD * 0.3 + 3 * s,
+      lx + legW * 0.2,
+      fcy + legD * 0.3 + 2 * s
+    );
     ctx.stroke();
 
     // Patina spots
     ctx.fillStyle = patina;
     ctx.beginPath();
-    ctx.ellipse(lx - legW * 0.5, by - seatH * 0.6, 1 * s, 0.7 * s, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(
+      lx - legW * 0.5,
+      by - seatH * 0.6,
+      1 * s,
+      0.7 * s,
+      0.2,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Foot pad
     const fpLG = ctx.createLinearGradient(lx - legW, by, lx + legW, by);
     fpLG.addColorStop(0, iMid);
     fpLG.addColorStop(1, iDk);
-    isoBox(ctx, lx, by + 0.3 * s, legW + 0.8 * s, legD + 0.4 * s, 0.6 * s, iTop, fpLG, iDk, s);
+    isoBox(
+      ctx,
+      lx,
+      by + 0.3 * s,
+      legW + 0.8 * s,
+      legD + 0.4 * s,
+      0.6 * s,
+      iTop,
+      fpLG,
+      iDk,
+      s
+    );
   }
 
   // --- Iron frame strip under seat ---
@@ -655,11 +819,21 @@ function ironBench(
   ctx.fill();
 
   // --- Wood seat slab ---
-  const sLG = ctx.createLinearGradient(bx - frameHW, stY - seatThk, bx - frameHW, stY);
+  const sLG = ctx.createLinearGradient(
+    bx - frameHW,
+    stY - seatThk,
+    bx - frameHW,
+    stY
+  );
   sLG.addColorStop(0, wSlat);
   sLG.addColorStop(0.5, "#957060");
   sLG.addColorStop(1, wDk);
-  const sTG = ctx.createLinearGradient(bx - frameHW, stY - seatThk, bx + frameHW, stY - seatThk);
+  const sTG = ctx.createLinearGradient(
+    bx - frameHW,
+    stY - seatThk,
+    bx + frameHW,
+    stY - seatThk
+  );
   sTG.addColorStop(0, wTop);
   sTG.addColorStop(0.3, wSlat);
   sTG.addColorStop(0.7, "#A08070");
@@ -692,7 +866,12 @@ function ironBench(
 
   // --- Top rail ---
   const railY = brBase - backH;
-  const railTG = ctx.createLinearGradient(bx - frameHW, railY, bx + frameHW, railY);
+  const railTG = ctx.createLinearGradient(
+    bx - frameHW,
+    railY,
+    bx + frameHW,
+    railY
+  );
   railTG.addColorStop(0, iTop);
   railTG.addColorStop(0.5, iHi);
   railTG.addColorStop(1, iTop);
@@ -737,8 +916,14 @@ function ironBench(
     for (let sp = 0; sp < 4; sp++) {
       const angle = sp * Math.PI * 0.5 + 0.3;
       ctx.beginPath();
-      ctx.moveTo(scx + Math.cos(angle) * scr * 0.45, scy + Math.sin(angle) * scr * 0.45);
-      ctx.lineTo(scx + Math.cos(angle) * scr * 0.9, scy + Math.sin(angle) * scr * 0.9);
+      ctx.moveTo(
+        scx + Math.cos(angle) * scr * 0.45,
+        scy + Math.sin(angle) * scr * 0.45
+      );
+      ctx.lineTo(
+        scx + Math.cos(angle) * scr * 0.9,
+        scy + Math.sin(angle) * scr * 0.9
+      );
       ctx.stroke();
     }
     ctx.lineWidth = 0.65 * s;
@@ -767,7 +952,7 @@ function stoneThrone(
   ctx: CanvasRenderingContext2D,
   bx: number,
   by: number,
-  s: number,
+  s: number
 ): void {
   // Stone palette
   const sTop = "#A0AAB0";
@@ -790,12 +975,22 @@ function stoneThrone(
   const bkY = by - seatH;
 
   // --- Backrest (drawn first, seat paints over lower portion) ---
-  const bkLG = ctx.createLinearGradient(bx - backHW, bkY - backH, bx - backHW, bkY);
+  const bkLG = ctx.createLinearGradient(
+    bx - backHW,
+    bkY - backH,
+    bx - backHW,
+    bkY
+  );
   bkLG.addColorStop(0, sLeftLt);
   bkLG.addColorStop(0.5, sLeft);
   bkLG.addColorStop(1, "#506070");
 
-  const bkRG = ctx.createLinearGradient(bx + backHW, bkY - backH, bx + backHW, bkY);
+  const bkRG = ctx.createLinearGradient(
+    bx + backHW,
+    bkY - backH,
+    bx + backHW,
+    bkY
+  );
   bkRG.addColorStop(0, sRightLt);
   bkRG.addColorStop(0.5, sRight);
   bkRG.addColorStop(1, "#354048");
@@ -886,11 +1081,21 @@ function stoneThrone(
   }
 
   // --- Seat block (drawn over backrest's lower portion) ---
-  const stLG = ctx.createLinearGradient(bx - seatHW, by - seatH, bx - seatHW, by);
+  const stLG = ctx.createLinearGradient(
+    bx - seatHW,
+    by - seatH,
+    bx - seatHW,
+    by
+  );
   stLG.addColorStop(0, sLeftLt);
   stLG.addColorStop(0.5, sLeft);
   stLG.addColorStop(1, "#506070");
-  const stRG = ctx.createLinearGradient(bx + seatHW, by - seatH, bx + seatHW, by);
+  const stRG = ctx.createLinearGradient(
+    bx + seatHW,
+    by - seatH,
+    bx + seatHW,
+    by
+  );
   stRG.addColorStop(0, sRightLt);
   stRG.addColorStop(1, sRight);
   isoBox(ctx, bx, by, seatHW, seatHD, seatH, sTop, stLG, stRG, s);
@@ -957,7 +1162,12 @@ function stoneThrone(
   ctx.lineWidth = 0.25 * s;
   ctx.beginPath();
   ctx.moveTo(bx - seatHW * 0.3, by - seatH * 0.7);
-  ctx.quadraticCurveTo(bx - seatHW * 0.1, by - seatH * 0.5, bx - seatHW * 0.2, by - seatH * 0.2);
+  ctx.quadraticCurveTo(
+    bx - seatHW * 0.1,
+    by - seatH * 0.5,
+    bx - seatHW * 0.2,
+    by - seatH * 0.2
+  );
   ctx.stroke();
 }
 
@@ -970,23 +1180,27 @@ export function drawBench(
   bx: number,
   by: number,
   s: number,
-  variant: number,
+  variant: number
 ): void {
   const bv = variant % 4;
   drawDirectionalShadow(ctx, bx, by + 1 * s, s, 14 * s, 6 * s, 18 * s, 0.22);
 
   switch (bv) {
-    case 0:
+    case 0: {
       parkBench(ctx, bx, by, s);
       break;
-    case 1:
+    }
+    case 1: {
       logBench(ctx, bx, by, s);
       break;
-    case 2:
+    }
+    case 2: {
       ironBench(ctx, bx, by, s);
       break;
-    case 3:
+    }
+    case 3: {
       stoneThrone(ctx, bx, by, s);
       break;
+    }
   }
 }

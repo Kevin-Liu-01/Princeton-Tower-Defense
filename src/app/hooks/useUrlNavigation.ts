@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef } from "react";
+
 import type { CodexTabId } from "../components/menus/CodexModal";
-import { parseRoute, routeToPath, type RouteTarget } from "../constants/routes";
+import { parseRoute, routeToPath } from "../constants/routes";
+import type { RouteTarget } from "../constants/routes";
 
 export interface InitialNavigation {
   level: string | null;
@@ -15,26 +17,32 @@ export interface InitialNavigation {
 
 function routeToInitialNav(target: RouteTarget): InitialNavigation {
   const base: InitialNavigation = {
-    level: null,
     codex: { open: false, tab: "towers" },
     creator: false,
     credits: false,
+    level: null,
     settings: false,
   };
 
   switch (target.type) {
-    case "level":
+    case "level": {
       return { ...base, level: target.levelId };
-    case "codex":
+    }
+    case "codex": {
       return { ...base, codex: { open: true, tab: target.tab ?? "towers" } };
-    case "creator":
+    }
+    case "creator": {
       return { ...base, creator: true };
-    case "credits":
+    }
+    case "credits": {
       return { ...base, credits: true };
-    case "settings":
+    }
+    case "settings": {
       return { ...base, settings: true };
-    default:
+    }
+    default: {
       return base;
+    }
   }
 }
 
@@ -54,7 +62,9 @@ export function useUrlNavigation() {
   });
 
   const getInitialNavigation = useCallback((): InitialNavigation | null => {
-    if (hasAppliedRef.current) return null;
+    if (hasAppliedRef.current) {
+      return null;
+    }
     hasAppliedRef.current = true;
     const val = initialNav.current;
     return typeof val === "function" ? (val as () => InitialNavigation)() : val;
@@ -81,5 +91,5 @@ export function useUrlNavigation() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  return { getInitialNavigation, updateUrl, resetUrl };
+  return { getInitialNavigation, resetUrl, updateUrl };
 }

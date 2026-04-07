@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+
 import { LandingPage } from "../components/landing/LandingPage";
 import { usePrincetonTowerDefenseRuntime } from "../hooks/usePrincetonTowerDefenseRuntime";
 

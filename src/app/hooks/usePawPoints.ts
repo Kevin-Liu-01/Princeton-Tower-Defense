@@ -4,7 +4,9 @@ import type { Dispatch, SetStateAction } from "react";
 type PawPointsSetter = Dispatch<SetStateAction<number>>;
 
 const normalizePawPointsValue = (value: number): number => {
-  if (!Number.isFinite(value)) return 0;
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
   return Math.max(0, Math.round(value));
 };
 
@@ -43,7 +45,9 @@ export function usePawPoints(initialPawPoints: number): PawPointsState {
   const addPawPoints = useCallback(
     (amount: number) => {
       const normalizedAmount = normalizePawPointsValue(amount);
-      if (normalizedAmount <= 0) return;
+      if (normalizedAmount <= 0) {
+        return;
+      }
       setPawPoints((current) => current + normalizedAmount);
     },
     [setPawPoints]
@@ -52,7 +56,9 @@ export function usePawPoints(initialPawPoints: number): PawPointsState {
   const removePawPoints = useCallback(
     (amount: number) => {
       const normalizedAmount = normalizePawPointsValue(amount);
-      if (normalizedAmount <= 0) return;
+      if (normalizedAmount <= 0) {
+        return;
+      }
       setPawPoints((current) => current - normalizedAmount);
     },
     [setPawPoints]
@@ -61,8 +67,12 @@ export function usePawPoints(initialPawPoints: number): PawPointsState {
   const spendPawPoints = useCallback(
     (amount: number): boolean => {
       const normalizedAmount = normalizePawPointsValue(amount);
-      if (normalizedAmount <= 0) return true;
-      if (pawPointsRaw < normalizedAmount) return false;
+      if (normalizedAmount <= 0) {
+        return true;
+      }
+      if (pawPointsRaw < normalizedAmount) {
+        return false;
+      }
       setPawPoints((current) => current - normalizedAmount);
       return true;
     },
@@ -82,12 +92,12 @@ export function usePawPoints(initialPawPoints: number): PawPointsState {
   );
 
   return {
-    pawPoints,
-    setPawPoints,
-    canAfford,
     addPawPoints,
+    canAfford,
+    pawPoints,
     removePawPoints,
-    spendPawPoints,
     resetPawPoints,
+    setPawPoints,
+    spendPawPoints,
   };
 }

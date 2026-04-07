@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+
 import { LEVEL_WAVES } from "../../../constants";
-import type { WaveGroup } from "../../../types";
 import type {
   CustomLevelDefinition,
   CustomLevelDraftInput,
@@ -8,13 +8,13 @@ import type {
   CustomPlacedTowerConfig,
   CustomSpecialTowerConfig,
 } from "../../../customLevels/types";
+import type { WaveGroup } from "../../../types";
 import type {
-  CreatorDraftState,
-  MapPresetTemplate,
-  PresetSection,
-  SelectionTarget,
-} from "../types";
-import type { DecorationCategory, HazardType, MapDecoration, MapHazard } from "../../../types";
+  DecorationCategory,
+  HazardType,
+  MapDecoration,
+  MapHazard,
+} from "../../../types";
 import {
   DEFAULT_PRESET_ID,
   LANDMARK_OPTIONS,
@@ -23,6 +23,13 @@ import {
   MAP_PRESET_TEMPLATES,
   DECORATION_OPTIONS_BY_THEME,
 } from "../constants";
+import type {
+  CreatorDraftState,
+  MapPresetTemplate,
+  PresetSection,
+  SelectionTarget,
+} from "../types";
+import type { GridPoint } from "../types";
 import {
   cloneDraftState,
   createDefaultPresetWaves,
@@ -31,18 +38,19 @@ import {
   levelToDraft,
   validateDraft,
 } from "../utils/draftUtils";
-import { removeSelection } from "../utils/selectionUtils";
 import { exportMapToFile, importMapFromFile } from "../utils/mapFileIO";
-import type { GridPoint } from "../types";
+import { removeSelection } from "../utils/selectionUtils";
 
-const cloneDecorations = (decorations: MapDecoration[] | undefined): MapDecoration[] =>
+const cloneDecorations = (
+  decorations: MapDecoration[] | undefined
+): MapDecoration[] =>
   (decorations ?? []).map((deco) => ({ ...deco, pos: { ...deco.pos } }));
 
 const cloneHazards = (hazards: MapHazard[] | undefined): MapHazard[] =>
   (hazards ?? []).map((hazard) => ({
     ...hazard,
-    pos: hazard.pos ? { ...(hazard.pos as GridPoint) } : hazard.pos,
     gridPos: hazard.gridPos ? { ...hazard.gridPos } : hazard.gridPos,
+    pos: hazard.pos ? { ...(hazard.pos as GridPoint) } : hazard.pos,
   }));
 
 export interface CreatorDraftActions {
@@ -50,14 +58,19 @@ export interface CreatorDraftActions {
   draftRef: React.RefObject<CreatorDraftState>;
   setDraft: React.Dispatch<React.SetStateAction<CreatorDraftState>>;
   pushDraftHistory: (nextDraft: CreatorDraftState) => void;
-  applyDraftUpdate: (updater: (prev: CreatorDraftState) => CreatorDraftState) => void;
+  applyDraftUpdate: (
+    updater: (prev: CreatorDraftState) => CreatorDraftState
+  ) => void;
   undoDraft: () => void;
   redoDraft: () => void;
   resetDraft: () => void;
   loadLevel: (level: CustomLevelDefinition) => void;
   saveDraft: () => void;
   deleteCurrentDraft: () => void;
-  eraseSelection: (selection: SelectionTarget | null, clearSelection: () => void) => void;
+  eraseSelection: (
+    selection: SelectionTarget | null,
+    clearSelection: () => void
+  ) => void;
   applyMapPreset: (presetId: string) => void;
   applyPresetSections: (presetId: string, sections: PresetSection[]) => void;
   applyPresetWaves: (presetId: string) => void;
@@ -80,20 +93,25 @@ export interface CreatorDraftActions {
   addWave: () => void;
   removeWave: (waveIndex: number) => void;
   addWaveGroup: (waveIndex: number) => void;
-  updateWaveGroup: (waveIndex: number, groupIndex: number, patch: Partial<WaveGroup>) => void;
+  updateWaveGroup: (
+    waveIndex: number,
+    groupIndex: number,
+    patch: Partial<WaveGroup>
+  ) => void;
   removeWaveGroup: (waveIndex: number, groupIndex: number) => void;
 }
 
 export function useCreatorDraft(
   onSaveLevel: (draft: CustomLevelDraftInput) => CustomLevelUpsertResult,
-  onDeleteLevel: (levelId: string) => void,
+  onDeleteLevel: (levelId: string) => void
 ): CreatorDraftActions {
   const [draft, setDraft] = useState<CreatorDraftState>(createEmptyDraft);
   const [undoStack, setUndoStack] = useState<CreatorDraftState[]>([]);
   const [redoStack, setRedoStack] = useState<CreatorDraftState[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [selectedPresetId, setSelectedPresetId] = useState<string>(DEFAULT_PRESET_ID);
+  const [selectedPresetId, setSelectedPresetId] =
+    useState<string>(DEFAULT_PRESET_ID);
 
   const draftRef = useRef<CreatorDraftState>(draft);
 
@@ -103,7 +121,11 @@ export function useCreatorDraft(
   }, []);
 
   const waveTemplateOptions = useMemo(
-    () => MAP_PRESET_TEMPLATES.map((preset) => ({ value: preset.id, label: preset.label })),
+    () =>
+      MAP_PRESET_TEMPLATES.map((preset) => ({
+        label: preset.label,
+        value: preset.id,
+      })),
     []
   );
 
@@ -123,7 +145,9 @@ export function useCreatorDraft(
 
   const pushDraftHistory = useCallback((nextDraft: CreatorDraftState): void => {
     const prev = draftRef.current;
-    if (nextDraft === prev) return;
+    if (nextDraft === prev) {
+      return;
+    }
     setUndoStack((stack) => [...stack.slice(-119), cloneDraftState(prev)]);
     setRedoStack([]);
     draftRef.current = nextDraft;
@@ -134,7 +158,9 @@ export function useCreatorDraft(
     (updater: (prev: CreatorDraftState) => CreatorDraftState): void => {
       const prev = draftRef.current;
       const next = updater(prev);
-      if (next === prev) return;
+      if (next === prev) {
+        return;
+      }
       pushDraftHistory(next);
     },
     [pushDraftHistory]
@@ -142,8 +168,10 @@ export function useCreatorDraft(
 
   const undoDraft = useCallback((): void => {
     setUndoStack((stack) => {
-      if (stack.length === 0) return stack;
-      const previous = stack[stack.length - 1];
+      if (stack.length === 0) {
+        return stack;
+      }
+      const previous = stack.at(-1);
       setRedoStack((future) => [...future, cloneDraftState(draftRef.current)]);
       const restored = cloneDraftState(previous);
       draftRef.current = restored;
@@ -154,8 +182,10 @@ export function useCreatorDraft(
 
   const redoDraft = useCallback((): void => {
     setRedoStack((stack) => {
-      if (stack.length === 0) return stack;
-      const next = stack[stack.length - 1];
+      if (stack.length === 0) {
+        return stack;
+      }
+      const next = stack.at(-1);
       setUndoStack((past) => [...past, cloneDraftState(draftRef.current)]);
       const restored = cloneDraftState(next);
       draftRef.current = restored;
@@ -202,22 +232,33 @@ export function useCreatorDraft(
     }
 
     const payload: CustomLevelDraftInput = {
-      id: currentDraft.id,
-      slug: currentDraft.slug,
-      name: currentDraft.name,
-      description: currentDraft.description,
-      theme: currentDraft.theme,
-      difficulty: currentDraft.difficulty,
-      startingPawPoints: currentDraft.startingPawPoints,
-      waveTemplate: currentDraft.waveTemplate,
+      allowedTowers:
+        currentDraft.allowedTowers.length > 0
+          ? currentDraft.allowedTowers
+          : undefined,
       customWaves:
         currentDraft.customWaves.length > 0
-          ? currentDraft.customWaves.map((wave) => wave.map((group) => ({ ...group })))
+          ? currentDraft.customWaves.map((wave) =>
+              wave.map((group) => ({ ...group }))
+            )
+          : undefined,
+      decorations: currentDraft.decorations,
+      description: currentDraft.description,
+      difficulty: currentDraft.difficulty,
+      hazards: currentDraft.hazards,
+      heroSpawn: currentDraft.heroSpawn ?? undefined,
+      id: currentDraft.id,
+      name: currentDraft.name,
+      placedTowers:
+        currentDraft.placedTowers.length > 0
+          ? currentDraft.placedTowers
           : undefined,
       primaryPath: currentDraft.primaryPath,
       secondaryPath:
-        currentDraft.secondaryPath.length > 0 ? currentDraft.secondaryPath : undefined,
-      heroSpawn: currentDraft.heroSpawn ?? undefined,
+        currentDraft.secondaryPath.length > 0
+          ? currentDraft.secondaryPath
+          : undefined,
+      slug: currentDraft.slug,
       specialTower:
         currentDraft.specialTowers.length === 1
           ? currentDraft.specialTowers[0]
@@ -226,16 +267,9 @@ export function useCreatorDraft(
         currentDraft.specialTowers.length > 0
           ? currentDraft.specialTowers
           : undefined,
-      placedTowers:
-        currentDraft.placedTowers.length > 0
-          ? currentDraft.placedTowers
-          : undefined,
-      allowedTowers:
-        currentDraft.allowedTowers.length > 0
-          ? currentDraft.allowedTowers
-          : undefined,
-      decorations: currentDraft.decorations,
-      hazards: currentDraft.hazards,
+      startingPawPoints: currentDraft.startingPawPoints,
+      theme: currentDraft.theme,
+      waveTemplate: currentDraft.waveTemplate,
     };
 
     const result = onSaveLevel(payload);
@@ -257,15 +291,21 @@ export function useCreatorDraft(
 
   const deleteCurrentDraft = useCallback((): void => {
     const currentDraft = draftRef.current;
-    if (!currentDraft.id) return;
-    if (!window.confirm(`Delete "${currentDraft.name || currentDraft.id}"?`)) return;
+    if (!currentDraft.id) {
+      return;
+    }
+    if (!window.confirm(`Delete "${currentDraft.name || currentDraft.id}"?`)) {
+      return;
+    }
     onDeleteLevel(currentDraft.id);
     resetDraft();
   }, [onDeleteLevel, resetDraft]);
 
   const eraseSelection = useCallback(
     (selection: SelectionTarget | null, clearSelection: () => void): void => {
-      if (!selection) return;
+      if (!selection) {
+        return;
+      }
       applyDraftUpdate((prev) => removeSelection(prev, selection));
       clearSelection();
     },
@@ -276,33 +316,36 @@ export function useCreatorDraft(
     (presetId: string): void => {
       const nextPresetId = resolvePresetId(presetId);
       const preset = mapPresetById.get(nextPresetId);
-      if (!preset) return;
+      if (!preset) {
+        return;
+      }
 
       const presetDecorations = cloneDecorations(preset.decorations);
       const presetHazards = cloneHazards(preset.hazards);
-      const specialTowers: CustomSpecialTowerConfig[] = preset.specialTowers.map((st) => ({
-        pos: { ...st.pos },
-        type: st.type,
-        hp: st.hp,
-      }));
+      const specialTowers: CustomSpecialTowerConfig[] =
+        preset.specialTowers.map((st) => ({
+          hp: st.hp,
+          pos: { ...st.pos },
+          type: st.type,
+        }));
 
       applyDraftUpdate((prev) => ({
         ...prev,
-        theme: preset.theme ?? prev.theme,
-        difficulty: preset.difficulty ?? prev.difficulty,
-        startingPawPoints: preset.startingPawPoints ?? prev.startingPawPoints,
-        waveTemplate: nextPresetId,
         customWaves: [],
+        decorations: presetDecorations,
+        difficulty: preset.difficulty ?? prev.difficulty,
+        hazards: presetHazards,
+        heroSpawn: preset.heroSpawn ? { ...preset.heroSpawn } : prev.heroSpawn,
         primaryPath: preset.primaryPath
           ? preset.primaryPath.map((p) => ({ ...p }))
           : prev.primaryPath,
         secondaryPath: preset.secondaryPath
           ? preset.secondaryPath.map((p) => ({ ...p }))
           : [],
-        heroSpawn: preset.heroSpawn ? { ...preset.heroSpawn } : prev.heroSpawn,
         specialTowers,
-        decorations: presetDecorations,
-        hazards: presetHazards,
+        startingPawPoints: preset.startingPawPoints ?? prev.startingPawPoints,
+        theme: preset.theme ?? prev.theme,
+        waveTemplate: nextPresetId,
       }));
 
       setSelectedPresetId(nextPresetId);
@@ -320,7 +363,9 @@ export function useCreatorDraft(
     (presetId: string, sections: PresetSection[]): void => {
       const nextPresetId = resolvePresetId(presetId);
       const preset = mapPresetById.get(nextPresetId);
-      if (!preset || sections.length === 0) return;
+      if (!preset || sections.length === 0) {
+        return;
+      }
 
       const sectionSet = new Set(sections);
 
@@ -330,7 +375,8 @@ export function useCreatorDraft(
         if (sectionSet.has("theme")) {
           next.theme = preset.theme ?? prev.theme;
           next.difficulty = preset.difficulty ?? prev.difficulty;
-          next.startingPawPoints = preset.startingPawPoints ?? prev.startingPawPoints;
+          next.startingPawPoints =
+            preset.startingPawPoints ?? prev.startingPawPoints;
         }
         if (sectionSet.has("waves")) {
           next.waveTemplate = nextPresetId;
@@ -355,9 +401,9 @@ export function useCreatorDraft(
         }
         if (sectionSet.has("objectives")) {
           next.specialTowers = preset.specialTowers.map((st) => ({
+            hp: st.hp,
             pos: { ...st.pos },
             type: st.type,
-            hp: st.hp,
           }));
         }
 
@@ -400,22 +446,26 @@ export function useCreatorDraft(
       draftRef.current = imported;
       setNotice(`Imported "${imported.name || "Untitled"}".`);
       setErrors([]);
-    } catch (err) {
-      setErrors([err instanceof Error ? err.message : "Import failed."]);
+    } catch (error) {
+      setErrors([error instanceof Error ? error.message : "Import failed."]);
     }
   }, [draftRef, pushDraftHistory, setDraft]);
 
   // Wave editing
   const startCustomWaves = useCallback((): void => {
     applyDraftUpdate((prev) => {
-      if (prev.customWaves.length > 0) return prev;
+      if (prev.customWaves.length > 0) {
+        return prev;
+      }
       return { ...prev, customWaves: [[createDefaultWaveGroup()]] };
     });
   }, [applyDraftUpdate]);
 
   const useTemplateWaves = useCallback((): void => {
     applyDraftUpdate((prev) => {
-      if (prev.customWaves.length === 0) return prev;
+      if (prev.customWaves.length === 0) {
+        return prev;
+      }
       return { ...prev, customWaves: [] };
     });
   }, [applyDraftUpdate]);
@@ -430,7 +480,9 @@ export function useCreatorDraft(
   const removeWave = useCallback(
     (waveIndex: number): void => {
       applyDraftUpdate((prev) => {
-        const nextWaves = prev.customWaves.filter((_, index) => index !== waveIndex);
+        const nextWaves = prev.customWaves.filter(
+          (_, index) => index !== waveIndex
+        );
         return { ...prev, customWaves: nextWaves };
       });
     },
@@ -450,12 +502,20 @@ export function useCreatorDraft(
   );
 
   const updateWaveGroup = useCallback(
-    (waveIndex: number, groupIndex: number, patch: Partial<WaveGroup>): void => {
+    (
+      waveIndex: number,
+      groupIndex: number,
+      patch: Partial<WaveGroup>
+    ): void => {
       applyDraftUpdate((prev) => {
         const wave = prev.customWaves[waveIndex];
-        if (!wave) return prev;
+        if (!wave) {
+          return prev;
+        }
         const group = wave[groupIndex];
-        if (!group) return prev;
+        if (!group) {
+          return prev;
+        }
         const nextWaves = [...prev.customWaves];
         const nextWave = [...wave];
         nextWave[groupIndex] = { ...group, ...patch };
@@ -470,7 +530,9 @@ export function useCreatorDraft(
     (waveIndex: number, groupIndex: number): void => {
       applyDraftUpdate((prev) => {
         const wave = prev.customWaves[waveIndex];
-        if (!wave) return prev;
+        if (!wave) {
+          return prev;
+        }
         const nextWave = wave.filter((_, index) => index !== groupIndex);
         const nextWaves = [...prev.customWaves];
         if (nextWave.length === 0) {
@@ -490,46 +552,46 @@ export function useCreatorDraft(
     () =>
       draft.waveTemplate === DEFAULT_PRESET_ID
         ? createDefaultPresetWaves()
-        : LEVEL_WAVES[draft.waveTemplate] ?? [],
+        : (LEVEL_WAVES[draft.waveTemplate] ?? []),
     [draft.waveTemplate]
   );
 
   return {
-    draft,
-    draftRef,
-    setDraft,
-    pushDraftHistory,
+    addWave,
+    addWaveGroup,
     applyDraftUpdate,
-    undoDraft,
-    redoDraft,
-    resetDraft,
-    loadLevel,
-    saveDraft,
-    deleteCurrentDraft,
-    eraseSelection,
     applyMapPreset,
+    applyPresetObjectives,
     applyPresetSections,
     applyPresetWaves,
-    applyPresetObjectives,
+    clearMessages,
+    deleteCurrentDraft,
+    draft,
+    draftRef,
+    eraseSelection,
+    errors,
     exportMap,
     importMap,
-    validationStatus,
-    errors,
-    notice,
-    clearMessages,
-    undoStack,
-    redoStack,
-    selectedPresetId,
+    loadLevel,
     mapPresetById,
-    waveTemplateOptions,
-    usingCustomWaves,
-    templateWaves,
-    startCustomWaves,
-    useTemplateWaves,
-    addWave,
+    notice,
+    pushDraftHistory,
+    redoDraft,
+    redoStack,
     removeWave,
-    addWaveGroup,
-    updateWaveGroup,
     removeWaveGroup,
+    resetDraft,
+    saveDraft,
+    selectedPresetId,
+    setDraft,
+    startCustomWaves,
+    templateWaves,
+    undoDraft,
+    undoStack,
+    updateWaveGroup,
+    useTemplateWaves,
+    usingCustomWaves,
+    validationStatus,
+    waveTemplateOptions,
   };
 }

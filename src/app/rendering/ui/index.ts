@@ -1,10 +1,10 @@
 // Princeton Tower Defense - UI Rendering Module
 // Renders game UI elements like health bars, resource displays, etc.
 
+import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
 import type { Position, Tower, Hero } from "../../types";
 import { worldToScreen, gridToWorld, isoTileDiamondHalfH } from "../../utils";
 import { drawFloatingText, colorWithAlpha } from "../helpers";
-import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
 import {
   renderRelocationReticle,
   renderSelectionReticle,
@@ -32,7 +32,7 @@ export function renderFloatingText(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     floatingText.pos,
@@ -40,7 +40,7 @@ export function renderFloatingText(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
 
@@ -51,7 +51,7 @@ export function renderFloatingText(
     screenPos.y,
     floatingText.progress,
     floatingText.color,
-    16 * zoom,
+    16 * zoom
   );
 }
 
@@ -66,7 +66,7 @@ export function renderWaveIndicator(
   waveProgress: number,
   canvasWidth: number,
   canvasHeight: number,
-  dpr: number,
+  dpr: number
 ): void {
   const width = canvasWidth / dpr;
   const barWidth = 200;
@@ -97,7 +97,7 @@ export function renderWaveIndicator(
   ctx.fillText(
     `Wave ${currentWave}/${totalWaves}`,
     width / 2,
-    y + barHeight + 15,
+    y + barHeight + 15
   );
 
   ctx.restore();
@@ -113,7 +113,7 @@ export function renderResourceDisplay(
   lives: number,
   x: number,
   y: number,
-  zoom: number = 1,
+  zoom: number = 1
 ): void {
   ctx.save();
 
@@ -142,7 +142,7 @@ export function renderTowerSelectionUI(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const zoom = cameraZoom || 1;
   const worldPos = gridToWorld(tower.pos);
@@ -152,21 +152,21 @@ export function renderTowerSelectionUI(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   screenPos.y -= isoTileDiamondHalfH(zoom);
 
   renderSelectionReticle(ctx, {
+    color: RETICLE_COLORS.gold,
+    dashPattern: [8, 4],
+    dashSpeed: 30,
+    lineWidth: 3,
+    pulseSpeed: 4,
+    radius: 45,
+    time: Date.now() / 1000,
     x: screenPos.x,
     y: screenPos.y,
     zoom,
-    time: Date.now() / 1000,
-    color: RETICLE_COLORS.gold,
-    radius: 45,
-    dashPattern: [8, 4],
-    dashSpeed: 30,
-    pulseSpeed: 4,
-    lineWidth: 3,
   });
 }
 
@@ -181,7 +181,7 @@ export function renderHeroSelectionUI(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     hero.pos,
@@ -189,7 +189,7 @@ export function renderHeroSelectionUI(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
@@ -197,15 +197,15 @@ export function renderHeroSelectionUI(
   const heroColor = hexToReticleColor(hData.color);
 
   renderSelectionReticle(ctx, {
-    x: screenPos.x,
-    y: screenPos.y,
-    zoom,
-    time,
     color: heroColor,
-    radius: 35,
     dashPattern: [6, 3],
     dashSpeed: 20,
     pulseSpeed: 3,
+    radius: 35,
+    time,
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom,
   });
 
   // Move indicator arrow if hero has target
@@ -216,7 +216,7 @@ export function renderHeroSelectionUI(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const pulse = 0.6 + Math.sin(time * 3) * 0.4;
 
@@ -234,17 +234,17 @@ export function renderHeroSelectionUI(
     ctx.fillStyle = colorWithAlpha(hData.color, pulse);
     const angle = Math.atan2(
       targetScreen.y - screenPos.y,
-      targetScreen.x - screenPos.x,
+      targetScreen.x - screenPos.x
     );
     ctx.beginPath();
     ctx.moveTo(targetScreen.x, targetScreen.y);
     ctx.lineTo(
       targetScreen.x - Math.cos(angle - 0.3) * 10 * zoom,
-      targetScreen.y - Math.sin(angle - 0.3) * 10 * zoom,
+      targetScreen.y - Math.sin(angle - 0.3) * 10 * zoom
     );
     ctx.lineTo(
       targetScreen.x - Math.cos(angle + 0.3) * 10 * zoom,
-      targetScreen.y - Math.sin(angle + 0.3) * 10 * zoom,
+      targetScreen.y - Math.sin(angle + 0.3) * 10 * zoom
     );
     ctx.closePath();
     ctx.fill();
@@ -261,7 +261,7 @@ export function renderPauseOverlay(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
   canvasHeight: number,
-  dpr: number,
+  dpr: number
 ): void {
   const width = canvasWidth / dpr;
   const height = canvasHeight / dpr;
@@ -282,13 +282,13 @@ export function renderPauseOverlay(
     centerX - iconSize / 2 - 10,
     centerY - iconSize / 2,
     15,
-    iconSize,
+    iconSize
   );
   ctx.fillRect(
     centerX + iconSize / 2 - 5,
     centerY - iconSize / 2,
     15,
-    iconSize,
+    iconSize
   );
 
   // Pause text
@@ -305,9 +305,11 @@ export function renderSpeedIndicator(
   speed: number,
   x: number,
   y: number,
-  zoom: number = 1,
+  zoom: number = 1
 ): void {
-  if (speed === 1) return;
+  if (speed === 1) {
+    return;
+  }
 
   ctx.save();
 
@@ -329,7 +331,7 @@ export function renderTooltip(
   text: string,
   x: number,
   y: number,
-  maxWidth: number = 200,
+  maxWidth: number = 200
 ): void {
   ctx.save();
 
@@ -344,7 +346,7 @@ export function renderTooltip(
   // Adjust position to stay on screen
   const adjustedX = Math.min(
     x,
-    ctx.canvas.width / (window.devicePixelRatio || 1) - boxWidth - 10,
+    ctx.canvas.width / (window.devicePixelRatio || 1) - boxWidth - 10
   );
   const adjustedY = Math.max(y - boxHeight, 10);
 
@@ -367,7 +369,7 @@ export function renderTooltip(
     ctx.fillText(
       line,
       adjustedX + padding,
-      adjustedY + padding + i * lineHeight,
+      adjustedY + padding + i * lineHeight
     );
   });
 
@@ -378,7 +380,7 @@ export function renderTooltip(
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
-  maxWidth: number,
+  maxWidth: number
 ): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
@@ -410,7 +412,7 @@ function roundRect(
   y: number,
   width: number,
   height: number,
-  radius: number,
+  radius: number
 ): void {
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -445,7 +447,7 @@ export function renderTroopMoveRange(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     config.anchorPos,
@@ -453,7 +455,7 @@ export function renderTroopMoveRange(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
@@ -467,7 +469,7 @@ export function renderTroopMoveRange(
   let shouldPulse = true; // Most types pulse, station does not
 
   switch (config.ownerType) {
-    case "station":
+    case "station": {
       // Orange for dinky station troops - NO PULSE for consistency
       strokeColor = config.isSelected
         ? "rgba(255, 180, 100, 0.7)"
@@ -478,7 +480,8 @@ export function renderTroopMoveRange(
       glowColor = "rgba(255, 180, 100, 0.4)";
       shouldPulse = false; // Station range is consistent, not pulsing
       break;
-    case "barracks":
+    }
+    case "barracks": {
       // Blue-green for frontier barracks - NO PULSE for consistency
       strokeColor = config.isSelected
         ? "rgba(100, 200, 180, 0.7)"
@@ -489,7 +492,8 @@ export function renderTroopMoveRange(
       glowColor = "rgba(100, 200, 180, 0.4)";
       shouldPulse = false; // Barracks range is consistent, not pulsing
       break;
-    case "spell":
+    }
+    case "spell": {
       // Purple for spell reinforcements - NO PULSE for consistency
       strokeColor = config.isSelected
         ? "rgba(180, 130, 255, 0.7)"
@@ -500,7 +504,8 @@ export function renderTroopMoveRange(
       glowColor = "rgba(180, 130, 255, 0.4)";
       shouldPulse = false; // Spell range is consistent, not pulsing
       break;
-    case "hero_summon":
+    }
+    case "hero_summon": {
       // Gold for hero-summoned troops - NO PULSE for consistency
       strokeColor = config.isSelected
         ? "rgba(255, 200, 80, 0.7)"
@@ -511,10 +516,12 @@ export function renderTroopMoveRange(
       glowColor = "rgba(255, 200, 80, 0.4)";
       shouldPulse = false; // Hero summon range is consistent, not pulsing
       break;
-    default:
+    }
+    default: {
       strokeColor = "rgba(150, 150, 150, 0.5)";
       fillColor = "rgba(150, 150, 150, 0.1)";
       glowColor = "rgba(150, 150, 150, 0.3)";
+    }
   }
 
   // Calculate isometric ellipse dimensions (proper isometric ratio)
@@ -541,7 +548,7 @@ export function renderTroopMoveRange(
     rangeY * pulse,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -558,7 +565,7 @@ export function renderTroopMoveRange(
     rangeY * pulse,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -584,11 +591,11 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
+        b: Number.parseInt(result[3], 16),
+        g: Number.parseInt(result[2], 16),
+        r: Number.parseInt(result[1], 16),
       }
-    : { r: 255, g: 200, b: 100 }; // Fallback gold
+    : { b: 100, g: 200, r: 255 }; // Fallback gold
 }
 
 /**
@@ -602,7 +609,7 @@ export function renderPathTargetIndicator(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const targetScreen = worldToScreen(
     config.targetPos,
@@ -610,7 +617,7 @@ export function renderPathTargetIndicator(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const unitScreen = worldToScreen(
     config.unitPos,
@@ -618,7 +625,7 @@ export function renderPathTargetIndicator(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
 
   const color = config.themeColor
@@ -628,14 +635,14 @@ export function renderPathTargetIndicator(
       : RETICLE_COLORS.gold;
 
   renderRelocationReticle(ctx, {
+    color,
+    isValid: config.isValid,
     targetX: targetScreen.x,
     targetY: targetScreen.y,
+    time: Date.now() / 1000,
     unitX: unitScreen.x,
     unitY: unitScreen.y,
     zoom: cameraZoom || 1,
-    time: Date.now() / 1000,
-    color,
-    isValid: config.isValid,
   });
 }
 
@@ -654,7 +661,7 @@ export function renderTroopSelectionUI(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
   const screenPos = worldToScreen(
     troopPos,
@@ -662,18 +669,18 @@ export function renderTroopSelectionUI(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
 
   renderSelectionReticle(ctx, {
-    x: screenPos.x,
-    y: screenPos.y,
-    zoom: cameraZoom || 1,
-    time: Date.now() / 1000,
     color: RETICLE_COLORS.gold,
-    radius: 28,
     dashPattern: [5, 3],
     dashSpeed: 25,
     pulseSpeed: 4,
+    radius: 28,
+    time: Date.now() / 1000,
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom: cameraZoom || 1,
   });
 }

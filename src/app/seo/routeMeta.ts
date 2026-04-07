@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { parseRoute } from "../constants/routes";
+
 import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { LEVEL_DATA } from "../constants";
+import { parseRoute } from "../constants/routes";
 import { SITE_URL, SITE_NAME, OG_IMAGES, REGION_OG_IMAGE } from "./constants";
 
 type OgImageKey = keyof typeof OG_IMAGES;
 
 const REGION_LABEL: Record<string, string> = {
+  desert: "Sahara Sands",
   grassland: "Princeton Grounds",
   swamp: "Murky Marshes",
-  desert: "Sahara Sands",
-  winter: "Frozen Frontier",
   volcanic: "Volcanic Depths",
+  winter: "Frozen Frontier",
 };
 
 const DIFFICULTY_LABEL: Record<number, string> = {
@@ -27,61 +28,63 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 const CODEX_TAB_META: Record<string, { title: string; description: string }> = {
-  towers: {
-    title: "Tower Codex - All 7 Towers & Upgrade Paths",
-    description:
-      "Browse every tower in Princeton Tower Defense: Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar. Each with dual upgrade paths, stats, and strategy tips.",
-  },
-  heroes: {
-    title: "Hero Codex - All 9 Heroes & Abilities",
-    description:
-      "Meet all 9 heroes: Princeton Tiger, Mathey Knight, Acapella Tenor, Rocky Raccoon, F. Scott, General Mercer, BSE Engineer, Nassau Phoenix, and Ivy Warden. View abilities, stats, and roles.",
-  },
   enemies: {
-    title: "Enemy Codex - 100+ Enemy Types & Bosses",
     description:
       "Explore the full bestiary of 100+ enemies across 5 regions: melee, ranged, flying, shielded, boss, and swarm types. Learn their abilities and weaknesses.",
-  },
-  spells: {
-    title: "Spell Codex - All Spells & Upgrade Trees",
-    description:
-      "Master all 6 spells: Fireball, Lightning, Freeze, Hex Ward, Payday, and Reinforcements. View upgrade trees, cooldowns, damage, and area of effect.",
-  },
-  special_towers: {
-    title: "Special Towers - Beacons, Shrines, Vaults & Barracks",
-    description:
-      "Discover special objective structures in Princeton Tower Defense: beacons, shrines, vaults, and barracks. Learn how to capture and defend them on each map.",
-  },
-  hazards: {
-    title: "Hazards Guide - Lava, Quicksand, Blizzards & More",
-    description:
-      "Learn about environmental hazards across all 5 regions: lava geysers, poison fog, quicksand, blizzard zones, and more. Strategy tips for hazard-heavy maps.",
+    title: "Enemy Codex - 100+ Enemy Types & Bosses",
   },
   guide: {
-    title: "Strategy Guide - Tips, Mechanics & Walkthrough",
     description:
       "Complete strategy guide for Princeton Tower Defense. Learn tower placement, hero deployment, spell timing, wave management, and upgrade priorities for every region.",
+    title: "Strategy Guide - Tips, Mechanics & Walkthrough",
+  },
+  hazards: {
+    description:
+      "Learn about environmental hazards across all 5 regions: lava geysers, poison fog, quicksand, blizzard zones, and more. Strategy tips for hazard-heavy maps.",
+    title: "Hazards Guide - Lava, Quicksand, Blizzards & More",
+  },
+  heroes: {
+    description:
+      "Meet all 9 heroes: Princeton Tiger, Mathey Knight, Acapella Tenor, Rocky Raccoon, F. Scott, General Mercer, BSE Engineer, Nassau Phoenix, and Ivy Warden. View abilities, stats, and roles.",
+    title: "Hero Codex - All 9 Heroes & Abilities",
+  },
+  special_towers: {
+    description:
+      "Discover special objective structures in Princeton Tower Defense: beacons, shrines, vaults, and barracks. Learn how to capture and defend them on each map.",
+    title: "Special Towers - Beacons, Shrines, Vaults & Barracks",
+  },
+  spells: {
+    description:
+      "Master all 6 spells: Fireball, Lightning, Freeze, Hex Ward, Payday, and Reinforcements. View upgrade trees, cooldowns, damage, and area of effect.",
+    title: "Spell Codex - All Spells & Upgrade Trees",
+  },
+  towers: {
+    description:
+      "Browse every tower in Princeton Tower Defense: Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar. Each with dual upgrade paths, stats, and strategy tips.",
+    title: "Tower Codex - All 7 Towers & Upgrade Paths",
   },
 };
 
 function getLevelMeta(levelId: string): Metadata | null {
   const level = WORLD_LEVELS.find((l) => l.id === levelId);
-  if (!level) return null;
+  if (!level) {
+    return null;
+  }
 
   const region = REGION_LABEL[level.region] ?? level.region;
   const difficulty = DIFFICULTY_LABEL[level.difficulty] ?? "Normal";
   const kind = KIND_LABEL[level.kind ?? "campaign"] ?? "Campaign";
-  const cleanDesc = level.description.replace(/\n/g, " ");
+  const cleanDesc = level.description.replaceAll("\n", " ");
   const tags = level.tags.join(", ");
   const canonical = `${SITE_URL}/${level.id}`;
 
   const levelData = LEVEL_DATA[levelId];
   const ogImage = levelData?.previewImage
     ? {
+        alt: `${level.name} level preview — ${region} in Princeton Tower Defense`,
+        height: 450,
         url: `${SITE_URL}${levelData.previewImage}`,
         width: 800,
-        height: 450,
-        alt: `${level.name} level preview — ${region} in Princeton Tower Defense`,
       }
     : OG_IMAGES[REGION_OG_IMAGE[level.region] ?? "primary"];
 
@@ -91,105 +94,114 @@ function getLevelMeta(levelId: string): Metadata | null {
     `${cleanDesc} Tags: ${tags}. Build towers, summon heroes, and cast spells to survive every wave. Share this link to let anyone try this level!`;
 
   return {
-    title,
-    description,
     alternates: { canonical },
+    description,
     openGraph: {
-      title,
       description,
-      url: canonical,
-      siteName: SITE_NAME,
       images: [ogImage],
+      siteName: SITE_NAME,
+      title,
       type: "website",
+      url: canonical,
     },
+    title,
     twitter: {
       card: "summary_large_image",
-      title,
       description,
       images: [ogImage],
+      title,
     },
   };
 }
 
 export function getRouteMetadata(slug: string[] | undefined): Metadata {
   const route = parseRoute(slug);
-  if (!route) return {};
+  if (!route) {
+    return {};
+  }
 
   switch (route.type) {
-    case "home":
+    case "home": {
       return {};
+    }
 
-    case "level":
+    case "level": {
       return getLevelMeta(route.levelId) ?? {};
+    }
 
     case "codex": {
       const tab = route.tab ?? "towers";
       const meta = CODEX_TAB_META[tab];
-      if (!meta) return {};
+      if (!meta) {
+        return {};
+      }
       const canonical = route.tab
         ? `${SITE_URL}/codex/${route.tab}`
         : `${SITE_URL}/codex`;
       return {
-        title: meta.title,
-        description: meta.description,
         alternates: { canonical },
+        description: meta.description,
         openGraph: {
-          title: `${meta.title} | ${SITE_NAME}`,
           description: meta.description,
-          url: canonical,
-          siteName: SITE_NAME,
           images: [OG_IMAGES.primary],
+          siteName: SITE_NAME,
+          title: `${meta.title} | ${SITE_NAME}`,
           type: "website",
+          url: canonical,
         },
+        title: meta.title,
         twitter: {
           card: "summary_large_image",
-          title: `${meta.title} | ${SITE_NAME}`,
           description: meta.description,
           images: [OG_IMAGES.primary],
+          title: `${meta.title} | ${SITE_NAME}`,
         },
       };
     }
 
-    case "creator":
+    case "creator": {
       return {
-        title: "Custom Level Creator - Build Your Own Maps",
+        alternates: { canonical: `${SITE_URL}/creator` },
         description:
           "Design custom tower defense maps in Princeton Tower Defense. Place paths, set enemy waves, add hazards, choose themes, and playtest your creations. 5 themes and full wave editor.",
-        alternates: { canonical: `${SITE_URL}/creator` },
         openGraph: {
-          title: `Level Creator | ${SITE_NAME}`,
           description:
             "Build custom tower defense maps with the Princeton TD level creator. Design paths, place hazards, compose waves, and share your maps.",
-          url: `${SITE_URL}/creator`,
-          siteName: SITE_NAME,
           images: [OG_IMAGES.homepage],
+          siteName: SITE_NAME,
+          title: `Level Creator | ${SITE_NAME}`,
           type: "website",
+          url: `${SITE_URL}/creator`,
         },
+        title: "Custom Level Creator - Build Your Own Maps",
       };
+    }
 
-    case "credits":
+    case "credits": {
       return {
-        title: "Credits & About",
+        alternates: { canonical: `${SITE_URL}/credits` },
         description:
           "Princeton Tower Defense was created by Kevin Liu. Built with Next.js, React, TypeScript, and HTML5 Canvas. No game engine — every pixel is hand-rendered.",
-        alternates: { canonical: `${SITE_URL}/credits` },
         openGraph: {
-          title: `Credits | ${SITE_NAME}`,
           description:
             "Meet the creator of Princeton Tower Defense and learn about the tech stack behind the game.",
-          url: `${SITE_URL}/credits`,
-          siteName: SITE_NAME,
           images: [OG_IMAGES.homepage],
+          siteName: SITE_NAME,
+          title: `Credits | ${SITE_NAME}`,
           type: "website",
+          url: `${SITE_URL}/credits`,
         },
+        title: "Credits & About",
       };
+    }
 
-    case "settings":
+    case "settings": {
       return {
-        title: "Game Settings",
+        alternates: { canonical: `${SITE_URL}/settings` },
         description:
           "Configure graphics quality, audio, controls, and accessibility options for Princeton Tower Defense.",
-        alternates: { canonical: `${SITE_URL}/settings` },
+        title: "Game Settings",
       };
+    }
   }
 }

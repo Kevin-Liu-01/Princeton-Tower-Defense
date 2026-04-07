@@ -1,10 +1,5 @@
-import type { WorldMapDrawContext } from "./drawContext";
-import { drawCamp } from "./grasslandDecorations";
-import {
-  drawRuins,
-  drawWatchTower,
-  drawCrater,
-} from "./swampDecorations";
+import { drawOrganicBlobAt } from "../../../../rendering/helpers";
+import { MAP_WIDTH } from "../worldMapData";
 import {
   drawSandDune,
   drawGoldenPyramid,
@@ -14,20 +9,8 @@ import {
   drawDesertCamp,
   drawBurningWreck,
 } from "./desertDecorations";
-import {
-  drawSnowMountain,
-  drawIceCrystal,
-  drawFrozenLake,
-  drawIgloo,
-  drawMammoth,
-} from "./winterDecorations";
-import {
-  drawVolcano,
-  drawLavaPool,
-  drawLavaRiver,
-  drawDemonStatue,
-  drawFireElemental,
-} from "./volcanicDecorations";
+import type { WorldMapDrawContext } from "./drawContext";
+import { drawCamp } from "./grasslandDecorations";
 import {
   drawWagonWheel,
   drawArrow,
@@ -39,8 +22,21 @@ import {
   drawEnemyLair,
   drawCastleLabel,
 } from "./structureDecorations";
-import { drawOrganicBlobAt } from "../../../../rendering/helpers";
-import { MAP_WIDTH } from "../worldMapData";
+import { drawRuins, drawWatchTower, drawCrater } from "./swampDecorations";
+import {
+  drawVolcano,
+  drawLavaPool,
+  drawLavaRiver,
+  drawDemonStatue,
+  drawFireElemental,
+} from "./volcanicDecorations";
+import {
+  drawSnowMountain,
+  drawIceCrystal,
+  drawFrozenLake,
+  drawIgloo,
+  drawMammoth,
+} from "./winterDecorations";
 
 export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
   const { ctx, width, time, getLevelY, seededRandom } = dc;
@@ -218,7 +214,8 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
   drawLavaPool(dc, 1555, 80, 20, 0.25);
   drawLavaPool(dc, 1660, 35, 26, 0.3);
   drawLavaPool(dc, 1730, 82, 24, 0.35);
-  drawLavaRiver(dc, 
+  drawLavaRiver(
+    dc,
     [
       [1460, 72],
       [1478, 67],
@@ -228,9 +225,10 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       [1568, 65],
       [1590, 68],
     ],
-    8,
+    8
   );
-  drawLavaRiver(dc, 
+  drawLavaRiver(
+    dc,
     [
       [1480, 38],
       [1498, 40],
@@ -240,9 +238,10 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       [1578, 42],
       [1590, 45],
     ],
-    7,
+    7
   );
-  drawLavaRiver(dc, 
+  drawLavaRiver(
+    dc,
     [
       [1640, 45],
       [1658, 48],
@@ -252,18 +251,20 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       [1742, 52],
       [1760, 55],
     ],
-    8,
+    8
   );
-  drawLavaRiver(dc, 
+  drawLavaRiver(
+    dc,
     [
       [1470, 55],
       [1495, 52],
       [1520, 55],
       [1545, 50],
     ],
-    5,
+    5
   );
-  drawLavaRiver(dc, 
+  drawLavaRiver(
+    dc,
     [
       [1650, 70],
       [1680, 72],
@@ -271,7 +272,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       [1740, 72],
       [1770, 70],
     ],
-    6,
+    6
   );
   drawDemonStatue(dc, 1560, 52, 0.8);
   drawDemonStatue(dc, 1720, 28, 0.7);
@@ -297,7 +298,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
   drawWagonWheel(dc, 670, 80, 6, 0.6);
   drawWagonWheel(dc, 835, 38, 5, 1.1);
   drawWagonWheel(dc, 1080, 58, 7, 1.4);
-  drawWagonWheel(dc, 1285, 42, 6, 2.0);
+  drawWagonWheel(dc, 1285, 42, 6, 2);
   drawWagonWheel(dc, 1480, 72, 5, 0.4);
   drawWagonWheel(dc, 1720, 55, 7, 1.6);
   drawWagonWheel(dc, 155, 68, 8, 0.5);
@@ -315,7 +316,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
   drawWagonWheel(dc, 670, 80, 6, 0.6);
   drawWagonWheel(dc, 835, 38, 5, 1.1);
   drawWagonWheel(dc, 1080, 58, 7, 1.4);
-  drawWagonWheel(dc, 1285, 42, 6, 2.0);
+  drawWagonWheel(dc, 1285, 42, 6, 2);
   drawWagonWheel(dc, 1480, 72, 5, 0.4);
   drawWagonWheel(dc, 1720, 55, 7, 1.6);
   for (let i = 0; i < 40; i++) {
@@ -437,7 +438,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       0,
       lkX,
       lkY,
-      lkW,
+      lkW
     );
     lakeGrad.addColorStop(0, "rgba(25,80,130,0.7)");
     lakeGrad.addColorStop(0.3, "rgba(35,100,155,0.6)");
@@ -498,7 +499,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         2.2,
         seededRandom(li * 3) * 1.5,
         0.2,
-        Math.PI * 1.85,
+        Math.PI * 1.85
       );
       ctx.fill();
       if (seededRandom(li * 7 + 216) > 0.5) {
@@ -555,7 +556,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         fx,
         fy,
         3 + seededRandom(fi * 7 + 332) * 4,
-        2 + seededRandom(fi * 7 + 333) * 2,
+        2 + seededRandom(fi * 7 + 333) * 2
       );
     }
     // Building shadow
@@ -738,7 +739,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ccX + 33,
       ccY - 15 + flagWave,
       ccX + 36,
-      ccY - 12 + flagWave,
+      ccY - 12 + flagWave
     );
     ctx.lineTo(ccX + 25.5, ccY - 9);
     ctx.closePath();
@@ -768,7 +769,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ivX - 10 * s,
       0,
       ivX - 5 * s,
-      0,
+      0
     );
     pillarGradL.addColorStop(0, "#4a4a42");
     pillarGradL.addColorStop(0.5, "#6a6a5a");
@@ -779,7 +780,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ivX + 5 * s,
       0,
       ivX + 10 * s,
-      0,
+      0
     );
     pillarGradR.addColorStop(0, "#5a5a4a");
     pillarGradR.addColorStop(0.5, "#6a6a5a");
@@ -841,13 +842,13 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ctx.beginPath();
       ctx.moveTo(
         hx,
-        ivY - 10 * s + Math.sqrt(Math.max(0, (9 * s) ** 2 - (hx - ivX) ** 2)),
+        ivY - 10 * s + Math.sqrt(Math.max(0, (9 * s) ** 2 - (hx - ivX) ** 2))
       );
       ctx.quadraticCurveTo(
         hx + Math.sin(time * 2 + h) * 1.5,
         ivY - 5 * s + tendrilLen * 0.5,
         hx + Math.sin(time * 2.5 + h) * 2,
-        ivY - 5 * s + tendrilLen,
+        ivY - 5 * s + tendrilLen
       );
       ctx.stroke();
     }
@@ -890,7 +891,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         1,
         seededRandom(b * 7 + 527) * 2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -921,12 +922,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     ctx.lineTo(whX + 18 * s, whY + 2 * s);
     ctx.stroke();
     // Hut body — crooked, larger
-    const hutGrad = ctx.createLinearGradient(
-      whX - 12 * s,
-      0,
-      whX + 12 * s,
-      0,
-    );
+    const hutGrad = ctx.createLinearGradient(whX - 12 * s, 0, whX + 12 * s, 0);
     hutGrad.addColorStop(0, "#1a1810");
     hutGrad.addColorStop(0.5, "#2a2820");
     hutGrad.addColorStop(1, "#201e16");
@@ -982,11 +978,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         0,
         whX + wx + 2 * s,
         whY - 2.5 * s,
-        8 * s,
+        8 * s
       );
       wGlow.addColorStop(
         0,
-        `rgba(80,200,40,${0.12 + Math.sin(time * 2.5 + wx) * 0.06})`,
+        `rgba(80,200,40,${0.12 + Math.sin(time * 2.5 + wx) * 0.06})`
       );
       wGlow.addColorStop(1, "rgba(60,150,30,0)");
       ctx.fillStyle = wGlow;
@@ -1030,7 +1026,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         bubY,
         1.2 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1071,7 +1067,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       0,
       stX,
       stY + 4 * s,
-      24 * s,
+      24 * s
     );
     waterGrad.addColorStop(0, "rgba(25,60,50,0.35)");
     waterGrad.addColorStop(0.6, "rgba(35,75,60,0.25)");
@@ -1093,7 +1089,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         1.5 + ripT * 2,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1107,9 +1103,9 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     // Broken columns — 6 total at various heights
     const colPositions: [number, number, number][] = [
       [-18, 2, 0.8],
-      [-10, -1, 1.0],
+      [-10, -1, 1],
       [-3, -3, 0.6],
-      [5, -2, 1.0],
+      [5, -2, 1],
       [13, 0, 0.9],
       [20, 2, 0.5],
     ];
@@ -1126,7 +1122,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         colW * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Column body with gradient
@@ -1134,7 +1130,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         stX + ox * s - colW,
         0,
         stX + ox * s + colW,
-        0,
+        0
       );
       colGrad.addColorStop(0, "#3a4a3a");
       colGrad.addColorStop(0.5, "#5a6a5a");
@@ -1158,13 +1154,13 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
           stX + ox * s - colW - 1.5,
           stY + oy * s - colH - 2 * s,
           colW * 2 + 3,
-          2.5 * s,
+          2.5 * s
         );
         ctx.fillRect(
           stX + ox * s - colW - 0.5,
           stY + oy * s - colH - 3.5 * s,
           colW * 2 + 1,
-          1.5 * s,
+          1.5 * s
         );
       }
       // Jagged broken top (if shorter)
@@ -1186,7 +1182,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         2.5 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     });
@@ -1222,8 +1218,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     for (let rb = 0; rb < 8; rb++) {
       const rbx = stX + (seededRandom(rb * 5 + 670) - 0.5) * 40 * s;
       const rby = stY + 2 * s + seededRandom(rb * 5 + 671) * 8 * s;
-      ctx.fillStyle =
-        seededRandom(rb * 5 + 672) > 0.5 ? "#4a5a4a" : "#3a4a3a";
+      ctx.fillStyle = seededRandom(rb * 5 + 672) > 0.5 ? "#4a5a4a" : "#3a4a3a";
       ctx.beginPath();
       ctx.ellipse(
         rbx,
@@ -1232,7 +1227,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         1 + seededRandom(rb * 5 + 674) * 1.5,
         seededRandom(rb * 5 + 675),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1265,7 +1260,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         dtx + (seededRandom(dt + 541) - 0.5) * 3,
         dty - 4 * s,
         dtx + (seededRandom(dt + 542) - 0.5) * 4,
-        dty - 10 * s,
+        dty - 10 * s
       );
       ctx.stroke();
       // Bare branches
@@ -1278,7 +1273,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         ctx.moveTo(brx, bry);
         ctx.lineTo(
           brx + (seededRandom(dt * 3 + br + 543) - 0.5) * 8 * s,
-          bry - 4 * s,
+          bry - 4 * s
         );
         ctx.stroke();
       }
@@ -1298,11 +1293,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       const poisonGrad = ctx.createRadialGradient(px, py, 0, px, py, prs);
       poisonGrad.addColorStop(
         0,
-        `rgba(70,210,25,${0.3 + Math.sin(time * 2 + p * 0.8) * 0.12})`,
+        `rgba(70,210,25,${0.3 + Math.sin(time * 2 + p * 0.8) * 0.12})`
       );
       poisonGrad.addColorStop(
         0.5,
-        `rgba(50,160,15,${0.2 + Math.sin(time * 2.2 + p) * 0.06})`,
+        `rgba(50,160,15,${0.2 + Math.sin(time * 2.2 + p) * 0.06})`
       );
       poisonGrad.addColorStop(1, "rgba(30,100,10,0)");
       ctx.fillStyle = poisonGrad;
@@ -1319,14 +1314,14 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
           py - bubPhase * 5 * s,
           (1 + bub * 0.5) * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
     });
     // Toxic mushroom clusters
     const mushrooms: [number, number, number][] = [
-      [-16, -4, 1.0],
+      [-16, -4, 1],
       [-8, 6, 0.8],
       [2, -5, 1.1],
       [10, 4, 0.9],
@@ -1355,17 +1350,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         my - 0.8 * mscale,
         0.6 * mscale,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(
-        mx + 1 * mscale,
-        my - 0.5 * mscale,
-        0.4 * mscale,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(mx + 1 * mscale, my - 0.5 * mscale, 0.4 * mscale, 0, Math.PI * 2);
       ctx.fill();
       // Spore glow
       if (seededRandom(m * 7 + 555) > 0.5) {
@@ -1410,12 +1399,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     ctx.ellipse(tkX, tkY + 7 * s, 16 * s, 5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     // Outer walls
-    const wallGrad = ctx.createLinearGradient(
-      tkX - 16 * s,
-      0,
-      tkX + 16 * s,
-      0,
-    );
+    const wallGrad = ctx.createLinearGradient(tkX - 16 * s, 0, tkX + 16 * s, 0);
     wallGrad.addColorStop(0, "#2a3a28");
     wallGrad.addColorStop(0.3, "#3a4a38");
     wallGrad.addColorStop(0.7, "#3a4a38");
@@ -1431,12 +1415,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ctx.fillRect(tkX - 15 * s + b * 4.5 * s, tkY - 8 * s, 3 * s, 4 * s);
     }
     // Central keep tower — taller
-    const towerGrad = ctx.createLinearGradient(
-      tkX - 6 * s,
-      0,
-      tkX + 6 * s,
-      0,
-    );
+    const towerGrad = ctx.createLinearGradient(tkX - 6 * s, 0, tkX + 6 * s, 0);
     towerGrad.addColorStop(0, "#2a3a28");
     towerGrad.addColorStop(0.5, "#3a4a38");
     towerGrad.addColorStop(1, "#2a3a28");
@@ -1477,7 +1456,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         pgx,
         tkY -
           1 * s +
-          Math.sqrt(Math.max(0, (4 * s) ** 2 - (pgx - tkX) ** 2)) * -1,
+          Math.sqrt(Math.max(0, (4 * s) ** 2 - (pgx - tkX) ** 2)) * -1
       );
       ctx.stroke();
     }
@@ -1508,7 +1487,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         tkX + bx + 5 * s,
         tkY - 17.5 * s + bwave,
         tkX + bx + 6 * s,
-        tkY - 15 * s + bwave,
+        tkY - 15 * s + bwave
       );
       ctx.lineTo(tkX + bx + 0.8, tkY - 13 * s);
       ctx.closePath();
@@ -1579,8 +1558,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ctx.lineWidth = 0.3;
       const brickCount = Math.floor(Math.abs(w) / 3);
       for (let bi = 1; bi < brickCount; bi++) {
-        const bx =
-          bi * 3 * s + (seededRandom(wi * 5 + bi + 1000) - 0.5) * 0.5;
+        const bx = bi * 3 * s + (seededRandom(wi * 5 + bi + 1000) - 0.5) * 0.5;
         ctx.beginPath();
         ctx.moveTo(bx, 0);
         ctx.lineTo(bx, h * s);
@@ -1601,7 +1579,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         2 * s,
         seededRandom(sd * 7 + 1012) * 1.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1638,7 +1616,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       6 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1703,7 +1681,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         pgx,
         ffY -
           2 * s +
-          Math.sqrt(Math.max(0, (5 * s) ** 2 - (pgx - ffX) ** 2)) * -1,
+          Math.sqrt(Math.max(0, (5 * s) ** 2 - (pgx - ffX) ** 2)) * -1
       );
       ctx.stroke();
     }
@@ -1719,7 +1697,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         ffX + tx - 4 * s,
         0,
         ffX + tx + 4 * s,
-        0,
+        0
       );
       tGrad.addColorStop(0, stoneD);
       tGrad.addColorStop(0.5, stoneC);
@@ -1752,14 +1730,14 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
           ffX + tx - 1.5 * s,
           ffY - 14 * s + tw * 5 * s,
           3 * s,
-          2.5 * s,
+          2.5 * s
         );
         ctx.fillStyle = `rgba(180,200,240,${0.06 + Math.sin(time * 1.5 + tw + tx) * 0.03})`;
         ctx.fillRect(
           ffX + tx - 1 * s,
           ffY - 13.5 * s + tw * 5 * s,
           2 * s,
-          1.8 * s,
+          1.8 * s
         );
       }
       // Ice on tower
@@ -1796,7 +1774,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ffX + 7 * s,
       ffY - 31 * s + bfw,
       ffX + 9 * s,
-      ffY - 28 * s + bfw,
+      ffY - 28 * s + bfw
     );
     ctx.lineTo(ffX + 0.8, ffY - 26 * s);
     ctx.closePath();
@@ -1844,8 +1822,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       ctx.translate(px, py);
       ctx.rotate(lean);
       // Log
-      ctx.fillStyle =
-        seededRandom(p * 3 + 1334) > 0.5 ? "#3a2a18" : "#3e2e1c";
+      ctx.fillStyle = seededRandom(p * 3 + 1334) > 0.5 ? "#3a2a18" : "#3e2e1c";
       ctx.fillRect(-1.2 * s, -logH, 2.4 * s, logH);
       // Bark texture
       ctx.strokeStyle = "rgba(0,0,0,0.08)";
@@ -1881,8 +1858,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         const logH = (10 + seededRandom((p % postCount) * 3 + 1332) * 5) * s;
         const bx = px,
           by = py - logH * beamH;
-        if (p === 0) ctx.moveTo(bx, by);
-        else ctx.lineTo(bx, by);
+        if (p === 0) {
+          ctx.moveTo(bx, by);
+        } else {
+          ctx.lineTo(bx, by);
+        }
       }
       ctx.stroke();
     }
@@ -1936,7 +1916,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         cfY + Math.sin(fsa) * 1.2 * s,
         1 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1948,11 +1928,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       0,
       cfX,
       cfY - 1,
-      6 * s,
+      6 * s
     );
     fireGlow.addColorStop(
       0,
-      `rgba(255,150,30,${0.15 + Math.sin(time * 4) * 0.05})`,
+      `rgba(255,150,30,${0.15 + Math.sin(time * 4) * 0.05})`
     );
     fireGlow.addColorStop(1, "rgba(255,80,10,0)");
     ctx.fillStyle = fireGlow;
@@ -1966,20 +1946,19 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       cfX + Math.sin(time * 7) * 1.5,
       cfY - fireH * s * 0.6,
       cfX,
-      cfY - fireH * s,
+      cfY - fireH * s
     );
     ctx.quadraticCurveTo(
       cfX - Math.sin(time * 8) * 1.5,
       cfY - fireH * s * 0.6,
       cfX + 1.5 * s,
-      cfY,
+      cfY
     );
     ctx.closePath();
     ctx.fill();
     // Smoke
     for (let sm = 0; sm < 3; sm++) {
-      const smY =
-        cfY - (fireH + 3 + sm * 4) * s - ((time * 10 + sm * 4) % 12);
+      const smY = cfY - (fireH + 3 + sm * 4) * s - ((time * 10 + sm * 4) % 12);
       const smX = cfX + Math.sin(time * 1.5 + sm) * 2;
       ctx.fillStyle = `rgba(150,160,170,${0.12 - sm * 0.03})`;
       ctx.beginPath();
@@ -2003,7 +1982,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       glX - 18 * s,
       glY - 22 * s,
       glX + 10 * s,
-      glY + 4 * s,
+      glY + 4 * s
     );
     iceGrad.addColorStop(0, "rgba(130,190,230,0.55)");
     iceGrad.addColorStop(0.3, "rgba(150,210,240,0.5)");
@@ -2040,7 +2019,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         glX + (x1 + x2) * 0.5 * s + seededRandom(x1 + y1 + 1135) * 3,
         glY + (y1 + y2) * 0.5 * s,
         glX + x2 * s,
-        glY + y2 * s,
+        glY + y2 * s
       );
       ctx.stroke();
     });
@@ -2064,7 +2043,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       glX + 22 * s,
       glY - 10 * s,
       glX + 28 * s,
-      glY + 2 * s,
+      glY + 2 * s
     );
     spireGrad.addColorStop(0, "rgba(140,200,235,0.45)");
     spireGrad.addColorStop(1, "rgba(170,215,240,0.25)");
@@ -2081,18 +2060,8 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     ctx.fillStyle = "rgba(160,210,240,0.3)";
     ctx.beginPath();
     ctx.moveTo(glX - 16 * s, glY - 4 * s);
-    ctx.quadraticCurveTo(
-      glX - 20 * s,
-      glY + 2 * s,
-      glX - 18 * s,
-      glY + 6 * s,
-    );
-    ctx.quadraticCurveTo(
-      glX - 22 * s,
-      glY + 4 * s,
-      glX - 20 * s,
-      glY - 2 * s,
-    );
+    ctx.quadraticCurveTo(glX - 20 * s, glY + 2 * s, glX - 18 * s, glY + 6 * s);
+    ctx.quadraticCurveTo(glX - 22 * s, glY + 4 * s, glX - 20 * s, glY - 2 * s);
     ctx.closePath();
     ctx.fill();
     // Icicles along bottom edge
@@ -2134,16 +2103,16 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       16 * s,
       otX,
       otY + 6 * s,
-      22 * s,
+      22 * s
     );
     moatGlow.addColorStop(0, "rgba(200,50,10,0)");
     moatGlow.addColorStop(
       0.4,
-      `rgba(220,60,15,${0.12 + Math.sin(time * 1.5) * 0.06})`,
+      `rgba(220,60,15,${0.12 + Math.sin(time * 1.5) * 0.06})`
     );
     moatGlow.addColorStop(
       0.7,
-      `rgba(255,80,20,${0.18 + Math.sin(time * 2) * 0.08})`,
+      `rgba(255,80,20,${0.18 + Math.sin(time * 2) * 0.08})`
     );
     moatGlow.addColorStop(1, "rgba(180,30,5,0)");
     ctx.fillStyle = moatGlow;
@@ -2186,7 +2155,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       otX - 8 * s,
       otY - 28 * s,
       otX + 8 * s,
-      otY,
+      otY
     );
     throneGrad.addColorStop(0, "#1a1018");
     throneGrad.addColorStop(0.3, "#2a2028");
@@ -2272,15 +2241,15 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       0,
       otX,
       otY - 12 * s,
-      24 * s,
+      24 * s
     );
     auraGrad.addColorStop(
       0,
-      `rgba(200,40,10,${0.1 + Math.sin(time * 1.5) * 0.05})`,
+      `rgba(200,40,10,${0.1 + Math.sin(time * 1.5) * 0.05})`
     );
     auraGrad.addColorStop(
       0.5,
-      `rgba(180,30,8,${0.05 + Math.sin(time * 1.5) * 0.03})`,
+      `rgba(180,30,8,${0.05 + Math.sin(time * 1.5) * 0.03})`
     );
     auraGrad.addColorStop(1, "rgba(150,20,5,0)");
     ctx.fillStyle = auraGrad;
@@ -2313,8 +2282,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       const spiralR = 4 * s + a * 3 * s;
       const sx = gsX + Math.cos(a) * spiralR;
       const sy = gsY + Math.sin(a) * spiralR * 0.4;
-      if (a === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+      if (a === 0) {
+        ctx.moveTo(sx, sy);
+      } else {
+        ctx.lineTo(sx, sy);
+      }
     }
     ctx.stroke();
     // Inner glow of spiral
@@ -2325,8 +2297,11 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       const spiralR = 3 * s + a * 2.5 * s;
       const sx = gsX + Math.cos(a) * spiralR;
       const sy = gsY + Math.sin(a) * spiralR * 0.4;
-      if (a === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+      if (a === 0) {
+        ctx.moveTo(sx, sy);
+      } else {
+        ctx.lineTo(sx, sy);
+      }
     }
     ctx.stroke();
     // 6 geyser vents along the spiral
@@ -2366,13 +2341,13 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
           gx + Math.sin(time * 6 + g) * 2 * s,
           gy - burstH * 0.5,
           gx,
-          gy - burstH,
+          gy - burstH
         );
         ctx.quadraticCurveTo(
           gx - Math.sin(time * 7 + g) * 2 * s,
           gy - burstH * 0.5,
           gx + burstW * 0.5,
-          gy,
+          gy
         );
         ctx.closePath();
         ctx.fill();
@@ -2384,13 +2359,13 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
           gx + Math.sin(time * 5 + g) * 3 * s,
           gy - burstH * 0.4,
           gx,
-          gy - burstH * 0.8,
+          gy - burstH * 0.8
         );
         ctx.quadraticCurveTo(
           gx - Math.sin(time * 5.5 + g) * 3 * s,
           gy - burstH * 0.4,
           gx + burstW,
-          gy,
+          gy
         );
         ctx.closePath();
         ctx.fill();
@@ -2429,8 +2404,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       const rbx = cbX + Math.cos(rba) * 17 * s;
       const rby = cbY + Math.sin(rba) * 6.5 * s + 2 * s;
       const rbs = (2 + seededRandom(rb * 5 + 1585) * 3) * s;
-      ctx.fillStyle =
-        seededRandom(rb * 5 + 1586) > 0.5 ? "#3a2a14" : "#2a1a0c";
+      ctx.fillStyle = seededRandom(rb * 5 + 1586) > 0.5 ? "#3a2a14" : "#2a1a0c";
       ctx.beginPath();
       ctx.ellipse(
         rbx,
@@ -2439,7 +2413,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         rbs * 0.6,
         seededRandom(rb * 5 + 1587) * 1.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2455,19 +2429,19 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
       0,
       cbX,
       cbY,
-      12 * s,
+      12 * s
     );
     lavaGrad.addColorStop(
       0,
-      `rgba(255,120,30,${0.4 + Math.sin(time * 1.8) * 0.15})`,
+      `rgba(255,120,30,${0.4 + Math.sin(time * 1.8) * 0.15})`
     );
     lavaGrad.addColorStop(
       0.3,
-      `rgba(255,80,20,${0.3 + Math.sin(time * 2) * 0.1})`,
+      `rgba(255,80,20,${0.3 + Math.sin(time * 2) * 0.1})`
     );
     lavaGrad.addColorStop(
       0.7,
-      `rgba(200,40,10,${0.15 + Math.sin(time * 1.8) * 0.08})`,
+      `rgba(200,40,10,${0.15 + Math.sin(time * 1.8) * 0.08})`
     );
     lavaGrad.addColorStop(1, "rgba(120,20,5,0)");
     ctx.fillStyle = lavaGrad;
@@ -2487,7 +2461,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         (1 + seededRandom(cr * 7 + 1593) * 1.5) * s,
         seededRandom(cr * 7 + 1594),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2521,7 +2495,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
         (1.5 + stPhase) * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2529,7 +2503,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     const ambGlow = ctx.createRadialGradient(cbX, cbY, 0, cbX, cbY, 22 * s);
     ambGlow.addColorStop(
       0,
-      `rgba(255,80,20,${0.06 + Math.sin(time * 1.5) * 0.03})`,
+      `rgba(255,80,20,${0.06 + Math.sin(time * 1.5) * 0.03})`
     );
     ambGlow.addColorStop(1, "rgba(200,40,10,0)");
     ctx.fillStyle = ambGlow;

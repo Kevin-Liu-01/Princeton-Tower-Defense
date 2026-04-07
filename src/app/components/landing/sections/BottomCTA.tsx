@@ -1,24 +1,31 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { LANDING_THEME, LANDING_LORE, LANDING_STATS } from "../landingConstants";
+
+import {
+  LANDING_THEME,
+  LANDING_LORE,
+  LANDING_STATS,
+} from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
-import { MapSectionBg, MapCartouche } from "./mapElements";
+import { MapSectionBg, MapCartouche, SectionBorderFrame } from "./mapElements";
 
 const T = LANDING_THEME;
 
 const CTA_EMBERS = Array.from({ length: 22 }, (_, i) => ({
-  id: i,
-  x: 5 + ((i * 29 + 7) % 90),
-  size: 2 + (i % 4) * 1.2,
-  duration: 5 + (i % 5) * 2,
   delay: (i * 0.9) % 10,
+  duration: 5 + (i % 5) * 2,
+  id: i,
   opacity: 0.15 + (i % 3) * 0.1,
+  size: 2 + (i % 4) * 1.2,
+  x: 5 + ((i * 29 + 7) % 90),
 }));
 
 function LoreQuote() {
   const [idx, setIdx] = useState(0);
-  useEffect(() => { setIdx(Math.floor(Math.random() * LANDING_LORE.length)); }, []);
+  useEffect(() => {
+    setIdx(Math.floor(Math.random() * LANDING_LORE.length));
+  }, []);
 
   return (
     <p
@@ -48,10 +55,16 @@ function MapLegendStats() {
         {stats.map(({ icon: Icon, value, label }) => (
           <div key={label} className="flex items-center gap-2">
             <Icon size={14} style={{ color: `rgba(${T.accentRgb},0.3)` }} />
-            <span className="text-lg sm:text-xl font-black tabular-nums" style={{ color: T.accent }}>
+            <span
+              className="text-lg sm:text-xl font-black tabular-nums"
+              style={{ color: T.accent }}
+            >
               {value}
             </span>
-            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: `rgba(${T.accentRgb},0.25)` }}>
+            <span
+              className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em]"
+              style={{ color: `rgba(${T.accentRgb},0.25)` }}
+            >
               {label}
             </span>
           </div>
@@ -60,9 +73,9 @@ function MapLegendStats() {
       <div
         className="absolute -top-1 left-1/2 -translate-x-1/2 text-[7px] font-bold uppercase tracking-[0.3em] px-3 py-0.5"
         style={{
-          color: `rgba(${T.accentRgb},0.25)`,
           background: T.bg,
           border: `0.5px solid rgba(${T.accentRgb},0.1)`,
+          color: `rgba(${T.accentRgb},0.25)`,
         }}
       >
         Legend
@@ -80,25 +93,29 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
   return (
     <section className="relative py-28 sm:py-36 px-6 flex flex-col items-center overflow-hidden">
       <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.045} />
+      <SectionBorderFrame />
 
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(circle at 35% 45%, rgba(${T.princetonRgb},0.04), transparent 50%), radial-gradient(circle at 65% 55%, rgba(${T.accentRgb},0.04), transparent 50%)`,
-      }} />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 35% 45%, rgba(${T.princetonRgb},0.04), transparent 50%), radial-gradient(circle at 65% 55%, rgba(${T.accentRgb},0.04), transparent 50%)`,
+        }}
+      />
 
       {/* Ember particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {CTA_EMBERS.map(e => (
+        {CTA_EMBERS.map((e) => (
           <div
             key={e.id}
             className="absolute rounded-full"
             style={{
-              left: `${e.x}%`,
-              bottom: "-8px",
-              width: e.size,
-              height: e.size,
-              background: T.accent,
-              opacity: e.opacity,
               animation: `landing-cta-ember ${e.duration}s ease-out ${e.delay}s infinite`,
+              background: T.accent,
+              bottom: "-8px",
+              height: e.size,
+              left: `${e.x}%`,
+              opacity: e.opacity,
+              width: e.size,
             }}
           />
         ))}
@@ -131,7 +148,12 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         {/* Map legend stats */}
         <MapLegendStats />
 
-        <div className="w-48 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.15), transparent)` }} />
+        <div
+          className="w-48 h-px"
+          style={{
+            background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.15), transparent)`,
+          }}
+        />
 
         <LoreQuote />
 
@@ -141,13 +163,18 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-[10px] sm:text-[11px] mt-6" style={{ color: `rgba(${T.accentRgb},0.2)` }}>
+        <div
+          className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-[10px] sm:text-[11px] mt-6"
+          style={{ color: `rgba(${T.accentRgb},0.2)` }}
+        >
           <span>Free to Play</span>
           <span style={{ color: `rgba(${T.accentRgb},0.1)` }}>&middot;</span>
           <span>Browser-Based</span>
           <span style={{ color: `rgba(${T.accentRgb},0.1)` }}>&middot;</span>
           <span>No Download Required</span>
-          <span className="mx-2" style={{ color: `rgba(${T.accentRgb},0.08)` }}>|</span>
+          <span className="mx-2" style={{ color: `rgba(${T.accentRgb},0.08)` }}>
+            |
+          </span>
           <span>Created by Kevin Liu</span>
         </div>
       </div>

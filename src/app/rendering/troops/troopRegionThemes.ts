@@ -13,35 +13,35 @@ export interface RegionAccentPalette {
 }
 
 const REGION_ACCENTS: Record<MapTheme, RegionAccentPalette> = {
-  grassland: {
-    trimColor: "rgba(0,0,0,0)",
-    trimGlow: "rgba(0,0,0,0)",
-    gemColor: "rgba(0,0,0,0)",
-    particleRgb: "0,0,0",
-  },
   desert: {
-    trimColor: "rgba(200,170,100,0.35)",
-    trimGlow: "rgba(240,210,120,0.18)",
     gemColor: "#d4a030",
     particleRgb: "210,190,140",
+    trimColor: "rgba(200,170,100,0.35)",
+    trimGlow: "rgba(240,210,120,0.18)",
   },
-  winter: {
-    trimColor: "rgba(160,200,240,0.3)",
-    trimGlow: "rgba(180,220,255,0.15)",
-    gemColor: "#60b8e8",
-    particleRgb: "200,220,255",
-  },
-  volcanic: {
-    trimColor: "rgba(255,90,30,0.25)",
-    trimGlow: "rgba(255,120,40,0.15)",
-    gemColor: "#e05020",
-    particleRgb: "255,100,40",
+  grassland: {
+    gemColor: "rgba(0,0,0,0)",
+    particleRgb: "0,0,0",
+    trimColor: "rgba(0,0,0,0)",
+    trimGlow: "rgba(0,0,0,0)",
   },
   swamp: {
-    trimColor: "rgba(80,130,50,0.28)",
-    trimGlow: "rgba(100,160,60,0.14)",
     gemColor: "#5a9a30",
     particleRgb: "100,150,60",
+    trimColor: "rgba(80,130,50,0.28)",
+    trimGlow: "rgba(100,160,60,0.14)",
+  },
+  volcanic: {
+    gemColor: "#e05020",
+    particleRgb: "255,100,40",
+    trimColor: "rgba(255,90,30,0.25)",
+    trimGlow: "rgba(255,120,40,0.15)",
+  },
+  winter: {
+    gemColor: "#60b8e8",
+    particleRgb: "200,220,255",
+    trimColor: "rgba(160,200,240,0.3)",
+    trimGlow: "rgba(180,220,255,0.15)",
   },
 };
 
@@ -57,9 +57,14 @@ export function getRegionArmorPalette(region: MapTheme): RegionAccentPalette {
 
 function drawDriftParticles(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number,
-  rgb: string, count: number, speed: number,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  rgb: string,
+  count: number,
+  speed: number
 ): void {
   for (let i = 0; i < count; i++) {
     const phase = (time * speed + i * 0.37) % 1;
@@ -79,8 +84,12 @@ function drawDriftParticles(
 
 function drawTrimLine(
   ctx: CanvasRenderingContext2D,
-  x1: number, y1: number, x2: number, y2: number,
-  color: string, width: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  width: number
 ): void {
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
@@ -92,8 +101,12 @@ function drawTrimLine(
 
 function drawGemDot(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, r: number,
-  color: string, glowColor: string, time: number,
+  x: number,
+  y: number,
+  r: number,
+  color: string,
+  glowColor: string,
+  time: number
 ): void {
   const pulse = 0.6 + Math.sin(time * 2.5) * 0.15;
   ctx.fillStyle = glowColor;
@@ -110,8 +123,11 @@ function drawGemDot(
 
 function drawFurTrim(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, width: number,
-  zoom: number, time: number,
+  x: number,
+  y: number,
+  width: number,
+  zoom: number,
+  time: number
 ): void {
   const tufts = 4;
   const sway = Math.sin(time * 2) * width * 0.01;
@@ -132,15 +148,24 @@ function drawFurTrim(
 
 function drawThinVine(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, len: number, side: number,
-  zoom: number, time: number,
+  x: number,
+  y: number,
+  len: number,
+  side: number,
+  zoom: number,
+  time: number
 ): void {
   const wave = Math.sin(time * 1.4 + side) * len * 0.06;
   ctx.strokeStyle = "rgba(60,95,35,0.3)";
   ctx.lineWidth = 0.7 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.quadraticCurveTo(x + side * len * 0.15 + wave, y + len * 0.5, x + side * len * 0.05, y + len);
+  ctx.quadraticCurveTo(
+    x + side * len * 0.15 + wave,
+    y + len * 0.5,
+    x + side * len * 0.05,
+    y + len
+  );
   ctx.stroke();
 
   ctx.fillStyle = "rgba(80,130,45,0.25)";
@@ -153,7 +178,10 @@ function drawThinVine(
 
 function drawEmberGlow(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, r: number, time: number,
+  x: number,
+  y: number,
+  r: number,
+  time: number
 ): void {
   const pulse = 0.12 + Math.sin(time * 3.5) * 0.06;
   ctx.fillStyle = `rgba(255,80,20,${pulse})`;
@@ -165,9 +193,12 @@ function drawEmberGlow(
 function drawCrackLine(
   ctx: CanvasRenderingContext2D,
   points: [number, number][],
-  zoom: number, time: number,
+  zoom: number,
+  time: number
 ): void {
-  if (points.length < 2) return;
+  if (points.length < 2) {
+    return;
+  }
   const glow = 0.15 + Math.sin(time * 2.8) * 0.08;
   ctx.strokeStyle = `rgba(255,80,20,${glow})`;
   ctx.lineWidth = 0.7 * zoom;
@@ -181,8 +212,11 @@ function drawCrackLine(
 
 function drawSandTrim(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, width: number,
-  zoom: number, time: number,
+  x: number,
+  y: number,
+  width: number,
+  zoom: number,
+  time: number
 ): void {
   const shimmer = 0.25 + Math.sin(time * 3) * 0.08;
   ctx.strokeStyle = `rgba(200,170,100,${shimmer})`;
@@ -197,15 +231,27 @@ function drawSandTrim(
 
 function drawSoldierRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
       drawSandTrim(ctx, x, y + size * 0.25, size * 0.24, zoom, time);
-      drawGemDot(ctx, x, y + size * 0.06, size * 0.012, p.gemColor, p.trimGlow, time);
+      drawGemDot(
+        ctx,
+        x,
+        y + size * 0.06,
+        size * 0.012,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.5);
       break;
     }
@@ -215,17 +261,30 @@ function drawSoldierRegionOverlay(
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.08, y + size * 0.04],
-        [x + size * 0.02, y + size * 0.12],
-        [x + size * 0.1, y + size * 0.06],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.08, y + size * 0.04],
+          [x + size * 0.02, y + size * 0.12],
+          [x + size * 0.1, y + size * 0.06],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x, y + size * 0.08, size * 0.015, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.12, y + size * 0.05, size * 0.12, 1, zoom, time);
+      drawThinVine(
+        ctx,
+        x + size * 0.12,
+        y + size * 0.05,
+        size * 0.12,
+        1,
+        zoom,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.4);
       break;
     }
@@ -234,8 +293,12 @@ function drawSoldierRegionOverlay(
 
 function drawArmoredRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
@@ -243,30 +306,67 @@ function drawArmoredRegionOverlay(
     case "desert": {
       drawSandTrim(ctx, x, y - size * 0.14, size * 0.32, zoom, time);
       drawSandTrim(ctx, x, y + size * 0.28, size * 0.18, zoom, time);
-      drawGemDot(ctx, x, y + size * 0.08, size * 0.014, p.gemColor, p.trimGlow, time);
+      drawGemDot(
+        ctx,
+        x,
+        y + size * 0.08,
+        size * 0.014,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.5);
       break;
     }
     case "winter": {
       drawFurTrim(ctx, x, y - size * 0.12, size * 0.42, zoom, time);
-      drawTrimLine(ctx, x - size * 0.12, y + size * 0.28, x + size * 0.12, y + size * 0.28, p.trimColor, 0.5 * zoom);
+      drawTrimLine(
+        ctx,
+        x - size * 0.12,
+        y + size * 0.28,
+        x + size * 0.12,
+        y + size * 0.28,
+        p.trimColor,
+        0.5 * zoom
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.35);
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.1, y + size * 0.02],
-        [x - size * 0.02, y + size * 0.1],
-        [x + size * 0.06, y + size * 0.04],
-        [x + size * 0.12, y + size * 0.12],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.1, y + size * 0.02],
+          [x - size * 0.02, y + size * 0.1],
+          [x + size * 0.06, y + size * 0.04],
+          [x + size * 0.12, y + size * 0.12],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x + size * 0.06, y + size * 0.04, size * 0.012, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.14, y + size * 0.02, size * 0.14, 1, zoom, time);
-      drawThinVine(ctx, x - size * 0.14, y + size * 0.06, size * 0.1, -1, zoom, time);
+      drawThinVine(
+        ctx,
+        x + size * 0.14,
+        y + size * 0.02,
+        size * 0.14,
+        1,
+        zoom,
+        time
+      );
+      drawThinVine(
+        ctx,
+        x - size * 0.14,
+        y + size * 0.06,
+        size * 0.1,
+        -1,
+        zoom,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.4);
       break;
     }
@@ -275,43 +375,97 @@ function drawArmoredRegionOverlay(
 
 function drawEliteRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
       drawSandTrim(ctx, x, y - size * 0.12, size * 0.28, zoom, time);
-      drawGemDot(ctx, x, y + size * 0.06, size * 0.016, p.gemColor, p.trimGlow, time);
-      drawTrimLine(ctx, x - size * 0.1, y + size * 0.24, x + size * 0.1, y + size * 0.24, p.trimColor, 0.5 * zoom);
+      drawGemDot(
+        ctx,
+        x,
+        y + size * 0.06,
+        size * 0.016,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
+      drawTrimLine(
+        ctx,
+        x - size * 0.1,
+        y + size * 0.24,
+        x + size * 0.1,
+        y + size * 0.24,
+        p.trimColor,
+        0.5 * zoom
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.5);
       break;
     }
     case "winter": {
       drawFurTrim(ctx, x, y - size * 0.1, size * 0.44, zoom, time);
-      drawGemDot(ctx, x, y - size * 0.32, size * 0.012, p.gemColor, p.trimGlow, time);
+      drawGemDot(
+        ctx,
+        x,
+        y - size * 0.32,
+        size * 0.012,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.35);
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.12, y + size * 0.0],
-        [x - size * 0.02, y + size * 0.08],
-        [x + size * 0.08, y + size * 0.02],
-      ], zoom, time);
-      drawCrackLine(ctx, [
-        [x + size * 0.04, y - size * 0.08],
-        [x - size * 0.02, y + size * 0.02],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.12, y + 0],
+          [x - size * 0.02, y + size * 0.08],
+          [x + size * 0.08, y + size * 0.02],
+        ],
+        zoom,
+        time
+      );
+      drawCrackLine(
+        ctx,
+        [
+          [x + size * 0.04, y - size * 0.08],
+          [x - size * 0.02, y + size * 0.02],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x, y + size * 0.06, size * 0.018, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.15, y + size * 0.0, size * 0.15, 1, zoom, time);
-      drawThinVine(ctx, x - size * 0.15, y + size * 0.04, size * 0.12, -1, zoom, time);
-      drawGemDot(ctx, x, y + size * 0.06, size * 0.012, p.gemColor, p.trimGlow, time);
+      drawThinVine(ctx, x + size * 0.15, y + 0, size * 0.15, 1, zoom, time);
+      drawThinVine(
+        ctx,
+        x - size * 0.15,
+        y + size * 0.04,
+        size * 0.12,
+        -1,
+        zoom,
+        time
+      );
+      drawGemDot(
+        ctx,
+        x,
+        y + size * 0.06,
+        size * 0.012,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.4);
       break;
     }
@@ -320,15 +474,27 @@ function drawEliteRegionOverlay(
 
 function drawKnightRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
       drawSandTrim(ctx, x, y + size * 0.3, size * 0.28, zoom, time);
-      drawGemDot(ctx, x, y + size * 0.12, size * 0.013, p.gemColor, p.trimGlow, time);
+      drawGemDot(
+        ctx,
+        x,
+        y + size * 0.12,
+        size * 0.013,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.5);
       break;
     }
@@ -338,16 +504,29 @@ function drawKnightRegionOverlay(
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.1, y + size * 0.06],
-        [x + size * 0.02, y + size * 0.14],
-        [x + size * 0.1, y + size * 0.08],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.1, y + size * 0.06],
+          [x + size * 0.02, y + size * 0.14],
+          [x + size * 0.1, y + size * 0.08],
+        ],
+        zoom,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.13, y + size * 0.06, size * 0.12, 1, zoom, time);
+      drawThinVine(
+        ctx,
+        x + size * 0.13,
+        y + size * 0.06,
+        size * 0.12,
+        1,
+        zoom,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.4);
       break;
     }
@@ -356,39 +535,100 @@ function drawKnightRegionOverlay(
 
 function drawCavalryRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
       drawSandTrim(ctx, x, y - size * 0.18, size * 0.3, zoom, time);
-      drawTrimLine(ctx, x - size * 0.18, y + size * 0.22, x + size * 0.18, y + size * 0.22, p.trimColor, 0.5 * zoom);
-      drawDriftParticles(ctx, x, y + size * 0.15, size, time, zoom, p.particleRgb, 3, 0.5);
+      drawTrimLine(
+        ctx,
+        x - size * 0.18,
+        y + size * 0.22,
+        x + size * 0.18,
+        y + size * 0.22,
+        p.trimColor,
+        0.5 * zoom
+      );
+      drawDriftParticles(
+        ctx,
+        x,
+        y + size * 0.15,
+        size,
+        time,
+        zoom,
+        p.particleRgb,
+        3,
+        0.5
+      );
       break;
     }
     case "winter": {
       drawFurTrim(ctx, x, y - size * 0.26, size * 0.3, zoom, time);
-      drawTrimLine(ctx, x - size * 0.22, y + size * 0.02, x + size * 0.22, y + size * 0.02, p.trimColor, 0.4 * zoom);
+      drawTrimLine(
+        ctx,
+        x - size * 0.22,
+        y + size * 0.02,
+        x + size * 0.22,
+        y + size * 0.02,
+        p.trimColor,
+        0.4 * zoom
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.35);
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.15, y + size * 0.02],
-        [x - size * 0.04, y + size * 0.1],
-        [x + size * 0.08, y + size * 0.04],
-        [x + size * 0.16, y + size * 0.1],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.15, y + size * 0.02],
+          [x - size * 0.04, y + size * 0.1],
+          [x + size * 0.08, y + size * 0.04],
+          [x + size * 0.16, y + size * 0.1],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x - size * 0.04, y + size * 0.1, size * 0.014, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x - size * 0.16, y - size * 0.05, size * 0.12, -1, zoom, time);
-      drawThinVine(ctx, x + size * 0.16, y - size * 0.02, size * 0.1, 1, zoom, time);
-      drawDriftParticles(ctx, x, y + size * 0.1, size, time, zoom, p.particleRgb, 2, 0.4);
+      drawThinVine(
+        ctx,
+        x - size * 0.16,
+        y - size * 0.05,
+        size * 0.12,
+        -1,
+        zoom,
+        time
+      );
+      drawThinVine(
+        ctx,
+        x + size * 0.16,
+        y - size * 0.02,
+        size * 0.1,
+        1,
+        zoom,
+        time
+      );
+      drawDriftParticles(
+        ctx,
+        x,
+        y + size * 0.1,
+        size,
+        time,
+        zoom,
+        p.particleRgb,
+        2,
+        0.4
+      );
       break;
     }
   }
@@ -396,37 +636,82 @@ function drawCavalryRegionOverlay(
 
 function drawCentaurRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
       drawSandTrim(ctx, x, y - size * 0.2, size * 0.26, zoom, time);
-      drawGemDot(ctx, x - size * 0.12, y - size * 0.24, size * 0.01, p.gemColor, p.trimGlow, time);
-      drawDriftParticles(ctx, x, y + size * 0.12, size, time, zoom, p.particleRgb, 2, 0.5);
+      drawGemDot(
+        ctx,
+        x - size * 0.12,
+        y - size * 0.24,
+        size * 0.01,
+        p.gemColor,
+        p.trimGlow,
+        time
+      );
+      drawDriftParticles(
+        ctx,
+        x,
+        y + size * 0.12,
+        size,
+        time,
+        zoom,
+        p.particleRgb,
+        2,
+        0.5
+      );
       break;
     }
     case "winter": {
       drawFurTrim(ctx, x, y - size * 0.28, size * 0.28, zoom, time);
-      drawTrimLine(ctx, x - size * 0.2, y + size * 0.02, x + size * 0.2, y + size * 0.02, p.trimColor, 0.4 * zoom);
+      drawTrimLine(
+        ctx,
+        x - size * 0.2,
+        y + size * 0.02,
+        x + size * 0.2,
+        y + size * 0.02,
+        p.trimColor,
+        0.4 * zoom
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.35);
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.12, y + size * 0.04],
-        [x, y + size * 0.1],
-        [x + size * 0.14, y + size * 0.06],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.12, y + size * 0.04],
+          [x, y + size * 0.1],
+          [x + size * 0.14, y + size * 0.06],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x, y + size * 0.1, size * 0.014, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 3, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.14, y + size * 0.0, size * 0.14, 1, zoom, time);
-      drawDriftParticles(ctx, x, y + size * 0.1, size, time, zoom, p.particleRgb, 2, 0.4);
+      drawThinVine(ctx, x + size * 0.14, y + 0, size * 0.14, 1, zoom, time);
+      drawDriftParticles(
+        ctx,
+        x,
+        y + size * 0.1,
+        size,
+        time,
+        zoom,
+        p.particleRgb,
+        2,
+        0.4
+      );
       break;
     }
   }
@@ -434,14 +719,26 @@ function drawCentaurRegionOverlay(
 
 function drawThesisRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
-      drawTrimLine(ctx, x - size * 0.08, y + size * 0.26, x + size * 0.08, y + size * 0.26, p.trimColor, 0.5 * zoom);
+      drawTrimLine(
+        ctx,
+        x - size * 0.08,
+        y + size * 0.26,
+        x + size * 0.08,
+        y + size * 0.26,
+        p.trimColor,
+        0.5 * zoom
+      );
       const orbPhase = time * 1.2;
       const orbX = x + Math.cos(orbPhase) * size * 0.1;
       const orbY = y - size * 0.18 + Math.sin(orbPhase * 1.3) * size * 0.03;
@@ -458,16 +755,29 @@ function drawThesisRegionOverlay(
       break;
     }
     case "volcanic": {
-      drawCrackLine(ctx, [
-        [x - size * 0.06, y + size * 0.04],
-        [x + size * 0.04, y + size * 0.1],
-      ], zoom, time);
+      drawCrackLine(
+        ctx,
+        [
+          [x - size * 0.06, y + size * 0.04],
+          [x + size * 0.04, y + size * 0.1],
+        ],
+        zoom,
+        time
+      );
       drawEmberGlow(ctx, x, y + size * 0.08, size * 0.014, time);
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.9);
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.1, y + size * 0.02, size * 0.1, 1, zoom, time);
+      drawThinVine(
+        ctx,
+        x + size * 0.1,
+        y + size * 0.02,
+        size * 0.1,
+        1,
+        zoom,
+        time
+      );
       const sporeGlow = 0.1 + Math.sin(time * 2.5) * 0.05;
       ctx.fillStyle = `rgba(100,180,60,${sporeGlow})`;
       ctx.beginPath();
@@ -481,14 +791,26 @@ function drawThesisRegionOverlay(
 
 function drawRowingRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
   const p = getAccent(region);
 
   switch (region) {
     case "desert": {
-      drawTrimLine(ctx, x - size * 0.08, y + size * 0.26, x + size * 0.08, y + size * 0.26, p.trimColor, 0.5 * zoom);
+      drawTrimLine(
+        ctx,
+        x - size * 0.08,
+        y + size * 0.26,
+        x + size * 0.08,
+        y + size * 0.26,
+        p.trimColor,
+        0.5 * zoom
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.5);
       break;
     }
@@ -503,7 +825,15 @@ function drawRowingRegionOverlay(
       break;
     }
     case "swamp": {
-      drawThinVine(ctx, x + size * 0.1, y + size * 0.02, size * 0.08, 1, zoom, time);
+      drawThinVine(
+        ctx,
+        x + size * 0.1,
+        y + size * 0.02,
+        size * 0.08,
+        1,
+        zoom,
+        time
+      );
       drawDriftParticles(ctx, x, y, size, time, zoom, p.particleRgb, 2, 0.4);
       break;
     }
@@ -512,32 +842,47 @@ function drawRowingRegionOverlay(
 
 // ── Main dispatcher ──────────────────────────────────────────────────────────
 
-const REGION_OVERLAY_MAP: Record<string, (
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  region: MapTheme, time: number, zoom: number,
-) => void> = {
-  footsoldier: drawSoldierRegionOverlay,
-  soldier: drawSoldierRegionOverlay,
+const REGION_OVERLAY_MAP: Record<
+  string,
+  (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    region: MapTheme,
+    time: number,
+    zoom: number
+  ) => void
+> = {
   armored: drawArmoredRegionOverlay,
-  elite: drawEliteRegionOverlay,
-  knight: drawKnightRegionOverlay,
   cavalry: drawCavalryRegionOverlay,
   centaur: drawCentaurRegionOverlay,
-  thesis: drawThesisRegionOverlay,
+  elite: drawEliteRegionOverlay,
+  footsoldier: drawSoldierRegionOverlay,
+  knight: drawKnightRegionOverlay,
   rowing: drawRowingRegionOverlay,
+  soldier: drawSoldierRegionOverlay,
+  thesis: drawThesisRegionOverlay,
 };
 
 export function drawTroopRegionOverlay(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  troopType: string, region: MapTheme,
-  time: number, zoom: number,
+  x: number,
+  y: number,
+  size: number,
+  troopType: string,
+  region: MapTheme,
+  time: number,
+  zoom: number
 ): void {
-  if (region === "grassland") return;
+  if (region === "grassland") {
+    return;
+  }
 
   const drawFn = REGION_OVERLAY_MAP[troopType];
-  if (!drawFn) return;
+  if (!drawFn) {
+    return;
+  }
 
   ctx.save();
   drawFn(ctx, x, y, size, region, time, zoom);

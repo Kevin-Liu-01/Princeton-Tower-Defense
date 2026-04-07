@@ -32,18 +32,18 @@ export const TOWER_FOOTPRINTS: Record<
   TowerType,
   { width: number; height: number }
 > = {
-  cannon: { width: 1, height: 1 },
-  library: { width: 1, height: 1 },
-  lab: { width: 1, height: 1 },
-  arch: { width: 1, height: 1 },
-  club: { width: 1, height: 1 },
-  station: { width: 1.5, height: 1.5 },
-  mortar: { width: 1, height: 1 },
+  arch: { height: 1, width: 1 },
+  cannon: { height: 1, width: 1 },
+  club: { height: 1, width: 1 },
+  lab: { height: 1, width: 1 },
+  library: { height: 1, width: 1 },
+  mortar: { height: 1, width: 1 },
+  station: { height: 1.5, width: 1.5 },
 };
 export const INITIAL_PAW_POINTS = 300;
 export const INITIAL_LIVES = 20;
-export const WAVE_TIMER_BASE = 15000;
-export const HERO_RESPAWN_TIME = 15000;
+export const WAVE_TIMER_BASE = 15_000;
+export const HERO_RESPAWN_TIME = 15_000;
 export const TROOP_SPREAD_RADIUS = 45;
 export const ENEMY_SPAWN_FADE_DURATION = 500;
 export const ENEMY_DESPAWN_FADE_DURATION = 500;

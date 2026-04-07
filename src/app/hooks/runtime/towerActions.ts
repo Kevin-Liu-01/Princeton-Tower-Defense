@@ -1,13 +1,21 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import type { Position, Tower, Troop, TowerType, TroopType, Particle } from "../../types";
+
 import {
   TOWER_DATA,
   TROOP_DATA,
   MAP_PATHS,
   DEFAULT_TROOP_HP,
 } from "../../constants";
-import { gridToWorld } from "../../utils";
 import { getUpgradeCost } from "../../constants/towerStats";
+import type {
+  Position,
+  Tower,
+  Troop,
+  TowerType,
+  TroopType,
+  Particle,
+} from "../../types";
+import { gridToWorld } from "../../utils";
 import type { GameEventLogAPI } from "../useGameEventLog";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
@@ -28,18 +36,24 @@ export interface UpgradeTowerParams {
 export function upgradeTowerImpl(
   towerId: string,
   choice: "A" | "B" | undefined,
-  p: UpgradeTowerParams,
+  p: UpgradeTowerParams
 ): void {
   const currentTowers = p.towersRef.current;
   const currentPawPoints = p.pawPointsRef.current;
 
   const tower = currentTowers.find((t) => t.id === towerId);
-  if (!tower) return;
+  if (!tower) {
+    return;
+  }
 
   const cost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
-  if (cost === 0 || currentPawPoints < cost) return;
+  if (cost === 0 || currentPawPoints < cost) {
+    return;
+  }
 
-  if (tower.level === 3 && !choice) return;
+  if (tower.level === 3 && !choice) {
+    return;
+  }
 
   const newLevel = (tower.level + 1) as 2 | 3 | 4;
   const newUpgrade = tower.level === 3 ? choice : tower.upgrade;
@@ -47,14 +61,21 @@ export function upgradeTowerImpl(
   p.setTowers((prev) =>
     prev.map((t) => {
       if (t.id === towerId) {
-        const updates: Partial<Tower> = { level: newLevel, upgrade: newUpgrade };
+        const updates: Partial<Tower> = {
+          level: newLevel,
+          upgrade: newUpgrade,
+        };
         if (t.type === "mortar" && newLevel === 4 && newUpgrade === "A") {
           updates.mortarAutoAim = true;
           const defaultPathKey = p.activeWaveSpawnPaths[0] ?? p.selectedMap;
-          const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS[p.selectedMap] ?? [];
+          const path =
+            MAP_PATHS[defaultPathKey] ?? MAP_PATHS[p.selectedMap] ?? [];
           if (path.length >= 2) {
             const spawnNode = path[Math.min(2, path.length - 1)];
-            updates.mortarTarget = gridToWorld({ x: spawnNode.x, y: spawnNode.y });
+            updates.mortarTarget = gridToWorld({
+              x: spawnNode.x,
+              y: spawnNode.y,
+            });
           } else {
             updates.mortarTarget = gridToWorld(t.pos);
           }
@@ -82,10 +103,10 @@ export function upgradeTowerImpl(
           const hpPercent = t.hp / t.maxHp;
           return {
             ...t,
-            type: newTroopType,
-            maxHp: newHP,
             hp: Math.round(newHP * hpPercent),
+            maxHp: newHP,
             selected: false,
+            type: newTroopType,
           };
         }
         return t;
@@ -98,7 +119,7 @@ export function upgradeTowerImpl(
   p.gameEventLogRef.current.log(
     "tower_upgraded",
     `Upgraded ${TOWER_DATA[tower.type].name} to Lv${newLevel}${newUpgrade ? ` (${newUpgrade})` : ""} for ${cost} PP`,
-    { towerType: tower.type, newLevel, upgrade: newUpgrade, cost },
+    { cost, newLevel, towerType: tower.type, upgrade: newUpgrade }
   );
   p.setSelectedTower(null);
 }
@@ -115,17 +136,19 @@ export interface SellTowerParams {
 
 export function sellTowerImpl(towerId: string, p: SellTowerParams): void {
   const tower = p.towers.find((t) => t.id === towerId);
-  if (!tower) return;
+  if (!tower) {
+    return;
+  }
   const refund =
     Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
     (tower.level - 1) *
-    (tower.level === 2
-      ? 150 * 0.7
-      : tower.level === 3
-        ? 250 * 0.7
-        : tower.level === 4
-          ? 350 * 0.7
-          : 0);
+      (tower.level === 2
+        ? 150 * 0.7
+        : tower.level === 3
+          ? 250 * 0.7
+          : tower.level === 4
+            ? 350 * 0.7
+            : 0);
   p.addPawPoints(refund);
   p.addParticles(gridToWorld(tower.pos), "smoke", 15);
   p.removeTowerEntity(towerId);
@@ -133,7 +156,7 @@ export function sellTowerImpl(towerId: string, p: SellTowerParams): void {
   p.gameEventLogRef.current.log(
     "tower_sold",
     `Sold ${TOWER_DATA[tower.type].name} Lv${tower.level} for ${refund} PP`,
-    { towerType: tower.type, level: tower.level, refund },
+    { level: tower.level, refund, towerType: tower.type }
   );
   p.setSelectedTower(null);
 }

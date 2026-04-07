@@ -1,10 +1,5 @@
 import { ENEMY_DATA, HERO_DATA, TROOP_DATA } from "../constants";
-import type {
-  Enemy,
-  Hero,
-  Troop,
-  TroopType,
-} from "../types";
+import type { Enemy, Hero, Troop, TroopType } from "../types";
 
 export type HexWardGhostStrength = "weak" | "medium" | "strong" | "apex";
 
@@ -30,7 +25,8 @@ const APEX_TROOP_SCORE = 2900;
 function getEnemyStrengthScore(enemy: Enemy): number {
   const enemyData = ENEMY_DATA[enemy.type];
   const traitCount = enemyData.traits?.length ?? 0;
-  const bossBonus = enemyData.isBoss || enemyData.traits?.includes("boss") ? 1600 : 0;
+  const bossBonus =
+    enemyData.isBoss || enemyData.traits?.includes("boss") ? 1600 : 0;
   const rangedBonus = enemyData.isRanged ? 140 : 0;
   const flyingBonus = enemyData.flying ? 110 : 0;
   return (
@@ -68,38 +64,44 @@ function classifyStrength(
   score: number,
   weakThreshold: number,
   strongThreshold: number,
-  apexThreshold: number,
+  apexThreshold: number
 ): HexWardGhostStrength {
-  if (score >= apexThreshold) return "apex";
-  if (score >= strongThreshold) return "strong";
-  if (score >= weakThreshold) return "medium";
+  if (score >= apexThreshold) {
+    return "apex";
+  }
+  if (score >= strongThreshold) {
+    return "strong";
+  }
+  if (score >= weakThreshold) {
+    return "medium";
+  }
   return "weak";
 }
 
 export function getHexWardGhostStrengthFromEnemy(
-  enemy: Enemy,
+  enemy: Enemy
 ): HexWardGhostStrength {
   return classifyStrength(
     getEnemyStrengthScore(enemy),
     WEAK_ENEMY_SCORE,
     STRONG_ENEMY_SCORE,
-    APEX_ENEMY_SCORE,
+    APEX_ENEMY_SCORE
   );
 }
 
 export function getHexWardGhostStrengthFromTroop(
-  troop: Troop,
+  troop: Troop
 ): HexWardGhostStrength {
   return classifyStrength(
     getTroopStrengthScore(troop),
     WEAK_TROOP_SCORE,
     STRONG_TROOP_SCORE,
-    APEX_TROOP_SCORE,
+    APEX_TROOP_SCORE
   );
 }
 
 export function getHexWardGhostStrengthFromHero(
-  hero: Hero,
+  hero: Hero
 ): HexWardGhostStrength {
   const heroData = HERO_DATA[hero.type];
   const heroScore =
@@ -108,57 +110,61 @@ export function getHexWardGhostStrengthFromHero(
 }
 
 export function getHexWardGhostProfile(
-  strength: HexWardGhostStrength,
+  strength: HexWardGhostStrength
 ): HexWardGhostProfile {
   switch (strength) {
-    case "weak":
+    case "weak": {
       return {
-        troopType: "rowing",
-        hp: 420,
-        damage: 8,
         attackSpeed: 1220,
-        lifetimeMs: 14000,
+        damage: 8,
         decayPerSecond: 24,
+        hp: 420,
+        lifetimeMs: 14_000,
+        troopType: "rowing",
       };
-    case "medium":
+    }
+    case "medium": {
       return {
-        troopType: "thesis",
-        hp: 640,
-        damage: 13,
         attackSpeed: 1020,
-        lifetimeMs: 17000,
+        damage: 13,
         decayPerSecond: 30,
+        hp: 640,
+        lifetimeMs: 17_000,
+        troopType: "thesis",
       };
-    case "strong":
+    }
+    case "strong": {
       return {
-        troopType: "hexling",
-        hp: 860,
-        damage: 18,
         attackSpeed: 940,
-        lifetimeMs: 19000,
+        canTargetFlying: true,
+        damage: 18,
         decayPerSecond: 38,
+        hp: 860,
         isRanged: true,
+        lifetimeMs: 19_000,
         range: 225,
-        canTargetFlying: true,
+        troopType: "hexling",
       };
-    case "apex":
+    }
+    case "apex": {
       return {
-        troopType: "hexseer",
-        hp: 1180,
-        damage: 25,
         attackSpeed: 820,
-        lifetimeMs: 22000,
-        decayPerSecond: 46,
-        isRanged: true,
-        range: 260,
         canTargetFlying: true,
+        damage: 25,
+        decayPerSecond: 46,
+        hp: 1180,
+        isRanged: true,
+        lifetimeMs: 22_000,
+        range: 260,
+        troopType: "hexseer",
       };
+    }
   }
 }
 
 export function isHexWardGhostHarvestActive(
   endTime: number | null | undefined,
-  now: number,
+  now: number
 ): boolean {
   return !!endTime && endTime > now;
 }

@@ -1,10 +1,10 @@
-import type { Projectile, Position } from "../../types";
-import { worldToScreen } from "../../utils";
 import {
   ISO_X_FACTOR,
   ISO_Y_FACTOR,
   ISO_Y_RATIO,
 } from "../../constants/isometric";
+import type { Projectile, Position } from "../../types";
+import { worldToScreen } from "../../utils";
 import { getPerformanceSettings } from "../performance";
 
 // ============================================================================
@@ -15,33 +15,37 @@ import { getPerformanceSettings } from "../performance";
 const parsedColorCache = new Map<string, { r: number; g: number; b: number }>();
 function parseColor(color: string): { r: number; g: number; b: number } {
   const cached = parsedColorCache.get(color);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   let parsed: { r: number; g: number; b: number };
   if (color.startsWith("#")) {
     const hex = color.slice(1);
     if (hex.length === 3) {
       parsed = {
-        r: parseInt(hex[0] + hex[0], 16),
-        g: parseInt(hex[1] + hex[1], 16),
-        b: parseInt(hex[2] + hex[2], 16),
+        b: Number.parseInt(hex[2] + hex[2], 16),
+        g: Number.parseInt(hex[1] + hex[1], 16),
+        r: Number.parseInt(hex[0] + hex[0], 16),
       };
     } else {
       parsed = {
-        r: parseInt(hex.slice(0, 2), 16),
-        g: parseInt(hex.slice(2, 4), 16),
-        b: parseInt(hex.slice(4, 6), 16),
+        b: Number.parseInt(hex.slice(4, 6), 16),
+        g: Number.parseInt(hex.slice(2, 4), 16),
+        r: Number.parseInt(hex.slice(0, 2), 16),
       };
     }
   } else {
     // Handle rgb/rgba
     const match = color.match(/\d+/g);
     parsed = match
-      ? { r: +match[0], g: +match[1], b: +match[2] }
-      : { r: 255, g: 255, b: 255 };
+      ? { b: +match[2], g: +match[1], r: +match[0] }
+      : { b: 255, g: 255, r: 255 };
   }
 
-  if (parsedColorCache.size > 256) parsedColorCache.clear();
+  if (parsedColorCache.size > 256) {
+    parsedColorCache.clear();
+  }
   parsedColorCache.set(color, parsed);
   return parsed;
 }
@@ -49,7 +53,7 @@ function parseColor(color: string): { r: number; g: number; b: number } {
 // Helper: Lighten a color
 function lightenColor(
   color: { r: number; g: number; b: number },
-  amount: number,
+  amount: number
 ): string {
   return `rgb(${Math.min(255, color.r + amount)}, ${Math.min(255, color.g + amount)}, ${Math.min(255, color.b + amount)})`;
 }
@@ -57,7 +61,7 @@ function lightenColor(
 // Helper: Darken a color
 function darkenColor(
   color: { r: number; g: number; b: number },
-  amount: number,
+  amount: number
 ): string {
   return `rgb(${Math.max(0, color.r - amount)}, ${Math.max(0, color.g - amount)}, ${Math.max(0, color.b - amount)})`;
 }
@@ -65,7 +69,7 @@ function darkenColor(
 // Helper: Get color with alpha
 function colorWithAlpha(
   color: { r: number; g: number; b: number },
-  alpha: number,
+  alpha: number
 ): string {
   return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
@@ -83,9 +87,11 @@ function drawTrail(
   cameraZoom: number,
   trailColor: { r: number; g: number; b: number },
   trailLength: number = 4,
-  trailSize: number = 4,
+  trailSize: number = 4
 ) {
-  if (!getPerformanceSettings().projectileTrails) return;
+  if (!getPerformanceSettings().projectileTrails) {
+    return;
+  }
   const t = proj.progress;
 
   const hasVerticalArc = Boolean(proj.arcHeight || proj.elevation);
@@ -96,7 +102,7 @@ function drawTrail(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const toScreen = worldToScreen(
       proj.to,
@@ -104,7 +110,7 @@ function drawTrail(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     for (let i = 1; i <= trailLength; i++) {
       const trailT = Math.max(0, t - i * 0.05);
@@ -130,7 +136,7 @@ function drawTrail(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     // Arc and elevation are HEIGHT above ground — apply as screen-Y offset
     const trailArc = proj.arcHeight
@@ -148,7 +154,7 @@ function drawTrail(
       trailGroundPos.y - trailArc - trailElevation,
       size,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -160,14 +166,14 @@ function drawTrail(
 function renderArrow(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  variant: "basic" | "crossbow" | "golden" = "basic",
+  variant: "basic" | "crossbow" | "golden" = "basic"
 ) {
   const s = 0.65 * zoom;
 
   const colors = {
-    basic: { shaft: "#6b4423", head: "#b8b8b8", fletch: "#c44" },
-    crossbow: { shaft: "#3a3a3a", head: "#707070", fletch: "#222" },
-    golden: { shaft: "#8b6914", head: "#daa520", fletch: "#ff9500" },
+    basic: { fletch: "#c44", head: "#b8b8b8", shaft: "#6b4423" },
+    crossbow: { fletch: "#222", head: "#707070", shaft: "#3a3a3a" },
+    golden: { fletch: "#ff9500", head: "#daa520", shaft: "#8b6914" },
   };
   const c = colors[variant];
 
@@ -212,7 +218,7 @@ function renderMagicBolt(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const pulse = 0.9 + Math.sin(time * 8) * 0.1;
   const coreSize = 5 * zoom * pulse;
@@ -246,7 +252,7 @@ function renderMagicBolt(
   coreGrad.addColorStop(0.35, lightenColor(baseColor, 60));
   coreGrad.addColorStop(
     0.7,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   coreGrad.addColorStop(1, darkenColor(baseColor, 40));
   ctx.fillStyle = coreGrad;
@@ -268,7 +274,7 @@ function renderFireball(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const fireSize = 9 * zoom;
 
@@ -316,7 +322,7 @@ function renderFireball(
 function renderRock(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  progress: number,
+  progress: number
 ) {
   const rotation = progress * Math.PI * 3;
   const size = 7 * zoom;
@@ -337,7 +343,7 @@ function renderRock(
     0,
     0,
     0,
-    size,
+    size
   );
   rockGrad.addColorStop(0, "#a09080");
   rockGrad.addColorStop(0.5, "#706860");
@@ -380,7 +386,7 @@ function renderSonicWave(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   // Three expanding rings
   for (let ring = 0; ring < 3; ring++) {
@@ -415,7 +421,7 @@ function renderLightningOrb(
   time: number,
   baseColor: { r: number; g: number; b: number },
   lowDetail: boolean,
-  minimalDetail: boolean,
+  minimalDetail: boolean
 ) {
   const coreSize = 5 * zoom;
   const arcCount = minimalDetail ? 2 : lowDetail ? 4 : 7;
@@ -453,12 +459,12 @@ function renderLightningOrb(
     coreSize * 0.4,
     0,
     0,
-    coreSize * 3.2,
+    coreSize * 3.2
   );
   coronaGrad.addColorStop(0, colorWithAlpha(baseColor, 0.32));
   coronaGrad.addColorStop(
     0.45,
-    colorWithAlpha(baseColor, lowDetail ? 0.1 : 0.14),
+    colorWithAlpha(baseColor, lowDetail ? 0.1 : 0.14)
   );
   coronaGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
   ctx.fillStyle = coronaGrad;
@@ -505,7 +511,7 @@ function renderLightningOrb(
     drawBoltPath(ctx, pts);
     ctx.stroke();
 
-    const tip = pts[pts.length - 1];
+    const tip = pts.at(-1);
     ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
     ctx.beginPath();
     ctx.arc(tip.x, tip.y, 1 * zoom, 0, Math.PI * 2);
@@ -523,13 +529,13 @@ function renderLightningOrb(
     0,
     0,
     0,
-    coreSize,
+    coreSize
   );
   coreGrad.addColorStop(0, "#ffffff");
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 85));
   coreGrad.addColorStop(
     0.75,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   coreGrad.addColorStop(1, darkenColor(baseColor, 35));
   ctx.fillStyle = coreGrad;
@@ -547,14 +553,14 @@ function renderLightningOrb(
     coreSize * 0.18,
     -0.4,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
 
 function drawBoltPath(
   ctx: CanvasRenderingContext2D,
-  pts: { x: number; y: number }[],
+  pts: { x: number; y: number }[]
 ) {
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
@@ -569,7 +575,7 @@ function drawBoltPath(
 function renderSpear(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const s = 0.55 * zoom;
   const metal = lightenColor(baseColor, 35);
@@ -636,7 +642,7 @@ function renderSpear(
 function renderBullet(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   // Tracer trail
   const trailGrad = ctx.createLinearGradient(-12 * zoom, 0, 4 * zoom, 0);
@@ -663,7 +669,7 @@ function renderBullet(
 function renderCannonball(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  progress: number,
+  progress: number
 ) {
   const spin = progress * Math.PI * 2.5;
   const size = 6 * zoom;
@@ -676,7 +682,7 @@ function renderCannonball(
     0,
     trailOffset,
     0,
-    8 * zoom,
+    8 * zoom
   );
   trailGrad.addColorStop(0, "rgba(255, 200, 50, 0.7)");
   trailGrad.addColorStop(0.5, "rgba(255, 100, 0, 0.4)");
@@ -693,7 +699,7 @@ function renderCannonball(
     0,
     0,
     0,
-    size,
+    size
   );
   ballGrad.addColorStop(0, "#555");
   ballGrad.addColorStop(0.5, "#333");
@@ -713,7 +719,7 @@ function renderCannonball(
     1.8 * zoom,
     -0.5,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -725,7 +731,7 @@ function renderMortarShell(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  time: number,
+  time: number
 ) {
   const size = 7 * zoom;
   const wobble = Math.sin(progress * Math.PI * 6) * 0.12;
@@ -757,7 +763,7 @@ function renderMortarShell(
       0,
       tOff,
       flicker,
-      tSize,
+      tSize
     );
     grad.addColorStop(0, `rgba(255, 220, 80, ${tAlpha})`);
     grad.addColorStop(0.4, `rgba(255, 130, 20, ${tAlpha * 0.7})`);
@@ -776,7 +782,7 @@ function renderMortarShell(
     0,
     -size * 1.1,
     0,
-    4 * zoom,
+    4 * zoom
   );
   flashGrad.addColorStop(0, `rgba(255, 255, 200, ${flashIntensity})`);
   flashGrad.addColorStop(0.5, `rgba(255, 160, 40, ${flashIntensity * 0.5})`);
@@ -861,7 +867,7 @@ function renderMortarShell(
     zoom * 1.5,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -883,7 +889,7 @@ function renderMissile(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  time: number,
+  time: number
 ) {
   const size = 5 * zoom;
 
@@ -905,7 +911,7 @@ function renderMissile(
     -size * 1.2 - flameLen,
     0,
     -size * 1.2,
-    0,
+    0
   );
   flameGrad.addColorStop(0, "rgba(255, 50, 0, 0)");
   flameGrad.addColorStop(0.3, "rgba(255, 120, 20, 0.5)");
@@ -927,7 +933,7 @@ function renderMissile(
     0,
     -size * 1.2,
     0,
-    coreFlame,
+    coreFlame
   );
   coreGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
   coreGrad.addColorStop(0.4, "rgba(255, 255, 150, 0.6)");
@@ -990,13 +996,13 @@ function renderMissile(
   ctx.beginPath();
   ctx.moveTo(size * 0.4, -size * 0.5);
   ctx.lineTo(size * 0.2, -size * 0.85);
-  ctx.lineTo(size * 0.0, -size * 0.5);
+  ctx.lineTo(0, -size * 0.5);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
   ctx.moveTo(size * 0.4, size * 0.5);
   ctx.lineTo(size * 0.2, size * 0.85);
-  ctx.lineTo(size * 0.0, size * 0.5);
+  ctx.lineTo(0, size * 0.5);
   ctx.closePath();
   ctx.fill();
 
@@ -1060,7 +1066,7 @@ function renderEmber(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  time: number,
+  time: number
 ) {
   const size = 6 * zoom;
   const tumble = progress * Math.PI * 3;
@@ -1132,13 +1138,13 @@ function renderEmber(
       (fx + tipX) * 0.5 + perpX * 0.6 + Math.sin(time * 12 + i) * zoom,
       (fy + tipY) * 0.5 + perpY * 0.6 + Math.cos(time * 11 + i) * zoom,
       tipX,
-      tipY,
+      tipY
     );
     ctx.quadraticCurveTo(
       (fx + tipX) * 0.5 - perpX * 0.6 - Math.sin(time * 12 + i) * zoom,
       (fy + tipY) * 0.5 - perpY * 0.6 - Math.cos(time * 11 + i) * zoom,
       fx - perpX,
-      fy - perpY,
+      fy - perpY
     );
     ctx.closePath();
     ctx.fill();
@@ -1151,7 +1157,7 @@ function renderEmber(
     0,
     0,
     0,
-    size,
+    size
   );
   coreGrad.addColorStop(0, "#ffffcc");
   coreGrad.addColorStop(0.2, "#ffdd44");
@@ -1201,7 +1207,7 @@ function renderEmber(
     size * 0.1,
     0.5,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1214,7 +1220,7 @@ function renderEmber(
 function renderFlame(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  time: number,
+  time: number
 ) {
   // Flame particles (reduced count for performance)
   for (let i = 0; i < 3; i++) {
@@ -1227,7 +1233,7 @@ function renderFlame(
       0,
       offset,
       offset * 0.4,
-      flameSize,
+      flameSize
     );
     flameGrad.addColorStop(0, "rgba(255, 255, 100, 0.85)");
     flameGrad.addColorStop(0.4, "rgba(255, 150, 0, 0.6)");
@@ -1245,7 +1251,7 @@ function renderFlame(
 function renderHeroProjectile(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const size = 5 * zoom;
 
@@ -1261,7 +1267,7 @@ function renderHeroProjectile(
   orbGrad.addColorStop(0.35, lightenColor(baseColor, 40));
   orbGrad.addColorStop(
     0.8,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   orbGrad.addColorStop(1, darkenColor(baseColor, 30));
   ctx.fillStyle = orbGrad;
@@ -1283,7 +1289,7 @@ function renderBansheeScream(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   // Expanding ghostly rings
   for (let ring = 0; ring < 3; ring++) {
@@ -1316,7 +1322,7 @@ function renderDragonBreath(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const size = 12 * zoom;
 
@@ -1344,7 +1350,7 @@ function renderDragonBreath(
       0,
       px,
       py,
-      particleSize,
+      particleSize
     );
     particleGrad.addColorStop(0, "rgba(255, 255, 255, 0.8)");
     particleGrad.addColorStop(0.4, colorWithAlpha(baseColor, 0.6));
@@ -1361,7 +1367,7 @@ function renderDragonBreath(
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 80));
   coreGrad.addColorStop(
     0.7,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   coreGrad.addColorStop(1, darkenColor(baseColor, 20));
   ctx.fillStyle = coreGrad;
@@ -1377,7 +1383,7 @@ function renderEnergyBall(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const size = 10 * zoom;
   const pulse = 1 + Math.sin(time * 10) * 0.15;
@@ -1401,7 +1407,7 @@ function renderEnergyBall(
     const wispSize = (2.5 + Math.sin(time * 12 + i * 1.7)) * zoom;
     ctx.fillStyle = colorWithAlpha(
       baseColor,
-      0.5 + Math.sin(time * 8 + i) * 0.2,
+      0.5 + Math.sin(time * 8 + i) * 0.2
     );
     ctx.beginPath();
     ctx.arc(wx, wy, wispSize, 0, Math.PI * 2);
@@ -1414,7 +1420,7 @@ function renderEnergyBall(
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 100));
   coreGrad.addColorStop(
     0.65,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   coreGrad.addColorStop(1, darkenColor(baseColor, 30));
   ctx.fillStyle = coreGrad;
@@ -1439,7 +1445,7 @@ function renderPhoenixFlame(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const size = 14 * zoom;
   const pulse = 1 + Math.sin(time * 6) * 0.12;
@@ -1478,7 +1484,7 @@ function renderPhoenixFlame(
   coreGrad.addColorStop(0.2, "#ffdd70");
   coreGrad.addColorStop(
     0.5,
-    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`
   );
   coreGrad.addColorStop(0.8, `rgb(200, 60, 10)`);
   coreGrad.addColorStop(1, `rgba(120, 30, 0, 0.5)`);
@@ -1518,7 +1524,7 @@ function renderVineBarb(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number },
+  baseColor: { r: number; g: number; b: number }
 ) {
   const len = 16 * zoom;
   const thickness = 3 * zoom;
@@ -1527,7 +1533,7 @@ function renderVineBarb(
   const vineGrad = ctx.createLinearGradient(len * 0.5, 0, -len * 0.5, 0);
   vineGrad.addColorStop(
     0,
-    `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.9)`,
+    `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.9)`
   );
   vineGrad.addColorStop(0.6, `rgba(16, 185, 129, 0.7)`);
   vineGrad.addColorStop(1, `rgba(52, 211, 153, 0.3)`);
@@ -1543,7 +1549,7 @@ function renderVineBarb(
     len * 0.15,
     Math.sin(time * 12 + 1.5) * -3 * zoom,
     len * 0.5,
-    0,
+    0
   );
   ctx.stroke();
 
@@ -1573,7 +1579,7 @@ function renderVineBarb(
       leafSize * 0.4,
       side * 0.5 + time * 2,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1585,7 +1591,7 @@ function renderVineBarb(
     0,
     -len * 0.5,
     0,
-    5 * zoom,
+    5 * zoom
   );
   tipGlow.addColorStop(0, `rgba(167, 243, 208, 0.5)`);
   tipGlow.addColorStop(1, `rgba(52, 211, 153, 0)`);
@@ -1600,53 +1606,53 @@ function renderVineBarb(
 // ============================================================================
 const COLORS = {
   // Basic projectiles
-  arrow: { r: 139, g: 90, b: 43 },
-  bolt: { r: 80, g: 80, b: 80 },
-  golden: { r: 201, g: 162, b: 39 },
+  arrow: { b: 43, g: 90, r: 139 },
+  bolt: { b: 80, g: 80, r: 80 },
+  golden: { b: 39, g: 162, r: 201 },
 
   // Fire
-  fire: { r: 255, g: 100, b: 0 },
-  infernal: { r: 200, g: 50, b: 255 },
-  dragon: { r: 50, g: 255, b: 150 },
+  fire: { b: 0, g: 100, r: 255 },
+  infernal: { b: 255, g: 50, r: 200 },
+  dragon: { b: 150, g: 255, r: 50 },
 
   // Magic
-  arcane: { r: 136, g: 100, b: 255 },
-  dark: { r: 170, g: 50, b: 180 },
-  frost: { r: 100, g: 200, b: 255 },
-  poison: { r: 150, g: 220, b: 50 },
-  holy: { r: 255, g: 230, b: 100 },
-  shadow: { r: 100, g: 50, b: 150 },
-  nature: { r: 100, g: 200, b: 80 },
-  blood: { r: 200, g: 50, b: 50 },
+  arcane: { b: 255, g: 100, r: 136 },
+  dark: { b: 180, g: 50, r: 170 },
+  frost: { b: 255, g: 200, r: 100 },
+  poison: { b: 50, g: 220, r: 150 },
+  holy: { b: 100, g: 230, r: 255 },
+  shadow: { b: 150, g: 50, r: 100 },
+  nature: { b: 80, g: 200, r: 100 },
+  blood: { b: 50, g: 50, r: 200 },
 
   // Lightning/electric
-  lightning: { r: 100, g: 220, b: 255 },
+  lightning: { b: 255, g: 220, r: 100 },
 
   // Sonic
-  sonic: { r: 80, g: 200, b: 120 },
+  sonic: { b: 120, g: 200, r: 80 },
 
   // Bullets
-  tracer: { r: 255, g: 200, b: 50 },
+  tracer: { b: 50, g: 200, r: 255 },
 
   // Hero colors
-  mathey: { r: 201, g: 162, b: 39 },
-  scott: { r: 201, g: 162, b: 39 },
-  tenor: { r: 168, g: 85, b: 247 },
-  rocky: { r: 120, g: 113, b: 108 },
-  nassau: { r: 230, g: 126, b: 34 },
-  nassauBlue: { r: 59, g: 130, b: 246 },
-  ivy: { r: 5, g: 150, b: 105 },
+  mathey: { b: 39, g: 162, r: 201 },
+  scott: { b: 39, g: 162, r: 201 },
+  tenor: { b: 247, g: 85, r: 168 },
+  rocky: { b: 108, g: 113, r: 120 },
+  nassau: { b: 34, g: 126, r: 230 },
+  nassauBlue: { b: 246, g: 130, r: 59 },
+  ivy: { b: 105, g: 150, r: 5 },
 
   // Banshee
-  banshee: { r: 200, g: 150, b: 255 },
+  banshee: { b: 255, g: 150, r: 200 },
 
   // Wyvern energy
-  wyvern: { r: 5, g: 200, b: 120 },
+  wyvern: { b: 120, g: 200, r: 5 },
 
   // Bug projectiles
-  acid: { r: 200, g: 255, b: 50 },
-  silk: { r: 200, g: 200, b: 220 },
-  venom: { r: 120, g: 255, b: 80 },
+  acid: { b: 50, g: 255, r: 200 },
+  silk: { b: 220, g: 200, r: 200 },
+  venom: { b: 80, g: 255, r: 120 },
 };
 
 // ============================================================================
@@ -1666,9 +1672,11 @@ export function renderProjectile(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  projectileDensityHint: number = 0,
+  projectileDensityHint: number = 0
 ) {
-  if (proj.spawnDelay && proj.spawnDelay > 0) return;
+  if (proj.spawnDelay && proj.spawnDelay > 0) {
+    return;
+  }
 
   const zoom = cameraZoom || 1;
   const t = proj.progress;
@@ -1685,7 +1693,7 @@ export function renderProjectile(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   // Arc and elevation are HEIGHT above the ground — offset in screen-Y only
   const arcOffset = proj.arcHeight
@@ -1704,78 +1712,101 @@ export function renderProjectile(
   } else {
     // Default colors based on type
     switch (proj.type) {
-      case "arrow":
+      case "arrow": {
         baseColor = COLORS.arrow;
         break;
-      case "bolt":
+      }
+      case "bolt": {
         baseColor = COLORS.bolt;
         break;
-      case "spear":
+      }
+      case "spear": {
         baseColor = COLORS.arrow;
         break;
-      case "fireball":
+      }
+      case "fireball": {
         baseColor = COLORS.fire;
         break;
-      case "infernalFire":
+      }
+      case "infernalFire": {
         baseColor = COLORS.infernal;
         break;
-      case "dragonBreath":
+      }
+      case "dragonBreath": {
         baseColor = COLORS.dragon;
         break;
-      case "magicBolt":
+      }
+      case "magicBolt": {
         baseColor = COLORS.arcane;
         break;
-      case "darkBolt":
+      }
+      case "darkBolt": {
         baseColor = COLORS.dark;
         break;
-      case "frostBolt":
+      }
+      case "frostBolt": {
         baseColor = COLORS.frost;
         break;
-      case "poisonBolt":
+      }
+      case "poisonBolt": {
         baseColor = COLORS.poison;
         break;
+      }
       case "lightning":
       case "lab":
-      case "energyBlast":
+      case "energyBlast": {
         baseColor = COLORS.lightning;
         break;
+      }
       case "sonicWave":
-      case "arch":
+      case "arch": {
         baseColor = COLORS.sonic;
         break;
-      case "bullet":
+      }
+      case "bullet": {
         baseColor = COLORS.tracer;
         break;
-      case "bansheeScream":
+      }
+      case "bansheeScream": {
         baseColor = COLORS.banshee;
         break;
-      case "wyvernBolt":
+      }
+      case "wyvernBolt": {
         baseColor = COLORS.wyvern;
         break;
-      case "hero":
+      }
+      case "hero": {
         baseColor = COLORS.mathey;
         break;
-      case "acidSpray":
+      }
+      case "acidSpray": {
         baseColor = COLORS.acid;
         break;
-      case "webBolt":
+      }
+      case "webBolt": {
         baseColor = COLORS.silk;
         break;
-      case "venomSpit":
+      }
+      case "venomSpit": {
         baseColor = COLORS.venom;
         break;
-      case "phoenixFlame":
+      }
+      case "phoenixFlame": {
         baseColor = COLORS.nassau;
         break;
-      case "phoenixFlameBlue":
+      }
+      case "phoenixFlameBlue": {
         baseColor = COLORS.nassauBlue;
         break;
-      case "vineBarb":
+      }
+      case "vineBarb": {
         baseColor = COLORS.ivy;
         break;
-      default:
+      }
+      default: {
         baseColor = COLORS.arcane;
         break;
+      }
     }
   }
 
@@ -1802,7 +1833,7 @@ export function renderProjectile(
         zoom,
         trailColor,
         trailLength,
-        trailSize,
+        trailSize
       );
     }
   }
@@ -1824,7 +1855,7 @@ export function renderProjectile(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const arc1 = Math.sin(t1 * Math.PI) * proj.arcHeight * zoom;
     const elev1 = proj.elevation ? proj.elevation * (1 - t1) * zoom : 0;
@@ -1840,7 +1871,7 @@ export function renderProjectile(
     const dy = proj.to.y - proj.from.y;
     effectiveRotation = Math.atan2(
       (dx + dy) * ISO_Y_FACTOR,
-      (dx - dy) * ISO_X_FACTOR,
+      (dx - dy) * ISO_X_FACTOR
     );
   }
   ctx.rotate(effectiveRotation);
@@ -1863,113 +1894,138 @@ export function renderProjectile(
 
   // Render based on type
   switch (proj.type) {
-    case "arrow":
+    case "arrow": {
       renderArrow(ctx, zoom, "basic");
       break;
+    }
 
-    case "bolt":
+    case "bolt": {
       renderArrow(ctx, zoom, "crossbow");
       break;
+    }
 
-    case "spear":
+    case "spear": {
       renderSpear(ctx, zoom, baseColor);
       break;
+    }
 
-    case "rock":
+    case "rock": {
       renderRock(ctx, zoom, t);
       break;
+    }
 
     case "fireball":
-    case "infernalFire":
+    case "infernalFire": {
       renderFireball(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "dragonBreath":
+    case "dragonBreath": {
       renderDragonBreath(ctx, zoom, time, baseColor);
       break;
+    }
 
     case "magicBolt":
     case "darkBolt":
     case "frostBolt":
-    case "poisonBolt":
+    case "poisonBolt": {
       renderMagicBolt(ctx, zoom, time, baseColor);
       break;
+    }
 
     case "energyBlast":
     case "lab":
-    case "lightning":
+    case "lightning": {
       renderLightningOrb(ctx, zoom, time, baseColor, lowDetail, minimalDetail);
       break;
+    }
 
     case "sonicWave":
-    case "arch":
+    case "arch": {
       renderSonicWave(ctx, zoom, t, baseColor);
       break;
+    }
 
-    case "bullet":
+    case "bullet": {
       renderBullet(ctx, zoom, baseColor);
       break;
+    }
 
-    case "cannon":
+    case "cannon": {
       renderCannonball(ctx, zoom, t);
       break;
+    }
 
-    case "mortarShell":
+    case "mortarShell": {
       renderMortarShell(ctx, zoom, t, time);
       break;
+    }
 
-    case "missile":
+    case "missile": {
       renderMissile(ctx, zoom, t, time);
       break;
+    }
 
-    case "ember":
+    case "ember": {
       renderEmber(ctx, zoom, t, time);
       break;
+    }
 
-    case "flame":
+    case "flame": {
       renderFlame(ctx, zoom, time);
       break;
+    }
 
-    case "hero":
+    case "hero": {
       renderHeroProjectile(ctx, zoom, baseColor);
       break;
+    }
 
-    case "bansheeScream":
+    case "bansheeScream": {
       renderBansheeScream(ctx, zoom, t, baseColor);
       break;
+    }
 
-    case "wyvernBolt":
+    case "wyvernBolt": {
       renderEnergyBall(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "acidSpray":
+    case "acidSpray": {
       renderFireball(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "webBolt":
+    case "webBolt": {
       renderMagicBolt(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "venomSpit":
+    case "venomSpit": {
       renderFireball(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "phoenixFlame":
+    case "phoenixFlame": {
       renderPhoenixFlame(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "phoenixFlameBlue":
+    case "phoenixFlameBlue": {
       renderPhoenixFlame(ctx, zoom, time, baseColor);
       break;
+    }
 
-    case "vineBarb":
+    case "vineBarb": {
       renderVineBarb(ctx, zoom, time, baseColor);
       break;
+    }
 
-    default:
+    default: {
       // Default to magic bolt style with the base color
       renderMagicBolt(ctx, zoom, time, baseColor);
       break;
+    }
   }
 
   ctx.restore();

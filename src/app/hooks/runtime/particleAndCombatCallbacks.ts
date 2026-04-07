@@ -1,4 +1,25 @@
 import type { MutableRefObject } from "react";
+
+import {
+  PARTICLE_COLORS,
+  ENEMY_DATA,
+  LEVEL_DATA,
+  REGION_THEMES,
+  SPELL_TROOP_RANGE,
+} from "../../constants";
+import {
+  findClosestRoadPoint,
+  getFacingRightFromDelta,
+} from "../../game/movement";
+import {
+  getHexWardGhostProfile,
+  getHexWardGhostStrengthFromEnemy,
+  getHexWardGhostStrengthFromHero,
+  getHexWardGhostStrengthFromTroop,
+  isHexWardGhostHarvestActive,
+} from "../../game/status";
+import { acquireParticle, enforceParticleCap } from "../../rendering";
+import { getPerformanceSettings } from "../../rendering/performance";
 import type {
   Position,
   Enemy,
@@ -8,29 +29,9 @@ import type {
   Particle,
   DeathCause,
 } from "../../types";
-import type { EntityCounts } from "./renderScene";
-import type { GameEventLogAPI } from "../useGameEventLog";
-import {
-  PARTICLE_COLORS,
-  ENEMY_DATA,
-  LEVEL_DATA,
-  REGION_THEMES,
-  SPELL_TROOP_RANGE,
-} from "../../constants";
 import { distance, generateId } from "../../utils";
-import { acquireParticle, enforceParticleCap } from "../../rendering";
-import { getPerformanceSettings } from "../../rendering/performance";
-import {
-  getHexWardGhostProfile,
-  getHexWardGhostStrengthFromEnemy,
-  getHexWardGhostStrengthFromHero,
-  getHexWardGhostStrengthFromTroop,
-  isHexWardGhostHarvestActive,
-} from "../../game/status";
-import {
-  findClosestRoadPoint,
-  getFacingRightFromDelta,
-} from "../../game/movement";
+import type { GameEventLogAPI } from "../useGameEventLog";
+import type { EntityCounts } from "./renderScene";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -59,8 +60,8 @@ export interface ParticleCombatRefs {
 export interface ParticleCombatActions {
   setBountyIncomeEvents: (
     updater: (
-      prev: Array<{ id: string; amount: number; isGoldBoosted: boolean }>,
-    ) => Array<{ id: string; amount: number; isGoldBoosted: boolean }>,
+      prev: { id: string; amount: number; isGoldBoosted: boolean }[]
+    ) => { id: string; amount: number; isGoldBoosted: boolean }[]
   ) => void;
   addPawPoints: (amount: number) => void;
   setPaydayPawPointsEarned: (updater: (prev: number) => number) => void;
@@ -78,7 +79,7 @@ export function addParticlesImpl(
   refs: Pick<
     ParticleCombatRefs,
     "lastParticleSpawn" | "pendingParticleBurstsRef" | "entityCountsRef"
-  >,
+  >
 ): void {
   const now = Date.now();
   const posKey = `${Math.round(pos.x / 20)}_${Math.round(pos.y / 20)}_${type}`;
@@ -89,7 +90,7 @@ export function addParticlesImpl(
   refs.lastParticleSpawn.current.set(posKey, now);
 
   if (refs.lastParticleSpawn.current.size > 100) {
-    const entries = Array.from(refs.lastParticleSpawn.current.entries());
+    const entries = [...refs.lastParticleSpawn.current.entries()];
     entries
       .slice(0, 50)
       .forEach(([key]) => refs.lastParticleSpawn.current.delete(key));
@@ -110,7 +111,7 @@ export function addParticlesImpl(
             : 1;
   const adjustedCount = Math.max(
     1,
-    Math.floor(Math.max(1, count) * pressureScale),
+    Math.floor(Math.max(1, count) * pressureScale)
   );
 
   if (
@@ -122,14 +123,14 @@ export function addParticlesImpl(
   }
 
   refs.pendingParticleBurstsRef.current.push({
+    count: adjustedCount,
     pos: { ...pos },
     type,
-    count: adjustedCount,
   });
   if (refs.pendingParticleBurstsRef.current.length > 320) {
     refs.pendingParticleBurstsRef.current.splice(
       0,
-      refs.pendingParticleBurstsRef.current.length - 320,
+      refs.pendingParticleBurstsRef.current.length - 320
     );
   }
 }
@@ -137,13 +138,12 @@ export function addParticlesImpl(
 // ── flushQueuedParticles impl ────────────────────────────────────────────────
 
 export function flushQueuedParticlesImpl(
-  refs: Pick<
-    ParticleCombatRefs,
-    "pendingParticleBurstsRef" | "entityCountsRef"
-  >,
+  refs: Pick<ParticleCombatRefs, "pendingParticleBurstsRef" | "entityCountsRef">
 ): void {
   const bursts = refs.pendingParticleBurstsRef.current;
-  if (bursts.length === 0) return;
+  if (bursts.length === 0) {
+    return;
+  }
   refs.pendingParticleBurstsRef.current = [];
 
   const counts = refs.entityCountsRef.current;
@@ -154,7 +154,9 @@ export function flushQueuedParticlesImpl(
   let remaining = budget;
 
   for (const burst of bursts) {
-    if (remaining <= 0) break;
+    if (remaining <= 0) {
+      break;
+    }
     const colors = PARTICLE_COLORS[burst.type] || PARTICLE_COLORS.spark;
     const spawnCount = Math.max(1, Math.min(burst.count, remaining));
     remaining -= spawnCount;
@@ -176,7 +178,7 @@ export function flushQueuedParticlesImpl(
         700,
         particleSize,
         colors[colorIndex] ?? colors[0] ?? "#ffffff",
-        resolvedType,
+        resolvedType
       );
     }
   }
@@ -201,16 +203,18 @@ export function awardBountyImpl(
   actions: Pick<
     ParticleCombatActions,
     "setBountyIncomeEvents" | "addPawPoints" | "setPaydayPawPointsEarned"
-  >,
+  >
 ): number {
   const goldBonus = hasGoldAura ? Math.floor(baseBounty * 0.5) : 0;
   const totalBounty = baseBounty + goldBonus;
   const eventId = `bounty-${Date.now()}-${sourceId || Math.random().toString(36).slice(2)}`;
   actions.setBountyIncomeEvents((prev) => {
-    if (prev.some((e) => e.id === eventId)) return prev;
+    if (prev.some((e) => e.id === eventId)) {
+      return prev;
+    }
     return [
       ...prev,
-      { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura },
+      { amount: totalBounty, id: eventId, isGoldBoosted: hasGoldAura },
     ];
   });
   actions.addPawPoints(totalBounty);
@@ -237,12 +241,18 @@ export function spawnHexWardGhostTroopImpl(
     ParticleCombatActions,
     "addTroopEntities" | "setHexWardRaisesRemaining"
   >,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
   const now = Date.now();
-  if (!isHexWardGhostHarvestActive(hexWardEndTime, now)) return;
-  if (refs.hexWardRaisesRemainingRef.current <= 0) return;
-  if (refs.handledHexGhostSourceIdsRef.current.has(sourceKey)) return;
+  if (!isHexWardGhostHarvestActive(hexWardEndTime, now)) {
+    return;
+  }
+  if (refs.hexWardRaisesRemainingRef.current <= 0) {
+    return;
+  }
+  if (refs.handledHexGhostSourceIdsRef.current.has(sourceKey)) {
+    return;
+  }
   refs.handledHexGhostSourceIdsRef.current.add(sourceKey);
   refs.hexWardRaisesRemainingRef.current -= 1;
   actions.setHexWardRaisesRemaining(refs.hexWardRaisesRemainingRef.current);
@@ -251,38 +261,38 @@ export function spawnHexWardGhostTroopImpl(
   const anchorPos = findClosestRoadPoint(
     deathPos,
     activeWaveSpawnPaths,
-    selectedMap,
+    selectedMap
   );
   const shouldMoveToAnchor = distance(deathPos, anchorPos) > 18;
   const ghostTroop: Troop = {
-    id: generateId("troop"),
-    ownerId: generateId("spell-hexghost"),
-    ownerType: "spell",
-    type: profile.troopType,
-    isHexGhost: true,
-    pos: deathPos,
-    targetPos: shouldMoveToAnchor ? anchorPos : undefined,
-    hp: profile.hp,
-    maxHp: profile.hp,
-    moving: shouldMoveToAnchor,
-    lastAttack: 0,
-    overrideDamage: profile.damage,
-    overrideAttackSpeed: profile.attackSpeed,
-    overrideIsRanged: profile.isRanged,
-    overrideRange: profile.range,
-    overrideCanTargetFlying: profile.canTargetFlying,
-    hexGhostDecayPerSecond: profile.decayPerSecond,
-    hexGhostExpireTime: now + profile.lifetimeMs,
-    rotation: 0,
+    attackAnim: 0,
     facingRight: getFacingRightFromDelta(
       anchorPos.x - deathPos.x,
       anchorPos.y - deathPos.y,
-      true,
+      true
     ),
-    attackAnim: 0,
+    hexGhostDecayPerSecond: profile.decayPerSecond,
+    hexGhostExpireTime: now + profile.lifetimeMs,
+    hp: profile.hp,
+    id: generateId("troop"),
+    isHexGhost: true,
+    lastAttack: 0,
+    maxHp: profile.hp,
+    moveRadius: SPELL_TROOP_RANGE + 40,
+    moving: shouldMoveToAnchor,
+    overrideAttackSpeed: profile.attackSpeed,
+    overrideCanTargetFlying: profile.canTargetFlying,
+    overrideDamage: profile.damage,
+    overrideIsRanged: profile.isRanged,
+    overrideRange: profile.range,
+    ownerId: generateId("spell-hexghost"),
+    ownerType: "spell",
+    pos: deathPos,
+    rotation: 0,
     selected: false,
     spawnPoint: anchorPos,
-    moveRadius: SPELL_TROOP_RANGE + 40,
+    targetPos: shouldMoveToAnchor ? anchorPos : undefined,
+    type: profile.troopType,
     userTargetPos: anchorPos,
   };
 
@@ -299,13 +309,13 @@ export function raiseHexWardGhostFromEnemyDeathImpl(
   spawnHexWardGhostTroop: (
     sourceKey: string,
     strength: "weak" | "medium" | "strong" | "apex",
-    deathPos: Position,
-  ) => void,
+    deathPos: Position
+  ) => void
 ): void {
   spawnHexWardGhostTroop(
     `enemy:${enemy.id}`,
     getHexWardGhostStrengthFromEnemy(enemy),
-    deathPos,
+    deathPos
   );
 }
 
@@ -315,14 +325,16 @@ export function raiseHexWardGhostFromTroopDeathImpl(
   spawnHexWardGhostTroop: (
     sourceKey: string,
     strength: "weak" | "medium" | "strong" | "apex",
-    deathPos: Position,
-  ) => void,
+    deathPos: Position
+  ) => void
 ): void {
-  if (troop.isHexGhost) return;
+  if (troop.isHexGhost) {
+    return;
+  }
   spawnHexWardGhostTroop(
     `troop:${troop.id}`,
     getHexWardGhostStrengthFromTroop(troop),
-    deathPos,
+    deathPos
   );
 }
 
@@ -331,13 +343,13 @@ export function raiseHexWardGhostFromHeroDeathImpl(
   spawnHexWardGhostTroop: (
     sourceKey: string,
     strength: "weak" | "medium" | "strong" | "apex",
-    deathPos: Position,
-  ) => void,
+    deathPos: Position
+  ) => void
 ): void {
   spawnHexWardGhostTroop(
     `hero:${fallenHero.id}`,
     getHexWardGhostStrengthFromHero(fallenHero),
-    fallenHero.pos,
+    fallenHero.pos
   );
 }
 
@@ -351,35 +363,42 @@ export function killHeroImpl(
   addParticles: (pos: Position, type: Particle["type"], count: number) => void,
   selectedMap?: string,
   refs?: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
-  actions?: Pick<ParticleCombatActions, "addEffectEntity">,
+  actions?: Pick<ParticleCombatActions, "addEffectEntity">
 ): Hero {
   raiseHexWardGhostFromHeroDeath(fallenHero);
   if (selectedMap && refs && actions) {
-    onHeroDeathImpl(fallenHero, fallenHero.pos, selectedMap, refs, actions, addParticles);
+    onHeroDeathImpl(
+      fallenHero,
+      fallenHero.pos,
+      selectedMap,
+      refs,
+      actions,
+      addParticles
+    );
   } else {
     addParticles(fallenHero.pos, "explosion", 20);
     addParticles(fallenHero.pos, "smoke", 10);
   }
   return {
     ...fallenHero,
-    hp: 0,
     dead: true,
+    hp: 0,
+    lastCombatTime: lastCombatTime ?? fallenHero.lastCombatTime,
+    moving: false,
     respawnTimer: respawnTimerMs,
     selected: false,
-    moving: false,
-    lastCombatTime: lastCombatTime ?? fallenHero.lastCombatTime,
   };
 }
 
 // ── onEnemyKill impl ────────────────────────────────────────────────────────
 
 const DEATH_DURATIONS: Record<DeathCause, number> = {
-  lightning: 1800,
+  default: 1500,
   fire: 2000,
   freeze: 800,
-  sonic: 1800,
+  lightning: 1800,
   poison: 1200,
-  default: 1500,
+  sonic: 1800,
 };
 
 export function onEnemyKillImpl(
@@ -396,12 +415,14 @@ export function onEnemyKillImpl(
   awardBounty: (
     baseBounty: number,
     hasGoldAura: boolean,
-    sourceId?: string,
+    sourceId?: string
   ) => number,
   raiseHexWardGhostFromEnemyDeath: (enemy: Enemy, pos: Position) => void,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
-  if (refs.handledEnemyIdsRef.current.has(enemy.id)) return;
+  if (refs.handledEnemyIdsRef.current.has(enemy.id)) {
+    return;
+  }
   refs.handledEnemyIdsRef.current.add(enemy.id);
 
   const eData = ENEMY_DATA[enemy.type];
@@ -412,27 +433,29 @@ export function onEnemyKillImpl(
   refs.gameEventLogRef.current.log(
     "enemy_killed",
     `${eData.name || enemy.type} killed (${deathCause}) +${baseBounty} PP`,
-    { enemyType: enemy.type, bounty: baseBounty, deathCause },
+    { bounty: baseBounty, deathCause, enemyType: enemy.type }
   );
-  if (enemy.goldAura) addParticles(pos, "gold", 6);
+  if (enemy.goldAura) {
+    addParticles(pos, "gold", 6);
+  }
 
   const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
   const regionColors = REGION_THEMES[mapThemeKey]?.ground;
 
   if (getPerformanceSettings().deathAnimations) {
     const deathEffect: Effect = {
-      id: generateId("fx"),
-      pos,
-      type: "enemy_death" as const,
-      progress: 0,
-      size: eData.size,
-      duration: DEATH_DURATIONS[deathCause],
       color: eData.color,
-      enemyType: enemy.type,
-      enemySize: eData.size,
-      isFlying: eData.flying,
       deathCause,
+      duration: DEATH_DURATIONS[deathCause],
+      enemySize: eData.size,
+      enemyType: enemy.type,
+      id: generateId("fx"),
+      isFlying: eData.flying,
+      pos,
+      progress: 0,
       regionGroundColors: regionColors,
+      size: eData.size,
+      type: "enemy_death" as const,
     };
     (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
       performance.now();
@@ -450,7 +473,7 @@ export function onTroopDeathImpl(
   selectedMap: string,
   refs: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
   actions: Pick<ParticleCombatActions, "addEffectEntity">,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
   addParticles(pos, "explosion", 8);
 
@@ -458,14 +481,14 @@ export function onTroopDeathImpl(
     const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
     const regionColors = REGION_THEMES[mapThemeKey]?.ground;
     const deathEffect: Effect = {
+      deathCause: "default",
+      duration: DEATH_DURATIONS["default"],
       id: generateId("fx"),
       pos,
-      type: "enemy_death" as const,
       progress: 0,
-      size: 16,
-      duration: DEATH_DURATIONS["default"],
-      deathCause: "default",
       regionGroundColors: regionColors,
+      size: 16,
+      type: "enemy_death" as const,
     };
     (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
       performance.now();
@@ -480,7 +503,7 @@ export function onHeroDeathImpl(
   selectedMap: string,
   refs: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
   actions: Pick<ParticleCombatActions, "addEffectEntity">,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void
 ): void {
   addParticles(pos, "explosion", 20);
   addParticles(pos, "smoke", 10);
@@ -489,14 +512,14 @@ export function onHeroDeathImpl(
     const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
     const regionColors = REGION_THEMES[mapThemeKey]?.ground;
     const deathEffect: Effect = {
+      deathCause: "default",
+      duration: DEATH_DURATIONS["default"],
       id: generateId("fx"),
       pos,
-      type: "enemy_death" as const,
       progress: 0,
-      size: 22,
-      duration: DEATH_DURATIONS["default"],
-      deathCause: "default",
       regionGroundColors: regionColors,
+      size: 22,
+      type: "enemy_death" as const,
     };
     (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
       performance.now();

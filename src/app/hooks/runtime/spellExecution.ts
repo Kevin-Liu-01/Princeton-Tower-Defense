@@ -1,3 +1,14 @@
+import {
+  SPELL_DATA,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getHexWardSpellStats,
+  getPaydaySpellStats,
+} from "../../constants";
+import { getEnemyPosWithPath } from "../../game/setup";
+import { getEnemyDamageTaken } from "../../game/status";
+import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
 import type {
   Position,
   Enemy,
@@ -8,24 +19,9 @@ import type {
   ParticleType,
   DeathCause,
 } from "../../types";
-import {
-  SPELL_DATA,
-  getFireballSpellStats,
-  getLightningSpellStats,
-  getFreezeSpellStats,
-  getHexWardSpellStats,
-  getPaydaySpellStats,
-} from "../../constants";
-import {
-  distance,
-  generateId,
-  getEnemyRemainingDistance,
-} from "../../utils";
-import { getEnemyDamageTaken } from "../../game/status";
-import { getEnemyPosWithPath } from "../../game/setup";
-import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
-import { isDefined } from "./runtimeConfig";
+import { distance, generateId, getEnemyRemainingDistance } from "../../utils";
 import type { GameEventLogAPI } from "../useGameEventLog";
+import { isDefined } from "./runtimeConfig";
 
 // ---------------------------------------------------------------------------
 // Params interface – everything both impl functions need from the hook scope
@@ -74,7 +70,7 @@ export interface SpellExecutionParams {
     enemy: Enemy,
     pos: Position,
     particleCount?: number,
-    deathCause?: DeathCause,
+    deathCause?: DeathCause
   ) => void;
 }
 
@@ -84,37 +80,51 @@ export interface SpellExecutionParams {
 
 export function castSpellImpl(
   p: SpellExecutionParams,
-  spellType: SpellType,
+  spellType: SpellType
 ): void {
-  if (p.gameSpeed === 0) return;
+  if (p.gameSpeed === 0) {
+    return;
+  }
 
   if (p.targetingSpell === spellType) {
     p.setTargetingSpell(null);
     const refundCost = SPELL_DATA[spellType]?.cost ?? 0;
-    if (refundCost > 0) p.addPawPoints(refundCost);
+    if (refundCost > 0) {
+      p.addPawPoints(refundCost);
+    }
     return;
   }
   if (p.placingTroop && spellType === "reinforcements") {
     p.setPlacingTroop(false);
     const refundCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
-    if (refundCost > 0) p.addPawPoints(refundCost);
+    if (refundCost > 0) {
+      p.addPawPoints(refundCost);
+    }
     return;
   }
   if (p.targetingSpell) {
     const prevCost = SPELL_DATA[p.targetingSpell]?.cost ?? 0;
-    if (prevCost > 0) p.addPawPoints(prevCost);
+    if (prevCost > 0) {
+      p.addPawPoints(prevCost);
+    }
     p.setTargetingSpell(null);
   }
   if (p.placingTroop) {
     const prevCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
-    if (prevCost > 0) p.addPawPoints(prevCost);
+    if (prevCost > 0) {
+      p.addPawPoints(prevCost);
+    }
     p.setPlacingTroop(false);
   }
 
   const spell = p.spells.find((s) => s.type === spellType);
-  if (!spell || spell.cooldown > 0) return;
+  if (!spell || spell.cooldown > 0) {
+    return;
+  }
   const cost = SPELL_DATA[spellType]?.cost ?? 0;
-  if (!p.canAffordPawPoints(cost)) return;
+  if (!p.canAffordPawPoints(cost)) {
+    return;
+  }
   if (
     (spellType === "fireball" ||
       spellType === "lightning" ||
@@ -123,11 +133,13 @@ export function castSpellImpl(
   ) {
     return;
   }
-  if (!p.spendPawPoints(cost)) return;
+  if (!p.spendPawPoints(cost)) {
+    return;
+  }
   p.gameEventLogRef.current.log(
     "spell_cast",
     `Cast ${SPELL_DATA[spellType]?.name || spellType} for ${cost} PP`,
-    { spellType, cost },
+    { cost, spellType }
   );
 
   let enteredTargeting = false;
@@ -159,20 +171,22 @@ export function castSpellImpl(
         ? null
         : new Set(
             [...p.enemies]
-              .sort(
+              .toSorted(
                 (a, b) =>
                   getEnemyRemainingDistance(a, p.selectedMap) -
-                  getEnemyRemainingDistance(b, p.selectedMap),
+                  getEnemyRemainingDistance(b, p.selectedMap)
               )
               .slice(0, freezeStats.maxTargets)
-              .map((e) => e.id),
+              .map((e) => e.id)
           );
 
       p.setEnemies((prev) =>
         prev.map((e) => {
-          if (freezeTargetIds && !freezeTargetIds.has(e.id)) return e;
+          if (freezeTargetIds && !freezeTargetIds.has(e.id)) {
+            return e;
+          }
           return { ...e, frozen: true, stunUntil: freezeUntil };
-        }),
+        })
       );
 
       if (p.enemies.length > 0) {
@@ -183,9 +197,9 @@ export function castSpellImpl(
           {
             id: generateId("freeze_wave"),
             pos: centerPos,
-            type: "freeze_wave",
             progress: 0,
             size: 400,
+            type: "freeze_wave",
           },
         ]);
       }
@@ -201,19 +215,23 @@ export function castSpellImpl(
     }
 
     case "hex_ward": {
-      if (p.enemies.length === 0) return;
+      if (p.enemies.length === 0) {
+        return;
+      }
 
       const hexStats = getHexWardSpellStats(p.spellUpgradeLevels.hex_ward);
       const hexUntil = Date.now() + hexStats.durationMs;
       const targetEnemies = [...p.enemies]
-        .sort(
+        .toSorted(
           (a, b) =>
             getEnemyRemainingDistance(a, p.selectedMap) -
-            getEnemyRemainingDistance(b, p.selectedMap),
+            getEnemyRemainingDistance(b, p.selectedMap)
         )
         .slice(0, hexStats.maxTargets);
 
-      if (targetEnemies.length === 0) return;
+      if (targetEnemies.length === 0) {
+        return;
+      }
 
       const targetIds = new Set(targetEnemies.map((enemy) => enemy.id));
       const centerPos =
@@ -224,13 +242,13 @@ export function castSpellImpl(
                 targetEnemies.reduce(
                   (sum, enemy) =>
                     sum + getEnemyPosWithPath(enemy, p.selectedMap).x,
-                  0,
+                  0
                 ) / targetEnemies.length,
               y:
                 targetEnemies.reduce(
                   (sum, enemy) =>
                     sum + getEnemyPosWithPath(enemy, p.selectedMap).y,
-                  0,
+                  0
                 ) / targetEnemies.length,
             };
 
@@ -240,12 +258,12 @@ export function castSpellImpl(
             ? {
                 ...enemy,
                 hexWard: true,
-                hexWardUntil: hexUntil,
-                hexWardDamageAmp: hexStats.damageAmp,
                 hexWardBlocksHealing: hexStats.blocksHealing,
+                hexWardDamageAmp: hexStats.damageAmp,
+                hexWardUntil: hexUntil,
               }
-            : enemy,
-        ),
+            : enemy
+        )
       );
 
       p.hexWardRaisesRemainingRef.current = hexStats.maxReanimations;
@@ -259,12 +277,12 @@ export function castSpellImpl(
       p.setEffects((ef) => [
         ...ef,
         {
+          duration: hexStats.durationMs,
           id: generateId("hex_ward_aura"),
           pos: centerPos,
-          type: "hex_ward_aura",
           progress: 0,
           size: 220,
-          duration: hexStats.durationMs,
+          type: "hex_ward_aura",
         },
       ]);
 
@@ -277,11 +295,11 @@ export function castSpellImpl(
 
     case "payday": {
       const paydayStats = getPaydaySpellStats(p.spellUpgradeLevels.payday);
-      const bonusPerEnemy = paydayStats.bonusPerEnemy;
-      const basePayout = paydayStats.basePayout;
+      const { bonusPerEnemy } = paydayStats;
+      const { basePayout } = paydayStats;
       const enemyBonus = Math.min(
         p.enemies.length * bonusPerEnemy,
-        paydayStats.maxBonus,
+        paydayStats.maxBonus
       );
       const totalPayout = basePayout + enemyBonus;
 
@@ -296,13 +314,13 @@ export function castSpellImpl(
       p.setEffects((ef) => [
         ...ef,
         {
-          id: generateId("payday_aura"),
-          pos: { x: 0, y: 0 },
-          type: "payday_aura",
-          progress: 0,
-          size: 0,
           duration: paydayStats.auraDurationMs,
           enemies: p.enemies.map((e) => e.id),
+          id: generateId("payday_aura"),
+          pos: { x: 0, y: 0 },
+          progress: 0,
+          size: 0,
+          type: "payday_aura",
         },
       ]);
 
@@ -319,16 +337,17 @@ export function castSpellImpl(
       break;
     }
 
-    case "reinforcements":
+    case "reinforcements": {
       p.setPlacingTroop(true);
       enteredTargeting = true;
       break;
+    }
   }
   if (!enteredTargeting) {
     p.setSpells((prev) =>
       prev.map((s) =>
-        s.type === spellType ? { ...s, cooldown: s.maxCooldown } : s,
-      ),
+        s.type === spellType ? { ...s, cooldown: s.maxCooldown } : s
+      )
     );
   }
 }
@@ -340,15 +359,13 @@ export function castSpellImpl(
 export function executeTargetedSpellImpl(
   p: SpellExecutionParams,
   spellType: SpellType,
-  centerWorldPos: Position,
+  centerWorldPos: Position
 ): void {
   if (spellType === "fireball") {
-    const fireballStats = getFireballSpellStats(
-      p.spellUpgradeLevels.fireball,
-    );
-    const meteorCount = fireballStats.meteorCount;
-    const damagePerMeteor = fireballStats.damagePerMeteor;
-    const impactRadius = fireballStats.impactRadius;
+    const fireballStats = getFireballSpellStats(p.spellUpgradeLevels.fireball);
+    const { meteorCount } = fireballStats;
+    const { damagePerMeteor } = fireballStats;
+    const { impactRadius } = fireballStats;
     const burnDuration = fireballStats.burnDurationMs;
     const burnDamage = fireballStats.burnDamagePerSecond;
     const fallDuration = fireballStats.fallDurationMs;
@@ -370,14 +387,14 @@ export function executeTargetedSpellImpl(
         p.setEffects((ef) => [
           ...ef,
           {
+            duration: fallDuration,
             id: generateId("meteor_falling"),
+            meteorIndex: index,
             pos: { x: targetPos.x + 700, y: targetPos.y - 2800 },
-            targetPos: targetPos,
-            type: "meteor_falling",
             progress: 0,
             size: 90,
-            duration: fallDuration,
-            meteorIndex: index,
+            targetPos,
+            type: "meteor_falling",
           },
         ]);
 
@@ -390,9 +407,7 @@ export function executeTargetedSpellImpl(
                 const dist = distance(pos, targetPos);
                 if (dist < impactRadius) {
                   const damageMultiplier = 1 - (dist / impactRadius) * 0.5;
-                  const damage = Math.floor(
-                    damagePerMeteor * damageMultiplier,
-                  );
+                  const damage = Math.floor(damagePerMeteor * damageMultiplier);
                   const actualDmg = getEnemyDamageTaken(e, damage, "fire");
                   emitDamageNumber(pos, actualDmg, "spell");
                   const newHp = e.hp - actualDmg;
@@ -403,16 +418,16 @@ export function executeTargetedSpellImpl(
                   }
                   return {
                     ...e,
-                    hp: newHp,
-                    damageFlash: 300,
-                    burning: true,
-                    burnDamage: burnDamage,
+                    burnDamage,
                     burnUntil: now + burnDuration,
+                    burning: true,
+                    damageFlash: 300,
+                    hp: newHp,
                   };
                 }
                 return e;
               })
-              .filter(isDefined),
+              .filter(isDefined)
           );
 
           p.setEffects((ef) => [
@@ -420,17 +435,17 @@ export function executeTargetedSpellImpl(
             {
               id: generateId("meteor_impact"),
               pos: targetPos,
-              type: "meteor_impact",
               progress: 0,
               size: impactRadius * 1.5,
+              type: "meteor_impact",
             },
             {
+              duration: 3000,
               id: generateId("fire_scorch"),
               pos: targetPos,
-              type: "fire_scorch",
               progress: 0,
               size: impactRadius * 1.2,
-              duration: 3000,
+              type: "fire_scorch",
             },
           ]);
           p.addParticles(targetPos, "explosion", 40);
@@ -441,22 +456,19 @@ export function executeTargetedSpellImpl(
     });
   } else if (spellType === "lightning") {
     const lightningStats = getLightningSpellStats(
-      p.spellUpgradeLevels.lightning,
+      p.spellUpgradeLevels.lightning
     );
-    const totalDamage = lightningStats.totalDamage;
+    const { totalDamage } = lightningStats;
     const targetCount = Math.min(lightningStats.chainCount, p.enemies.length);
     const damagePerTarget =
       targetCount > 0 ? Math.floor(totalDamage / targetCount) : 0;
 
     const sorted = [...p.enemies]
       .map((e) => ({
+        dist: distance(getEnemyPosWithPath(e, p.selectedMap), centerWorldPos),
         enemy: e,
-        dist: distance(
-          getEnemyPosWithPath(e, p.selectedMap),
-          centerWorldPos,
-        ),
       }))
-      .sort((a, b) => a.dist - b.dist);
+      .toSorted((a, b) => a.dist - b.dist);
     const targets = sorted.slice(0, targetCount).map((s) => s.enemy);
 
     targets.forEach((target, index) => {
@@ -468,19 +480,19 @@ export function executeTargetedSpellImpl(
           {
             id: generateId("lightning_bolt"),
             pos: { x: targetPos.x, y: targetPos.y - 700 },
-            targetPos: targetPos,
-            type: "lightning_bolt",
             progress: 0,
             size: 120,
             strikeIndex: index,
+            targetPos,
+            type: "lightning_bolt",
           },
           {
+            duration: 2500,
             id: generateId("lightning_scorch"),
             pos: targetPos,
-            type: "lightning_scorch",
             progress: 0,
             size: 80,
-            duration: 2500,
+            type: "lightning_scorch",
           },
         ]);
 
@@ -499,14 +511,14 @@ export function executeTargetedSpellImpl(
                 }
                 return {
                   ...e,
-                  hp: newHp,
                   damageFlash: 250,
+                  hp: newHp,
                   stunUntil: Date.now() + lightningStats.stunDurationMs,
                 };
               }
               return e;
             })
-            .filter(isDefined),
+            .filter(isDefined)
         );
         p.addParticles(targetPos, "spark", 20);
       }, index * 200);

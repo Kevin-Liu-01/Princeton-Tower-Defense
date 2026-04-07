@@ -1,15 +1,16 @@
-import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO, LEVEL_DATA } from "../constants";
+import type { Tower, Enemy, Effect, Position } from "../types";
 import { worldToScreen, gridToWorld, isoTileDiamondHalfH } from "../utils";
-import { drawOrganicBlobAt, type LightningColorScheme } from "./helpers";
-import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
-import { getScenePressure } from "./performance";
 import {
   renderSentinelImpact,
   renderSunforgeBeam,
   renderSunforgeImpact,
 } from "./effects/specialTowerEffects";
+import { drawOrganicBlobAt } from "./helpers";
+import type { LightningColorScheme } from "./helpers";
+import { getScenePressure } from "./performance";
 import { getSentinelPalette } from "./towers/sentinelTheme";
+import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 
 // Performance utilities - critical for Firefox
 export {
@@ -62,22 +63,22 @@ export { renderProjectile, setProjectileRenderTime } from "./projectiles";
 // EFFECT RENDERING
 // ============================================================================
 function hashString32(input: string): number {
-  let hash = 2166136261;
+  let hash = 2_166_136_261;
   for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+    hash ^= input.codePointAt(i);
+    hash = Math.imul(hash, 16_777_619);
   }
   return hash >>> 0;
 }
 
 function seededNoise(seed: number): number {
-  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43_758.5453;
   return x - Math.floor(x);
 }
 
 function tracePolyline(
   ctx: CanvasRenderingContext2D,
-  points: Array<{ x: number; y: number }>,
+  points: { x: number; y: number }[]
 ): void {
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
@@ -97,7 +98,7 @@ export function renderEffect(
   selectedMap: string,
   cameraOffset?: Position,
   cameraZoom?: number,
-  effectDensityHint: number = 0,
+  effectDensityHint: number = 0
 ) {
   const screenPos = worldToScreen(
     effect.pos,
@@ -105,14 +106,14 @@ export function renderEffect(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
-  const progress = effect.progress;
+  const { progress } = effect;
   const alpha = 1 - progress;
 
   switch (effect.type) {
-    case "explosion":
+    case "explosion": {
       const expRadius = effect.size * zoom * (0.5 + progress * 0.5);
       const expGradient = ctx.createRadialGradient(
         screenPos.x,
@@ -120,7 +121,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        expRadius,
+        expRadius
       );
       expGradient.addColorStop(0, `rgba(255, 200, 50, ${alpha})`);
       expGradient.addColorStop(0.4, `rgba(200, 80, 0, ${alpha * 0.8})`);
@@ -135,15 +136,16 @@ export function renderEffect(
         expRadius * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       break;
+    }
 
     case "lightning":
     case "zap":
     case "beam":
-    case "chain":
+    case "chain": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -151,7 +153,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         const intensity = Math.max(0, effect.intensity || 1);
         const lowDetail = false;
@@ -171,64 +173,64 @@ export function renderEffect(
           }
         > = {
           blue: {
-            outer: "30, 100, 255",
-            mid: "0, 220, 255",
-            core: "220, 255, 255",
             branch: "0, 200, 255",
             branchCore: "200, 255, 255",
+            core: "220, 255, 255",
             impactCenter: "200, 255, 255",
-            impactMid: "0, 200, 255",
             impactEdge: "0, 100, 255",
-          },
-          yellow: {
-            outer: "255, 170, 30",
-            mid: "255, 230, 50",
-            core: "255, 255, 220",
-            branch: "255, 200, 0",
-            branchCore: "255, 255, 200",
-            impactCenter: "255, 255, 200",
-            impactMid: "255, 200, 0",
-            impactEdge: "255, 140, 0",
-          },
-          red: {
-            outer: "255, 60, 30",
-            mid: "255, 100, 80",
-            core: "255, 220, 210",
-            branch: "255, 80, 40",
-            branchCore: "255, 200, 190",
-            impactCenter: "255, 220, 210",
-            impactMid: "255, 80, 40",
-            impactEdge: "200, 20, 0",
-          },
-          violet: {
-            outer: "70, 65, 230",
-            mid: "110, 110, 255",
-            core: "215, 225, 255",
-            branch: "100, 100, 255",
-            branchCore: "200, 210, 255",
-            impactCenter: "215, 225, 255",
-            impactMid: "100, 100, 255",
-            impactEdge: "40, 35, 180",
-          },
-          teal: {
-            outer: "20, 150, 130",
-            mid: "80, 220, 180",
-            core: "200, 255, 240",
-            branch: "60, 200, 160",
-            branchCore: "180, 255, 230",
-            impactCenter: "200, 255, 240",
-            impactMid: "60, 200, 160",
-            impactEdge: "10, 120, 100",
+            impactMid: "0, 200, 255",
+            mid: "0, 220, 255",
+            outer: "30, 100, 255",
           },
           green: {
-            outer: "80, 170, 20",
-            mid: "160, 230, 80",
-            core: "230, 255, 200",
             branch: "120, 200, 40",
             branchCore: "210, 255, 180",
+            core: "230, 255, 200",
             impactCenter: "230, 255, 200",
-            impactMid: "120, 200, 40",
             impactEdge: "50, 130, 10",
+            impactMid: "120, 200, 40",
+            mid: "160, 230, 80",
+            outer: "80, 170, 20",
+          },
+          red: {
+            branch: "255, 80, 40",
+            branchCore: "255, 200, 190",
+            core: "255, 220, 210",
+            impactCenter: "255, 220, 210",
+            impactEdge: "200, 20, 0",
+            impactMid: "255, 80, 40",
+            mid: "255, 100, 80",
+            outer: "255, 60, 30",
+          },
+          teal: {
+            branch: "60, 200, 160",
+            branchCore: "180, 255, 230",
+            core: "200, 255, 240",
+            impactCenter: "200, 255, 240",
+            impactEdge: "10, 120, 100",
+            impactMid: "60, 200, 160",
+            mid: "80, 220, 180",
+            outer: "20, 150, 130",
+          },
+          violet: {
+            branch: "100, 100, 255",
+            branchCore: "200, 210, 255",
+            core: "215, 225, 255",
+            impactCenter: "215, 225, 255",
+            impactEdge: "40, 35, 180",
+            impactMid: "100, 100, 255",
+            mid: "110, 110, 255",
+            outer: "70, 65, 230",
+          },
+          yellow: {
+            branch: "255, 200, 0",
+            branchCore: "255, 255, 200",
+            core: "255, 255, 220",
+            impactCenter: "255, 255, 200",
+            impactEdge: "255, 140, 0",
+            impactMid: "255, 200, 0",
+            mid: "255, 230, 50",
+            outer: "255, 170, 30",
           },
         };
         const boltScheme: LightningColorScheme =
@@ -271,7 +273,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom
           );
           towerScreen.y -= isoTileDiamondHalfH(zoom);
 
@@ -293,8 +295,11 @@ export function renderEffect(
             }
 
             let orbOffset = 5;
-            if (towerLevel === 4 && towerUpgrade === "A") orbOffset = 7;
-            else if (towerLevel === 4 && towerUpgrade === "B") orbOffset = 4;
+            if (towerLevel === 4 && towerUpgrade === "A") {
+              orbOffset = 7;
+            } else if (towerLevel === 4 && towerUpgrade === "B") {
+              orbOffset = 4;
+            }
             sourceY = topY - coilHeight + orbOffset * zoom;
           }
         }
@@ -316,7 +321,7 @@ export function renderEffect(
         const perpY = dx / dist;
         const angle = Math.atan2(dy, dx);
         const timeBucket = Math.floor(
-          Date.now() / (minimalDetail ? 90 : lowDetail ? 70 : 50),
+          Date.now() / (minimalDetail ? 90 : lowDetail ? 70 : 50)
         );
         const seedBase = (hashString32(effect.id) ^ timeBucket) >>> 0;
         const noise = (seed: number) => seededNoise(seedBase + seed);
@@ -414,15 +419,15 @@ export function renderEffect(
             0,
             targetScreen.x,
             targetScreen.y,
-            impactRadius,
+            impactRadius
           );
           impGrad.addColorStop(
             0,
-            `rgba(${bp.impactCenter}, ${effectAlpha * 0.6 * intensity * impactPulse})`,
+            `rgba(${bp.impactCenter}, ${effectAlpha * 0.6 * intensity * impactPulse})`
           );
           impGrad.addColorStop(
             0.4,
-            `rgba(${bp.impactMid}, ${effectAlpha * 0.3 * intensity})`,
+            `rgba(${bp.impactMid}, ${effectAlpha * 0.3 * intensity})`
           );
           impGrad.addColorStop(1, `rgba(${bp.impactEdge}, 0)`);
           ctx.fillStyle = impGrad;
@@ -439,13 +444,14 @@ export function renderEffect(
           targetScreen.y,
           (minimalDetail ? 2.2 : 3) * zoom * intensity,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
         ctx.restore();
       }
       break;
+    }
 
     case "sentinel_lockon": {
       const pulse = 0.55 + Math.sin(Date.now() / 60) * 0.45;
@@ -491,7 +497,7 @@ export function renderEffect(
         progress,
         alpha,
         effect.size,
-        impactPal.hotRgb,
+        impactPal.hotRgb
       );
       break;
     }
@@ -504,7 +510,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         const beamIntensity = Math.max(0, effect.intensity || 1);
         const beamSourceY = screenPos.y + (effect.sourceYOffset ?? 0) * zoom;
@@ -518,7 +524,7 @@ export function renderEffect(
           progress,
           alpha,
           beamIntensity,
-          effect.id,
+          effect.id
         );
       }
       break;
@@ -532,12 +538,12 @@ export function renderEffect(
         zoom,
         progress,
         alpha,
-        effect.size,
+        effect.size
       );
       break;
     }
 
-    case "music_notes":
+    case "music_notes": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -545,7 +551,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         const intensity = Math.max(0, effect.intensity || 1);
         const noteIndex = effect.noteIndex || 0;
@@ -567,7 +573,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom
           );
           towerScreen.y -= isoTileDiamondHalfH(zoom);
 
@@ -658,10 +664,11 @@ export function renderEffect(
         ctx.restore();
       }
       break;
+    }
 
     case "cannon_shot":
     case "bullet_stream":
-    case "flame_burst":
+    case "flame_burst": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
           effect.targetPos,
@@ -669,7 +676,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
 
         // Find the source cannon tower
@@ -689,7 +696,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom
           );
           towerScreen.y -= isoTileDiamondHalfH(zoom);
 
@@ -738,7 +745,7 @@ export function renderEffect(
 
           const flightAngle = Math.atan2(
             dy - Math.cos(projT * Math.PI) * Math.PI * arcHeight,
-            dx,
+            dx
           );
           const now = Date.now();
           const pulse = 0.85 + Math.sin(now / 40) * 0.15;
@@ -760,15 +767,15 @@ export function renderEffect(
               0,
               trailX,
               trailY,
-              trailR,
+              trailR
             );
             trailGrad.addColorStop(
               0,
-              `rgba(255, 200, 80, ${trailFade * 0.5 * (1 - tFrac)})`,
+              `rgba(255, 200, 80, ${trailFade * 0.5 * (1 - tFrac)})`
             );
             trailGrad.addColorStop(
               0.5,
-              `rgba(255, 140, 30, ${trailFade * 0.25 * (1 - tFrac)})`,
+              `rgba(255, 140, 30, ${trailFade * 0.25 * (1 - tFrac)})`
             );
             trailGrad.addColorStop(1, `rgba(255, 80, 0, 0)`);
             ctx.fillStyle = trailGrad;
@@ -787,7 +794,7 @@ export function renderEffect(
               streakX,
               streakY,
               projX,
-              projY,
+              projY
             );
             streakGrad.addColorStop(0, `rgba(255, 160, 40, 0)`);
             streakGrad.addColorStop(0.4, `rgba(255, 190, 60, ${alpha * 0.3})`);
@@ -805,7 +812,7 @@ export function renderEffect(
               streakX,
               streakY,
               projX,
-              projY,
+              projY
             );
             innerGrad.addColorStop(0, `rgba(255, 240, 200, 0)`);
             innerGrad.addColorStop(0.6, `rgba(255, 255, 220, ${alpha * 0.35})`);
@@ -833,7 +840,7 @@ export function renderEffect(
               projX + Math.cos(wispAngle + 0.3) * wispLen * 0.6,
               projY + Math.sin(wispAngle + 0.3) * wispLen * 0.6,
               wispEndX,
-              wispEndY,
+              wispEndY
             );
             ctx.stroke();
           }
@@ -848,7 +855,7 @@ export function renderEffect(
             0,
             projX,
             projY,
-            ambientR,
+            ambientR
           );
           ambientGrad.addColorStop(0, `rgba(255, 220, 100, ${alpha * 0.5})`);
           ambientGrad.addColorStop(0.3, `rgba(255, 170, 40, ${alpha * 0.3})`);
@@ -871,7 +878,7 @@ export function renderEffect(
             ringR * 0.55,
             flightAngle,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
 
@@ -883,7 +890,7 @@ export function renderEffect(
             0,
             projX,
             projY,
-            orbR,
+            orbR
           );
           orbGrad.addColorStop(0, `rgba(255, 255, 245, ${alpha})`);
           orbGrad.addColorStop(0.3, `rgba(255, 240, 180, ${alpha * 0.95})`);
@@ -914,7 +921,7 @@ export function renderEffect(
           const bulletDx = targetScreen.x - bulletSourceX;
           const bulletDy = targetScreen.y - bulletSourceY;
           const bulletDist = Math.sqrt(
-            bulletDx * bulletDx + bulletDy * bulletDy,
+            bulletDx * bulletDx + bulletDy * bulletDy
           );
           const now = Date.now();
 
@@ -931,9 +938,11 @@ export function renderEffect(
             for (let b = 0; b < 3; b++) {
               const bulletT = Math.min(
                 1,
-                progress * 2.0 + barrel * 0.06 + b * 0.1,
+                progress * 2 + barrel * 0.06 + b * 0.1
               );
-              if (bulletT <= 0 || bulletT >= 1) continue;
+              if (bulletT <= 0 || bulletT >= 1) {
+                continue;
+              }
 
               const bulletX = thisSourceX + bulletDx * bulletT;
               const bulletY = thisSourceY + bulletDy * bulletT;
@@ -943,7 +952,7 @@ export function renderEffect(
               const tracerLen = 28 * zoom;
               const tracerStartT = Math.max(
                 0,
-                bulletT - tracerLen / bulletDist,
+                bulletT - tracerLen / bulletDist
               );
               const trailStartX = thisSourceX + bulletDx * tracerStartT;
               const trailStartY = thisSourceY + bulletDy * tracerStartT;
@@ -953,20 +962,20 @@ export function renderEffect(
                 trailStartX,
                 trailStartY,
                 bulletX,
-                bulletY,
+                bulletY
               );
               trailGrad.addColorStop(0, `rgba(255, 120, 20, 0)`);
               trailGrad.addColorStop(
                 0.3,
-                `rgba(255, 160, 40, ${fadeAlpha * 0.25})`,
+                `rgba(255, 160, 40, ${fadeAlpha * 0.25})`
               );
               trailGrad.addColorStop(
                 0.7,
-                `rgba(255, 200, 60, ${fadeAlpha * 0.5})`,
+                `rgba(255, 200, 60, ${fadeAlpha * 0.5})`
               );
               trailGrad.addColorStop(
                 1,
-                `rgba(255, 230, 100, ${fadeAlpha * 0.7})`,
+                `rgba(255, 230, 100, ${fadeAlpha * 0.7})`
               );
               ctx.strokeStyle = trailGrad;
               ctx.lineWidth = 4 * zoom;
@@ -981,16 +990,16 @@ export function renderEffect(
                 trailStartX,
                 trailStartY,
                 bulletX,
-                bulletY,
+                bulletY
               );
               innerGrad.addColorStop(0, `rgba(255, 220, 120, 0)`);
               innerGrad.addColorStop(
                 0.5,
-                `rgba(255, 240, 180, ${fadeAlpha * 0.4})`,
+                `rgba(255, 240, 180, ${fadeAlpha * 0.4})`
               );
               innerGrad.addColorStop(
                 1,
-                `rgba(255, 255, 220, ${fadeAlpha * 0.8})`,
+                `rgba(255, 255, 220, ${fadeAlpha * 0.8})`
               );
               ctx.strokeStyle = innerGrad;
               ctx.lineWidth = 1.8 * zoom;
@@ -1009,16 +1018,16 @@ export function renderEffect(
                 0,
                 bulletX,
                 bulletY,
-                5 * zoom,
+                5 * zoom
               );
               headGrad.addColorStop(0, `rgba(255, 255, 230, ${fadeAlpha})`);
               headGrad.addColorStop(
                 0.35,
-                `rgba(255, 220, 100, ${fadeAlpha * 0.9})`,
+                `rgba(255, 220, 100, ${fadeAlpha * 0.9})`
               );
               headGrad.addColorStop(
                 0.7,
-                `rgba(255, 160, 40, ${fadeAlpha * 0.5})`,
+                `rgba(255, 160, 40, ${fadeAlpha * 0.5})`
               );
               headGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
               ctx.fillStyle = headGrad;
@@ -1037,15 +1046,16 @@ export function renderEffect(
                 1.2 * zoom,
                 Math.atan2(bulletDy, bulletDx),
                 0,
-                Math.PI * 2,
+                Math.PI * 2
               );
               ctx.fill();
 
               // Micro-spark near bullet (only for leading bullets)
               if (b === 0 && bulletT > 0.15) {
                 const sparkSeed = barrel * 7 + Math.floor(now / 30);
-                const sparkAngle = ((sparkSeed * 2654435761) % 628) / 100;
-                const sparkDist = (2 + ((sparkSeed * 1103515245) % 4)) * zoom;
+                const sparkAngle = ((sparkSeed * 2_654_435_761) % 628) / 100;
+                const sparkDist =
+                  (2 + ((sparkSeed * 1_103_515_245) % 4)) * zoom;
                 const sparkX = bulletX + Math.cos(sparkAngle) * sparkDist;
                 const sparkY = bulletY + Math.sin(sparkAngle) * sparkDist;
                 ctx.fillStyle = `rgba(255, 240, 180, ${fadeAlpha * 0.6})`;
@@ -1065,12 +1075,12 @@ export function renderEffect(
               0,
               bulletSourceX,
               bulletSourceY,
-              8 * zoom,
+              8 * zoom
             );
             hazeGrad.addColorStop(0, `rgba(255, 200, 100, ${hazeAlpha})`);
             hazeGrad.addColorStop(
               0.5,
-              `rgba(255, 150, 50, ${hazeAlpha * 0.5})`,
+              `rgba(255, 150, 50, ${hazeAlpha * 0.5})`
             );
             hazeGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
             ctx.fillStyle = hazeGrad;
@@ -1111,12 +1121,10 @@ export function renderEffect(
           };
 
           // Tangent direction at t (for perpendicular wobble)
-          const bezTanX = (t: number) => {
-            return 2 * (1 - t) * (p1x - p0x) + 2 * t * (p2x - p1x);
-          };
-          const bezTanY = (t: number) => {
-            return 2 * (1 - t) * (p1y - p0y) + 2 * t * (p2y - p1y);
-          };
+          const bezTanX = (t: number) =>
+            2 * (1 - t) * (p1x - p0x) + 2 * t * (p2x - p1x);
+          const bezTanY = (t: number) =>
+            2 * (1 - t) * (p1y - p0y) + 2 * t * (p2y - p1y);
           const bezPerp = (t: number) => {
             const tx = bezTanX(t);
             const ty = bezTanY(t);
@@ -1135,7 +1143,7 @@ export function renderEffect(
             0,
             headX,
             headY,
-            heatR,
+            heatR
           );
           heatGrad.addColorStop(0, `rgba(255, 120, 20, ${alpha * 0.12})`);
           heatGrad.addColorStop(0.5, `rgba(255, 60, 0, ${alpha * 0.06})`);
@@ -1148,7 +1156,9 @@ export function renderEffect(
           // Smoke layer (drawn behind flame)
           for (let s = 0; s < 5; s++) {
             const smokeT = Math.min(1, progress * 1.1 + s * 0.06 + 0.15);
-            if (smokeT <= 0.2 || smokeT >= 1) continue;
+            if (smokeT <= 0.2 || smokeT >= 1) {
+              continue;
+            }
             const smokeFrac = (smokeT - 0.2) / 0.8;
             const sp = bezPerp(smokeT);
             const smokeWobble =
@@ -1170,7 +1180,9 @@ export function renderEffect(
           // Outer flame body — blobs along bezier arc
           for (let f = 0; f < 12; f++) {
             const flameT = Math.min(1, progress * 1.3 + f * 0.035);
-            if (flameT <= 0 || flameT >= 1) continue;
+            if (flameT <= 0 || flameT >= 1) {
+              continue;
+            }
 
             const turb1 = Math.sin(now / 45 + f * 1.3) * 6;
             const turb2 = Math.sin(now / 28 + f * 2.7) * 3;
@@ -1193,16 +1205,16 @@ export function renderEffect(
               0,
               flameX,
               flameY,
-              flameR,
+              flameR
             );
             fGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${fadeA})`);
             fGrad.addColorStop(
               0.4,
-              `rgba(${r}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 40)}, ${fadeA * 0.7})`,
+              `rgba(${r}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 40)}, ${fadeA * 0.7})`
             );
             fGrad.addColorStop(
               0.75,
-              `rgba(${Math.floor(r * 0.8)}, ${Math.max(0, g - 120)}, 0, ${fadeA * 0.3})`,
+              `rgba(${Math.floor(r * 0.8)}, ${Math.max(0, g - 120)}, 0, ${fadeA * 0.3})`
             );
             fGrad.addColorStop(1, `rgba(180, 20, 0, 0)`);
             ctx.fillStyle = fGrad;
@@ -1216,7 +1228,9 @@ export function renderEffect(
           ctx.shadowColor = "#ffcc00";
           for (let c = 0; c < 8; c++) {
             const coreT = Math.min(1, progress * 1.3 + c * 0.04);
-            if (coreT <= 0 || coreT >= 0.7) continue;
+            if (coreT <= 0 || coreT >= 0.7) {
+              continue;
+            }
 
             const cp = bezPerp(coreT);
             const coreTurb = Math.sin(now / 35 + c * 1.9) * 2.5 * zoom * coreT;
@@ -1231,12 +1245,12 @@ export function renderEffect(
               0,
               coreX,
               coreY,
-              coreR,
+              coreR
             );
             coreGrad.addColorStop(0, `rgba(255, 255, 240, ${coreAlpha})`);
             coreGrad.addColorStop(
               0.5,
-              `rgba(255, 240, 160, ${coreAlpha * 0.7})`,
+              `rgba(255, 240, 160, ${coreAlpha * 0.7})`
             );
             coreGrad.addColorStop(1, `rgba(255, 200, 80, 0)`);
             ctx.fillStyle = coreGrad;
@@ -1251,9 +1265,11 @@ export function renderEffect(
             const emberSeed = Math.floor(now / 40) + e * 31;
             const emberT = Math.min(
               1,
-              progress * 1.2 + ((emberSeed * 2654435761) % 100) / 250,
+              progress * 1.2 + ((emberSeed * 2_654_435_761) % 100) / 250
             );
-            if (emberT <= 0.05 || emberT >= 0.95) continue;
+            if (emberT <= 0.05 || emberT >= 0.95) {
+              continue;
+            }
 
             const ep = bezPerp(emberT);
             const emberWobble = Math.sin(emberSeed * 0.7) * 12 * zoom * emberT;
@@ -1277,12 +1293,12 @@ export function renderEffect(
               0,
               p0x,
               p0y,
-              nozzleR,
+              nozzleR
             );
             nozzleGrad.addColorStop(0, `rgba(255, 255, 220, ${nozzleAlpha})`);
             nozzleGrad.addColorStop(
               0.4,
-              `rgba(255, 200, 80, ${nozzleAlpha * 0.6})`,
+              `rgba(255, 200, 80, ${nozzleAlpha * 0.6})`
             );
             nozzleGrad.addColorStop(1, `rgba(255, 120, 20, 0)`);
             ctx.fillStyle = nozzleGrad;
@@ -1296,8 +1312,9 @@ export function renderEffect(
         ctx.restore();
       }
       break;
+    }
 
-    case "sonic":
+    case "sonic": {
       const sonicRadius = effect.size * zoom * (0.2 + progress * 0.8);
       for (let ring = 0; ring < 3; ring++) {
         const ringProgress = (progress + ring * 0.15) % 1;
@@ -1314,17 +1331,20 @@ export function renderEffect(
           ringRadius * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
       break;
+    }
 
     // ========== NEW SPELL EFFECTS ==========
 
     case "meteor_falling": {
       // DETAILED Falling meteor animation - comes from TOP RIGHT
-      if (!effect.targetPos) break;
+      if (!effect.targetPos) {
+        break;
+      }
 
       const targetScreen = worldToScreen(
         effect.targetPos,
@@ -1332,7 +1352,7 @@ export function renderEffect(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
 
       // Calculate meteor position along fall path (top right to target)
@@ -1357,7 +1377,7 @@ export function renderEffect(
         warningSize * 0.6,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1373,7 +1393,7 @@ export function renderEffect(
         warningSize * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -1386,16 +1406,16 @@ export function renderEffect(
         0,
         targetScreen.x,
         targetScreen.y,
-        groundGlowRadius,
+        groundGlowRadius
       );
       groundGlow.addColorStop(0, `rgba(255, 200, 100, ${groundGlowAlpha})`);
       groundGlow.addColorStop(
         0.3,
-        `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`,
+        `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`
       );
       groundGlow.addColorStop(
         0.6,
-        `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`,
+        `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`
       );
       groundGlow.addColorStop(1, "rgba(200, 30, 0, 0)");
       ctx.fillStyle = groundGlow;
@@ -1407,14 +1427,14 @@ export function renderEffect(
         groundGlowRadius * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // ========== METEOR TRAIL ==========
       const trailAngle = Math.atan2(
         targetScreen.y - screenPos.y,
-        targetScreen.x - screenPos.x,
+        targetScreen.x - screenPos.x
       );
 
       // Outermost smoke/heat trail
@@ -1437,7 +1457,7 @@ export function renderEffect(
         outerStartX,
         outerStartY,
         meteorX,
-        meteorY,
+        meteorY
       );
       outerTrailGrad.addColorStop(0, "rgba(255, 80, 0, 0)");
       outerTrailGrad.addColorStop(0.4, `rgba(255, 100, 20, ${alpha * 0.3})`);
@@ -1458,7 +1478,7 @@ export function renderEffect(
         coreStartX,
         coreStartY,
         meteorX,
-        meteorY,
+        meteorY
       );
       coreTrailGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
       coreTrailGrad.addColorStop(0.3, `rgba(255, 200, 100, ${alpha * 0.5})`);
@@ -1479,7 +1499,7 @@ export function renderEffect(
         innerStartX,
         innerStartY,
         meteorX,
-        meteorY,
+        meteorY
       );
       innerTrailGrad.addColorStop(0, "rgba(255, 255, 200, 0)");
       innerTrailGrad.addColorStop(0.5, `rgba(255, 255, 230, ${alpha * 0.6})`);
@@ -1515,12 +1535,12 @@ export function renderEffect(
           0,
           emberX,
           emberY,
-          emberSize * 1.8,
+          emberSize * 1.8
         );
         emberGrad.addColorStop(0, `rgba(255, ${eG}, ${eB}, ${emberAlpha})`);
         emberGrad.addColorStop(
           0.5,
-          `rgba(255, ${eG - 40}, ${Math.max(0, eB - 20)}, ${emberAlpha * 0.5})`,
+          `rgba(255, ${eG - 40}, ${Math.max(0, eB - 20)}, ${emberAlpha * 0.5})`
         );
         emberGrad.addColorStop(1, `rgba(200, 60, 0, 0)`);
         ctx.fillStyle = emberGrad;
@@ -1539,7 +1559,7 @@ export function renderEffect(
         0,
         meteorX,
         meteorY,
-        meteorSize * 3,
+        meteorSize * 3
       );
       hugeGlow.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.4})`);
       hugeGlow.addColorStop(0.4, `rgba(255, 100, 30, ${alpha * 0.2})`);
@@ -1556,7 +1576,7 @@ export function renderEffect(
         0,
         meteorX,
         meteorY,
-        meteorSize * 2,
+        meteorSize * 2
       );
       meteorGlow.addColorStop(0, `rgba(255, 255, 230, ${alpha})`);
       meteorGlow.addColorStop(0.2, `rgba(255, 230, 150, ${alpha})`);
@@ -1579,7 +1599,7 @@ export function renderEffect(
         0,
         0,
         0,
-        meteorSize * 1.2,
+        meteorSize * 1.2
       );
       rockGrad.addColorStop(0, `rgba(180, 140, 100, ${alpha})`);
       rockGrad.addColorStop(0.3, `rgba(120, 80, 50, ${alpha})`);
@@ -1612,7 +1632,7 @@ export function renderEffect(
         ctx.moveTo(0, 0);
         ctx.lineTo(
           Math.cos(crackAngle) * meteorSize * 0.6,
-          Math.sin(crackAngle) * meteorSize * 0.6,
+          Math.sin(crackAngle) * meteorSize * 0.6
         );
         ctx.stroke();
       }
@@ -1621,9 +1641,9 @@ export function renderEffect(
 
       // Hot molten spots on meteor
       const hotSpots = [
-        { x: -0.3, y: -0.4, size: 0.3 },
-        { x: 0.25, y: -0.2, size: 0.2 },
-        { x: -0.15, y: 0.35, size: 0.25 },
+        { size: 0.3, x: -0.3, y: -0.4 },
+        { size: 0.2, x: 0.25, y: -0.2 },
+        { size: 0.25, x: -0.15, y: 0.35 },
       ];
       for (const spot of hotSpots) {
         const spotX = meteorX + spot.x * meteorSize;
@@ -1634,7 +1654,7 @@ export function renderEffect(
           0,
           spotX,
           spotY,
-          spot.size * meteorSize,
+          spot.size * meteorSize
         );
         spotGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
         spotGrad.addColorStop(0.5, `rgba(255, 200, 100, ${alpha * 0.7})`);
@@ -1660,7 +1680,7 @@ export function renderEffect(
           0,
           emberX,
           emberY,
-          eSize * 1.6,
+          eSize * 1.6
         );
         emberGlow.addColorStop(0, `rgba(255, 255, 210, ${alpha * 0.9})`);
         emberGlow.addColorStop(0.3, `rgba(255, 200, 80, ${alpha * 0.6})`);
@@ -1689,7 +1709,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom
           )
         : screenPos;
 
@@ -1706,7 +1726,7 @@ export function renderEffect(
         effect.size * zoom * 0.3,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1727,7 +1747,7 @@ export function renderEffect(
           0,
           meteorX,
           trailY,
-          trailSize,
+          trailSize
         );
         trailGrad.addColorStop(0, `rgba(255, 200, 50, ${trailAlpha})`);
         trailGrad.addColorStop(0.5, `rgba(200, 80, 0, ${trailAlpha * 0.6})`);
@@ -1739,7 +1759,7 @@ export function renderEffect(
           trailY,
           trailSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1753,7 +1773,7 @@ export function renderEffect(
         0,
         meteorX,
         meteorY,
-        25 * zoom,
+        25 * zoom
       );
       meteorGrad.addColorStop(0, "#ffffff");
       meteorGrad.addColorStop(0.3, "#ffcc00");
@@ -1781,7 +1801,7 @@ export function renderEffect(
         0,
         sx,
         sy + 4 * zoom,
-        sz * 0.5,
+        sz * 0.5
       );
       craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterAlpha})`);
       craterGrad.addColorStop(0.4, `rgba(40, 20, 10, ${craterAlpha * 0.7})`);
@@ -1804,12 +1824,12 @@ export function renderEffect(
         0,
         sx,
         sy - ip * 20 * zoom,
-        hazeSize,
+        hazeSize
       );
       hazeGrad.addColorStop(0, `rgba(255, 180, 60, ${alpha * 0.5 * (1 - ip)})`);
       hazeGrad.addColorStop(
         0.3,
-        `rgba(255, 100, 20, ${alpha * 0.35 * (1 - ip)})`,
+        `rgba(255, 100, 20, ${alpha * 0.35 * (1 - ip)})`
       );
       hazeGrad.addColorStop(0.6, `rgba(200, 50, 0, ${alpha * 0.2 * (1 - ip)})`);
       hazeGrad.addColorStop(1, "rgba(150, 30, 0, 0)");
@@ -1822,7 +1842,7 @@ export function renderEffect(
         hazeSize * 0.7,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1834,7 +1854,7 @@ export function renderEffect(
         0,
         sx,
         sy - ip * 12 * zoom,
-        coreSize,
+        coreSize
       );
       coreGrad.addColorStop(0, `rgba(255, 255, 240, ${alpha})`);
       coreGrad.addColorStop(0.15, `rgba(255, 240, 160, ${alpha})`);
@@ -1851,7 +1871,7 @@ export function renderEffect(
         coreSize * 0.65,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -1869,10 +1889,12 @@ export function renderEffect(
 
       // Ground-level fire shockwave rings — expanding rapidly
       for (let ring = 0; ring < 4; ring++) {
-        const rp = Math.min(1, ip * 2.0 + ring * 0.08);
+        const rp = Math.min(1, ip * 2 + ring * 0.08);
         const rRadius = sz * rp * (0.8 + ring * 0.15);
         const rAlpha = (1 - rp) * alpha * (0.6 - ring * 0.1);
-        if (rAlpha <= 0) continue;
+        if (rAlpha <= 0) {
+          continue;
+        }
 
         const rGrad = ctx.createRadialGradient(
           sx,
@@ -1880,12 +1902,12 @@ export function renderEffect(
           rRadius * 0.85,
           sx,
           sy,
-          rRadius,
+          rRadius
         );
         rGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
         rGrad.addColorStop(
           0.5,
-          `rgba(255, ${120 - ring * 20}, ${30 - ring * 5}, ${rAlpha})`,
+          `rgba(255, ${120 - ring * 20}, ${30 - ring * 5}, ${rAlpha})`
         );
         rGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
         ctx.fillStyle = rGrad;
@@ -1908,7 +1930,9 @@ export function renderEffect(
           ip * 40 * zoom * (1 - ip) +
           dGrav;
         const dAlpha = alpha * (1 - ip) * 0.9;
-        if (dAlpha <= 0) continue;
+        if (dAlpha <= 0) {
+          continue;
+        }
 
         const dSize = (2 + (dSeed % 3)) * zoom;
         const dGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, dSize * 2);
@@ -1953,14 +1977,14 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom
           )
         : screenPos;
 
       // Dramatic sky flash with blue-white tint
       if (sp < 0.5) {
         const flashPhase = sp / 0.5;
-        const flashA = Math.pow(1 - flashPhase, 2) * 0.45;
+        const flashA = (1 - flashPhase) ** 2 * 0.45;
         ctx.fillStyle = `rgba(180, 210, 255, ${flashA})`;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         // Secondary warm flash near impact
@@ -1971,7 +1995,7 @@ export function renderEffect(
           0,
           ts.x,
           ts.y,
-          warmR,
+          warmR
         );
         warmGrad.addColorStop(0, `rgba(220, 230, 255, ${flashA * 0.8})`);
         warmGrad.addColorStop(0.5, `rgba(150, 180, 255, ${flashA * 0.3})`);
@@ -2040,7 +2064,9 @@ export function renderEffect(
       ctx.shadowColor = "#88aaff";
       for (let i = 3; i < boltPts.length - 3; i++) {
         const branchChance = seededNoise(boltSeed + i * 13);
-        if (branchChance < 0.45) continue;
+        if (branchChance < 0.45) {
+          continue;
+        }
         const bp = boltPts[i];
         const nextPt = boltPts[i + 1];
         const mainAngle = Math.atan2(nextPt.y - bp.y, nextPt.x - bp.x);
@@ -2124,13 +2150,13 @@ export function renderEffect(
     case "freeze_wave": {
       const fzR = effect.size * zoom * progress;
       const fzSeed = hashString32(effect.id);
-      const fzEase = 1 - Math.pow(1 - progress, 3);
+      const fzEase = 1 - (1 - progress) ** 3;
 
       ctx.save();
 
       // ── FROSTED SCREEN OVERLAY ──
       // Full-screen icy tint that fades with the effect, strongest at start
-      const screenFrostA = Math.pow(alpha, 1.5) * 0.18;
+      const screenFrostA = alpha ** 1.5 * 0.18;
       if (screenFrostA > 0.005) {
         ctx.fillStyle = `rgba(180, 220, 255, ${screenFrostA})`;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -2143,7 +2169,7 @@ export function renderEffect(
           Math.min(canvasWidth, canvasHeight) * 0.25,
           canvasWidth * 0.5,
           canvasHeight * 0.5,
-          Math.max(canvasWidth, canvasHeight) * 0.75,
+          Math.max(canvasWidth, canvasHeight) * 0.75
         );
         vigGrad.addColorStop(0, "rgba(160, 210, 245, 0)");
         vigGrad.addColorStop(0.5, `rgba(140, 200, 240, ${vigStrength * 0.25})`);
@@ -2171,7 +2197,7 @@ export function renderEffect(
               0,
               corner.x,
               corner.y,
-              cornerR,
+              cornerR
             );
             cGrad.addColorStop(0, `rgba(200, 235, 255, ${edgeFrostA * 0.7})`);
             cGrad.addColorStop(0.4, `rgba(170, 215, 245, ${edgeFrostA * 0.4})`);
@@ -2181,14 +2207,14 @@ export function renderEffect(
               corner.x - cornerR,
               corner.y - cornerR,
               cornerR * 2,
-              cornerR * 2,
+              cornerR * 2
             );
 
             // Fractal ice veins from corners
             for (let v = 0; v < 4; v++) {
               const baseAngle = Math.atan2(
                 canvasHeight * 0.5 - corner.y,
-                canvasWidth * 0.5 - corner.x,
+                canvasWidth * 0.5 - corner.x
               );
               const vAngle =
                 baseAngle + (seededNoise(fzSeed + ci * 17 + v * 7) - 0.5) * 1.2;
@@ -2211,7 +2237,7 @@ export function renderEffect(
                 midX,
                 midY,
                 corner.x + Math.cos(vAngle) * vLen,
-                corner.y + Math.sin(vAngle) * vLen,
+                corner.y + Math.sin(vAngle) * vLen
               );
               ctx.stroke();
 
@@ -2228,7 +2254,7 @@ export function renderEffect(
                 ctx.moveTo(brX, brY);
                 ctx.lineTo(
                   brX + Math.cos(brAngle) * brLen,
-                  brY + Math.sin(brAngle) * brLen,
+                  brY + Math.sin(brAngle) * brLen
                 );
                 ctx.stroke();
               }
@@ -2246,11 +2272,11 @@ export function renderEffect(
               0,
               fx,
               fy,
-              fSize * 3,
+              fSize * 3
             );
             fleckGrad.addColorStop(
               0,
-              `rgba(255, 255, 255, ${edgeFrostA * 0.5})`,
+              `rgba(255, 255, 255, ${edgeFrostA * 0.5})`
             );
             fleckGrad.addColorStop(1, "rgba(200, 240, 255, 0)");
             ctx.fillStyle = fleckGrad;
@@ -2271,7 +2297,7 @@ export function renderEffect(
         fzR * 0.7,
         screenPos.x,
         screenPos.y,
-        haloR,
+        haloR
       );
       haloGrad.addColorStop(0, "rgba(120, 200, 255, 0)");
       haloGrad.addColorStop(0.5, `rgba(100, 180, 240, ${alpha * 0.1})`);
@@ -2285,7 +2311,7 @@ export function renderEffect(
         haloR * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2296,7 +2322,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        fzR,
+        fzR
       );
       frostGrad.addColorStop(0, `rgba(230, 248, 255, ${alpha * 0.4})`);
       frostGrad.addColorStop(0.15, `rgba(200, 235, 255, ${alpha * 0.35})`);
@@ -2309,7 +2335,7 @@ export function renderEffect(
       ctx.fill();
 
       // Inner white-hot flash core (bright at start, fades quickly)
-      const flashA = Math.pow(alpha, 2) * 0.6;
+      const flashA = alpha ** 2 * 0.6;
       if (flashA > 0.01) {
         const flashR = fzR * 0.3;
         const flashGrad = ctx.createRadialGradient(
@@ -2318,7 +2344,7 @@ export function renderEffect(
           0,
           screenPos.x,
           screenPos.y,
-          flashR,
+          flashR
         );
         flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashA})`);
         flashGrad.addColorStop(0.3, `rgba(220, 245, 255, ${flashA * 0.7})`);
@@ -2333,7 +2359,7 @@ export function renderEffect(
           flashR * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2362,7 +2388,7 @@ export function renderEffect(
         ring2R * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -2380,7 +2406,7 @@ export function renderEffect(
         ring3R * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -2425,7 +2451,7 @@ export function renderEffect(
           ctx.moveTo(brX, brY);
           ctx.lineTo(
             brX + Math.cos(brAngle) * brLen,
-            brY + Math.sin(brAngle) * brLen * 0.5,
+            brY + Math.sin(brAngle) * brLen * 0.5
           );
           ctx.stroke();
         }
@@ -2526,14 +2552,14 @@ export function renderEffect(
             ctx.moveTo(bx, by);
             ctx.lineTo(
               bx + Math.cos(bA1) * brLen,
-              by + Math.sin(bA1) * brLen * 0.5,
+              by + Math.sin(bA1) * brLen * 0.5
             );
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(bx, by);
             ctx.lineTo(
               bx + Math.cos(bA2) * brLen,
-              by + Math.sin(bA2) * brLen * 0.5,
+              by + Math.sin(bA2) * brLen * 0.5
             );
             ctx.stroke();
           }
@@ -2616,7 +2642,7 @@ export function renderEffect(
         auraRadius * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -2645,8 +2671,11 @@ export function renderEffect(
         const ry = scorchR * 0.5 * wobble;
         const px = sx + Math.cos(a) * rx;
         const py = sy + Math.sin(a) * ry;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
       }
       ctx.closePath();
       ctx.clip();
@@ -2663,7 +2692,7 @@ export function renderEffect(
         sx - scorchR * 1.1,
         sy - scorchR * 0.6,
         scorchR * 2.2,
-        scorchR * 1.2,
+        scorchR * 1.2
       );
 
       // Glowing ember rim (first 55%)
@@ -2676,7 +2705,7 @@ export function renderEffect(
           scorchR * 0.55,
           sx,
           sy,
-          scorchR,
+          scorchR
         );
         rimGrad.addColorStop(0, "rgba(255, 120, 20, 0)");
         rimGrad.addColorStop(0.35, `rgba(255, 90, 10, ${emberA * 0.5})`);
@@ -2687,7 +2716,7 @@ export function renderEffect(
           sx - scorchR * 1.1,
           sy - scorchR * 0.6,
           scorchR * 2.2,
-          scorchR * 1.2,
+          scorchR * 1.2
         );
 
         // Small glowing ember specks
@@ -2719,7 +2748,7 @@ export function renderEffect(
           sx + Math.cos(cA) * cLen * 0.5 + midOff,
           sy + Math.sin(cA) * cLen * 0.25 + midOff * 0.4,
           sx + Math.cos(cA) * cLen,
-          sy + Math.sin(cA) * cLen * 0.5,
+          sy + Math.sin(cA) * cLen * 0.5
         );
         ctx.stroke();
       }
@@ -2774,7 +2803,7 @@ export function renderEffect(
         0,
         lx,
         ly,
-        lR * 0.6,
+        lR * 0.6
       );
       sheenGrad.addColorStop(0, `rgba(180, 210, 255, ${sheenA})`);
       sheenGrad.addColorStop(0.5, `rgba(120, 160, 230, ${sheenA * 0.4})`);
@@ -2888,7 +2917,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        roarRadius * 0.6,
+        roarRadius * 0.6
       );
       craterGrad.addColorStop(0, `rgba(60, 20, 0, ${craterAlpha})`);
       craterGrad.addColorStop(0.4, `rgba(40, 12, 0, ${craterAlpha * 0.6})`);
@@ -2902,7 +2931,7 @@ export function renderEffect(
         roarRadius * 0.6 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2941,7 +2970,7 @@ export function renderEffect(
           sx + Math.cos(angle) * innerR,
           sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
           sx + Math.cos(angle) * outerR,
-          sy + Math.sin(angle) * outerR * ISO_Y_RATIO,
+          sy + Math.sin(angle) * outerR * ISO_Y_RATIO
         );
         grad.addColorStop(0, `rgba(255, 200, 80, ${streakA})`);
         grad.addColorStop(0.5, `rgba(255, 120, 20, ${streakA * 0.6})`);
@@ -2952,11 +2981,11 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(
           sx + Math.cos(angle) * innerR,
-          sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
+          sy + Math.sin(angle) * innerR * ISO_Y_RATIO
         );
         ctx.lineTo(
           sx + Math.cos(angle) * outerR,
-          sy + Math.sin(angle) * outerR * ISO_Y_RATIO,
+          sy + Math.sin(angle) * outerR * ISO_Y_RATIO
         );
         ctx.stroke();
       }
@@ -2984,7 +3013,7 @@ export function renderEffect(
           0,
           pX,
           pY,
-          pSize * 2,
+          pSize * 2
         );
         sparkGrad.addColorStop(0, `rgba(255, 220, 120, ${pA})`);
         sparkGrad.addColorStop(0.5, `rgba(255, 140, 30, ${pA * 0.5})`);
@@ -3004,7 +3033,7 @@ export function renderEffect(
           0,
           sx,
           sy,
-          roarRadius * 0.3,
+          roarRadius * 0.3
         );
         coreGrad.addColorStop(0, `rgba(255, 255, 220, ${coreA})`);
         coreGrad.addColorStop(0.3, `rgba(255, 200, 80, ${coreA * 0.7})`);
@@ -3019,7 +3048,7 @@ export function renderEffect(
           roarRadius * 0.3 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3040,7 +3069,7 @@ export function renderEffect(
           sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
           sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
           sx + Math.cos(cAngle) * cLen,
-          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO,
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
         );
         ctx.stroke();
       }
@@ -3066,7 +3095,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        noteRadius * 0.7,
+        noteRadius * 0.7
       );
       fieldGrad.addColorStop(0, `rgba(160, 80, 255, ${fieldA})`);
       fieldGrad.addColorStop(0.5, `rgba(120, 50, 200, ${fieldA * 0.5})`);
@@ -3080,7 +3109,7 @@ export function renderEffect(
         noteRadius * 0.7 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3123,7 +3152,7 @@ export function renderEffect(
           arcR * ISO_Y_RATIO,
           0,
           arcStart,
-          arcStart + arcLen,
+          arcStart + arcLen
         );
         ctx.stroke();
       }
@@ -3163,7 +3192,7 @@ export function renderEffect(
           nX + nSize * 1.5,
           nY - nSize * 1.5,
           nX + nSize * 0.55,
-          nY - nSize * 1.0,
+          nY - nSize * 1
         );
         ctx.strokeStyle = `rgba(220, 170, 255, ${nA * 0.8})`;
         ctx.lineWidth = 1.2 * zoom;
@@ -3176,7 +3205,7 @@ export function renderEffect(
           0,
           nX,
           nY,
-          nSize * 2.5,
+          nSize * 2.5
         );
         noteGlow.addColorStop(0, `rgba(180, 120, 255, ${nA * 0.25})`);
         noteGlow.addColorStop(1, "rgba(140, 80, 220, 0)");
@@ -3207,8 +3236,11 @@ export function renderEffect(
           const ptR = pt % 2 === 0 ? hSize * 1.5 : hSize * 0.4;
           const px = hX + Math.cos(ptAngle) * ptR;
           const py = hY + Math.sin(ptAngle) * ptR;
-          if (pt === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (pt === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -3223,7 +3255,7 @@ export function renderEffect(
           0,
           sx,
           sy,
-          noteRadius * 0.25,
+          noteRadius * 0.25
         );
         coreGrad.addColorStop(0, `rgba(255, 240, 255, ${coreA})`);
         coreGrad.addColorStop(0.3, `rgba(220, 170, 255, ${coreA * 0.7})`);
@@ -3238,7 +3270,7 @@ export function renderEffect(
           noteRadius * 0.25 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3290,8 +3322,11 @@ export function renderEffect(
           const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRot;
           const hx = sx + Math.cos(angle) * layerR;
           const hy = sy + Math.sin(angle) * layerR * ISO_Y_RATIO;
-          if (i === 0) ctx.moveTo(hx, hy);
-          else ctx.lineTo(hx, hy);
+          if (i === 0) {
+            ctx.moveTo(hx, hy);
+          } else {
+            ctx.lineTo(hx, hy);
+          }
         }
         ctx.stroke();
 
@@ -3303,8 +3338,11 @@ export function renderEffect(
           const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRot;
           const hx = sx + Math.cos(angle) * layerR;
           const hy = sy + Math.sin(angle) * layerR * ISO_Y_RATIO;
-          if (i === 0) ctx.moveTo(hx, hy);
-          else ctx.lineTo(hx, hy);
+          if (i === 0) {
+            ctx.moveTo(hx, hy);
+          } else {
+            ctx.lineTo(hx, hy);
+          }
         }
         ctx.stroke();
 
@@ -3331,12 +3369,12 @@ export function renderEffect(
         0,
         sx,
         sy,
-        shieldRadius * 0.85,
+        shieldRadius * 0.85
       );
       outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.12})`);
       outerShield.addColorStop(
         0.5,
-        `rgba(59, 130, 246, ${alpha * 0.18 * pulsePhase})`,
+        `rgba(59, 130, 246, ${alpha * 0.18 * pulsePhase})`
       );
       outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.08})`);
       outerShield.addColorStop(1, "rgba(37, 99, 235, 0)");
@@ -3349,7 +3387,7 @@ export function renderEffect(
         shieldRadius * 0.85 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3360,7 +3398,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        shieldRadius * 0.35,
+        shieldRadius * 0.35
       );
       coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.45})`);
       coreShield.addColorStop(0.5, `rgba(147, 197, 253, ${alpha * 0.25})`);
@@ -3374,7 +3412,7 @@ export function renderEffect(
         shieldRadius * 0.35 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3391,7 +3429,7 @@ export function renderEffect(
         shieldRadius * 0.5 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -3430,7 +3468,7 @@ export function renderEffect(
             rx - runeSize * 0.6,
             ry - runeSize * 0.3,
             runeSize * 1.2,
-            2 * zoom,
+            2 * zoom
           );
         } else {
           // Diamond ward
@@ -3451,7 +3489,7 @@ export function renderEffect(
           0,
           rx,
           ry,
-          runeSize * 2.5,
+          runeSize * 2.5
         );
         runeGlow.addColorStop(0, `rgba(96, 165, 250, 0.2)`);
         runeGlow.addColorStop(1, "rgba(59, 130, 246, 0)");
@@ -3478,7 +3516,7 @@ export function renderEffect(
           0,
           sparkX,
           sparkY,
-          sparkSize * 2,
+          sparkSize * 2
         );
         sGrad.addColorStop(0, `rgba(220, 240, 255, ${sparkA})`);
         sGrad.addColorStop(0.5, `rgba(147, 197, 253, ${sparkA * 0.5})`);
@@ -3525,13 +3563,13 @@ export function renderEffect(
         sx - 1.5 * zoom,
         sy - csSize * 0.7 - 2 * zoom,
         3 * zoom,
-        csSize * 1.3,
+        csSize * 1.3
       );
       ctx.fillRect(
         sx - csSize * 0.5,
         sy - csSize * 0.15 - 2 * zoom,
         csSize,
-        3 * zoom,
+        3 * zoom
       );
 
       ctx.globalAlpha = 1;
@@ -3556,7 +3594,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        strikeRadius * 0.7,
+        strikeRadius * 0.7
       );
       craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterA})`);
       craterGrad.addColorStop(0.25, `rgba(50, 25, 10, ${craterA * 0.7})`);
@@ -3572,7 +3610,7 @@ export function renderEffect(
         strikeRadius * 0.7 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3590,7 +3628,7 @@ export function renderEffect(
           fireRingR * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -3604,7 +3642,7 @@ export function renderEffect(
           fireRingR * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -3662,7 +3700,7 @@ export function renderEffect(
           0,
           rX,
           rY,
-          rSize,
+          rSize
         );
         rGrad.addColorStop(0, `rgba(160, 130, 90, ${rA})`);
         rGrad.addColorStop(0.5, `rgba(100, 75, 45, ${rA})`);
@@ -3674,10 +3712,11 @@ export function renderEffect(
           const vAngle = (v / rockVerts) * Math.PI * 2;
           const variance = 0.7 + seededNoise(mSeed + rock * 43 + v * 3) * 0.3;
           const vr = rSize * variance;
-          if (v === 0)
+          if (v === 0) {
             ctx.moveTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
-          else
+          } else {
             ctx.lineTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -3701,7 +3740,7 @@ export function renderEffect(
           sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
           sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
           sx + Math.cos(cAngle) * cLen,
-          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO,
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
         );
         ctx.stroke();
       }
@@ -3715,7 +3754,7 @@ export function renderEffect(
           0,
           sx,
           sy,
-          strikeRadius * 0.4,
+          strikeRadius * 0.4
         );
         flashGrad.addColorStop(0, `rgba(255, 240, 200, ${flashA})`);
         flashGrad.addColorStop(0.3, `rgba(255, 180, 80, ${flashA * 0.6})`);
@@ -3729,7 +3768,7 @@ export function renderEffect(
           strikeRadius * 0.4 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3748,7 +3787,7 @@ export function renderEffect(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       const startX = screenPos.x;
       const startY = screenPos.y;
@@ -3775,15 +3814,15 @@ export function renderEffect(
           0,
           shadowX,
           shadowY + 4 * zoom,
-          boulderSize * shadowScale,
+          boulderSize * shadowScale
         );
         shadowGrad.addColorStop(
           0,
-          `rgba(0, 0, 0, ${0.35 * alpha * shadowScale})`,
+          `rgba(0, 0, 0, ${0.35 * alpha * shadowScale})`
         );
         shadowGrad.addColorStop(
           0.7,
-          `rgba(0, 0, 0, ${0.1 * alpha * shadowScale})`,
+          `rgba(0, 0, 0, ${0.1 * alpha * shadowScale})`
         );
         shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = shadowGrad;
@@ -3795,7 +3834,7 @@ export function renderEffect(
           boulderSize * shadowScale * ISO_Y_RATIO * 0.6,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -3814,7 +3853,7 @@ export function renderEffect(
             0,
             trailX,
             trailY,
-            trailSize,
+            trailSize
           );
           tGrad.addColorStop(0, `rgba(160, 130, 90, ${trailA})`);
           tGrad.addColorStop(1, "rgba(120, 95, 60, 0)");
@@ -3836,7 +3875,7 @@ export function renderEffect(
           0,
           0,
           0,
-          boulderSize,
+          boulderSize
         );
         bGrad.addColorStop(0, "#b09070");
         bGrad.addColorStop(0.3, "#907050");
@@ -3849,8 +3888,11 @@ export function renderEffect(
           const angle = (i / 10) * Math.PI * 2;
           const variance = 0.7 + seededNoise(bSeed + i * 3) * 0.35;
           const r = boulderSize * variance;
-          if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
-          else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          if (i === 0) {
+            ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          } else {
+            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -3870,7 +3912,7 @@ export function renderEffect(
           ctx.beginPath();
           ctx.moveTo(
             Math.cos(crStart) * boulderSize * 0.1,
-            Math.sin(crStart) * boulderSize * 0.1,
+            Math.sin(crStart) * boulderSize * 0.1
           );
           ctx.lineTo(Math.cos(crStart) * crLen, Math.sin(crStart) * crLen);
           ctx.stroke();
@@ -3886,7 +3928,7 @@ export function renderEffect(
           boulderSize * 0.2,
           -0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -3934,7 +3976,7 @@ export function renderEffect(
           impactR * 1.5 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.strokeStyle = `rgba(220, 180, 120, ${shockA})`;
@@ -3947,7 +3989,7 @@ export function renderEffect(
           impactR * 1.5 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -3989,7 +4031,7 @@ export function renderEffect(
               Math.sin(crAngle) * crLen * 0.5 * ISO_Y_RATIO +
               crJitter * 0.3,
             endX + Math.cos(crAngle) * crLen,
-            endY + Math.sin(crAngle) * crLen * ISO_Y_RATIO,
+            endY + Math.sin(crAngle) * crLen * ISO_Y_RATIO
           );
           ctx.stroke();
         }
@@ -4020,9 +4062,11 @@ export function renderEffect(
           for (let v = 0; v < dVerts; v++) {
             const vA = (v / dVerts) * Math.PI * 2;
             const vr = dSize * (0.7 + seededNoise(bSeed + d * 111 + v) * 0.3);
-            if (v === 0)
+            if (v === 0) {
               ctx.moveTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
-            else ctx.lineTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
+            } else {
+              ctx.lineTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
+            }
           }
           ctx.closePath();
           ctx.fill();
@@ -4074,14 +4118,17 @@ export function renderEffect(
           const spiralDist = auraRadius * (0.12 + t * 0.7);
           const x = sx + Math.cos(spiralAngle) * spiralDist;
           const y = sy + Math.sin(spiralAngle) * spiralDist * ISO_Y_RATIO;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
         }
         const spiralGrad = ctx.createLinearGradient(
           sx - auraRadius,
           sy,
           sx + auraRadius,
-          sy,
+          sy
         );
         spiralGrad.addColorStop(0, `rgba(255, 248, 220, ${armA})`);
         spiralGrad.addColorStop(0.5, `rgba(255, 230, 150, ${armA * 0.7})`);
@@ -4117,11 +4164,11 @@ export function renderEffect(
         0,
         sx,
         sy,
-        auraRadius * 0.5,
+        auraRadius * 0.5
       );
       outerGlow.addColorStop(
         0,
-        `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`,
+        `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`
       );
       outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.12})`);
       outerGlow.addColorStop(1, "rgba(20, 184, 166, 0)");
@@ -4134,7 +4181,7 @@ export function renderEffect(
         auraRadius * 0.5 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4144,7 +4191,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        auraRadius * 0.22,
+        auraRadius * 0.22
       );
       coreGlow.addColorStop(0, `rgba(255, 240, 170, ${alpha * 0.55})`);
       coreGlow.addColorStop(0.5, `rgba(255, 215, 0, ${alpha * 0.3})`);
@@ -4158,7 +4205,7 @@ export function renderEffect(
         auraRadius * 0.22 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4212,13 +4259,13 @@ export function renderEffect(
             symX + symSize * 0.8,
             symY - symSize * 0.8,
             symX + symSize * 0.5,
-            symY - symSize,
+            symY - symSize
           );
           ctx.quadraticCurveTo(
             symX + symSize * 0.2,
             symY - symSize * 0.7,
             symX - symSize * 0.6,
-            symY + symSize * 0.8,
+            symY + symSize * 0.8
           );
           ctx.fill();
           ctx.stroke();
@@ -4231,13 +4278,13 @@ export function renderEffect(
             symX - symSize * 0.5,
             symY - symSize * 0.5,
             symSize,
-            symSize * 1.2,
+            symSize * 1.2
           );
           ctx.strokeRect(
             symX - symSize * 0.5,
             symY - symSize * 0.5,
             symSize,
-            symSize * 1.2,
+            symSize * 1.2
           );
           // Scroll curl top
           ctx.beginPath();
@@ -4247,7 +4294,7 @@ export function renderEffect(
             symSize * 0.15,
             0,
             Math.PI,
-            true,
+            true
           );
           ctx.stroke();
           ctx.beginPath();
@@ -4257,7 +4304,7 @@ export function renderEffect(
             symSize * 0.15,
             0,
             Math.PI,
-            true,
+            true
           );
           ctx.stroke();
         }
@@ -4269,7 +4316,7 @@ export function renderEffect(
           0,
           symX,
           symY,
-          symSize * 2.5,
+          symSize * 2.5
         );
         symGlow.addColorStop(0, `rgba(255, 215, 0, 0.15)`);
         symGlow.addColorStop(1, "rgba(255, 200, 0, 0)");
@@ -4300,8 +4347,11 @@ export function renderEffect(
           const ptR = pt % 2 === 0 ? pSize : pSize * 0.3;
           const px = pX + Math.cos(ptAngle) * ptR;
           const py = pY + Math.sin(ptAngle) * ptR;
-          if (pt === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (pt === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -4328,7 +4378,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        summonRadius,
+        summonRadius
       );
       baseGrad.addColorStop(0, `rgba(80, 50, 10, ${baseA})`);
       baseGrad.addColorStop(0.6, `rgba(60, 35, 5, ${baseA * 0.5})`);
@@ -4342,7 +4392,7 @@ export function renderEffect(
         summonRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4377,7 +4427,7 @@ export function renderEffect(
         summonRadius * 0.65 * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -4394,11 +4444,11 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(
           sx + Math.cos(a1) * wardR,
-          sy + Math.sin(a1) * wardR * ISO_Y_RATIO,
+          sy + Math.sin(a1) * wardR * ISO_Y_RATIO
         );
         ctx.lineTo(
           sx + Math.cos(a2) * wardR,
-          sy + Math.sin(a2) * wardR * ISO_Y_RATIO,
+          sy + Math.sin(a2) * wardR * ISO_Y_RATIO
         );
         ctx.stroke();
       }
@@ -4436,7 +4486,7 @@ export function renderEffect(
           0,
           pillarX,
           pillarY,
-          pillarW * 2,
+          pillarW * 2
         );
         haloGrad.addColorStop(0, `rgba(255, 200, 80, ${haloA})`);
         haloGrad.addColorStop(1, "rgba(255, 180, 50, 0)");
@@ -4449,7 +4499,7 @@ export function renderEffect(
           pillarW * 2 * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -4458,7 +4508,7 @@ export function renderEffect(
           pillarX,
           pillarY,
           pillarX,
-          pillarY - pillarH,
+          pillarY - pillarH
         );
         pillarGrad.addColorStop(0, `rgba(255, 210, 100, ${alpha * 0.8})`);
         pillarGrad.addColorStop(0.3, `rgba(255, 180, 60, ${alpha * 0.5})`);
@@ -4480,7 +4530,7 @@ export function renderEffect(
           pillarX,
           pillarY,
           pillarX,
-          pillarY - pillarH,
+          pillarY - pillarH
         );
         innerGrad.addColorStop(0, `rgba(255, 240, 180, ${alpha * 0.6})`);
         innerGrad.addColorStop(0.5, `rgba(255, 220, 120, ${alpha * 0.3})`);
@@ -4525,14 +4575,14 @@ export function renderEffect(
             pillarX - 3 * zoom,
             formY - 9 * zoom,
             6 * zoom,
-            12 * zoom,
+            12 * zoom
           );
           // Shield arm
           ctx.fillRect(
             pillarX - 6 * zoom,
             formY - 7 * zoom,
             3 * zoom,
-            8 * zoom,
+            8 * zoom
           );
         }
       }
@@ -4583,7 +4633,7 @@ export function renderEffect(
         deployRadius * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4624,7 +4674,7 @@ export function renderEffect(
           sx + Math.cos(bAngle) * outerR,
           sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
           sx + Math.cos(bAngle) * innerR,
-          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO,
+          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO
         );
         beamGrad.addColorStop(0, `rgba(255, 200, 50, 0)`);
         beamGrad.addColorStop(0.3, `rgba(255, 220, 80, ${bA * 0.5})`);
@@ -4636,11 +4686,11 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(
           sx + Math.cos(bAngle) * outerR,
-          sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
+          sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO
         );
         ctx.lineTo(
           sx + Math.cos(bAngle) * innerR,
-          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO,
+          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO
         );
         ctx.stroke();
       }
@@ -4671,8 +4721,11 @@ export function renderEffect(
         for (let t = 0; t < teeth * 2; t++) {
           const tAngle = (t / (teeth * 2)) * Math.PI * 2;
           const tR = t % 2 === 0 ? gSize : gSize * 0.65;
-          if (t === 0) ctx.moveTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
-          else ctx.lineTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
+          if (t === 0) {
+            ctx.moveTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
+          } else {
+            ctx.lineTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -4723,7 +4776,7 @@ export function renderEffect(
         0,
         sx,
         sy,
-        deployRadius * 0.25 * coreScale,
+        deployRadius * 0.25 * coreScale
       );
       coreGrad.addColorStop(0, `rgba(255, 250, 220, ${coreA})`);
       coreGrad.addColorStop(0.4, `rgba(255, 220, 100, ${coreA * 0.6})`);
@@ -4737,7 +4790,7 @@ export function renderEffect(
         deployRadius * 0.25 * coreScale * ISO_Y_RATIO,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4754,7 +4807,7 @@ export function renderEffect(
           deployRadius * 0.35 * ISO_Y_RATIO,
           0,
           -Math.PI / 2,
-          -Math.PI / 2 + progressAngle,
+          -Math.PI / 2 + progressAngle
         );
         ctx.stroke();
       }
@@ -4778,12 +4831,12 @@ export function renderEffect(
           0,
           screenPos.x,
           screenPos.y,
-          flashSize,
+          flashSize
         );
         flashGrad.addColorStop(0, `rgba(255, 220, 100, ${(1 - flashP) * 0.9})`);
         flashGrad.addColorStop(
           0.4,
-          `rgba(255, 140, 40, ${(1 - flashP) * 0.6})`,
+          `rgba(255, 140, 40, ${(1 - flashP) * 0.6})`
         );
         flashGrad.addColorStop(1, "rgba(255, 60, 0, 0)");
         ctx.fillStyle = flashGrad;
@@ -4837,7 +4890,7 @@ export function renderEffect(
           fSize * 0.7,
           seed + 1,
           0.2,
-          blobPts,
+          blobPts
         );
         ctx.fill();
 
@@ -4851,7 +4904,7 @@ export function renderEffect(
           fSize * 0.35,
           seed + 2,
           0.18,
-          blobPts,
+          blobPts
         );
         ctx.fill();
       }
@@ -4871,7 +4924,7 @@ export function renderEffect(
           rRadius * 0.5,
           seed + 3,
           0.1,
-          blobPts,
+          blobPts
         );
         ctx.stroke();
       }
@@ -4885,7 +4938,9 @@ export function renderEffect(
         const dy =
           sy + Math.sin(dAngle) * dDist * 0.5 - ip * (1 - ip) * 20 * zoom;
         const dSize = (2 + (d & 1)) * zoom * (1 - ip);
-        if (dSize < 0.5) continue;
+        if (dSize < 0.5) {
+          continue;
+        }
         ctx.fillStyle = `rgba(${110 + d * 12}, ${65 + d * 6}, ${32}, ${alpha * (1 - ip) * 0.65})`;
         drawOrganicBlobAt(
           ctx,
@@ -4895,7 +4950,7 @@ export function renderEffect(
           dSize * 0.8,
           seed + 10 + d,
           0.25,
-          8,
+          8
         );
         ctx.fill();
       }
@@ -4909,7 +4964,9 @@ export function renderEffect(
           const smokeX = sx + Math.sin(sp * 3 + s) * 7 * zoom;
           const smokeR = (6 + s * 3.5) * zoom * sp;
           const smokeA = alpha * (1 - sp) * 0.25;
-          if (smokeA < 0.01) continue;
+          if (smokeA < 0.01) {
+            continue;
+          }
           ctx.fillStyle = `rgba(75, 68, 58, ${smokeA})`;
           drawOrganicBlobAt(
             ctx,
@@ -4919,7 +4976,7 @@ export function renderEffect(
             smokeR * 0.85,
             seed + 20 + s,
             0.2,
-            10,
+            10
           );
           ctx.fill();
         }
@@ -4951,7 +5008,7 @@ export function renderEffect(
         puddleR * 0.45,
         eSeed,
         0.15,
-        eBlobPts,
+        eBlobPts
       );
       ctx.fill();
 
@@ -4971,7 +5028,7 @@ export function renderEffect(
           coreR * 0.18,
           eSeed + 2,
           0.15,
-          8,
+          8
         );
         ctx.fill();
       }
@@ -4989,7 +5046,9 @@ export function renderEffect(
             Math.sin(sAngle) * sDist * 0.5 -
             splatP * (1 - splatP) * 14 * zoom;
           const sSize = (1.8 + (ls & 1) * 1.2) * zoom * (1 - splatP);
-          if (sSize < 0.4) continue;
+          if (sSize < 0.4) {
+            continue;
+          }
           const sGlow = ls % 3 === 0 ? 255 : 200;
           ctx.fillStyle = `rgba(${sGlow}, ${80 + ls * 8}, 10, ${alpha * (1 - splatP) * 0.7})`;
           ctx.beginPath();
@@ -5013,7 +5072,7 @@ export function renderEffect(
           heatR * 0.45,
           eSeed + 5,
           0.1,
-          eBlobPts,
+          eBlobPts
         );
         ctx.stroke();
       }
@@ -5029,7 +5088,9 @@ export function renderEffect(
           const sparkY =
             ey - spT * 30 * zoom + Math.sin(sparkAngle) * esz * 0.08;
           const sparkA = alpha * (1 - spT) * 0.6;
-          if (sparkA < 0.01) continue;
+          if (sparkA < 0.01) {
+            continue;
+          }
           const sparkSize = (1.5 + sp * 0.4) * zoom * (1 - spT * 0.5);
           ctx.fillStyle = `rgba(255, ${140 + sp * 20}, ${20 + sp * 10}, ${sparkA})`;
           ctx.beginPath();
@@ -5047,7 +5108,9 @@ export function renderEffect(
           const smokeY = ey - smT * 32 * zoom;
           const smokeR = (5 + sm * 3) * zoom * smT;
           const smokeA = alpha * (1 - smT) * 0.2;
-          if (smokeA < 0.01) continue;
+          if (smokeA < 0.01) {
+            continue;
+          }
           ctx.fillStyle = `rgba(60, 45, 30, ${smokeA})`;
           drawOrganicBlobAt(
             ctx,
@@ -5057,7 +5120,7 @@ export function renderEffect(
             smokeR * 0.8,
             eSeed + 10 + sm,
             0.2,
-            10,
+            10
           );
           ctx.fill();
         }
@@ -5077,7 +5140,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        emberSize,
+        emberSize
       );
       const pulse = Math.sin(time * 4) * 0.15 + 0.5;
       fireGrad.addColorStop(0, `rgba(255, 120, 20, ${alpha * pulse})`);
@@ -5092,7 +5155,7 @@ export function renderEffect(
         emberSize * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5110,7 +5173,7 @@ export function renderEffect(
           ey - Math.abs(Math.sin(eAngle * 1.5)) * 4 * zoom,
           2 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5146,18 +5209,18 @@ export function renderMissileTargetReticle(
   screenPos: Position,
   zoom: number,
   timeSeconds: number,
-  cooldownProgress?: number,
+  cooldownProgress?: number
 ): void {
   renderTargetingReticle(ctx, {
+    color: RETICLE_COLORS.orange,
+    cooldownColor: RETICLE_COLORS.orange,
+    cooldownProgress,
+    glowColor: { b: 0, g: 80, r: 255 },
+    radius: 62,
+    time: timeSeconds,
     x: screenPos.x,
     y: screenPos.y,
     zoom,
-    time: timeSeconds,
-    color: RETICLE_COLORS.orange,
-    glowColor: { r: 255, g: 80, b: 0 },
-    radius: 62,
-    cooldownProgress,
-    cooldownColor: RETICLE_COLORS.orange,
   });
 }
 

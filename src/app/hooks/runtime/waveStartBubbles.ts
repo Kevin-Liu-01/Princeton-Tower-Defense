@@ -1,8 +1,6 @@
+import { WAVE_START_BUBBLE_HIT_RADIUS } from "../../rendering/ui/waveStartBubble";
+import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
 import { distance } from "../../utils";
-import {
-  WAVE_START_BUBBLE_HIT_RADIUS,
-  type WaveStartBubbleScreenData,
-} from "../../rendering/ui/waveStartBubble";
 
 export interface WaveStartConfirmState {
   mapId: string;
@@ -18,7 +16,7 @@ interface Point {
 
 export function findWaveStartBubbleAtPoint(
   bubbles: WaveStartBubbleScreenData[],
-  point: Point,
+  point: Point
 ): WaveStartBubbleScreenData | null {
   let clickedBubble: WaveStartBubbleScreenData | null = null;
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -39,7 +37,7 @@ export function findWaveStartBubbleAtPoint(
 
 export function getHoveredWaveStartBubblePath(
   bubbles: WaveStartBubbleScreenData[],
-  point: Point,
+  point: Point
 ): string | null {
   const bubble = findWaveStartBubbleAtPoint(bubbles, point);
   return bubble?.pathKey ?? null;
@@ -49,7 +47,7 @@ export function isWaveStartConfirmForBubble(
   confirmState: WaveStartConfirmState | null,
   bubble: WaveStartBubbleScreenData,
   mapId: string,
-  waveIndex: number,
+  waveIndex: number
 ): boolean {
   return (
     confirmState?.mapId === mapId &&

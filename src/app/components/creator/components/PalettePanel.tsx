@@ -1,4 +1,3 @@
-import React, { useMemo, useState } from "react";
 import {
   AlertTriangle,
   ChessRook,
@@ -8,6 +7,8 @@ import {
   Sword,
   Wand2,
 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+
 import type {
   DecorationCategory,
   HazardType,
@@ -15,7 +16,6 @@ import type {
   SpecialTowerType,
   TowerType,
 } from "../../../types";
-import type { PaletteDragPayload, ToolMode } from "../types";
 import {
   ALL_HAZARD_OPTIONS,
   CHALLENGE_DECORATIONS,
@@ -28,6 +28,7 @@ import {
   TOWER_TYPE_OPTIONS,
   UNIVERSAL_DECORATIONS,
 } from "../constants";
+import type { PaletteDragPayload, ToolMode } from "../types";
 import { formatAssetName } from "../utils/gridUtils";
 import { AssetChip } from "./AssetChip";
 
@@ -48,17 +49,29 @@ interface PalettePanelProps {
   onToolSelect: (tool: ToolMode) => void;
 }
 
-const TAB_CONFIG: { key: PaletteTab; label: string; icon: typeof Paintbrush; color: string }[] = [
-  { key: "decoration", label: "Deco", icon: Paintbrush, color: "amber" },
-  { key: "landmark", label: "Land", icon: Landmark, color: "sky" },
-  { key: "hazard", label: "Hazard", icon: AlertTriangle, color: "red" },
-  { key: "objective", label: "Obj", icon: ChessRook, color: "purple" },
-  { key: "tower", label: "Tower", icon: Sword, color: "blue" },
+const TAB_CONFIG: {
+  key: PaletteTab;
+  label: string;
+  icon: typeof Paintbrush;
+  color: string;
+}[] = [
+  { color: "amber", icon: Paintbrush, key: "decoration", label: "Deco" },
+  { color: "sky", icon: Landmark, key: "landmark", label: "Land" },
+  { color: "red", icon: AlertTriangle, key: "hazard", label: "Hazard" },
+  { color: "purple", icon: ChessRook, key: "objective", label: "Obj" },
+  { color: "blue", icon: Sword, key: "tower", label: "Tower" },
 ];
 
 const getDisplayName = (tab: PaletteTab, value: string): string => {
-  if (tab === "tower") return TOWER_DISPLAY_NAMES[value as TowerType] ?? formatAssetName(value);
-  if (tab === "objective") return OBJECTIVE_TYPE_STATS[value as SpecialTowerType]?.title ?? formatAssetName(value);
+  if (tab === "tower") {
+    return TOWER_DISPLAY_NAMES[value as TowerType] ?? formatAssetName(value);
+  }
+  if (tab === "objective") {
+    return (
+      OBJECTIVE_TYPE_STATS[value as SpecialTowerType]?.title ??
+      formatAssetName(value)
+    );
+  }
   return formatAssetName(value);
 };
 
@@ -85,56 +98,81 @@ export const PalettePanel: React.FC<PalettePanelProps> = ({
     if (showAllThemes) {
       const allDecos = new Set<DecorationCategory>(themeDecos);
       for (const decos of Object.values(DECORATION_OPTIONS_BY_THEME)) {
-        for (const d of decos) allDecos.add(d);
+        for (const d of decos) {
+          allDecos.add(d);
+        }
       }
-      for (const d of UNIVERSAL_DECORATIONS) allDecos.add(d);
-      for (const d of CHALLENGE_DECORATIONS) allDecos.add(d);
-      return Array.from(allDecos);
+      for (const d of UNIVERSAL_DECORATIONS) {
+        allDecos.add(d);
+      }
+      for (const d of CHALLENGE_DECORATIONS) {
+        allDecos.add(d);
+      }
+      return [...allDecos];
     }
     const combined = new Set<DecorationCategory>(themeDecos);
-    for (const d of UNIVERSAL_DECORATIONS) combined.add(d);
-    return Array.from(combined);
+    for (const d of UNIVERSAL_DECORATIONS) {
+      combined.add(d);
+    }
+    return [...combined];
   }, [theme, showAllThemes]);
 
   const hazardOptions = useMemo(() => {
-    if (showAllThemes) return ALL_HAZARD_OPTIONS;
+    if (showAllThemes) {
+      return ALL_HAZARD_OPTIONS;
+    }
     return HAZARD_OPTIONS_BY_THEME[theme] ?? ALL_HAZARD_OPTIONS;
   }, [theme, showAllThemes]);
 
   const paletteOptions = useMemo(() => {
     let source: string[];
     switch (tab) {
-      case "decoration":
+      case "decoration": {
         source = [...decorationOptions];
         break;
-      case "landmark":
+      }
+      case "landmark": {
         source = [...LANDMARK_OPTIONS];
         break;
-      case "hazard":
+      }
+      case "hazard": {
         source = [...hazardOptions];
         break;
-      case "objective":
+      }
+      case "objective": {
         source = [...SPECIAL_TOWER_TYPES];
         break;
-      case "tower":
+      }
+      case "tower": {
         source = [...TOWER_TYPE_OPTIONS];
         break;
-      default:
+      }
+      default: {
         source = [];
+      }
     }
     const term = search.trim().toLowerCase();
-    if (!term) return source;
+    if (!term) {
+      return source;
+    }
     return source.filter((option) => {
       const displayName = getDisplayName(tab, option);
-      return option.toLowerCase().includes(term) || displayName.toLowerCase().includes(term);
+      return (
+        option.toLowerCase().includes(term) ||
+        displayName.toLowerCase().includes(term)
+      );
     });
   }, [tab, search, decorationOptions, hazardOptions]);
 
   const tabIcon = TAB_CONFIG.find((t) => t.key === tab)?.icon ?? Paintbrush;
 
   const toolModeForTab = (t: PaletteTab): ToolMode => {
-    if (t === "objective") return "special_tower";
-    if (t === "tower") return "tower";
+    if (t === "objective") {
+      return "special_tower";
+    }
+    if (t === "tower") {
+      return "tower";
+    }
     return t as ToolMode;
   };
 
@@ -145,43 +183,64 @@ export const PalettePanel: React.FC<PalettePanelProps> = ({
 
   const isActive = (option: string): boolean => {
     switch (tab) {
-      case "decoration": return selectedDecorationType === option;
-      case "landmark": return selectedLandmarkType === option;
-      case "hazard": return selectedHazardType === option;
-      case "objective": return selectedObjectiveType === option;
-      case "tower": return selectedTowerType === option;
-      default: return false;
+      case "decoration": {
+        return selectedDecorationType === option;
+      }
+      case "landmark": {
+        return selectedLandmarkType === option;
+      }
+      case "hazard": {
+        return selectedHazardType === option;
+      }
+      case "objective": {
+        return selectedObjectiveType === option;
+      }
+      case "tower": {
+        return selectedTowerType === option;
+      }
+      default: {
+        return false;
+      }
     }
   };
 
   const handleSelect = (option: string) => {
     switch (tab) {
-      case "decoration":
+      case "decoration": {
         onSelectDecoration(option as DecorationCategory);
         onToolSelect("decoration");
         break;
-      case "landmark":
+      }
+      case "landmark": {
         onSelectLandmark(option as DecorationCategory);
         onToolSelect("landmark");
         break;
-      case "hazard":
+      }
+      case "hazard": {
         onSelectHazard(option as HazardType);
         onToolSelect("hazard");
         break;
-      case "objective":
+      }
+      case "objective": {
         onSelectObjective(option as SpecialTowerType);
         onToolSelect("special_tower");
         break;
-      case "tower":
+      }
+      case "tower": {
         onSelectTower(option as TowerType);
         onToolSelect("tower");
         break;
+      }
     }
   };
 
   const getDragPayload = (option: string): PaletteDragPayload => {
-    if (tab === "objective") return { kind: "objective", value: option };
-    if (tab === "tower") return { kind: "tower", value: option };
+    if (tab === "objective") {
+      return { kind: "objective", value: option };
+    }
+    if (tab === "tower") {
+      return { kind: "tower", value: option };
+    }
     return { kind: tab as PaletteDragPayload["kind"], value: option };
   };
 
@@ -203,10 +262,11 @@ export const PalettePanel: React.FC<PalettePanelProps> = ({
             <button
               key={t.key}
               onClick={() => handleTabClick(t.key)}
-              className={`flex-1 rounded-md px-1 py-1.5 text-[10px] inline-flex items-center justify-center gap-0.5 transition-all font-medium ${active
-                ? "bg-amber-500/20 text-amber-100 shadow-sm shadow-amber-500/10 border border-amber-500/30"
-                : "text-amber-400/60 hover:text-amber-300/80 hover:bg-stone-800/50 border border-transparent"
-                }`}
+              className={`flex-1 rounded-md px-1 py-1.5 text-[10px] inline-flex items-center justify-center gap-0.5 transition-all font-medium ${
+                active
+                  ? "bg-amber-500/20 text-amber-100 shadow-sm shadow-amber-500/10 border border-amber-500/30"
+                  : "text-amber-400/60 hover:text-amber-300/80 hover:bg-stone-800/50 border border-transparent"
+              }`}
             >
               <Icon size={10} />
               {t.label}
@@ -225,18 +285,23 @@ export const PalettePanel: React.FC<PalettePanelProps> = ({
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={`Search ${TAB_CONFIG.find(t => t.key === tab)?.label ?? ""}...`}
+            placeholder={`Search ${TAB_CONFIG.find((t) => t.key === tab)?.label ?? ""}...`}
             className="w-full rounded-lg border border-amber-800/30 bg-stone-950/70 pl-7 pr-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-500/50 placeholder:text-amber-500/30 transition-colors"
           />
         </label>
         {showThemeToggle && (
           <button
             onClick={() => setShowAllThemes(!showAllThemes)}
-            className={`rounded-lg border px-2.5 py-1 text-[10px] whitespace-nowrap transition-all font-medium ${showAllThemes
-              ? "border-amber-400/50 bg-amber-500/15 text-amber-200"
-              : "border-amber-800/30 bg-stone-950/50 text-amber-400/60 hover:bg-stone-800/60"
-              }`}
-            title={showAllThemes ? "Showing all themes" : "Showing current theme only"}
+            className={`rounded-lg border px-2.5 py-1 text-[10px] whitespace-nowrap transition-all font-medium ${
+              showAllThemes
+                ? "border-amber-400/50 bg-amber-500/15 text-amber-200"
+                : "border-amber-800/30 bg-stone-950/50 text-amber-400/60 hover:bg-stone-800/60"
+            }`}
+            title={
+              showAllThemes
+                ? "Showing all themes"
+                : "Showing current theme only"
+            }
           >
             {showAllThemes ? "All" : formatAssetName(theme)}
           </button>

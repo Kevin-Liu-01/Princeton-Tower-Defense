@@ -22,93 +22,99 @@ export interface SentinelPalette {
 
 // ── Grassland — verdant cyan-teal ──────────────────────────────────────────
 const SENTINEL_GRASSLAND: SentinelPalette = {
-  stoneName: "Emerald",
-  hotRgb: "80, 220, 180",
-  hotHex: "#50DCB4",
-  crystalR: 80,
-  crystalG: 220,
   crystalB: 180,
-  crystalBaseR: 120,
-  crystalBaseG: 140,
   crystalBaseB: 135,
-  reticleColor: { r: 80, g: 220, b: 180 },
-  reticleGlow: { r: 40, g: 200, b: 160 },
+  crystalBaseG: 140,
+  crystalBaseR: 120,
+  crystalG: 220,
+  crystalR: 80,
+  hotHex: "#50DCB4",
+  hotRgb: "80, 220, 180",
+  reticleColor: { b: 180, g: 220, r: 80 },
+  reticleGlow: { b: 160, g: 200, r: 40 },
+  stoneName: "Emerald",
 };
 
 // ── Desert — amber gold ────────────────────────────────────────────────────
 const SENTINEL_DESERT: SentinelPalette = {
-  stoneName: "Amber",
-  hotRgb: "255, 185, 60",
-  hotHex: "#FFB93C",
-  crystalR: 255,
-  crystalG: 185,
   crystalB: 60,
-  crystalBaseR: 150,
-  crystalBaseG: 135,
   crystalBaseB: 100,
-  reticleColor: { r: 255, g: 185, b: 60 },
-  reticleGlow: { r: 220, g: 150, b: 30 },
+  crystalBaseG: 135,
+  crystalBaseR: 150,
+  crystalG: 185,
+  crystalR: 255,
+  hotHex: "#FFB93C",
+  hotRgb: "255, 185, 60",
+  reticleColor: { b: 60, g: 185, r: 255 },
+  reticleGlow: { b: 30, g: 150, r: 220 },
+  stoneName: "Amber",
 };
 
 // ── Winter — icy blue ──────────────────────────────────────────────────────
 const SENTINEL_WINTER: SentinelPalette = {
-  stoneName: "Sapphire",
-  hotRgb: "130, 200, 255",
-  hotHex: "#82C8FF",
-  crystalR: 130,
-  crystalG: 200,
   crystalB: 255,
-  crystalBaseR: 120,
-  crystalBaseG: 130,
   crystalBaseB: 145,
-  reticleColor: { r: 130, g: 200, b: 255 },
-  reticleGlow: { r: 80, g: 160, b: 240 },
+  crystalBaseG: 130,
+  crystalBaseR: 120,
+  crystalG: 200,
+  crystalR: 130,
+  hotHex: "#82C8FF",
+  hotRgb: "130, 200, 255",
+  reticleColor: { b: 255, g: 200, r: 130 },
+  reticleGlow: { b: 240, g: 160, r: 80 },
+  stoneName: "Sapphire",
 };
 
 // ── Volcanic — crimson red (original) ──────────────────────────────────────
 const SENTINEL_VOLCANIC: SentinelPalette = {
-  stoneName: "Ruby",
-  hotRgb: "255, 110, 96",
-  hotHex: "#FF6E60",
-  crystalR: 255,
-  crystalG: 110,
   crystalB: 96,
-  crystalBaseR: 140,
-  crystalBaseG: 115,
   crystalBaseB: 115,
-  reticleColor: { r: 255, g: 80, b: 70 },
-  reticleGlow: { r: 220, g: 30, b: 30 },
+  crystalBaseG: 115,
+  crystalBaseR: 140,
+  crystalG: 110,
+  crystalR: 255,
+  hotHex: "#FF6E60",
+  hotRgb: "255, 110, 96",
+  reticleColor: { b: 70, g: 80, r: 255 },
+  reticleGlow: { b: 30, g: 30, r: 220 },
+  stoneName: "Ruby",
 };
 
 // ── Swamp — sickly green ──────────────────────────────────────────────────
 const SENTINEL_SWAMP: SentinelPalette = {
-  stoneName: "Jade",
-  hotRgb: "160, 230, 80",
-  hotHex: "#A0E650",
-  crystalR: 160,
-  crystalG: 230,
   crystalB: 80,
-  crystalBaseR: 120,
-  crystalBaseG: 140,
   crystalBaseB: 110,
-  reticleColor: { r: 160, g: 230, b: 80 },
-  reticleGlow: { r: 120, g: 200, b: 40 },
+  crystalBaseG: 140,
+  crystalBaseR: 120,
+  crystalG: 230,
+  crystalR: 160,
+  hotHex: "#A0E650",
+  hotRgb: "160, 230, 80",
+  reticleColor: { b: 80, g: 230, r: 160 },
+  reticleGlow: { b: 40, g: 200, r: 120 },
+  stoneName: "Jade",
 };
 
 export function getSentinelPalette(theme?: MapTheme): SentinelPalette {
   switch (theme) {
-    case "grassland":
+    case "grassland": {
       return SENTINEL_GRASSLAND;
-    case "desert":
+    }
+    case "desert": {
       return SENTINEL_DESERT;
-    case "winter":
+    }
+    case "winter": {
       return SENTINEL_WINTER;
-    case "volcanic":
+    }
+    case "volcanic": {
       return SENTINEL_VOLCANIC;
-    case "swamp":
+    }
+    case "swamp": {
       return SENTINEL_SWAMP;
-    default:
+    }
+    default: {
       return SENTINEL_VOLCANIC;
+    }
   }
 }
 
@@ -118,18 +124,24 @@ export function getSentinelName(theme?: MapTheme): string {
 
 export function getSentinelBoltColor(theme?: MapTheme): LightningColorScheme {
   switch (theme) {
-    case "grassland":
+    case "grassland": {
       return "teal";
-    case "desert":
+    }
+    case "desert": {
       return "yellow";
-    case "winter":
+    }
+    case "winter": {
       return "blue";
-    case "volcanic":
+    }
+    case "volcanic": {
       return "red";
-    case "swamp":
+    }
+    case "swamp": {
       return "green";
-    default:
+    }
+    default: {
       return "red";
+    }
   }
 }
 
@@ -143,12 +155,12 @@ export const SUNFORGE_GEM_Y_OFFSET = -67;
 
 // Consistent metal colors used regardless of region
 export const SENTINEL_METAL = {
-  darkest: "#1a1c20",
+  band: "rgba(70, 74, 82, 0.5)",
   dark: "#2a2c30",
-  mid: "#3e4248",
+  darkest: "#1a1c20",
+  highlight: "#8a8e98",
   light: "#585c64",
   lightest: "#70747c",
-  highlight: "#8a8e98",
+  mid: "#3e4248",
   rivet: "rgba(90, 95, 105, 0.6)",
-  band: "rgba(70, 74, 82, 0.5)",
 } as const;

@@ -43,7 +43,7 @@ export function computeFogCounts(isChallengeTerrainLevel: boolean): {
 }
 
 function fogHash(n: number): number {
-  const x = Math.sin(n * 127.1 + n * 311.7) * 43758.5453;
+  const x = Math.sin(n * 127.1 + n * 311.7) * 43_758.5453;
   return x - Math.floor(x);
 }
 
@@ -90,15 +90,36 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
   // Solid core: opaque ground-colored ellipse that fully hides the road end
   const coreSize = fogSize * 0.55 * z;
   const coreGrad = ctx.createRadialGradient(
-    endPos.x, endPos.y, 0,
-    endPos.x, endPos.y, coreSize
+    endPos.x,
+    endPos.y,
+    0,
+    endPos.x,
+    endPos.y,
+    coreSize
   );
-  coreGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${(1 * challengeFogOpacityScale).toFixed(3)})`);
-  coreGrad.addColorStop(0.5, `rgba(${gr},${gg},${gb},${(0.95 * challengeFogOpacityScale).toFixed(3)})`);
-  coreGrad.addColorStop(0.75, `rgba(${gr},${gg},${gb},${(0.7 * challengeFogOpacityScale).toFixed(3)})`);
+  coreGrad.addColorStop(
+    0,
+    `rgba(${gr},${gg},${gb},${(1 * challengeFogOpacityScale).toFixed(3)})`
+  );
+  coreGrad.addColorStop(
+    0.5,
+    `rgba(${gr},${gg},${gb},${(0.95 * challengeFogOpacityScale).toFixed(3)})`
+  );
+  coreGrad.addColorStop(
+    0.75,
+    `rgba(${gr},${gg},${gb},${(0.7 * challengeFogOpacityScale).toFixed(3)})`
+  );
   coreGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
   ctx.fillStyle = coreGrad;
-  drawOrganicBlobAt(ctx, endPos.x, endPos.y, coreSize, coreSize * 0.5, fogHash(42.7) * 1000, 0.14);
+  drawOrganicBlobAt(
+    ctx,
+    endPos.x,
+    endPos.y,
+    coreSize,
+    coreSize * 0.5,
+    fogHash(42.7) * 1000,
+    0.14
+  );
   ctx.fill();
 
   // Mid layer: slightly offset opaque fills to widen the solid coverage
@@ -109,11 +130,25 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     const my = endPos.y + Math.sin(mAngle) * mDist * 0.35;
     const mSize = fogSize * 0.4 * z;
     const mGrad = ctx.createRadialGradient(mx, my, 0, mx, my, mSize);
-    mGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${(0.9 * challengeFogOpacityScale).toFixed(3)})`);
-    mGrad.addColorStop(0.55, `rgba(${gr},${gg},${gb},${(0.6 * challengeFogOpacityScale).toFixed(3)})`);
+    mGrad.addColorStop(
+      0,
+      `rgba(${gr},${gg},${gb},${(0.9 * challengeFogOpacityScale).toFixed(3)})`
+    );
+    mGrad.addColorStop(
+      0.55,
+      `rgba(${gr},${gg},${gb},${(0.6 * challengeFogOpacityScale).toFixed(3)})`
+    );
     mGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
     ctx.fillStyle = mGrad;
-    drawOrganicBlobAt(ctx, mx, my, mSize, mSize * 0.5, fogHash(m * 31.3 + 77) * 1000, 0.16);
+    drawOrganicBlobAt(
+      ctx,
+      mx,
+      my,
+      mSize,
+      mSize * 0.5,
+      fogHash(m * 31.3 + 77) * 1000,
+      0.16
+    );
     ctx.fill();
   }
 
@@ -140,8 +175,8 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
   for (let i = 0; i < fogBlobCount; i++) {
     const h1 = fogHash(i * 13.37);
     const h2 = fogHash(i * 7.91 + 0.5);
-    const h3 = fogHash(i * 3.14 + 1.0);
-    const h4 = fogHash(i * 11.23 + 2.0);
+    const h3 = fogHash(i * 3.14 + 1);
+    const h4 = fogHash(i * 11.23 + 2);
 
     const angle = h1 * Math.PI * 2;
     const maxR = getMaxReach(angle);
@@ -151,7 +186,8 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     const perpDist = Math.sin(angle) * rawDist * fogSize;
 
     const bx = endPos.x + dirX * alongDist * z + perpX * perpDist * 0.65 * z;
-    const by = endPos.y + dirY * alongDist * 0.5 * z + perpY * perpDist * 0.32 * z;
+    const by =
+      endPos.y + dirY * alongDist * 0.5 * z + perpY * perpDist * 0.32 * z;
 
     const animX = Math.sin(time * 0.25 + i * 0.68) * 4 * z;
     const animY = Math.cos(time * 0.2 + i * 0.52) * 2.5 * z;
@@ -162,7 +198,9 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
       0,
       0.7 * (1 - distNorm * distNorm) * challengeFogOpacityScale
     );
-    if (alpha <= 0.01) continue;
+    if (alpha <= 0.01) {
+      continue;
+    }
 
     const blend = distNorm;
     const cr = gr + (edgeR - gr) * blend;
@@ -170,14 +208,32 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     const cb = gb + (edgeB - gb) * blend;
 
     const grad = ctx.createRadialGradient(
-      bx + animX, by + animY, 0,
-      bx + animX, by + animY, blobSize
+      bx + animX,
+      by + animY,
+      0,
+      bx + animX,
+      by + animY,
+      blobSize
     );
-    grad.addColorStop(0, `rgba(${Math.round(cr)},${Math.round(cg2)},${Math.round(cb)},${alpha.toFixed(3)})`);
-    grad.addColorStop(0.5, `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.5).toFixed(3)})`);
+    grad.addColorStop(
+      0,
+      `rgba(${Math.round(cr)},${Math.round(cg2)},${Math.round(cb)},${alpha.toFixed(3)})`
+    );
+    grad.addColorStop(
+      0.5,
+      `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.5).toFixed(3)})`
+    );
     grad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
     ctx.fillStyle = grad;
-    drawOrganicBlobAt(ctx, bx + animX, by + animY, blobSize, blobSize * 0.6, fogHash(i * 19.7 + 123) * 1000, 0.2);
+    drawOrganicBlobAt(
+      ctx,
+      bx + animX,
+      by + animY,
+      blobSize,
+      blobSize * 0.6,
+      fogHash(i * 19.7 + 123) * 1000,
+      0.2
+    );
     ctx.fill();
   }
 
@@ -187,16 +243,29 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     const wAlongDist = Math.sin(wAngle) * fogSize * 0.65;
     const wPerpDist = Math.cos(wAngle * 0.7 + i) * fogSize * 0.45;
     const wx = endPos.x + dirX * wAlongDist * z + perpX * wPerpDist * 0.65 * z;
-    const wy = endPos.y + dirY * wAlongDist * 0.5 * z + perpY * wPerpDist * 0.32 * z;
+    const wy =
+      endPos.y + dirY * wAlongDist * 0.5 * z + perpY * wPerpDist * 0.32 * z;
     const wSize = fogSize * (0.18 + fogHash(i + 200) * 0.2) * z;
-    const wa = (0.22 + 0.08 * Math.sin(time * 0.4 + i)) * challengeFogOpacityScale;
+    const wa =
+      (0.22 + 0.08 * Math.sin(time * 0.4 + i)) * challengeFogOpacityScale;
 
     const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, wSize);
     wGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${wa.toFixed(3)})`);
-    wGrad.addColorStop(0.45, `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.45).toFixed(3)})`);
+    wGrad.addColorStop(
+      0.45,
+      `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.45).toFixed(3)})`
+    );
     wGrad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
     ctx.fillStyle = wGrad;
-    drawOrganicBlobAt(ctx, wx, wy, wSize, wSize * 0.65, fogHash(i * 41.1 + 200) * 1000, 0.22);
+    drawOrganicBlobAt(
+      ctx,
+      wx,
+      wy,
+      wSize,
+      wSize * 0.65,
+      fogHash(i * 41.1 + 200) * 1000,
+      0.22
+    );
     ctx.fill();
   }
 }

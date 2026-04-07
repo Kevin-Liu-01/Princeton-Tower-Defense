@@ -28,14 +28,18 @@ export function useEntityCollection<T extends EntityWithId>(
   }, []);
 
   const addItems = useCallback((nextItems: T[]) => {
-    if (nextItems.length === 0) return;
+    if (nextItems.length === 0) {
+      return;
+    }
     setItems((prev) => [...prev, ...nextItems]);
   }, []);
 
   const removeById = useCallback((id: string) => {
     setItems((prev) => {
       const index = prev.findIndex((item) => item.id === id);
-      if (index === -1) return prev;
+      if (index === -1) {
+        return prev;
+      }
       return prev.filter((item) => item.id !== id);
     });
   }, []);
@@ -45,7 +49,9 @@ export function useEntityCollection<T extends EntityWithId>(
       let changed = false;
       const next = prev.filter((item) => {
         const shouldRemove = predicate(item);
-        if (shouldRemove) changed = true;
+        if (shouldRemove) {
+          changed = true;
+        }
         return !shouldRemove;
       });
       return changed ? next : prev;
@@ -55,7 +61,9 @@ export function useEntityCollection<T extends EntityWithId>(
   const updateById = useCallback((id: string, updater: (item: T) => T) => {
     setItems((prev) => {
       const index = prev.findIndex((item) => item.id === id);
-      if (index === -1) return prev;
+      if (index === -1) {
+        return prev;
+      }
       return prev.map((item) => (item.id === id ? updater(item) : item));
     });
   }, []);
@@ -65,13 +73,13 @@ export function useEntityCollection<T extends EntityWithId>(
   }, []);
 
   return {
-    items,
-    setItems,
     addItem,
     addItems,
+    clearItems,
+    items,
     removeById,
     removeWhere,
+    setItems,
     updateById,
-    clearItems,
   };
 }

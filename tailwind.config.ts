@@ -6,8 +6,16 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  plugins: [],
   theme: {
     extend: {
+      backgroundImage: {
+        "dot-pattern":
+          "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)",
+      },
+      backgroundSize: {
+        "dot-sm": "1rem 1rem",
+      },
       colors: {
         // Dark mode palette
         background: "#18181b", // zinc-900
@@ -22,15 +30,7 @@ const config: Config = {
       fontFamily: {
         cinzel: ["var(--font-cinzel)", "sans-serif"],
       },
-      backgroundImage: {
-        "dot-pattern":
-          "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)",
-      },
-      backgroundSize: {
-        "dot-sm": "1rem 1rem",
-      },
     },
   },
-  plugins: [],
 };
 export default config;

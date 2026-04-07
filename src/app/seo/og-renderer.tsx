@@ -2,16 +2,19 @@ import { headers } from "next/headers";
 
 import { SITE_URL, GAME_STATS } from "./constants";
 
-export const OG_SIZE = { width: 1200, height: 630 };
+export const OG_SIZE = { height: 630, width: 1200 };
 
 export const OG_ALT =
   "Princeton Tower Defense - Free Browser Tower Defense Game with 26 Levels, 9 Heroes, and 100+ Enemies";
 
 export async function getBaseUrl(): Promise<string> {
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
 
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
 
   try {
     const headersList = await headers();
@@ -29,23 +32,23 @@ export async function getBaseUrl(): Promise<string> {
 
 export async function getOGFonts(baseUrl: string) {
   const [bold, regular] = await Promise.all([
-    fetch(`${baseUrl}/fonts/bc-novatica-cyr/BCNovaticaCyr-Bold.ttf`).then(
-      (r) => r.arrayBuffer(),
+    fetch(`${baseUrl}/fonts/bc-novatica-cyr/BCNovaticaCyr-Bold.ttf`).then((r) =>
+      r.arrayBuffer()
     ),
     fetch(`${baseUrl}/fonts/bc-novatica-cyr/BCNovaticaCyr-Regular.ttf`).then(
-      (r) => r.arrayBuffer(),
+      (r) => r.arrayBuffer()
     ),
   ]);
   return [
     {
-      name: "bc-novatica-cyr",
       data: bold,
+      name: "bc-novatica-cyr",
       style: "normal" as const,
       weight: 700 as const,
     },
     {
-      name: "bc-novatica-cyr",
       data: regular,
+      name: "bc-novatica-cyr",
       style: "normal" as const,
       weight: 400 as const,
     },
@@ -107,10 +110,10 @@ const CORNER_SVG = (
 );
 
 const CORNERS = [
-  { x: 0, y: 0, r: 0 },
-  { x: W - CS, y: 0, r: 90 },
-  { x: W - CS, y: H - CS, r: 180 },
-  { x: 0, y: H - CS, r: 270 },
+  { r: 0, x: 0, y: 0 },
+  { r: 90, x: W - CS, y: 0 },
+  { r: 180, x: W - CS, y: H - CS },
+  { r: 270, x: 0, y: H - CS },
 ] as const;
 
 function renderFrame(): React.ReactElement {
@@ -121,113 +124,113 @@ function renderFrame(): React.ReactElement {
   return (
     <div
       style={{
+        display: "flex",
+        height: H,
+        left: 0,
         position: "absolute",
         top: 0,
-        left: 0,
         width: W,
-        height: H,
-        display: "flex",
       }}
     >
       {/* Outer border */}
       <div
         style={{
+          border: "1.5px solid rgba(180,140,60,0.45)",
+          display: "flex",
+          height: H - 20,
+          left: 10,
           position: "absolute",
           top: 10,
-          left: 10,
           width: W - 20,
-          height: H - 20,
-          display: "flex",
-          border: "1.5px solid rgba(180,140,60,0.45)",
         }}
       />
       {/* Inner border */}
       <div
         style={{
+          border: "1px solid rgba(180,140,60,0.18)",
+          display: "flex",
+          height: H - 32,
+          left: 16,
           position: "absolute",
           top: 16,
-          left: 16,
           width: W - 32,
-          height: H - 32,
-          display: "flex",
-          border: "1px solid rgba(180,140,60,0.18)",
         }}
       />
 
       {/* Top border accent */}
       <div
         style={{
+          background: hLine,
+          display: "flex",
+          height: 2,
+          left: CS,
           position: "absolute",
           top: 10,
-          left: CS,
           width: W - CS * 2,
-          height: 2,
-          display: "flex",
-          background: hLine,
         }}
       />
       {/* Bottom border accent */}
       <div
         style={{
+          background: hLine,
+          display: "flex",
+          height: 2,
+          left: CS,
           position: "absolute",
           top: H - 12,
-          left: CS,
           width: W - CS * 2,
-          height: 2,
-          display: "flex",
-          background: hLine,
         }}
       />
       {/* Left border accent */}
       <div
         style={{
-          position: "absolute",
+          background: vLine,
+          display: "flex",
+          height: H - CS * 2,
           left: 10,
+          position: "absolute",
           top: CS,
           width: 2,
-          height: H - CS * 2,
-          display: "flex",
-          background: vLine,
         }}
       />
       {/* Right border accent */}
       <div
         style={{
-          position: "absolute",
+          background: vLine,
+          display: "flex",
+          height: H - CS * 2,
           left: W - 12,
+          position: "absolute",
           top: CS,
           width: 2,
-          height: H - CS * 2,
-          display: "flex",
-          background: vLine,
         }}
       />
 
       {/* Center diamonds top + bottom */}
       <div
         style={{
-          position: "absolute",
-          top: 3,
-          left: W / 2 - 7,
-          width: 14,
-          height: 14,
-          display: "flex",
-          transform: "rotate(45deg)",
           background: "rgba(212,168,74,0.25)",
           border: `1.5px solid ${FC}`,
+          display: "flex",
+          height: 14,
+          left: W / 2 - 7,
+          position: "absolute",
+          top: 3,
+          transform: "rotate(45deg)",
+          width: 14,
         }}
       />
       <div
         style={{
-          position: "absolute",
-          top: H - 18,
-          left: W / 2 - 7,
-          width: 14,
-          height: 14,
-          display: "flex",
-          transform: "rotate(45deg)",
           background: "rgba(212,168,74,0.25)",
           border: `1.5px solid ${FC}`,
+          display: "flex",
+          height: 14,
+          left: W / 2 - 7,
+          position: "absolute",
+          top: H - 18,
+          transform: "rotate(45deg)",
+          width: 14,
         }}
       />
 
@@ -236,13 +239,13 @@ function renderFrame(): React.ReactElement {
         <div
           key={`${c.x}-${c.y}`}
           style={{
+            display: "flex",
+            height: CS,
+            left: c.x,
             position: "absolute",
             top: c.y,
-            left: c.x,
-            width: CS,
-            height: CS,
-            display: "flex",
             transform: `rotate(${c.r}deg)`,
+            width: CS,
           }}
         >
           {CORNER_SVG}
@@ -257,22 +260,22 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
   const logoUrl = `${baseUrl}/images/og-thumbs/logo.png`;
 
   const stats = [
-    { v: String(GAME_STATS.levels), l: "Levels" },
-    { v: `${GAME_STATS.enemyTypes}+`, l: "Enemies" },
-    { v: String(GAME_STATS.heroes), l: "Heroes" },
-    { v: String(GAME_STATS.towers), l: "Towers" },
+    { l: "Levels", v: String(GAME_STATS.levels) },
+    { l: "Enemies", v: `${GAME_STATS.enemyTypes}+` },
+    { l: "Heroes", v: String(GAME_STATS.heroes) },
+    { l: "Towers", v: String(GAME_STATS.towers) },
   ];
 
   return (
     <div
       style={{
-        width: W,
-        height: H,
-        display: "flex",
-        position: "relative",
-        overflow: "hidden",
         background: "#06060a",
+        display: "flex",
         fontFamily: FONT,
+        height: H,
+        overflow: "hidden",
+        position: "relative",
+        width: W,
       }}
     >
       {/* Background gameplay image */}
@@ -282,34 +285,34 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         width={W}
         height={H}
         alt=""
-        style={{ position: "absolute", top: 0, left: 0, opacity: 0.95 }}
+        style={{ left: 0, opacity: 0.95, position: "absolute", top: 0 }}
       />
 
       {/* Vignette overlay */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: W,
-          height: H,
-          display: "flex",
           background:
             "radial-gradient(ellipse 100% 90% at 50% 45%, rgba(6,6,10,0.1) 0%, rgba(6,6,10,0.65) 80%)",
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: W,
         }}
       />
 
       {/* Dark band behind content for readability */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: W,
-          height: H,
-          display: "flex",
           background:
             "linear-gradient(180deg, rgba(6,6,10,0.5) 0%, rgba(6,6,10,0.35) 30%, rgba(6,6,10,0.2) 50%, rgba(6,6,10,0.4) 70%, rgba(6,6,10,0.7) 100%)",
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: W,
         }}
       />
 
@@ -319,45 +322,45 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
       {/* Content */}
       <div
         style={{
+          alignItems: "center",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          height: "100%",
-          padding: "36px 40px",
           gap: 24,
+          height: "100%",
+          justifyContent: "center",
+          padding: "36px 40px",
           position: "relative",
+          width: "100%",
         }}
       >
         {/* Logo + Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div style={{ alignItems: "center", display: "flex", gap: 24 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} width={100} height={100} alt="" />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{
+                color: "#fbbf24",
                 display: "flex",
+                fontFamily: FONT,
                 fontSize: 72,
                 fontWeight: 700,
-                color: "#fbbf24",
-                lineHeight: 1,
                 letterSpacing: "-0.01em",
-                fontFamily: FONT,
+                lineHeight: 1,
               }}
             >
               PRINCETON
             </div>
             <div
               style={{
+                color: "#e4e4e7",
                 display: "flex",
+                fontFamily: FONT,
                 fontSize: 34,
                 fontWeight: 700,
-                color: "#e4e4e7",
-                lineHeight: 1,
                 letterSpacing: "0.24em",
+                lineHeight: 1,
                 marginTop: 6,
-                fontFamily: FONT,
               }}
             >
               TOWER DEFENSE
@@ -368,24 +371,24 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         {/* Tower sprites row */}
         <div
           style={{
-            display: "flex",
             alignItems: "flex-end",
-            justifyContent: "center",
+            display: "flex",
             gap: 10,
+            justifyContent: "center",
           }}
         >
           {TOWERS.map((tower) => (
             <div
               key={tower}
               style={{
-                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                width: 120,
-                height: 180,
-                borderRadius: 8,
                 background: "rgba(6,6,10,0.5)",
                 border: "1.5px solid rgba(180,140,60,0.3)",
+                borderRadius: 8,
+                display: "flex",
+                height: 180,
+                justifyContent: "center",
+                width: 120,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -403,55 +406,55 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         {/* Stats row */}
         <div
           style={{
+            alignItems: "center",
             display: "flex",
             gap: 8,
-            alignItems: "center",
           }}
         >
           {stats.map((s, i) => (
-            <div key={s.l} style={{ display: "flex", alignItems: "center" }}>
+            <div key={s.l} style={{ alignItems: "center", display: "flex" }}>
               {i > 0 && (
                 <div
                   style={{
-                    display: "flex",
-                    width: 1,
-                    height: 28,
                     background: `${FC}60`,
+                    display: "flex",
+                    height: 28,
                     marginRight: 8,
+                    width: 1,
                   }}
                 />
               )}
               <div
                 style={{
-                  display: "flex",
                   alignItems: "center",
-                  gap: 6,
-                  padding: "6px 14px",
-                  borderRadius: 6,
                   background: "rgba(6,6,10,0.5)",
                   border: "1px solid rgba(180,140,60,0.25)",
+                  borderRadius: 6,
+                  display: "flex",
+                  gap: 6,
+                  padding: "6px 14px",
                 }}
               >
                 <div
                   style={{
+                    color: "#F58025",
                     display: "flex",
+                    fontFamily: FONT,
                     fontSize: 32,
                     fontWeight: 700,
-                    color: "#F58025",
                     lineHeight: 1,
-                    fontFamily: FONT,
                   }}
                 >
                   {s.v}
                 </div>
                 <div
                   style={{
+                    color: "#a1a1aa",
                     display: "flex",
+                    fontFamily: FONT,
                     fontSize: 16,
                     fontWeight: 700,
-                    color: "#a1a1aa",
                     letterSpacing: "0.06em",
-                    fontFamily: FONT,
                   }}
                 >
                   {s.l}
@@ -464,12 +467,12 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         {/* CTA */}
         <div
           style={{
+            color: "#fbbf24",
             display: "flex",
+            fontFamily: FONT,
             fontSize: 18,
             fontWeight: 700,
-            color: "#fbbf24",
             letterSpacing: "0.3em",
-            fontFamily: FONT,
           }}
         >
           FREE BROWSER GAME · PLAY NOW

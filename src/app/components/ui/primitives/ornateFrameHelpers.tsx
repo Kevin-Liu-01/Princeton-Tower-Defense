@@ -31,7 +31,15 @@ export function heroFrameElements(options: FrameOpts): React.ReactElement[] {
   const dashLength = Math.max(6, outerR * 0.22);
 
   const elements: React.ReactElement[] = [
-    <circle key={`${prefix}or`} cx={cx} cy={cx} r={outerR} fill="none" stroke={color} strokeWidth={ringWidth} />,
+    <circle
+      key={`${prefix}or`}
+      cx={cx}
+      cy={cx}
+      r={outerR}
+      fill="none"
+      stroke={color}
+      strokeWidth={ringWidth}
+    />,
     <circle
       key={`${prefix}ir`}
       cx={cx}
@@ -68,7 +76,7 @@ export function heroFrameElements(options: FrameOpts): React.ReactElement[] {
         strokeLinejoin="round"
         strokeLinecap="round"
         filter={glowFilter}
-      />,
+      />
     );
   }
 
@@ -81,7 +89,7 @@ export function heroFrameElements(options: FrameOpts): React.ReactElement[] {
         cy={fix(cx + outerR * Math.sin(radians))}
         r={studRadius}
         fill={dimColor}
-      />,
+      />
     );
   }
 
@@ -126,7 +134,7 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
         stroke={dimColor}
         strokeWidth={0.4}
         strokeLinecap="round"
-      />,
+      />
     );
   }
 
@@ -136,9 +144,25 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
     const pointY = cx + outerR * Math.sin(radians);
     elements.push(
       <g key={`${prefix}sk${degree}`} filter={glowFilter}>
-        <line x1={fix(pointX - starArm)} y1={fix(pointY)} x2={fix(pointX + starArm)} y2={fix(pointY)} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
-        <line x1={fix(pointX)} y1={fix(pointY - starArm)} x2={fix(pointX)} y2={fix(pointY + starArm)} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
-      </g>,
+        <line
+          x1={fix(pointX - starArm)}
+          y1={fix(pointY)}
+          x2={fix(pointX + starArm)}
+          y2={fix(pointY)}
+          stroke={color}
+          strokeWidth={starWidth}
+          strokeLinecap="round"
+        />
+        <line
+          x1={fix(pointX)}
+          y1={fix(pointY - starArm)}
+          x2={fix(pointX)}
+          y2={fix(pointY + starArm)}
+          stroke={color}
+          strokeWidth={starWidth}
+          strokeLinecap="round"
+        />
+      </g>
     );
   }
 
@@ -154,7 +178,7 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
         points={`${pxStr},${fix(pointY - triangleSize)} ${fix(pointX + triangleSize * 0.8)},${fix(pointY + triangleSize * 0.5)} ${fix(pointX - triangleSize * 0.8)},${fix(pointY + triangleSize * 0.5)}`}
         fill={dimColor}
         transform={`rotate(${degree} ${pxStr} ${pyStr})`}
-      />,
+      />
     );
   }
 

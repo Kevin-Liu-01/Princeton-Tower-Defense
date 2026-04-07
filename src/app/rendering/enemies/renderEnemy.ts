@@ -1,4 +1,3 @@
-import type { Enemy, EnemyType, Position, MapTheme } from "../../types";
 import {
   ENEMY_DATA,
   ISO_Y_RATIO,
@@ -7,6 +6,7 @@ import {
   ENEMY_REGEN_DELAY_MS,
   getEnemyNativeRegion,
 } from "../../constants";
+import type { Enemy, EnemyType, Position, MapTheme } from "../../types";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -14,15 +14,13 @@ import {
   lightenColor,
   darkenColor,
 } from "../../utils";
-import {
-  renderInspectIndicator,
-  type InspectRenderPass,
-} from "../effects/inspectIndicator";
-import { renderEnemyAttackEffect } from "./attackEffects";
-import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
+import { renderInspectIndicator } from "../effects/inspectIndicator";
+import type { InspectRenderPass } from "../effects/inspectIndicator";
 import { getPerformanceSettings } from "../performance";
+import { renderEnemyAttackEffect } from "./attackEffects";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
 import { getRegionalPalette } from "./regionColors";
+import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
 
 const mapThemeCache = new Map<string, MapTheme>();
 
@@ -55,9 +53,9 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   skeleton_footman: 1.8,
   skeleton_knight: 1.85,
   skeleton_archer: 1.75,
-  skeleton_king: 2.0,
+  skeleton_king: 2,
   zombie_shambler: 1.8,
-  zombie_brute: 2.0,
+  zombie_brute: 2,
   zombie_spitter: 1.8,
   ghoul: 1.8,
   dark_knight: 1.9,
@@ -66,7 +64,7 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   fallen_paladin: 1.9,
   black_guard: 1.85,
   lich: 1.85,
-  wraith: 2.0,
+  wraith: 2,
   bone_mage: 1.8,
   dark_priest: 1.85,
   revenant: 1.9,
@@ -132,13 +130,19 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
 
 function getMapTheme(selectedMap: string): MapTheme {
   const cached = mapThemeCache.get(selectedMap);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
   const levelData = LEVEL_DATA[selectedMap];
   const theme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
   mapThemeCache.set(selectedMap, theme);
   return theme;
 }
 
+import {
+  getAbilityActivationPhase,
+  renderAbilityActivation,
+} from "./abilityEffects";
 import {
   drawFreshmanEnemy,
   drawSophomoreEnemy,
@@ -148,52 +152,25 @@ import {
   drawProfessorEnemy,
   drawDeanEnemy,
 } from "./academic";
-import { drawMascotEnemy, drawDefaultEnemy, drawTrusteeEnemy } from "./special";
 import {
-  drawArcherEnemy,
-  drawMageEnemy,
-  drawCatapultEnemy,
-  drawWarlockEnemy,
-  drawCrossbowmanEnemy,
-  drawHexerEnemy,
-} from "./ranged";
-import { drawHarpyEnemy, drawWyvernEnemy } from "./flying";
-import {
-  drawSpecterEnemy,
-  drawBerserkerEnemy,
-  drawGolemEnemy,
-  drawNecromancerEnemy,
-  drawShadowKnightEnemy,
-  drawCultistEnemy,
-  drawPlaguebearerEnemy,
-} from "./undead";
-import {
-  drawThornwalkerEnemy,
-  drawSandwormEnemy,
-  drawFrostlingEnemy,
-  drawInfernalEnemy,
-  drawBansheeEnemy,
-  drawJuggernautEnemy,
-  drawAssassinEnemy,
-  drawDragonEnemy,
-} from "./elemental";
-import { drawAthleteEnemy, drawTigerFanEnemy } from "./forest";
-import {
-  drawBogCreatureEnemy,
-  drawWillOWispEnemy,
-  drawSwampTrollEnemy,
-} from "./swamp";
-import { drawNomadEnemy, drawScorpionEnemy, drawScarabEnemy } from "./desert";
-import {
-  drawSnowGoblinEnemy,
-  drawYetiEnemy,
-  drawIceWitchEnemy,
-} from "./winter";
-import {
-  drawMagmaSpawnEnemy,
-  drawFireImpEnemy,
-  drawEmberGuardEnemy,
-} from "./volcanic";
+  drawOrbWeaverEnemy,
+  drawMantisEnemy,
+  drawBombardierBeetleEnemy,
+  drawMosquitoEnemy,
+  drawCentipedeEnemy,
+  drawDragonflyEnemy,
+  drawSilkMothEnemy,
+  drawAntSoldierEnemy,
+  drawLocustEnemy,
+  drawTrapdoorSpiderEnemy,
+  drawIceBeetleEnemy,
+  drawFrostTickEnemy,
+  drawSnowMothEnemy,
+  drawFireAntEnemy,
+  drawMagmaBeetleEnemy,
+  drawAshMothEnemy,
+  drawBroodMotherEnemy,
+} from "./bugs";
 import {
   drawSkeletonFootmanEnemy,
   drawSkeletonKnightEnemy,
@@ -218,32 +195,17 @@ import {
   drawHellhoundEnemy,
   drawDoomHeraldEnemy,
 } from "./darkfantasyB";
+import { drawNomadEnemy, drawScorpionEnemy, drawScarabEnemy } from "./desert";
 import {
-  drawTitanOfNassauEnemy,
-  drawSwampLeviathanEnemy,
-  drawSphinxGuardianEnemy,
-  drawFrostColossusEnemy,
-  drawInfernoWyrmEnemy,
-} from "./regionbosses";
-import {
-  drawOrbWeaverEnemy,
-  drawMantisEnemy,
-  drawBombardierBeetleEnemy,
-  drawMosquitoEnemy,
-  drawCentipedeEnemy,
-  drawDragonflyEnemy,
-  drawSilkMothEnemy,
-  drawAntSoldierEnemy,
-  drawLocustEnemy,
-  drawTrapdoorSpiderEnemy,
-  drawIceBeetleEnemy,
-  drawFrostTickEnemy,
-  drawSnowMothEnemy,
-  drawFireAntEnemy,
-  drawMagmaBeetleEnemy,
-  drawAshMothEnemy,
-  drawBroodMotherEnemy,
-} from "./bugs";
+  drawThornwalkerEnemy,
+  drawSandwormEnemy,
+  drawFrostlingEnemy,
+  drawInfernalEnemy,
+  drawBansheeEnemy,
+  drawJuggernautEnemy,
+  drawAssassinEnemy,
+  drawDragonEnemy,
+} from "./elemental";
 import {
   drawDireBearEnemy,
   drawAncientEntEnemy,
@@ -266,10 +228,48 @@ import {
   drawVolcanicDrakeEnemy,
   drawSalamanderEnemy,
 } from "./fantasy";
+import { drawHarpyEnemy, drawWyvernEnemy } from "./flying";
+import { drawAthleteEnemy, drawTigerFanEnemy } from "./forest";
 import {
-  getAbilityActivationPhase,
-  renderAbilityActivation,
-} from "./abilityEffects";
+  drawArcherEnemy,
+  drawMageEnemy,
+  drawCatapultEnemy,
+  drawWarlockEnemy,
+  drawCrossbowmanEnemy,
+  drawHexerEnemy,
+} from "./ranged";
+import {
+  drawTitanOfNassauEnemy,
+  drawSwampLeviathanEnemy,
+  drawSphinxGuardianEnemy,
+  drawFrostColossusEnemy,
+  drawInfernoWyrmEnemy,
+} from "./regionbosses";
+import { drawMascotEnemy, drawDefaultEnemy, drawTrusteeEnemy } from "./special";
+import {
+  drawBogCreatureEnemy,
+  drawWillOWispEnemy,
+  drawSwampTrollEnemy,
+} from "./swamp";
+import {
+  drawSpecterEnemy,
+  drawBerserkerEnemy,
+  drawGolemEnemy,
+  drawNecromancerEnemy,
+  drawShadowKnightEnemy,
+  drawCultistEnemy,
+  drawPlaguebearerEnemy,
+} from "./undead";
+import {
+  drawMagmaSpawnEnemy,
+  drawFireImpEnemy,
+  drawEmberGuardEnemy,
+} from "./volcanic";
+import {
+  drawSnowGoblinEnemy,
+  drawYetiEnemy,
+  drawIceWitchEnemy,
+} from "./winter";
 
 const RIGHT_FACING_ENEMY_SPRITES = new Set([
   "catapult",
@@ -291,7 +291,7 @@ export function renderEnemy(
   selectedMap: string,
   cameraOffset?: Position,
   cameraZoom?: number,
-  enemyDensityHint: number = 0,
+  enemyDensityHint: number = 0
 ) {
   const pathKey = enemy.pathKey || selectedMap;
   const worldPos = getEnemyPosition(enemy, pathKey);
@@ -301,14 +301,16 @@ export function renderEnemy(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const eData = ENEMY_DATA[enemy.type];
   const now = Date.now();
   const time = now / 1000;
   const spawnAlpha = Math.min(1, enemy.spawnProgress);
-  if (spawnAlpha <= 0) return;
+  if (spawnAlpha <= 0) {
+    return;
+  }
 
   ctx.save();
   ctx.globalAlpha = spawnAlpha;
@@ -334,7 +336,7 @@ export function renderEnemy(
     size * 0.6 * ISO_Y_RATIO,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -346,7 +348,7 @@ export function renderEnemy(
   const lastAttackTime = Math.max(
     enemy.lastTroopAttack || 0,
     enemy.lastHeroAttack || 0,
-    enemy.lastRangedAttack || 0,
+    enemy.lastRangedAttack || 0
   );
   const timeSinceAttack = now - lastAttackTime;
   const attackPhase =
@@ -371,7 +373,7 @@ export function renderEnemy(
   ctx.translate(screenPos.x, drawY);
   ctx.scale(
     attackScalePulse * hurtScalePulse * facingFlip,
-    attackScalePulse * hurtScalePulse,
+    attackScalePulse * hurtScalePulse
   );
   ctx.translate(-screenPos.x, -drawY);
 
@@ -393,7 +395,7 @@ export function renderEnemy(
     isFlying,
     zoom,
     attackPhase,
-    region,
+    region
   );
 
   if (damageFlashIntensity > 0) {
@@ -414,7 +416,7 @@ export function renderEnemy(
       size * 0.38,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     {
@@ -433,7 +435,7 @@ export function renderEnemy(
         size * 0.42,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -453,7 +455,7 @@ export function renderEnemy(
       0,
       screenPos.x,
       drawY,
-      size * 0.6,
+      size * 0.6
     );
     regenGrad.addColorStop(0, `rgba(50, 255, 100, ${regenPulse * 0.25})`);
     regenGrad.addColorStop(0.5, `rgba(30, 200, 80, ${regenPulse * 0.15})`);
@@ -473,7 +475,7 @@ export function renderEnemy(
         sparkY,
         2 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -498,7 +500,7 @@ export function renderEnemy(
       zoom,
       isFlying,
       eData.color,
-      enemy.pathIndex,
+      enemy.pathIndex
     );
     if (spriteReversed) {
       ctx.restore();
@@ -519,7 +521,7 @@ export function renderEnemy(
         zoom,
         enemy.lastAbilityType,
         abilityPhase,
-        time,
+        time
       );
     }
   }
@@ -529,12 +531,28 @@ export function renderEnemy(
     const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
     ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.85,
+      size * 0.85 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.65,
+      size * 0.65 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Animated frost ring
@@ -545,7 +563,15 @@ export function renderEnemy(
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([5 * zoom, 3 * zoom]);
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      0,
+      0,
+      size * 0.78,
+      size * 0.78 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -579,7 +605,8 @@ export function renderEnemy(
       const pAngle = time * 1.5 + i * 1.26;
       const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
       const px = screenPos.x + Math.cos(pAngle) * pDist;
-      const py = drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
+      const py =
+        drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
       const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
       ctx.fillStyle = `rgba(220, 245, 255, ${moteAlpha})`;
       ctx.beginPath();
@@ -595,41 +622,84 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY + size * 0.05,
+      size * 0.5,
+      size * 0.5 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
 
     // Flames — always full quality with 3 layers
     const flameCount = 5;
     for (let i = 0; i < flameCount; i++) {
       const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
-      const flameX = screenPos.x + flameOffset + (i - Math.floor(flameCount / 2)) * size * 0.1;
+      const flameX =
+        screenPos.x +
+        flameOffset +
+        (i - Math.floor(flameCount / 2)) * size * 0.1;
       const baseY = drawY - size * 0.1;
-      const flameHeight = (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
-      const flameWidth = (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
+      const flameHeight =
+        (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
+      const flameWidth =
+        (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
       const flicker = Math.sin(time * 12 + i * 3) * 0.12;
 
       // Outer dark-red layer
       ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY - flameHeight);
-      ctx.quadraticCurveTo(flameX + flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 1.1,
+        baseY - flameHeight * 0.45,
+        flameX,
+        baseY - flameHeight
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 1.1,
+        baseY - flameHeight * 0.45,
+        flameX,
+        baseY
+      );
       ctx.fill();
 
       // Mid orange layer
       ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY - flameHeight * 0.75);
-      ctx.quadraticCurveTo(flameX + flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 0.7,
+        baseY - flameHeight * 0.4,
+        flameX,
+        baseY - flameHeight * 0.75
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 0.7,
+        baseY - flameHeight * 0.4,
+        flameX,
+        baseY
+      );
       ctx.fill();
 
       // Bright inner core
       ctx.fillStyle = `rgba(255, 230, 140, ${0.8 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY - flameHeight * 0.5);
-      ctx.quadraticCurveTo(flameX + flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 0.35,
+        baseY - flameHeight * 0.3,
+        flameX,
+        baseY - flameHeight * 0.5
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 0.35,
+        baseY - flameHeight * 0.3,
+        flameX,
+        baseY
+      );
       ctx.fill();
     }
 
@@ -639,7 +709,7 @@ export function renderEnemy(
       const emberPhase = (time * 2.5 + i * 0.35) % 1;
       const drift = Math.sin(time * 3 + i * 2.2) * size * 0.35;
       const emberX = screenPos.x + drift;
-      const emberY = drawY - size * 0.15 - emberPhase * size * 1.0;
+      const emberY = drawY - size * 0.15 - emberPhase * size * 1;
       const emberSize = (1.8 - emberPhase * 1.2) * zoom;
       const emberAlpha = (1 - emberPhase) * 0.85;
 
@@ -663,12 +733,27 @@ export function renderEnemy(
     const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
 
     // Radial aura glow
-    const auraGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
+    const auraGrad = ctx.createRadialGradient(
+      screenPos.x,
+      drawY,
+      0,
+      screenPos.x,
+      drawY,
+      size * 0.9
+    );
     auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
     auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
     ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.9,
+      size * 0.9 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Inner pulsing ring
@@ -676,7 +761,15 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      innerPulse,
+      innerPulse * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
 
     // Animated outer ring (rotating dashed stroke)
@@ -758,7 +851,7 @@ export function renderEnemy(
       concussionR * 0.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -769,7 +862,7 @@ export function renderEnemy(
       0,
       screenPos.x,
       drawY - size * 0.65,
-      size * 0.35,
+      size * 0.35
     );
     dazeGrad.addColorStop(0, `rgba(255, 255, 150, ${0.2 * stunPulse})`);
     dazeGrad.addColorStop(1, "rgba(255, 240, 80, 0)");
@@ -854,7 +947,7 @@ export function renderEnemy(
     const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
     const remainingRatio = Math.max(
       0.35,
-      Math.min(1, (enemy.hexWardUntil - now) / 4000),
+      Math.min(1, (enemy.hexWardUntil - now) / 4000)
     );
 
     const hexGlow = ctx.createRadialGradient(
@@ -863,7 +956,7 @@ export function renderEnemy(
       0,
       screenPos.x,
       drawY,
-      size * 0.95,
+      size * 0.95
     );
     hexGlow.addColorStop(0, `rgba(168, 85, 247, ${0.18 * cursePulse})`);
     hexGlow.addColorStop(0.55, `rgba(147, 51, 234, ${0.12 * remainingRatio})`);
@@ -877,7 +970,7 @@ export function renderEnemy(
       size * 0.92 * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -891,8 +984,11 @@ export function renderEnemy(
       const angle = -Math.PI / 2 + (i * Math.PI) / 3;
       const px = Math.cos(angle) * size * 0.78;
       const py = Math.sin(angle) * size * 0.52;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -936,7 +1032,7 @@ export function renderEnemy(
   if (enemy.goldAura) {
     for (let i = 0; i < 5; i++) {
       const coinAngle = time * 2.5 + (i * Math.PI * 2) / 5;
-      const coinOrbitX = Math.cos(coinAngle) * size * 1.0;
+      const coinOrbitX = Math.cos(coinAngle) * size * 1;
       const coinOrbitY = Math.sin(coinAngle) * size * ISO_Y_RATIO;
       const coinFloat = Math.sin(time * 4 + i * 1.2) * 6 * zoom;
       const coinX = screenPos.x + coinOrbitX;
@@ -957,7 +1053,7 @@ export function renderEnemy(
         coinSize * 0.25,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -984,7 +1080,7 @@ export function renderEnemy(
       size * 0.9 * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -994,7 +1090,7 @@ export function renderEnemy(
     const channelElapsed = now - enemy.summonStartTime;
     const channelProgress = Math.min(
       1,
-      channelElapsed / SUMMON_CHANNEL_DURATION,
+      channelElapsed / SUMMON_CHANNEL_DURATION
     );
     const summonColor = eData.color || "#7722cc";
     const ritualRadius = size * (0.8 + channelProgress * 0.6);
@@ -1017,7 +1113,7 @@ export function renderEnemy(
       ritualRadius * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -1038,7 +1134,7 @@ export function renderEnemy(
       ritualRadius * pulseScale * ISO_Y_RATIO,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -1056,7 +1152,7 @@ export function renderEnemy(
         ry,
         2.5 * zoom * (0.7 + channelProgress * 0.3),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1069,7 +1165,7 @@ export function renderEnemy(
         screenPos.x,
         drawY,
         screenPos.x,
-        drawY - columnHeight,
+        drawY - columnHeight
       );
       colGrad.addColorStop(0, summonColor);
       colGrad.addColorStop(1, "transparent");
@@ -1083,7 +1179,7 @@ export function renderEnemy(
         columnHeight,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1098,7 +1194,7 @@ export function renderEnemy(
     getPerformanceSettings().showHealthBars &&
     (enemy.hp < enemy.maxHp || eData.armor > 0)
   ) {
-    const drawScale = ENEMY_DRAW_SCALE[enemy.type] ?? 1.0;
+    const drawScale = ENEMY_DRAW_SCALE[enemy.type] ?? 1;
     const barHeightMul = Math.max(1.3, drawScale * 0.85 + 0.15);
     const barWidth = size * 1.4 * Math.max(1, drawScale * 0.65);
     const barHeight = 6 * zoom;
@@ -1114,7 +1210,7 @@ export function renderEnemy(
       barY - 2,
       barWidth + 4,
       barHeight + 4,
-      cornerRadius + 1,
+      cornerRadius + 1
     );
     ctx.fill();
 
@@ -1125,7 +1221,7 @@ export function renderEnemy(
       barY - 1,
       barWidth + 2,
       barHeight + 2,
-      cornerRadius,
+      cornerRadius
     );
     ctx.fill();
 
@@ -1146,7 +1242,7 @@ export function renderEnemy(
         barX,
         barY,
         barX,
-        barY + barHeight,
+        barY + barHeight
       );
       if (hpPercent > 0.5) {
         hpGradient.addColorStop(0, "#f87171");
@@ -1178,7 +1274,7 @@ export function renderEnemy(
         barX,
         barY,
         barX,
-        barY + barHeight * 0.4,
+        barY + barHeight * 0.4
       );
       shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.25)");
       shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
@@ -1199,7 +1295,7 @@ export function renderEnemy(
         armorStartX,
         barY,
         armorStartX,
-        barY + barHeight,
+        barY + barHeight
       );
       armorGrad.addColorStop(0, "#f5f5f4");
       armorGrad.addColorStop(0.3, "#e7e5e4");
@@ -1221,7 +1317,7 @@ export function renderEnemy(
         armorStartX,
         barY,
         armorStartX,
-        barY + barHeight * 0.4,
+        barY + barHeight * 0.4
       );
       armorShine.addColorStop(0, "rgba(255, 255, 255, 0.6)");
       armorShine.addColorStop(1, "rgba(255, 255, 255, 0.1)");
@@ -1251,7 +1347,7 @@ export function renderEnemy(
       barY - 1,
       barWidth + 2,
       barHeight + 2,
-      cornerRadius,
+      cornerRadius
     );
     ctx.stroke();
   }
@@ -1270,7 +1366,7 @@ export function renderEnemyInspectIndicator(
   isHovered: boolean,
   cameraOffset?: Position,
   cameraZoom?: number,
-  renderPass: InspectRenderPass = "all",
+  renderPass: InspectRenderPass = "all"
 ) {
   const pathKey = enemy.pathKey || selectedMap;
   const worldPos = getEnemyPosition(enemy, pathKey);
@@ -1280,13 +1376,13 @@ export function renderEnemyInspectIndicator(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const zoom = cameraZoom || 1;
   const eData = ENEMY_DATA[enemy.type];
   const time = Date.now() / 1000;
 
-  const size = eData.size;
+  const { size } = eData;
   const sizeZoomed = size * zoom;
   const isFlying = eData.flying;
   const floatOffset = isFlying ? Math.sin(time * 3) * 10 * zoom : 0;
@@ -1299,14 +1395,14 @@ export function renderEnemyInspectIndicator(
     (isFlying ? 35 * zoom : 0);
 
   renderInspectIndicator(ctx, {
-    screenPos,
     drawY,
-    zoom,
-    unitSize: size,
-    isSelected,
     isHovered,
-    unitType: "enemy",
+    isSelected,
     renderPass,
+    screenPos,
+    unitSize: size,
+    unitType: "enemy",
+    zoom,
   });
 }
 
@@ -1322,9 +1418,11 @@ export function drawEnemySprite(
   isFlying: boolean,
   zoom: number,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
-  if (size <= 0 || zoom <= 0) return;
+  if (size <= 0 || zoom <= 0) {
+    return;
+  }
   const nativeRegion = getEnemyNativeRegion(type as EnemyType);
   const paletteRegion =
     nativeRegion != null ? ("grassland" as MapTheme) : region;
@@ -1337,7 +1435,7 @@ export function drawEnemySprite(
       flashBase,
       paletteRegion,
       darkenColor,
-      lightenColor,
+      lightenColor
     );
     bodyColor = palette.color;
     bodyColorDark = palette.dark;
@@ -1347,7 +1445,7 @@ export function drawEnemySprite(
       color,
       paletteRegion,
       darkenColor,
-      lightenColor,
+      lightenColor
     );
     bodyColor = palette.color;
     bodyColorDark = palette.dark;
@@ -1355,7 +1453,7 @@ export function drawEnemySprite(
   }
 
   switch (type) {
-    case "frosh":
+    case "frosh": {
       drawFreshmanEnemy(
         ctx,
         x,
@@ -1367,10 +1465,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "sophomore":
+    }
+    case "sophomore": {
       drawSophomoreEnemy(
         ctx,
         x,
@@ -1382,10 +1481,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "junior":
+    }
+    case "junior": {
       drawJuniorEnemy(
         ctx,
         x,
@@ -1397,10 +1497,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "senior":
+    }
+    case "senior": {
       drawSeniorEnemy(
         ctx,
         x,
@@ -1412,10 +1513,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "gradstudent":
+    }
+    case "gradstudent": {
       drawGradStudentEnemy(
         ctx,
         x,
@@ -1427,10 +1529,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "professor":
+    }
+    case "professor": {
       drawProfessorEnemy(
         ctx,
         x,
@@ -1441,10 +1544,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dean":
+    }
+    case "dean": {
       drawDeanEnemy(
         ctx,
         x,
@@ -1455,10 +1559,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "trustee":
+    }
+    case "trustee": {
       drawTrusteeEnemy(
         ctx,
         x,
@@ -1469,10 +1574,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "mascot":
+    }
+    case "mascot": {
       drawMascotEnemy(
         ctx,
         x,
@@ -1485,10 +1591,11 @@ export function drawEnemySprite(
         zoom,
         isFlying,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "archer":
+    }
+    case "archer": {
       drawArcherEnemy(
         ctx,
         x,
@@ -1500,10 +1607,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "mage":
+    }
+    case "mage": {
       drawMageEnemy(
         ctx,
         x,
@@ -1515,10 +1623,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "catapult":
+    }
+    case "catapult": {
       drawCatapultEnemy(
         ctx,
         x,
@@ -1529,10 +1638,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "warlock":
+    }
+    case "warlock": {
       drawWarlockEnemy(
         ctx,
         x,
@@ -1544,10 +1654,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "crossbowman":
+    }
+    case "crossbowman": {
       drawCrossbowmanEnemy(
         ctx,
         x,
@@ -1559,10 +1670,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "hexer":
+    }
+    case "hexer": {
       drawHexerEnemy(
         ctx,
         x,
@@ -1574,10 +1686,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "harpy":
+    }
+    case "harpy": {
       drawHarpyEnemy(
         ctx,
         x,
@@ -1589,10 +1702,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "wyvern":
+    }
+    case "wyvern": {
       drawWyvernEnemy(
         ctx,
         x,
@@ -1604,10 +1718,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "specter":
+    }
+    case "specter": {
       drawSpecterEnemy(
         ctx,
         x,
@@ -1619,10 +1734,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "berserker":
+    }
+    case "berserker": {
       drawBerserkerEnemy(
         ctx,
         x,
@@ -1634,10 +1750,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "golem":
+    }
+    case "golem": {
       drawGolemEnemy(
         ctx,
         x,
@@ -1648,10 +1765,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "necromancer":
+    }
+    case "necromancer": {
       drawNecromancerEnemy(
         ctx,
         x,
@@ -1663,10 +1781,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "shadow_knight":
+    }
+    case "shadow_knight": {
       drawShadowKnightEnemy(
         ctx,
         x,
@@ -1678,10 +1797,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "cultist":
+    }
+    case "cultist": {
       drawCultistEnemy(
         ctx,
         x,
@@ -1693,10 +1813,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "plaguebearer":
+    }
+    case "plaguebearer": {
       drawPlaguebearerEnemy(
         ctx,
         x,
@@ -1708,10 +1829,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "thornwalker":
+    }
+    case "thornwalker": {
       drawThornwalkerEnemy(
         ctx,
         x,
@@ -1722,10 +1844,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "sandworm":
+    }
+    case "sandworm": {
       drawSandwormEnemy(
         ctx,
         x,
@@ -1736,10 +1859,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "frostling":
+    }
+    case "frostling": {
       drawFrostlingEnemy(
         ctx,
         x,
@@ -1750,10 +1874,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "infernal":
+    }
+    case "infernal": {
       drawInfernalEnemy(
         ctx,
         x,
@@ -1765,10 +1890,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "banshee":
+    }
+    case "banshee": {
       drawBansheeEnemy(
         ctx,
         x,
@@ -1780,10 +1906,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "juggernaut":
+    }
+    case "juggernaut": {
       drawJuggernautEnemy(
         ctx,
         x,
@@ -1794,10 +1921,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "assassin":
+    }
+    case "assassin": {
       drawAssassinEnemy(
         ctx,
         x,
@@ -1809,10 +1937,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "dragon":
+    }
+    case "dragon": {
       drawDragonEnemy(
         ctx,
         x,
@@ -1823,10 +1952,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "athlete":
+    }
+    case "athlete": {
       drawAthleteEnemy(
         ctx,
         x,
@@ -1838,10 +1968,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "tiger_fan":
+    }
+    case "tiger_fan": {
       drawTigerFanEnemy(
         ctx,
         x,
@@ -1853,10 +1984,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "bog_creature":
+    }
+    case "bog_creature": {
       drawBogCreatureEnemy(
         ctx,
         x,
@@ -1867,10 +1999,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "will_o_wisp":
+    }
+    case "will_o_wisp": {
       drawWillOWispEnemy(
         ctx,
         x,
@@ -1881,10 +2014,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "swamp_troll":
+    }
+    case "swamp_troll": {
       drawSwampTrollEnemy(
         ctx,
         x,
@@ -1895,10 +2029,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "nomad":
+    }
+    case "nomad": {
       drawNomadEnemy(
         ctx,
         x,
@@ -1909,10 +2044,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "scorpion":
+    }
+    case "scorpion": {
       drawScorpionEnemy(
         ctx,
         x,
@@ -1923,10 +2059,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "scarab":
+    }
+    case "scarab": {
       drawScarabEnemy(
         ctx,
         x,
@@ -1937,10 +2074,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "snow_goblin":
+    }
+    case "snow_goblin": {
       drawSnowGoblinEnemy(
         ctx,
         x,
@@ -1951,10 +2089,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "yeti":
+    }
+    case "yeti": {
       drawYetiEnemy(
         ctx,
         x,
@@ -1965,10 +2104,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ice_witch":
+    }
+    case "ice_witch": {
       drawIceWitchEnemy(
         ctx,
         x,
@@ -1979,10 +2119,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "magma_spawn":
+    }
+    case "magma_spawn": {
       drawMagmaSpawnEnemy(
         ctx,
         x,
@@ -1993,10 +2134,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "fire_imp":
+    }
+    case "fire_imp": {
       drawFireImpEnemy(
         ctx,
         x,
@@ -2007,10 +2149,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ember_guard":
+    }
+    case "ember_guard": {
       drawEmberGuardEnemy(
         ctx,
         x,
@@ -2021,10 +2164,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "skeleton_footman":
+    }
+    case "skeleton_footman": {
       drawSkeletonFootmanEnemy(
         ctx,
         x,
@@ -2035,10 +2179,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "skeleton_knight":
+    }
+    case "skeleton_knight": {
       drawSkeletonKnightEnemy(
         ctx,
         x,
@@ -2049,10 +2194,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "skeleton_archer":
+    }
+    case "skeleton_archer": {
       drawSkeletonArcherEnemy(
         ctx,
         x,
@@ -2063,10 +2209,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "skeleton_king":
+    }
+    case "skeleton_king": {
       drawSkeletonKingEnemy(
         ctx,
         x,
@@ -2077,10 +2224,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "zombie_shambler":
+    }
+    case "zombie_shambler": {
       drawZombieShamblerEnemy(
         ctx,
         x,
@@ -2091,10 +2239,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "zombie_brute":
+    }
+    case "zombie_brute": {
       drawZombieBruteEnemy(
         ctx,
         x,
@@ -2105,10 +2254,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "zombie_spitter":
+    }
+    case "zombie_spitter": {
       drawZombieSpitterEnemy(
         ctx,
         x,
@@ -2119,10 +2269,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ghoul":
+    }
+    case "ghoul": {
       drawGhoulEnemy(
         ctx,
         x,
@@ -2133,10 +2284,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dark_knight":
+    }
+    case "dark_knight": {
       drawDarkKnightEnemy(
         ctx,
         x,
@@ -2147,10 +2299,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "death_knight":
+    }
+    case "death_knight": {
       drawDeathKnightEnemy(
         ctx,
         x,
@@ -2161,10 +2314,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "fallen_paladin":
+    }
+    case "fallen_paladin": {
       drawFallenPaladinEnemy(
         ctx,
         x,
@@ -2175,10 +2329,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "black_guard":
+    }
+    case "black_guard": {
       drawBlackGuardEnemy(
         ctx,
         x,
@@ -2189,10 +2344,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "lich":
+    }
+    case "lich": {
       drawLichEnemy(
         ctx,
         x,
@@ -2203,10 +2359,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "wraith":
+    }
+    case "wraith": {
       drawWraithEnemy(
         ctx,
         x,
@@ -2217,10 +2374,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "bone_mage":
+    }
+    case "bone_mage": {
       drawBoneMageEnemy(
         ctx,
         x,
@@ -2231,10 +2389,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dark_priest":
+    }
+    case "dark_priest": {
       drawDarkPriestEnemy(
         ctx,
         x,
@@ -2245,10 +2404,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "revenant":
+    }
+    case "revenant": {
       drawRevenantEnemy(
         ctx,
         x,
@@ -2259,10 +2419,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "abomination":
+    }
+    case "abomination": {
       drawAbominationEnemy(
         ctx,
         x,
@@ -2273,10 +2434,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "hellhound":
+    }
+    case "hellhound": {
       drawHellhoundEnemy(
         ctx,
         x,
@@ -2287,10 +2449,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "doom_herald":
+    }
+    case "doom_herald": {
       drawDoomHeraldEnemy(
         ctx,
         x,
@@ -2301,10 +2464,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "titan_of_nassau":
+    }
+    case "titan_of_nassau": {
       drawTitanOfNassauEnemy(
         ctx,
         x,
@@ -2315,10 +2479,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "swamp_leviathan":
+    }
+    case "swamp_leviathan": {
       drawSwampLeviathanEnemy(
         ctx,
         x,
@@ -2329,10 +2494,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "sphinx_guardian":
+    }
+    case "sphinx_guardian": {
       drawSphinxGuardianEnemy(
         ctx,
         x,
@@ -2343,10 +2509,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "frost_colossus":
+    }
+    case "frost_colossus": {
       drawFrostColossusEnemy(
         ctx,
         x,
@@ -2357,10 +2524,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "inferno_wyrm":
+    }
+    case "inferno_wyrm": {
       drawInfernoWyrmEnemy(
         ctx,
         x,
@@ -2371,10 +2539,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "orb_weaver":
+    }
+    case "orb_weaver": {
       drawOrbWeaverEnemy(
         ctx,
         x,
@@ -2385,10 +2554,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "mantis":
+    }
+    case "mantis": {
       drawMantisEnemy(
         ctx,
         x,
@@ -2399,10 +2569,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "bombardier_beetle":
+    }
+    case "bombardier_beetle": {
       drawBombardierBeetleEnemy(
         ctx,
         x,
@@ -2413,10 +2584,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "mosquito":
+    }
+    case "mosquito": {
       drawMosquitoEnemy(
         ctx,
         x,
@@ -2427,10 +2599,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "centipede":
+    }
+    case "centipede": {
       drawCentipedeEnemy(
         ctx,
         x,
@@ -2441,10 +2614,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dragonfly":
+    }
+    case "dragonfly": {
       drawDragonflyEnemy(
         ctx,
         x,
@@ -2455,10 +2629,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "silk_moth":
+    }
+    case "silk_moth": {
       drawSilkMothEnemy(
         ctx,
         x,
@@ -2469,10 +2644,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ant_soldier":
+    }
+    case "ant_soldier": {
       drawAntSoldierEnemy(
         ctx,
         x,
@@ -2483,10 +2659,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "locust":
+    }
+    case "locust": {
       drawLocustEnemy(
         ctx,
         x,
@@ -2497,10 +2674,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "trapdoor_spider":
+    }
+    case "trapdoor_spider": {
       drawTrapdoorSpiderEnemy(
         ctx,
         x,
@@ -2511,10 +2689,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ice_beetle":
+    }
+    case "ice_beetle": {
       drawIceBeetleEnemy(
         ctx,
         x,
@@ -2525,10 +2704,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "frost_tick":
+    }
+    case "frost_tick": {
       drawFrostTickEnemy(
         ctx,
         x,
@@ -2539,10 +2719,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "snow_moth":
+    }
+    case "snow_moth": {
       drawSnowMothEnemy(
         ctx,
         x,
@@ -2553,10 +2734,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "fire_ant":
+    }
+    case "fire_ant": {
       drawFireAntEnemy(
         ctx,
         x,
@@ -2567,10 +2749,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "magma_beetle":
+    }
+    case "magma_beetle": {
       drawMagmaBeetleEnemy(
         ctx,
         x,
@@ -2581,10 +2764,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ash_moth":
+    }
+    case "ash_moth": {
       drawAshMothEnemy(
         ctx,
         x,
@@ -2595,10 +2779,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "brood_mother":
+    }
+    case "brood_mother": {
       drawBroodMotherEnemy(
         ctx,
         x,
@@ -2609,10 +2794,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dire_bear":
+    }
+    case "dire_bear": {
       drawDireBearEnemy(
         ctx,
         x,
@@ -2623,10 +2809,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "ancient_ent":
+    }
+    case "ancient_ent": {
       drawAncientEntEnemy(
         ctx,
         x,
@@ -2638,10 +2825,11 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
-        region,
+        region
       );
       break;
-    case "forest_troll":
+    }
+    case "forest_troll": {
       drawForestTrollEnemy(
         ctx,
         x,
@@ -2652,10 +2840,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "timber_wolf":
+    }
+    case "timber_wolf": {
       drawTimberWolfEnemy(
         ctx,
         x,
@@ -2666,10 +2855,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "giant_eagle":
+    }
+    case "giant_eagle": {
       drawGiantEagleEnemy(
         ctx,
         x,
@@ -2680,10 +2870,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "swamp_hydra":
+    }
+    case "swamp_hydra": {
       drawSwampHydraEnemy(
         ctx,
         x,
@@ -2694,10 +2885,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "giant_toad":
+    }
+    case "giant_toad": {
       drawGiantToadEnemy(
         ctx,
         x,
@@ -2708,10 +2900,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "vine_serpent":
+    }
+    case "vine_serpent": {
       drawVineSerpentEnemy(
         ctx,
         x,
@@ -2722,10 +2915,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "marsh_troll":
+    }
+    case "marsh_troll": {
       drawMarshTrollEnemy(
         ctx,
         x,
@@ -2736,10 +2930,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "phoenix":
+    }
+    case "phoenix": {
       drawPhoenixEnemy(
         ctx,
         x,
@@ -2750,10 +2945,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "basilisk":
+    }
+    case "basilisk": {
       drawBasiliskEnemy(
         ctx,
         x,
@@ -2764,10 +2960,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "djinn":
+    }
+    case "djinn": {
       drawDjinnEnemy(
         ctx,
         x,
@@ -2778,10 +2975,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "manticore":
+    }
+    case "manticore": {
       drawManticoreEnemy(
         ctx,
         x,
@@ -2792,10 +2990,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "frost_troll":
+    }
+    case "frost_troll": {
       drawFrostTrollEnemy(
         ctx,
         x,
@@ -2806,10 +3005,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "dire_wolf":
+    }
+    case "dire_wolf": {
       drawDireWolfEnemy(
         ctx,
         x,
@@ -2820,10 +3020,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "wendigo":
+    }
+    case "wendigo": {
       drawWendigoEnemy(
         ctx,
         x,
@@ -2834,10 +3035,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "mammoth":
+    }
+    case "mammoth": {
       drawMammothEnemy(
         ctx,
         x,
@@ -2848,10 +3050,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "lava_golem":
+    }
+    case "lava_golem": {
       drawLavaGolemEnemy(
         ctx,
         x,
@@ -2862,10 +3065,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "volcanic_drake":
+    }
+    case "volcanic_drake": {
       drawVolcanicDrakeEnemy(
         ctx,
         x,
@@ -2876,10 +3080,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    case "salamander":
+    }
+    case "salamander": {
       drawSalamanderEnemy(
         ctx,
         x,
@@ -2890,10 +3095,11 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
       break;
-    default:
+    }
+    default: {
       drawDefaultEnemy(
         ctx,
         x,
@@ -2904,7 +3110,8 @@ export function drawEnemySprite(
         bodyColorLight,
         time,
         zoom,
-        attackPhase,
+        attackPhase
       );
+    }
   }
 }

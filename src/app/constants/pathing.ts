@@ -1,6 +1,9 @@
 import { LEVEL_DATA, MAP_PATHS } from "./maps";
 
-type PathNode = { x: number; y: number };
+interface PathNode {
+  x: number;
+  y: number;
+}
 
 export interface ResolvedMapPath {
   key: string;
@@ -18,7 +21,10 @@ const SEGMENT_COORD_PRECISION = 4;
 const toNodeSignature = (node: PathNode): string =>
   `${node.x.toFixed(SEGMENT_COORD_PRECISION)},${node.y.toFixed(SEGMENT_COORD_PRECISION)}`;
 
-const toUndirectedSegmentSignature = (start: PathNode, end: PathNode): string => {
+const toUndirectedSegmentSignature = (
+  start: PathNode,
+  end: PathNode
+): string => {
   const a = toNodeSignature(start);
   const b = toNodeSignature(end);
   return a <= b ? `${a}|${b}` : `${b}|${a}`;
@@ -48,19 +54,25 @@ export function getLevelPathKeys(mapKey: string): string[] {
   const suffixPrefix = `${mapKey}_`;
   const discoveredSuffixKeys = Object.keys(MAP_PATHS)
     .filter((key) => key.startsWith(suffixPrefix))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    .toSorted((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   candidates.push(...discoveredSuffixKeys);
 
   const deduped: string[] = [];
   const seen = new Set<string>();
   for (const pathKey of candidates) {
-    if (seen.has(pathKey)) continue;
-    if (!isUsablePath(pathKey)) continue;
+    if (seen.has(pathKey)) {
+      continue;
+    }
+    if (!isUsablePath(pathKey)) {
+      continue;
+    }
     seen.add(pathKey);
     deduped.push(pathKey);
   }
 
-  if (deduped.length > 0) return deduped;
+  if (deduped.length > 0) {
+    return deduped;
+  }
   return isUsablePath("poe") ? ["poe"] : [];
 }
 
@@ -68,7 +80,9 @@ export function getLevelPaths(mapKey: string): ResolvedMapPath[] {
   return getLevelPathKeys(mapKey)
     .map((key) => {
       const points = MAP_PATHS[key];
-      if (!points || points.length < 2) return null;
+      if (!points || points.length < 2) {
+        return null;
+      }
       return { key, points };
     })
     .filter((path): path is ResolvedMapPath => Boolean(path));
@@ -81,27 +95,39 @@ export function getDefaultLevelPathKey(mapKey: string): string | null {
 
 export function getPathSpawnNode(pathKey: string): PathNode | null {
   const path = MAP_PATHS[pathKey];
-  if (!path || path.length === 0) return null;
+  if (!path || path.length === 0) {
+    return null;
+  }
   return path[0] ?? null;
 }
 
 export function getPathEndNode(pathKey: string): PathNode | null {
   const path = MAP_PATHS[pathKey];
-  if (!path || path.length === 0) return null;
-  return path[path.length - 1] ?? null;
+  if (!path || path.length === 0) {
+    return null;
+  }
+  return path.at(-1) ?? null;
 }
 
-export function getLevelSpawnNode(mapKey: string, pathKey?: string): PathNode | null {
+export function getLevelSpawnNode(
+  mapKey: string,
+  pathKey?: string
+): PathNode | null {
   const resolvedPathKey = pathKey ?? getDefaultLevelPathKey(mapKey);
   return resolvedPathKey ? getPathSpawnNode(resolvedPathKey) : null;
 }
 
-export function getLevelEndNode(mapKey: string, pathKey?: string): PathNode | null {
+export function getLevelEndNode(
+  mapKey: string,
+  pathKey?: string
+): PathNode | null {
   const resolvedPathKey = pathKey ?? getDefaultLevelPathKey(mapKey);
   return resolvedPathKey ? getPathEndNode(resolvedPathKey) : null;
 }
 
-export function getLevelUniquePathSegments(mapKey: string): ResolvedMapPathSegment[] {
+export function getLevelUniquePathSegments(
+  mapKey: string
+): ResolvedMapPathSegment[] {
   const segments: ResolvedMapPathSegment[] = [];
   const seenSegments = new Set<string>();
 
@@ -109,16 +135,20 @@ export function getLevelUniquePathSegments(mapKey: string): ResolvedMapPathSegme
     for (let i = 0; i < points.length - 1; i++) {
       const start = points[i];
       const end = points[i + 1];
-      if (!start || !end) continue;
+      if (!start || !end) {
+        continue;
+      }
 
       const signature = toUndirectedSegmentSignature(start, end);
-      if (seenSegments.has(signature)) continue;
+      if (seenSegments.has(signature)) {
+        continue;
+      }
       seenSegments.add(signature);
 
       segments.push({
+        end,
         pathKey: key,
         start,
-        end,
       });
     }
   }

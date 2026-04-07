@@ -1,4 +1,3 @@
-import React, { useCallback, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -9,10 +8,12 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import type { CreatorDraftState, PresetSection } from "../types";
-import { ALL_PRESET_SECTIONS, PRESET_SECTION_LABELS } from "../types";
+import React, { useCallback, useState } from "react";
+
 import type { MapTheme } from "../../../types";
 import { THEME_OPTIONS } from "../constants";
+import type { CreatorDraftState, PresetSection } from "../types";
+import { ALL_PRESET_SECTIONS, PRESET_SECTION_LABELS } from "../types";
 import { formatAssetName } from "../utils/gridUtils";
 
 interface CreatorHeaderProps {
@@ -26,9 +27,9 @@ interface CreatorHeaderProps {
 }
 
 const DIFFICULTY_LABELS: Record<number, { label: string; color: string }> = {
-  1: { label: "Easy", color: "text-emerald-300" },
-  2: { label: "Medium", color: "text-amber-300" },
-  3: { label: "Hard", color: "text-red-300" },
+  1: { color: "text-emerald-300", label: "Easy" },
+  2: { color: "text-amber-300", label: "Medium" },
+  3: { color: "text-red-300", label: "Hard" },
 };
 
 export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
@@ -60,7 +61,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
   const handleImportSelected = useCallback(() => {
     const sections = ALL_PRESET_SECTIONS.filter((s) => importSections.has(s));
-    if (sections.length === 0) return;
+    if (sections.length === 0) {
+      return;
+    }
     onApplyPresetSections(importPresetId, sections);
   }, [importPresetId, importSections, onApplyPresetSections]);
 
@@ -77,7 +80,8 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               Map Creator
             </h2>
             <p className="text-[10px] text-amber-400/60 leading-tight">
-              {formatAssetName(draft.theme)} &middot; {DIFFICULTY_LABELS[draft.difficulty]?.label}
+              {formatAssetName(draft.theme)} &middot;{" "}
+              {DIFFICULTY_LABELS[draft.difficulty]?.label}
             </p>
           </div>
         </div>
@@ -92,7 +96,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
           <select
             value={draft.theme}
-            onChange={(event) => onUpdateDraft({ theme: event.target.value as MapTheme })}
+            onChange={(event) =>
+              onUpdateDraft({ theme: event.target.value as MapTheme })
+            }
             className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80"
           >
             {THEME_OPTIONS.map((theme) => (
@@ -105,7 +111,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
           <select
             value={draft.difficulty}
             onChange={(event) =>
-              onUpdateDraft({ difficulty: Number(event.target.value) as 1 | 2 | 3 })
+              onUpdateDraft({
+                difficulty: Number(event.target.value) as 1 | 2 | 3,
+              })
             }
             className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80"
           >
@@ -142,7 +150,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
                 </option>
               ))}
             </select>
-            <span className="text-[9px] text-violet-400/60 whitespace-nowrap">Full Preset</span>
+            <span className="text-[9px] text-violet-400/60 whitespace-nowrap">
+              Full Preset
+            </span>
           </div>
         </div>
 
@@ -175,7 +185,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               </span>
               <input
                 value={draft.slug}
-                onChange={(event) => onUpdateDraft({ slug: event.target.value })}
+                onChange={(event) =>
+                  onUpdateDraft({ slug: event.target.value })
+                }
                 placeholder="my-custom-map"
                 className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
               />
@@ -187,7 +199,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               </span>
               <input
                 value={draft.description}
-                onChange={(event) => onUpdateDraft({ description: event.target.value })}
+                onChange={(event) =>
+                  onUpdateDraft({ description: event.target.value })
+                }
                 placeholder="Describe the map..."
                 className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
               />
@@ -228,7 +242,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
                       onChange={() => toggleImportSection(section)}
                       className="accent-cyan-500 w-3 h-3"
                     />
-                    <span className={`text-[11px] ${importSections.has(section) ? "text-cyan-100" : "text-cyan-400/50"}`}>
+                    <span
+                      className={`text-[11px] ${importSections.has(section) ? "text-cyan-100" : "text-cyan-400/50"}`}
+                    >
                       {PRESET_SECTION_LABELS[section]}
                     </span>
                   </label>

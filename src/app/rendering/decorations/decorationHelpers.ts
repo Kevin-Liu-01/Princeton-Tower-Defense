@@ -1,5 +1,9 @@
-import type { DecorationType, Decoration, DecorationHeightTag } from "../../types";
 import { ISO_Y_FACTOR } from "../../constants";
+import type {
+  DecorationType,
+  Decoration,
+  DecorationHeightTag,
+} from "../../types";
 import { getDecorationVolumeSpec } from "../../utils";
 
 export type DecorationRenderLayer = "background" | "default";
@@ -27,24 +31,24 @@ export function getDecorationRenderLayer(
 }
 
 const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
+  alexander_hall: 0,
+  blair_arch: 0,
+  carnegie_lake: 20,
+  cleveland_tower: 0,
+  clio_hall: 0,
+  east_pyne: 0,
+  fine_hall: 0,
+  firestone_library: 0,
+  foulke_hall: 0,
+  holder_hall: 0,
+  mccosh_hall: 0,
   nassau_hall: 12,
   princeton_chapel: 0,
-  firestone_library: 0,
-  blair_arch: 0,
-  whig_hall: 0,
-  east_pyne: 0,
   prospect_house: 0,
-  clio_hall: 0,
-  mccosh_hall: 0,
-  robertson_hall: 0,
-  holder_hall: 0,
-  cleveland_tower: 0,
-  alexander_hall: 0,
-  fine_hall: 0,
-  foulke_hall: 0,
-  tiger_stadium: 0,
   pyramid: 6,
-  carnegie_lake: 20,
+  robertson_hall: 0,
+  tiger_stadium: 0,
+  whig_hall: 0,
 };
 
 export function getDecorationIsoY(

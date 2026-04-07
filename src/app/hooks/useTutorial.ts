@@ -1,15 +1,16 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useLocalStorage } from "./useLocalStorage";
-import type { EnemyType, HazardType, SpecialTowerType } from "../types";
+
+import { ENEMY_DATA } from "../constants/enemies";
 import type { EncounterInfo } from "../constants/tutorial";
 import {
   TUTORIAL_STEPS,
   SPECIAL_TOWER_ENCOUNTERS,
   getHazardEncounter,
 } from "../constants/tutorial";
-import { ENEMY_DATA } from "../constants/enemies";
+import type { EnemyType, HazardType, SpecialTowerType } from "../types";
+import { useLocalStorage } from "./useLocalStorage";
 
 // =============================================================================
 // TUTORIAL STATE
@@ -28,8 +29,8 @@ const TUTORIAL_STORAGE_KEY = STORAGE_KEY_TUTORIAL;
 const DEFAULT_TUTORIAL_STATE: TutorialState = {
   hasCompletedTutorial: false,
   seenEnemyTypes: [],
-  seenSpecialTowers: [],
   seenHazards: [],
+  seenSpecialTowers: [],
 };
 
 // =============================================================================
@@ -75,8 +76,10 @@ export function useTutorial() {
             changed = true;
           }
         }
-        if (!changed) return prev;
-        return { ...prev, seenEnemyTypes: Array.from(newSeen) };
+        if (!changed) {
+          return prev;
+        }
+        return { ...prev, seenEnemyTypes: [...newSeen] };
       });
     },
     [setState]
@@ -85,21 +88,28 @@ export function useTutorial() {
   const getUnseenEnemyEncounters = useCallback(
     (waveEnemyTypes: EnemyType[]): EncounterQueueItem[] => {
       const seen = new Set(state.seenEnemyTypes);
-      const unseenTypes = Array.from(new Set(waveEnemyTypes.filter((t) => !seen.has(t))));
-      if (unseenTypes.length === 0) return [];
+      const unseenTypes = [
+        ...new Set(waveEnemyTypes.filter((t) => !seen.has(t))),
+      ];
+      if (unseenTypes.length === 0) {
+        return [];
+      }
 
       const names = unseenTypes.map((t) => ENEMY_DATA[t]?.name || t);
-      const title = unseenTypes.length === 1
-        ? `New: ${names[0]}`
-        : `${unseenTypes.length} New Enemies`;
+      const title =
+        unseenTypes.length === 1
+          ? `New: ${names[0]}`
+          : `${unseenTypes.length} New Enemies`;
 
-      return [{
-        key: `enemy-wave-${unseenTypes.join("-")}`,
-        name: title,
-        description: "",
-        category: "enemy",
-        members: unseenTypes,
-      }];
+      return [
+        {
+          category: "enemy",
+          description: "",
+          key: `enemy-wave-${unseenTypes.join("-")}`,
+          members: unseenTypes,
+          name: title,
+        },
+      ];
     },
     [state.seenEnemyTypes]
   );
@@ -117,8 +127,10 @@ export function useTutorial() {
             changed = true;
           }
         }
-        if (!changed) return prev;
-        return { ...prev, seenSpecialTowers: Array.from(newSeen) };
+        if (!changed) {
+          return prev;
+        }
+        return { ...prev, seenSpecialTowers: [...newSeen] };
       });
     },
     [setState]
@@ -127,10 +139,10 @@ export function useTutorial() {
   const getUnseenSpecialTowerEncounters = useCallback(
     (towerTypes: SpecialTowerType[]): EncounterQueueItem[] => {
       const seen = new Set(state.seenSpecialTowers);
-      const unique = Array.from(new Set(towerTypes.filter((t) => !seen.has(t))));
+      const unique = [...new Set(towerTypes.filter((t) => !seen.has(t)))];
       return unique.map((t) => ({
-        key: `special-tower-${t}`,
         entityType: t,
+        key: `special-tower-${t}`,
         ...SPECIAL_TOWER_ENCOUNTERS[t],
       }));
     },
@@ -150,8 +162,10 @@ export function useTutorial() {
             changed = true;
           }
         }
-        if (!changed) return prev;
-        return { ...prev, seenHazards: Array.from(newSeen) };
+        if (!changed) {
+          return prev;
+        }
+        return { ...prev, seenHazards: [...newSeen] };
       });
     },
     [setState]
@@ -160,13 +174,13 @@ export function useTutorial() {
   const getUnseenHazardEncounters = useCallback(
     (hazardTypes: HazardType[]): EncounterQueueItem[] => {
       const seen = new Set(state.seenHazards);
-      const unique = Array.from(new Set(hazardTypes.filter((t) => !seen.has(t))));
+      const unique = [...new Set(hazardTypes.filter((t) => !seen.has(t)))];
       const encounters: EncounterQueueItem[] = [];
 
       for (const t of unique) {
         const info = getHazardEncounter(t);
         if (info) {
-          encounters.push({ key: `hazard-${t}`, entityType: t, ...info });
+          encounters.push({ entityType: t, key: `hazard-${t}`, ...info });
         }
       }
       return encounters;
@@ -180,12 +194,10 @@ export function useTutorial() {
     (
       specialTowerTypes: SpecialTowerType[],
       hazardTypes: HazardType[]
-    ): EncounterQueueItem[] => {
-      return [
-        ...getUnseenSpecialTowerEncounters(specialTowerTypes),
-        ...getUnseenHazardEncounters(hazardTypes),
-      ];
-    },
+    ): EncounterQueueItem[] => [
+      ...getUnseenSpecialTowerEncounters(specialTowerTypes),
+      ...getUnseenHazardEncounters(hazardTypes),
+    ],
     [getUnseenSpecialTowerEncounters, getUnseenHazardEncounters]
   );
 

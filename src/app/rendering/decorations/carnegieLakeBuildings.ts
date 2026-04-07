@@ -1,7 +1,7 @@
 import { ISO_COS, ISO_SIN } from "../../constants";
 import { drawIsometricPrism } from "../helpers";
+import { drawIsoGothicWindow, drawIsoFlushDoor } from "../isoFlush";
 import {
-  type BuildingPalette,
   drawGabledRoof,
   drawConicalRoof,
   drawColumnPortico,
@@ -15,67 +15,67 @@ import {
   drawRoofShingles,
   drawChimney,
 } from "./princetonBuildingHelpers";
-import { drawIsoGothicWindow, drawIsoFlushDoor } from "../isoFlush";
+import type { BuildingPalette } from "./princetonBuildingHelpers";
 
 const ISO_Y_RATIO = ISO_SIN / ISO_COS;
 
 // ─── Palettes ────────────────────────────────────────────────────────────
 
 const BOATHOUSE_PAL: BuildingPalette = {
-  wallTop: "#D8C8A8",
-  wallLeft: "#C0A880",
-  wallRight: "#D8C4A0",
+  accent: "#C8A860",
+  cornice: "#5A4030",
+  door: "#2A1808",
+  foundLeft: "#4A3A28",
+  foundRight: "#3A2A1A",
+  foundTop: "#5A4A38",
+  glass: "#1A0A00",
+  roofDark: "#3A2008",
   roofFront: "#5A3A18",
   roofSide: "#4A2A10",
   roofTop: "#6B4A28",
-  roofDark: "#3A2008",
   trim: "#3A2008",
   trimLight: "#C8B898",
-  cornice: "#5A4030",
-  glass: "#1A0A00",
-  foundTop: "#5A4A38",
-  foundLeft: "#4A3A28",
-  foundRight: "#3A2A1A",
-  door: "#2A1808",
-  accent: "#C8A860",
+  wallLeft: "#C0A880",
+  wallRight: "#D8C4A0",
+  wallTop: "#D8C8A8",
 };
 
 const PAVILION_PAL: BuildingPalette = {
-  wallTop: "#8A7A65",
-  wallLeft: "#6A5A48",
-  wallRight: "#7A6A55",
+  accent: "#C8A860",
+  cornice: "#9A8A72",
+  door: "#0A0500",
+  foundLeft: "#5A4A38",
+  foundRight: "#6A5A48",
+  foundTop: "#7A6A55",
+  glass: "#2A1A08",
+  roofDark: "#4A3A2D",
   roofFront: "#6A5A48",
   roofSide: "#5A4A38",
   roofTop: "#7A6A55",
-  roofDark: "#4A3A2D",
   trim: "#8A7A65",
   trimLight: "#9A8A72",
-  cornice: "#9A8A72",
-  glass: "#2A1A08",
-  foundTop: "#7A6A55",
-  foundLeft: "#5A4A38",
-  foundRight: "#6A5A48",
-  door: "#0A0500",
-  accent: "#C8A860",
+  wallLeft: "#6A5A48",
+  wallRight: "#7A6A55",
+  wallTop: "#8A7A65",
 };
 
 const TOWER_PAL: BuildingPalette = {
-  wallTop: "#7A6A55",
-  wallLeft: "#4A3A2A",
-  wallRight: "#6A5A48",
+  accent: "#C4A040",
+  cornice: "#7A6A55",
+  door: "#1A0A00",
+  foundLeft: "#3A2A1A",
+  foundRight: "#4A3A28",
+  foundTop: "#5A4A38",
+  glass: "#1A1008",
+  roofDark: "#1A3A2A",
   roofFront: "#4A6A58",
   roofSide: "#3A5A48",
   roofTop: "#3A5A4A",
-  roofDark: "#1A3A2A",
   trim: "#7A6A55",
   trimLight: "#8A7A65",
-  cornice: "#7A6A55",
-  glass: "#1A1008",
-  foundTop: "#5A4A38",
-  foundLeft: "#3A2A1A",
-  foundRight: "#4A3A28",
-  door: "#1A0A00",
-  accent: "#C4A040",
+  wallLeft: "#4A3A2A",
+  wallRight: "#6A5A48",
+  wallTop: "#7A6A55",
 };
 
 // ─── Boathouse (Tudor style) ─────────────────────────────────────────────
@@ -85,7 +85,7 @@ export function drawCarnegieLakeBoathouse(
   cx: number,
   cy: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   const pal = BOATHOUSE_PAL;
   const bx = cx + 18 * s;
@@ -103,7 +103,17 @@ export function drawCarnegieLakeBoathouse(
 
   // Foundation prism
   const fndH = 3 * s;
-  drawIsometricPrism(ctx, bx, by + fndH, (bodyW + 2) * s, (bodyD + 2) * s, fndH, pal.foundTop, pal.foundLeft, pal.foundRight);
+  drawIsometricPrism(
+    ctx,
+    bx,
+    by + fndH,
+    (bodyW + 2) * s,
+    (bodyD + 2) * s,
+    fndH,
+    pal.foundTop,
+    pal.foundLeft,
+    pal.foundRight
+  );
 
   // Base AO shadow
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.15);
@@ -158,17 +168,28 @@ export function drawCarnegieLakeBoathouse(
   drawWeatherStains(ctx, bx, by, Ws, Ds, Hs, s, "right");
 
   // Gothic windows flush with walls
-  const bhWinPositions: Array<{ x: number; y: number; face: "left" | "right" }> = [
-    { x: bx + iW * 0.35, y: wt + iD * 0.35 + Hs * 0.35, face: "right" },
-    { x: bx + iW * 0.7, y: wt + iD * 0.7 + Hs * 0.35, face: "right" },
-    { x: bx - iW * 0.35, y: wt + iD * 1.65 + Hs * 0.35, face: "left" },
-    { x: bx - iW * 0.65, y: wt + iD * 1.35 + Hs * 0.35, face: "left" },
+  const bhWinPositions: {
+    x: number;
+    y: number;
+    face: "left" | "right";
+  }[] = [
+    { face: "right", x: bx + iW * 0.35, y: wt + iD * 0.35 + Hs * 0.35 },
+    { face: "right", x: bx + iW * 0.7, y: wt + iD * 0.7 + Hs * 0.35 },
+    { face: "left", x: bx - iW * 0.35, y: wt + iD * 1.65 + Hs * 0.35 },
+    { face: "left", x: bx - iW * 0.65, y: wt + iD * 1.35 + Hs * 0.35 },
   ];
   for (const w of bhWinPositions) {
     drawIsoGothicWindow(
-      ctx, w.x, w.y, 2.5, 3.5, w.face, s,
-      "rgba(220,160,70", 0.4,
-      { frame: "#3A2008", void: "#1A0A00", sill: "#4A3A28" },
+      ctx,
+      w.x,
+      w.y,
+      2.5,
+      3.5,
+      w.face,
+      s,
+      "rgba(220,160,70",
+      0.4,
+      { frame: "#3A2008", sill: "#4A3A28", void: "#1A0A00" }
     );
   }
 
@@ -176,14 +197,14 @@ export function drawCarnegieLakeBoathouse(
   const doorCx = bx;
   const doorBaseY = by + 2 * iD - 3 * s;
   drawIsoFlushDoor(ctx, doorCx, doorBaseY - 3.5 * s, 4.5, 7, "front", s, {
-    frameColor: "#4A3828",
     bodyDark: "#1A0A00",
-    bodyMid: "#2A1808",
     bodyLight: "#3A2210",
+    bodyMid: "#2A1808",
+    frameColor: "#4A3828",
     handleColor: "#C8A860",
     hasStep: true,
-    stepColor: "#4A3A28",
     plankLines: 3,
+    stepColor: "#4A3A28",
   });
 
   // Gabled roof
@@ -199,7 +220,10 @@ export function drawCarnegieLakeBoathouse(
     const smPhase = (time * 0.8 + sm * 0.7) % 3.5;
     const smAlpha = Math.max(0, 0.25 - smPhase * 0.08);
     if (smAlpha > 0) {
-      const smX = bx + 3 * s + Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
+      const smX =
+        bx +
+        3 * s +
+        Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
       const smY = by - Hs - 6 * s - smPhase * 5 * s;
       const smR = (1.5 + smPhase * 2) * s;
       ctx.fillStyle = `rgba(180,170,160,${smAlpha})`;
@@ -215,10 +239,13 @@ export function drawCarnegieLakeBoathouse(
 
 function drawTimberFrame(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  Ws: number, Ds: number, Hs: number,
+  bx: number,
+  by: number,
+  Ws: number,
+  Ds: number,
+  Hs: number,
   face: "left" | "right",
-  s: number,
+  s: number
 ): void {
   const iW = Ws * ISO_COS;
   const iD = Ds * ISO_SIN;
@@ -257,7 +284,10 @@ function drawTimberFrame(
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(tr.x, tr.y);
-  ctx.lineTo(midL.x + (cBot.x - midL.x) * 0.5, midL.y + (cBot.y - midL.y) * 0.5);
+  ctx.lineTo(
+    midL.x + (cBot.x - midL.x) * 0.5,
+    midL.y + (cBot.y - midL.y) * 0.5
+  );
   ctx.stroke();
 
   // Border frame
@@ -273,8 +303,10 @@ function drawTimberFrame(
 
 function drawDock(
   ctx: CanvasRenderingContext2D,
-  bhx: number, bhy: number,
-  Ds: number, s: number,
+  bhx: number,
+  bhy: number,
+  Ds: number,
+  s: number
 ): void {
   const iD = Ds * ISO_SIN;
   const dockStartX = bhx - 2 * s;
@@ -294,7 +326,12 @@ function drawDock(
   ctx.fill();
 
   // Dock top surface
-  const dockTopG = ctx.createLinearGradient(dockStartX, dockStartY, dockEndX, dockEndY);
+  const dockTopG = ctx.createLinearGradient(
+    dockStartX,
+    dockStartY,
+    dockEndX,
+    dockEndY
+  );
   dockTopG.addColorStop(0, "#7A5A35");
   dockTopG.addColorStop(0.5, "#6D5030");
   dockTopG.addColorStop(1, "#5A4025");
@@ -365,7 +402,12 @@ function drawDock(
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
       ctx.moveTo(dpx, postTop + 2 * s);
-      ctx.quadraticCurveTo(dpx - 3 * s, postTop + 6 * s, dpx - 2 * s, dpy + 1 * s);
+      ctx.quadraticCurveTo(
+        dpx - 3 * s,
+        postTop + 6 * s,
+        dpx - 2 * s,
+        dpy + 1 * s
+      );
       ctx.stroke();
     }
   }
@@ -378,7 +420,7 @@ export function drawCarnegieLakePavilion(
   cx: number,
   cy: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   const pal = PAVILION_PAL;
   const bx = cx - 15 * s;
@@ -401,18 +443,27 @@ export function drawCarnegieLakePavilion(
     const stepH = 1.5;
     const stepY = by + (2 - st) * stepH * s;
     drawIsometricPrism(
-      ctx, bx, stepY,
-      stepW * s, stepD * s, stepH * s,
+      ctx,
+      bx,
+      stepY,
+      stepW * s,
+      stepD * s,
+      stepH * s,
       st % 2 === 0 ? "#7A6A55" : "#8A7A65",
       st % 2 === 0 ? "#5A4A38" : "#6A5A48",
-      st % 2 === 0 ? "#6A5A48" : "#7A6A58",
+      st % 2 === 0 ? "#6A5A48" : "#7A6A58"
     );
   }
 
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.15);
 
   // Back wall (left face — recessed interior behind colonnade)
-  const interiorGrad = ctx.createLinearGradient(bx - iW, wt + iD, bx, wt + 2 * iD);
+  const interiorGrad = ctx.createLinearGradient(
+    bx - iW,
+    wt + iD,
+    bx,
+    wt + 2 * iD
+  );
   interiorGrad.addColorStop(0, "#3A3028");
   interiorGrad.addColorStop(1, "#4A4038");
   ctx.fillStyle = interiorGrad;
@@ -460,7 +511,7 @@ export function drawCarnegieLakePavilion(
   ctx.fill();
 
   // Face shading
-  drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.10);
+  drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.1);
 
   // Quoins
   drawQuoins(ctx, bx, by, Ws, Ds, Hs, s, pal.trim, 6);
@@ -482,11 +533,16 @@ export function drawCarnegieLakePavilion(
     const wCx = bx + iW * wf;
     const wCy = wt + iD + iD * wf + Hs * 0.38;
     drawIsoGothicWindow(
-      ctx, wCx, wCy,
-      2.5, 5, "right", s,
+      ctx,
+      wCx,
+      wCy,
+      2.5,
+      5,
+      "right",
+      s,
       "rgba(210,160,80",
       0.35 + Math.sin(time * 1.2 + w * 0.8) * 0.1,
-      { frame: "#5A4A38", void: "#2A1A08", sill: "#6A5A48" },
+      { frame: "#5A4A38", sill: "#6A5A48", void: "#2A1A08" }
     );
   }
 
@@ -494,14 +550,14 @@ export function drawCarnegieLakePavilion(
   const archCx = bx + iW * 0.3;
   const archBaseY = wt + iD * 1.3 + Hs * 0.65;
   drawIsoFlushDoor(ctx, archCx, archBaseY, 5, 8, "right", s, {
-    frameColor: "#5A4A38",
     bodyDark: "#0A0500",
-    bodyMid: "#1A0A00",
     bodyLight: "#2A1808",
+    bodyMid: "#1A0A00",
+    frameColor: "#5A4A38",
     handleColor: "#C8A860",
     hasStep: true,
-    stepColor: "#5A4A38",
     plankLines: 2,
+    stepColor: "#5A4A38",
   });
 
   // Entablature (horizontal band above columns) — on right face only
@@ -562,10 +618,16 @@ export function drawCarnegieLakePavilion(
   const colAnchorX = bx - iW * 0.5;
   const colAnchorY = by + iD * 1.5;
   drawColumnPortico(
-    ctx, colAnchorX, colAnchorY,
-    4, porticoH, porticoSpan, s,
-    "#8A7A65", "#9A8A72",
-    "left",
+    ctx,
+    colAnchorX,
+    colAnchorY,
+    4,
+    porticoH,
+    porticoSpan,
+    s,
+    "#8A7A65",
+    "#9A8A72",
+    "left"
   );
 
   // Balustrade along front (left) edge — drawn after columns
@@ -574,9 +636,11 @@ export function drawCarnegieLakePavilion(
 
 function drawBalustrade(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  iW: number, iD: number,
-  s: number,
+  bx: number,
+  by: number,
+  iW: number,
+  iD: number,
+  s: number
 ): void {
   const balCount = 6;
   for (let bl = 0; bl < balCount; bl++) {
@@ -629,7 +693,7 @@ export function drawCarnegieLakeClockTower(
   cx: number,
   cy: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   const pal = TOWER_PAL;
   const bx = cx;
@@ -646,7 +710,16 @@ export function drawCarnegieLakeClockTower(
   const wt = by - Hs;
 
   // Tower foundation
-  drawTowerFoundation(ctx, bx, by, bodyW + 1, s, pal.foundTop, pal.foundLeft, pal.foundRight);
+  drawTowerFoundation(
+    ctx,
+    bx,
+    by,
+    bodyW + 1,
+    s,
+    pal.foundTop,
+    pal.foundLeft,
+    pal.foundRight
+  );
 
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.12);
 
@@ -733,11 +806,16 @@ export function drawCarnegieLakeClockTower(
     const wCy = wt + iD + iD * wf + Hs * vf;
     const glowA = tw === 1 ? 0.4 : 0.2;
     drawIsoGothicWindow(
-      ctx, wCx, wCy,
-      2.8, 4.5, "right", s,
+      ctx,
+      wCx,
+      wCy,
+      2.8,
+      4.5,
+      "right",
+      s,
       "rgba(200,150,70",
       glowA + Math.sin(time * 1.5 + tw) * 0.04,
-      { frame: "#5A4A38", void: "#1A1008", sill: "#6A5A48" },
+      { frame: "#5A4A38", sill: "#6A5A48", void: "#1A1008" }
     );
   }
 
@@ -749,15 +827,38 @@ export function drawCarnegieLakeClockTower(
 
   // Parapet with crenellations
   drawIsometricPrism(
-    ctx, bx, wt,
-    (bodyW + 0.5) * s, (bodyD + 0.5) * s, 1.5 * s,
-    pal.cornice, pal.wallLeft, pal.wallRight,
+    ctx,
+    bx,
+    wt,
+    (bodyW + 0.5) * s,
+    (bodyD + 0.5) * s,
+    1.5 * s,
+    pal.cornice,
+    pal.wallLeft,
+    pal.wallRight
   );
-  drawCrenellations(ctx, bx, wt - 1.5 * s, bodyW + 0.5, bodyD + 0.5, s, pal.trim);
+  drawCrenellations(
+    ctx,
+    bx,
+    wt - 1.5 * s,
+    bodyW + 0.5,
+    bodyD + 0.5,
+    s,
+    pal.trim
+  );
 
   // Pointed spire
   const spireH = 11;
-  drawConicalRoof(ctx, bx, wt - 1.5 * s, bodyW * 0.85, spireH, s, pal.roofFront, pal.roofDark);
+  drawConicalRoof(
+    ctx,
+    bx,
+    wt - 1.5 * s,
+    bodyW * 0.85,
+    spireH,
+    s,
+    pal.roofFront,
+    pal.roofDark
+  );
 
   // Finial
   const spireTipY = wt - 1.5 * s - spireH * s;
@@ -795,10 +896,13 @@ export function drawCarnegieLakeClockTower(
 
 function drawBelfryOpening(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  Ws: number, Ds: number, Hs: number,
+  bx: number,
+  by: number,
+  Ws: number,
+  Ds: number,
+  Hs: number,
   s: number,
-  face: "left" | "right",
+  face: "left" | "right"
 ): void {
   const iW = Ws * ISO_COS;
   const iD = Ds * ISO_SIN;
@@ -829,16 +933,27 @@ function drawBelfryOpening(
   ctx.strokeStyle = "#6A5A48";
   ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
-  ctx.ellipse(belCx, belCy, 2 * s * 0.8, 1.5 * s, face === "right" ? -0.46 : 0.46, Math.PI, 0);
+  ctx.ellipse(
+    belCx,
+    belCy,
+    2 * s * 0.8,
+    1.5 * s,
+    face === "right" ? -0.46 : 0.46,
+    Math.PI,
+    0
+  );
   ctx.stroke();
 }
 
 function drawClockFace(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  Ws: number, Ds: number, Hs: number,
+  bx: number,
+  by: number,
+  Ws: number,
+  Ds: number,
+  Hs: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   const iW = Ws * ISO_COS;
   const iD = Ds * ISO_SIN;
@@ -904,7 +1019,7 @@ function drawClockFace(
   ctx.moveTo(0, 0);
   ctx.lineTo(
     Math.cos(clockAngle - Math.PI * 0.5) * fX * 0.55,
-    Math.sin(clockAngle - Math.PI * 0.5) * fY * 0.55,
+    Math.sin(clockAngle - Math.PI * 0.5) * fY * 0.55
   );
   ctx.stroke();
 
@@ -914,7 +1029,7 @@ function drawClockFace(
   ctx.moveTo(0, 0);
   ctx.lineTo(
     Math.cos(clockAngle * 12 - Math.PI * 0.5) * fX * 0.7,
-    Math.sin(clockAngle * 12 - Math.PI * 0.5) * fY * 0.7,
+    Math.sin(clockAngle * 12 - Math.PI * 0.5) * fY * 0.7
   );
   ctx.stroke();
   ctx.lineCap = "butt";
@@ -930,10 +1045,12 @@ function drawClockFace(
 
 function drawCrenellations(
   ctx: CanvasRenderingContext2D,
-  bx: number, by: number,
-  W: number, D: number,
+  bx: number,
+  by: number,
+  W: number,
+  D: number,
   s: number,
-  color: string,
+  color: string
 ): void {
   const Ws = W * s;
   const Ds = D * s;
@@ -949,7 +1066,17 @@ function drawCrenellations(
     const mf = (m + 0.3) / count;
     const mx = bx + iW * mf;
     const my = by + iD * mf;
-    drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, color, "#5A4A38", "#6A5A48");
+    drawIsometricPrism(
+      ctx,
+      mx,
+      my,
+      merlonW,
+      merlonW,
+      merlonH,
+      color,
+      "#5A4A38",
+      "#6A5A48"
+    );
   }
 
   // Left edge merlons
@@ -957,7 +1084,17 @@ function drawCrenellations(
     const mf = (m + 0.3) / count;
     const mx = bx - iW * mf;
     const my = by + iD * mf;
-    drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, color, "#4A3A28", "#5A4A38");
+    drawIsometricPrism(
+      ctx,
+      mx,
+      my,
+      merlonW,
+      merlonW,
+      merlonH,
+      color,
+      "#4A3A28",
+      "#5A4A38"
+    );
   }
 }
 
@@ -968,7 +1105,7 @@ export function drawCarnegieLakeRowboat(
   cx: number,
   cy: number,
   s: number,
-  time: number,
+  time: number
 ): void {
   const bob = Math.sin(time * 1.1) * 1.5 * s;
   const bx = cx + 7 * s;
@@ -1083,14 +1220,30 @@ export function drawCarnegieLakeRowboat(
   // Oar blades (isometric ellipses)
   ctx.fillStyle = "#A08060";
   ctx.beginPath();
-  ctx.ellipse(-6.5 * s, 3 * s + oarSwayY, 1.4 * s, 0.6 * s, 0.5 + oarSway, 0, Math.PI * 2);
+  ctx.ellipse(
+    -6.5 * s,
+    3 * s + oarSwayY,
+    1.4 * s,
+    0.6 * s,
+    0.5 + oarSway,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#806040";
   ctx.lineWidth = 0.3 * s;
   ctx.stroke();
   ctx.fillStyle = "#A08060";
   ctx.beginPath();
-  ctx.ellipse(6.5 * s, 3 * s - oarSwayY, 1.4 * s, 0.6 * s, -0.5 - oarSway, 0, Math.PI * 2);
+  ctx.ellipse(
+    6.5 * s,
+    3 * s - oarSwayY,
+    1.4 * s,
+    0.6 * s,
+    -0.5 - oarSway,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#806040";
   ctx.stroke();
@@ -1105,10 +1258,13 @@ export function drawCarnegieLakeRowboat(
       ctx.strokeStyle = `rgba(140,220,240,${rAlpha})`;
       ctx.beginPath();
       ctx.ellipse(
-        0, 0.5 * s,
+        0,
+        0.5 * s,
         hullLen * (1.05 + rPhase * 0.3),
         hullWy * (1.1 + rPhase * 0.3),
-        0, 0, Math.PI * 2,
+        0,
+        0,
+        Math.PI * 2
       );
       ctx.stroke();
     }

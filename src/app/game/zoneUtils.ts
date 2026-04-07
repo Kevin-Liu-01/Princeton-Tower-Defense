@@ -13,7 +13,7 @@ function isWithinRadius(
   gy: number,
   cx: number,
   cy: number,
-  radius: number,
+  radius: number
 ): boolean {
   const dx = gx - cx;
   const dy = gy - cy;
@@ -26,9 +26,11 @@ export function isInSpecialTowerZone(
   radius: number,
   specialTowerZones: ZoneCenter[]
 ): boolean {
-  if (specialTowerZones.length === 0) return false;
+  if (specialTowerZones.length === 0) {
+    return false;
+  }
   return specialTowerZones.some((zone) =>
-    isWithinRadius(gx, gy, zone.cx, zone.cy, radius),
+    isWithinRadius(gx, gy, zone.cx, zone.cy, radius)
   );
 }
 
@@ -38,7 +40,9 @@ export function isInLandmarkCore(
   landmarkZones: LandmarkZone[]
 ): boolean {
   for (const zone of landmarkZones) {
-    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.coreR)) return true;
+    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.coreR)) {
+      return true;
+    }
   }
   return false;
 }
@@ -49,7 +53,9 @@ export function isInLandmarkFull(
   landmarkZones: LandmarkZone[]
 ): boolean {
   for (const zone of landmarkZones) {
-    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.fullR)) return true;
+    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.fullR)) {
+      return true;
+    }
   }
   return false;
 }

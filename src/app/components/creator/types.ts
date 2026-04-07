@@ -1,3 +1,13 @@
+import type { LucideIcon } from "lucide-react";
+
+import type {
+  CustomLevelDefinition,
+  CustomLevelDraftInput,
+  CustomLevelUpsertResult,
+  CustomPlacedTowerConfig,
+  CustomSpecialTowerConfig,
+  GridPoint,
+} from "../../customLevels/types";
 import type {
   DecorationCategory,
   EnemyType,
@@ -8,15 +18,6 @@ import type {
   TowerType,
   WaveGroup,
 } from "../../types";
-import type {
-  CustomLevelDefinition,
-  CustomLevelDraftInput,
-  CustomLevelUpsertResult,
-  CustomPlacedTowerConfig,
-  CustomSpecialTowerConfig,
-  GridPoint,
-} from "../../customLevels/types";
-import type { LucideIcon } from "lucide-react";
 
 export type { GridPoint };
 
@@ -105,12 +106,12 @@ export const ALL_PRESET_SECTIONS: PresetSection[] = [
 ];
 
 export const PRESET_SECTION_LABELS: Record<PresetSection, string> = {
-  waves: "Waves",
-  paths: "Paths",
   decorations: "Decorations",
   hazards: "Hazards",
   objectives: "Objectives",
+  paths: "Paths",
   theme: "Theme & Settings",
+  waves: "Waves",
 };
 
 export interface ObjectiveTypeStats {

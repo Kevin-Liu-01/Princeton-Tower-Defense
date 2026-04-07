@@ -1,10 +1,6 @@
+import { ISO_PRISM_D_FACTOR } from "../../constants";
 import type { Tower, Enemy, Position } from "../../types";
-import {
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
-import {
-  drawIsometricRailing,
-} from "./towerHelpers";
+import { drawIsometricRailing } from "./towerHelpers";
 
 export function renderTeslaCoil(
   ctx: CanvasRenderingContext2D,
@@ -19,7 +15,7 @@ export function renderTeslaCoil(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   void enemies;
   void selectedMap;
@@ -41,7 +37,7 @@ export function renderTeslaCoil(
     const rp = (ri + 1) / (ringCount + 1);
     const ry = topY - rp * (coilHeight - 18 * zoom) * 1.4;
     const rs = 14 - rp * 8;
-    ringPositions.push({ y: ry, size: rs, progress: rp });
+    ringPositions.push({ progress: rp, size: rs, y: ry });
   }
 
   // Coil base platform
@@ -54,7 +50,7 @@ export function renderTeslaCoil(
     9 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -67,7 +63,7 @@ export function renderTeslaCoil(
     8 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -91,7 +87,7 @@ export function renderTeslaCoil(
       basePulseSize * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -112,7 +108,7 @@ export function renderTeslaCoil(
           pulseExpand * 0.4,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -192,7 +188,7 @@ export function renderTeslaCoil(
         discX - discR,
         discY,
         discX + discR,
-        discY,
+        discY
       );
       dg.addColorStop(0, "#8B7355");
       dg.addColorStop(0.5, "#D8C098");
@@ -209,7 +205,7 @@ export function renderTeslaCoil(
     screenPos.x - 10 * zoom,
     0,
     screenPos.x + 10 * zoom,
-    0,
+    0
   );
   columnGrad.addColorStop(0, "#1a3a4f");
   columnGrad.addColorStop(0.25, "#3a6a8f");
@@ -296,8 +292,11 @@ export function renderTeslaCoil(
       const hx = screenPos.x + Math.cos(hAngle) * hRadius;
       const hy =
         topY - ht * (coilHeight - 12 * zoom) + Math.sin(hAngle) * hRadius * 0.3;
-      if (h === 0) ctx.moveTo(hx, hy);
-      else ctx.lineTo(hx, hy);
+      if (h === 0) {
+        ctx.moveTo(hx, hy);
+      } else {
+        ctx.lineTo(hx, hy);
+      }
     }
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -328,7 +327,7 @@ export function renderTeslaCoil(
         discX - discR,
         discY,
         discX + discR,
-        discY,
+        discY
       );
       dg.addColorStop(0, "#8B7355");
       dg.addColorStop(0.5, "#D8C098");
@@ -366,7 +365,13 @@ export function renderTeslaCoil(
       (isAttacking ? Math.sin(time * 15 + i) * 0.3 * attackIntensity : 0);
     const ringRotation =
       time * (0.8 + (isAttacking ? 2.5 * attackIntensity : 0)) + i * 0.4;
-    ringRenderData.push({ ringY, ringSize, energyPulse, ringRotation, sizePulse });
+    ringRenderData.push({
+      energyPulse,
+      ringRotation,
+      ringSize,
+      ringY,
+      sizePulse,
+    });
   }
 
   // Pass 1: Ring shadows and attack glows (behind gold bodies)
@@ -385,7 +390,7 @@ export function renderTeslaCoil(
         (ringSize + 2) * zoom * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -400,14 +405,15 @@ export function renderTeslaCoil(
       ringSize * zoom * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
 
   // Pass 2: Ring bodies and details (on top of all shadows)
   for (let i = 0; i < ringCount; i++) {
-    const { ringY, ringSize, energyPulse, ringRotation, sizePulse } = ringRenderData[i];
+    const { ringY, ringSize, energyPulse, ringRotation, sizePulse } =
+      ringRenderData[i];
 
     // Main ring body - copper with 3D effect and rotation animation
     const rotOffset =
@@ -418,28 +424,28 @@ export function renderTeslaCoil(
       screenPos.x - ringSize * zoom + rotOffset,
       ringY,
       screenPos.x + ringSize * zoom + rotOffset,
-      ringY,
+      ringY
     );
     const blueShift = isAttacking ? attackIntensity * 60 : 0;
     ringGrad.addColorStop(
       0,
-      `rgb(${120 + energyPulse * 25 - blueShift * 0.3}, ${75 + energyPulse * 15 + blueShift * 0.5}, ${35 + blueShift})`,
+      `rgb(${120 + energyPulse * 25 - blueShift * 0.3}, ${75 + energyPulse * 15 + blueShift * 0.5}, ${35 + blueShift})`
     );
     ringGrad.addColorStop(
       0.3,
-      `rgb(${180 + energyPulse * 40 - blueShift * 0.3}, ${120 + energyPulse * 25 + blueShift * 0.5}, ${55 + blueShift})`,
+      `rgb(${180 + energyPulse * 40 - blueShift * 0.3}, ${120 + energyPulse * 25 + blueShift * 0.5}, ${55 + blueShift})`
     );
     ringGrad.addColorStop(
       0.5,
-      `rgb(${220 + energyPulse * 35 - blueShift * 0.3}, ${160 + energyPulse * 30 + blueShift * 0.5}, ${80 + blueShift})`,
+      `rgb(${220 + energyPulse * 35 - blueShift * 0.3}, ${160 + energyPulse * 30 + blueShift * 0.5}, ${80 + blueShift})`
     );
     ringGrad.addColorStop(
       0.7,
-      `rgb(${180 + energyPulse * 40 - blueShift * 0.3}, ${120 + energyPulse * 25 + blueShift * 0.5}, ${55 + blueShift})`,
+      `rgb(${180 + energyPulse * 40 - blueShift * 0.3}, ${120 + energyPulse * 25 + blueShift * 0.5}, ${55 + blueShift})`
     );
     ringGrad.addColorStop(
       1,
-      `rgb(${120 + energyPulse * 25 - blueShift * 0.3}, ${75 + energyPulse * 15 + blueShift * 0.5}, ${35 + blueShift})`,
+      `rgb(${120 + energyPulse * 25 - blueShift * 0.3}, ${75 + energyPulse * 15 + blueShift * 0.5}, ${35 + blueShift})`
     );
 
     ctx.fillStyle = ringGrad;
@@ -451,7 +457,7 @@ export function renderTeslaCoil(
       ringSize * zoom * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -466,7 +472,7 @@ export function renderTeslaCoil(
       ringSize * zoom * 0.35,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -498,7 +504,7 @@ export function renderTeslaCoil(
       ringSize * zoom * 0.22,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
 
@@ -515,7 +521,7 @@ export function renderTeslaCoil(
         glowRX * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -601,7 +607,7 @@ export function renderTeslaCoil(
           spkEdgeY,
           (1 + attackIntensity * 0.8) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -620,7 +626,7 @@ export function renderTeslaCoil(
         ctx.lineTo(midBX, midBY);
         ctx.lineTo(
           spkEdgeX + Math.cos(boltAng) * boltLen,
-          spkEdgeY + Math.sin(boltAng) * boltLen * 0.3,
+          spkEdgeY + Math.sin(boltAng) * boltLen * 0.3
         );
         ctx.stroke();
         ctx.shadowBlur = 0;
@@ -657,7 +663,7 @@ export function renderTeslaCoil(
         1.5 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -702,8 +708,11 @@ export function renderTeslaCoil(
       for (let s = 0; s <= 4; s++) {
         const sy = damperY - (s / 4) * springH;
         const sx = damperX + (s % 2 === 0 ? -1.5 : 1.5) * zoom;
-        if (s === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
+        if (s === 0) {
+          ctx.moveTo(sx, sy);
+        } else {
+          ctx.lineTo(sx, sy);
+        }
       }
       ctx.stroke();
 
@@ -713,7 +722,7 @@ export function renderTeslaCoil(
         damperX - 2.5 * zoom,
         damperY - springH - 2 * zoom,
         5 * zoom,
-        2 * zoom,
+        2 * zoom
       );
     }
 
@@ -776,7 +785,7 @@ export function renderTeslaCoil(
   if (isAttacking || attackIntensity > 0) {
     const pulseCount = 3;
     for (let pr = 0; pr < pulseCount; pr++) {
-      const pulseAge = (time * 2 + pr * 1.2) % 2.0;
+      const pulseAge = (time * 2 + pr * 1.2) % 2;
       if (pulseAge < 1.5) {
         const pulseFrac = pulseAge / 1.5;
         const pulseAlpha = (1 - pulseFrac) * 0.3 * attackIntensity;
@@ -793,7 +802,7 @@ export function renderTeslaCoil(
           pulseRadius * 0.35,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -808,7 +817,7 @@ export function renderTeslaCoil(
             pulseRadius * 0.33,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
         }
@@ -825,7 +834,7 @@ export function renderTeslaCoil(
     screenPos.x,
     topY,
     screenPos.x,
-    topY - coilHeight,
+    topY - coilHeight
   );
   humGrad.addColorStop(0, "rgba(0, 150, 255, 0)");
   humGrad.addColorStop(0.3, `rgba(0, 180, 255, ${humAlpha})`);
@@ -839,7 +848,7 @@ export function renderTeslaCoil(
     screenPos.x - humWidth / 2,
     topY - coilHeight,
     humWidth,
-    coilHeight,
+    coilHeight
   );
 
   // Energy orb at top - THIS IS WHERE LIGHTNING ORIGINATES
@@ -858,19 +867,19 @@ export function renderTeslaCoil(
     0,
     screenPos.x,
     orbY,
-    orbSize * (2.5 + attackIntensity * 0.5) * orbPulse,
+    orbSize * (2.5 + attackIntensity * 0.5) * orbPulse
   );
   energyFieldGrad.addColorStop(
     0,
-    `rgba(0, 255, 255, ${fieldAlphaBase + attackIntensity * 0.2})`,
+    `rgba(0, 255, 255, ${fieldAlphaBase + attackIntensity * 0.2})`
   );
   energyFieldGrad.addColorStop(
     0.4,
-    `rgba(0, 200, 255, ${0.08 + attackIntensity * 0.15})`,
+    `rgba(0, 200, 255, ${0.08 + attackIntensity * 0.15})`
   );
   energyFieldGrad.addColorStop(
     0.7,
-    `rgba(0, 150, 255, ${0.03 + attackIntensity * 0.08})`,
+    `rgba(0, 150, 255, ${0.03 + attackIntensity * 0.08})`
   );
   energyFieldGrad.addColorStop(1, "rgba(0, 100, 255, 0)");
   ctx.fillStyle = energyFieldGrad;
@@ -880,7 +889,7 @@ export function renderTeslaCoil(
     orbY,
     orbSize * (2.5 + attackIntensity * 0.5) * orbPulse,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -893,7 +902,7 @@ export function renderTeslaCoil(
     0,
     screenPos.x,
     orbY,
-    orbSize * orbPulse,
+    orbSize * orbPulse
   );
   // Brighter gradient when attacking
   if (isAttacking) {
@@ -924,7 +933,7 @@ export function renderTeslaCoil(
       0,
       screenPos.x,
       orbY,
-      orbSize * 0.5 * orbPulse,
+      orbSize * 0.5 * orbPulse
     );
     coreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackIntensity})`);
     coreGrad.addColorStop(0.5, `rgba(220, 255, 255, ${attackIntensity * 0.9})`);
@@ -971,8 +980,9 @@ export function renderTeslaCoil(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
 
@@ -983,8 +993,9 @@ export function renderTeslaCoil(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
 
     // Layer 3: thin white-hot center
@@ -992,12 +1003,13 @@ export function renderTeslaCoil(
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
 
     // Glow node at tip
-    const tip = boltPts[boltPts.length - 1];
+    const tip = boltPts.at(-1);
     ctx.fillStyle = `rgba(200, 255, 255, ${0.5 + attackIntensity * 0.3})`;
     ctx.beginPath();
     ctx.arc(tip.x, tip.y, 1.8 * zoom, 0, Math.PI * 2);
@@ -1101,7 +1113,7 @@ export function renderFocusedBeam(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ) {
   void enemies;
   void selectedMap;
@@ -1128,7 +1140,7 @@ export function renderFocusedBeam(
     14 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1143,7 +1155,7 @@ export function renderFocusedBeam(
     12 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -1169,7 +1181,7 @@ export function renderFocusedBeam(
     11 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1189,7 +1201,7 @@ export function renderFocusedBeam(
       crR * 0.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     // Conductor nodes on ring
@@ -1235,7 +1247,7 @@ export function renderFocusedBeam(
       vdX,
       vdY + 0.7 * zoom,
       vdX + 4 * zoom,
-      vdY + 3 * zoom - vdSwing,
+      vdY + 3 * zoom - vdSwing
     );
     ctx.stroke();
     for (const ws of [-1, 1]) {
@@ -1251,7 +1263,9 @@ export function renderFocusedBeam(
   // === COIL AMPLIFIERS - BACK PASS (behind pylons) ===
   for (let i = 0; i < 4; i++) {
     const coilAngle = (i / 4) * Math.PI * 2 + time;
-    if (Math.sin(coilAngle) >= 0) continue;
+    if (Math.sin(coilAngle) >= 0) {
+      continue;
+    }
     const coilX = screenPos.x + Math.cos(coilAngle) * 16 * zoom;
     const coilY = topY - 4 * zoom + Math.sin(coilAngle) * 8 * zoom;
 
@@ -1276,7 +1290,7 @@ export function renderFocusedBeam(
         coilRingR * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Main ring body with copper gradient
@@ -1284,7 +1298,7 @@ export function renderFocusedBeam(
         coilX - coilRingR,
         turnY,
         coilX + coilRingR,
-        turnY,
+        turnY
       );
       rGrad.addColorStop(0, "rgb(120, 75, 35)");
       rGrad.addColorStop(0.3, "rgb(180, 120, 55)");
@@ -1306,7 +1320,7 @@ export function renderFocusedBeam(
         coilRingR * 0.32,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1324,7 +1338,7 @@ export function renderFocusedBeam(
       0,
       coilX,
       sphereY,
-      4.5 * zoom,
+      4.5 * zoom
     );
     sphereGrad.addColorStop(0, "#ffffff");
     sphereGrad.addColorStop(0.3, "#aaeeff");
@@ -1367,8 +1381,9 @@ export function renderFocusedBeam(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
     ctx.strokeStyle = `rgba(255, 220, 130, ${0.45 + attackPulse * 0.35})`;
@@ -1376,15 +1391,17 @@ export function renderFocusedBeam(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 255, 220, ${0.4 + attackPulse * 0.3})`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
   }
 
@@ -1455,7 +1472,7 @@ export function renderFocusedBeam(
       pylonX + i * 5 * zoom - 2 * zoom,
       pistonBaseY - 6 * zoom,
       4 * zoom,
-      6 * zoom,
+      6 * zoom
     );
     ctx.strokeStyle = "#8a7a4a";
     ctx.lineWidth = 0.6 * zoom;
@@ -1463,14 +1480,14 @@ export function renderFocusedBeam(
       pylonX + i * 5 * zoom - 2 * zoom,
       pistonBaseY - 6 * zoom,
       4 * zoom,
-      6 * zoom,
+      6 * zoom
     );
     ctx.fillStyle = "#c8b870";
     ctx.fillRect(
       pylonX + i * 5 * zoom - 0.8 * zoom,
       pistonBaseY - 6 * zoom - pistonExt,
       1.6 * zoom,
-      pistonExt + 1.5 * zoom,
+      pistonExt + 1.5 * zoom
     );
     ctx.fillStyle = "#8a7a40";
     ctx.beginPath();
@@ -1481,7 +1498,7 @@ export function renderFocusedBeam(
       1 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     if (attackPulse > 0.2) {
@@ -1494,7 +1511,7 @@ export function renderFocusedBeam(
           pistonBaseY - 7 * zoom - pistonExt - vy,
           (1 + v * 0.3) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1526,7 +1543,7 @@ export function renderFocusedBeam(
         discR * 0.18,
         0,
         0,
-        Math.PI,
+        Math.PI
       );
       ctx.stroke();
       if (dd < 2) {
@@ -1535,7 +1552,7 @@ export function renderFocusedBeam(
           insX - 0.3 * zoom,
           discY + discR * 0.3,
           0.6 * zoom,
-          2 * zoom,
+          2 * zoom
         );
       }
     }
@@ -1550,7 +1567,7 @@ export function renderFocusedBeam(
       insX - i * 3 * zoom,
       insBottomY + 5 * zoom + wireSag,
       screenPos.x + i * 3 * zoom,
-      topY + 2 * zoom,
+      topY + 2 * zoom
     );
     ctx.stroke();
 
@@ -1584,7 +1601,9 @@ export function renderFocusedBeam(
   // === COIL AMPLIFIERS - FRONT PASS (in front of pylons) ===
   for (let i = 0; i < 4; i++) {
     const coilAngle = (i / 4) * Math.PI * 2 + time;
-    if (Math.sin(coilAngle) < 0) continue;
+    if (Math.sin(coilAngle) < 0) {
+      continue;
+    }
     const coilX = screenPos.x + Math.cos(coilAngle) * 16 * zoom;
     const coilY = topY - 4 * zoom + Math.sin(coilAngle) * 8 * zoom;
 
@@ -1609,7 +1628,7 @@ export function renderFocusedBeam(
         coilRingR * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Main ring body with copper gradient
@@ -1617,7 +1636,7 @@ export function renderFocusedBeam(
         coilX - coilRingR,
         turnY,
         coilX + coilRingR,
-        turnY,
+        turnY
       );
       rGrad.addColorStop(0, "rgb(120, 75, 35)");
       rGrad.addColorStop(0.3, "rgb(180, 120, 55)");
@@ -1639,7 +1658,7 @@ export function renderFocusedBeam(
         coilRingR * 0.32,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1657,7 +1676,7 @@ export function renderFocusedBeam(
       0,
       coilX,
       sphereY,
-      4.5 * zoom,
+      4.5 * zoom
     );
     sphereGrad.addColorStop(0, "#ffffff");
     sphereGrad.addColorStop(0.3, "#aaeeff");
@@ -1700,8 +1719,9 @@ export function renderFocusedBeam(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
     ctx.strokeStyle = `rgba(255, 220, 130, ${0.45 + attackPulse * 0.35})`;
@@ -1709,15 +1729,17 @@ export function renderFocusedBeam(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 255, 220, ${0.4 + attackPulse * 0.3})`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(ampBoltPts[0].x, ampBoltPts[0].y);
-    for (let p = 1; p < ampBoltPts.length; p++)
+    for (let p = 1; p < ampBoltPts.length; p++) {
       ctx.lineTo(ampBoltPts[p].x, ampBoltPts[p].y);
+    }
     ctx.stroke();
   }
 
@@ -1729,7 +1751,7 @@ export function renderFocusedBeam(
     const cbY = topY - coilHeight * 0.55 + Math.sin(cbAngle) * cbR * 0.5;
     const charge = Math.max(
       0,
-      Math.min(1, 0.3 + Math.sin(time * 2.5 + cb) * 0.25 + attackPulse * 0.5),
+      Math.min(1, 0.3 + Math.sin(time * 2.5 + cb) * 0.25 + attackPulse * 0.5)
     );
     ctx.fillStyle = "#2a2010";
     ctx.beginPath();
@@ -1744,7 +1766,7 @@ export function renderFocusedBeam(
       charge * 3 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#b87333";
@@ -1811,7 +1833,7 @@ export function renderFocusedBeam(
     (dishSize + 2) * 0.72 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1825,7 +1847,7 @@ export function renderFocusedBeam(
     dishSize * 0.72 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1836,7 +1858,7 @@ export function renderFocusedBeam(
     0,
     screenPos.x,
     dishY,
-    dishSize * zoom,
+    dishSize * zoom
   );
   dishGrad.addColorStop(0, "#bda860");
   dishGrad.addColorStop(0.25, "#9d8848");
@@ -1852,7 +1874,7 @@ export function renderFocusedBeam(
     (dishSize * 0.72 - 2) * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1864,11 +1886,11 @@ export function renderFocusedBeam(
     ctx.beginPath();
     ctx.moveTo(
       screenPos.x + Math.cos(rlAngle) * 5 * zoom,
-      dishY + Math.sin(rlAngle) * 3.5 * zoom,
+      dishY + Math.sin(rlAngle) * 3.5 * zoom
     );
     ctx.lineTo(
       screenPos.x + Math.cos(rlAngle) * (dishSize - 4) * zoom,
-      dishY + Math.sin(rlAngle) * (dishSize - 4) * 0.72 * zoom,
+      dishY + Math.sin(rlAngle) * (dishSize - 4) * 0.72 * zoom
     );
     ctx.stroke();
   }
@@ -1887,7 +1909,7 @@ export function renderFocusedBeam(
       ringSize * 0.72 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -1909,7 +1931,7 @@ export function renderFocusedBeam(
       daBaseX - 1.5 * zoom,
       daBaseY + daExt - 1 * zoom,
       3 * zoom,
-      4 * zoom,
+      4 * zoom
     );
     ctx.fillStyle = "#c8b870";
     ctx.fillRect(daBaseX - 0.5 * zoom, daBaseY - 0.5 * zoom, 1 * zoom, daExt);
@@ -1929,7 +1951,7 @@ export function renderFocusedBeam(
     4 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2015,8 +2037,9 @@ export function renderFocusedBeam(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(crackPts[0].x, crackPts[0].y);
-    for (let p = 1; p < crackPts.length; p++)
+    for (let p = 1; p < crackPts.length; p++) {
       ctx.lineTo(crackPts[p].x, crackPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
     ctx.strokeStyle = `rgba(255, 220, 130, ${0.4 + attackPulse * 0.3})`;
@@ -2024,15 +2047,17 @@ export function renderFocusedBeam(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(crackPts[0].x, crackPts[0].y);
-    for (let p = 1; p < crackPts.length; p++)
+    for (let p = 1; p < crackPts.length; p++) {
       ctx.lineTo(crackPts[p].x, crackPts[p].y);
+    }
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 255, 220, ${0.35 + attackPulse * 0.25})`;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(crackPts[0].x, crackPts[0].y);
-    for (let p = 1; p < crackPts.length; p++)
+    for (let p = 1; p < crackPts.length; p++) {
       ctx.lineTo(crackPts[p].x, crackPts[p].y);
+    }
     ctx.stroke();
   }
 
@@ -2053,7 +2078,7 @@ export function renderFocusedBeam(
         ringRadius * 0.5 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -2064,7 +2089,7 @@ export function renderFocusedBeam(
       crystalY,
       15 * (1 - beamPhase * 0.5) * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2095,7 +2120,7 @@ export function renderChainLightning(
   topY: number,
   tower: Tower,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const coilHeight = 52 * zoom;
   const timeSinceFire = Date.now() - tower.lastAttack;
@@ -2114,7 +2139,7 @@ export function renderChainLightning(
     11 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2128,7 +2153,7 @@ export function renderChainLightning(
     14 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2143,7 +2168,7 @@ export function renderChainLightning(
     12 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -2163,7 +2188,7 @@ export function renderChainLightning(
       crR * 0.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2179,7 +2204,7 @@ export function renderChainLightning(
     11 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2212,7 +2237,7 @@ export function renderChainLightning(
       mainCoilR * 0.4,
       0,
       Math.PI,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.closePath();
     ctx.fill();
@@ -2226,7 +2251,7 @@ export function renderChainLightning(
       mainCoilR * 0.4,
       0,
       Math.PI,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.closePath();
     ctx.fill();
@@ -2299,7 +2324,7 @@ export function renderChainLightning(
       mainCoilR * 0.4,
       0,
       0,
-      Math.PI,
+      Math.PI
     );
     ctx.closePath();
     ctx.fill();
@@ -2308,7 +2333,7 @@ export function renderChainLightning(
       screenPos.x - mainCoilR,
       turnY,
       screenPos.x + mainCoilR,
-      turnY,
+      turnY
     );
     mcGrad.addColorStop(0, "rgb(120, 75, 35)");
     mcGrad.addColorStop(0.3, "rgb(180, 120, 55)");
@@ -2331,7 +2356,7 @@ export function renderChainLightning(
       mainCoilR * 0.32,
       0,
       0.15,
-      Math.PI - 0.15,
+      Math.PI - 0.15
     );
     ctx.stroke();
   }
@@ -2354,21 +2379,21 @@ export function renderChainLightning(
     32,
     16,
     {
-      rail: "#3a2870",
-      topRail: "#4a3890",
       backPanel: "rgba(58, 40, 112, 0.35)",
       frontPanel: "rgba(58, 40, 112, 0.25)",
+      rail: "#3a2870",
+      topRail: "#4a3890",
     },
     zoom,
-    "front",
+    "front"
   );
 
   // === SUB-COIL TOWERS with PISTONS, 3D COILS, and INSULATORS ===
   const coilPositions = [
-    { x: 0, y: -10, size: 0.7 },
-    { x: -19, y: 0, size: 0.7 },
-    { x: 19, y: 0, size: 0.7 },
-    { x: 0, y: 10, size: 0.8 },
+    { size: 0.7, x: 0, y: -10 },
+    { size: 0.7, x: -19, y: 0 },
+    { size: 0.7, x: 19, y: 0 },
+    { size: 0.8, x: 0, y: 10 },
   ];
 
   for (const pos of coilPositions) {
@@ -2386,7 +2411,7 @@ export function renderChainLightning(
       4 * zoom * coilSize,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2400,7 +2425,7 @@ export function renderChainLightning(
       5 * zoom * coilSize,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2414,7 +2439,7 @@ export function renderChainLightning(
       3 * zoom * coilSize,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2434,7 +2459,7 @@ export function renderChainLightning(
         subCoilR * 0.4,
         0,
         Math.PI,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.closePath();
       ctx.fill();
@@ -2492,7 +2517,7 @@ export function renderChainLightning(
         subCoilR * 0.4,
         0,
         0,
-        Math.PI,
+        Math.PI
       );
       ctx.closePath();
       ctx.fill();
@@ -2501,7 +2526,7 @@ export function renderChainLightning(
         cx - subCoilR,
         turnY,
         cx + subCoilR,
-        turnY,
+        turnY
       );
       scGrad.addColorStop(0, "rgb(120, 75, 35)");
       scGrad.addColorStop(0.3, "rgb(180, 120, 55)");
@@ -2524,7 +2549,7 @@ export function renderChainLightning(
         subCoilR * 0.32,
         0,
         0.15,
-        Math.PI - 0.15,
+        Math.PI - 0.15
       );
       ctx.stroke();
     }
@@ -2542,14 +2567,14 @@ export function renderChainLightning(
       subPistonX - 1.8 * zoom,
       subPistonY - 5 * zoom * coilSize,
       3.6 * zoom,
-      5 * zoom * coilSize,
+      5 * zoom * coilSize
     );
     ctx.fillStyle = "#9888c0";
     ctx.fillRect(
       subPistonX - 0.7 * zoom,
       subPistonY - 5 * zoom * coilSize - subPistonExt,
       1.4 * zoom,
-      subPistonExt + 1.5 * zoom,
+      subPistonExt + 1.5 * zoom
     );
     ctx.fillStyle = "#6a58a0";
     ctx.beginPath();
@@ -2560,7 +2585,7 @@ export function renderChainLightning(
       0.8 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     if (attackPulse > 0.15) {
@@ -2573,7 +2598,7 @@ export function renderChainLightning(
           subPistonY - 5.5 * zoom * coilSize - subPistonExt - vy,
           (0.8 + v * 0.3) * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2610,15 +2635,15 @@ export function renderChainLightning(
       0,
       cx,
       miniOrbY,
-      miniOrbSize * (2 + attackPulse * 0.5),
+      miniOrbSize * (2 + attackPulse * 0.5)
     );
     miniFieldGrad.addColorStop(
       0,
-      `rgba(176, 148, 255, ${miniFieldAlpha + attackPulse * 0.2})`,
+      `rgba(176, 148, 255, ${miniFieldAlpha + attackPulse * 0.2})`
     );
     miniFieldGrad.addColorStop(
       0.5,
-      `rgba(140, 120, 255, ${0.08 + attackPulse * 0.12})`,
+      `rgba(140, 120, 255, ${0.08 + attackPulse * 0.12})`
     );
     miniFieldGrad.addColorStop(1, "rgba(100, 80, 220, 0)");
     ctx.fillStyle = miniFieldGrad;
@@ -2628,7 +2653,7 @@ export function renderChainLightning(
       miniOrbY,
       miniOrbSize * (2 + attackPulse * 0.5),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2640,7 +2665,7 @@ export function renderChainLightning(
       0,
       cx,
       miniOrbY,
-      miniOrbSize,
+      miniOrbSize
     );
     if (isAttacking) {
       miniOrbGrad.addColorStop(0, "#ffffff");
@@ -2668,12 +2693,12 @@ export function renderChainLightning(
         0,
         cx,
         miniOrbY,
-        miniOrbSize * 0.5,
+        miniOrbSize * 0.5
       );
       miniCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
       miniCoreGrad.addColorStop(
         0.5,
-        `rgba(220, 230, 255, ${attackPulse * 0.9})`,
+        `rgba(220, 230, 255, ${attackPulse * 0.9})`
       );
       miniCoreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackPulse * 0.5})`);
       ctx.fillStyle = miniCoreGrad;
@@ -2718,8 +2743,9 @@ export function renderChainLightning(
       ctx.lineJoin = "round";
       ctx.beginPath();
       ctx.moveTo(miniPts[0].x, miniPts[0].y);
-      for (let p = 1; p < miniPts.length; p++)
+      for (let p = 1; p < miniPts.length; p++) {
         ctx.lineTo(miniPts[p].x, miniPts[p].y);
+      }
       ctx.stroke();
       ctx.restore();
       ctx.strokeStyle = `rgba(180, 160, 255, ${0.45 + attackPulse * 0.25})`;
@@ -2727,15 +2753,17 @@ export function renderChainLightning(
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(miniPts[0].x, miniPts[0].y);
-      for (let p = 1; p < miniPts.length; p++)
+      for (let p = 1; p < miniPts.length; p++) {
         ctx.lineTo(miniPts[p].x, miniPts[p].y);
+      }
       ctx.stroke();
       ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + attackPulse * 0.2})`;
       ctx.lineWidth = 0.5 * zoom * coilSize;
       ctx.beginPath();
       ctx.moveTo(miniPts[0].x, miniPts[0].y);
-      for (let p = 1; p < miniPts.length; p++)
+      for (let p = 1; p < miniPts.length; p++) {
         ctx.lineTo(miniPts[p].x, miniPts[p].y);
+      }
       ctx.stroke();
     }
   }
@@ -2756,7 +2784,7 @@ export function renderChainLightning(
       vdX,
       vdY + 0.5 * zoom,
       vdX + 3.5 * zoom,
-      vdY + 2.5 * zoom - swing,
+      vdY + 2.5 * zoom - swing
     );
     ctx.stroke();
     for (const ws of [-1, 1]) {
@@ -2779,8 +2807,8 @@ export function renderChainLightning(
       0,
       Math.min(
         1,
-        0.3 + Math.sin(time * 2.5 + cb * 0.8) * 0.25 + attackPulse * 0.5,
-      ),
+        0.3 + Math.sin(time * 2.5 + cb * 0.8) * 0.25 + attackPulse * 0.5
+      )
     );
     ctx.fillStyle = "#1a1838";
     ctx.beginPath();
@@ -2795,7 +2823,7 @@ export function renderChainLightning(
       charge * 2.5 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#b87333";
@@ -2850,19 +2878,19 @@ export function renderChainLightning(
     0,
     screenPos.x,
     mainOrbY,
-    mainOrbSize * (2.5 + attackPulse * 0.5),
+    mainOrbSize * (2.5 + attackPulse * 0.5)
   );
   energyFieldGrad.addColorStop(
     0,
-    `rgba(180, 160, 255, ${mainFieldAlpha + attackPulse * 0.25})`,
+    `rgba(180, 160, 255, ${mainFieldAlpha + attackPulse * 0.25})`
   );
   energyFieldGrad.addColorStop(
     0.4,
-    `rgba(150, 128, 255, ${0.1 + attackPulse * 0.15})`,
+    `rgba(150, 128, 255, ${0.1 + attackPulse * 0.15})`
   );
   energyFieldGrad.addColorStop(
     0.7,
-    `rgba(120, 100, 240, ${0.05 + attackPulse * 0.1})`,
+    `rgba(120, 100, 240, ${0.05 + attackPulse * 0.1})`
   );
   energyFieldGrad.addColorStop(1, "rgba(100, 80, 220, 0)");
   ctx.fillStyle = energyFieldGrad;
@@ -2872,7 +2900,7 @@ export function renderChainLightning(
     mainOrbY,
     mainOrbSize * (2.5 + attackPulse * 0.5),
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2885,7 +2913,7 @@ export function renderChainLightning(
     0,
     screenPos.x,
     mainOrbY,
-    mainOrbSize,
+    mainOrbSize
   );
   if (isAttacking) {
     mainOrbGrad.addColorStop(0, "#ffffff");
@@ -2913,7 +2941,7 @@ export function renderChainLightning(
       0,
       screenPos.x,
       mainOrbY,
-      mainOrbSize * 0.5,
+      mainOrbSize * 0.5
     );
     coreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
     coreGrad.addColorStop(0.5, `rgba(220, 230, 255, ${attackPulse * 0.9})`);
@@ -2961,8 +2989,9 @@ export function renderChainLightning(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
     ctx.strokeStyle = `rgba(185, 165, 255, ${0.55 + attackPulse * 0.3})`;
@@ -2971,17 +3000,19 @@ export function renderChainLightning(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 255, 255, ${0.65 + attackPulse * 0.3})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(boltPts[0].x, boltPts[0].y);
-    for (let p = 1; p < boltPts.length; p++)
+    for (let p = 1; p < boltPts.length; p++) {
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
+    }
     ctx.stroke();
-    const tip = boltPts[boltPts.length - 1];
+    const tip = boltPts.at(-1);
     ctx.fillStyle = `rgba(220, 200, 255, ${0.55 + attackPulse * 0.3})`;
     ctx.beginPath();
     ctx.arc(tip.x, tip.y, 2 * zoom, 0, Math.PI * 2);
@@ -3057,8 +3088,9 @@ export function renderChainLightning(
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(connPts[0].x, connPts[0].y);
-    for (let p = 1; p < connPts.length; p++)
+    for (let p = 1; p < connPts.length; p++) {
       ctx.lineTo(connPts[p].x, connPts[p].y);
+    }
     ctx.stroke();
     ctx.restore();
     ctx.strokeStyle = `rgba(185, 165, 255, ${0.45 + attackPulse * 0.3})`;
@@ -3066,15 +3098,17 @@ export function renderChainLightning(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(connPts[0].x, connPts[0].y);
-    for (let p = 1; p < connPts.length; p++)
+    for (let p = 1; p < connPts.length; p++) {
       ctx.lineTo(connPts[p].x, connPts[p].y);
+    }
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + attackPulse * 0.25})`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(connPts[0].x, connPts[0].y);
-    for (let p = 1; p < connPts.length; p++)
+    for (let p = 1; p < connPts.length; p++) {
       ctx.lineTo(connPts[p].x, connPts[p].y);
+    }
     ctx.stroke();
   }
 

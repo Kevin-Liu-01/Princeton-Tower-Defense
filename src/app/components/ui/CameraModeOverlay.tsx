@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
 import { Camera, X } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
 
 // =============================================================================
 // CAMERA MODE OVERLAY
@@ -20,7 +20,9 @@ export const CameraModeOverlay: React.FC<CameraModeOverlayProps> = ({
   const [capturing, setCapturing] = useState(false);
 
   const handleCapture = useCallback(async () => {
-    if (capturing) return;
+    if (capturing) {
+      return;
+    }
     setCapturing(true);
     const ok = await onCapture();
     if (ok) {
@@ -52,9 +54,9 @@ export const CameraModeOverlay: React.FC<CameraModeOverlayProps> = ({
         <div
           className="fixed inset-0 pointer-events-none"
           style={{
-            zIndex: 9999,
-            background: "rgba(255,255,255,0.85)",
             animation: "flashFade 200ms ease-out forwards",
+            background: "rgba(255,255,255,0.85)",
+            zIndex: 9999,
           }}
         />
       )}
@@ -63,10 +65,10 @@ export const CameraModeOverlay: React.FC<CameraModeOverlayProps> = ({
       <div
         className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2 rounded-xl"
         style={{
-          zIndex: 500,
-          background: "rgba(0,0,0,0.7)",
           backdropFilter: "blur(8px)",
+          background: "rgba(0,0,0,0.7)",
           border: "1px solid rgba(255,255,255,0.15)",
+          zIndex: 500,
         }}
       >
         <Camera size={16} className="text-white/80" />
@@ -110,15 +112,13 @@ export const CameraModeOverlay: React.FC<CameraModeOverlayProps> = ({
           disabled={capturing}
           className="group flex items-center gap-2 px-5 py-2.5 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
           style={{
-            background: "rgba(255,255,255,0.15)",
             backdropFilter: "blur(8px)",
+            background: "rgba(255,255,255,0.15)",
             border: "2px solid rgba(255,255,255,0.3)",
             boxShadow: "0 0 20px rgba(255,255,255,0.1)",
           }}
         >
-          <div
-            className="w-8 h-8 rounded-full border-2 border-white/80 flex items-center justify-center group-hover:border-white transition-colors"
-          >
+          <div className="w-8 h-8 rounded-full border-2 border-white/80 flex items-center justify-center group-hover:border-white transition-colors">
             <div className="w-6 h-6 rounded-full bg-white/90 group-hover:bg-white transition-colors" />
           </div>
           <span className="text-white/90 text-sm font-medium">Capture</span>
@@ -127,8 +127,12 @@ export const CameraModeOverlay: React.FC<CameraModeOverlayProps> = ({
 
       <style jsx>{`
         @keyframes flashFade {
-          0% { opacity: 1; }
-          100% { opacity: 0; }
+          0% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
         }
       `}</style>
     </>

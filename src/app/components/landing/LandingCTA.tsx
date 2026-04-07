@@ -1,6 +1,7 @@
 "use client";
-import React from "react";
 import { Swords } from "lucide-react";
+import React from "react";
+
 import { LANDING_THEME } from "./landingConstants";
 
 const T = LANDING_THEME;
@@ -38,9 +39,9 @@ export function LandingCTA({
         <div
           className="absolute inset-0"
           style={{
+            animation: "landing-shimmer 4s ease-in-out infinite",
             background:
               "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
-            animation: "landing-shimmer 4s ease-in-out infinite",
           }}
         />
       </div>

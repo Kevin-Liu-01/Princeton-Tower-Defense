@@ -18,7 +18,7 @@ export function getTooltipPosition(
     offsetY = -30,
     minTop = 60,
     viewportPadding = 10,
-  }: TooltipPositionOptions,
+  }: TooltipPositionOptions
 ) {
   let left = position.x + offsetX;
   let top = position.y + offsetY;

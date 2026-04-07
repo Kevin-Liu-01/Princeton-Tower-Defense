@@ -4,7 +4,7 @@ export function drawTree(
   dc: WorldMapDrawContext,
   x: number,
   yPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, time, seededRandom, getY } = dc;
   const y = getY(yPct);
@@ -16,7 +16,7 @@ export function drawTree(
     0,
     x + 4,
     y + 7,
-    18 * scale,
+    18 * scale
   );
   shadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
   shadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
@@ -49,19 +49,13 @@ export function drawTree(
         1.2 * scale,
         0,
         Math.PI,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       if (ft < 0.75) {
         ctx.fillStyle = "#f0e0c0";
         ctx.beginPath();
-        ctx.arc(
-          fx - 0.5 * scale,
-          fy - 2 * scale,
-          0.4 * scale,
-          0,
-          Math.PI * 2,
-        );
+        ctx.arc(fx - 0.5 * scale, fy - 2 * scale, 0.4 * scale, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -71,7 +65,7 @@ export function drawTree(
     x - 5 * scale,
     0,
     x + 5 * scale,
-    0,
+    0
   );
   trunkGrad.addColorStop(0, "#2a1008");
   trunkGrad.addColorStop(0.2, "#4a3020");
@@ -85,7 +79,7 @@ export function drawTree(
     x - 6 * scale,
     y - 4 * scale,
     x - 3.5 * scale,
-    y - 14 * scale,
+    y - 14 * scale
   );
   ctx.lineTo(x + 3.5 * scale, y - 14 * scale);
   ctx.quadraticCurveTo(x + 6 * scale, y - 4 * scale, x + 4.5 * scale, y + 5);
@@ -102,7 +96,7 @@ export function drawTree(
       bx + (seededRandom(x + bi * 43) - 0.5) * 2 * scale,
       y - 7 * scale,
       bx - 1 * scale,
-      y - 12 * scale,
+      y - 12 * scale
     );
     ctx.stroke();
   }
@@ -115,7 +109,7 @@ export function drawTree(
     2 * scale,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = "#1a0a00";
@@ -131,7 +125,7 @@ export function drawTree(
     3.5 * scale,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -143,7 +137,7 @@ export function drawTree(
     x - 8 * scale,
     y - 16 * scale,
     x - 10 * scale,
-    y - 20 * scale,
+    y - 20 * scale
   );
   ctx.stroke();
   ctx.beginPath();
@@ -152,7 +146,7 @@ export function drawTree(
     x + 7 * scale,
     y - 15 * scale,
     x + 9 * scale,
-    y - 19 * scale,
+    y - 19 * scale
   );
   ctx.stroke();
   ctx.lineWidth = 1.5 * scale;
@@ -162,7 +156,7 @@ export function drawTree(
     x + 2 * scale,
     y - 18 * scale,
     x + 1 * scale,
-    y - 23 * scale,
+    y - 23 * scale
   );
   ctx.stroke();
 
@@ -172,7 +166,7 @@ export function drawTree(
     0,
     x - 3 * scale,
     y - 22 * scale,
-    14 * scale,
+    14 * scale
   );
   c1.addColorStop(0, "#1a4a0a");
   c1.addColorStop(1, "#0d3006");
@@ -188,7 +182,7 @@ export function drawTree(
     2 * scale,
     x,
     y - 20 * scale,
-    14 * scale,
+    14 * scale
   );
   c2.addColorStop(0, "#2d6a18");
   c2.addColorStop(1, "#1a4a0c");
@@ -203,7 +197,7 @@ export function drawTree(
     0,
     x - 7 * scale,
     y - 17 * scale,
-    10 * scale,
+    10 * scale
   );
   c3.addColorStop(0, "#2a6015");
   c3.addColorStop(1, "#1d4a0f");
@@ -219,7 +213,7 @@ export function drawTree(
     0,
     x - 2 * scale,
     y - 20 * scale,
-    8 * scale,
+    8 * scale
   );
   c4.addColorStop(0, "#4a8a30");
   c4.addColorStop(1, "#2d6a18");
@@ -236,7 +230,7 @@ export function drawTree(
     0,
     x + sway,
     y - 24 * scale,
-    6 * scale,
+    6 * scale
   );
   c5.addColorStop(0, "#5ca040");
   c5.addColorStop(1, "rgba(70,140,45,0)");
@@ -247,7 +241,7 @@ export function drawTree(
 
   ctx.fillStyle = "#5a9a40";
   for (let li = 0; li < 10; li++) {
-    const lSway = Math.sin(time * 1.5 + li * 0.8 + x * 0.05) * 1.0 * scale;
+    const lSway = Math.sin(time * 1.5 + li * 0.8 + x * 0.05) * 1 * scale;
     const lx = x + (seededRandom(x + li * 7) - 0.5) * 20 * scale + lSway;
     const ly = y - 15 * scale - seededRandom(x + li * 7 + 1) * 14 * scale;
     ctx.beginPath();
@@ -258,7 +252,7 @@ export function drawTree(
       1.4 * scale,
       seededRandom(x + li * 11) * Math.PI,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -279,11 +273,7 @@ export function drawTree(
   ctx.fill();
 }
 
-export function drawCamp(
-  dc: WorldMapDrawContext,
-  cx: number,
-  cyPct: number,
-) {
+export function drawCamp(dc: WorldMapDrawContext, cx: number, cyPct: number) {
   const { ctx, time, getY } = dc;
   const cy = getY(cyPct);
 
@@ -393,7 +383,7 @@ export function drawCamp(
     cx + 30,
     cy - 16 + fw * 0.7,
     cx + 36,
-    cy - 14 + fw2 * 0.8,
+    cy - 14 + fw2 * 0.8
   );
   ctx.stroke();
   ctx.fillStyle = "#b45309";
@@ -428,15 +418,15 @@ export function drawCamp(
     0,
     cx - 12,
     cy + 2,
-    16,
+    16
   );
   glowGrad.addColorStop(
     0,
-    `rgba(255, 150, 50, ${0.5 + Math.sin(time * 6) * 0.2})`,
+    `rgba(255, 150, 50, ${0.5 + Math.sin(time * 6) * 0.2})`
   );
   glowGrad.addColorStop(
     0.5,
-    `rgba(255, 100, 20, ${0.15 + Math.sin(time * 5) * 0.05})`,
+    `rgba(255, 100, 20, ${0.15 + Math.sin(time * 5) * 0.05})`
   );
   glowGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
   ctx.fillStyle = glowGrad;
@@ -469,7 +459,7 @@ export function drawCamp(
       fx + Math.sin(time * 7 + f) * 1.5,
       cy - fh,
       fx + 2,
-      cy + 3,
+      cy + 3
     );
     ctx.fill();
   }
@@ -529,12 +519,7 @@ export function drawCamp(
   ctx.arc(cx - 12, cy - 5, 2.5, Math.PI, Math.PI * 2);
   ctx.stroke();
 
-  const crateGrad1 = ctx.createLinearGradient(
-    cx + 24,
-    cy + 1,
-    cx + 34,
-    cy + 7,
-  );
+  const crateGrad1 = ctx.createLinearGradient(cx + 24, cy + 1, cx + 34, cy + 7);
   crateGrad1.addColorStop(0, "#6a5038");
   crateGrad1.addColorStop(1, "#4a3020");
   ctx.fillStyle = crateGrad1;
@@ -552,12 +537,7 @@ export function drawCamp(
   ctx.strokeStyle = "#3a2010";
   ctx.lineWidth = 0.5;
   ctx.strokeRect(cx + 24, cy + 1, 10, 7);
-  const crateGrad2 = ctx.createLinearGradient(
-    cx + 25,
-    cy - 4,
-    cx + 33,
-    cy + 1,
-  );
+  const crateGrad2 = ctx.createLinearGradient(cx + 25, cy - 4, cx + 33, cy + 1);
   crateGrad2.addColorStop(0, "#5a4028");
   crateGrad2.addColorStop(1, "#3a2518");
   ctx.fillStyle = crateGrad2;
@@ -587,7 +567,7 @@ export function drawCamp(
       cx - 29 + s * 3,
       cy - 16,
       cx - 25 + s * 3,
-      cy - 12,
+      cy - 12
     );
     spearGrad.addColorStop(0, "#b0b0b0");
     spearGrad.addColorStop(1, "#707070");

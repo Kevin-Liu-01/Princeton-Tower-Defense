@@ -21,34 +21,44 @@ export function findAllyAlertTarget(
   enemies: Enemy[],
   getEnemyPos: (e: Enemy) => Position,
   extendedSightRange: number,
-  enemyFilter?: (e: Enemy) => boolean,
+  enemyFilter?: (e: Enemy) => boolean
 ): { enemy: Enemy; dist: number } | null {
   let hasEngagingAlly = false;
 
   for (const ally of allies) {
-    if (!ally.engaging) continue;
+    if (!ally.engaging) {
+      continue;
+    }
     if (distance(unitPos, ally.pos) <= ALLY_ALERT_RANGE) {
       hasEngagingAlly = true;
       break;
     }
   }
 
-  if (!hasEngagingAlly) return null;
+  if (!hasEngagingAlly) {
+    return null;
+  }
 
   let closestEnemy: Enemy | null = null;
   let closestDist = Infinity;
 
   for (const enemy of enemies) {
-    if (enemyFilter && !enemyFilter(enemy)) continue;
+    if (enemyFilter && !enemyFilter(enemy)) {
+      continue;
+    }
     const enemyPos = getEnemyPos(enemy);
     const dist = distance(unitPos, enemyPos);
-    if (dist > extendedSightRange) continue;
+    if (dist > extendedSightRange) {
+      continue;
+    }
     if (dist < closestDist) {
       closestDist = dist;
       closestEnemy = enemy;
     }
   }
 
-  if (!closestEnemy) return null;
-  return { enemy: closestEnemy, dist: closestDist };
+  if (!closestEnemy) {
+    return null;
+  }
+  return { dist: closestDist, enemy: closestEnemy };
 }

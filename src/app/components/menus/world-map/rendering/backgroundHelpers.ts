@@ -6,7 +6,7 @@ export function drawGrassTuft(
   y: number,
   scale: number,
   color: string,
-  time: number,
+  time: number
 ) {
   ctx.fillStyle = color;
   const blades = 3 + Math.floor(seededRandom(x + y) * 4);
@@ -20,14 +20,9 @@ export function drawGrassTuft(
       bladeX + sway,
       y - bladeHeight * 0.6,
       bladeX + sway * 1.5,
-      y - bladeHeight,
+      y - bladeHeight
     );
-    ctx.quadraticCurveTo(
-      bladeX + sway * 0.5,
-      y - bladeHeight * 0.4,
-      bladeX,
-      y,
-    );
+    ctx.quadraticCurveTo(bladeX + sway * 0.5, y - bladeHeight * 0.4, bladeX, y);
     ctx.fill();
   }
 }
@@ -51,9 +46,9 @@ function borderNoise(y: number, seed: number): number {
 
 export function generateOrganicBorderPoints(
   x: number,
-  height: number,
-): Array<{ x: number; y: number }> {
-  const points: Array<{ x: number; y: number }> = [];
+  height: number
+): { x: number; y: number }[] {
+  const points: { x: number; y: number }[] = [];
   const step = 4;
   const seed = x * 0.37 + 17;
 
@@ -67,9 +62,11 @@ export function generateOrganicBorderPoints(
 
 function traceOrganicPath(
   ctx: CanvasRenderingContext2D,
-  points: ReadonlyArray<{ x: number; y: number }>,
+  points: readonly { x: number; y: number }[]
 ) {
-  if (points.length < 2) return;
+  if (points.length < 2) {
+    return;
+  }
 
   ctx.moveTo(points[0].x, points[0].y);
 
@@ -81,15 +78,15 @@ function traceOrganicPath(
     ctx.quadraticCurveTo(cur.x, cur.y, mx, my);
   }
 
-  const last = points[points.length - 1];
+  const last = points.at(-1);
   ctx.lineTo(last.x, last.y);
 }
 
 function drawBorderScatter(
   ctx: CanvasRenderingContext2D,
-  points: ReadonlyArray<{ x: number; y: number }>,
+  points: readonly { x: number; y: number }[],
   region1Color: string,
-  region2Color: string,
+  region2Color: string
 ) {
   const step = 8;
   for (let i = 0; i < points.length; i += step) {
@@ -121,7 +118,8 @@ function drawBorderScatter(
       const py = pt.y + (seededRandom(rSeed + 101) - 0.5) * 4;
       const ps = 1 + seededRandom(rSeed + 102) * 2.5;
       ctx.globalAlpha = 0.08;
-      ctx.fillStyle = seededRandom(rSeed + 103) > 0.5 ? region1Color : region2Color;
+      ctx.fillStyle =
+        seededRandom(rSeed + 103) > 0.5 ? region1Color : region2Color;
       ctx.beginPath();
       ctx.arc(px, py, ps, 0, Math.PI * 2);
       ctx.fill();
@@ -135,7 +133,7 @@ export function drawRuggedBorder(
   height: number,
   x: number,
   _region1Color: string,
-  _region2Color: string,
+  _region2Color: string
 ) {
   ctx.save();
 

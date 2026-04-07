@@ -1,7 +1,7 @@
-import { setShadowBlur, clearShadow } from "../performance";
-import { drawRobeBody } from "../enemies/helpers";
-import { drawAnimatedArm } from "../enemies/animationHelpers";
 import type { Position } from "../../types";
+import { drawAnimatedArm } from "../enemies/animationHelpers";
+import { drawRobeBody } from "../enemies/helpers";
+import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawHexPlate,
   drawHexArmorPlate,
@@ -25,7 +25,7 @@ export function drawHexseerTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  _targetPos?: Position,
+  _targetPos?: Position
 ) {
   const isAttacking = attackPhase > 0;
   const pulse = 0.76 + Math.sin(time * 5.1) * 0.24;
@@ -37,7 +37,14 @@ export function drawHexseerTroop(
   ctx.save();
   ctx.globalAlpha = 0.2 * pulse;
   traceHexPath(ctx, x, y + size * 0.45, size * 0.5);
-  const poolGrad = ctx.createRadialGradient(x, y + size * 0.45, 0, x, y + size * 0.45, size * 0.5);
+  const poolGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.45,
+    0,
+    x,
+    y + size * 0.45,
+    size * 0.5
+  );
   poolGrad.addColorStop(0, "rgba(244, 114, 182, 0.4)");
   poolGrad.addColorStop(0.4, "rgba(190, 24, 93, 0.25)");
   poolGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
@@ -56,7 +63,14 @@ export function drawHexseerTroop(
   ctx.restore();
 
   // grand aura
-  const pool = ctx.createRadialGradient(x, y + size * 0.45, 0, x, y + size * 0.45, size * 0.62);
+  const pool = ctx.createRadialGradient(
+    x,
+    y + size * 0.45,
+    0,
+    x,
+    y + size * 0.45,
+    size * 0.62
+  );
   pool.addColorStop(0, `rgba(244, 114, 182, ${0.22 * pulse})`);
   pool.addColorStop(0.45, `rgba(190, 24, 93, ${0.13 * pulse})`);
   pool.addColorStop(1, "rgba(88, 28, 135, 0)");
@@ -67,56 +81,103 @@ export function drawHexseerTroop(
 
   // orbiting hex rune sigils (6 for Hexseer - more than others)
   drawOrbitingHexRunes(
-    ctx, x, y - size * 0.12, 6, size * 0.44, 0.42,
-    size * 0.042, `rgba(244, 114, 182, ${0.65 + pulse * 0.25})`,
-    time, 1.15, pulse, zoom,
+    ctx,
+    x,
+    y - size * 0.12,
+    6,
+    size * 0.44,
+    0.42,
+    size * 0.042,
+    `rgba(244, 114, 182, ${0.65 + pulse * 0.25})`,
+    time,
+    1.15,
+    pulse,
+    zoom
   );
 
   // arms with hex armored gauntlets
-  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.21 + hover, size, time, zoom, -1, {
-    color: "#be185d",
-    colorDark: "#9d174d",
-    handColor: "#f9a8d4",
-    swingSpeed: 3.6,
-    swingAmt: 0.36,
-    baseAngle: 0.5,
-    upperLen: 0.18,
-    foreLen: 0.15,
-    width: 0.04,
-    phaseOffset: 0.3,
-    elbowBend: 0.55,
-  });
-  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.21 + hover, size, time, zoom, 1, {
-    color: "#be185d",
-    colorDark: "#9d174d",
-    handColor: "#f9a8d4",
-    swingSpeed: 3.8,
-    swingAmt: 0.32,
-    baseAngle: 0.38,
-    upperLen: 0.17,
-    foreLen: 0.14,
-    width: 0.04,
-    phaseOffset: 1.35,
-    elbowBend: 0.65,
-    attackExtra: charge * 0.5,
-  });
+  drawAnimatedArm(
+    ctx,
+    x - size * 0.18,
+    y - size * 0.21 + hover,
+    size,
+    time,
+    zoom,
+    -1,
+    {
+      baseAngle: 0.5,
+      color: "#be185d",
+      colorDark: "#9d174d",
+      elbowBend: 0.55,
+      foreLen: 0.15,
+      handColor: "#f9a8d4",
+      phaseOffset: 0.3,
+      swingAmt: 0.36,
+      swingSpeed: 3.6,
+      upperLen: 0.18,
+      width: 0.04,
+    }
+  );
+  drawAnimatedArm(
+    ctx,
+    x + size * 0.18,
+    y - size * 0.21 + hover,
+    size,
+    time,
+    zoom,
+    1,
+    {
+      attackExtra: charge * 0.5,
+      baseAngle: 0.38,
+      color: "#be185d",
+      colorDark: "#9d174d",
+      elbowBend: 0.65,
+      foreLen: 0.14,
+      handColor: "#f9a8d4",
+      phaseOffset: 1.35,
+      swingAmt: 0.32,
+      swingSpeed: 3.8,
+      upperLen: 0.17,
+      width: 0.04,
+    }
+  );
 
   // spectral trail - outer ethereal glow layer
-  const outerTrailGrad = ctx.createLinearGradient(x, y + size * 0.05, x, y + size * 0.82);
+  const outerTrailGrad = ctx.createLinearGradient(
+    x,
+    y + size * 0.05,
+    x,
+    y + size * 0.82
+  );
   outerTrailGrad.addColorStop(0, "rgba(190, 24, 93, 0.15)");
   outerTrailGrad.addColorStop(0.4, "rgba(126, 34, 206, 0.08)");
   outerTrailGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
   ctx.fillStyle = outerTrailGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.2, y + size * 0.08 + hover);
-  ctx.quadraticCurveTo(x - size * 0.38, y + size * 0.45, x - size * 0.12, y + size * 0.82);
+  ctx.quadraticCurveTo(
+    x - size * 0.38,
+    y + size * 0.45,
+    x - size * 0.12,
+    y + size * 0.82
+  );
   ctx.quadraticCurveTo(x, y + size * 0.7, x + size * 0.12, y + size * 0.82);
-  ctx.quadraticCurveTo(x + size * 0.38, y + size * 0.45, x + size * 0.2, y + size * 0.08 + hover);
+  ctx.quadraticCurveTo(
+    x + size * 0.38,
+    y + size * 0.45,
+    x + size * 0.2,
+    y + size * 0.08 + hover
+  );
   ctx.closePath();
   ctx.fill();
 
   // spectral trail - core layer
-  const trailGrad = ctx.createLinearGradient(x, y - size * 0.02, x, y + size * 0.75);
+  const trailGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.02,
+    x,
+    y + size * 0.75
+  );
   trailGrad.addColorStop(0, "rgba(190, 24, 93, 0.65)");
   trailGrad.addColorStop(0.3, "rgba(162, 28, 140, 0.5)");
   trailGrad.addColorStop(0.6, "rgba(126, 34, 206, 0.28)");
@@ -124,84 +185,151 @@ export function drawHexseerTroop(
   ctx.fillStyle = trailGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y + size * 0.1 + hover);
-  ctx.quadraticCurveTo(x - size * 0.28, y + size * 0.42, x - size * 0.1, y + size * 0.72);
+  ctx.quadraticCurveTo(
+    x - size * 0.28,
+    y + size * 0.42,
+    x - size * 0.1,
+    y + size * 0.72
+  );
   ctx.quadraticCurveTo(x - size * 0.03, y + size * 0.62, x, y + size * 0.75);
-  ctx.quadraticCurveTo(x + size * 0.03, y + size * 0.62, x + size * 0.1, y + size * 0.72);
-  ctx.quadraticCurveTo(x + size * 0.28, y + size * 0.42, x + size * 0.14, y + size * 0.1 + hover);
+  ctx.quadraticCurveTo(
+    x + size * 0.03,
+    y + size * 0.62,
+    x + size * 0.1,
+    y + size * 0.72
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y + size * 0.42,
+    x + size * 0.14,
+    y + size * 0.1 + hover
+  );
   ctx.closePath();
   ctx.fill();
 
   // inner bright trail core
-  const innerTrailGrad = ctx.createLinearGradient(x, y + size * 0.1, x, y + size * 0.55);
+  const innerTrailGrad = ctx.createLinearGradient(
+    x,
+    y + size * 0.1,
+    x,
+    y + size * 0.55
+  );
   innerTrailGrad.addColorStop(0, "rgba(244, 114, 182, 0.3)");
   innerTrailGrad.addColorStop(0.5, "rgba(190, 24, 93, 0.15)");
   innerTrailGrad.addColorStop(1, "rgba(126, 34, 206, 0)");
   ctx.fillStyle = innerTrailGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.08, y + size * 0.12 + hover);
-  ctx.quadraticCurveTo(x - size * 0.14, y + size * 0.35, x - size * 0.04, y + size * 0.55);
+  ctx.quadraticCurveTo(
+    x - size * 0.14,
+    y + size * 0.35,
+    x - size * 0.04,
+    y + size * 0.55
+  );
   ctx.quadraticCurveTo(x, y + size * 0.5, x + size * 0.04, y + size * 0.55);
-  ctx.quadraticCurveTo(x + size * 0.14, y + size * 0.35, x + size * 0.08, y + size * 0.12 + hover);
+  ctx.quadraticCurveTo(
+    x + size * 0.14,
+    y + size * 0.35,
+    x + size * 0.08,
+    y + size * 0.12 + hover
+  );
   ctx.closePath();
   ctx.fill();
 
   // grand ghostly wisps from spectral trail (most elaborate)
   drawGhostlyWisps(ctx, x, y + size * 0.45, size, time, zoom, pulse, {
-    count: 9,
+    baseWidth: 2.5,
     color1: "rgba(244, 114, 182, 0.55)",
     color2: "rgba(190, 24, 93, 0.3)",
     color3: "rgba(88, 28, 135, 0)",
-    baseWidth: 2.5,
-    lengthMin: 0.18,
-    lengthMax: 0.38,
-    spread: 0.042,
-    speed: 2.2,
+    count: 9,
     curlAmount: 0.065,
+    lengthMax: 0.38,
+    lengthMin: 0.18,
+    speed: 2.2,
+    spread: 0.042,
   });
 
   // secondary wisps - fast ethereal tendrils
   drawGhostlyWisps(ctx, x, y + size * 0.38, size, time * 1.4, zoom, pulse, {
-    count: 6,
+    baseWidth: 1,
     color1: "rgba(251, 207, 232, 0.35)",
     color2: "rgba(244, 114, 182, 0.18)",
     color3: "rgba(190, 24, 93, 0)",
-    baseWidth: 1.0,
-    lengthMin: 0.22,
-    lengthMax: 0.42,
-    spread: 0.058,
-    speed: 3.8,
+    count: 6,
     curlAmount: 0.1,
+    lengthMax: 0.42,
+    lengthMin: 0.22,
+    speed: 3.8,
+    spread: 0.058,
   });
 
   // tertiary wisps - slow, wide, ghostly backdrop
   drawGhostlyWisps(ctx, x, y + size * 0.5, size, time * 0.6, zoom, pulse, {
-    count: 4,
+    baseWidth: 3,
     color1: "rgba(126, 34, 206, 0.25)",
     color2: "rgba(88, 28, 135, 0.12)",
     color3: "rgba(59, 7, 100, 0)",
-    baseWidth: 3.0,
-    lengthMin: 0.25,
-    lengthMax: 0.4,
-    spread: 0.08,
-    speed: 1.2,
+    count: 4,
     curlAmount: 0.04,
+    lengthMax: 0.4,
+    lengthMin: 0.25,
+    speed: 1.2,
+    spread: 0.08,
   });
 
   // hex dissolve particles (most)
-  drawDissolveParticles(ctx, x, y + size * 0.5, size, time, zoom, 14, 0.28, 0.45, "rgba(244, 114, 182, 0.5)", pulse);
+  drawDissolveParticles(
+    ctx,
+    x,
+    y + size * 0.5,
+    size,
+    time,
+    zoom,
+    14,
+    0.28,
+    0.45,
+    "rgba(244, 114, 182, 0.5)",
+    pulse
+  );
 
   // hex energy veins on spectral trail
-  drawHexEnergyVeins(ctx, x, y + size * 0.3 + hover, size * 0.2, size * 0.28, time, zoom, `rgba(244, 114, 182, ${0.2 + pulse * 0.12})`, pulse, 4);
+  drawHexEnergyVeins(
+    ctx,
+    x,
+    y + size * 0.3 + hover,
+    size * 0.2,
+    size * 0.28,
+    time,
+    zoom,
+    `rgba(244, 114, 182, ${0.2 + pulse * 0.12})`,
+    pulse,
+    4
+  );
 
   // hex chainmail on torso
   ctx.save();
   ctx.globalAlpha = 0.28;
-  drawHexChainMail(ctx, x, y + size * 0.02 + hover, size * 0.28, size * 0.14, size * 0.022, "rgba(244, 114, 182, 0.5)", zoom);
+  drawHexChainMail(
+    ctx,
+    x,
+    y + size * 0.02 + hover,
+    size * 0.28,
+    size * 0.14,
+    size * 0.022,
+    "rgba(244, 114, 182, 0.5)",
+    zoom
+  );
   ctx.globalAlpha = 1;
   ctx.restore();
 
   // ornate robe body with rich gradient
-  const robeGrad = ctx.createLinearGradient(x - size * 0.42, y, x + size * 0.42, y);
+  const robeGrad = ctx.createLinearGradient(
+    x - size * 0.42,
+    y,
+    x + size * 0.42,
+    y
+  );
   robeGrad.addColorStop(0, "#7e22ce");
   robeGrad.addColorStop(0.25, "#9d174d");
   robeGrad.addColorStop(0.5, "#f472b6");
@@ -209,16 +337,50 @@ export function drawHexseerTroop(
   robeGrad.addColorStop(1, "#7e22ce");
   ctx.fillStyle = robeGrad;
   drawRobeBody(
-    ctx, x, size * 0.18, y - size * 0.34 + hover, size * 0.4,
-    y + size * 0.52, size * 0.42, y + size * 0.1,
-    { count: 9, amplitude: size * 0.035, time, speed: 3.8, altAmplitude: size * 0.07 },
+    ctx,
+    x,
+    size * 0.18,
+    y - size * 0.34 + hover,
+    size * 0.4,
+    y + size * 0.52,
+    size * 0.42,
+    y + size * 0.1,
+    {
+      altAmplitude: size * 0.07,
+      amplitude: size * 0.035,
+      count: 9,
+      speed: 3.8,
+      time,
+    }
   );
 
   // hex scale armor overlay on robe
-  drawHexScaleArmor(ctx, x, y - size * 0.02 + hover, size * 0.3, size * 0.28, size * 0.035, "rgba(190, 24, 93, 0.45)", `rgba(244, 114, 182, 0.25)`, zoom, shimmer);
+  drawHexScaleArmor(
+    ctx,
+    x,
+    y - size * 0.02 + hover,
+    size * 0.3,
+    size * 0.28,
+    size * 0.035,
+    "rgba(190, 24, 93, 0.45)",
+    `rgba(244, 114, 182, 0.25)`,
+    zoom,
+    shimmer
+  );
 
   // hex energy veins on robe body
-  drawHexEnergyVeins(ctx, x, y + size * 0.04 + hover, size * 0.24, size * 0.3, time, zoom, `rgba(244, 114, 182, ${0.25 + pulse * 0.18})`, pulse, 5);
+  drawHexEnergyVeins(
+    ctx,
+    x,
+    y + size * 0.04 + hover,
+    size * 0.24,
+    size * 0.3,
+    time,
+    zoom,
+    `rgba(244, 114, 182, ${0.25 + pulse * 0.18})`,
+    pulse,
+    5
+  );
 
   // robe panel accents - glowing seams
   for (let side = -1; side <= 1; side += 2) {
@@ -226,7 +388,12 @@ export function drawHexseerTroop(
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.13, y - size * 0.2 + hover);
-    ctx.quadraticCurveTo(x + side * size * 0.18, y + size * 0.08, x + side * size * 0.16, y + size * 0.38);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.18,
+      y + size * 0.08,
+      x + side * size * 0.16,
+      y + size * 0.38
+    );
     ctx.stroke();
   }
 
@@ -239,11 +406,26 @@ export function drawHexseerTroop(
   ctx.stroke();
 
   // hex armor breastplate (larger, more ornate for seer)
-  const breastGrad = ctx.createRadialGradient(x, y - size * 0.12 + hover, 0, x, y - size * 0.12 + hover, size * 0.15);
+  const breastGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.12 + hover,
+    0,
+    x,
+    y - size * 0.12 + hover,
+    size * 0.15
+  );
   breastGrad.addColorStop(0, "#f472b6");
   breastGrad.addColorStop(0.4, "#be185d");
   breastGrad.addColorStop(1, "#9d174d");
-  drawHexPlate(ctx, x, y - size * 0.12 + hover, size * 0.14, breastGrad, `rgba(244, 114, 182, ${0.55 + shimmer * 0.2})`, 1.4 * zoom);
+  drawHexPlate(
+    ctx,
+    x,
+    y - size * 0.12 + hover,
+    size * 0.14,
+    breastGrad,
+    `rgba(244, 114, 182, ${0.55 + shimmer * 0.2})`,
+    1.4 * zoom
+  );
 
   // inner hex detail
   ctx.strokeStyle = `rgba(251, 207, 232, ${0.35 + shimmer * 0.2})`;
@@ -252,7 +434,16 @@ export function drawHexseerTroop(
   ctx.stroke();
 
   // breastplate center gem
-  drawGlowingHexGem(ctx, x, y - size * 0.12 + hover, size * 0.032, "#fda4af", "#f472b6", pulse, zoom);
+  drawGlowingHexGem(
+    ctx,
+    x,
+    y - size * 0.12 + hover,
+    size * 0.032,
+    "#fda4af",
+    "#f472b6",
+    pulse,
+    zoom
+  );
 
   // grand hex pauldrons
   for (let side = -1; side <= 1; side += 2) {
@@ -265,7 +456,7 @@ export function drawHexseerTroop(
       "#f472b6",
       "#7e22ce",
       `rgba(244, 114, 182, ${0.55 + shimmer * 0.2})`,
-      zoom,
+      zoom
     );
 
     // pauldron spikes
@@ -293,10 +484,22 @@ export function drawHexseerTroop(
   ctx.strokeStyle = `rgba(255, 241, 242, ${0.36 + pulse * 0.22})`;
   ctx.lineWidth = 1.4 * zoom;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.31 + hover, size * 0.18, Math.PI * 0.18, Math.PI * 0.82);
+  ctx.arc(
+    x,
+    y - size * 0.31 + hover,
+    size * 0.18,
+    Math.PI * 0.18,
+    Math.PI * 0.82
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.31 + hover, size * 0.27, Math.PI * 0.12, Math.PI * 0.88);
+  ctx.arc(
+    x,
+    y - size * 0.31 + hover,
+    size * 0.27,
+    Math.PI * 0.12,
+    Math.PI * 0.88
+  );
   ctx.stroke();
 
   // head
@@ -307,7 +510,12 @@ export function drawHexseerTroop(
 
   // hex tiara/crown
   const tiaraVerts = hexVertices(x, y - size * 0.44 + hover, size * 0.06);
-  const crownGrad = ctx.createLinearGradient(x - size * 0.06, y - size * 0.5, x + size * 0.06, y - size * 0.38);
+  const crownGrad = ctx.createLinearGradient(
+    x - size * 0.06,
+    y - size * 0.5,
+    x + size * 0.06,
+    y - size * 0.38
+  );
   crownGrad.addColorStop(0, "#be185d");
   crownGrad.addColorStop(0.5, "#f472b6");
   crownGrad.addColorStop(1, "#be185d");
@@ -333,13 +541,34 @@ export function drawHexseerTroop(
   ctx.stroke();
 
   // crown center gem
-  drawGlowingHexGem(ctx, x, y - size * 0.42 + hover, size * 0.02, "#fda4af", "#f472b6", pulse, zoom);
+  drawGlowingHexGem(
+    ctx,
+    x,
+    y - size * 0.42 + hover,
+    size * 0.02,
+    "#fda4af",
+    "#f472b6",
+    pulse,
+    zoom
+  );
 
   // eyes
   ctx.fillStyle = "#2a123f";
   ctx.beginPath();
-  ctx.arc(x - size * 0.028, y - size * 0.35 + hover, size * 0.012, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.028, y - size * 0.35 + hover, size * 0.012, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.028,
+    y - size * 0.35 + hover,
+    size * 0.012,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    x + size * 0.028,
+    y - size * 0.35 + hover,
+    size * 0.012,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // hex third eye mark
@@ -381,14 +610,29 @@ export function drawHexseerTroop(
 
   // grand hex gem at staff top
   const gemR = size * 0.065;
-  const staffGemGrad = ctx.createRadialGradient(0, -size * 0.5, 0, 0, -size * 0.5, gemR);
+  const staffGemGrad = ctx.createRadialGradient(
+    0,
+    -size * 0.5,
+    0,
+    0,
+    -size * 0.5,
+    gemR
+  );
   staffGemGrad.addColorStop(0, `rgba(255, 241, 242, ${0.95 * pulse})`);
   staffGemGrad.addColorStop(0.35, `rgba(244, 114, 182, ${0.85 * pulse})`);
   staffGemGrad.addColorStop(0.7, `rgba(190, 24, 93, ${0.5 * pulse})`);
   staffGemGrad.addColorStop(1, `rgba(126, 34, 206, ${0.2 * pulse})`);
 
   setShadowBlur(ctx, 12 * zoom * pulse, "#f472b6");
-  drawHexPlate(ctx, 0, -size * 0.5, gemR, staffGemGrad, `rgba(244, 114, 182, ${0.6 + pulse * 0.3})`, 1.2 * zoom);
+  drawHexPlate(
+    ctx,
+    0,
+    -size * 0.5,
+    gemR,
+    staffGemGrad,
+    `rgba(244, 114, 182, ${0.6 + pulse * 0.3})`,
+    1.2 * zoom
+  );
   clearShadow(ctx);
 
   // inner hex detail on gem
@@ -409,7 +653,12 @@ export function drawHexseerTroop(
     ctx.lineWidth = 1.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.44);
-    ctx.quadraticCurveTo(side * size * 0.04, -size * 0.48, side * size * 0.025, -size * 0.55);
+    ctx.quadraticCurveTo(
+      side * size * 0.04,
+      -size * 0.48,
+      side * size * 0.025,
+      -size * 0.55
+    );
     ctx.stroke();
   }
 
@@ -422,7 +671,12 @@ export function drawHexseerTroop(
     const ribbonX = x + (i - 2) * size * 0.07;
     const ribbonLen = size * (0.5 + (i % 3) * 0.08);
 
-    const ribbonGrad = ctx.createLinearGradient(ribbonX, y + size * 0.18, ribbonX, y + size * 0.18 + ribbonLen);
+    const ribbonGrad = ctx.createLinearGradient(
+      ribbonX,
+      y + size * 0.18,
+      ribbonX,
+      y + size * 0.18 + ribbonLen
+    );
     ribbonGrad.addColorStop(0, `rgba(244, 114, 182, ${0.35 + charge * 0.15})`);
     ribbonGrad.addColorStop(0.5, `rgba(190, 24, 93, ${0.2 + charge * 0.08})`);
     ribbonGrad.addColorStop(1, "rgba(126, 34, 206, 0)");
@@ -433,12 +687,16 @@ export function drawHexseerTroop(
     ctx.beginPath();
     ctx.moveTo(ribbonX, y + size * 0.18 + hover);
     ctx.quadraticCurveTo(
-      ribbonX + ribbonSwing, y + size * 0.32,
-      ribbonX + ribbonSwing2, y + size * 0.46,
+      ribbonX + ribbonSwing,
+      y + size * 0.32,
+      ribbonX + ribbonSwing2,
+      y + size * 0.46
     );
     ctx.quadraticCurveTo(
-      ribbonX + ribbonSwing * 1.2, y + size * 0.55,
-      ribbonX - ribbonSwing * 0.6 + ribbonSwing2, y + size * 0.18 + ribbonLen,
+      ribbonX + ribbonSwing * 1.2,
+      y + size * 0.55,
+      ribbonX - ribbonSwing * 0.6 + ribbonSwing2,
+      y + size * 0.18 + ribbonLen
     );
     ctx.stroke();
 
@@ -472,7 +730,14 @@ export function drawHexseerTroop(
     ctx.stroke();
 
     // inner glow fill
-    const burstGrad = ctx.createRadialGradient(x, y - size * 0.12, 0, x, y - size * 0.12, burstR);
+    const burstGrad = ctx.createRadialGradient(
+      x,
+      y - size * 0.12,
+      0,
+      x,
+      y - size * 0.12,
+      burstR
+    );
     burstGrad.addColorStop(0, `rgba(255, 241, 242, ${0.18 * charge})`);
     burstGrad.addColorStop(0.45, `rgba(244, 114, 182, ${0.12 * charge})`);
     burstGrad.addColorStop(1, "rgba(190, 24, 93, 0)");

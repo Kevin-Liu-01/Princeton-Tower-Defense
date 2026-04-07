@@ -2,7 +2,11 @@ import { setShadowBlur, clearShadow } from "../performance";
 
 const HEX_ANGLE_OFFSET = -Math.PI / 6;
 
-export function hexVertices(cx: number, cy: number, r: number): [number, number][] {
+export function hexVertices(
+  cx: number,
+  cy: number,
+  r: number
+): [number, number][] {
   const verts: [number, number][] = [];
   for (let i = 0; i < 6; i++) {
     const a = HEX_ANGLE_OFFSET + (i * Math.PI) / 3;
@@ -11,11 +15,18 @@ export function hexVertices(cx: number, cy: number, r: number): [number, number]
   return verts;
 }
 
-export function traceHexPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+export function traceHexPath(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  r: number
+): void {
   const verts = hexVertices(cx, cy, r);
   ctx.beginPath();
   ctx.moveTo(verts[0][0], verts[0][1]);
-  for (let i = 1; i < 6; i++) ctx.lineTo(verts[i][0], verts[i][1]);
+  for (let i = 1; i < 6; i++) {
+    ctx.lineTo(verts[i][0], verts[i][1]);
+  }
   ctx.closePath();
 }
 
@@ -26,7 +37,7 @@ export function drawHexPlate(
   r: number,
   fill: string | CanvasGradient,
   stroke?: string,
-  lineWidth?: number,
+  lineWidth?: number
 ): void {
   traceHexPath(ctx, cx, cy, r);
   ctx.fillStyle = fill;
@@ -45,7 +56,7 @@ export function drawHexRune(
   r: number,
   color: string,
   pulse: number,
-  zoom: number,
+  zoom: number
 ): void {
   traceHexPath(ctx, cx, cy, r);
   ctx.strokeStyle = color;
@@ -69,7 +80,7 @@ export function drawHexChainMail(
   height: number,
   cellSize: number,
   color: string,
-  zoom: number,
+  zoom: number
 ): void {
   const cols = Math.floor(width / (cellSize * 1.5));
   const rows = Math.floor(height / (cellSize * 1.732));
@@ -77,7 +88,8 @@ export function drawHexChainMail(
   ctx.lineWidth = 0.6 * zoom;
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const ox = cx - width / 2 + col * cellSize * 1.5 + (row % 2) * cellSize * 0.75;
+      const ox =
+        cx - width / 2 + col * cellSize * 1.5 + (row % 2) * cellSize * 0.75;
       const oy = cy - height / 2 + row * cellSize * 0.866;
       traceHexPath(ctx, ox, oy, cellSize * 0.45);
       ctx.stroke();
@@ -93,7 +105,7 @@ export function drawGlowingHexGem(
   coreColor: string,
   glowColor: string,
   pulse: number,
-  zoom: number,
+  zoom: number
 ): void {
   setShadowBlur(ctx, 8 * zoom * pulse, glowColor);
   const gemGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
@@ -113,9 +125,16 @@ export function drawHexArmorPlate(
   highlightColor: string,
   shadowColor: string,
   trimColor: string,
-  zoom: number,
+  zoom: number
 ): void {
-  const grad = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.2, 0, cx, cy, r);
+  const grad = ctx.createRadialGradient(
+    cx - r * 0.2,
+    cy - r * 0.2,
+    0,
+    cx,
+    cy,
+    r
+  );
   grad.addColorStop(0, highlightColor);
   grad.addColorStop(0.6, baseColor);
   grad.addColorStop(1, shadowColor);
@@ -139,7 +158,7 @@ export function drawOrbitingHexRunes(
   time: number,
   speed: number,
   pulse: number,
-  zoom: number,
+  zoom: number
 ): void {
   for (let i = 0; i < count; i++) {
     const angle = time * speed + (i * Math.PI * 2) / count;
@@ -170,17 +189,31 @@ export function drawGhostlyWisps(
   time: number,
   zoom: number,
   pulse: number,
-  config: WispConfig,
+  config: WispConfig
 ): void {
   for (let i = 0; i < config.count; i++) {
-    const phase = i * (Math.PI * 2) / config.count;
-    const drift = Math.sin(time * config.speed + phase) * size * config.curlAmount;
-    const drift2 = Math.cos(time * config.speed * 0.7 + phase * 1.3) * size * config.curlAmount * 0.6;
-    const wispX = cx + (i - (config.count - 1) / 2) * size * config.spread + drift * 0.3;
-    const wispLen = size * (config.lengthMin + (config.lengthMax - config.lengthMin) * ((i % 3) / 2));
+    const phase = (i * (Math.PI * 2)) / config.count;
+    const drift =
+      Math.sin(time * config.speed + phase) * size * config.curlAmount;
+    const drift2 =
+      Math.cos(time * config.speed * 0.7 + phase * 1.3) *
+      size *
+      config.curlAmount *
+      0.6;
+    const wispX =
+      cx + (i - (config.count - 1) / 2) * size * config.spread + drift * 0.3;
+    const wispLen =
+      size *
+      (config.lengthMin +
+        (config.lengthMax - config.lengthMin) * ((i % 3) / 2));
     const alpha = 0.35 + pulse * 0.25 - (i % 2) * 0.08;
 
-    const wispGrad = ctx.createLinearGradient(wispX, baseY, wispX + drift, baseY + wispLen);
+    const wispGrad = ctx.createLinearGradient(
+      wispX,
+      baseY,
+      wispX + drift,
+      baseY + wispLen
+    );
     wispGrad.addColorStop(0, config.color1);
     wispGrad.addColorStop(0.4, config.color2);
     wispGrad.addColorStop(1, config.color3);
@@ -196,13 +229,13 @@ export function drawGhostlyWisps(
       wispX + drift,
       baseY + wispLen * 0.4,
       wispX + drift2,
-      baseY + wispLen * 0.75,
+      baseY + wispLen * 0.75
     );
     ctx.quadraticCurveTo(
       wispX + drift * 1.2 + drift2 * 0.5,
       baseY + wispLen * 0.9,
       wispX + drift * 0.8 + drift2,
-      baseY + wispLen,
+      baseY + wispLen
     );
     ctx.stroke();
     ctx.globalAlpha = 1;
@@ -221,7 +254,7 @@ export function drawDissolveParticles(
   spread: number,
   riseHeight: number,
   color: string,
-  pulse: number,
+  pulse: number
 ): void {
   for (let i = 0; i < count; i++) {
     const phase = (time * 0.8 + i * 0.31) % 1;
@@ -255,7 +288,7 @@ export function drawHexEnergyVeins(
   zoom: number,
   color: string,
   pulse: number,
-  count: number,
+  count: number
 ): void {
   ctx.save();
   ctx.strokeStyle = color;
@@ -272,7 +305,8 @@ export function drawHexEnergyVeins(
     ctx.moveTo(startX, startY);
     for (let s = 1; s <= segments; s++) {
       const t = s / segments;
-      const segX = startX + Math.sin(time * 3.2 + i * 1.5 + s * 0.8) * width * 0.08;
+      const segX =
+        startX + Math.sin(time * 3.2 + i * 1.5 + s * 0.8) * width * 0.08;
       const segY = startY + (endY - startY) * t;
       ctx.lineTo(segX, segY);
     }
@@ -293,16 +327,18 @@ export function drawHexScaleArmor(
   fillColor: string,
   strokeColor: string,
   zoom: number,
-  shimmer: number,
+  shimmer: number
 ): void {
   const cols = Math.floor(width / (scaleSize * 1.1));
   const rows = Math.floor(height / (scaleSize * 0.9));
   ctx.save();
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const ox = cx - width / 2 + col * scaleSize * 1.1 + (row % 2) * scaleSize * 0.55;
+      const ox =
+        cx - width / 2 + col * scaleSize * 1.1 + (row % 2) * scaleSize * 0.55;
       const oy = cy - height / 2 + row * scaleSize * 0.9;
-      const scaleAlpha = 0.3 + shimmer * 0.15 + Math.sin(row * 0.8 + col * 1.2) * 0.08;
+      const scaleAlpha =
+        0.3 + shimmer * 0.15 + Math.sin(row * 0.8 + col * 1.2) * 0.08;
       ctx.fillStyle = fillColor;
       ctx.globalAlpha = scaleAlpha;
       traceHexPath(ctx, ox, oy, scaleSize * 0.48);

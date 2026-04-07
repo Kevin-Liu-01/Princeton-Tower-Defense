@@ -43,22 +43,24 @@ export class EnemyMutationBatch {
    * Apply all batched mutations in a single setEnemies call.
    * Clears the batch afterwards.
    */
-  flush(
-    setEnemies: (fn: (prev: Enemy[]) => Enemy[]) => void,
-  ): void {
-    if (this.mutators.size === 0) return;
+  flush(setEnemies: (fn: (prev: Enemy[]) => Enemy[]) => void): void {
+    if (this.mutators.size === 0) {
+      return;
+    }
 
     const batch = this.mutators;
     setEnemies((prev) =>
       prev.map((enemy) => {
         const fns = batch.get(enemy.id);
-        if (!fns) return enemy;
+        if (!fns) {
+          return enemy;
+        }
         let result = enemy;
         for (const fn of fns) {
           result = fn(result);
         }
         return result;
-      }),
+      })
     );
 
     this.mutators = new Map();

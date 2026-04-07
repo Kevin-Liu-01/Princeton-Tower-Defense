@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
 import { ExternalLink } from "lucide-react";
-import { GOLD, dividerGradient, panelGradient } from "../../ui/system/theme";
-import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import React from "react";
+
 import { SITE_URL } from "../../../seo/constants";
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { GOLD, dividerGradient, panelGradient } from "../../ui/system/theme";
 
 const SHARE_TEXT = `@kevskgs made a fire free browser TD game with 26 levels, 9 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`;
 
@@ -62,10 +63,10 @@ export function WorldMapShoutOut({ visible = true }: WorldMapShoutOutProps) {
             <span
               className="text-[10px] font-black uppercase tracking-[0.2em]"
               style={{
-                background:
-                  "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
+                background:
+                  "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
               }}
             >
               Enjoying the game?

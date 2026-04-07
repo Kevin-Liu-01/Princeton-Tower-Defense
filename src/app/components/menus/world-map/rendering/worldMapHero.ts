@@ -1,6 +1,6 @@
-import type { HeroType } from "../../../../types";
-import { drawHeroSprite } from "../../../../rendering/heroes";
 import { HERO_DATA } from "../../../../constants/heroes";
+import { drawHeroSprite } from "../../../../rendering/heroes";
+import type { HeroType } from "../../../../types";
 
 const HERO_MAP_SIZE = 22;
 const HERO_MAP_ZOOM = 0.7;
@@ -18,10 +18,12 @@ export function drawWorldMapHero(
   isMoving: boolean,
   facingRight: boolean,
   attackPhase: number = 0,
-  isMobile: boolean = false,
+  isMobile: boolean = false
 ) {
   const heroData = HERO_DATA[heroType];
-  if (!heroData) return;
+  if (!heroData) {
+    return;
+  }
 
   const idleBob = isMoving ? 0 : Math.sin(time * 2) * 1.5;
   const runBob = isMoving ? Math.abs(Math.sin(time * 10)) * 3 : 0;
@@ -49,7 +51,9 @@ export function drawWorldMapHero(
     const dustCount = isMobile ? 2 : 4;
     for (let d = 0; d < dustCount; d++) {
       const dustAge = (time * 6 + d * 1.5) % 3;
-      if (dustAge > 2) continue;
+      if (dustAge > 2) {
+        continue;
+      }
       const dustAlpha = (1 - dustAge / 2) * 0.25;
       const dustX = x + (facingRight ? -1 : 1) * (8 + dustAge * 6 + d * 3);
       const dustY = y + 6 - dustAge * 2;
@@ -77,7 +81,7 @@ export function drawWorldMapHero(
     heroData.color,
     time,
     HERO_MAP_ZOOM * scale,
-    attackPhase,
+    attackPhase
   );
 
   ctx.restore();

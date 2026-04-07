@@ -1,6 +1,6 @@
+import { getLevelPaths } from "../constants";
 import type { Position } from "../types";
 import { distance, closestPointOnLine, gridToWorldPath } from "../utils";
-import { getLevelPaths } from "../constants";
 
 /**
  * Multi-path walk distance: for maps with shared nodes between paths
@@ -10,10 +10,12 @@ import { getLevelPaths } from "../constants";
 function multiPathWalkDistance(
   worldA: Position,
   worldB: Position,
-  mapKey: string,
+  mapKey: string
 ): number {
   const paths = getLevelPaths(mapKey);
-  if (paths.length === 0) return Infinity;
+  if (paths.length === 0) {
+    return Infinity;
+  }
 
   let bestDist = Infinity;
 
@@ -33,7 +35,11 @@ function multiPathWalkDistance(
       if (dA < bestADist) {
         bestADist = dA;
         const sLen = distance(p1, p2);
-        bestA = { point: projA, segIdx: si, t: sLen > 0.0001 ? distance(p1, projA) / sLen : 0 };
+        bestA = {
+          point: projA,
+          segIdx: si,
+          t: sLen > 0.0001 ? distance(p1, projA) / sLen : 0,
+        };
       }
 
       const projB = closestPointOnLine(worldB, p1, p2);
@@ -41,11 +47,17 @@ function multiPathWalkDistance(
       if (dB < bestBDist) {
         bestBDist = dB;
         const sLen = distance(p1, p2);
-        bestB = { point: projB, segIdx: si, t: sLen > 0.0001 ? distance(p1, projB) / sLen : 0 };
+        bestB = {
+          point: projB,
+          segIdx: si,
+          t: sLen > 0.0001 ? distance(p1, projB) / sLen : 0,
+        };
       }
     }
 
-    if (!bestA || !bestB) continue;
+    if (!bestA || !bestB) {
+      continue;
+    }
 
     let lo = bestA;
     let hi = bestB;
@@ -67,7 +79,9 @@ function multiPathWalkDistance(
       walk += distance(gridToWorldPath(pts[hi.segIdx]), hi.point);
     }
 
-    if (walk < bestDist) bestDist = walk;
+    if (walk < bestDist) {
+      bestDist = walk;
+    }
   }
 
   return bestDist;
@@ -85,7 +99,7 @@ export function isEnemyReachableAlongPath(
   unitPos: Position,
   enemyPos: Position,
   mapKey: string,
-  maxPathDistance: number,
+  maxPathDistance: number
 ): boolean {
   const walkDist = multiPathWalkDistance(unitPos, enemyPos, mapKey);
   return walkDist <= maxPathDistance;
@@ -102,10 +116,12 @@ export function isEnemyReachableAlongPath(
 export function getPathWaypoints(
   start: Position,
   end: Position,
-  mapKey: string,
+  mapKey: string
 ): Position[] {
   const paths = getLevelPaths(mapKey);
-  if (paths.length === 0) return [end];
+  if (paths.length === 0) {
+    return [end];
+  }
 
   let bestPathIdx = -1;
   let bestStartSeg = -1;
@@ -130,7 +146,11 @@ export function getPathWaypoints(
       if (dA < sADist) {
         sADist = dA;
         const sLen = distance(p1, p2);
-        sA = { segIdx: si, t: sLen > 0.0001 ? distance(p1, projA) / sLen : 0, point: projA };
+        sA = {
+          point: projA,
+          segIdx: si,
+          t: sLen > 0.0001 ? distance(p1, projA) / sLen : 0,
+        };
       }
 
       const projB = closestPointOnLine(end, p1, p2);
@@ -138,11 +158,17 @@ export function getPathWaypoints(
       if (dB < sBDist) {
         sBDist = dB;
         const sLen = distance(p1, p2);
-        sB = { segIdx: si, t: sLen > 0.0001 ? distance(p1, projB) / sLen : 0, point: projB };
+        sB = {
+          point: projB,
+          segIdx: si,
+          t: sLen > 0.0001 ? distance(p1, projB) / sLen : 0,
+        };
       }
     }
 
-    if (!sA || !sB) continue;
+    if (!sA || !sB) {
+      continue;
+    }
 
     let lo = sA;
     let hi = sB;
@@ -159,7 +185,10 @@ export function getPathWaypoints(
     } else {
       walkLen = distance(lo.point, gridToWorldPath(pts[lo.segIdx + 1]));
       for (let i = lo.segIdx + 1; i < hi.segIdx; i++) {
-        walkLen += distance(gridToWorldPath(pts[i]), gridToWorldPath(pts[i + 1]));
+        walkLen += distance(
+          gridToWorldPath(pts[i]),
+          gridToWorldPath(pts[i + 1])
+        );
       }
       walkLen += distance(gridToWorldPath(pts[hi.segIdx]), hi.point);
     }
@@ -174,12 +203,15 @@ export function getPathWaypoints(
     }
   }
 
-  if (bestPathIdx < 0) return [end];
+  if (bestPathIdx < 0) {
+    return [end];
+  }
 
   const pts = paths[bestPathIdx].points;
   const waypoints: Position[] = [];
 
-  const forward = bestStartSeg < bestEndSeg ||
+  const forward =
+    bestStartSeg < bestEndSeg ||
     (bestStartSeg === bestEndSeg && bestStartT <= bestEndT);
 
   if (forward) {

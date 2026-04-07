@@ -20,16 +20,16 @@ let freeHead = 0;
 
 function createBlankParticle(index: number): PooledParticle {
   return {
-    id: `pp${index}`,
-    pos: { x: 0, y: 0 },
-    velocity: { x: 0, y: 0 },
-    life: 0,
-    maxLife: 0,
-    size: 0,
-    color: "#ffffff",
-    type: "spark",
     _active: false,
     _poolIndex: index,
+    color: "#ffffff",
+    id: `pp${index}`,
+    life: 0,
+    maxLife: 0,
+    pos: { x: 0, y: 0 },
+    size: 0,
+    type: "spark",
+    velocity: { x: 0, y: 0 },
   };
 }
 
@@ -51,7 +51,7 @@ function fillParticle(
   maxLife: number,
   size: number,
   color: string,
-  type: ParticleType,
+  type: ParticleType
 ): void {
   p._active = true;
   p.id = `pp${idCounter++}`;
@@ -74,7 +74,7 @@ export function acquireParticle(
   maxLife: number,
   size: number,
   color: string,
-  type: ParticleType,
+  type: ParticleType
 ): PooledParticle | null {
   const len = pool.length;
   for (let i = freeHead; i < len; i++) {
@@ -102,7 +102,9 @@ export function acquireParticle(
 }
 
 export function releaseParticle(p: PooledParticle): void {
-  if (!p._active) return;
+  if (!p._active) {
+    return;
+  }
   p._active = false;
   activeCount--;
 }
@@ -111,7 +113,9 @@ export function updateParticles(accumulatedDelta: number): void {
   const deltaScale = accumulatedDelta / 16;
   for (let i = 0; i < pool.length; i++) {
     const p = pool[i];
-    if (!p._active) continue;
+    if (!p._active) {
+      continue;
+    }
 
     p.life -= accumulatedDelta;
     if (p.life <= 0) {
@@ -127,12 +131,14 @@ export function updateParticles(accumulatedDelta: number): void {
   }
 }
 
-let activeSnapshot: PooledParticle[] = [];
+const activeSnapshot: PooledParticle[] = [];
 
 export function getActiveParticles(): PooledParticle[] {
   activeSnapshot.length = 0;
   for (let i = 0; i < pool.length; i++) {
-    if (pool[i]._active) activeSnapshot.push(pool[i]);
+    if (pool[i]._active) {
+      activeSnapshot.push(pool[i]);
+    }
   }
   return activeSnapshot;
 }
@@ -149,7 +155,9 @@ export function clearParticlePool(): void {
 }
 
 export function enforceParticleCap(cap: number): void {
-  if (activeCount <= cap) return;
+  if (activeCount <= cap) {
+    return;
+  }
   let toRemove = activeCount - cap;
   for (let i = 0; i < pool.length && toRemove > 0; i++) {
     if (pool[i]._active) {

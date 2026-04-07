@@ -1,5 +1,5 @@
-import type { TowerType } from "../../types";
 import { LEVEL_DATA, REGION_THEMES } from "../../constants";
+import type { TowerType } from "../../types";
 import { hexToRgb } from "../../utils";
 import { darkenRgbChannel } from "../../utils/colorUtils";
 

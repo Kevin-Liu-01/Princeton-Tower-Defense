@@ -1,5 +1,5 @@
-import type { EnemyAbilityType } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { EnemyAbilityType } from "../../types";
 
 const TAU = Math.PI * 2;
 const ABILITY_ACTIVATION_DURATION_MS = 600;
@@ -14,70 +14,74 @@ export interface AbilityActivationConfig {
 
 const ABILITY_CONFIGS: Record<EnemyAbilityType, AbilityActivationConfig> = {
   burn: {
+    glow: "255, 180, 50",
+    particleCount: 8,
     primary: "255, 120, 30",
     secondary: "255, 60, 10",
-    glow: "255, 180, 50",
     symbol: "fire",
-    particleCount: 8,
-  },
-  slow: {
-    primary: "100, 180, 255",
-    secondary: "60, 120, 220",
-    glow: "150, 200, 255",
-    symbol: "wave",
-    particleCount: 6,
   },
   poison: {
+    glow: "120, 255, 80",
+    particleCount: 7,
     primary: "80, 220, 60",
     secondary: "40, 180, 30",
-    glow: "120, 255, 80",
     symbol: "skull",
-    particleCount: 7,
+  },
+  slow: {
+    glow: "150, 200, 255",
+    particleCount: 6,
+    primary: "100, 180, 255",
+    secondary: "60, 120, 220",
+    symbol: "wave",
   },
   stun: {
+    glow: "255, 255, 150",
+    particleCount: 6,
     primary: "255, 240, 60",
     secondary: "255, 200, 20",
-    glow: "255, 255, 150",
     symbol: "bolt",
-    particleCount: 6,
-  },
-  tower_slow: {
-    primary: "80, 140, 200",
-    secondary: "50, 100, 170",
-    glow: "120, 170, 230",
-    symbol: "chain",
-    particleCount: 5,
-  },
-  tower_weaken: {
-    primary: "200, 60, 60",
-    secondary: "160, 30, 30",
-    glow: "240, 100, 80",
-    symbol: "crack",
-    particleCount: 5,
   },
   tower_blind: {
+    glow: "200, 120, 240",
+    particleCount: 5,
     primary: "160, 80, 200",
     secondary: "120, 50, 170",
-    glow: "200, 120, 240",
     symbol: "eye",
-    particleCount: 5,
   },
   tower_disable: {
+    glow: "255, 220, 80",
+    particleCount: 6,
     primary: "220, 180, 40",
     secondary: "180, 140, 20",
-    glow: "255, 220, 80",
     symbol: "lock",
-    particleCount: 6,
+  },
+  tower_slow: {
+    glow: "120, 170, 230",
+    particleCount: 5,
+    primary: "80, 140, 200",
+    secondary: "50, 100, 170",
+    symbol: "chain",
+  },
+  tower_weaken: {
+    glow: "240, 100, 80",
+    particleCount: 5,
+    primary: "200, 60, 60",
+    secondary: "160, 30, 30",
+    symbol: "crack",
   },
 };
 
 export function getAbilityActivationPhase(
   lastAbilityUse: number | undefined,
-  now: number,
+  now: number
 ): number {
-  if (!lastAbilityUse) return 0;
+  if (!lastAbilityUse) {
+    return 0;
+  }
   const elapsed = now - lastAbilityUse;
-  if (elapsed >= ABILITY_ACTIVATION_DURATION_MS) return 0;
+  if (elapsed >= ABILITY_ACTIVATION_DURATION_MS) {
+    return 0;
+  }
   return 1 - elapsed / ABILITY_ACTIVATION_DURATION_MS;
 }
 
@@ -89,12 +93,16 @@ export function renderAbilityActivation(
   zoom: number,
   abilityType: EnemyAbilityType,
   phase: number,
-  time: number,
+  time: number
 ): void {
-  if (phase <= 0) return;
+  if (phase <= 0) {
+    return;
+  }
 
   const config = ABILITY_CONFIGS[abilityType];
-  if (!config) return;
+  if (!config) {
+    return;
+  }
 
   const isTowerAbility = abilityType.startsWith("tower_");
 
@@ -103,7 +111,17 @@ export function renderAbilityActivation(
   if (isTowerAbility) {
     renderTowerAbilityActivation(ctx, x, y, size, zoom, config, phase, time);
   } else {
-    renderUnitAbilityActivation(ctx, x, y, size, zoom, config, abilityType, phase, time);
+    renderUnitAbilityActivation(
+      ctx,
+      x,
+      y,
+      size,
+      zoom,
+      config,
+      abilityType,
+      phase,
+      time
+    );
   }
 
   ctx.restore();
@@ -118,7 +136,7 @@ function renderUnitAbilityActivation(
   config: AbilityActivationConfig,
   abilityType: EnemyAbilityType,
   phase: number,
-  time: number,
+  time: number
 ): void {
   const easeOut = 1 - (1 - phase) * (1 - phase);
   const fadeAlpha = phase < 0.3 ? phase / 0.3 : 1;
@@ -127,7 +145,10 @@ function renderUnitAbilityActivation(
   // Outer glow burst (isometric ground-plane ellipse)
   const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, burstRadius);
   glowGrad.addColorStop(0, `rgba(${config.glow}, ${0.5 * fadeAlpha * phase})`);
-  glowGrad.addColorStop(0.4, `rgba(${config.primary}, ${0.3 * fadeAlpha * phase})`);
+  glowGrad.addColorStop(
+    0.4,
+    `rgba(${config.primary}, ${0.3 * fadeAlpha * phase})`
+  );
   glowGrad.addColorStop(1, `rgba(${config.secondary}, 0)`);
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
@@ -158,7 +179,17 @@ function renderUnitAbilityActivation(
   }
 
   // Ability-specific symbol
-  renderAbilitySymbol(ctx, x, y - size * 0.6 * phase, size, zoom, config, abilityType, phase, time);
+  renderAbilitySymbol(
+    ctx,
+    x,
+    y - size * 0.6 * phase,
+    size,
+    zoom,
+    config,
+    abilityType,
+    phase,
+    time
+  );
 
   // Burst particles
   renderActivationParticles(ctx, x, y, size, zoom, config, phase, time);
@@ -172,7 +203,7 @@ function renderTowerAbilityActivation(
   zoom: number,
   config: AbilityActivationConfig,
   phase: number,
-  time: number,
+  time: number
 ): void {
   const easeOut = 1 - (1 - phase) * (1 - phase);
   const fadeAlpha = phase < 0.3 ? phase / 0.3 : 1;
@@ -180,8 +211,14 @@ function renderTowerAbilityActivation(
   // Dark oppressive aura emanating from enemy (isometric)
   const auraRadius = size * (0.8 + (1 - easeOut) * 1.5);
   const auraGrad = ctx.createRadialGradient(x, y, size * 0.2, x, y, auraRadius);
-  auraGrad.addColorStop(0, `rgba(${config.secondary}, ${0.4 * fadeAlpha * phase})`);
-  auraGrad.addColorStop(0.5, `rgba(${config.primary}, ${0.25 * fadeAlpha * phase})`);
+  auraGrad.addColorStop(
+    0,
+    `rgba(${config.secondary}, ${0.4 * fadeAlpha * phase})`
+  );
+  auraGrad.addColorStop(
+    0.5,
+    `rgba(${config.primary}, ${0.25 * fadeAlpha * phase})`
+  );
   auraGrad.addColorStop(1, `rgba(${config.secondary}, 0)`);
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
@@ -223,8 +260,14 @@ function renderTowerAbilityActivation(
     const segments = 5;
     for (let s = 1; s <= segments; s++) {
       const t = s / segments;
-      const px = x + Math.cos(angle) * len * t + Math.sin(time * 8 + i + s) * size * 0.05;
-      const py = y + Math.sin(angle) * len * t * ISO_Y_RATIO + Math.cos(time * 6 + i + s) * size * 0.03;
+      const px =
+        x +
+        Math.cos(angle) * len * t +
+        Math.sin(time * 8 + i + s) * size * 0.05;
+      const py =
+        y +
+        Math.sin(angle) * len * t * ISO_Y_RATIO +
+        Math.cos(time * 6 + i + s) * size * 0.03;
       ctx.lineTo(px, py);
     }
     ctx.stroke();
@@ -242,10 +285,13 @@ function renderAbilitySymbol(
   config: AbilityActivationConfig,
   abilityType: EnemyAbilityType,
   phase: number,
-  _time: number,
+  _time: number
 ): void {
-  const symbolAlpha = phase > 0.3 ? Math.min(1, (phase - 0.3) / 0.3) * phase : 0;
-  if (symbolAlpha <= 0) return;
+  const symbolAlpha =
+    phase > 0.3 ? Math.min(1, (phase - 0.3) / 0.3) * phase : 0;
+  if (symbolAlpha <= 0) {
+    return;
+  }
 
   const s = size * 0.18 * zoom;
 
@@ -254,24 +300,32 @@ function renderAbilitySymbol(
   ctx.globalAlpha = symbolAlpha;
 
   switch (abilityType) {
-    case "burn":
+    case "burn": {
       drawFlameSymbol(ctx, s, config);
       break;
-    case "slow":
+    }
+    case "slow": {
       drawSlowSymbol(ctx, s, config);
       break;
-    case "poison":
+    }
+    case "poison": {
       drawPoisonSymbol(ctx, s, config);
       break;
-    case "stun":
+    }
+    case "stun": {
       drawBoltSymbol(ctx, s, config);
       break;
+    }
   }
 
   ctx.restore();
 }
 
-function drawFlameSymbol(ctx: CanvasRenderingContext2D, s: number, config: AbilityActivationConfig): void {
+function drawFlameSymbol(
+  ctx: CanvasRenderingContext2D,
+  s: number,
+  config: AbilityActivationConfig
+): void {
   ctx.fillStyle = `rgba(${config.glow}, 0.95)`;
   ctx.beginPath();
   ctx.moveTo(0, -s * 1.3);
@@ -289,7 +343,11 @@ function drawFlameSymbol(ctx: CanvasRenderingContext2D, s: number, config: Abili
   ctx.fill();
 }
 
-function drawSlowSymbol(ctx: CanvasRenderingContext2D, s: number, config: AbilityActivationConfig): void {
+function drawSlowSymbol(
+  ctx: CanvasRenderingContext2D,
+  s: number,
+  config: AbilityActivationConfig
+): void {
   ctx.strokeStyle = `rgba(${config.glow}, 0.95)`;
   ctx.lineWidth = s * 0.15;
   ctx.beginPath();
@@ -301,7 +359,11 @@ function drawSlowSymbol(ctx: CanvasRenderingContext2D, s: number, config: Abilit
   ctx.stroke();
 }
 
-function drawPoisonSymbol(ctx: CanvasRenderingContext2D, s: number, config: AbilityActivationConfig): void {
+function drawPoisonSymbol(
+  ctx: CanvasRenderingContext2D,
+  s: number,
+  config: AbilityActivationConfig
+): void {
   // Dripping drops
   ctx.fillStyle = `rgba(${config.glow}, 0.95)`;
   for (let i = 0; i < 3; i++) {
@@ -325,15 +387,19 @@ function drawPoisonSymbol(ctx: CanvasRenderingContext2D, s: number, config: Abil
   ctx.stroke();
 }
 
-function drawBoltSymbol(ctx: CanvasRenderingContext2D, s: number, config: AbilityActivationConfig): void {
+function drawBoltSymbol(
+  ctx: CanvasRenderingContext2D,
+  s: number,
+  config: AbilityActivationConfig
+): void {
   ctx.fillStyle = `rgba(${config.glow}, 0.95)`;
   ctx.beginPath();
-  ctx.moveTo(s * 0.15, -s * 1.0);
+  ctx.moveTo(s * 0.15, -s * 1);
   ctx.lineTo(-s * 0.3, -s * 0.1);
   ctx.lineTo(s * 0.05, -s * 0.1);
   ctx.lineTo(-s * 0.15, s * 0.8);
-  ctx.lineTo(s * 0.3, s * 0.0);
-  ctx.lineTo(-s * 0.05, s * 0.0);
+  ctx.lineTo(s * 0.3, 0);
+  ctx.lineTo(-s * 0.05, 0);
   ctx.closePath();
   ctx.fill();
 
@@ -355,7 +421,7 @@ function renderActivationParticles(
   zoom: number,
   config: AbilityActivationConfig,
   phase: number,
-  time: number,
+  time: number
 ): void {
   const count = config.particleCount;
   const spread = 1 - phase;

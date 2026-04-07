@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Activity,
   AlertTriangle,
@@ -24,6 +23,8 @@ import {
   Wind,
   Zap,
 } from "lucide-react";
+import React from "react";
+
 import type { Position } from "../../../types";
 import { GOLD, PANEL, RED_CARD, panelGradient } from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
@@ -37,353 +38,353 @@ const LANDMARK_INFO: Record<
   string,
   { name: string; icon: React.ReactNode; desc: string; lore: string }
 > = {
-  pyramid: {
-    name: "Ancient Pyramid",
-    icon: <Landmark className="text-amber-400" size={16} />,
-    desc: "A towering stone monument from a forgotten civilization.",
-    lore: "Legend says it was built by scholars who discovered the secrets of geometry long before anyone else.",
-  },
-  sphinx: {
-    name: "Sphinx",
-    icon: <Eye className="text-amber-400" size={16} />,
-    desc: "A mythical guardian carved from living stone.",
-    lore: "It asks riddles of all who pass. Most enemies are too dumb to answer correctly.",
-  },
-  giant_sphinx: {
-    name: "Great Sphinx",
-    icon: <Eye className="text-amber-400" size={16} />,
-    desc: "An enormous sphinx watching over the desert sands.",
-    lore: "Its gaze is said to pierce through illusions. Even the bravest foes feel uneasy in its shadow.",
-  },
-  nassau_hall: {
-    name: "Nassau Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "The historic heart of Princeton University, est. 1756.",
-    lore: "Once served as the capitol of the United States. Now it serves as the last bastion against the dark horde.",
-  },
-  princeton_chapel: {
-    name: "Princeton Chapel",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A towering Collegiate Gothic chapel with soaring spire and rose window.",
-    lore: "Its bells once rallied the faithful. Now they warn of approaching darkness across the fields.",
-  },
-  firestone_library: {
-    name: "Firestone Library",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "The great library of Princeton, repository of ancient knowledge.",
-    lore: "Within its archives lie forbidden texts on tower defense tactics penned by scholars of old.",
-  },
-  blair_arch: {
-    name: "Blair Arch",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "An iconic twin-towered stone archway connecting the dormitories.",
-    lore: "Generations of defenders passed beneath this arch. Its clock still keeps time against the siege.",
-  },
-  whig_hall: {
-    name: "Whig Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A Greek revival temple slowly being reclaimed by the swamp.",
-    lore: "Once a hall of debate and rhetoric, now moss and vines argue over its crumbling columns.",
-  },
-  east_pyne: {
-    name: "East Pyne Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A Romanesque hall with a distinctive round tower, weathered by the marsh.",
-    lore: "Its round arches echo with whispered incantations. The swamp seems to listen.",
-  },
-  prospect_house: {
-    name: "Prospect House",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "An Italianate mansion with observation tower, half-swallowed by the bog.",
-    lore: "The president's former residence. From its tower, one can still survey the creeping darkness.",
-  },
-  clio_hall: {
-    name: "Clio Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A pristine Greek temple standing defiant against the desert winds.",
-    lore: "Sister to Whig Hall, Clio endures where sand buries all else. Its columns cast long shadows at dusk.",
-  },
-  mccosh_hall: {
-    name: "McCosh Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A grand lecture hall with central Gothic tower rising from the dunes.",
-    lore: "Philosophy was once taught here. Now it teaches patience to those who defend its walls.",
-  },
-  robertson_hall: {
-    name: "Robertson Hall",
-    icon: <Home className="text-amber-400" size={16} />,
-    desc: "A modernist angular building with clean geometric forms in sandstone.",
-    lore: "Home of the School of Public Affairs. Its reflecting pool has long since filled with sand.",
-  },
-  holder_hall: {
-    name: "Holder Hall",
-    icon: <Home className="text-cyan-400" size={16} />,
-    desc: "A Collegiate Gothic dormitory crowned with a tall clock tower.",
-    lore: "Its frozen clock tower still chimes on the hour, a defiant heartbeat in the silent ice.",
-  },
-  cleveland_tower: {
-    name: "Cleveland Tower",
-    icon: <Home className="text-cyan-400" size={16} />,
-    desc: "A solitary Gothic tower piercing the frozen sky, the tallest structure for miles.",
-    lore: "Built to honor a president, it now serves as a watchtower against the frost wyrms.",
-  },
   alexander_hall: {
-    name: "Alexander Hall",
-    icon: <Home className="text-cyan-400" size={16} />,
     desc: "A sturdy Richardson Romanesque hall with a semi-circular apse.",
+    icon: <Home className="text-cyan-400" size={16} />,
     lore: "Its thick stone walls shed the cold like armor. Even blizzards cannot breach its round arches.",
-  },
-  fine_hall: {
-    name: "Fine Hall",
-    icon: <Home className="text-red-400" size={16} />,
-    desc: "A modern mathematics tower wreathed in volcanic ember.",
-    lore: "Where equations once filled blackboards, now fire runes glow on obsidian walls.",
-  },
-  foulke_hall: {
-    name: "Foulke Hall",
-    icon: <Home className="text-red-400" size={16} />,
-    desc: "A dark Gothic dormitory with sinister spires rising from the caldera.",
-    lore: "Its residents fled long ago. Something else dwells in those smoke-filled corridors now.",
-  },
-  tiger_stadium: {
-    name: "Tiger Stadium",
-    icon: <Home className="text-red-400" size={16} />,
-    desc: "Princeton's athletic arena, now a coliseum of fire and obsidian.",
-    lore: "Where Tigers once competed, demons now battle. The eternal flame burns in its braziers.",
-  },
-  glacier: {
-    name: "Glacier",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A towering block of ancient ice sculpted by millennia of wind and frost.",
-    lore: "These crystalline monoliths predate all memory, slowly creeping across the frozen highlands like silent sentinels.",
-  },
-  fortress: {
-    name: "Fortress Ruins",
-    icon: <Shield className="text-stone-400" size={16} />,
-    desc: "Crumbled ruins of a once-mighty fortress, its towers broken and walls reduced to rubble.",
-    lore: "No one remembers who built it or why it fell. The stones remember, but they aren't talking.",
-  },
-  ice_throne: {
-    name: "Ice Throne",
-    icon: <Snowflake className="text-cyan-300" size={16} />,
-    desc: "A grand seat of power carved from a single colossal block of enchanted ice.",
-    lore: "The throne of the Frost Queen, from which she commanded the eternal winter that once blanketed these peaks.",
-  },
-  obsidian_castle: {
-    name: "Obsidian Castle",
-    icon: <Shield className="text-purple-400" size={16} />,
-    desc: "A dark stronghold hewn from volcanic glass.",
-    lore: "The castle absorbs light itself. Torches flicker and die within its walls without magical protection.",
-  },
-  witch_cottage: {
-    name: "Witch's Cottage",
-    icon: <Sparkles className="text-green-400" size={16} />,
-    desc: "A crooked dwelling reeking of potions and old magic.",
-    lore: "The witch left years ago, but her cauldron still bubbles. Nobody dares taste what's inside.",
-  },
-  ruined_temple: {
-    name: "Ruined Temple",
-    icon: <Landmark className="text-stone-400" size={16} />,
-    desc: "Crumbling remains of an ancient place of worship.",
-    lore: "The old gods may be gone, but faint hymns can still be heard at midnight.",
-  },
-  sunken_pillar: {
-    name: "Sunken Pillar",
-    icon: <Mountain className="text-stone-400" size={16} />,
-    desc: "A massive column half-buried in the earth.",
-    lore: "Part of a bridge that once connected two kingdoms. The other half was never found.",
-  },
-  statue: {
-    name: "Stone Statue",
-    icon: <Crown className="text-amber-400" size={16} />,
-    desc: "A weathered statue of a forgotten hero.",
-    lore: "Students used to rub its nose for good luck on exams. The nose is very shiny.",
-  },
-  demon_statue: {
-    name: "Demon Statue",
-    icon: <Swords className="text-red-400" size={16} />,
-    desc: "A menacing effigy radiating dark energy.",
-    lore: "Carved by a mad sculptor who claimed the stone 'told him what shape it wanted to be.'",
-  },
-  obelisk: {
-    name: "Ancient Obelisk",
-    icon: <TrendingUp className="text-amber-400" size={16} />,
-    desc: "A tall monolith inscribed with arcane symbols.",
-    lore: "The inscriptions are a pizza recipe in a dead language. Scholars are still debating the toppings.",
-  },
-  cobra_statue: {
-    name: "Cobra Statue",
-    icon: <Diamond className="text-green-400" size={16} />,
-    desc: "A menacing effigy radiating dark energy.",
-    lore: "Carved by a mad sculptor who claimed the stone 'told him what shape it wanted to be.'",
-  },
-  frozen_waterfall: {
-    name: "Frozen Waterfall",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A frozen waterfall that flows through the battlefield.",
-    lore: "The waterfall is frozen solid and cannot be passed through.",
-  },
-  frozen_gate: {
-    name: "Frozen Gate",
-    icon: <Fence className="text-cyan-400" size={16} />,
-    desc: "A frozen gate that defends the battlefield.",
-    lore: "The gate doesn't seem to be very sturdy.",
-  },
-  aurora_crystal: {
-    name: "Aurora Crystal",
-    icon: <Sparkles className="text-purple-400" size={16} />,
-    desc: "A crystal that emits a radiant energy.",
-    lore: "The crystal is said to be the source of the aurora borealis.",
-  },
-  lava_fall: {
-    name: "Lava Fall",
-    icon: <Flame className="text-orange-400" size={16} />,
-    desc: "A lava fall that flows through the battlefield.",
-    lore: "The lava is hot and cannot be passed through.",
-  },
-  obsidian_pillar: {
-    name: "Obsidian Pillar",
-    icon: <Shield className="text-purple-400" size={16} />,
-    desc: "A pillar of obsidian that stands in the battlefield.",
-    lore: "Combined with a crystal, it could heal a dragon.",
-  },
-  skull_throne: {
-    name: "Skull Throne",
-    icon: <Skull className="text-red-400" size={16} />,
-    desc: "A throne made of skulls that stands in the battlefield.",
-    lore: "How many souls does it take to get some seating?",
-  },
-  volcano_rim: {
-    name: "Volcano Rim",
-    icon: <Flame className="text-orange-400" size={16} />,
-    desc: "A rim of lava that surrounds the battlefield.",
-    lore: "The precipice of eternal fire.",
-  },
-  idol_statue: {
-    name: "Idol Statue",
-    icon: <Landmark className="text-amber-400" size={16} />,
-    desc: "A statue of an idol that stands in the battlefield.",
-    lore: "A less impressive statue of a less impressive idol.",
-  },
-  gate: {
-    name: "Gate",
-    icon: <Fence className="text-cyan-400" size={16} />,
-    desc: "A gate that defends the battlefield.",
-    lore: "The gate doesn't seem to be very sturdy.",
-  },
-  carnegie_lake: {
-    name: "Carnegie Lake",
-    icon: <Mountain className="text-blue-400" size={16} />,
-    desc: "A serene body of water reflecting the sky like a mirror.",
-    lore: "Andrew Carnegie donated the lake so Princeton students could row. The fish were not consulted.",
-  },
-  hieroglyph_wall: {
-    name: "Hieroglyph Wall",
-    icon: <Landmark className="text-amber-400" size={16} />,
-    desc: "A weathered stone wall covered in ancient hieroglyphs.",
-    lore: "Scholars have translated most of it. It's mostly complaints about the heat and requests for more beer.",
-  },
-  sarcophagus: {
-    name: "Sarcophagus",
-    icon: <Skull className="text-amber-400" size={16} />,
-    desc: "An ornate stone coffin sealed with ancient wards.",
-    lore: "Whatever's inside keeps knocking. Everyone has agreed to pretend they don't hear it.",
-  },
-  dark_throne: {
-    name: "Dark Throne",
-    icon: <Crown className="text-purple-400" size={16} />,
-    desc: "A menacing throne wreathed in shadow and dread.",
-    lore: "Sitting in it grants immense power and also terrible lower back pain.",
-  },
-  dark_barracks: {
-    name: "Dark Barracks",
-    icon: <Shield className="text-purple-400" size={16} />,
-    desc: "A fortified outpost where dark forces once mustered.",
-    lore: "The bunks are still made. Evil is disciplined about hospital corners, apparently.",
-  },
-  dark_spire: {
-    name: "Dark Spire",
-    icon: <TrendingUp className="text-purple-400" size={16} />,
-    desc: "A jagged tower of black stone piercing the sky.",
-    lore: "Lightning strikes it constantly, yet it never crumbles. The architect was either brilliant or cursed.",
-  },
-  ice_bridge: {
-    name: "Ice Bridge",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A frozen arch spanning a treacherous chasm.",
-    lore: "Crossing it requires courage, balance, and the good sense not to look down.",
-  },
-  cannon_crest: {
-    name: "Cannon Crest",
-    icon: <Crosshair className="text-stone-400" size={16} />,
-    desc: "An entrenched artillery berm lined with Nassau cannons.",
-    lore: "The ridge was reshaped around firing lanes. Every sandbag exists because someone learned the hard way.",
-  },
-  ivy_crossroads: {
-    name: "Ivy Crossroads",
-    icon: <Landmark className="text-emerald-400" size={16} />,
-    desc: "An ivy-choked arch marking a split crossroads through old campus stone.",
-    lore: "Nobody remembers who built the arch first. The ivy is now the senior partner.",
-  },
-  blight_basin: {
-    name: "Blight Basin",
-    icon: <Skull className="text-lime-400" size={16} />,
-    desc: "A poisoned basin where corrosive pools bubble through dead ground.",
-    lore: "The air tastes wrong here. The mushrooms seem thrilled about that.",
-  },
-  triad_keep: {
-    name: "Triad Keep",
-    icon: <Shield className="text-emerald-400" size={16} />,
-    desc: "A fortified swamp keep ringed by murky water and green banners.",
-    lore: "Three halls fed this fortress once. Now only the walls remember the guest list.",
-  },
-  sunscorch_labyrinth: {
-    name: "Sunscorch Labyrinth",
-    icon: <TrendingUp className="text-amber-400" size={16} />,
-    desc: "A burning sandstone maze whose walls trap heat as well as armies.",
-    lore: "It was designed to confuse invaders and roast them while they were busy being confused.",
-  },
-  frist_outpost: {
-    name: "Frist Outpost",
-    icon: <Fence className="text-cyan-300" size={16} />,
-    desc: "A snowbound palisade outpost built around a rough watchtower and campfire.",
-    lore: "The walls creak, the fire sputters, and somehow it still holds every winter.",
+    name: "Alexander Hall",
   },
   ashen_spiral: {
-    name: "Ashen Spiral",
-    icon: <Flame className="text-orange-400" size={16} />,
     desc: "A spiral of scorched vents that erupts in staggered waves of fire.",
+    icon: <Flame className="text-orange-400" size={16} />,
     lore: "Stand still too long and the ground starts making plans for you.",
+    name: "Ashen Spiral",
   },
-  war_monument: {
-    name: "War Monument",
-    icon: <Swords className="text-stone-400" size={16} />,
-    desc: "A towering memorial honoring fallen warriors of ages past.",
-    lore: "Every name etched into its surface represents a hero. There are a lot of names.",
+  aurora_crystal: {
+    desc: "A crystal that emits a radiant energy.",
+    icon: <Sparkles className="text-purple-400" size={16} />,
+    lore: "The crystal is said to be the source of the aurora borealis.",
+    name: "Aurora Crystal",
+  },
+  blair_arch: {
+    desc: "An iconic twin-towered stone archway connecting the dormitories.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Generations of defenders passed beneath this arch. Its clock still keeps time against the siege.",
+    name: "Blair Arch",
+  },
+  blight_basin: {
+    desc: "A poisoned basin where corrosive pools bubble through dead ground.",
+    icon: <Skull className="text-lime-400" size={16} />,
+    lore: "The air tastes wrong here. The mushrooms seem thrilled about that.",
+    name: "Blight Basin",
   },
   bone_altar: {
-    name: "Bone Altar",
-    icon: <Skull className="text-red-400" size={16} />,
     desc: "A grim sacrificial platform assembled from countless bones.",
+    icon: <Skull className="text-red-400" size={16} />,
     lore: "Dark rituals were performed here. The stains don't come out no matter how hard you scrub.",
+    name: "Bone Altar",
   },
-  sun_obelisk: {
-    name: "Sun Obelisk",
-    icon: <TrendingUp className="text-amber-400" size={16} />,
-    desc: "A golden spire that channels the power of the sun.",
-    lore: "At high noon it casts no shadow. At midnight, it glows faintly, as if remembering the light.",
+  cannon_crest: {
+    desc: "An entrenched artillery berm lined with Nassau cannons.",
+    icon: <Crosshair className="text-stone-400" size={16} />,
+    lore: "The ridge was reshaped around firing lanes. Every sandbag exists because someone learned the hard way.",
+    name: "Cannon Crest",
+  },
+  carnegie_lake: {
+    desc: "A serene body of water reflecting the sky like a mirror.",
+    icon: <Mountain className="text-blue-400" size={16} />,
+    lore: "Andrew Carnegie donated the lake so Princeton students could row. The fish were not consulted.",
+    name: "Carnegie Lake",
+  },
+  cleveland_tower: {
+    desc: "A solitary Gothic tower piercing the frozen sky, the tallest structure for miles.",
+    icon: <Home className="text-cyan-400" size={16} />,
+    lore: "Built to honor a president, it now serves as a watchtower against the frost wyrms.",
+    name: "Cleveland Tower",
+  },
+  clio_hall: {
+    desc: "A pristine Greek temple standing defiant against the desert winds.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Sister to Whig Hall, Clio endures where sand buries all else. Its columns cast long shadows at dusk.",
+    name: "Clio Hall",
+  },
+  cobra_statue: {
+    desc: "A menacing effigy radiating dark energy.",
+    icon: <Diamond className="text-green-400" size={16} />,
+    lore: "Carved by a mad sculptor who claimed the stone 'told him what shape it wanted to be.'",
+    name: "Cobra Statue",
+  },
+  dark_barracks: {
+    desc: "A fortified outpost where dark forces once mustered.",
+    icon: <Shield className="text-purple-400" size={16} />,
+    lore: "The bunks are still made. Evil is disciplined about hospital corners, apparently.",
+    name: "Dark Barracks",
+  },
+  dark_spire: {
+    desc: "A jagged tower of black stone piercing the sky.",
+    icon: <TrendingUp className="text-purple-400" size={16} />,
+    lore: "Lightning strikes it constantly, yet it never crumbles. The architect was either brilliant or cursed.",
+    name: "Dark Spire",
+  },
+  dark_throne: {
+    desc: "A menacing throne wreathed in shadow and dread.",
+    icon: <Crown className="text-purple-400" size={16} />,
+    lore: "Sitting in it grants immense power and also terrible lower back pain.",
+    name: "Dark Throne",
+  },
+  demon_statue: {
+    desc: "A menacing effigy radiating dark energy.",
+    icon: <Swords className="text-red-400" size={16} />,
+    lore: "Carved by a mad sculptor who claimed the stone 'told him what shape it wanted to be.'",
+    name: "Demon Statue",
+  },
+  east_pyne: {
+    desc: "A Romanesque hall with a distinctive round tower, weathered by the marsh.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Its round arches echo with whispered incantations. The swamp seems to listen.",
+    name: "East Pyne Hall",
+  },
+  fine_hall: {
+    desc: "A modern mathematics tower wreathed in volcanic ember.",
+    icon: <Home className="text-red-400" size={16} />,
+    lore: "Where equations once filled blackboards, now fire runes glow on obsidian walls.",
+    name: "Fine Hall",
+  },
+  firestone_library: {
+    desc: "The great library of Princeton, repository of ancient knowledge.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Within its archives lie forbidden texts on tower defense tactics penned by scholars of old.",
+    name: "Firestone Library",
+  },
+  fortress: {
+    desc: "Crumbled ruins of a once-mighty fortress, its towers broken and walls reduced to rubble.",
+    icon: <Shield className="text-stone-400" size={16} />,
+    lore: "No one remembers who built it or why it fell. The stones remember, but they aren't talking.",
+    name: "Fortress Ruins",
+  },
+  foulke_hall: {
+    desc: "A dark Gothic dormitory with sinister spires rising from the caldera.",
+    icon: <Home className="text-red-400" size={16} />,
+    lore: "Its residents fled long ago. Something else dwells in those smoke-filled corridors now.",
+    name: "Foulke Hall",
+  },
+  frist_outpost: {
+    desc: "A snowbound palisade outpost built around a rough watchtower and campfire.",
+    icon: <Fence className="text-cyan-300" size={16} />,
+    lore: "The walls creak, the fire sputters, and somehow it still holds every winter.",
+    name: "Frist Outpost",
   },
   frost_citadel: {
-    name: "Frost Citadel",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
     desc: "A massive fortress sculpted entirely from enchanted ice.",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
     lore: "The throne room is gorgeous but the heating bill is zero—because there is no heating.",
+    name: "Frost Citadel",
+  },
+  frozen_gate: {
+    desc: "A frozen gate that defends the battlefield.",
+    icon: <Fence className="text-cyan-400" size={16} />,
+    lore: "The gate doesn't seem to be very sturdy.",
+    name: "Frozen Gate",
+  },
+  frozen_waterfall: {
+    desc: "A frozen waterfall that flows through the battlefield.",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    lore: "The waterfall is frozen solid and cannot be passed through.",
+    name: "Frozen Waterfall",
+  },
+  gate: {
+    desc: "A gate that defends the battlefield.",
+    icon: <Fence className="text-cyan-400" size={16} />,
+    lore: "The gate doesn't seem to be very sturdy.",
+    name: "Gate",
+  },
+  giant_sphinx: {
+    desc: "An enormous sphinx watching over the desert sands.",
+    icon: <Eye className="text-amber-400" size={16} />,
+    lore: "Its gaze is said to pierce through illusions. Even the bravest foes feel uneasy in its shadow.",
+    name: "Great Sphinx",
+  },
+  glacier: {
+    desc: "A towering block of ancient ice sculpted by millennia of wind and frost.",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    lore: "These crystalline monoliths predate all memory, slowly creeping across the frozen highlands like silent sentinels.",
+    name: "Glacier",
+  },
+  hieroglyph_wall: {
+    desc: "A weathered stone wall covered in ancient hieroglyphs.",
+    icon: <Landmark className="text-amber-400" size={16} />,
+    lore: "Scholars have translated most of it. It's mostly complaints about the heat and requests for more beer.",
+    name: "Hieroglyph Wall",
+  },
+  holder_hall: {
+    desc: "A Collegiate Gothic dormitory crowned with a tall clock tower.",
+    icon: <Home className="text-cyan-400" size={16} />,
+    lore: "Its frozen clock tower still chimes on the hour, a defiant heartbeat in the silent ice.",
+    name: "Holder Hall",
+  },
+  ice_bridge: {
+    desc: "A frozen arch spanning a treacherous chasm.",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    lore: "Crossing it requires courage, balance, and the good sense not to look down.",
+    name: "Ice Bridge",
+  },
+  ice_throne: {
+    desc: "A grand seat of power carved from a single colossal block of enchanted ice.",
+    icon: <Snowflake className="text-cyan-300" size={16} />,
+    lore: "The throne of the Frost Queen, from which she commanded the eternal winter that once blanketed these peaks.",
+    name: "Ice Throne",
+  },
+  idol_statue: {
+    desc: "A statue of an idol that stands in the battlefield.",
+    icon: <Landmark className="text-amber-400" size={16} />,
+    lore: "A less impressive statue of a less impressive idol.",
+    name: "Idol Statue",
   },
   infernal_gate: {
-    name: "Infernal Gate",
-    icon: <Flame className="text-red-400" size={16} />,
     desc: "A blazing portal crackling with hellfire and brimstone.",
+    icon: <Flame className="text-red-400" size={16} />,
     lore: "It leads somewhere very hot. The welcome mat on the other side says 'Abandon Hope.' Subtle.",
+    name: "Infernal Gate",
+  },
+  ivy_crossroads: {
+    desc: "An ivy-choked arch marking a split crossroads through old campus stone.",
+    icon: <Landmark className="text-emerald-400" size={16} />,
+    lore: "Nobody remembers who built the arch first. The ivy is now the senior partner.",
+    name: "Ivy Crossroads",
+  },
+  lava_fall: {
+    desc: "A lava fall that flows through the battlefield.",
+    icon: <Flame className="text-orange-400" size={16} />,
+    lore: "The lava is hot and cannot be passed through.",
+    name: "Lava Fall",
+  },
+  mccosh_hall: {
+    desc: "A grand lecture hall with central Gothic tower rising from the dunes.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Philosophy was once taught here. Now it teaches patience to those who defend its walls.",
+    name: "McCosh Hall",
+  },
+  nassau_hall: {
+    desc: "The historic heart of Princeton University, est. 1756.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Once served as the capitol of the United States. Now it serves as the last bastion against the dark horde.",
+    name: "Nassau Hall",
+  },
+  obelisk: {
+    desc: "A tall monolith inscribed with arcane symbols.",
+    icon: <TrendingUp className="text-amber-400" size={16} />,
+    lore: "The inscriptions are a pizza recipe in a dead language. Scholars are still debating the toppings.",
+    name: "Ancient Obelisk",
+  },
+  obsidian_castle: {
+    desc: "A dark stronghold hewn from volcanic glass.",
+    icon: <Shield className="text-purple-400" size={16} />,
+    lore: "The castle absorbs light itself. Torches flicker and die within its walls without magical protection.",
+    name: "Obsidian Castle",
+  },
+  obsidian_pillar: {
+    desc: "A pillar of obsidian that stands in the battlefield.",
+    icon: <Shield className="text-purple-400" size={16} />,
+    lore: "Combined with a crystal, it could heal a dragon.",
+    name: "Obsidian Pillar",
+  },
+  princeton_chapel: {
+    desc: "A towering Collegiate Gothic chapel with soaring spire and rose window.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Its bells once rallied the faithful. Now they warn of approaching darkness across the fields.",
+    name: "Princeton Chapel",
+  },
+  prospect_house: {
+    desc: "An Italianate mansion with observation tower, half-swallowed by the bog.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "The president's former residence. From its tower, one can still survey the creeping darkness.",
+    name: "Prospect House",
+  },
+  pyramid: {
+    desc: "A towering stone monument from a forgotten civilization.",
+    icon: <Landmark className="text-amber-400" size={16} />,
+    lore: "Legend says it was built by scholars who discovered the secrets of geometry long before anyone else.",
+    name: "Ancient Pyramid",
+  },
+  robertson_hall: {
+    desc: "A modernist angular building with clean geometric forms in sandstone.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Home of the School of Public Affairs. Its reflecting pool has long since filled with sand.",
+    name: "Robertson Hall",
+  },
+  ruined_temple: {
+    desc: "Crumbling remains of an ancient place of worship.",
+    icon: <Landmark className="text-stone-400" size={16} />,
+    lore: "The old gods may be gone, but faint hymns can still be heard at midnight.",
+    name: "Ruined Temple",
+  },
+  sarcophagus: {
+    desc: "An ornate stone coffin sealed with ancient wards.",
+    icon: <Skull className="text-amber-400" size={16} />,
+    lore: "Whatever's inside keeps knocking. Everyone has agreed to pretend they don't hear it.",
+    name: "Sarcophagus",
+  },
+  skull_throne: {
+    desc: "A throne made of skulls that stands in the battlefield.",
+    icon: <Skull className="text-red-400" size={16} />,
+    lore: "How many souls does it take to get some seating?",
+    name: "Skull Throne",
+  },
+  sphinx: {
+    desc: "A mythical guardian carved from living stone.",
+    icon: <Eye className="text-amber-400" size={16} />,
+    lore: "It asks riddles of all who pass. Most enemies are too dumb to answer correctly.",
+    name: "Sphinx",
+  },
+  statue: {
+    desc: "A weathered statue of a forgotten hero.",
+    icon: <Crown className="text-amber-400" size={16} />,
+    lore: "Students used to rub its nose for good luck on exams. The nose is very shiny.",
+    name: "Stone Statue",
+  },
+  sun_obelisk: {
+    desc: "A golden spire that channels the power of the sun.",
+    icon: <TrendingUp className="text-amber-400" size={16} />,
+    lore: "At high noon it casts no shadow. At midnight, it glows faintly, as if remembering the light.",
+    name: "Sun Obelisk",
+  },
+  sunken_pillar: {
+    desc: "A massive column half-buried in the earth.",
+    icon: <Mountain className="text-stone-400" size={16} />,
+    lore: "Part of a bridge that once connected two kingdoms. The other half was never found.",
+    name: "Sunken Pillar",
+  },
+  sunscorch_labyrinth: {
+    desc: "A burning sandstone maze whose walls trap heat as well as armies.",
+    icon: <TrendingUp className="text-amber-400" size={16} />,
+    lore: "It was designed to confuse invaders and roast them while they were busy being confused.",
+    name: "Sunscorch Labyrinth",
+  },
+  tiger_stadium: {
+    desc: "Princeton's athletic arena, now a coliseum of fire and obsidian.",
+    icon: <Home className="text-red-400" size={16} />,
+    lore: "Where Tigers once competed, demons now battle. The eternal flame burns in its braziers.",
+    name: "Tiger Stadium",
+  },
+  triad_keep: {
+    desc: "A fortified swamp keep ringed by murky water and green banners.",
+    icon: <Shield className="text-emerald-400" size={16} />,
+    lore: "Three halls fed this fortress once. Now only the walls remember the guest list.",
+    name: "Triad Keep",
+  },
+  volcano_rim: {
+    desc: "A rim of lava that surrounds the battlefield.",
+    icon: <Flame className="text-orange-400" size={16} />,
+    lore: "The precipice of eternal fire.",
+    name: "Volcano Rim",
+  },
+  war_monument: {
+    desc: "A towering memorial honoring fallen warriors of ages past.",
+    icon: <Swords className="text-stone-400" size={16} />,
+    lore: "Every name etched into its surface represents a hero. There are a lot of names.",
+    name: "War Monument",
+  },
+  whig_hall: {
+    desc: "A Greek revival temple slowly being reclaimed by the swamp.",
+    icon: <Home className="text-amber-400" size={16} />,
+    lore: "Once a hall of debate and rhetoric, now moss and vines argue over its crumbling columns.",
+    name: "Whig Hall",
+  },
+  witch_cottage: {
+    desc: "A crooked dwelling reeking of potions and old magic.",
+    icon: <Sparkles className="text-green-400" size={16} />,
+    lore: "The witch left years ago, but her cauldron still bubbles. Nobody dares taste what's inside.",
+    name: "Witch's Cottage",
   },
 };
 
@@ -392,29 +393,40 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
   position,
 }) => {
   const info = LANDMARK_INFO[landmarkType] || {
-    name: landmarkType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    icon: <Landmark className="text-amber-400" size={16} />,
     desc: "A notable landmark on the battlefield.",
+    icon: <Landmark className="text-amber-400" size={16} />,
     lore: "Its origins are shrouded in mystery.",
+    name: landmarkType
+      .replaceAll("_", " ")
+      .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   };
 
-  const coords = getTooltipPosition(position, { width: 240, height: 140 });
+  const coords = getTooltipPosition(position, { height: 140, width: 240 });
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 250,
-        width: 240,
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
         boxShadow: `0 0 20px ${GOLD.glow07}`,
+        left: coords.left,
+        top: coords.top,
+        width: 240,
+        zIndex: 250,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-      <div className="px-3 py-1.5 relative z-10" style={{ background: PANEL.bgWarmMid, borderBottom: `1px solid ${GOLD.border25}` }}>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
         <div className="flex items-center gap-2">
           {info.icon}
           <span className="font-bold text-amber-200 text-sm">{info.name}</span>
@@ -425,8 +437,13 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
         </div>
       </div>
       <div className="px-3 py-2">
-        <p className="text-[11px] text-amber-100/80 leading-relaxed">{info.desc}</p>
-        <p className="text-[10px] text-amber-400/60 leading-relaxed mt-1.5 italic pt-1.5" style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }}>
+        <p className="text-[11px] text-amber-100/80 leading-relaxed">
+          {info.desc}
+        </p>
+        <p
+          className="text-[10px] text-amber-400/60 leading-relaxed mt-1.5 italic pt-1.5"
+          style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }}
+        >
           &quot;{info.lore}&quot;
         </p>
       </div>
@@ -441,140 +458,146 @@ interface HazardTooltipProps {
 
 const HAZARD_INFO: Record<
   string,
-  { name: string; icon: React.ReactNode; desc: string; effect: string; effectColor: string }
+  {
+    name: string;
+    icon: React.ReactNode;
+    desc: string;
+    effect: string;
+    effectColor: string;
+  }
 > = {
-  poison_fog: {
-    name: "Poison Fog",
-    icon: <Wind className="text-green-400" size={16} />,
-    desc: "A thick, noxious cloud of toxic gas lingers over this area.",
-    effect: "Deals 15 DPS to all units passing through",
-    effectColor: "text-green-400",
-  },
   deep_water: {
-    name: "Deep Water",
-    icon: <Activity className="text-blue-400" size={16} />,
     desc: "Dark water with strong undertow and almost no footing.",
     effect: "Slows and drowns all units — 4-9 DPS + 38% slow",
     effectColor: "text-blue-300",
-  },
-  maelstrom: {
-    name: "Maelstrom",
-    icon: <Wind className="text-cyan-300" size={16} />,
-    desc: "A rotating vortex that drags everything toward its crushing center.",
-    effect: "8-20 DPS + 55% slow to all units",
-    effectColor: "text-cyan-300",
-  },
-  storm_field: {
-    name: "Storm Field",
-    icon: <Zap className="text-sky-300" size={16} />,
-    desc: "Ionized storm air that supercharges movement but shreds armor.",
-    effect: "All units move 15% faster but take 6 DPS",
-    effectColor: "text-sky-300",
-  },
-  quicksand: {
-    name: "Quicksand",
-    icon: <TrendingDown className="text-yellow-400" size={16} />,
-    desc: "Treacherous ground that swallows anything that steps on it.",
-    effect: "Slows all units by 50%",
-    effectColor: "text-yellow-400",
-  },
-  ice_sheet: {
-    name: "Ice Sheet",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A slick expanse of frozen ground that accelerates movement.",
-    effect: "All units move 60% FASTER through this zone",
-    effectColor: "text-cyan-400",
-  },
-  slippery_ice: {
-    name: "Slippery Ice",
-    icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A treacherously smooth ice surface.",
-    effect: "All units move 60% FASTER through this zone",
-    effectColor: "text-cyan-400",
-  },
-  ice: {
-    name: "Ice",
-    icon: <Snowflake className="text-cyan-300" size={16} />,
-    desc: "A frozen patch that makes footing unreliable.",
-    effect: "All units move 50% FASTER through this zone",
-    effectColor: "text-cyan-300",
-  },
-  ice_spikes: {
-    name: "Ice Spikes",
-    icon: <Mountain className="text-cyan-300" size={16} />,
-    desc: "Razor-sharp crystal growths burst from the frozen ground.",
-    effect: "Shoots up in cycles, damaging and slowing all units",
-    effectColor: "text-cyan-300",
-  },
-  spikes: {
-    name: "Ice Spikes",
-    icon: <Mountain className="text-cyan-300" size={16} />,
-    desc: "Razor-sharp crystal growths burst from the frozen ground.",
-    effect: "Shoots up in cycles, damaging and slowing all units",
-    effectColor: "text-cyan-300",
-  },
-  lava_geyser: {
-    name: "Lava Geyser",
-    icon: <Flame className="text-orange-400" size={16} />,
-    desc: "Periodic eruptions of molten rock from deep underground.",
-    effect: "Random eruptions deal 5 fire damage to all nearby units",
-    effectColor: "text-orange-400",
+    icon: <Activity className="text-blue-400" size={16} />,
+    name: "Deep Water",
   },
   eruption_zone: {
-    name: "Lava Geyser",
-    icon: <Flame className="text-orange-400" size={16} />,
     desc: "Periodic eruptions of molten rock from deep underground.",
     effect: "Random eruptions deal 5 fire damage to all nearby units",
     effectColor: "text-orange-400",
-  },
-  volcano: {
-    name: "Volcano",
-    icon: <Flame className="text-red-400" size={16} />,
-    desc: "A volatile crater that hurls molten rock across the battlefield.",
-    effect: "Devastating eruptions deal 15 fire damage to all nearby units",
-    effectColor: "text-red-400",
-  },
-  lava: {
-    name: "Lava Pool",
-    icon: <Flame className="text-red-300" size={16} />,
-    desc: "Bubbling magma that scorches anything too close.",
-    effect: "Periodic splashes deal 4 fire damage to all nearby units",
-    effectColor: "text-red-300",
-  },
-  swamp: {
-    name: "Toxic Swamp",
-    icon: <Wind className="text-lime-400" size={16} />,
-    desc: "A fetid mire oozing with corrosive sludge.",
-    effect: "6 DPS poison + 35% slow to all units",
-    effectColor: "text-lime-400",
-  },
-  poison: {
-    name: "Poison",
-    icon: <Wind className="text-green-400" size={16} />,
-    desc: "A pool of concentrated toxin.",
-    effect: "Deals 12 DPS to all units",
-    effectColor: "text-green-400",
+    icon: <Flame className="text-orange-400" size={16} />,
+    name: "Lava Geyser",
   },
   fire: {
-    name: "Hellfire Zone",
-    icon: <Flame className="text-orange-400" size={16} />,
     desc: "Continuous flames scorch everything in the area.",
     effect: "10 fire DPS to all units",
     effectColor: "text-orange-400",
+    icon: <Flame className="text-orange-400" size={16} />,
+    name: "Hellfire Zone",
+  },
+  ice: {
+    desc: "A frozen patch that makes footing unreliable.",
+    effect: "All units move 50% FASTER through this zone",
+    effectColor: "text-cyan-300",
+    icon: <Snowflake className="text-cyan-300" size={16} />,
+    name: "Ice",
+  },
+  ice_sheet: {
+    desc: "A slick expanse of frozen ground that accelerates movement.",
+    effect: "All units move 60% FASTER through this zone",
+    effectColor: "text-cyan-400",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    name: "Ice Sheet",
+  },
+  ice_spikes: {
+    desc: "Razor-sharp crystal growths burst from the frozen ground.",
+    effect: "Shoots up in cycles, damaging and slowing all units",
+    effectColor: "text-cyan-300",
+    icon: <Mountain className="text-cyan-300" size={16} />,
+    name: "Ice Spikes",
+  },
+  lava: {
+    desc: "Bubbling magma that scorches anything too close.",
+    effect: "Periodic splashes deal 4 fire damage to all nearby units",
+    effectColor: "text-red-300",
+    icon: <Flame className="text-red-300" size={16} />,
+    name: "Lava Pool",
+  },
+  lava_geyser: {
+    desc: "Periodic eruptions of molten rock from deep underground.",
+    effect: "Random eruptions deal 5 fire damage to all nearby units",
+    effectColor: "text-orange-400",
+    icon: <Flame className="text-orange-400" size={16} />,
+    name: "Lava Geyser",
   },
   lightning: {
-    name: "Lightning Field",
-    icon: <Zap className="text-yellow-300" size={16} />,
     desc: "Sporadic high-voltage strikes blast the area.",
     effect: "18 burst damage per lightning strike to all units",
     effectColor: "text-yellow-300",
+    icon: <Zap className="text-yellow-300" size={16} />,
+    name: "Lightning Field",
+  },
+  maelstrom: {
+    desc: "A rotating vortex that drags everything toward its crushing center.",
+    effect: "8-20 DPS + 55% slow to all units",
+    effectColor: "text-cyan-300",
+    icon: <Wind className="text-cyan-300" size={16} />,
+    name: "Maelstrom",
+  },
+  poison: {
+    desc: "A pool of concentrated toxin.",
+    effect: "Deals 12 DPS to all units",
+    effectColor: "text-green-400",
+    icon: <Wind className="text-green-400" size={16} />,
+    name: "Poison",
+  },
+  poison_fog: {
+    desc: "A thick, noxious cloud of toxic gas lingers over this area.",
+    effect: "Deals 15 DPS to all units passing through",
+    effectColor: "text-green-400",
+    icon: <Wind className="text-green-400" size={16} />,
+    name: "Poison Fog",
+  },
+  quicksand: {
+    desc: "Treacherous ground that swallows anything that steps on it.",
+    effect: "Slows all units by 50%",
+    effectColor: "text-yellow-400",
+    icon: <TrendingDown className="text-yellow-400" size={16} />,
+    name: "Quicksand",
+  },
+  slippery_ice: {
+    desc: "A treacherously smooth ice surface.",
+    effect: "All units move 60% FASTER through this zone",
+    effectColor: "text-cyan-400",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    name: "Slippery Ice",
+  },
+  spikes: {
+    desc: "Razor-sharp crystal growths burst from the frozen ground.",
+    effect: "Shoots up in cycles, damaging and slowing all units",
+    effectColor: "text-cyan-300",
+    icon: <Mountain className="text-cyan-300" size={16} />,
+    name: "Ice Spikes",
+  },
+  storm_field: {
+    desc: "Ionized storm air that supercharges movement but shreds armor.",
+    effect: "All units move 15% faster but take 6 DPS",
+    effectColor: "text-sky-300",
+    icon: <Zap className="text-sky-300" size={16} />,
+    name: "Storm Field",
+  },
+  swamp: {
+    desc: "A fetid mire oozing with corrosive sludge.",
+    effect: "6 DPS poison + 35% slow to all units",
+    effectColor: "text-lime-400",
+    icon: <Wind className="text-lime-400" size={16} />,
+    name: "Toxic Swamp",
   },
   void: {
-    name: "Void Rift",
-    icon: <CircleOff className="text-purple-400" size={16} />,
     desc: "A dimensional tear that drains life force.",
     effect: "8 DPS + 30% slow to all units",
     effectColor: "text-purple-400",
+    icon: <CircleOff className="text-purple-400" size={16} />,
+    name: "Void Rift",
+  },
+  volcano: {
+    desc: "A volatile crater that hurls molten rock across the battlefield.",
+    effect: "Devastating eruptions deal 15 fire damage to all nearby units",
+    effectColor: "text-red-400",
+    icon: <Flame className="text-red-400" size={16} />,
+    name: "Volcano",
   },
 };
 
@@ -583,30 +606,41 @@ export const HazardTooltip: React.FC<HazardTooltipProps> = ({
   position,
 }) => {
   const info = HAZARD_INFO[hazardType] || {
-    name: hazardType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    icon: <AlertTriangle className="text-red-400" size={16} />,
     desc: "A dangerous environmental hazard.",
     effect: "Applies an unknown effect to units in the area",
     effectColor: "text-red-400",
+    icon: <AlertTriangle className="text-red-400" size={16} />,
+    name: hazardType
+      .replaceAll("_", " ")
+      .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   };
 
-  const coords = getTooltipPosition(position, { width: 250, height: 150 });
+  const coords = getTooltipPosition(position, { height: 150, width: 250 });
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
-        left: coords.left,
-        top: coords.top,
-        zIndex: 250,
-        width: 250,
         background: panelGradient,
         border: `1.5px solid ${RED_CARD.border}`,
         boxShadow: `0 0 20px ${RED_CARD.glow06}`,
+        left: coords.left,
+        top: coords.top,
+        width: 250,
+        zIndex: 250,
       }}
     >
-      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-      <div className="px-3 py-1.5 relative z-10" style={{ background: RED_CARD.bgLight, borderBottom: `1px solid ${RED_CARD.border25}` }}>
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${RED_CARD.innerBorder12}` }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: RED_CARD.bgLight,
+          borderBottom: `1px solid ${RED_CARD.border25}`,
+        }}
+      >
         <div className="flex items-center gap-2">
           {info.icon}
           <span className="font-bold text-red-200 text-sm">{info.name}</span>
@@ -617,10 +651,22 @@ export const HazardTooltip: React.FC<HazardTooltipProps> = ({
         </div>
       </div>
       <div className="px-3 py-2">
-        <p className="text-[11px] text-stone-300/80 leading-relaxed">{info.desc}</p>
-        <div className="mt-2 rounded-lg px-2.5 py-1.5" style={{ background: PANEL.bgDeep, border: `1px solid ${RED_CARD.border25}` }}>
-          <div className="text-[9px] text-red-400/60 uppercase tracking-wider mb-0.5 font-semibold">Effect</div>
-          <p className={`text-[11px] font-medium leading-snug ${info.effectColor}`}>
+        <p className="text-[11px] text-stone-300/80 leading-relaxed">
+          {info.desc}
+        </p>
+        <div
+          className="mt-2 rounded-lg px-2.5 py-1.5"
+          style={{
+            background: PANEL.bgDeep,
+            border: `1px solid ${RED_CARD.border25}`,
+          }}
+        >
+          <div className="text-[9px] text-red-400/60 uppercase tracking-wider mb-0.5 font-semibold">
+            Effect
+          </div>
+          <p
+            className={`text-[11px] font-medium leading-snug ${info.effectColor}`}
+          >
             {info.effect}
           </p>
         </div>

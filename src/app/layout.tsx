@@ -1,8 +1,9 @@
-import type { Metadata, Viewport } from "next";
-import "./globals.css";
 import { Theme } from "@radix-ui/themes";
+
+import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
-import { StructuredData } from "./seo/StructuredData";
+import type { Metadata, Viewport } from "next";
+
 import {
   SITE_URL,
   SITE_NAME,
@@ -13,82 +14,83 @@ import {
   AUTHOR_URL,
   GITHUB_URL,
 } from "./seo/constants";
+import { StructuredData } from "./seo/StructuredData";
 
 export const viewport: Viewport = {
-  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  width: "device-width",
 };
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: SITE_URL,
+  },
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_AUTHOR, url: AUTHOR_URL }],
+  category: "Games",
+  classification: "Tower Defense Strategy Game",
+  creator: SITE_AUTHOR,
+  description: SITE_DESCRIPTION,
+  generator: "Next.js",
+  icons: {
+    apple: [{ url: "/images/logos/princeton-td-logo.png" }],
+    icon: [{ sizes: "any", url: "/favicon.ico" }],
+  },
+  keywords: KEYWORDS,
   metadataBase: new URL(SITE_URL),
+  openGraph: {
+    description: SITE_DESCRIPTION_SHORT,
+    locale: "en_US",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | Free Tower Defense Game - Play Now`,
+    type: "website",
+    url: SITE_URL,
+  },
+
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": SITE_NAME,
+    author: SITE_AUTHOR,
+    designer: SITE_AUTHOR,
+    "github:repo": GITHUB_URL,
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#E87722",
+    "theme-color": "#E87722",
+    "twitter:domain": "princeton-tower-defense.vercel.app",
+  },
+
+  publisher: SITE_AUTHOR,
+
+  referrer: "origin-when-cross-origin",
+
+  robots: {
+    follow: true,
+    googleBot: {
+      follow: true,
+      index: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+    index: true,
+    nocache: false,
+  },
+
   title: {
     default: `${SITE_NAME} | Free Browser Tower Defense Game`,
     template: `%s | ${SITE_NAME}`,
   },
-  description: SITE_DESCRIPTION,
-  applicationName: SITE_NAME,
-  generator: "Next.js",
-  referrer: "origin-when-cross-origin",
-  keywords: KEYWORDS,
-  authors: [{ name: SITE_AUTHOR, url: AUTHOR_URL }],
-  creator: SITE_AUTHOR,
-  publisher: SITE_AUTHOR,
-  category: "Games",
-  classification: "Tower Defense Strategy Game",
-
-  icons: {
-    icon: [{ url: "/favicon.ico", sizes: "any" }],
-    apple: [{ url: "/images/logos/princeton-td-logo.png" }],
-  },
-
-  openGraph: {
-    title: `${SITE_NAME} | Free Tower Defense Game - Play Now`,
-    description: SITE_DESCRIPTION_SHORT,
-    type: "website",
-    locale: "en_US",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-  },
 
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} | Free Browser Tower Defense Game`,
-    description: SITE_DESCRIPTION_SHORT,
     creator: "@kevskgs",
+    description: SITE_DESCRIPTION_SHORT,
     site: "@kevskgs",
-  },
-
-  robots: {
-    index: true,
-    follow: true,
-    nocache: false,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-
-  alternates: {
-    canonical: SITE_URL,
-  },
-
-  other: {
-    "apple-mobile-web-app-title": SITE_NAME,
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "mobile-web-app-capable": "yes",
-    "msapplication-TileColor": "#E87722",
-    "theme-color": "#E87722",
-    "github:repo": GITHUB_URL,
-    "author": SITE_AUTHOR,
-    "designer": SITE_AUTHOR,
-    "twitter:domain": "princeton-tower-defense.vercel.app",
+    title: `${SITE_NAME} | Free Browser Tower Defense Game`,
   },
 };
 

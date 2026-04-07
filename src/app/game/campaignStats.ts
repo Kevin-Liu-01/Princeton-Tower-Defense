@@ -1,5 +1,6 @@
 import type { LevelStats, GameProgress } from "../hooks/useLocalStorage";
-import { ALL_CAMPAIGN_LEVELS, REGION_CAMPAIGN_LEVELS, type RegionKey } from "./progression";
+import { ALL_CAMPAIGN_LEVELS, REGION_CAMPAIGN_LEVELS } from "./progression";
+import type { RegionKey } from "./progression";
 
 export interface CumulativeCampaignStats {
   totalStars: number;
@@ -11,18 +12,25 @@ export interface CumulativeCampaignStats {
   levelsCompleted: number;
   totalLevels: number;
   bestOverallHearts: number;
-  regionStats: { region: string; stars: number; maxStars: number; completed: boolean }[];
+  regionStats: {
+    region: string;
+    stars: number;
+    maxStars: number;
+    completed: boolean;
+  }[];
 }
 
 const REGION_DISPLAY_NAMES: Record<RegionKey, string> = {
+  desert: "Sahara Sands",
   grassland: "Princeton Grounds",
   swamp: "Murky Marshes",
-  desert: "Sahara Sands",
-  winter: "Frozen Frontier",
   volcanic: "Volcanic Depths",
+  winter: "Frozen Frontier",
 };
 
-export function computeCumulativeCampaignStats(progress: GameProgress): CumulativeCampaignStats {
+export function computeCumulativeCampaignStats(
+  progress: GameProgress
+): CumulativeCampaignStats {
   const { levelStars, levelStats } = progress;
   const totalLevels = ALL_CAMPAIGN_LEVELS.length;
 
@@ -37,38 +45,51 @@ export function computeCumulativeCampaignStats(progress: GameProgress): Cumulati
   for (const levelId of ALL_CAMPAIGN_LEVELS) {
     const stars = levelStars[levelId] || 0;
     totalStars += stars;
-    if (stars > 0) levelsCompleted++;
-    if (stars >= 3) perfectLevels++;
+    if (stars > 0) {
+      levelsCompleted++;
+    }
+    if (stars >= 3) {
+      perfectLevels++;
+    }
 
     const stats: LevelStats = levelStats[levelId] || {};
-    if (stats.bestTime) totalBestTime += stats.bestTime;
+    if (stats.bestTime) {
+      totalBestTime += stats.bestTime;
+    }
     totalTimesPlayed += stats.timesPlayed || 0;
     totalTimesWon += stats.timesWon || 0;
-    if (stats.bestHearts) bestOverallHearts += stats.bestHearts;
+    if (stats.bestHearts) {
+      bestOverallHearts += stats.bestHearts;
+    }
   }
 
-  const regionStats = (Object.keys(REGION_CAMPAIGN_LEVELS) as RegionKey[]).map((key) => {
-    const levels = REGION_CAMPAIGN_LEVELS[key];
-    const regionStars = levels.reduce((sum, id) => sum + (levelStars[id] || 0), 0);
-    const completed = levels.every((id) => (levelStars[id] || 0) > 0);
-    return {
-      region: REGION_DISPLAY_NAMES[key],
-      stars: regionStars,
-      maxStars: levels.length * 3,
-      completed,
-    };
-  });
+  const regionStats = (Object.keys(REGION_CAMPAIGN_LEVELS) as RegionKey[]).map(
+    (key) => {
+      const levels = REGION_CAMPAIGN_LEVELS[key];
+      const regionStars = levels.reduce(
+        (sum, id) => sum + (levelStars[id] || 0),
+        0
+      );
+      const completed = levels.every((id) => (levelStars[id] || 0) > 0);
+      return {
+        completed,
+        maxStars: levels.length * 3,
+        region: REGION_DISPLAY_NAMES[key],
+        stars: regionStars,
+      };
+    }
+  );
 
   return {
-    totalStars,
+    bestOverallHearts,
+    levelsCompleted,
     maxStars: totalLevels * 3,
+    perfectLevels,
+    regionStats,
     totalBestTime,
+    totalLevels,
+    totalStars,
     totalTimesPlayed,
     totalTimesWon,
-    perfectLevels,
-    levelsCompleted,
-    totalLevels,
-    bestOverallHearts,
-    regionStats,
   };
 }

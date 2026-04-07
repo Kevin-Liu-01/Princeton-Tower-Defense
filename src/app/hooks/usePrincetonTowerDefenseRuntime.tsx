@@ -1,5 +1,52 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+
+import { FreeplayDisclaimer } from "../components/menus/FreeplayDisclaimer";
+import {
+  LoadingScreen,
+  LoadingOverlay,
+  SceneTransitionOverlay,
+} from "../components/menus/LoadingScreen";
+// Components
+import { WorldMap } from "../components/menus/WorldMap";
+// Constants
+import {
+  LEVEL_DATA,
+  HERO_OPTIONS,
+  SPELL_OPTIONS,
+  HERO_AUTO_ABILITY_HP_THRESHOLD,
+  normalizeSpellUpgradeLevels,
+  getSpentSpellUpgradeStars,
+  getLevelPathKeys,
+  INITIAL_PAW_POINTS,
+  INITIAL_LIVES,
+  WAVE_TIMER_BASE,
+} from "../constants";
+import {
+  getWorldMapAssets,
+  getBattleAssets,
+  resolveLoadingTheme,
+} from "../constants/loadingAssets";
+import {
+  STORAGE_KEY_SELECTED_HERO,
+  STORAGE_KEY_SELECTED_SPELLS,
+  STORAGE_KEY_SPELL_AUTOAIM,
+} from "../constants/storage";
+import {
+  DEFAULT_CAMERA_OFFSET,
+  DEFAULT_CAMERA_ZOOM,
+  getBlockedPositionsForMap,
+  getLevelWaves,
+} from "../game/setup";
+import { initParticlePool, getActiveParticleCount } from "../rendering";
+import type { RuntimeDecoration } from "../rendering/decorations/decorationHelpers";
+import { getWaveStartBubblesScreenData as computeWaveStartBubbles } from "../rendering/ui/waveStartBubble";
 // Types
 import type {
   Position,
@@ -20,142 +67,16 @@ import type {
   Decoration,
   SpecialTower,
 } from "../types";
-// Constants
-import {
-  LEVEL_DATA,
-  HERO_OPTIONS,
-  SPELL_OPTIONS,
-  HERO_AUTO_ABILITY_HP_THRESHOLD,
-  normalizeSpellUpgradeLevels,
-  getSpentSpellUpgradeStars,
-  getLevelPathKeys,
-  INITIAL_PAW_POINTS,
-  INITIAL_LIVES,
-  WAVE_TIMER_BASE,
-} from "../constants";
-import {
-  STORAGE_KEY_SELECTED_HERO,
-  STORAGE_KEY_SELECTED_SPELLS,
-  STORAGE_KEY_SPELL_AUTOAIM,
-} from "../constants/storage";
 // Utils
-import {
-  type TroopMoveInfo,
-} from "../utils";
-import {
-  type RuntimeDecoration,
-} from "../rendering/decorations/decorationHelpers";
-import {
-  initParticlePool,
-  getActiveParticleCount,
-} from "../rendering";
-import {
-  getWaveStartBubblesScreenData as computeWaveStartBubbles,
-} from "../rendering/ui/waveStartBubble";
-import {
-  DEFAULT_CAMERA_OFFSET,
-  DEFAULT_CAMERA_ZOOM,
-  getBlockedPositionsForMap,
-  getLevelWaves,
-} from "../game/setup";
-import { updateGameTick } from "./runtime/updateGame";
-import { useTimerSystem } from "./runtime/useTimerSystem";
-// Components
-import { WorldMap } from "../components/menus/WorldMap";
-// Hooks
-import {
-  useGameProgress,
-  useLocalStorage,
-} from "./useLocalStorage";
-import { useCustomLevels } from "./useCustomLevels";
-import { useEntityCollection } from "./useEntityCollection";
-import { usePawPoints } from "./usePawPoints";
-import { useGameEventLog } from "./useGameEventLog";
-import { useTutorial, type EncounterQueueItem } from "./useTutorial";
-import {
-  DEV_CONFIG_MENU_ENABLED,
-  QUALITY_DPR_CAP,
-  QUALITY_TRANSITION_COOLDOWN_MS,
-  readDevModeUnlocked,
-  type RenderQuality,
-} from "./runtime/runtimeConfig";
-import {
-  renderScene,
-  type StaticMapLayerCache,
-  type StaticDecorationLayerCache,
-  type FogLayerCache,
-  type BackdropCache,
-  type AmbientLayerCache,
-  type DraggingUnitState,
-  type WavePreviewEnemyEntry,
-} from "./runtime/renderScene";
-import {
-  handlePointerDownImpl,
-  handleCanvasClickImpl,
-  handleMouseMoveImpl,
-  type CanvasEventParams,
-} from "./runtime/canvasEventHandlers";
-import {
-  type WaveStartConfirmState,
-} from "./runtime/waveStartBubbles";
-import {
-  castSpellImpl,
-  executeTargetedSpellImpl,
-  type SpellExecutionParams,
-} from "./runtime/spellExecution";
-import { triggerHeroAbilityImpl } from "./runtime/heroAbilities";
-import {
-  startGameLoop,
-  type GameLoopRefs,
-  type DevPerfSnapshot,
-} from "./runtime/gameLoop";
-import {
-  resolveHeroCommandTargetImpl,
-  resolveTroopCommandTargetImpl,
-  issueHeroMoveCommandImpl,
-  issueTroopFormationMoveCommandImpl,
-} from "./runtime/unitCommandHelpers";
-import {
-  upgradeTowerImpl,
-  sellTowerImpl,
-  type UpgradeTowerParams,
-  type SellTowerParams,
-} from "./runtime/towerActions";
-import {
-  resetGameImpl,
-  retryLevelImpl,
-  type BattleResetDeps,
-} from "./runtime/battleReset";
-import {
-  getSpecialTowerKeyImpl,
-  clampWorldToMapBoundsImpl,
-  getRandomMapTargetImpl,
-  getRenderDprImpl,
-  getCanvasDimensionsImpl,
-} from "./runtime/viewMath";
-import { upgradeSpellImpl, downgradeSpellImpl } from "./runtime/spellUpgrades";
-import { useParticleAndCombat } from "./runtime/useParticleAndCombat";
-import { useDevMenuSetup } from "./runtime/useDevMenuSetup";
+import type { TroopMoveInfo } from "../utils";
+import { resetGameImpl, retryLevelImpl } from "./runtime/battleReset";
+import type { BattleResetDeps } from "./runtime/battleReset";
 import { computeBattleTheme } from "./runtime/battleTheme";
-import {
-  queueLevelEncountersImpl,
-  handleTutorialHeroChangeImpl,
-  handleTutorialSpellToggleImpl,
-  handleEncounterAcknowledgeImpl,
-  startWithRandomLoadoutImpl,
-  ENCOUNTER_AUTO_DISMISS_MS,
-  ENCOUNTER_EXIT_DURATION_MS,
-} from "./runtime/tutorialCallbacks";
-import { computeWavePreviewByPath } from "./runtime/wavePreview";
-import { syncReinforcementTroops } from "./runtime/reinforcementSync";
-import { setupResizeListener } from "./runtime/canvasResize";
-import { handleBuildTouchDragMoveImpl, handleBuildTouchDragEndImpl } from "./runtime/buildDragHandlers";
-import { computePendingChallengeUnlocks } from "./runtime/challengeUnlocks";
 import { BattleUI } from "./runtime/BattleUI";
-import { FreeplayDisclaimer } from "../components/menus/FreeplayDisclaimer";
-import { LoadingScreen, LoadingOverlay, SceneTransitionOverlay } from "../components/menus/LoadingScreen";
-import { usePreloadGate, useBattleLoadingGate } from "./useImagePreloader";
-import { getWorldMapAssets, getBattleAssets, resolveLoadingTheme } from "../constants/loadingAssets";
+import {
+  handleBuildTouchDragMoveImpl,
+  handleBuildTouchDragEndImpl,
+} from "./runtime/buildDragHandlers";
 import {
   handleCameraKeyDown,
   enterCameraModeImpl,
@@ -172,6 +93,14 @@ import {
   enforceBattleOutcomePause,
 } from "./runtime/cameraAndKeyboard";
 import {
+  handlePointerDownImpl,
+  handleCanvasClickImpl,
+  handleMouseMoveImpl,
+} from "./runtime/canvasEventHandlers";
+import type { CanvasEventParams } from "./runtime/canvasEventHandlers";
+import { setupResizeListener } from "./runtime/canvasResize";
+import { computePendingChallengeUnlocks } from "./runtime/challengeUnlocks";
+import {
   resetGameStateImpl,
   initTutorialEncountersImpl,
   cleanupOnLeavePlayingImpl,
@@ -183,7 +112,76 @@ import {
   startWaveInnerImpl,
   startWaveImpl,
 } from "./runtime/gameLifecycle";
+import { startGameLoop } from "./runtime/gameLoop";
+import type { GameLoopRefs, DevPerfSnapshot } from "./runtime/gameLoop";
+import { triggerHeroAbilityImpl } from "./runtime/heroAbilities";
+import { syncReinforcementTroops } from "./runtime/reinforcementSync";
+import { renderScene } from "./runtime/renderScene";
+import type {
+  StaticMapLayerCache,
+  StaticDecorationLayerCache,
+  FogLayerCache,
+  BackdropCache,
+  AmbientLayerCache,
+  DraggingUnitState,
+  WavePreviewEnemyEntry,
+} from "./runtime/renderScene";
+import {
+  DEV_CONFIG_MENU_ENABLED,
+  QUALITY_DPR_CAP,
+  QUALITY_TRANSITION_COOLDOWN_MS,
+  readDevModeUnlocked,
+} from "./runtime/runtimeConfig";
+import type { RenderQuality } from "./runtime/runtimeConfig";
+import {
+  castSpellImpl,
+  executeTargetedSpellImpl,
+} from "./runtime/spellExecution";
+import type { SpellExecutionParams } from "./runtime/spellExecution";
+import { upgradeSpellImpl, downgradeSpellImpl } from "./runtime/spellUpgrades";
+import { upgradeTowerImpl, sellTowerImpl } from "./runtime/towerActions";
+import type {
+  UpgradeTowerParams,
+  SellTowerParams,
+} from "./runtime/towerActions";
+import {
+  queueLevelEncountersImpl,
+  handleTutorialHeroChangeImpl,
+  handleTutorialSpellToggleImpl,
+  handleEncounterAcknowledgeImpl,
+  startWithRandomLoadoutImpl,
+  ENCOUNTER_AUTO_DISMISS_MS,
+  ENCOUNTER_EXIT_DURATION_MS,
+} from "./runtime/tutorialCallbacks";
+import {
+  resolveHeroCommandTargetImpl,
+  resolveTroopCommandTargetImpl,
+  issueHeroMoveCommandImpl,
+  issueTroopFormationMoveCommandImpl,
+} from "./runtime/unitCommandHelpers";
+import { updateGameTick } from "./runtime/updateGame";
+import { useDevMenuSetup } from "./runtime/useDevMenuSetup";
+import { useParticleAndCombat } from "./runtime/useParticleAndCombat";
+import { useTimerSystem } from "./runtime/useTimerSystem";
 import { useZoomSetup } from "./runtime/useZoomSetup";
+import {
+  getSpecialTowerKeyImpl,
+  clampWorldToMapBoundsImpl,
+  getRandomMapTargetImpl,
+  getRenderDprImpl,
+  getCanvasDimensionsImpl,
+} from "./runtime/viewMath";
+import { computeWavePreviewByPath } from "./runtime/wavePreview";
+import type { WaveStartConfirmState } from "./runtime/waveStartBubbles";
+import { useCustomLevels } from "./useCustomLevels";
+import { useEntityCollection } from "./useEntityCollection";
+import { useGameEventLog } from "./useGameEventLog";
+import { usePreloadGate, useBattleLoadingGate } from "./useImagePreloader";
+// Hooks
+import { useGameProgress, useLocalStorage } from "./useLocalStorage";
+import { usePawPoints } from "./usePawPoints";
+import { useTutorial } from "./useTutorial";
+import type { EncounterQueueItem } from "./useTutorial";
 
 type BattleOutcome = "victory" | "defeat";
 
@@ -191,8 +189,14 @@ export function usePrincetonTowerDefenseRuntime() {
   // Game state
   const [gameState, setGameState] = useState<GameState>("menu");
   const [selectedMap, setSelectedMap] = useState<string>("poe");
-  const [selectedHero, setSelectedHero] = useLocalStorage<HeroType | null>(STORAGE_KEY_SELECTED_HERO, "tiger");
-  const [selectedSpells, setSelectedSpells] = useLocalStorage<SpellType[]>(STORAGE_KEY_SELECTED_SPELLS, []);
+  const [selectedHero, setSelectedHero] = useLocalStorage<HeroType | null>(
+    STORAGE_KEY_SELECTED_HERO,
+    "tiger"
+  );
+  const [selectedSpells, setSelectedSpells] = useLocalStorage<SpellType[]>(
+    STORAGE_KEY_SELECTED_SPELLS,
+    []
+  );
 
   // Freeplay: true when accessing a locked level via URL (no campaign credit on victory)
   const [isFreeplay, setIsFreeplay] = useState(false);
@@ -205,7 +209,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const getBattleUrlsForMap = useCallback(
     () => getBattleAssets(selectedMap),
-    [selectedMap],
+    [selectedMap]
   );
   const [sceneTransitioning, setSceneTransitioning] = useState(false);
   const battleLoading = useBattleLoadingGate(
@@ -213,7 +217,7 @@ export function usePrincetonTowerDefenseRuntime() {
     2600,
     useCallback(() => {
       setGameState("playing");
-    }, [setGameState]),
+    }, [setGameState])
   );
 
   useEffect(() => {
@@ -228,15 +232,18 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const freeplayDismissedRef = useRef(false);
 
-  const handleFreeplayRequest = useCallback((levelId: string, isUnlocked: boolean) => {
-    if (freeplayDismissedRef.current) {
-      freeplayDismissedRef.current = false;
-      return;
-    }
-    setSelectedMap(levelId);
-    setIsFreeplay(!isUnlocked);
-    setShowFreeplayDisclaimer(true);
-  }, []);
+  const handleFreeplayRequest = useCallback(
+    (levelId: string, isUnlocked: boolean) => {
+      if (freeplayDismissedRef.current) {
+        freeplayDismissedRef.current = false;
+        return;
+      }
+      setSelectedMap(levelId);
+      setIsFreeplay(!isUnlocked);
+      setShowFreeplayDisclaimer(true);
+    },
+    []
+  );
 
   const freeplayStartRef = useRef<() => void>(() => {});
 
@@ -258,20 +265,23 @@ export function usePrincetonTowerDefenseRuntime() {
     updateLevelStats,
     unlockLevel,
   } = useGameProgress();
-  const { customLevels, upsertCustomLevel, deleteCustomLevel } = useCustomLevels();
+  const { customLevels, upsertCustomLevel, deleteCustomLevel } =
+    useCustomLevels();
 
   // Tutorial system
   const tutorial = useTutorial();
   const [showTutorial, setShowTutorial] = useState(false);
-  const [encounterQueue, setEncounterQueue] = useState<EncounterQueueItem[]>([]);
+  const [encounterQueue, setEncounterQueue] = useState<EncounterQueueItem[]>(
+    []
+  );
   const [encounterIndex, setEncounterIndex] = useState(0);
   const [encounterExiting, setEncounterExiting] = useState(false);
   const tutorialBlockingRef = useRef(false);
   tutorialBlockingRef.current = showTutorial;
 
-  const unlockedMaps = progress.unlockedMaps;
+  const { unlockedMaps } = progress;
   const levelStars = progress.levelStars as LevelStars;
-  const levelStats = progress.levelStats;
+  const { levelStats } = progress;
   const spellUpgradeLevels = useMemo(
     () => normalizeSpellUpgradeLevels(progress.spellUpgrades),
     [progress.spellUpgrades]
@@ -284,7 +294,9 @@ export function usePrincetonTowerDefenseRuntime() {
 
   useEffect(() => {
     const pending = computePendingChallengeUnlocks(levelStars, unlockedMaps);
-    if (pending.length > 0) pending.forEach((levelId) => unlockLevel(levelId));
+    if (pending.length > 0) {
+      pending.forEach((levelId) => unlockLevel(levelId));
+    }
   }, [levelStars, unlockedMaps, unlockLevel]);
 
   const [starsEarned, setStarsEarned] = useState(0);
@@ -306,9 +318,15 @@ export function usePrincetonTowerDefenseRuntime() {
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [currentWave, setCurrentWave] = useState(0);
   const nextWaveTimerRef = useRef(WAVE_TIMER_BASE);
-  const setNextWaveTimer = useCallback((action: React.SetStateAction<number>) => {
-    nextWaveTimerRef.current = typeof action === 'function' ? action(nextWaveTimerRef.current) : action;
-  }, []);
+  const setNextWaveTimer = useCallback(
+    (action: React.SetStateAction<number>) => {
+      nextWaveTimerRef.current =
+        typeof action === "function"
+          ? action(nextWaveTimerRef.current)
+          : action;
+    },
+    []
+  );
   const [waveInProgress, setWaveInProgress] = useState(false);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const gameEventLog = useGameEventLog();
@@ -316,8 +334,9 @@ export function usePrincetonTowerDefenseRuntime() {
   gameEventLogRef.current = gameEventLog;
   const [waveStartConfirm, setWaveStartConfirm] =
     useState<WaveStartConfirmState | null>(null);
-  const [hoveredWaveBubblePathKey, setHoveredWaveBubblePathKey] =
-    useState<string | null>(null);
+  const [hoveredWaveBubblePathKey, setHoveredWaveBubblePathKey] = useState<
+    string | null
+  >(null);
   // Game entities
   const {
     items: towers,
@@ -368,7 +387,9 @@ export function usePrincetonTowerDefenseRuntime() {
     particlePoolInitRef.current = true;
   }
   // Special Objectives State – keyed by vault position (e.g. "3,5")
-  const [specialTowerHp, setSpecialTowerHp] = useState<Record<string, number>>({});
+  const [specialTowerHp, setSpecialTowerHp] = useState<Record<string, number>>(
+    {}
+  );
   const [vaultFlash, setVaultFlash] = useState<Record<string, number>>({});
   // HUD Animation state
   const [goldSpellActive, setGoldSpellActive] = useState(false);
@@ -381,11 +402,17 @@ export function usePrincetonTowerDefenseRuntime() {
   const [hexWardDamageAmpPct, setHexWardDamageAmpPct] = useState(0);
   const [hexWardBlocksHealing, setHexWardBlocksHealing] = useState(false);
   // Eating club income events for stacking floaters
-  const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
+  const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<
+    { id: string; amount: number }[]
+  >([]);
   // Bounty income events (from enemy kills)
-  const [bountyIncomeEvents, setBountyIncomeEvents] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean }>>([]);
+  const [bountyIncomeEvents, setBountyIncomeEvents] = useState<
+    { id: string; amount: number; isGoldBoosted: boolean }[]
+  >([]);
   // Leaked enemy bounty events (enemies that reached the end still award paw points)
-  const [leakedBountyEvents, setLeakedBountyEvents] = useState<Array<{ id: string; amount: number }>>([]);
+  const [leakedBountyEvents, setLeakedBountyEvents] = useState<
+    { id: string; amount: number }[]
+  >([]);
   // UI state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
@@ -399,17 +426,24 @@ export function usePrincetonTowerDefenseRuntime() {
   const [placingTroop, setPlacingTroop] = useState(false);
   const [targetingSpell, setTargetingSpell] = useState<SpellType | null>(null);
   const targetingSpellRef = useRef<SpellType | null>(null);
-  const [spellAutoAim, setSpellAutoAim] = useLocalStorage<Partial<Record<SpellType, boolean>>>(STORAGE_KEY_SPELL_AUTOAIM, {
+  const [spellAutoAim, setSpellAutoAim] = useLocalStorage<
+    Partial<Record<SpellType, boolean>>
+  >(STORAGE_KEY_SPELL_AUTOAIM, {
     fireball: false,
     lightning: false,
   });
   const placingTroopRef = useRef(false);
   const mousePosRef = useRef<Position>({ x: 0, y: 0 });
-  const executeTargetedSpellRef = useRef<(spellType: SpellType, pos: Position) => void>(() => { });
+  const executeTargetedSpellRef = useRef<
+    (spellType: SpellType, pos: Position) => void
+  >(() => {});
   const [gameSpeed, setGameSpeed] = useState(1);
-  const [hoveredSpecialTower, setHoveredSpecialTower] = useState<SpecialTower | null>(null);
+  const [hoveredSpecialTower, setHoveredSpecialTower] =
+    useState<SpecialTower | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
-  const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(null);
+  const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(
+    null
+  );
   const [activeSentinelTargetKey, setActiveSentinelTargetKey] = useState<
     string | null
   >(null);
@@ -422,19 +456,29 @@ export function usePrincetonTowerDefenseRuntime() {
   >({});
   // Unit Inspector state (enemies, troops, heroes)
   const [inspectorActive, setInspectorActive] = useState(false);
-  const [selectedInspectEnemy, setSelectedInspectEnemy] = useState<Enemy | null>(null);
-  const [selectedInspectTroop, setSelectedInspectTroop] = useState<Troop | null>(null);
+  const [selectedInspectEnemy, setSelectedInspectEnemy] =
+    useState<Enemy | null>(null);
+  const [selectedInspectTroop, setSelectedInspectTroop] =
+    useState<Troop | null>(null);
   const [selectedInspectHero, setSelectedInspectHero] = useState(false);
   const [previousGameSpeed, setPreviousGameSpeed] = useState(1);
-  const [hoveredInspectEnemy, setHoveredInspectEnemy] = useState<string | null>(null);
-  const [hoveredInspectTroop, setHoveredInspectTroop] = useState<string | null>(null);
+  const [hoveredInspectEnemy, setHoveredInspectEnemy] = useState<string | null>(
+    null
+  );
+  const [hoveredInspectTroop, setHoveredInspectTroop] = useState<string | null>(
+    null
+  );
   const [hoveredInspectHero, setHoveredInspectHero] = useState(false);
-  const [hoveredInspectDecoration, setHoveredInspectDecoration] = useState<Decoration | null>(null);
+  const [hoveredInspectDecoration, setHoveredInspectDecoration] =
+    useState<Decoration | null>(null);
   // Troop/Hero movement target indicator state
   const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
   const [moveTargetValid, setMoveTargetValid] = useState(false);
-  const [selectedUnitMoveInfo, setSelectedUnitMoveInfo] = useState<TroopMoveInfo | null>(null);
-  const [draggingUnit, setDraggingUnit] = useState<DraggingUnitState | null>(null);
+  const [selectedUnitMoveInfo, setSelectedUnitMoveInfo] =
+    useState<TroopMoveInfo | null>(null);
+  const [draggingUnit, setDraggingUnit] = useState<DraggingUnitState | null>(
+    null
+  );
   const [unitDragStart, setUnitDragStart] = useState<Position | null>(null);
   const [unitDragMoved, setUnitDragMoved] = useState(false);
   // Camera panning state
@@ -443,8 +487,11 @@ export function usePrincetonTowerDefenseRuntime() {
   const [panStartOffset, setPanStartOffset] = useState<Position | null>(null);
   const [isBuildDragging, setIsBuildDragging] = useState(false);
   // Tower repositioning state (drag existing towers to move them)
-  const [repositioningTower, setRepositioningTower] = useState<string | null>(null);
-  const [repositionPreviewPos, setRepositionPreviewPos] = useState<Position | null>(null);
+  const [repositioningTower, setRepositioningTower] = useState<string | null>(
+    null
+  );
+  const [repositionPreviewPos, setRepositionPreviewPos] =
+    useState<Position | null>(null);
   // Camera stored in refs to avoid React re-renders on every pan/zoom frame.
   // The game loop reads these at 60fps via renderRef/updateGameRef.
   const cameraOffsetRef = useRef<Position>(DEFAULT_CAMERA_OFFSET);
@@ -452,33 +499,44 @@ export function usePrincetonTowerDefenseRuntime() {
   const cameraOffset = cameraOffsetRef.current;
   const cameraZoom = cameraZoomRef.current;
 
-  const setCameraOffset = useCallback((val: Position | ((prev: Position) => Position)) => {
-    cameraOffsetRef.current = typeof val === "function" ? val(cameraOffsetRef.current) : val;
-  }, []);
+  const setCameraOffset = useCallback(
+    (val: Position | ((prev: Position) => Position)) => {
+      cameraOffsetRef.current =
+        typeof val === "function" ? val(cameraOffsetRef.current) : val;
+    },
+    []
+  );
 
-  const setCameraZoom = useCallback((val: number | ((prev: number) => number)) => {
-    cameraZoomRef.current = typeof val === "function" ? val(cameraZoomRef.current) : val;
-  }, []);
+  const setCameraZoom = useCallback(
+    (val: number | ((prev: number) => number)) => {
+      cameraZoomRef.current =
+        typeof val === "function" ? val(cameraZoomRef.current) : val;
+    },
+    []
+  );
   const [cameraModeActive, setCameraModeActive] = useState(false);
-  const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
-  const [isDevModeUnlocked, setIsDevModeUnlocked] = useState(readDevModeUnlocked);
+  const [renderDprCap, setRenderDprCap] = useState<number>(
+    QUALITY_DPR_CAP.high
+  );
+  const [isDevModeUnlocked, setIsDevModeUnlocked] =
+    useState(readDevModeUnlocked);
   const isDevMode = DEV_CONFIG_MENU_ENABLED || isDevModeUnlocked;
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
     () => DEV_CONFIG_MENU_ENABLED
   );
   const [photoModeEnabled, setPhotoModeEnabled] = useState<boolean>(false);
   const [devPerfSnapshot, setDevPerfSnapshot] = useState<DevPerfSnapshot>({
+    effects: 0,
+    enemies: 0,
     fps: 0,
     frameMs: 16.7,
-    updateMs: 0,
-    renderMs: 0,
-    quality: "high",
-    towers: 0,
-    enemies: 0,
-    troops: 0,
-    projectiles: 0,
-    effects: 0,
     particles: 0,
+    projectiles: 0,
+    quality: "high",
+    renderMs: 0,
+    towers: 0,
+    troops: 0,
+    updateMs: 0,
   });
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -501,20 +559,20 @@ export function usePrincetonTowerDefenseRuntime() {
   const devPerfUpdateMsRef = useRef<number>(0);
   const devPerfRenderMsRef = useRef<number>(0);
   const entityCountsRef = useRef({
-    towers: 0,
-    enemies: 0,
-    troops: 0,
-    projectiles: 0,
     effects: 0,
+    enemies: 0,
     particles: 0,
+    projectiles: 0,
+    towers: 0,
+    troops: 0,
   });
 
   // PERFORMANCE FIX: Use refs for game loop callbacks to prevent loop restart on state changes
   // Without this, selecting a troop/hero causes the game loop useEffect to re-run,
   // which cancels the animation frame and causes a noticeable freeze on mobile devices
-  const updateGameRef = useRef<(deltaTime: number) => void>(() => { });
-  const renderRef = useRef<() => void>(() => { });
-  const flushParticleQueueRef = useRef<() => void>(() => { });
+  const updateGameRef = useRef<(deltaTime: number) => void>(() => {});
+  const renderRef = useRef<() => void>(() => {});
+  const flushParticleQueueRef = useRef<() => void>(() => {});
   const enemySortOffsetCacheRef = useRef<Map<string, number>>(new Map());
   // Guard ref to prevent duplicate defeat/victory handling across animation frames
   const gameEndHandledRef = useRef(false);
@@ -522,7 +580,10 @@ export function usePrincetonTowerDefenseRuntime() {
   // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
   // This was causing major performance issues on mobile - generating 500+ decorations per frame
   const cachedCanvasRectRef = useRef<DOMRect | null>(null);
-  const cachedDecorationsRef = useRef<{ mapKey: string; decorations: RuntimeDecoration[] } | null>(null);
+  const cachedDecorationsRef = useRef<{
+    mapKey: string;
+    decorations: RuntimeDecoration[];
+  } | null>(null);
   const cachedStaticMapLayerRef = useRef<StaticMapLayerCache | null>(null);
   const cachedStaticDecorationLayerRef =
     useRef<StaticDecorationLayerCache | null>(null);
@@ -531,20 +592,28 @@ export function usePrincetonTowerDefenseRuntime() {
   const cachedAmbientLayerRef = useRef<AmbientLayerCache | null>(null);
   devPerfEnabledRef.current = devPerfEnabled;
   entityCountsRef.current = {
-    towers: towers.length,
-    enemies: enemies.length,
-    troops: troops.length,
-    projectiles: projectiles.length,
     effects: effects.length,
+    enemies: enemies.length,
     particles: getActiveParticleCount(),
+    projectiles: projectiles.length,
+    towers: towers.length,
+    troops: troops.length,
   };
 
   // Timer system (wave management + pausable timeouts + zoom debounce refs)
   const {
-    clearAllTimers, setPausableTimeout, pauseAllTimeouts, resumeAllTimeouts,
-    spawnIntervalsRef, activeTimeoutsRef, pausableTimeoutsRef,
-    gameSpeedRef, pausedAtRef, totalPausedTimeRef,
-    zoomSettleTimerRef, isZoomDebouncingRef,
+    clearAllTimers,
+    setPausableTimeout,
+    pauseAllTimeouts,
+    resumeAllTimeouts,
+    spawnIntervalsRef,
+    activeTimeoutsRef,
+    pausableTimeoutsRef,
+    gameSpeedRef,
+    pausedAtRef,
+    totalPausedTimeRef,
+    zoomSettleTimerRef,
+    isZoomDebouncingRef,
   } = useTimerSystem(gameSpeed);
 
   // Refs for current state values to avoid stale closures in callbacks
@@ -588,13 +657,17 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const currentLevelWaves = getLevelWaves(selectedMap);
   const totalWaves = currentLevelWaves.length;
-  const activeWaveSpawnPaths = React.useMemo<string[]>(() => {
-    return getLevelPathKeys(selectedMap);
-  }, [selectedMap]);
+  const activeWaveSpawnPaths = React.useMemo<string[]>(
+    () => getLevelPathKeys(selectedMap),
+    [selectedMap]
+  );
 
-  const incomingWavePreviewByPath = React.useMemo<Map<string, WavePreviewEnemyEntry[]>>(
-    () => computeWavePreviewByPath(selectedMap, currentWave, activeWaveSpawnPaths),
-    [selectedMap, currentWave, activeWaveSpawnPaths],
+  const incomingWavePreviewByPath = React.useMemo<
+    Map<string, WavePreviewEnemyEntry[]>
+  >(
+    () =>
+      computeWavePreviewByPath(selectedMap, currentWave, activeWaveSpawnPaths),
+    [selectedMap, currentWave, activeWaveSpawnPaths]
   );
 
   const blockedPositions = React.useMemo(
@@ -604,59 +677,92 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const getRenderDpr = useCallback(
     () => getRenderDprImpl(renderDprCap),
-    [renderDprCap],
+    [renderDprCap]
   );
 
   const getCanvasDimensions = useCallback(
     () => getCanvasDimensionsImpl(canvasRef, renderDprCap),
-    [renderDprCap],
+    [renderDprCap]
   );
 
-  const { stableZoomRef } = useZoomSetup({
-    canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef,
-    cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef,
-    cachedAmbientLayerRef, lastGestureScaleRef,
-    gameState, battleOutcome, selectedMap,
-    setCameraZoom, setCameraOffset, getCanvasDimensions,
-  }, cameraZoom, cameraZoomRef);
+  const { stableZoomRef } = useZoomSetup(
+    {
+      battleOutcome,
+      cachedAmbientLayerRef,
+      cachedCanvasRectRef,
+      cachedFogLayerRef,
+      cachedStaticDecorationLayerRef,
+      cachedStaticMapLayerRef,
+      canvasRef,
+      gameState,
+      getCanvasDimensions,
+      isZoomDebouncingRef,
+      lastGestureScaleRef,
+      selectedMap,
+      setCameraOffset,
+      setCameraZoom,
+      zoomSettleTimerRef,
+    },
+    cameraZoom,
+    cameraZoomRef
+  );
 
   // Timer callbacks come from useTimerSystem above
 
   // Particle & combat system (refs + callbacks in sub-hook)
   const {
-    addParticles, flushQueuedParticles, awardBounty, killHero, onEnemyKill,
-    onTroopDeath, raiseHexWardGhostFromTroopDeath,
-    pendingParticleBurstsRef, pendingDeathEffectsRef,
-    handledEnemyIdsRef, handledHexGhostSourceIdsRef,
-    hexWardRaisesRemainingRef, handledWaveCompletionRef,
-    projectileUpdateAccumulator, particleUpdateAccumulator, effectsUpdateAccumulator,
+    addParticles,
+    flushQueuedParticles,
+    awardBounty,
+    killHero,
+    onEnemyKill,
+    onTroopDeath,
+    raiseHexWardGhostFromTroopDeath,
+    pendingParticleBurstsRef,
+    pendingDeathEffectsRef,
+    handledEnemyIdsRef,
+    handledHexGhostSourceIdsRef,
+    hexWardRaisesRemainingRef,
+    handledWaveCompletionRef,
+    projectileUpdateAccumulator,
+    particleUpdateAccumulator,
+    effectsUpdateAccumulator,
   } = useParticleAndCombat({
-    entityCountsRef, gameEventLogRef,
-    hexWardEndTime, activeWaveSpawnPaths, selectedMap,
-    addPawPoints, setBountyIncomeEvents, setPaydayPawPointsEarned,
-    addTroopEntities, setHexWardRaisesRemaining, addEffectEntity,
+    activeWaveSpawnPaths,
+    addEffectEntity,
+    addPawPoints,
+    addTroopEntities,
+    entityCountsRef,
+    gameEventLogRef,
+    hexWardEndTime,
+    selectedMap,
+    setBountyIncomeEvents,
+    setHexWardRaisesRemaining,
+    setPaydayPawPointsEarned,
   });
 
   // Keyboard controls for camera panning, zoom, and escape
   useEffect(() => {
-    if (gameState !== "playing" || battleOutcome) return;
+    if (gameState !== "playing" || battleOutcome) {
+      return;
+    }
     const handleKeyDown = (e: KeyboardEvent) =>
       handleCameraKeyDown(e, {
+        addPawPoints,
+        placingTroopRef,
+        setActiveSentinelTargetKey,
+        setBuildingTower,
         setCameraOffset,
         setCameraZoom,
-        setBuildingTower,
         setDraggingTower,
+        setHero,
         setIsBuildDragging,
-        setTargetingSpell,
+        setMissileMortarTargetingId,
         setPlacingTroop,
         setSelectedTower,
-        setActiveSentinelTargetKey,
-        setMissileMortarTargetingId,
-        setHero,
+        setTargetingSpell,
         setTroops,
-        addPawPoints,
         targetingSpellRef,
-        placingTroopRef,
       });
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -665,31 +771,57 @@ export function usePrincetonTowerDefenseRuntime() {
   const preLockSpeedRef = useRef<number | null>(null);
 
   const enterCameraMode = useCallback(
-    () => enterCameraModeImpl(cameraModeActive, gameSpeed, preLockSpeedRef, setGameSpeed, setCameraModeActive),
-    [cameraModeActive, gameSpeed],
+    () =>
+      enterCameraModeImpl(
+        cameraModeActive,
+        gameSpeed,
+        preLockSpeedRef,
+        setGameSpeed,
+        setCameraModeActive
+      ),
+    [cameraModeActive, gameSpeed]
   );
 
   const exitCameraMode = useCallback(
-    () => exitCameraModeImpl(cameraModeActive, preLockSpeedRef, setGameSpeed, setCameraModeActive),
-    [cameraModeActive],
+    () =>
+      exitCameraModeImpl(
+        cameraModeActive,
+        preLockSpeedRef,
+        setGameSpeed,
+        setCameraModeActive
+      ),
+    [cameraModeActive]
   );
 
   const toggleCameraMode = useCallback(() => {
-    if (cameraModeActive) exitCameraMode();
-    else enterCameraMode();
+    if (cameraModeActive) {
+      exitCameraMode();
+    } else {
+      enterCameraMode();
+    }
   }, [cameraModeActive, enterCameraMode, exitCameraMode]);
 
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing") {
+      return;
+    }
     const handler = (e: KeyboardEvent) => handleF2Key(e, toggleCameraMode);
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [gameState, toggleCameraMode]);
 
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing") {
+      return;
+    }
     const handler = (e: KeyboardEvent) =>
-      handleSpacePause(e, cameraModeActive, inspectorActive, battleOutcome, setGameSpeed);
+      handleSpacePause(
+        e,
+        cameraModeActive,
+        inspectorActive,
+        battleOutcome,
+        setGameSpeed
+      );
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [gameState, cameraModeActive, inspectorActive, battleOutcome]);
@@ -697,28 +829,39 @@ export function usePrincetonTowerDefenseRuntime() {
   const handleCameraModeCapture = useCallback(
     () =>
       captureScreenshotImpl({
-        canvasRef,
-        bgCanvasRef,
         backdropCanvasRef,
+        bgCanvasRef,
         cachedStaticMapLayerRef,
         cameraOffset: cameraOffsetRef.current,
         cameraZoom: cameraZoomRef.current,
+        canvasRef,
         getRenderDpr,
       }),
-    [getRenderDpr],
+    [getRenderDpr]
   );
 
   const pauseLocked = computePauseLocked(cameraModeActive, inspectorActive);
 
-  useEffect(() => { loadDevPerfSetting(setDevPerfEnabled); }, []);
-  useEffect(() => { saveDevPerfSetting(devPerfEnabled); }, [devPerfEnabled]);
-
-  useEffect(() => { loadPhotoModeSetting(setPhotoModeEnabled); }, []);
-  useEffect(() => { savePhotoModeSetting(photoModeEnabled); }, [photoModeEnabled]);
+  useEffect(() => {
+    loadDevPerfSetting(setDevPerfEnabled);
+  }, []);
+  useEffect(() => {
+    saveDevPerfSetting(devPerfEnabled);
+  }, [devPerfEnabled]);
 
   useEffect(() => {
-    if (!DEV_CONFIG_MENU_ENABLED || gameState !== "playing") return;
-    const handler = (e: KeyboardEvent) => handleDevPerfHotkey(e, setDevPerfEnabled);
+    loadPhotoModeSetting(setPhotoModeEnabled);
+  }, []);
+  useEffect(() => {
+    savePhotoModeSetting(photoModeEnabled);
+  }, [photoModeEnabled]);
+
+  useEffect(() => {
+    if (!DEV_CONFIG_MENU_ENABLED || gameState !== "playing") {
+      return;
+    }
+    const handler = (e: KeyboardEvent) =>
+      handleDevPerfHotkey(e, setDevPerfEnabled);
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [gameState]);
@@ -731,57 +874,57 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     if (gameState === "playing") {
       resetGameStateImpl({
-        selectedMap,
+        clearAllTimers,
+        clearEffects,
+        clearEnemies,
+        clearProjectiles,
+        clearTowers,
+        clearTroops,
+        photoModeEnabled,
         refs: {
-          prevGameSpeedRef,
-          pausedAtRef,
-          totalPausedTimeRef,
-          pausableTimeoutsRef,
-          lastBarracksSpawnRef,
-          lastSentinelStrikeRef,
-          lastSunforgeBarrageRef,
-          sunforgeAimRef,
-          missileAutoAimRef,
           enemiesFirstAppearedRef,
           gameResetTimeRef,
           hexWardRaisesRemainingRef,
+          lastBarracksSpawnRef,
+          lastSentinelStrikeRef,
+          lastSunforgeBarrageRef,
+          missileAutoAimRef,
+          pausableTimeoutsRef,
+          pausedAtRef,
+          prevGameSpeedRef,
+          sunforgeAimRef,
+          totalPausedTimeRef,
         },
-        clearAllTimers,
-        setBattleOutcome,
         resetPawPoints,
-        setLives,
-        setCurrentWave,
-        setNextWaveTimer,
-        setWaveInProgress,
-        setHoveredWaveBubblePathKey,
-        setTowers,
-        clearTowers,
-        clearEnemies,
-        setHero,
-        clearTroops,
-        clearProjectiles,
-        clearEffects,
-        setSelectedTower,
-        setBuildingTower,
-        setDraggingTower,
-        setPlacingTroop,
-        setTargetingSpell,
+        selectedMap,
         setActiveSentinelTargetKey,
-        setMissileMortarTargetingId,
-        setSentinelTargets,
-        setSpells,
+        setBattleOutcome,
+        setBuildingTower,
+        setCurrentWave,
+        setDraggingTower,
         setGameSpeed,
         setGoldSpellActive,
-        setPaydayEndTime,
-        setPaydayPawPointsEarned,
+        setHero,
+        setHexWardBlocksHealing,
+        setHexWardDamageAmpPct,
         setHexWardEndTime,
-        setHexWardTargetCount,
         setHexWardRaiseCap,
         setHexWardRaisesRemaining,
-        setHexWardDamageAmpPct,
-        setHexWardBlocksHealing,
+        setHexWardTargetCount,
+        setHoveredWaveBubblePathKey,
+        setLives,
+        setMissileMortarTargetingId,
+        setNextWaveTimer,
+        setPaydayEndTime,
+        setPaydayPawPointsEarned,
+        setPlacingTroop,
+        setSelectedTower,
+        setSentinelTargets,
         setSpecialTowerHp,
-        photoModeEnabled,
+        setSpells,
+        setTargetingSpell,
+        setTowers,
+        setWaveInProgress,
       });
     }
   }, [
@@ -800,28 +943,35 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // Tutorial & encounter check when entering playing state
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing") {
+      return;
+    }
     initTutorialEncountersImpl({
       selectedMap,
-      tutorial,
-      setShowTutorial,
       setEncounterExiting,
-      setEncounterQueue,
       setEncounterIndex,
+      setEncounterQueue,
+      setShowTutorial,
+      tutorial,
     });
-  }, [gameState, selectedMap, tutorial.hasCompletedTutorial, tutorial.getLevelEncounters]);
+  }, [
+    gameState,
+    selectedMap,
+    tutorial.hasCompletedTutorial,
+    tutorial.getLevelEncounters,
+  ]);
 
   // Clear all timers when leaving the playing state (defeat, victory, quit)
   useEffect(() => {
     if (gameState !== "playing") {
       cleanupOnLeavePlayingImpl({
-        refs: { pendingParticleBurstsRef },
         clearAllTimers,
+        refs: { pendingParticleBurstsRef },
+        setEncounterExiting,
+        setEncounterIndex,
+        setEncounterQueue,
         setHoveredWaveBubblePathKey,
         setShowTutorial,
-        setEncounterExiting,
-        setEncounterQueue,
-        setEncounterIndex,
       });
     }
   }, [gameState, clearAllTimers]);
@@ -837,7 +987,13 @@ export function usePrincetonTowerDefenseRuntime() {
         activeWaveSpawnPaths
       )
     );
-  }, [gameState, waveInProgress, selectedMap, currentWave, activeWaveSpawnPaths]);
+  }, [
+    gameState,
+    waveInProgress,
+    selectedMap,
+    currentWave,
+    activeWaveSpawnPaths,
+  ]);
 
   useEffect(() => {
     if (
@@ -868,18 +1024,18 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     if (gameState === "playing" && selectedHero && !hero) {
       initHeroAndSpellsImpl({
+        activeWaveSpawnPaths,
+        refs: { gameEventLogRef },
         selectedHero,
         selectedMap,
         selectedSpells,
-        activeWaveSpawnPaths,
-        refs: { gameEventLogRef },
-        setHero,
-        setSpells,
-        setNextWaveTimer,
-        setLevelStartTime,
-        setTimeSpent,
         setCameraOffset,
         setCameraZoom,
+        setHero,
+        setLevelStartTime,
+        setNextWaveTimer,
+        setSpells,
+        setTimeSpent,
       });
     }
   }, [
@@ -890,13 +1046,21 @@ export function usePrincetonTowerDefenseRuntime() {
     selectedMap,
     activeWaveSpawnPaths,
   ]);
-  useEffect(() => {
-    return setupResizeListener(
-      canvasRef, bgCanvasRef, backdropCanvasRef, containerRef,
-      cachedStaticMapLayerRef, cachedBackdropRef, cachedFogLayerRef, getRenderDpr,
-      cachedCanvasRectRef,
-    );
-  }, [gameState, getRenderDpr, cameraModeActive]);
+  useEffect(
+    () =>
+      setupResizeListener(
+        canvasRef,
+        bgCanvasRef,
+        backdropCanvasRef,
+        containerRef,
+        cachedStaticMapLayerRef,
+        cachedBackdropRef,
+        cachedFogLayerRef,
+        getRenderDpr,
+        cachedCanvasRectRef
+      ),
+    [gameState, getRenderDpr, cameraModeActive]
+  );
 
   // Handle pause/resume of spawn timers when gameSpeed changes
   const prevGameSpeedRef = useRef(gameSpeed);
@@ -909,26 +1073,41 @@ export function usePrincetonTowerDefenseRuntime() {
     } else if (prevSpeed === 0 && gameSpeed !== 0) {
       extendStatusEffectsAfterResume({
         gameSpeed,
-        refs: { pausedAtRef, totalPausedTimeRef },
         pauseAllTimeouts,
+        refs: { pausedAtRef, totalPausedTimeRef },
         resumeAllTimeouts,
-        setTroops,
-        setHero,
         setEnemies,
-        setTowers,
+        setHero,
         setHexWardEndTime,
+        setTowers,
+        setTroops,
       });
       resumeAllTimeouts();
     }
-  }, [gameSpeed, pauseAllTimeouts, resumeAllTimeouts, setTroops, setHero, setEnemies, setTowers]);
+  }, [
+    gameSpeed,
+    pauseAllTimeouts,
+    resumeAllTimeouts,
+    setTroops,
+    setHero,
+    setEnemies,
+    setTowers,
+  ]);
 
   // --- Tutorial & encounter callbacks ---
 
-  const startWaveInnerRef = useRef<() => void>(() => { });
+  const startWaveInnerRef = useRef<() => void>(() => {});
 
   const queueLevelEncounters = useCallback(
-    (mapKey: string) => queueLevelEncountersImpl(mapKey, tutorial, setEncounterExiting, setEncounterQueue, setEncounterIndex),
-    [tutorial],
+    (mapKey: string) =>
+      queueLevelEncountersImpl(
+        mapKey,
+        tutorial,
+        setEncounterExiting,
+        setEncounterQueue,
+        setEncounterIndex
+      ),
+    [tutorial]
   );
 
   const handleTutorialComplete = useCallback(() => {
@@ -944,18 +1123,22 @@ export function usePrincetonTowerDefenseRuntime() {
   }, [tutorial, selectedMap, queueLevelEncounters]);
 
   const handleTutorialHeroChange = useCallback(
-    (heroType: HeroType) => handleTutorialHeroChangeImpl(heroType, setSelectedHero, setHero),
-    [setSelectedHero],
+    (heroType: HeroType) =>
+      handleTutorialHeroChangeImpl(heroType, setSelectedHero, setHero),
+    [setSelectedHero]
   );
 
   const handleTutorialSpellToggle = useCallback(
-    (spellType: SpellType) => handleTutorialSpellToggleImpl(spellType, setSelectedSpells),
-    [setSelectedSpells],
+    (spellType: SpellType) =>
+      handleTutorialSpellToggleImpl(spellType, setSelectedSpells),
+    [setSelectedSpells]
   );
 
   // Keep live spells in sync when selectedSpells changes during tutorial
   useEffect(() => {
-    if (!showTutorial) return;
+    if (!showTutorial) {
+      return;
+    }
     setSpells(buildSpellsFromSelection(selectedSpells));
   }, [selectedSpells, showTutorial]);
 
@@ -967,12 +1150,21 @@ export function usePrincetonTowerDefenseRuntime() {
   tutorialRef.current = tutorial;
 
   const handleEncounterAcknowledge = useCallback(
-    () => handleEncounterAcknowledgeImpl(encounterQueueRef, encounterIndexRef, tutorialRef, setEncounterExiting, setEncounterIndex),
-    [],
+    () =>
+      handleEncounterAcknowledgeImpl(
+        encounterQueueRef,
+        encounterIndexRef,
+        tutorialRef,
+        setEncounterExiting,
+        setEncounterIndex
+      ),
+    []
   );
 
   useEffect(() => {
-    if (!encounterExiting) return;
+    if (!encounterExiting) {
+      return;
+    }
     const timer = setTimeout(() => {
       setEncounterQueue([]);
       setEncounterIndex(0);
@@ -984,21 +1176,21 @@ export function usePrincetonTowerDefenseRuntime() {
   // Start wave function
   const startWaveInner = useCallback(() => {
     startWaveInnerImpl({
-      selectedMap,
-      waveInProgress,
-      currentWave,
       activeWaveSpawnPaths,
+      addEnemyEntity,
+      currentWave,
       refs: {
-        gameSpeedRef,
-        spawnIntervalsRef,
-        handledWaveCompletionRef,
         gameEventLogRef,
+        gameSpeedRef,
+        handledWaveCompletionRef,
+        spawnIntervalsRef,
       },
-      setWaveInProgress,
+      selectedMap,
       setCurrentWave,
       setNextWaveTimer,
-      addEnemyEntity,
       setPausableTimeout,
+      setWaveInProgress,
+      waveInProgress,
     });
   }, [
     waveInProgress,
@@ -1014,58 +1206,120 @@ export function usePrincetonTowerDefenseRuntime() {
   // Wrapper that checks for new enemy encounters before spawning
   const startWave = useCallback(() => {
     startWaveImpl({
-      selectedMap,
-      waveInProgress,
       currentWave,
       refs: { tutorialBlockingRef },
-      tutorial,
-      startWaveInner,
+      selectedMap,
       setEncounterExiting,
-      setEncounterQueue,
       setEncounterIndex,
+      setEncounterQueue,
+      startWaveInner,
+      tutorial,
+      waveInProgress,
     });
   }, [startWaveInner, selectedMap, waveInProgress, currentWave, tutorial]);
 
   // updateGame is only accessed through updateGameRef, so no useMemo/useCallback needed
-  const updateGame = (deltaTime: number) => updateGameTick({
-    gameSpeed, selectedMap, isFreeplay, waveInProgress, currentWave, vaultFlash,
-    hero, lives, gameState, battleOutcome, enemies, nextWaveTimer: nextWaveTimerRef.current,
-    specialTowerHp, troops, towers, levelStartTime, levelStars,
-    totalWaves, unlockedMaps, activeWaveSpawnPaths,
-    cameraOffset: cameraOffsetRef.current, cameraZoom: cameraZoomRef.current,
-    setTimeSpent, setWaveInProgress, setHoveredWaveBubblePathKey,
-    setNextWaveTimer, setGameSpeed, setBattleOutcome, setStarsEarned,
-    setTowers, setEnemies, setHero, setTroops, setSpells, setEffects,
-    setProjectiles, setSentinelTargets, setLives, setSpecialTowerHp,
-    setVaultFlash, setLeakedBountyEvents, setEatingClubIncomeEvents,
-    startWave, addParticles, clearAllTimers, updateLevelStats, updateLevelStars,
-    unlockLevel, awardBounty, killHero, onEnemyKill, onTroopDeath, addPawPoints,
-    addEffectEntities, addProjectileEntities, addTroopEntities,
-    getSpecialTowerKey, getRandomMapTarget, raiseHexWardGhostFromTroopDeath,
-    getCanvasDimensions,
-    handledEnemyIdsRef, handledHexGhostSourceIdsRef, gameEndHandledRef,
-    totalPausedTimeRef, gameResetTimeRef, gameEventLogRef,
-    enemiesFirstAppearedRef, lastSentinelStrikeRef, lastSunforgeBarrageRef,
-    sunforgeAimRef, lastBarracksSpawnRef, entityCountsRef,
-    projectileUpdateAccumulator, effectsUpdateAccumulator,
-    particleUpdateAccumulator, tutorialBlockingRef, activeTimeoutsRef,
-    sentinelTargetsRef, missileMortarTargetingIdRef, mousePosRef,
-    missileAutoAimRef,
-  }, deltaTime);
+  const updateGame = (deltaTime: number) =>
+    updateGameTick(
+      {
+        activeTimeoutsRef,
+        activeWaveSpawnPaths,
+        addEffectEntities,
+        addParticles,
+        addPawPoints,
+        addProjectileEntities,
+        addTroopEntities,
+        awardBounty,
+        battleOutcome,
+        cameraOffset: cameraOffsetRef.current,
+        cameraZoom: cameraZoomRef.current,
+        clearAllTimers,
+        currentWave,
+        effectsUpdateAccumulator,
+        enemies,
+        enemiesFirstAppearedRef,
+        entityCountsRef,
+        gameEndHandledRef,
+        gameEventLogRef,
+        gameResetTimeRef,
+        gameSpeed,
+        gameState,
+        getCanvasDimensions,
+        getRandomMapTarget,
+        getSpecialTowerKey,
+        handledEnemyIdsRef,
+        handledHexGhostSourceIdsRef,
+        hero,
+        isFreeplay,
+        killHero,
+        lastBarracksSpawnRef,
+        lastSentinelStrikeRef,
+        lastSunforgeBarrageRef,
+        levelStars,
+        levelStartTime,
+        lives,
+        missileAutoAimRef,
+        missileMortarTargetingIdRef,
+        mousePosRef,
+        nextWaveTimer: nextWaveTimerRef.current,
+        onEnemyKill,
+        onTroopDeath,
+        particleUpdateAccumulator,
+        projectileUpdateAccumulator,
+        raiseHexWardGhostFromTroopDeath,
+        selectedMap,
+        sentinelTargetsRef,
+        setBattleOutcome,
+        setEatingClubIncomeEvents,
+        setEffects,
+        setEnemies,
+        setGameSpeed,
+        setHero,
+        setHoveredWaveBubblePathKey,
+        setLeakedBountyEvents,
+        setLives,
+        setNextWaveTimer,
+        setProjectiles,
+        setSentinelTargets,
+        setSpecialTowerHp,
+        setSpells,
+        setStarsEarned,
+        setTimeSpent,
+        setTowers,
+        setTroops,
+        setVaultFlash,
+        setWaveInProgress,
+        specialTowerHp,
+        startWave,
+        sunforgeAimRef,
+        totalPausedTimeRef,
+        totalWaves,
+        towers,
+        troops,
+        tutorialBlockingRef,
+        unlockLevel,
+        unlockedMaps,
+        updateLevelStars,
+        updateLevelStats,
+        vaultFlash,
+        waveInProgress,
+      },
+      deltaTime
+    );
   const getWaveStartBubblesScreenData = useCallback(
     (canvasWidth: number, canvasHeight: number, dpr: number) =>
       computeWaveStartBubbles(
         {
-          gameState,
-          battleOutcome,
-          gameSpeed,
-          waveInProgress,
-          currentWave,
-          totalWaves,
-          nextWaveTimer: nextWaveTimerRef.current,
           activeWaveSpawnPaths,
+          battleOutcome,
           cameraOffset: cameraOffsetRef.current,
           cameraZoom: cameraZoomRef.current,
+          currentWave,
+          gameSpeed,
+          gameState,
+          nextWaveTimer: nextWaveTimerRef.current,
+          totalWaves,
+          waveInProgress,
         },
         canvasWidth,
         canvasHeight,
@@ -1085,31 +1339,76 @@ export function usePrincetonTowerDefenseRuntime() {
   // PERFORMANCE FIX: Keep refs updated with latest callbacks
   // The game loop uses these refs, so the actual identity of render/updateGame doesn't matter.
   updateGameRef.current = updateGame;
-  renderRef.current = () => renderScene({
-    canvasRef, bgCanvasRef, backdropCanvasRef,
-    cameraOffset: cameraOffsetRef.current, cameraZoom: cameraZoomRef.current, stableZoomRef, isZoomDebouncingRef,
-    renderQualityRef, renderFrameIndexRef,
-    towers, enemies, hero, troops, projectiles, effects,
-    selectedMap, currentWave, activeWaveSpawnPaths,
-    draggingTower, hoveredTower, selectedTower,
-    moveTargetPos, moveTargetValid, selectedUnitMoveInfo, draggingUnit,
-    hoveredSpecialTower, sentinelTargets, activeSentinelTargetKey,
-    specialTowerHp, vaultFlash,
-    repositioningTower, repositionPreviewPos, blockedPositions,
-    inspectorActive, selectedInspectEnemy, hoveredInspectEnemy,
-    hoveredInspectTroop, hoveredInspectHero,
-    selectedInspectTroop, selectedInspectHero,
-    hoveredWaveBubblePathKey, waveStartConfirm, incomingWavePreviewByPath,
-    cachedStaticMapLayerRef, cachedStaticDecorationLayerRef,
-    cachedFogLayerRef, cachedBackdropRef, cachedAmbientLayerRef,
-    cachedDecorationsRef, pendingDeathEffectsRef,
-    particlesRef, entityCountsRef, enemySortOffsetCacheRef,
-    pausedAtRef, gameSpeedRef, enemiesFirstAppearedRef,
-    lastSentinelStrikeRef, lastSunforgeBarrageRef,
-    sunforgeAimRef, missileAutoAimRef, mousePosRef,
-    targetingSpellRef, placingTroopRef, missileMortarTargetingIdRef,
-    getRenderDpr, getWaveStartBubblesScreenData, getSpecialTowerKey,
-  });
+  renderRef.current = () =>
+    renderScene({
+      activeSentinelTargetKey,
+      activeWaveSpawnPaths,
+      backdropCanvasRef,
+      bgCanvasRef,
+      blockedPositions,
+      cachedAmbientLayerRef,
+      cachedBackdropRef,
+      cachedDecorationsRef,
+      cachedFogLayerRef,
+      cachedStaticDecorationLayerRef,
+      cachedStaticMapLayerRef,
+      cameraOffset: cameraOffsetRef.current,
+      cameraZoom: cameraZoomRef.current,
+      canvasRef,
+      currentWave,
+      draggingTower,
+      draggingUnit,
+      effects,
+      enemies,
+      enemiesFirstAppearedRef,
+      enemySortOffsetCacheRef,
+      entityCountsRef,
+      gameSpeedRef,
+      getRenderDpr,
+      getSpecialTowerKey,
+      getWaveStartBubblesScreenData,
+      hero,
+      hoveredInspectEnemy,
+      hoveredInspectHero,
+      hoveredInspectTroop,
+      hoveredSpecialTower,
+      hoveredTower,
+      hoveredWaveBubblePathKey,
+      incomingWavePreviewByPath,
+      inspectorActive,
+      isZoomDebouncingRef,
+      lastSentinelStrikeRef,
+      lastSunforgeBarrageRef,
+      missileAutoAimRef,
+      missileMortarTargetingIdRef,
+      mousePosRef,
+      moveTargetPos,
+      moveTargetValid,
+      particlesRef,
+      pausedAtRef,
+      pendingDeathEffectsRef,
+      placingTroopRef,
+      projectiles,
+      renderFrameIndexRef,
+      renderQualityRef,
+      repositionPreviewPos,
+      repositioningTower,
+      selectedInspectEnemy,
+      selectedInspectHero,
+      selectedInspectTroop,
+      selectedMap,
+      selectedTower,
+      selectedUnitMoveInfo,
+      sentinelTargets,
+      specialTowerHp,
+      stableZoomRef,
+      sunforgeAimRef,
+      targetingSpellRef,
+      towers,
+      troops,
+      vaultFlash,
+      waveStartConfirm,
+    });
   targetingSpellRef.current = targetingSpell;
   placingTroopRef.current = placingTroop;
   mousePosRef.current = mousePos;
@@ -1117,27 +1416,50 @@ export function usePrincetonTowerDefenseRuntime() {
   flushParticleQueueRef.current = flushQueuedParticles;
 
   useEffect(() => {
-    if (gameState !== "playing" || battleOutcome) return;
+    if (gameState !== "playing" || battleOutcome) {
+      return;
+    }
     const loopRefs: GameLoopRefs = {
-      lastTimeRef, gameLoopRef, rollingFrameMsRef,
-      qualityLastChangedAtRef, qualityThresholdSustainedSinceRef,
-      qualityCooldownMsRef, renderQualityRef, gameSpeedRef,
-      devPerfEnabledRef, devPerfLastPublishedAtRef,
-      devPerfUpdateMsRef, devPerfRenderMsRef, entityCountsRef,
-      updateGameRef, renderRef, flushParticleQueueRef,
+      devPerfEnabledRef,
+      devPerfLastPublishedAtRef,
+      devPerfRenderMsRef,
+      devPerfUpdateMsRef,
+      entityCountsRef,
+      flushParticleQueueRef,
+      gameLoopRef,
+      gameSpeedRef,
+      lastTimeRef,
+      qualityCooldownMsRef,
+      qualityLastChangedAtRef,
+      qualityThresholdSustainedSinceRef,
+      renderQualityRef,
+      renderRef,
+      rollingFrameMsRef,
+      updateGameRef,
     };
     return startGameLoop(loopRefs, setRenderDprCap, setDevPerfSnapshot);
   }, [gameState, battleOutcome]);
 
   const resolveHeroCommandTarget = useCallback(
     (clickWorldPos: Position): Position | null =>
-      resolveHeroCommandTargetImpl(clickWorldPos, moveTargetPos, moveTargetValid, selectedMap),
+      resolveHeroCommandTargetImpl(
+        clickWorldPos,
+        moveTargetPos,
+        moveTargetValid,
+        selectedMap
+      ),
     [moveTargetPos, moveTargetValid, selectedMap]
   );
 
   const resolveTroopCommandTarget = useCallback(
     (clickWorldPos: Position, moveInfo: TroopMoveInfo): Position | null =>
-      resolveTroopCommandTargetImpl(clickWorldPos, moveInfo, moveTargetPos, moveTargetValid, selectedMap),
+      resolveTroopCommandTargetImpl(
+        clickWorldPos,
+        moveInfo,
+        moveTargetPos,
+        moveTargetValid,
+        selectedMap
+      ),
     [moveTargetPos, moveTargetValid, selectedMap]
   );
 
@@ -1149,7 +1471,13 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const issueTroopFormationMoveCommand = useCallback(
     (ownerId: string, targetPos: Position) =>
-      issueTroopFormationMoveCommandImpl(ownerId, targetPos, towers, setTroops, addParticles),
+      issueTroopFormationMoveCommandImpl(
+        ownerId,
+        targetPos,
+        towers,
+        setTroops,
+        addParticles
+      ),
     [addParticles, setTroops, towers]
   );
 
@@ -1163,53 +1491,130 @@ export function usePrincetonTowerDefenseRuntime() {
   }, []);
 
   // Canvas event params updated via ref each render (handlers use ref to avoid stale closures)
-  const canvasEventParamsRef = useRef<CanvasEventParams>(null as unknown as CanvasEventParams);
+  const canvasEventParamsRef = useRef<CanvasEventParams>(
+    null as unknown as CanvasEventParams
+  );
   canvasEventParamsRef.current = {
-    canvasRef, cachedCanvasRectRef, isTouchDeviceRef, lastTouchTimeRef, executeTargetedSpellRef,
-    sentinelTargetsRef, missileAutoAimRef, cachedDecorationsRef, gameEventLogRef,
-    get cameraOffset() { return cameraOffsetRef.current; },
-    get cameraZoom() { return cameraZoomRef.current; },
-    buildingTower, draggingTower, placingTroop,
-    targetingSpell, activeSentinelTargetKey, inspectorActive, gameSpeed,
-    selectedTower, selectedMap, repositioningTower, repositionPreviewPos,
-    missileMortarTargetingId, isPanning, panStart, panStartOffset,
-    isBuildDragging, draggingUnit, unitDragStart, unitDragMoved,
-    blockedPositions, waveStartConfirm, currentWave, spellUpgradeLevels,
-    moveTargetPos, moveTargetValid, selectedUnitMoveInfo,
-    towers, enemies, hero, troops,
-    getCanvasDimensions, getWaveStartBubblesScreenData,
-    canAffordPawPoints, spendPawPoints, addParticles,
-    addTowerEntity, addTroopEntities, startWave, getSpecialTowerKey,
-    clampWorldToMapBounds, resolveHeroCommandTarget, resolveTroopCommandTarget,
-    issueHeroMoveCommand, issueTroopFormationMoveCommand, clearUnitMoveInteraction,
-    setIsBuildDragging, setDraggingTower, setBuildingTower, setIsPanning,
-    setPanStart, setPanStartOffset, setDraggingUnit, setUnitDragStart,
-    setUnitDragMoved, setSelectedInspectEnemy, setSelectedInspectTroop,
-    setSelectedInspectHero, setNextWaveTimer, setWaveStartConfirm,
-    setRepositioningTower, setRepositionPreviewPos, setTowers, setTroops,
-    setSpells, setHero, setSelectedTower, setActiveSentinelTargetKey,
-    setSentinelTargets, setEffects, setPlacingTroop, setTargetingSpell,
-    setMissileMortarTargetingId, setMousePos, setMoveTargetPos,
-    setMoveTargetValid, setSelectedUnitMoveInfo, setCameraOffset,
-    setHoveredTower, setHoveredHero, setHoveredSpecialTower,
-    setHoveredLandmark, setHoveredHazardType, setHoveredWaveBubblePathKey,
-    setHoveredInspectEnemy, setHoveredInspectTroop, setHoveredInspectHero,
+    activeSentinelTargetKey,
+    addParticles,
+    addTowerEntity,
+    addTroopEntities,
+    blockedPositions,
+    buildingTower,
+    cachedCanvasRectRef,
+    cachedDecorationsRef,
+    get cameraOffset() {
+      return cameraOffsetRef.current;
+    },
+    get cameraZoom() {
+      return cameraZoomRef.current;
+    },
+    canAffordPawPoints,
+    canvasRef,
+    clampWorldToMapBounds,
+    clearUnitMoveInteraction,
+    currentWave,
+    draggingTower,
+    draggingUnit,
+    enemies,
+    executeTargetedSpellRef,
+    gameEventLogRef,
+    gameSpeed,
+    getCanvasDimensions,
+    getSpecialTowerKey,
+    getWaveStartBubblesScreenData,
+    hero,
+    inspectorActive,
+    isBuildDragging,
+    isPanning,
+    isTouchDeviceRef,
+    issueHeroMoveCommand,
+    issueTroopFormationMoveCommand,
+    lastTouchTimeRef,
+    missileAutoAimRef,
+    missileMortarTargetingId,
+    moveTargetPos,
+    moveTargetValid,
+    panStart,
+    panStartOffset,
+    placingTroop,
+    repositionPreviewPos,
+    repositioningTower,
+    resolveHeroCommandTarget,
+    resolveTroopCommandTarget,
+    selectedMap,
+    selectedTower,
+    selectedUnitMoveInfo,
+    sentinelTargetsRef,
+    setActiveSentinelTargetKey,
+    setBuildingTower,
+    setCameraOffset,
+    setDraggingTower,
+    setDraggingUnit,
+    setEffects,
+    setHero,
+    setHoveredHazardType,
+    setHoveredHero,
     setHoveredInspectDecoration,
+    setHoveredInspectEnemy,
+    setHoveredInspectHero,
+    setHoveredInspectTroop,
+    setHoveredLandmark,
+    setHoveredSpecialTower,
+    setHoveredTower,
+    setHoveredWaveBubblePathKey,
+    setIsBuildDragging,
+    setIsPanning,
+    setMissileMortarTargetingId,
+    setMousePos,
+    setMoveTargetPos,
+    setMoveTargetValid,
+    setNextWaveTimer,
+    setPanStart,
+    setPanStartOffset,
+    setPlacingTroop,
+    setRepositionPreviewPos,
+    setRepositioningTower,
+    setSelectedInspectEnemy,
+    setSelectedInspectHero,
+    setSelectedInspectTroop,
+    setSelectedTower,
+    setSelectedUnitMoveInfo,
+    setSentinelTargets,
+    setSpells,
+    setTargetingSpell,
+    setTowers,
+    setTroops,
+    setUnitDragMoved,
+    setUnitDragStart,
+    setWaveStartConfirm,
+    spellUpgradeLevels,
+    spendPawPoints,
+    startWave,
+    targetingSpell,
+    towers,
+    troops,
+    unitDragMoved,
+    unitDragStart,
+    waveStartConfirm,
   };
 
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) => handlePointerDownImpl(canvasEventParamsRef.current, e),
-    [],
+    (e: React.PointerEvent<HTMLCanvasElement>) =>
+      handlePointerDownImpl(canvasEventParamsRef.current, e),
+    []
   );
 
   const handleCanvasClick = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) => handleCanvasClickImpl(canvasEventParamsRef.current, e),
-    [],
+    (e: React.PointerEvent<HTMLCanvasElement>) =>
+      handleCanvasClickImpl(canvasEventParamsRef.current, e),
+    []
   );
 
   const handleMouseMove = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) => handleMouseMoveImpl(canvasEventParamsRef.current, e),
-    [],
+    (e: React.PointerEvent<HTMLCanvasElement>) =>
+      handleMouseMoveImpl(canvasEventParamsRef.current, e),
+    []
   );
 
   const handleCanvasPointerLeave = useCallback(() => {
@@ -1218,49 +1623,126 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const handleBuildTouchDragMove = useCallback(
     (clientX: number, clientY: number, towerType: TowerType) =>
-      handleBuildTouchDragMoveImpl(clientX, clientY, towerType, canvasRef, setDraggingTower, cachedCanvasRectRef),
+      handleBuildTouchDragMoveImpl(
+        clientX,
+        clientY,
+        towerType,
+        canvasRef,
+        setDraggingTower,
+        cachedCanvasRectRef
+      ),
     []
   );
 
   const handleBuildTouchDragEnd = useCallback(
     (clientX: number, clientY: number) =>
-      handleBuildTouchDragEndImpl(clientX, clientY, canvasRef, setDraggingTower, cachedCanvasRectRef),
+      handleBuildTouchDragEndImpl(
+        clientX,
+        clientY,
+        canvasRef,
+        setDraggingTower,
+        cachedCanvasRectRef
+      ),
     []
   );
 
-  const upgradeTowerParams = useMemo<UpgradeTowerParams>(() => ({
-    towersRef, pawPointsRef, activeWaveSpawnPaths, selectedMap, gameEventLogRef,
-    setTowers, setTroops, setSelectedTower, removePawPoints, addParticles,
-  }), [addParticles, removePawPoints, setTowers, setTroops, activeWaveSpawnPaths, selectedMap]);
+  const upgradeTowerParams = useMemo<UpgradeTowerParams>(
+    () => ({
+      activeWaveSpawnPaths,
+      addParticles,
+      gameEventLogRef,
+      pawPointsRef,
+      removePawPoints,
+      selectedMap,
+      setSelectedTower,
+      setTowers,
+      setTroops,
+      towersRef,
+    }),
+    [
+      addParticles,
+      removePawPoints,
+      setTowers,
+      setTroops,
+      activeWaveSpawnPaths,
+      selectedMap,
+    ]
+  );
 
   const upgradeTower = useCallback(
-    (towerId: string, choice?: "A" | "B") => upgradeTowerImpl(towerId, choice, upgradeTowerParams),
+    (towerId: string, choice?: "A" | "B") =>
+      upgradeTowerImpl(towerId, choice, upgradeTowerParams),
     [upgradeTowerParams]
   );
 
-  const sellTowerParams = useMemo<SellTowerParams>(() => ({
-    towers, gameEventLogRef, addPawPoints, addParticles,
-    removeTowerEntity, removeTroopsWhere, setSelectedTower,
-  }), [towers, addParticles, addPawPoints, removeTowerEntity, removeTroopsWhere]);
+  const sellTowerParams = useMemo<SellTowerParams>(
+    () => ({
+      addParticles,
+      addPawPoints,
+      gameEventLogRef,
+      removeTowerEntity,
+      removeTroopsWhere,
+      setSelectedTower,
+      towers,
+    }),
+    [towers, addParticles, addPawPoints, removeTowerEntity, removeTroopsWhere]
+  );
 
   const sellTower = useCallback(
     (towerId: string) => sellTowerImpl(towerId, sellTowerParams),
     [sellTowerParams]
   );
-  const spellExecParams: SpellExecutionParams = useMemo(() => ({
-    spells, enemies, selectedMap, gameSpeed, targetingSpell, placingTroop,
-    spellUpgradeLevels, spellAutoAim,
-    setSpells, setEnemies, setEffects, setTargetingSpell, setPlacingTroop,
-    setGoldSpellActive, setPaydayPawPointsEarned, setPaydayEndTime,
-    setHexWardEndTime, setHexWardTargetCount, setHexWardRaiseCap,
-    setHexWardRaisesRemaining, setHexWardDamageAmpPct, setHexWardBlocksHealing,
-    hexWardRaisesRemainingRef, executeTargetedSpellRef, gameEventLogRef,
-    canAffordPawPoints, spendPawPoints, addPawPoints, addParticles, onEnemyKill,
-  }), [
-    spells, enemies, selectedMap, gameSpeed, targetingSpell, placingTroop,
-    spellUpgradeLevels, spellAutoAim, addParticles, canAffordPawPoints,
-    spendPawPoints, addPawPoints, onEnemyKill, setEnemies, setEffects,
-  ]);
+  const spellExecParams: SpellExecutionParams = useMemo(
+    () => ({
+      addParticles,
+      addPawPoints,
+      canAffordPawPoints,
+      enemies,
+      executeTargetedSpellRef,
+      gameEventLogRef,
+      gameSpeed,
+      hexWardRaisesRemainingRef,
+      onEnemyKill,
+      placingTroop,
+      selectedMap,
+      setEffects,
+      setEnemies,
+      setGoldSpellActive,
+      setHexWardBlocksHealing,
+      setHexWardDamageAmpPct,
+      setHexWardEndTime,
+      setHexWardRaiseCap,
+      setHexWardRaisesRemaining,
+      setHexWardTargetCount,
+      setPaydayEndTime,
+      setPaydayPawPointsEarned,
+      setPlacingTroop,
+      setSpells,
+      setTargetingSpell,
+      spellAutoAim,
+      spellUpgradeLevels,
+      spells,
+      spendPawPoints,
+      targetingSpell,
+    }),
+    [
+      spells,
+      enemies,
+      selectedMap,
+      gameSpeed,
+      targetingSpell,
+      placingTroop,
+      spellUpgradeLevels,
+      spellAutoAim,
+      addParticles,
+      canAffordPawPoints,
+      spendPawPoints,
+      addPawPoints,
+      onEnemyKill,
+      setEnemies,
+      setEffects,
+    ]
+  );
 
   const castSpell = useCallback(
     (spellType: SpellType) => {
@@ -1269,9 +1751,12 @@ export function usePrincetonTowerDefenseRuntime() {
     [spellExecParams]
   );
 
-  const toggleSpellAutoAim = useCallback((spellType: SpellType) => {
-    setSpellAutoAim((prev) => ({ ...prev, [spellType]: !prev[spellType] }));
-  }, [setSpellAutoAim]);
+  const toggleSpellAutoAim = useCallback(
+    (spellType: SpellType) => {
+      setSpellAutoAim((prev) => ({ ...prev, [spellType]: !prev[spellType] }));
+    },
+    [setSpellAutoAim]
+  );
 
   const executeTargetedSpell = useCallback(
     (spellType: SpellType, centerWorldPos: Position) => {
@@ -1292,57 +1777,135 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const toggleHeroSelection = useCallback(() => {
     setHero((prev) =>
-      prev && !prev.dead
-        ? { ...prev, selected: !prev.selected }
-        : prev
+      prev && !prev.dead ? { ...prev, selected: !prev.selected } : prev
     );
   }, []);
   const triggerHeroAbility = useCallback(() => {
-    if (!hero) return;
+    if (!hero) {
+      return;
+    }
     triggerHeroAbilityImpl({
-      hero, enemies, selectedMap, gameSpeed,
-      setHero, setEnemies, setTowers, setTroops, setEffects,
-      addParticles, onEnemyKill, addTroopEntities, addTroopEntity,
+      addParticles,
+      addTroopEntities,
+      addTroopEntity,
+      enemies,
+      gameSpeed,
+      hero,
+      onEnemyKill,
+      selectedMap,
+      setEffects,
+      setEnemies,
+      setHero,
+      setTowers,
+      setTroops,
     });
   }, [
-    hero, enemies, selectedMap, addParticles, gameSpeed,
-    onEnemyKill, addTroopEntities, addTroopEntity, setEffects, setEnemies, setTowers, setTroops,
+    hero,
+    enemies,
+    selectedMap,
+    addParticles,
+    gameSpeed,
+    onEnemyKill,
+    addTroopEntities,
+    addTroopEntity,
+    setEffects,
+    setEnemies,
+    setTowers,
+    setTroops,
   ]);
 
   // Auto-trigger hero ability when HP drops below 25% while actively attacking
   useEffect(() => {
-    if (!hero || hero.dead || !hero.abilityReady || hero.hp <= 0) return;
-    if (!hero.aggroTarget) return;
+    if (!hero || hero.dead || !hero.abilityReady || hero.hp <= 0) {
+      return;
+    }
+    if (!hero.aggroTarget) {
+      return;
+    }
     if (hero.hp < hero.maxHp * HERO_AUTO_ABILITY_HP_THRESHOLD) {
       triggerHeroAbility();
     }
-  }, [hero?.hp, hero?.maxHp, hero?.abilityReady, hero?.dead, hero?.aggroTarget, triggerHeroAbility]);
+  }, [
+    hero?.hp,
+    hero?.maxHp,
+    hero?.abilityReady,
+    hero?.dead,
+    hero?.aggroTarget,
+    triggerHeroAbility,
+  ]);
 
-  const battleResetDeps = useMemo<BattleResetDeps>(() => ({
-    clearAllTimers, setPawPoints, setEffects, setEnemies, setProjectiles,
-    setBattleOutcome, setTowers, setTroops, setGameState, setLives,
-    setCurrentWave, setNextWaveTimer, setHero, setSelectedTower,
-    setBuildingTower, setDraggingTower, setIsPanning, setPanStart,
-    setPanStartOffset, setRepositioningTower, setRepositionPreviewPos,
-    setWaveInProgress, setPlacingTroop, setTargetingSpell, setSpells,
-    setGameSpeed, setGoldSpellActive, setInspectorActive,
-    setSelectedInspectEnemy, setPreviousGameSpeed, setSpecialTowerHp,
-    setLevelStartTime, setCameraOffset, setCameraZoom, setStarsEarned,
-    setTimeSpent, setActiveSentinelTargetKey, setSentinelTargets,
-    gameEndHandledRef, prevGameSpeedRef, pausedAtRef, totalPausedTimeRef,
-    pausableTimeoutsRef, lastBarracksSpawnRef, lastSentinelStrikeRef,
-    lastSunforgeBarrageRef, sunforgeAimRef, missileAutoAimRef,
-    enemiesFirstAppearedRef, gameResetTimeRef,
-  }), [clearAllTimers, setPawPoints, setEffects, setEnemies, setProjectiles, setTowers, setTroops]);
+  const battleResetDeps = useMemo<BattleResetDeps>(
+    () => ({
+      clearAllTimers,
+      enemiesFirstAppearedRef,
+      gameEndHandledRef,
+      gameResetTimeRef,
+      lastBarracksSpawnRef,
+      lastSentinelStrikeRef,
+      lastSunforgeBarrageRef,
+      missileAutoAimRef,
+      pausableTimeoutsRef,
+      pausedAtRef,
+      prevGameSpeedRef,
+      setActiveSentinelTargetKey,
+      setBattleOutcome,
+      setBuildingTower,
+      setCameraOffset,
+      setCameraZoom,
+      setCurrentWave,
+      setDraggingTower,
+      setEffects,
+      setEnemies,
+      setGameSpeed,
+      setGameState,
+      setGoldSpellActive,
+      setHero,
+      setInspectorActive,
+      setIsPanning,
+      setLevelStartTime,
+      setLives,
+      setNextWaveTimer,
+      setPanStart,
+      setPanStartOffset,
+      setPawPoints,
+      setPlacingTroop,
+      setPreviousGameSpeed,
+      setProjectiles,
+      setRepositionPreviewPos,
+      setRepositioningTower,
+      setSelectedInspectEnemy,
+      setSelectedTower,
+      setSentinelTargets,
+      setSpecialTowerHp,
+      setSpells,
+      setStarsEarned,
+      setTargetingSpell,
+      setTimeSpent,
+      setTowers,
+      setTroops,
+      setWaveInProgress,
+      sunforgeAimRef,
+      totalPausedTimeRef,
+    }),
+    [
+      clearAllTimers,
+      setPawPoints,
+      setEffects,
+      setEnemies,
+      setProjectiles,
+      setTowers,
+      setTroops,
+    ]
+  );
 
   const resetGame = useCallback(
     () => resetGameImpl(battleResetDeps, selectedMap),
-    [battleResetDeps, selectedMap],
+    [battleResetDeps, selectedMap]
   );
 
   const retryLevel = useCallback(
     () => retryLevelImpl(battleResetDeps, selectedMap),
-    [battleResetDeps, selectedMap],
+    [battleResetDeps, selectedMap]
   );
 
   const resetGameWithTransition = useCallback(() => {
@@ -1365,24 +1928,47 @@ export function usePrincetonTowerDefenseRuntime() {
   }, [resetGame]);
 
   const { devConfigMenu, handleDevModeChange } = useDevMenuSetup({
-    isDevMode, gameState, battleOutcome, progress,
-    devPerfEnabled, setDevPerfEnabled, devPerfSnapshot,
-    photoModeEnabled, setPhotoModeEnabled,
-    currentWave, totalWaves, waveInProgress,
-    enemies, selectedMap,
-    setProgress, addPawPoints, setLives,
-    clearAllTimers, clearEnemies, onEnemyKill, unlockLevel,
-    setHoveredWaveBubblePathKey, setWaveInProgress,
-    setNextWaveTimer, setCurrentWave, setIsDevModeUnlocked,
+    addPawPoints,
+    battleOutcome,
+    clearAllTimers,
+    clearEnemies,
+    currentWave,
+    devPerfEnabled,
+    devPerfSnapshot,
+    enemies,
+    gameState,
+    isDevMode,
+    onEnemyKill,
+    photoModeEnabled,
+    progress,
+    selectedMap,
+    setCurrentWave,
+    setDevPerfEnabled,
+    setHoveredWaveBubblePathKey,
+    setIsDevModeUnlocked,
+    setLives,
+    setNextWaveTimer,
+    setPhotoModeEnabled,
+    setProgress,
+    setWaveInProgress,
+    totalWaves,
+    unlockLevel,
+    waveInProgress,
   });
 
   const pendingStartWithRandomRef = useRef(false);
   const startWithRandomLoadout = useCallback(
-    () => startWithRandomLoadoutImpl(
-      selectedHero, selectedSpells, setSelectedHero, setSelectedSpells,
-      pendingStartWithRandomRef, HERO_OPTIONS, SPELL_OPTIONS,
-    ),
-    [selectedHero, selectedSpells, setSelectedHero, setSelectedSpells],
+    () =>
+      startWithRandomLoadoutImpl(
+        selectedHero,
+        selectedSpells,
+        setSelectedHero,
+        setSelectedSpells,
+        pendingStartWithRandomRef,
+        HERO_OPTIONS,
+        SPELL_OPTIONS
+      ),
+    [selectedHero, selectedSpells, setSelectedHero, setSelectedSpells]
   );
 
   freeplayStartRef.current = () => {
@@ -1395,7 +1981,11 @@ export function usePrincetonTowerDefenseRuntime() {
   };
 
   useEffect(() => {
-    if (pendingStartWithRandomRef.current && selectedHero && selectedSpells.length === 3) {
+    if (
+      pendingStartWithRandomRef.current &&
+      selectedHero &&
+      selectedSpells.length === 3
+    ) {
       pendingStartWithRandomRef.current = false;
       startBattle();
     }
@@ -1410,14 +2000,17 @@ export function usePrincetonTowerDefenseRuntime() {
         setGameState(state);
       }
     },
-    [startBattle, setGameState],
+    [startBattle, setGameState]
   );
 
   // ── Phase 1: Blocking loading screen (gameState is still "menu"/"setup") ──
   // Visible until minDisplayMs elapses, then onReady sets gameState("playing").
   if (battleLoading.active && gameState !== "playing") {
     const levelData = LEVEL_DATA[selectedMap];
-    const battleTheme = resolveLoadingTheme(levelData?.theme, levelData?.levelKind);
+    const battleTheme = resolveLoadingTheme(
+      levelData?.theme,
+      levelData?.levelKind
+    );
     return (
       <LoadingScreen
         progress={battleLoading.progress}
@@ -1433,7 +2026,10 @@ export function usePrincetonTowerDefenseRuntime() {
   }
 
   // ── Phase 1b: Level landing page (accessed level via direct URL) ──
-  if (showFreeplayDisclaimer && (gameState === "menu" || gameState === "setup")) {
+  if (
+    showFreeplayDisclaimer &&
+    (gameState === "menu" || gameState === "setup")
+  ) {
     return (
       <FreeplayDisclaimer
         levelId={selectedMap}
@@ -1491,7 +2087,8 @@ export function usePrincetonTowerDefenseRuntime() {
   // Main game view (battle overlay stays on top without leaving this view)
   const { width, height, dpr } = getCanvasDimensions();
   const selectedLevelData = LEVEL_DATA[selectedMap];
-  const { fadeOverlayBackground, levelAllowedTowers } = computeBattleTheme(selectedMap);
+  const { fadeOverlayBackground, levelAllowedTowers } =
+    computeBattleTheme(selectedMap);
   const currentLevelStats = levelStats?.[selectedMap] || {};
 
   return (
@@ -1639,7 +2236,10 @@ export function usePrincetonTowerDefenseRuntime() {
           context="battle"
           levelId={selectedMap}
           levelName={selectedLevelData?.name}
-          theme={resolveLoadingTheme(selectedLevelData?.theme, selectedLevelData?.levelKind)}
+          theme={resolveLoadingTheme(
+            selectedLevelData?.theme,
+            selectedLevelData?.levelKind
+          )}
         />
       </LoadingOverlay>
     </>

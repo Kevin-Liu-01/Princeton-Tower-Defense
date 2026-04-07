@@ -5,15 +5,15 @@ export function drawRuins(
   rx: number,
   ryPct: number,
   scale: number,
-  tint?: string,
+  tint?: string
 ) {
   const { ctx, getY, seededRandom } = dc;
   const ry = getY(ryPct);
   const seed = rx * 3.7 + ryPct * 11.3;
   const stoneBase = tint || "#5a5048";
   const stoneDark = tint
-    ? tint.replace(/[0-9a-f]{2}/gi, (m) => {
-        const v = Math.max(0, parseInt(m, 16) - 30);
+    ? tint.replaceAll(/[0-9a-f]{2}/gi, (m) => {
+        const v = Math.max(0, Number.parseInt(m, 16) - 30);
         return v.toString(16).padStart(2, "0");
       })
     : "#3a3028";
@@ -28,7 +28,7 @@ export function drawRuins(
     6 * scale,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -47,7 +47,7 @@ export function drawRuins(
       ss * 0.6,
       seededRandom(seed + i * 7 + 4) * 1.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -124,7 +124,7 @@ export function drawRuins(
       1.5 * scale,
       seededRandom(seed + v * 11 + 122),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -133,7 +133,7 @@ export function drawRuins(
 export function drawWatchTower(
   dc: WorldMapDrawContext,
   tx: number,
-  tyPct: number,
+  tyPct: number
 ) {
   const { ctx, getLevelY, time } = dc;
   const ty = getLevelY(tyPct);
@@ -206,7 +206,7 @@ export function drawWatchTower(
       2.5,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -223,12 +223,7 @@ export function drawWatchTower(
   }
 
   // Platform with 3D overhang
-  const platGrad = ctx.createLinearGradient(
-    tx - 14,
-    ty - 45,
-    tx - 14,
-    ty - 38,
-  );
+  const platGrad = ctx.createLinearGradient(tx - 14, ty - 45, tx - 14, ty - 38);
   platGrad.addColorStop(0, "#5a4a3a");
   platGrad.addColorStop(1, "#3a2a1a");
   ctx.fillStyle = platGrad;
@@ -256,7 +251,7 @@ export function drawWatchTower(
   const winGlow1 = ctx.createRadialGradient(tx, ty - 12, 0, tx, ty - 12, 8);
   winGlow1.addColorStop(
     0,
-    `rgba(255, 200, 100, ${0.5 + Math.sin(time * 2.3 + tx) * 0.25})`,
+    `rgba(255, 200, 100, ${0.5 + Math.sin(time * 2.3 + tx) * 0.25})`
   );
   winGlow1.addColorStop(1, "rgba(255, 150, 50, 0)");
   ctx.fillStyle = winGlow1;
@@ -275,7 +270,7 @@ export function drawWatchTower(
   const winGlow2 = ctx.createRadialGradient(tx, ty - 28, 0, tx, ty - 28, 7);
   winGlow2.addColorStop(
     0,
-    `rgba(255, 200, 100, ${0.4 + Math.sin(time * 1.8 + tx + 1) * 0.2})`,
+    `rgba(255, 200, 100, ${0.4 + Math.sin(time * 1.8 + tx + 1) * 0.2})`
   );
   winGlow2.addColorStop(1, "rgba(255, 150, 50, 0)");
   ctx.fillStyle = winGlow2;
@@ -293,12 +288,7 @@ export function drawWatchTower(
   ctx.stroke();
 
   // Conical roof with shading
-  const roofGrad = ctx.createLinearGradient(
-    tx - 10,
-    ty - 62,
-    tx + 10,
-    ty - 48,
-  );
+  const roofGrad = ctx.createLinearGradient(tx - 10, ty - 62, tx + 10, ty - 48);
   roofGrad.addColorStop(0, "#6a3020");
   roofGrad.addColorStop(0.5, "#8a4030");
   roofGrad.addColorStop(1, "#4a2018");
@@ -336,7 +326,7 @@ export function drawWatchTower(
     tx + 8,
     ty - 64 + pfw * 0.5,
     tx + 12,
-    ty - 63 + pfw2 * 0.6,
+    ty - 63 + pfw2 * 0.6
   );
   ctx.stroke();
 
@@ -369,7 +359,7 @@ export function drawCrater(
   dc: WorldMapDrawContext,
   cx: number,
   cyPct: number,
-  size: number,
+  size: number
 ) {
   const { ctx, getY, seededRandom, time } = dc;
   const cy = getY(cyPct);
@@ -383,7 +373,7 @@ export function drawCrater(
     ctx.beginPath();
     ctx.moveTo(
       cx + Math.cos(angle) * size * 0.6,
-      cy + Math.sin(angle) * size * 0.25,
+      cy + Math.sin(angle) * size * 0.25
     );
     ctx.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len * 0.4);
     ctx.stroke();
@@ -395,7 +385,7 @@ export function drawCrater(
       ctx.moveTo(midX, midY);
       ctx.lineTo(
         midX + Math.cos(branchAngle) * size * 0.5,
-        midY + Math.sin(branchAngle) * size * 0.2,
+        midY + Math.sin(branchAngle) * size * 0.2
       );
       ctx.stroke();
     }
@@ -407,14 +397,7 @@ export function drawCrater(
     const dist = size * 0.9 + seededRandom(cx + si * 5) * size * 0.5;
     const sx = cx + Math.cos(angle) * dist;
     const sy = cy + Math.sin(angle) * dist * 0.4;
-    const scorchGrad = ctx.createRadialGradient(
-      sx,
-      sy,
-      0,
-      sx,
-      sy,
-      size * 0.4,
-    );
+    const scorchGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 0.4);
     scorchGrad.addColorStop(0, "rgba(15,10,5,0.25)");
     scorchGrad.addColorStop(1, "rgba(15,10,5,0)");
     ctx.fillStyle = scorchGrad;
@@ -430,7 +413,7 @@ export function drawCrater(
     size * 0.7,
     cx,
     cy,
-    size * 1.3,
+    size * 1.3
   );
   rimGrad.addColorStop(0, "rgba(50,40,25,0)");
   rimGrad.addColorStop(0.5, "rgba(55,42,28,0.5)");
@@ -443,7 +426,7 @@ export function drawCrater(
   // Mid ring
   ctx.fillStyle = "#2e2218";
   ctx.beginPath();
-  ctx.ellipse(cx, cy, size * 1.0, size * 0.42, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy, size * 1, size * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Inner ring (deeper)
@@ -459,7 +442,7 @@ export function drawCrater(
     0,
     cx,
     cy - 1,
-    size * 0.4,
+    size * 0.4
   );
   centerGrad.addColorStop(0, "#0a0805");
   centerGrad.addColorStop(1, "#1a1208");
@@ -476,7 +459,7 @@ export function drawCrater(
     0,
     cx,
     cy - 1,
-    size * 0.3,
+    size * 0.3
   );
   emberGrad.addColorStop(0, `rgba(255, 80, 20, ${emberPulse})`);
   emberGrad.addColorStop(0.5, `rgba(200, 50, 10, ${emberPulse * 0.4})`);
@@ -516,7 +499,7 @@ export function drawCrater(
       dSize * 0.7,
       seededRandom(cx + di * 61) * Math.PI,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -528,11 +511,11 @@ export function drawCrater(
   ctx.ellipse(
     cx,
     cy - 1,
-    size * 1.0,
+    size * 1,
     size * 0.42,
     0,
     Math.PI * 1.1,
-    Math.PI * 1.9,
+    Math.PI * 1.9
   );
   ctx.stroke();
 }
@@ -541,7 +524,7 @@ export function drawWillowTree(
   dc: WorldMapDrawContext,
   x: number,
   yPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, seededRandom, time } = dc;
   const y = getY(yPct);
@@ -596,7 +579,7 @@ export function drawWillowTree(
         1.2 * scale,
         rAngle,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -607,7 +590,7 @@ export function drawWillowTree(
     x - 6 * scale,
     0,
     x + 6 * scale,
-    0,
+    0
   );
   trunkGrad.addColorStop(0, "#080805");
   trunkGrad.addColorStop(0.2, "#161410");
@@ -624,7 +607,7 @@ export function drawWillowTree(
     x - 6 * scale,
     y - 14 * scale,
     x - 3 * scale,
-    y - 18 * scale,
+    y - 18 * scale
   );
   ctx.bezierCurveTo(
     x - 6 * scale,
@@ -632,7 +615,7 @@ export function drawWillowTree(
     x - 4 * scale,
     y - 27 * scale,
     x,
-    y - 30 * scale,
+    y - 30 * scale
   );
   ctx.bezierCurveTo(
     x + 4 * scale,
@@ -640,7 +623,7 @@ export function drawWillowTree(
     x + 6 * scale,
     y - 22 * scale,
     x + 3 * scale,
-    y - 18 * scale,
+    y - 18 * scale
   );
   ctx.bezierCurveTo(
     x + 6 * scale,
@@ -648,7 +631,7 @@ export function drawWillowTree(
     x + 8 * scale,
     y - 6 * scale,
     x + 4 * scale,
-    y,
+    y
   );
   ctx.closePath();
   ctx.fill();
@@ -667,7 +650,7 @@ export function drawWillowTree(
       gx + 1.5 * scale,
       y - 20 * scale,
       gx - 0.5 * scale,
-      y - 28 * scale,
+      y - 28 * scale
     );
     ctx.stroke();
   }
@@ -683,7 +666,7 @@ export function drawWillowTree(
       kr * 1.8 * scale,
       kAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(40, 35, 25, 0.4)";
@@ -701,7 +684,7 @@ export function drawWillowTree(
     mx: number,
     my: number,
     mScale: number,
-    seed: number,
+    seed: number
   ) => {
     const glowPhase = Math.sin(time * 2.2 + seed * 3.1) * 0.5 + 0.5;
     // Glow halo (flat color)
@@ -715,7 +698,7 @@ export function drawWillowTree(
       mx - 0.5 * mScale * scale,
       my,
       1 * mScale * scale,
-      3 * mScale * scale,
+      3 * mScale * scale
     );
     // Mushroom cap
     ctx.fillStyle = `rgba(100, 230, 130, ${0.5 + glowPhase * 0.35})`;
@@ -727,12 +710,12 @@ export function drawWillowTree(
       1.5 * mScale * scale,
       0,
       Math.PI,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   };
   // Cluster of mushrooms at various heights on trunk
-  drawMushroom(x + 3.5 * scale, y - 7 * scale, 1.0, x + 1);
+  drawMushroom(x + 3.5 * scale, y - 7 * scale, 1, x + 1);
   drawMushroom(x + 4.5 * scale, y - 9 * scale, 0.7, x + 2);
   drawMushroom(x - 3 * scale, y - 15 * scale, 0.9, x + 3);
   drawMushroom(x - 4 * scale, y - 13 * scale, 0.6, x + 4);
@@ -796,7 +779,7 @@ export function drawWillowTree(
     ctx.moveTo(webCx1, webCy1);
     ctx.lineTo(
       webCx1 + Math.cos(angle) * 7 * scale,
-      webCy1 + Math.sin(angle) * 7 * scale,
+      webCy1 + Math.sin(angle) * 7 * scale
     );
     ctx.stroke();
   }
@@ -808,8 +791,11 @@ export function drawWillowTree(
       const rr = ring * 2.2 * scale;
       const px = webCx1 + Math.cos(angle) * rr;
       const py = webCy1 + Math.sin(angle) * rr;
-      if (s === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (s === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.stroke();
   }
@@ -822,7 +808,7 @@ export function drawWillowTree(
     ctx.moveTo(webCx2, webCy2);
     ctx.lineTo(
       webCx2 + Math.cos(angle) * 5 * scale,
-      webCy2 + Math.sin(angle) * 5 * scale,
+      webCy2 + Math.sin(angle) * 5 * scale
     );
     ctx.stroke();
   }
@@ -833,22 +819,23 @@ export function drawWillowTree(
       const rr = ring * 2 * scale;
       const px = webCx2 + Math.cos(angle) * rr;
       const py = webCy2 + Math.sin(angle) * rr;
-      if (s === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (s === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.stroke();
   }
 
   // --- Much longer, more numerous hanging moss/vines with leaf clusters ---
-  ctx.lineWidth = 1.0 * scale;
+  ctx.lineWidth = 1 * scale;
   for (let i = 0; i < 14; i++) {
     const vx = x - 18 * scale + i * 2.8 * scale;
     const vy = y - 22 * scale + seededRandom(x + i * 3) * 10 * scale;
     const len =
-      22 * scale +
-      Math.sin(time * 1.5 + i + x) * 5 +
-      seededRandom(x + i) * 14;
-    const sway = Math.sin(time * 1.0 + i * 0.6 + x * 0.01) * (3 + i * 0.3);
+      22 * scale + Math.sin(time * 1.5 + i + x) * 5 + seededRandom(x + i) * 14;
+    const sway = Math.sin(time * 1 + i * 0.6 + x * 0.01) * (3 + i * 0.3);
 
     // Vine with flat color (was per-vine gradient)
     ctx.strokeStyle = "#1e2e1e";
@@ -862,7 +849,7 @@ export function drawWillowTree(
       vx + sway * 0.8,
       vy + len * 0.55,
       vx + sway * 0.2,
-      vy + len,
+      vy + len
     );
     ctx.stroke();
 
@@ -880,7 +867,7 @@ export function drawWillowTree(
         2.8 * scale,
         0.4 + sway * 0.05,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#1e3e1e";
@@ -892,7 +879,7 @@ export function drawWillowTree(
         2.2 * scale,
         -0.3 + sway * 0.03,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -908,7 +895,7 @@ export function drawWillowTree(
       3 * scale,
       0.3 + sway * 0.02,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     if (i % 3 === 0) {
@@ -921,7 +908,7 @@ export function drawWillowTree(
         2.5 * scale,
         -0.4,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#1c3a1c";
@@ -933,7 +920,7 @@ export function drawWillowTree(
         2 * scale,
         0.6,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -944,7 +931,7 @@ export function drawSwampPool(
   dc: WorldMapDrawContext,
   px: number,
   pyPct: number,
-  psize: number,
+  psize: number
 ) {
   const { ctx, getY, seededRandom, time } = dc;
   const py = getY(pyPct);
@@ -969,15 +956,7 @@ export function drawSwampPool(
     const ah = aw * 0.4;
     ctx.fillStyle = `rgba(90, 140, 40, ${0.12 + seededRandom(px + a * 53) * 0.08})`;
     ctx.beginPath();
-    ctx.ellipse(
-      ax,
-      ay,
-      aw,
-      ah,
-      seededRandom(px + a * 7) * 1.5,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(ax, ay, aw, ah, seededRandom(px + a * 7) * 1.5, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -998,7 +977,7 @@ export function drawSwampPool(
       rippleR * 0.38,
       poolAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -1034,13 +1013,13 @@ export function drawSwampPool(
     ctx.beginPath();
     ctx.moveTo(
       lpx + lpR * Math.cos(lpAngle),
-      lpy + lpR * 0.4 * Math.sin(lpAngle),
+      lpy + lpR * 0.4 * Math.sin(lpAngle)
     );
     for (let a = 0.15; a <= 1.85; a += 0.05) {
       const angle = lpAngle + a * Math.PI;
       ctx.lineTo(
         lpx + lpR * Math.cos(angle),
-        lpy + lpR * 0.4 * Math.sin(angle),
+        lpy + lpR * 0.4 * Math.sin(angle)
       );
     }
     ctx.closePath();
@@ -1052,7 +1031,7 @@ export function drawSwampPool(
     ctx.moveTo(lpx, lpy);
     ctx.lineTo(
       lpx + lpR * 0.7 * Math.cos(lpAngle + Math.PI),
-      lpy + lpR * 0.28 * Math.sin(lpAngle + Math.PI),
+      lpy + lpR * 0.28 * Math.sin(lpAngle + Math.PI)
     );
     ctx.stroke();
 
@@ -1068,11 +1047,11 @@ export function drawSwampPool(
         ctx.ellipse(
           flx + Math.cos(pa) * 1.2,
           fly + Math.sin(pa) * 0.5,
-          1.0,
+          1,
           0.5,
           pa,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -1100,7 +1079,7 @@ export function drawSwampPool(
       1.2,
       fishProgress * 0.3 - 0.15,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Tail
@@ -1122,16 +1101,12 @@ export function drawSwampPool(
     psize * 0.12,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
 
-export function drawSwampGas(
-  dc: WorldMapDrawContext,
-  x: number,
-  yPct: number,
-) {
+export function drawSwampGas(dc: WorldMapDrawContext, x: number, yPct: number) {
   const { ctx, getY, seededRandom, time } = dc;
   const y = getY(yPct);
   const tOffset = x * 0.1;
@@ -1160,11 +1135,11 @@ export function drawSwampGas(
         ctx.beginPath();
         ctx.moveTo(
           bubbleX + Math.cos(spAngle) * spR * 0.3,
-          bubbleY + Math.sin(spAngle) * spR * 0.3,
+          bubbleY + Math.sin(spAngle) * spR * 0.3
         );
         ctx.lineTo(
           bubbleX + Math.cos(spAngle) * spR,
-          bubbleY + Math.sin(spAngle) * spR,
+          bubbleY + Math.sin(spAngle) * spR
         );
         ctx.stroke();
       }
@@ -1177,7 +1152,7 @@ export function drawSwampGas(
       0,
       bubbleX,
       bubbleY,
-      bubbleR * 3.5,
+      bubbleR * 3.5
     );
     glowGrad.addColorStop(0, `rgba(100, 255, 120, ${opacity * 0.2})`);
     glowGrad.addColorStop(0.5, `rgba(80, 220, 100, ${opacity * 0.08})`);
@@ -1201,7 +1176,7 @@ export function drawSwampGas(
         bubbleY - bubbleR * 0.3,
         bubbleR * 0.35,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1211,7 +1186,7 @@ export function drawSwampGas(
 export function drawFireflies(
   dc: WorldMapDrawContext,
   xBase: number,
-  yPct: number,
+  yPct: number
 ) {
   const { ctx, getY, time } = dc;
   const yBase = getY(yPct);
@@ -1231,8 +1206,7 @@ export function drawFireflies(
     const denomP = 1 + Math.sin(tPast) * Math.sin(tPast);
     const tx = xBase + (loopScale * Math.cos(tPast)) / denomP;
     const ty =
-      yBase +
-      ((loopScale * Math.sin(tPast) * Math.cos(tPast)) / denomP) * 0.6;
+      yBase + ((loopScale * Math.sin(tPast) * Math.cos(tPast)) / denomP) * 0.6;
     const trailAlpha = glow * (1 - trail / 6) * 0.35;
     ctx.fillStyle = `rgba(210, 255, 120, ${trailAlpha})`;
     ctx.beginPath();

@@ -1,4 +1,9 @@
-export type RegionType = "grassland" | "swamp" | "desert" | "winter" | "volcanic";
+export type RegionType =
+  | "grassland"
+  | "swamp"
+  | "desert"
+  | "winter"
+  | "volcanic";
 
 /**
  * Draw the region icon centered at the current canvas origin.
@@ -7,14 +12,29 @@ export type RegionType = "grassland" | "swamp" | "desert" | "winter" | "volcanic
  */
 export function drawRegionIcon(
   ctx: CanvasRenderingContext2D,
-  type: RegionType,
+  type: RegionType
 ): void {
   switch (type) {
-    case "grassland": drawGrasslandIcon(ctx); break;
-    case "swamp":     drawSwampIcon(ctx);     break;
-    case "desert":    drawDesertIcon(ctx);    break;
-    case "winter":    drawWinterIcon(ctx);    break;
-    case "volcanic":  drawVolcanicIcon(ctx);  break;
+    case "grassland": {
+      drawGrasslandIcon(ctx);
+      break;
+    }
+    case "swamp": {
+      drawSwampIcon(ctx);
+      break;
+    }
+    case "desert": {
+      drawDesertIcon(ctx);
+      break;
+    }
+    case "winter": {
+      drawWinterIcon(ctx);
+      break;
+    }
+    case "volcanic": {
+      drawVolcanicIcon(ctx);
+      break;
+    }
   }
 }
 
@@ -109,18 +129,22 @@ function drawGrasslandIcon(ctx: CanvasRenderingContext2D): void {
 
   // Lumpy foliage bumps along the canopy edge for organic silhouette
   const bumps = [
-    { x: -8, y: -3.5, r: 4 },
-    { x: -5, y: -7.5, r: 4.5 },
-    { x: -1, y: -9.5, r: 4 },
-    { x:  3, y: -8.5, r: 4.5 },
-    { x:  7, y: -5, r: 4 },
-    { x:  8.5, y: -1.5, r: 3.5 },
-    { x: -9, y:  0, r: 3 },
+    { r: 4, x: -8, y: -3.5 },
+    { r: 4.5, x: -5, y: -7.5 },
+    { r: 4, x: -1, y: -9.5 },
+    { r: 4.5, x: 3, y: -8.5 },
+    { r: 4, x: 7, y: -5 },
+    { r: 3.5, x: 8.5, y: -1.5 },
+    { r: 3, x: -9, y: 0 },
   ];
   for (const b of bumps) {
     const bumpGrad = ctx.createRadialGradient(
-      b.x - 1, b.y - 1.5, 0,
-      b.x, b.y, b.r,
+      b.x - 1,
+      b.y - 1.5,
+      0,
+      b.x,
+      b.y,
+      b.r
     );
     bumpGrad.addColorStop(0, "#50C848");
     bumpGrad.addColorStop(0.5, "#38A830");
@@ -133,10 +157,10 @@ function drawGrasslandIcon(ctx: CanvasRenderingContext2D): void {
 
   // Bright sunlit patches (upper-left quadrant)
   const sunPatches = [
-    { x: -5, y: -7, r: 3.2 },
-    { x: -1, y: -9, r: 2.8 },
-    { x: -7, y: -3, r: 2.5 },
-    { x:  1, y: -7, r: 2 },
+    { r: 3.2, x: -5, y: -7 },
+    { r: 2.8, x: -1, y: -9 },
+    { r: 2.5, x: -7, y: -3 },
+    { r: 2, x: 1, y: -7 },
   ];
   for (const p of sunPatches) {
     const pGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
@@ -292,9 +316,12 @@ function drawSwampIcon(ctx: CanvasRenderingContext2D): void {
 
   // Glowing spots with halos
   const spots = [
-    { x: -5, y: -7, r: 2.2 }, { x: 2, y: -8, r: 1.8 },
-    { x: 6, y: -5, r: 1.5 }, { x: -1, y: -9.5, r: 1.3 },
-    { x: -8, y: -4, r: 1.2 }, { x: 4, y: -4, r: 1 },
+    { r: 2.2, x: -5, y: -7 },
+    { r: 1.8, x: 2, y: -8 },
+    { r: 1.5, x: 6, y: -5 },
+    { r: 1.3, x: -1, y: -9.5 },
+    { r: 1.2, x: -8, y: -4 },
+    { r: 1, x: 4, y: -4 },
   ];
   for (const s of spots) {
     const hGrad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r + 1.5);
@@ -321,8 +348,10 @@ function drawSwampIcon(ctx: CanvasRenderingContext2D): void {
 
   // Bioluminescent bubbles
   const bubbles = [
-    { x: -6, y: 5, r: 1.8 }, { x: 5, y: 6, r: 1.4 },
-    { x: -2, y: 7, r: 1 }, { x: 7, y: 7.5, r: 0.8 },
+    { r: 1.8, x: -6, y: 5 },
+    { r: 1.4, x: 5, y: 6 },
+    { r: 1, x: -2, y: 7 },
+    { r: 0.8, x: 7, y: 7.5 },
   ];
   for (const b of bubbles) {
     const bGrad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r + 1.2);
@@ -344,7 +373,13 @@ function drawSwampIcon(ctx: CanvasRenderingContext2D): void {
 
   // Spore particles
   ctx.fillStyle = "rgba(200,120,255,0.5)";
-  const spores = [[-6, -1, 0.6], [7, -1, 0.5], [-3, -11, 0.5], [4, -10, 0.45], [0, -12, 0.4]] as const;
+  const spores = [
+    [-6, -1, 0.6],
+    [7, -1, 0.5],
+    [-3, -11, 0.5],
+    [4, -10, 0.45],
+    [0, -12, 0.4],
+  ] as const;
   for (const [sx, sy, sr] of spores) {
     ctx.beginPath();
     ctx.arc(sx, sy, sr, 0, Math.PI * 2);
@@ -560,9 +595,14 @@ function drawWinterIcon(ctx: CanvasRenderingContext2D): void {
   // Sparkle particles
   ctx.fillStyle = "rgba(255,255,255,0.6)";
   const sparkles = [
-    [-6, -8.5, 0.5], [7, -4, 0.45], [-3.5, 7.5, 0.45],
-    [5, 7, 0.4], [8, 2, 0.35], [-7.5, 1, 0.4],
-    [-1, -12, 0.35], [4, -10, 0.3],
+    [-6, -8.5, 0.5],
+    [7, -4, 0.45],
+    [-3.5, 7.5, 0.45],
+    [5, 7, 0.4],
+    [8, 2, 0.35],
+    [-7.5, 1, 0.4],
+    [-1, -12, 0.35],
+    [4, -10, 0.3],
   ] as const;
   for (const [sx, sy, sr] of sparkles) {
     ctx.beginPath();
@@ -749,7 +789,7 @@ function drawVolcanicIcon(ctx: CanvasRenderingContext2D): void {
   // Ember particles — more, varied sizes and colors, scattered widely
   const embers: [number, number, number, string][] = [
     [-4, -12, 1.2, "#FFD800"],
-    [3.5, -11, 1.0, "#FF8800"],
+    [3.5, -11, 1, "#FF8800"],
     [0.5, -13.5, 0.8, "#FFCC00"],
     [-2, -14, 0.6, "#FF6600"],
     [5.5, -8, 0.6, "#FFAA00"],
@@ -780,8 +820,10 @@ function drawVolcanicIcon(ctx: CanvasRenderingContext2D): void {
   ctx.strokeStyle = "rgba(255,200,60,0.4)";
   ctx.lineWidth = 0.5;
   const sparks: [number, number, number, number][] = [
-    [-3, -11, -3.5, -13], [2, -10, 2.5, -12.5],
-    [0, -12, -0.5, -14.5], [5, -7, 5.5, -9],
+    [-3, -11, -3.5, -13],
+    [2, -10, 2.5, -12.5],
+    [0, -12, -0.5, -14.5],
+    [5, -7, 5.5, -9],
     [-5.5, -8, -6, -10.5],
   ];
   for (const [x1, y1, x2, y2] of sparks) {
@@ -796,48 +838,81 @@ function drawVolcanicIcon(ctx: CanvasRenderingContext2D): void {
 // Challenge sigil — base X/crossed-blades design stylized per region
 // ---------------------------------------------------------------------------
 
-const CHALLENGE_PALETTES: Record<RegionType, {
-  bgGlow: string; diamondDark: string; diamondLight: string;
-  bladeStroke: string; bladeHighlight: string;
-  center: string; centerGlow: string;
-  accentA: string; accentB: string;
-}> = {
+const CHALLENGE_PALETTES: Record<
+  RegionType,
+  {
+    bgGlow: string;
+    diamondDark: string;
+    diamondLight: string;
+    bladeStroke: string;
+    bladeHighlight: string;
+    center: string;
+    centerGlow: string;
+    accentA: string;
+    accentB: string;
+  }
+> = {
+  desert: {
+    accentA: "#FFAA00",
+    accentB: "#FFD860",
+    bgGlow: "rgba(255,180,40,0.18)",
+    bladeHighlight: "#FFF0D0",
+    bladeStroke: "#FFE0A0",
+    center: "#FFF0D0",
+    centerGlow: "rgba(255,220,100,0.3)",
+    diamondDark: "#8A5A10",
+    diamondLight: "#B88020",
+  },
   grassland: {
-    bgGlow: "rgba(60,180,80,0.18)", diamondDark: "#1A5A28", diamondLight: "#2E8840",
-    bladeStroke: "#A0E8A0", bladeHighlight: "#D0FFD0",
-    center: "#E0FFD0", centerGlow: "rgba(100,255,100,0.3)",
-    accentA: "#50C050", accentB: "#80FF80",
+    accentA: "#50C050",
+    accentB: "#80FF80",
+    bgGlow: "rgba(60,180,80,0.18)",
+    bladeHighlight: "#D0FFD0",
+    bladeStroke: "#A0E8A0",
+    center: "#E0FFD0",
+    centerGlow: "rgba(100,255,100,0.3)",
+    diamondDark: "#1A5A28",
+    diamondLight: "#2E8840",
   },
   swamp: {
-    bgGlow: "rgba(120,60,180,0.18)", diamondDark: "#3A1858", diamondLight: "#582888",
-    bladeStroke: "#C8A0FF", bladeHighlight: "#E8D0FF",
-    center: "#E8D0FF", centerGlow: "rgba(180,120,255,0.3)",
-    accentA: "#A060E0", accentB: "#80FFD0",
-  },
-  desert: {
-    bgGlow: "rgba(255,180,40,0.18)", diamondDark: "#8A5A10", diamondLight: "#B88020",
-    bladeStroke: "#FFE0A0", bladeHighlight: "#FFF0D0",
-    center: "#FFF0D0", centerGlow: "rgba(255,220,100,0.3)",
-    accentA: "#FFAA00", accentB: "#FFD860",
-  },
-  winter: {
-    bgGlow: "rgba(100,180,255,0.18)", diamondDark: "#1A4878", diamondLight: "#2868A8",
-    bladeStroke: "#B0D8FF", bladeHighlight: "#E0F0FF",
-    center: "#E8F4FF", centerGlow: "rgba(140,200,255,0.3)",
-    accentA: "#60B0E8", accentB: "#FFFFFF",
+    accentA: "#A060E0",
+    accentB: "#80FFD0",
+    bgGlow: "rgba(120,60,180,0.18)",
+    bladeHighlight: "#E8D0FF",
+    bladeStroke: "#C8A0FF",
+    center: "#E8D0FF",
+    centerGlow: "rgba(180,120,255,0.3)",
+    diamondDark: "#3A1858",
+    diamondLight: "#582888",
   },
   volcanic: {
-    bgGlow: "rgba(255,80,20,0.18)", diamondDark: "#781810", diamondLight: "#A83020",
-    bladeStroke: "#FFB880", bladeHighlight: "#FFE0C0",
-    center: "#FFF0D0", centerGlow: "rgba(255,150,60,0.35)",
-    accentA: "#FF6020", accentB: "#FFD800",
+    accentA: "#FF6020",
+    accentB: "#FFD800",
+    bgGlow: "rgba(255,80,20,0.18)",
+    bladeHighlight: "#FFE0C0",
+    bladeStroke: "#FFB880",
+    center: "#FFF0D0",
+    centerGlow: "rgba(255,150,60,0.35)",
+    diamondDark: "#781810",
+    diamondLight: "#A83020",
+  },
+  winter: {
+    accentA: "#60B0E8",
+    accentB: "#FFFFFF",
+    bgGlow: "rgba(100,180,255,0.18)",
+    bladeHighlight: "#E0F0FF",
+    bladeStroke: "#B0D8FF",
+    center: "#E8F4FF",
+    centerGlow: "rgba(140,200,255,0.3)",
+    diamondDark: "#1A4878",
+    diamondLight: "#2868A8",
   },
 };
 
 export function drawChallengeSigil(
   ctx: CanvasRenderingContext2D,
   type: RegionType,
-  scale: number = 1,
+  scale: number = 1
 ): void {
   const p = CHALLENGE_PALETTES[type];
   const S = scale;
@@ -957,16 +1032,29 @@ export function drawChallengeSigil(
 function drawChallengeAccents(
   ctx: CanvasRenderingContext2D,
   type: RegionType,
-  S: number,
+  S: number
 ): void {
   switch (type) {
     case "grassland": {
       // Tiny leaf shapes at blade tips
       ctx.fillStyle = "#50C050";
-      const tips = [[7, -7], [-7, -7], [7, 7], [-7, 7]];
+      const tips = [
+        [7, -7],
+        [-7, -7],
+        [7, 7],
+        [-7, 7],
+      ];
       for (const [tx, ty] of tips) {
         ctx.beginPath();
-        ctx.ellipse(tx * S, ty * S, 1.5 * S, 0.7 * S, Math.atan2(ty, tx), 0, Math.PI * 2);
+        ctx.ellipse(
+          tx * S,
+          ty * S,
+          1.5 * S,
+          0.7 * S,
+          Math.atan2(ty, tx),
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
       break;
@@ -975,7 +1063,14 @@ function drawChallengeAccents(
       // Glowing spore dots near blade tips
       ctx.fillStyle = "#80FFD0";
       ctx.globalAlpha = 0.7;
-      const pts = [[6, -6], [-6, -6], [6, 6], [-6, 6], [0, -9], [0, 9]];
+      const pts = [
+        [6, -6],
+        [-6, -6],
+        [6, 6],
+        [-6, 6],
+        [0, -9],
+        [0, 9],
+      ];
       for (const [px, py] of pts) {
         ctx.beginPath();
         ctx.arc(px * S, py * S, 0.7 * S, 0, Math.PI * 2);
@@ -1003,7 +1098,12 @@ function drawChallengeAccents(
       // Tiny ice crystal dots at blade intersections
       ctx.fillStyle = "#FFFFFF";
       ctx.globalAlpha = 0.6;
-      const icePos = [[3.5, -3.5], [-3.5, -3.5], [3.5, 3.5], [-3.5, 3.5]];
+      const icePos = [
+        [3.5, -3.5],
+        [-3.5, -3.5],
+        [3.5, 3.5],
+        [-3.5, 3.5],
+      ];
       for (const [ix, iy] of icePos) {
         ctx.beginPath();
         ctx.moveTo(ix * S, (iy - 1) * S);
@@ -1019,7 +1119,14 @@ function drawChallengeAccents(
     case "volcanic": {
       // Small ember dots along the blades
       ctx.fillStyle = "#FFD800";
-      const embers = [[5, -5], [-5, -5], [5, 5], [-5, 5], [2, -8], [-2, 8]];
+      const embers = [
+        [5, -5],
+        [-5, -5],
+        [5, 5],
+        [-5, 5],
+        [2, -8],
+        [-2, 8],
+      ];
       for (const [ex, ey] of embers) {
         ctx.beginPath();
         ctx.arc(ex * S, ey * S, 0.8 * S, 0, Math.PI * 2);

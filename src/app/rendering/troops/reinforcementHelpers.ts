@@ -1,4 +1,7 @@
-import type { ReinforcementHelmetStyle, ReinforcementArmorStyle } from "./reinforcementThemes";
+import type {
+  ReinforcementHelmetStyle,
+  ReinforcementArmorStyle,
+} from "./reinforcementThemes";
 
 // Shared palette type used by all reinforcement drawing helpers.
 export interface ReinforcementPalette {
@@ -8,7 +11,7 @@ export interface ReinforcementPalette {
   trim: string;
   cape: string;
   capeShadow: string;
-  glow: string;   // "rgba(r, g, b, " — caller appends alpha + ")"
+  glow: string; // "rgba(r, g, b, " — caller appends alpha + ")"
   eye: string;
   eyeShadow: string;
 }
@@ -28,7 +31,7 @@ export function drawReinforcementHelmet(
   attackDrive: number,
   palette: ReinforcementPalette,
   helmet: ReinforcementHelmetStyle,
-  tier: number,
+  tier: number
 ) {
   const headYOffset = size * 0.04;
   const hY = helmY + headYOffset;
@@ -41,8 +44,10 @@ export function drawReinforcementHelmet(
       ctx.beginPath();
       ctx.moveTo(x + side * size * 0.12, hY - size * 0.1 + bY);
       ctx.quadraticCurveTo(
-        x + side * size * 0.17, hY - size * 0.14 + bY,
-        x + side * size * 0.15, hY - size * 0.06 + bY,
+        x + side * size * 0.17,
+        hY - size * 0.14 + bY,
+        x + side * size * 0.15,
+        hY - size * 0.06 + bY
       );
       ctx.closePath();
       ctx.fill();
@@ -51,8 +56,12 @@ export function drawReinforcementHelmet(
 
   // Dome
   const helmGrad = ctx.createRadialGradient(
-    x - size * 0.05, hY - size * 0.04, 0,
-    x, hY, size * 0.2,
+    x - size * 0.05,
+    hY - size * 0.04,
+    0,
+    x,
+    hY,
+    size * 0.2
   );
   helmGrad.addColorStop(0, palette.armorLight);
   helmGrad.addColorStop(0.4, palette.armorMid);
@@ -60,10 +69,13 @@ export function drawReinforcementHelmet(
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.ellipse(
-    x, hY + breathe * 0.25,
+    x,
+    hY + breathe * 0.25,
     size * helmet.domeRadiusX,
     size * helmet.domeRadiusY,
-    0, 0, Math.PI * 2,
+    0,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -76,7 +88,7 @@ export function drawReinforcementHelmet(
       x + size * (helmet.domeRadiusX + helmet.rearSweep * 0.5),
       hY + size * 0.06 + bY,
       x + size * (helmet.domeRadiusX * 0.4 + helmet.rearSweep),
-      hY + size * 0.14 + bY,
+      hY + size * 0.14 + bY
     );
     ctx.lineTo(x + size * helmet.domeRadiusX * 0.3, hY + size * 0.12 + bY);
     ctx.closePath();
@@ -97,11 +109,7 @@ export function drawReinforcementHelmet(
   ctx.lineWidth = 1.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, hY - size * helmet.domeRadiusY * 0.92 + bY);
-  ctx.quadraticCurveTo(
-    x + size * 0.006,
-    hY + bY,
-    x, hY + size * 0.1 + bY,
-  );
+  ctx.quadraticCurveTo(x + size * 0.006, hY + bY, x, hY + size * 0.1 + bY);
   ctx.stroke();
 
   // Cheek plates
@@ -109,10 +117,22 @@ export function drawReinforcementHelmet(
     for (let side = -1; side <= 1; side += 2) {
       ctx.fillStyle = palette.armorMid;
       ctx.beginPath();
-      ctx.moveTo(x + side * size * helmet.domeRadiusX * 0.85, hY - size * 0.02 + bY);
-      ctx.lineTo(x + side * size * (helmet.domeRadiusX * 0.9), hY + size * 0.1 + bY);
-      ctx.lineTo(x + side * size * helmet.domeRadiusX * 0.5, hY + size * 0.14 + bY);
-      ctx.lineTo(x + side * size * helmet.domeRadiusX * 0.55, hY + size * 0.02 + bY);
+      ctx.moveTo(
+        x + side * size * helmet.domeRadiusX * 0.85,
+        hY - size * 0.02 + bY
+      );
+      ctx.lineTo(
+        x + side * size * (helmet.domeRadiusX * 0.9),
+        hY + size * 0.1 + bY
+      );
+      ctx.lineTo(
+        x + side * size * helmet.domeRadiusX * 0.5,
+        hY + size * 0.14 + bY
+      );
+      ctx.lineTo(
+        x + side * size * helmet.domeRadiusX * 0.55,
+        hY + size * 0.02 + bY
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = palette.armorDark;
@@ -141,14 +161,38 @@ export function drawReinforcementHelmet(
   ctx.shadowColor = palette.eyeShadow;
   ctx.shadowBlur = 8 * zoom;
   ctx.beginPath();
-  ctx.arc(x - size * 0.052, hY - size * 0.01 + breathe * 0.2, size * 0.018, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.052, hY - size * 0.01 + breathe * 0.2, size * 0.018, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.052,
+    hY - size * 0.01 + breathe * 0.2,
+    size * 0.018,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    x + size * 0.052,
+    hY - size * 0.01 + breathe * 0.2,
+    size * 0.018,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // Tier-based crest on top
   if (helmet.hasCrest && tier >= 1) {
-    drawHelmetCrest(ctx, x, hY, size, zoom, time, breathe, palette, helmet, tier, attackDrive);
+    drawHelmetCrest(
+      ctx,
+      x,
+      hY,
+      size,
+      zoom,
+      time,
+      breathe,
+      palette,
+      helmet,
+      tier,
+      attackDrive
+    );
   }
 }
 
@@ -160,13 +204,16 @@ function drawVisor(
   zoom: number,
   breathe: number,
   palette: ReinforcementPalette,
-  helmet: ReinforcementHelmetStyle,
+  helmet: ReinforcementHelmetStyle
 ) {
   const bY = breathe * 0.2;
 
   // Face plate background
   const fpGrad = ctx.createLinearGradient(
-    x - size * 0.16, hY, x + size * 0.16, hY,
+    x - size * 0.16,
+    hY,
+    x + size * 0.16,
+    hY
   );
   fpGrad.addColorStop(0, palette.armorDark);
   fpGrad.addColorStop(0.4, palette.armorMid);
@@ -187,7 +234,7 @@ function drawVisor(
   // Visor opening
   ctx.fillStyle = "#06060d";
   switch (helmet.visorType) {
-    case "slit":
+    case "slit": {
       ctx.beginPath();
       ctx.moveTo(x - size * 0.12, hY - size * 0.015 + bY);
       ctx.lineTo(x - size * 0.04, hY + size * 0.015 + bY);
@@ -200,7 +247,8 @@ function drawVisor(
       ctx.closePath();
       ctx.fill();
       break;
-    case "tshaped":
+    }
+    case "tshaped": {
       ctx.beginPath();
       ctx.moveTo(x - size * 0.09, hY - size * 0.025 + bY);
       ctx.lineTo(x - size * 0.09, hY + size * 0.01 + bY);
@@ -213,7 +261,8 @@ function drawVisor(
       ctx.closePath();
       ctx.fill();
       break;
-    case "pointed":
+    }
+    case "pointed": {
       ctx.beginPath();
       ctx.moveTo(x - size * 0.1, hY - size * 0.02 + bY);
       ctx.lineTo(x - size * 0.1, hY + size * 0.02 + bY);
@@ -225,11 +274,21 @@ function drawVisor(
       ctx.closePath();
       ctx.fill();
       break;
-    case "rounded":
+    }
+    case "rounded": {
       ctx.beginPath();
-      ctx.ellipse(x, hY + size * 0.01 + bY, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        x,
+        hY + size * 0.01 + bY,
+        size * 0.08,
+        size * 0.04,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       break;
+    }
   }
 
   // Breathing holes
@@ -241,7 +300,8 @@ function drawVisor(
         x + bSide * (size * 0.025 + i * size * 0.022),
         hY + size * 0.055 + i * size * 0.016 + bY,
         size * 0.007,
-        0, Math.PI * 2,
+        0,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -270,26 +330,41 @@ function drawHelmetCrest(
   palette: ReinforcementPalette,
   helmet: ReinforcementHelmetStyle,
   tier: number,
-  attackDrive: number,
+  attackDrive: number
 ) {
   const bY = breathe * 0.2;
   const crestBaseY = hY - size * helmet.domeRadiusY * 0.85 + bY;
-  const crestWind = Math.sin(time * 4.5) * 1.5 + attackDrive * 2.0;
+  const crestWind = Math.sin(time * 4.5) * 1.5 + attackDrive * 2;
 
   if (tier < 3) {
     // Short pointed fin crest
     const crestH = size * (helmet.crestHeight + tier * 0.015);
     const crestW = size * 0.03;
-    const crestGrad = ctx.createLinearGradient(x, crestBaseY, x, crestBaseY - crestH);
+    const crestGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x,
+      crestBaseY - crestH
+    );
     crestGrad.addColorStop(0, palette.armorMid);
     crestGrad.addColorStop(0.5, palette.trim);
     crestGrad.addColorStop(1, palette.armorLight);
     ctx.fillStyle = crestGrad;
     ctx.beginPath();
     ctx.moveTo(x, crestBaseY - crestH + crestWind * 0.2);
-    ctx.quadraticCurveTo(x - crestW * 1.1, crestBaseY - crestH * 0.4, x - crestW, crestBaseY);
+    ctx.quadraticCurveTo(
+      x - crestW * 1.1,
+      crestBaseY - crestH * 0.4,
+      x - crestW,
+      crestBaseY
+    );
     ctx.lineTo(x + crestW, crestBaseY);
-    ctx.quadraticCurveTo(x + crestW * 1.1, crestBaseY - crestH * 0.4, x, crestBaseY - crestH + crestWind * 0.2);
+    ctx.quadraticCurveTo(
+      x + crestW * 1.1,
+      crestBaseY - crestH * 0.4,
+      x,
+      crestBaseY - crestH + crestWind * 0.2
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = palette.trim;
@@ -309,19 +384,24 @@ function drawHelmetCrest(
       x - plumeWidth * 0.3 + crestWind * 0.2,
       crestBaseY - plumePeakH * 0.88,
       x + crestWind * 0.35,
-      crestBaseY - plumePeakH,
+      crestBaseY - plumePeakH
     );
     ctx.quadraticCurveTo(
       x + plumeWidth * 0.5 + crestWind * 0.6,
       crestBaseY - plumePeakH * 0.65,
-      x + plumeWidth * 1.0 + crestWind * 0.8,
-      crestBaseY,
+      x + plumeWidth * 1 + crestWind * 0.8,
+      crestBaseY
     );
     ctx.closePath();
     ctx.fill();
 
     // Base layer
-    const plumeBaseGrad = ctx.createLinearGradient(x, crestBaseY, x, crestBaseY - plumePeakH);
+    const plumeBaseGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x,
+      crestBaseY - plumePeakH
+    );
     plumeBaseGrad.addColorStop(0, palette.armorDark);
     plumeBaseGrad.addColorStop(0.3, palette.armorMid);
     plumeBaseGrad.addColorStop(0.6, palette.armorLight);
@@ -333,19 +413,24 @@ function drawHelmetCrest(
       x - plumeWidth * 0.3 + crestWind * 0.22,
       crestBaseY - plumePeakH * 0.92,
       x + crestWind * 0.38 + crestWhip * 0.2,
-      crestBaseY - plumePeakH,
+      crestBaseY - plumePeakH
     );
     ctx.quadraticCurveTo(
       x + plumeWidth * 0.45 + crestWind * 0.62,
       crestBaseY - plumePeakH * 0.68,
       x + plumeWidth * 0.95 + crestWind * 0.8,
-      crestBaseY,
+      crestBaseY
     );
     ctx.closePath();
     ctx.fill();
 
     // Main body with trim color
-    const plumeMainGrad = ctx.createLinearGradient(x, crestBaseY, x + crestWind * 0.2, crestBaseY - plumePeakH);
+    const plumeMainGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x + crestWind * 0.2,
+      crestBaseY - plumePeakH
+    );
     plumeMainGrad.addColorStop(0, palette.armorMid);
     plumeMainGrad.addColorStop(0.2, palette.armorLight);
     plumeMainGrad.addColorStop(0.45, palette.trim);
@@ -358,19 +443,24 @@ function drawHelmetCrest(
       x - plumeWidth * 0.2 + crestWind * 0.26,
       crestBaseY - plumePeakH * 0.94,
       x + crestWind * 0.42 + crestWhip * 0.15,
-      crestBaseY - plumePeakH * 0.97,
+      crestBaseY - plumePeakH * 0.97
     );
     ctx.quadraticCurveTo(
       x + plumeWidth * 0.35 + crestWind * 0.58,
       crestBaseY - plumePeakH * 0.64,
       x + plumeWidth * 0.8 + crestWind * 0.74,
-      crestBaseY,
+      crestBaseY
     );
     ctx.closePath();
     ctx.fill();
 
     // Inner highlight shimmer
-    const plumeHiGrad = ctx.createLinearGradient(x, crestBaseY - plumePeakH * 0.2, x, crestBaseY - plumePeakH * 0.9);
+    const plumeHiGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY - plumePeakH * 0.2,
+      x,
+      crestBaseY - plumePeakH * 0.9
+    );
     plumeHiGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
     plumeHiGrad.addColorStop(0.35, "rgba(255, 250, 220, 0.3)");
     plumeHiGrad.addColorStop(0.65, "rgba(255, 250, 220, 0.25)");
@@ -382,13 +472,13 @@ function drawHelmetCrest(
       x - plumeWidth * 0.1 + crestWind * 0.3,
       crestBaseY - plumePeakH * 0.9,
       x + crestWind * 0.4 + crestWhip * 0.1,
-      crestBaseY - plumePeakH * 0.86,
+      crestBaseY - plumePeakH * 0.86
     );
     ctx.quadraticCurveTo(
       x + plumeWidth * 0.2 + crestWind * 0.45,
       crestBaseY - plumePeakH * 0.55,
       x + plumeWidth * 0.4 + crestWind * 0.5,
-      crestBaseY - plumePeakH * 0.06,
+      crestBaseY - plumePeakH * 0.06
     );
     ctx.closePath();
     ctx.fill();
@@ -398,7 +488,7 @@ function drawHelmetCrest(
     for (let strand = 0; strand < strandCount; strand++) {
       const strandT = strand / (strandCount - 1);
       const strandPhase = time * (3.8 + strand * 0.5) + strand * 1.1;
-      const strandBend = Math.sin(strandPhase) * (1.0 + strandT * 2.0);
+      const strandBend = Math.sin(strandPhase) * (1 + strandT * 2);
       const strandAlpha = 0.15 + Math.sin(time * 2.5 + strand * 0.8) * 0.08;
       const startX = x - plumeWidth * 0.6 + strandT * plumeWidth * 1.2;
       const peakScale = 0.6 + Math.sin(strandT * Math.PI) * 0.4;
@@ -410,14 +500,22 @@ function drawHelmetCrest(
       ctx.quadraticCurveTo(
         startX + crestWind * (0.2 + strandT * 0.5) + strandBend,
         crestBaseY - plumePeakH * peakScale,
-        startX + plumeWidth * (0.06 + strandT * 0.2) + crestWind * (0.5 + strandT * 0.4) + strandBend * 1.3,
-        crestBaseY - plumePeakH * peakScale * 0.15,
+        startX +
+          plumeWidth * (0.06 + strandT * 0.2) +
+          crestWind * (0.5 + strandT * 0.4) +
+          strandBend * 1.3,
+        crestBaseY - plumePeakH * peakScale * 0.15
       );
       ctx.stroke();
     }
 
     // Gold crest clamp
-    const clampGrad = ctx.createLinearGradient(x - plumeWidth * 0.7, crestBaseY, x + plumeWidth * 0.7, crestBaseY);
+    const clampGrad = ctx.createLinearGradient(
+      x - plumeWidth * 0.7,
+      crestBaseY,
+      x + plumeWidth * 0.7,
+      crestBaseY
+    );
     clampGrad.addColorStop(0, "#5a4518");
     clampGrad.addColorStop(0.3, "#a08028");
     clampGrad.addColorStop(0.5, "#c4a440");
@@ -425,7 +523,13 @@ function drawHelmetCrest(
     clampGrad.addColorStop(1, "#5a4518");
     ctx.fillStyle = clampGrad;
     ctx.beginPath();
-    ctx.roundRect(x - plumeWidth * 0.7, crestBaseY - size * 0.006, plumeWidth * 1.4, size * 0.022, size * 0.005);
+    ctx.roundRect(
+      x - plumeWidth * 0.7,
+      crestBaseY - size * 0.006,
+      plumeWidth * 1.4,
+      size * 0.022,
+      size * 0.005
+    );
     ctx.fill();
   }
 }
@@ -445,7 +549,7 @@ export function drawChestMotif(
   palette: ReinforcementPalette,
   motif: ReinforcementArmorStyle["chestMotif"],
   tier: number,
-  attackDrive: number,
+  attackDrive: number
 ) {
   const bY = breathe;
 
@@ -494,7 +598,15 @@ export function drawChestMotif(
           const scaleX = x + col * size * 0.04 + (row % 2) * size * 0.02;
           const scaleY = y - size * 0.02 + row * size * 0.035 + bY;
           ctx.beginPath();
-          ctx.ellipse(scaleX, scaleY, size * 0.022, size * 0.018, 0, 0, Math.PI);
+          ctx.ellipse(
+            scaleX,
+            scaleY,
+            size * 0.022,
+            size * 0.018,
+            0,
+            0,
+            Math.PI
+          );
           ctx.fill();
         }
       }
@@ -512,7 +624,7 @@ export function drawChestMotif(
           flX + size * 0.005,
           y + size * 0.03 + bY,
           flX,
-          y + size * 0.14 + bY,
+          y + size * 0.14 + bY
         );
         ctx.stroke();
       }
@@ -569,9 +681,11 @@ export function drawPauldrons(
   breathe: number,
   palette: ReinforcementPalette,
   shape: ReinforcementArmorStyle["pauldronShape"],
-  tier: number,
+  tier: number
 ) {
-  if (tier < 2) return;
+  if (tier < 2) {
+    return;
+  }
 
   for (let side = -1; side <= 1; side += 2) {
     const pX = x + side * size * 0.27;
@@ -580,36 +694,73 @@ export function drawPauldrons(
     switch (shape) {
       case "round": {
         const pauldGrad = ctx.createRadialGradient(
-          pX - side * size * 0.02, pY - size * 0.02, size * 0.01,
-          pX, pY, size * 0.12,
+          pX - side * size * 0.02,
+          pY - size * 0.02,
+          size * 0.01,
+          pX,
+          pY,
+          size * 0.12
         );
         pauldGrad.addColorStop(0, palette.armorLight);
         pauldGrad.addColorStop(0.5, palette.armorMid);
         pauldGrad.addColorStop(1, palette.armorDark);
         ctx.fillStyle = pauldGrad;
         ctx.beginPath();
-        ctx.ellipse(pX, pY, size * 0.12, size * 0.09, side * 0.25, 0, Math.PI * 2);
+        ctx.ellipse(
+          pX,
+          pY,
+          size * 0.12,
+          size * 0.09,
+          side * 0.25,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         // Trim ring
         ctx.strokeStyle = palette.trim;
         ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
-        ctx.ellipse(pX, pY + size * 0.025, size * 0.1, size * 0.035, side * 0.25, 0, Math.PI);
+        ctx.ellipse(
+          pX,
+          pY + size * 0.025,
+          size * 0.1,
+          size * 0.035,
+          side * 0.25,
+          0,
+          Math.PI
+        );
         ctx.stroke();
         break;
       }
       case "ridged": {
         ctx.fillStyle = palette.armorMid;
         ctx.beginPath();
-        ctx.ellipse(pX, pY, size * 0.12, size * 0.09, side * 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          pX,
+          pY,
+          size * 0.12,
+          size * 0.09,
+          side * 0.3,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         // Horizontal ridges
         for (let r = 0; r < 3; r++) {
           const rY = pY - size * 0.03 + r * size * 0.025;
-          ctx.strokeStyle = r % 2 === 0 ? palette.armorLight : palette.armorDark;
+          ctx.strokeStyle =
+            r % 2 === 0 ? palette.armorLight : palette.armorDark;
           ctx.lineWidth = 1.2 * zoom;
           ctx.beginPath();
-          ctx.ellipse(pX, rY, size * (0.1 - r * 0.01), size * 0.015, side * 0.3, 0, Math.PI);
+          ctx.ellipse(
+            pX,
+            rY,
+            size * (0.1 - r * 0.01),
+            size * 0.015,
+            side * 0.3,
+            0,
+            Math.PI
+          );
           ctx.stroke();
         }
         break;
@@ -617,7 +768,15 @@ export function drawPauldrons(
       case "spiked": {
         ctx.fillStyle = palette.armorMid;
         ctx.beginPath();
-        ctx.ellipse(pX, pY, size * 0.11, size * 0.085, side * 0.25, 0, Math.PI * 2);
+        ctx.ellipse(
+          pX,
+          pY,
+          size * 0.11,
+          size * 0.085,
+          side * 0.25,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         // Spike
         ctx.fillStyle = palette.armorLight;
@@ -639,10 +798,22 @@ export function drawPauldrons(
         for (let layer = 2; layer >= 0; layer--) {
           const lScale = 1 - layer * 0.15;
           const lY = pY + layer * size * 0.018;
-          const colors = [palette.armorDark, palette.armorMid, palette.armorLight];
+          const colors = [
+            palette.armorDark,
+            palette.armorMid,
+            palette.armorLight,
+          ];
           ctx.fillStyle = colors[layer];
           ctx.beginPath();
-          ctx.ellipse(pX, lY, size * 0.11 * lScale, size * 0.07 * lScale, side * 0.25, 0, Math.PI * 2);
+          ctx.ellipse(
+            pX,
+            lY,
+            size * 0.11 * lScale,
+            size * 0.07 * lScale,
+            side * 0.25,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
         break;
@@ -650,7 +821,15 @@ export function drawPauldrons(
       case "winged": {
         ctx.fillStyle = palette.armorMid;
         ctx.beginPath();
-        ctx.ellipse(pX, pY, size * 0.1, size * 0.08, side * 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          pX,
+          pY,
+          size * 0.1,
+          size * 0.08,
+          side * 0.2,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         // Wing extension
         ctx.fillStyle = palette.trim;
@@ -661,13 +840,13 @@ export function drawPauldrons(
           pX + side * size * 0.2,
           pY - size * 0.12,
           pX + side * size * 0.22,
-          pY - size * 0.04,
+          pY - size * 0.04
         );
         ctx.quadraticCurveTo(
           pX + side * size * 0.15,
           pY - size * 0.02,
           pX + side * size * 0.08,
-          pY + size * 0.01,
+          pY + size * 0.01
         );
         ctx.closePath();
         ctx.fill();
@@ -701,7 +880,7 @@ export function drawBelt(
   zoom: number,
   breathe: number,
   palette: ReinforcementPalette,
-  beltDetail: ReinforcementArmorStyle["beltDetail"],
+  beltDetail: ReinforcementArmorStyle["beltDetail"]
 ) {
   const beltY = y + size * 0.28 + breathe;
 
@@ -712,11 +891,23 @@ export function drawBelt(
     case "buckle": {
       ctx.fillStyle = palette.trim;
       ctx.beginPath();
-      ctx.roundRect(x - size * 0.03, beltY + size * 0.01, size * 0.06, size * 0.045, size * 0.008);
+      ctx.roundRect(
+        x - size * 0.03,
+        beltY + size * 0.01,
+        size * 0.06,
+        size * 0.045,
+        size * 0.008
+      );
       ctx.fill();
       ctx.fillStyle = palette.armorDark;
       ctx.beginPath();
-      ctx.roundRect(x - size * 0.015, beltY + size * 0.02, size * 0.03, size * 0.025, size * 0.004);
+      ctx.roundRect(
+        x - size * 0.015,
+        beltY + size * 0.02,
+        size * 0.03,
+        size * 0.025,
+        size * 0.004
+      );
       ctx.fill();
       break;
     }
@@ -724,7 +915,12 @@ export function drawBelt(
       ctx.fillStyle = palette.cape;
       ctx.beginPath();
       ctx.moveTo(x - size * 0.04, beltY);
-      ctx.quadraticCurveTo(x - size * 0.08, beltY + size * 0.12, x - size * 0.06, beltY + size * 0.18);
+      ctx.quadraticCurveTo(
+        x - size * 0.08,
+        beltY + size * 0.12,
+        x - size * 0.06,
+        beltY + size * 0.18
+      );
       ctx.lineTo(x + size * 0.02, beltY + size * 0.16);
       ctx.quadraticCurveTo(x, beltY + size * 0.08, x + size * 0.04, beltY);
       ctx.closePath();
@@ -737,7 +933,15 @@ export function drawBelt(
       for (let i = 0; i < 6; i++) {
         const cX = x - size * 0.15 + i * size * 0.06;
         ctx.beginPath();
-        ctx.ellipse(cX, beltY + size * 0.032, size * 0.018, size * 0.012, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          cX,
+          beltY + size * 0.032,
+          size * 0.018,
+          size * 0.012,
+          0,
+          0,
+          Math.PI * 2
+        );
         ctx.stroke();
       }
       break;
@@ -767,14 +971,19 @@ export function drawGreaves(
   size: number,
   zoom: number,
   palette: ReinforcementPalette,
-  greaveStyle: ReinforcementArmorStyle["greaveStyle"],
+  greaveStyle: ReinforcementArmorStyle["greaveStyle"]
 ) {
   const lw = size * 0.14;
   const hlw = lw * 0.5;
 
   // --- Thigh plate (cuisse) ---
-  const thighH = size * 0.10;
-  const thighGrad = ctx.createLinearGradient(legX - hlw, legY, legX + hlw, legY);
+  const thighH = size * 0.1;
+  const thighGrad = ctx.createLinearGradient(
+    legX - hlw,
+    legY,
+    legX + hlw,
+    legY
+  );
   thighGrad.addColorStop(0, palette.armorDark);
   thighGrad.addColorStop(0.2, palette.armorMid);
   thighGrad.addColorStop(0.5, palette.armorLight);
@@ -804,7 +1013,12 @@ export function drawGreaves(
   // --- Knee cop (poleyn) ---
   const kneeY = legY + thighH + size * 0.005;
   const kneeCopGrad = ctx.createRadialGradient(
-    legX, kneeY, 0, legX, kneeY, size * 0.055,
+    legX,
+    kneeY,
+    0,
+    legX,
+    kneeY,
+    size * 0.055
   );
   kneeCopGrad.addColorStop(0, palette.armorLight);
   kneeCopGrad.addColorStop(0.5, palette.armorMid);
@@ -830,7 +1044,12 @@ export function drawGreaves(
   const greaveTop = kneeY + size * 0.035;
   const greaveH = size * 0.12;
 
-  const greaveGrad = ctx.createLinearGradient(legX - hlw, greaveTop, legX + hlw, greaveTop);
+  const greaveGrad = ctx.createLinearGradient(
+    legX - hlw,
+    greaveTop,
+    legX + hlw,
+    greaveTop
+  );
   greaveGrad.addColorStop(0, palette.armorDark);
   greaveGrad.addColorStop(0.15, palette.armorMid);
   greaveGrad.addColorStop(0.5, palette.armorLight);
@@ -838,7 +1057,12 @@ export function drawGreaves(
   greaveGrad.addColorStop(1, palette.armorDark);
   ctx.fillStyle = greaveGrad;
   ctx.beginPath();
-  ctx.roundRect(legX - hlw, greaveTop, lw, greaveH, [0, 0, size * 0.015, size * 0.015]);
+  ctx.roundRect(legX - hlw, greaveTop, lw, greaveH, [
+    0,
+    0,
+    size * 0.015,
+    size * 0.015,
+  ]);
   ctx.fill();
 
   // Greave center ridge
@@ -912,29 +1136,50 @@ export function drawGreaves(
   const bootTop = greaveTop + greaveH;
   const bootH = size * 0.07;
 
-  const bootGrad = ctx.createLinearGradient(legX - hlw, bootTop, legX + hlw, bootTop);
+  const bootGrad = ctx.createLinearGradient(
+    legX - hlw,
+    bootTop,
+    legX + hlw,
+    bootTop
+  );
   bootGrad.addColorStop(0, "#1e1828");
   bootGrad.addColorStop(0.4, "#2a2335");
   bootGrad.addColorStop(0.6, "#2a2335");
   bootGrad.addColorStop(1, "#1e1828");
   ctx.fillStyle = bootGrad;
   ctx.beginPath();
-  ctx.roundRect(
-    legX - hlw - size * 0.005, bootTop,
-    lw + size * 0.01, bootH,
-    [0, 0, size * 0.02, size * 0.02],
-  );
+  ctx.roundRect(legX - hlw - size * 0.005, bootTop, lw + size * 0.01, bootH, [
+    0,
+    0,
+    size * 0.02,
+    size * 0.02,
+  ]);
   ctx.fill();
 
   // Boot cuff
   ctx.fillStyle = palette.armorMid;
-  ctx.fillRect(legX - hlw - size * 0.005, bootTop, lw + size * 0.01, size * 0.016);
+  ctx.fillRect(
+    legX - hlw - size * 0.005,
+    bootTop,
+    lw + size * 0.01,
+    size * 0.016
+  );
 
   // Boot strap
   ctx.fillStyle = palette.trim;
-  ctx.fillRect(legX - size * 0.025, bootTop + bootH * 0.45, size * 0.05, size * 0.014);
+  ctx.fillRect(
+    legX - size * 0.025,
+    bootTop + bootH * 0.45,
+    size * 0.05,
+    size * 0.014
+  );
 
   // Sole
   ctx.fillStyle = "#141018";
-  ctx.fillRect(legX - hlw - size * 0.005, bootTop + bootH - size * 0.01, lw + size * 0.01, size * 0.01);
+  ctx.fillRect(
+    legX - hlw - size * 0.005,
+    bootTop + bootH - size * 0.01,
+    lw + size * 0.01,
+    size * 0.01
+  );
 }

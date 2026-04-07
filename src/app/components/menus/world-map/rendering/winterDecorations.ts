@@ -6,7 +6,7 @@ export function drawSnowMountain(
   mx: number,
   myPct: number,
   width: number,
-  heightPx: number,
+  heightPx: number
 ) {
   const { ctx, time } = dc;
   const my = dc.getY(myPct);
@@ -23,7 +23,7 @@ export function drawSnowMountain(
     isoDepth * 0.45,
     mtSeed + 99,
     0.15,
-    14,
+    14
   );
   ctx.fill();
 
@@ -32,7 +32,7 @@ export function drawSnowMountain(
     mx,
     my - heightPx,
     mx + width * 0.5,
-    my,
+    my
   );
   backGrad.addColorStop(0, "#7a8a9a");
   backGrad.addColorStop(0.3, "#6a7a8a");
@@ -56,7 +56,7 @@ export function drawSnowMountain(
     mx + width * 0.15,
     my - heightPx * 0.6,
     mx + width * 0.55,
-    my,
+    my
   );
   spurGrad.addColorStop(0, "#6a7a8a");
   spurGrad.addColorStop(0.5, "#556878");
@@ -70,7 +70,7 @@ export function drawSnowMountain(
     mx + width * 0.38,
     my - heightPx * 0.35,
     mx + width * 0.52,
-    my + isoDepth * 0.2,
+    my + isoDepth * 0.2
   );
   ctx.lineTo(mx + width * 0.45, my + isoDepth * 0.4);
   ctx.lineTo(mx + width * 0.18, my - heightPx * 0.35);
@@ -84,14 +84,14 @@ export function drawSnowMountain(
     mx + width * 0.25,
     my - heightPx * 0.58,
     mx + width * 0.32,
-    my - heightPx * 0.48,
+    my - heightPx * 0.48
   );
   ctx.lineTo(mx + width * 0.28, my - heightPx * 0.46);
   ctx.quadraticCurveTo(
     mx + width * 0.22,
     my - heightPx * 0.56,
     mx + width * 0.17,
-    my - heightPx * 0.62,
+    my - heightPx * 0.62
   );
   ctx.closePath();
   ctx.fill();
@@ -101,7 +101,7 @@ export function drawSnowMountain(
     mx - width * 0.4,
     my - heightPx,
     mx + width * 0.1,
-    my + isoDepth,
+    my + isoDepth
   );
   mtGrad.addColorStop(0, "#f0f8ff");
   mtGrad.addColorStop(0.15, "#e8f2fc");
@@ -118,7 +118,7 @@ export function drawSnowMountain(
     mx - width * 0.06,
     my - heightPx * 0.96,
     mx - width * 0.1,
-    my - heightPx * 0.82,
+    my - heightPx * 0.82
   );
   ctx.bezierCurveTo(
     mx - width * 0.16,
@@ -126,7 +126,7 @@ export function drawSnowMountain(
     mx - width * 0.28,
     my - heightPx * 0.38,
     mx - width * 0.4,
-    my,
+    my
   );
   ctx.lineTo(mx - width * 0.4, my + isoDepth * 0.4);
   ctx.lineTo(mx + width * 0.05, my + isoDepth * 0.25);
@@ -149,14 +149,14 @@ export function drawSnowMountain(
       leftX + (rightX - leftX) * 0.3,
       strataY - heightPx * 0.02 + dc.seededRandom(mtSeed + s) * 3,
       rightX,
-      strataY - heightPx * 0.03,
+      strataY - heightPx * 0.03
     );
     ctx.lineTo(rightX, strataY + heightPx * 0.04);
     ctx.quadraticCurveTo(
       leftX + (rightX - leftX) * 0.6,
       strataY + heightPx * 0.06 - dc.seededRandom(mtSeed + s + 10) * 2,
       leftX,
-      strataY + heightPx * 0.05,
+      strataY + heightPx * 0.05
     );
     ctx.closePath();
     ctx.fill();
@@ -179,7 +179,7 @@ export function drawSnowMountain(
       cvStartX + cvLen * 0.7,
       cvStartY + heightPx * 0.02 - dc.seededRandom(mtSeed + cv * 5) * 3,
       cvStartX + cvLen,
-      cvStartY + heightPx * 0.08,
+      cvStartY + heightPx * 0.08
     );
     ctx.stroke();
     ctx.strokeStyle = "rgba(40, 55, 70, 0.2)";
@@ -195,7 +195,8 @@ export function drawSnowMountain(
   ctx.globalAlpha = 0.2;
   for (let ep = 0; ep < 5; ep++) {
     const epX = mx - width * (0.08 + dc.seededRandom(mtSeed + ep * 11) * 0.25);
-    const epY = my - heightPx * (0.15 + dc.seededRandom(mtSeed + ep * 13) * 0.6);
+    const epY =
+      my - heightPx * (0.15 + dc.seededRandom(mtSeed + ep * 13) * 0.6);
     const epW = 4 + dc.seededRandom(mtSeed + ep * 17) * 6;
     const epH = 2 + dc.seededRandom(mtSeed + ep * 19) * 3;
     ctx.fillStyle = dc.seededRandom(mtSeed + ep) > 0.5 ? "#4a5868" : "#3a4858";
@@ -220,7 +221,7 @@ export function drawSnowMountain(
       2.5,
       mtSeed + sl * 5.1,
       0.2,
-      8,
+      8
     );
     ctx.fill();
   }
@@ -236,7 +237,7 @@ export function drawSnowMountain(
     mx + width * 0.1,
     my + isoDepth * 0.55,
     mx - width * 0.4,
-    my + isoDepth * 0.4,
+    my + isoDepth * 0.4
   );
   ctx.fill();
 
@@ -258,7 +259,7 @@ export function drawSnowMountain(
       tbSize * 0.6,
       mtSeed + tb * 2.7,
       0.25,
-      7,
+      7
     );
     ctx.fill();
   }
@@ -274,14 +275,14 @@ export function drawSnowMountain(
     mx + width * 0.15,
     my - heightPx * 0.72,
     mx + width * 0.1,
-    my - heightPx * 0.68,
+    my - heightPx * 0.68
   );
   ctx.lineTo(mx + width * 0.05, my - heightPx * 0.65);
   ctx.quadraticCurveTo(
     mx - width * 0.02,
     my - heightPx * 0.75,
     mx - width * 0.08,
-    my - heightPx * 0.72,
+    my - heightPx * 0.72
   );
   ctx.lineTo(mx - width * 0.12, my - heightPx * 0.68);
   ctx.closePath();
@@ -296,14 +297,14 @@ export function drawSnowMountain(
     mx - width * 0.12,
     my - heightPx * 0.6,
     mx - width * 0.08,
-    my - heightPx * 0.58,
+    my - heightPx * 0.58
   );
   ctx.lineTo(mx - width * 0.2, my - heightPx * 0.48);
   ctx.quadraticCurveTo(
     mx - width * 0.18,
     my - heightPx * 0.45,
     mx - width * 0.14,
-    my - heightPx * 0.42,
+    my - heightPx * 0.42
   );
   ctx.lineTo(mx + width * 0.02, my - heightPx * 0.6);
   ctx.closePath();
@@ -329,7 +330,7 @@ export function drawSnowMountain(
     fwX + 4,
     fwStartY + (fwEndY - fwStartY) * 0.6,
     fwX - 1,
-    fwEndY,
+    fwEndY
   );
   ctx.stroke();
   ctx.strokeStyle = "rgba(210, 235, 255, 0.35)";
@@ -371,19 +372,19 @@ export function drawSnowMountain(
     mx + width * 0.16,
     my - heightPx * 0.86,
     mx + width * 0.2,
-    my - heightPx * 0.82,
+    my - heightPx * 0.82
   );
   ctx.quadraticCurveTo(
     mx + width * 0.18,
     my - heightPx * 0.8,
     mx + width * 0.14,
-    my - heightPx * 0.82,
+    my - heightPx * 0.82
   );
   ctx.quadraticCurveTo(
     mx + width * 0.11,
     my - heightPx * 0.85,
     mx + width * 0.12,
-    my - heightPx * 0.88,
+    my - heightPx * 0.88
   );
   ctx.fill();
 
@@ -403,7 +404,7 @@ export function drawSnowMountain(
       windX + windLen * 0.5,
       windY - 3 + Math.sin(windPhase + w * 0.5) * 2,
       windX + windLen,
-      windY - 1 + Math.sin(windPhase * 1.3 + w) * 3,
+      windY - 1 + Math.sin(windPhase * 1.3 + w) * 3
     );
     ctx.stroke();
   }
@@ -416,7 +417,8 @@ export function drawSnowMountain(
       width * 0.32 +
       ic * width * 0.08 +
       dc.seededRandom(mtSeed + ic * 31) * 3;
-    const icY = my - heightPx * (0.4 + dc.seededRandom(mtSeed + ic * 33) * 0.35);
+    const icY =
+      my - heightPx * (0.4 + dc.seededRandom(mtSeed + ic * 33) * 0.35);
     const icLen = 3 + dc.seededRandom(mtSeed + ic * 7) * 8;
     const icW = 1 + dc.seededRandom(mtSeed + ic * 9) * 1.5;
     const icGrad = ctx.createLinearGradient(icX, icY, icX, icY + icLen);
@@ -426,12 +428,7 @@ export function drawSnowMountain(
     ctx.fillStyle = icGrad;
     ctx.beginPath();
     ctx.moveTo(icX - icW, icY);
-    ctx.quadraticCurveTo(
-      icX - icW * 0.6,
-      icY + icLen * 0.7,
-      icX,
-      icY + icLen,
-    );
+    ctx.quadraticCurveTo(icX - icW * 0.6, icY + icLen * 0.7, icX, icY + icLen);
     ctx.quadraticCurveTo(icX + icW * 0.6, icY + icLen * 0.7, icX + icW, icY);
     ctx.closePath();
     ctx.fill();
@@ -468,7 +465,7 @@ export function drawFrostedPine(
   dc: WorldMapDrawContext,
   x: number,
   yPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx } = dc;
   const y = dc.getY(yPct);
@@ -482,7 +479,7 @@ export function drawFrostedPine(
     5 * scale,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -493,7 +490,7 @@ export function drawFrostedPine(
     0,
     x,
     y + 2 * scale,
-    12 * scale,
+    12 * scale
   );
   snowGrad.addColorStop(0, "#f4f8ff");
   snowGrad.addColorStop(0.7, "#e0ecf8");
@@ -507,7 +504,7 @@ export function drawFrostedPine(
     5 * scale,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -516,7 +513,7 @@ export function drawFrostedPine(
     x - 3 * scale,
     y,
     x + 3 * scale,
-    y,
+    y
   );
   trunkGrad.addColorStop(0, "#2a1a12");
   trunkGrad.addColorStop(0.3, "#4a3828");
@@ -538,12 +535,12 @@ export function drawFrostedPine(
 
   // Branch layers (6 tiers of individual branches instead of triangles)
   const branchTiers = [
-    { y: -4, spread: 16, droop: 3 },
-    { y: -10, spread: 14, droop: 2.5 },
-    { y: -16, spread: 12, droop: 2 },
-    { y: -22, spread: 10, droop: 1.5 },
-    { y: -27, spread: 7, droop: 1 },
-    { y: -31, spread: 4, droop: 0.5 },
+    { droop: 3, spread: 16, y: -4 },
+    { droop: 2.5, spread: 14, y: -10 },
+    { droop: 2, spread: 12, y: -16 },
+    { droop: 1.5, spread: 10, y: -22 },
+    { droop: 1, spread: 7, y: -27 },
+    { droop: 0.5, spread: 4, y: -31 },
   ];
   branchTiers.forEach((tier, ti) => {
     const baseY = y + tier.y * scale;
@@ -556,17 +553,17 @@ export function drawFrostedPine(
         x + side * tier.spread * 0.6 * scale,
         baseY - 1 * scale,
         x + side * tier.spread * scale,
-        baseY + tier.droop * scale,
+        baseY + tier.droop * scale
       );
       ctx.lineTo(
         x + side * tier.spread * scale,
-        baseY + tier.droop * scale + 2 * scale,
+        baseY + tier.droop * scale + 2 * scale
       );
       ctx.quadraticCurveTo(
         x + side * tier.spread * 0.5 * scale,
         baseY + 1.5 * scale,
         x,
-        baseY + 1 * scale,
+        baseY + 1 * scale
       );
       ctx.closePath();
       ctx.fill();
@@ -591,17 +588,17 @@ export function drawFrostedPine(
         x + side * tier.spread * 0.5 * scale,
         baseY - 2.5 * scale + Math.sin(ti * 0.5) * scale,
         x + side * tier.spread * 0.85 * scale,
-        baseY + tier.droop * 0.5 * scale,
+        baseY + tier.droop * 0.5 * scale
       );
       ctx.lineTo(
         x + side * tier.spread * 0.7 * scale,
-        baseY + tier.droop * 0.3 * scale,
+        baseY + tier.droop * 0.3 * scale
       );
       ctx.quadraticCurveTo(
         x + side * tier.spread * 0.4 * scale,
         baseY - 1 * scale,
         x + side * 2 * scale,
-        baseY - 0.5 * scale,
+        baseY - 0.5 * scale
       );
       ctx.closePath();
       ctx.fill();
@@ -635,7 +632,7 @@ export function drawFrostedPine(
       3 * scale,
       0.2 * (p === 0 ? 1 : -1),
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(40, 25, 10, 0.5)";
@@ -657,7 +654,7 @@ export function drawIceCrystal(
   dc: WorldMapDrawContext,
   cx: number,
   cyPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, time } = dc;
   const cy = dc.getY(cyPct);
@@ -685,7 +682,7 @@ export function drawIceCrystal(
     ctx.moveTo(midX, midY);
     ctx.lineTo(
       midX + Math.cos(angle + 0.5) * frostLen * 0.3 * scale,
-      midY + Math.sin(angle + 0.5) * frostLen * 0.3 * scale * 0.4,
+      midY + Math.sin(angle + 0.5) * frostLen * 0.3 * scale * 0.4
     );
     ctx.stroke();
   }
@@ -698,7 +695,7 @@ export function drawIceCrystal(
     0,
     cx,
     cy - 15 * scale,
-    30 * scale,
+    30 * scale
   );
   glowGrad.addColorStop(0, `rgba(150, 220, 255, ${0.25 + pulse})`);
   glowGrad.addColorStop(0.5, `rgba(120, 200, 255, ${0.1 + pulse * 0.5})`);
@@ -713,7 +710,7 @@ export function drawIceCrystal(
     cx - 8 * scale,
     cy,
     cx + 8 * scale,
-    cy - 38 * scale,
+    cy - 38 * scale
   );
   crystalGrad.addColorStop(0, "rgba(160, 210, 255, 0.85)");
   crystalGrad.addColorStop(0.3, "rgba(200, 230, 255, 0.9)");
@@ -773,7 +770,7 @@ export function drawIceCrystal(
       cy - 15 * scale + Math.sin(refractAngle) * refractDist * scale * 0.6,
       2.5 * scale,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   });
@@ -786,7 +783,7 @@ export function drawIceCrystal(
     0,
     cx,
     cy - 18 * scale,
-    12 * scale,
+    12 * scale
   );
   innerGlow.addColorStop(0, `rgba(200, 240, 255, ${0.3 + pulse})`);
   innerGlow.addColorStop(1, "rgba(200, 240, 255, 0)");
@@ -837,7 +834,7 @@ export function drawFrozenLake(
   lx: number,
   lyPct: number,
   width: number,
-  heightRatio: number,
+  heightRatio: number
 ) {
   const { ctx, time } = dc;
   const ly = dc.getY(lyPct);
@@ -865,7 +862,7 @@ export function drawFrozenLake(
     0,
     lx,
     ly,
-    width,
+    width
   );
   iceGrad.addColorStop(0, "rgba(210,235,255,0.6)");
   iceGrad.addColorStop(0.3, "rgba(185,215,245,0.65)");
@@ -895,7 +892,7 @@ export function drawFrozenLake(
       midX + (dc.seededRandom(lx + c + 20) - 0.5) * 5,
       midY + (dc.seededRandom(lx + c + 21) - 0.5) * 3,
       lx + Math.cos(startAngle) * crackLen,
-      ly + Math.sin(startAngle) * crackLen * heightRatio,
+      ly + Math.sin(startAngle) * crackLen * heightRatio
     );
     ctx.stroke();
     if (c < 4) {
@@ -905,7 +902,7 @@ export function drawFrozenLake(
         startAngle + (dc.seededRandom(lx + c + 30) > 0.5 ? 0.6 : -0.6);
       ctx.lineTo(
         midX + Math.cos(branchAngle) * crackLen * 0.4,
-        midY + Math.sin(branchAngle) * crackLen * heightRatio * 0.4,
+        midY + Math.sin(branchAngle) * crackLen * heightRatio * 0.4
       );
       ctx.stroke();
     }
@@ -925,13 +922,7 @@ export function drawFrozenLake(
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.5)";
       ctx.beginPath();
-      ctx.arc(
-        bx - bSize * 0.3,
-        by - bSize * 0.3,
-        bSize * 0.4,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(bx - bSize * 0.3, by - bSize * 0.3, bSize * 0.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "rgba(200,230,255,0.35)";
     }
@@ -949,14 +940,14 @@ export function drawFrozenLake(
     ctx.moveTo(scX, scY);
     ctx.lineTo(
       scX + Math.cos(scAngle) * scLen,
-      scY + Math.sin(scAngle) * scLen * heightRatio,
+      scY + Math.sin(scAngle) * scLen * heightRatio
     );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(scX + 2, scY + 1);
     ctx.lineTo(
       scX + Math.cos(scAngle) * scLen + 2,
-      scY + Math.sin(scAngle) * scLen * heightRatio + 1,
+      scY + Math.sin(scAngle) * scLen * heightRatio + 1
     );
     ctx.stroke();
   }
@@ -974,7 +965,7 @@ export function drawFrozenLake(
       2,
       dc.seededRandom(lx + s * 19) * 0.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -984,7 +975,7 @@ export function drawIgloo(
   dc: WorldMapDrawContext,
   ix: number,
   iyPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, time } = dc;
   const iy = dc.getY(iyPct);
@@ -999,7 +990,7 @@ export function drawIgloo(
     8 * scale,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1016,7 +1007,7 @@ export function drawIgloo(
     0,
     ix,
     iy,
-    22 * scale,
+    22 * scale
   );
   domeGrad.addColorStop(0, "#ffffff");
   domeGrad.addColorStop(0.3, "#f0f8ff");
@@ -1044,9 +1035,7 @@ export function drawIgloo(
       const blockAngle = Math.PI + ((b + 0.5) / blocksInRow) * Math.PI;
       const bx1 = ix + Math.cos(blockAngle) * (18 * scale - row * 2 * scale);
       const by1 =
-        iy -
-        2 * scale -
-        Math.sin(blockAngle) * (18 * scale - row * 2 * scale);
+        iy - 2 * scale - Math.sin(blockAngle) * (18 * scale - row * 2 * scale);
       const bx2 =
         ix + Math.cos(blockAngle) * (18 * scale - (row + 1) * 2 * scale);
       const by2 =
@@ -1070,7 +1059,7 @@ export function drawIgloo(
     9 * scale,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1081,15 +1070,15 @@ export function drawIgloo(
     0,
     ix + 18 * scale,
     iy - 1 * scale,
-    12 * scale,
+    12 * scale
   );
   warmGlow.addColorStop(
     0,
-    `rgba(255, 180, 80, ${0.4 + Math.sin(time * 2) * 0.1})`,
+    `rgba(255, 180, 80, ${0.4 + Math.sin(time * 2) * 0.1})`
   );
   warmGlow.addColorStop(
     0.4,
-    `rgba(255, 140, 50, ${0.2 + Math.sin(time * 1.5) * 0.05})`,
+    `rgba(255, 140, 50, ${0.2 + Math.sin(time * 1.5) * 0.05})`
   );
   warmGlow.addColorStop(1, "rgba(255, 100, 30, 0)");
   ctx.fillStyle = warmGlow;
@@ -1116,7 +1105,7 @@ export function drawIgloo(
     1.5 * scale,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1140,7 +1129,7 @@ export function drawMammoth(
   mx: number,
   myPct: number,
   scale: number,
-  facing: number,
+  facing: number
 ) {
   const { ctx } = dc;
   const my = dc.getY(myPct);
@@ -1178,7 +1167,7 @@ export function drawMammoth(
     0,
     0,
     0,
-    24 * scale,
+    24 * scale
   );
   furGrad.addColorStop(0, "#6a5040");
   furGrad.addColorStop(0.5, "#5a4030");
@@ -1200,7 +1189,7 @@ export function drawMammoth(
       fx + 1 * scale,
       4 * scale,
       fx - 1 * scale,
-      furLen * scale,
+      furLen * scale
     );
     ctx.stroke();
   }
@@ -1215,7 +1204,7 @@ export function drawMammoth(
       bfx + 0.5 * scale,
       16 * scale,
       bfx - 0.5 * scale,
-      20 * scale,
+      20 * scale
     );
     ctx.stroke();
   }
@@ -1244,7 +1233,7 @@ export function drawMammoth(
     0,
     18 * scale,
     -6 * scale,
-    14 * scale,
+    14 * scale
   );
   headGrad.addColorStop(0, "#6a5040");
   headGrad.addColorStop(1, "#4a3020");
@@ -1257,7 +1246,7 @@ export function drawMammoth(
     11 * scale,
     0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1294,7 +1283,7 @@ export function drawMammoth(
     22 * scale,
     4 * scale,
     42 * scale,
-    -2 * scale,
+    -2 * scale
   );
   tuskGrad.addColorStop(0, "#f8f0e0");
   tuskGrad.addColorStop(0.5, "#fff8f0");
@@ -1328,7 +1317,7 @@ export function drawMammoth(
     2.5 * scale,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#2a1a08";
@@ -1361,7 +1350,7 @@ export function drawMammoth(
     4 * scale,
     -0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Scattered snow clumps
@@ -1374,7 +1363,7 @@ export function drawMammoth(
       scy,
       (1.5 + dc.seededRandom(mx + sc * 13)) * scale,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1389,7 +1378,7 @@ export function drawMammoth(
     8 * scale,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#4a3020";
@@ -1401,7 +1390,7 @@ export function drawMammoth(
     6 * scale,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 

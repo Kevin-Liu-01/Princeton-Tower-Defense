@@ -1,7 +1,9 @@
 import type { MutableRefObject, Dispatch, SetStateAction } from "react";
+
+import { SPELL_DATA } from "../../constants";
 import type { Position, SpellType } from "../../types";
-import type { StaticMapLayerCache } from "./renderScene";
 import { captureCanvas } from "../../utils/screenshot";
+import type { StaticMapLayerCache } from "./renderScene";
 import {
   BG_OVERSCAN_X,
   BG_OVERSCAN_Y,
@@ -9,7 +11,6 @@ import {
   DEV_PERF_STORAGE_KEY,
   PHOTO_MODE_STORAGE_KEY,
 } from "./runtimeConfig";
-import { SPELL_DATA } from "../../constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,36 +75,43 @@ export function handleCameraKeyDown(
     | "addPawPoints"
     | "targetingSpellRef"
     | "placingTroopRef"
-  >,
+  >
 ): void {
   switch (e.key.toLowerCase()) {
     case "w":
-    case "arrowup":
+    case "arrowup": {
       params.setCameraOffset((prev) => ({ ...prev, y: prev.y + PAN_SPEED }));
       break;
+    }
     case "s":
-    case "arrowdown":
+    case "arrowdown": {
       params.setCameraOffset((prev) => ({ ...prev, y: prev.y - PAN_SPEED }));
       break;
+    }
     case "a":
-    case "arrowleft":
+    case "arrowleft": {
       params.setCameraOffset((prev) => ({ ...prev, x: prev.x + PAN_SPEED }));
       break;
+    }
     case "d":
-    case "arrowright":
+    case "arrowright": {
       params.setCameraOffset((prev) => ({ ...prev, x: prev.x - PAN_SPEED }));
       break;
+    }
     case "+":
-    case "=":
+    case "=": {
       params.setCameraZoom((prev) => Math.min(prev + 0.1, 2));
       break;
+    }
     case "-":
-    case "_":
+    case "_": {
       params.setCameraZoom((prev) => Math.max(prev - 0.1, 0.5));
       break;
-    case "escape":
+    }
+    case "escape": {
       handleEscapeKey(params);
       break;
+    }
   }
 }
 
@@ -123,21 +131,24 @@ function handleEscapeKey(
     | "addPawPoints"
     | "targetingSpellRef"
     | "placingTroopRef"
-  >,
+  >
 ): void {
   params.setBuildingTower(null);
   params.setDraggingTower(null);
   params.setIsBuildDragging(false);
 
   if (params.targetingSpellRef.current) {
-    const refundCost =
-      SPELL_DATA[params.targetingSpellRef.current]?.cost ?? 0;
-    if (refundCost > 0) params.addPawPoints(refundCost);
+    const refundCost = SPELL_DATA[params.targetingSpellRef.current]?.cost ?? 0;
+    if (refundCost > 0) {
+      params.addPawPoints(refundCost);
+    }
     params.setTargetingSpell(null);
   }
   if (params.placingTroopRef.current) {
     const refundCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
-    if (refundCost > 0) params.addPawPoints(refundCost);
+    if (refundCost > 0) {
+      params.addPawPoints(refundCost);
+    }
     params.setPlacingTroop(false);
   }
 
@@ -146,7 +157,7 @@ function handleEscapeKey(
   params.setMissileMortarTargetingId(null);
   params.setHero((prev: any) => (prev ? { ...prev, selected: false } : null));
   params.setTroops((prev: any[]) =>
-    prev.map((t) => ({ ...t, selected: false })),
+    prev.map((t) => ({ ...t, selected: false }))
   );
 }
 
@@ -159,9 +170,11 @@ export function enterCameraModeImpl(
   gameSpeed: number,
   preLockSpeedRef: MutableRefObject<number | null>,
   setGameSpeed: Dispatch<SetStateAction<number>>,
-  setCameraModeActive: Dispatch<SetStateAction<boolean>>,
+  setCameraModeActive: Dispatch<SetStateAction<boolean>>
 ): void {
-  if (cameraModeActive) return;
+  if (cameraModeActive) {
+    return;
+  }
   preLockSpeedRef.current = gameSpeed;
   setGameSpeed(0);
   setCameraModeActive(true);
@@ -171,9 +184,11 @@ export function exitCameraModeImpl(
   cameraModeActive: boolean,
   preLockSpeedRef: MutableRefObject<number | null>,
   setGameSpeed: Dispatch<SetStateAction<number>>,
-  setCameraModeActive: Dispatch<SetStateAction<boolean>>,
+  setCameraModeActive: Dispatch<SetStateAction<boolean>>
 ): void {
-  if (!cameraModeActive) return;
+  if (!cameraModeActive) {
+    return;
+  }
   setCameraModeActive(false);
   const restored = preLockSpeedRef.current;
   setGameSpeed(restored != null && restored > 0 ? restored : 1);
@@ -184,8 +199,13 @@ export function exitCameraModeImpl(
 // F2 key handler
 // ---------------------------------------------------------------------------
 
-export function handleF2Key(e: KeyboardEvent, toggleCameraMode: () => void): void {
-  if (e.key !== "F2") return;
+export function handleF2Key(
+  e: KeyboardEvent,
+  toggleCameraMode: () => void
+): void {
+  if (e.key !== "F2") {
+    return;
+  }
   e.preventDefault();
   toggleCameraMode();
 }
@@ -199,14 +219,22 @@ export function handleSpacePause(
   cameraModeActive: boolean,
   inspectorActive: boolean,
   battleOutcome: unknown,
-  setGameSpeed: Dispatch<SetStateAction<number>>,
+  setGameSpeed: Dispatch<SetStateAction<number>>
 ): void {
-  if (e.key !== " ") return;
+  if (e.key !== " ") {
+    return;
+  }
   const tag = (e.target as HTMLElement)?.tagName;
-  if (tag === "BUTTON" || tag === "INPUT") return;
+  if (tag === "BUTTON" || tag === "INPUT") {
+    return;
+  }
   e.preventDefault();
-  if (cameraModeActive || inspectorActive) return;
-  if (battleOutcome) return;
+  if (cameraModeActive || inspectorActive) {
+    return;
+  }
+  if (battleOutcome) {
+    return;
+  }
   setGameSpeed((prev) => (prev === 0 ? 1 : 0));
 }
 
@@ -214,7 +242,7 @@ export function handleSpacePause(
 // Screenshot capture
 // ---------------------------------------------------------------------------
 
-export async function captureScreenshotImpl(params: {
+export function captureScreenshotImpl(params: {
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
   bgCanvasRef: MutableRefObject<HTMLCanvasElement | null>;
   backdropCanvasRef: MutableRefObject<HTMLCanvasElement | null>;
@@ -224,7 +252,9 @@ export async function captureScreenshotImpl(params: {
   getRenderDpr: () => number;
 }): Promise<boolean> {
   const canvas = params.canvasRef.current;
-  if (!canvas) return false;
+  if (!canvas) {
+    return false;
+  }
 
   const bgCanvas = params.bgCanvasRef.current;
   if (bgCanvas) {
@@ -254,7 +284,7 @@ export async function captureScreenshotImpl(params: {
           0,
           0,
           canvas.width,
-          canvas.height,
+          canvas.height
         );
       }
       compositeCtx.drawImage(
@@ -266,7 +296,7 @@ export async function captureScreenshotImpl(params: {
         0,
         0,
         canvas.width,
-        canvas.height,
+        canvas.height
       );
       compositeCtx.drawImage(canvas, 0, 0);
       return captureCanvas(compositeCanvas);
@@ -281,7 +311,7 @@ export async function captureScreenshotImpl(params: {
 
 export function computePauseLocked(
   cameraModeActive: boolean,
-  inspectorActive: boolean,
+  inspectorActive: boolean
 ): boolean {
   return cameraModeActive || inspectorActive;
 }
@@ -291,9 +321,11 @@ export function computePauseLocked(
 // ---------------------------------------------------------------------------
 
 export function loadDevPerfSetting(
-  setDevPerfEnabled: Dispatch<SetStateAction<boolean>>,
+  setDevPerfEnabled: Dispatch<SetStateAction<boolean>>
 ): void {
-  if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
+  if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") {
+    return;
+  }
   try {
     const saved = window.localStorage.getItem(DEV_PERF_STORAGE_KEY);
     if (saved === "1" || saved === "0") {
@@ -305,11 +337,13 @@ export function loadDevPerfSetting(
 }
 
 export function saveDevPerfSetting(devPerfEnabled: boolean): void {
-  if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
+  if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") {
+    return;
+  }
   try {
     window.localStorage.setItem(
       DEV_PERF_STORAGE_KEY,
-      devPerfEnabled ? "1" : "0",
+      devPerfEnabled ? "1" : "0"
     );
   } catch {
     // Ignore localStorage access errors.
@@ -321,9 +355,11 @@ export function saveDevPerfSetting(devPerfEnabled: boolean): void {
 // ---------------------------------------------------------------------------
 
 export function loadPhotoModeSetting(
-  setPhotoModeEnabled: Dispatch<SetStateAction<boolean>>,
+  setPhotoModeEnabled: Dispatch<SetStateAction<boolean>>
 ): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   try {
     const saved = window.localStorage.getItem(PHOTO_MODE_STORAGE_KEY);
     if (saved === "1") {
@@ -335,11 +371,13 @@ export function loadPhotoModeSetting(
 }
 
 export function savePhotoModeSetting(photoModeEnabled: boolean): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   try {
     window.localStorage.setItem(
       PHOTO_MODE_STORAGE_KEY,
-      photoModeEnabled ? "1" : "0",
+      photoModeEnabled ? "1" : "0"
     );
   } catch {
     // Ignore localStorage access errors.
@@ -352,10 +390,14 @@ export function savePhotoModeSetting(photoModeEnabled: boolean): void {
 
 export function handleDevPerfHotkey(
   e: KeyboardEvent,
-  setDevPerfEnabled: Dispatch<SetStateAction<boolean>>,
+  setDevPerfEnabled: Dispatch<SetStateAction<boolean>>
 ): void {
-  if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
-  if (e.key.toLowerCase() !== "p") return;
+  if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) {
+    return;
+  }
+  if (e.key.toLowerCase() !== "p") {
+    return;
+  }
   e.preventDefault();
   setDevPerfEnabled((prev) => !prev);
 }
@@ -367,9 +409,13 @@ export function handleDevPerfHotkey(
 export function enforceBattleOutcomePause(
   battleOutcome: unknown,
   gameSpeed: number,
-  setGameSpeed: Dispatch<SetStateAction<number>>,
+  setGameSpeed: Dispatch<SetStateAction<number>>
 ): void {
-  if (!battleOutcome) return;
-  if (gameSpeed === 0) return;
+  if (!battleOutcome) {
+    return;
+  }
+  if (gameSpeed === 0) {
+    return;
+  }
   setGameSpeed(0);
 }

@@ -1,10 +1,8 @@
 import { ISO_COS, ISO_SIN } from "../../constants";
 import { drawIsometricPrism } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawDirectionalShadow } from "./shadowHelpers";
 import type { LandmarkParams } from "./landmarkBuildings";
 import {
-  type BuildingPalette,
   drawBuildingSection,
   drawGabledRoof,
   drawHipRoof,
@@ -36,11 +34,15 @@ import {
   drawPinnacle,
   drawChimney,
 } from "./princetonBuildingHelpers";
+import type { BuildingPalette } from "./princetonBuildingHelpers";
+import { drawDirectionalShadow } from "./shadowHelpers";
 
 // Helper: evenly space N front-facing angles on [marginπ, (1-margin)π]
 function frontAngles(n: number, margin: number = 0.15): number[] {
   const out: number[] = [];
-  if (n <= 1) return [Math.PI * 0.5];
+  if (n <= 1) {
+    return [Math.PI * 0.5];
+  }
   for (let i = 0; i < n; i++) {
     out.push(Math.PI * (margin + (i * (1 - 2 * margin)) / (n - 1)));
   }
@@ -52,22 +54,22 @@ function frontAngles(n: number, margin: number = 0.15): number[] {
 // =========================================================================
 
 const CHAPEL_PAL: BuildingPalette = {
-  wallTop: "#E8DCC8",
-  wallLeft: "#D4C8B0",
-  wallRight: "#B8A888",
+  accent: "#C49A3C",
+  cornice: "#F8F0E4",
+  door: "#3A2818",
+  foundLeft: "#908878",
+  foundRight: "#706858",
+  foundTop: "#A09888",
+  glass: "#1a1830",
+  roofDark: "#3A6A4A",
   roofFront: "#5A8A6A",
   roofSide: "#4A7A5A",
   roofTop: "#6A9A7A",
-  roofDark: "#3A6A4A",
   trim: "#8A7A60",
   trimLight: "#F0E8D8",
-  cornice: "#F8F0E4",
-  glass: "#1a1830",
-  foundTop: "#A09888",
-  foundLeft: "#908878",
-  foundRight: "#706858",
-  door: "#3A2818",
-  accent: "#C49A3C",
+  wallLeft: "#D4C8B0",
+  wallRight: "#B8A888",
+  wallTop: "#E8DCC8",
 };
 
 export function renderPrincetonChapel(p: LandmarkParams): void {
@@ -81,12 +83,12 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = CHAPEL_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -97,9 +99,12 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
       58 * s,
       0.28,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const bodyW = 16;
   const bodyD = 16;
@@ -117,7 +122,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Round bell tower — back-left, drawn BEFORE main body so it layers behind
@@ -130,7 +135,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     s,
     "#E8DCC8",
     "#D4C8B0",
-    "#A09080",
+    "#A09080"
   );
   drawCircularBattlements(ctx, tbx, tby - 40 * s, 5, s, pal.cornice, 10);
   drawDome(
@@ -142,7 +147,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     s,
     "#7DB88A",
     "#5A9A68",
-    "#3A7A48",
+    "#3A7A48"
   );
   const lanternY = tby - 40 * s - 10 * s;
   drawCylindricalTower(
@@ -154,7 +159,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     s,
     "#6A9A7A",
     "#5A8A6A",
-    "#4A7A5A",
+    "#4A7A5A"
   );
   ctx.fillStyle = pal.accent;
   ctx.beginPath();
@@ -177,7 +182,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
       1.5,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
 
@@ -188,12 +193,12 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
 
   // Main nave — drawn after back-left tower
   drawBuildingSection(ctx, bx, by, bodyW, bodyD, bodyH, s, pal, {
-    rows: 3,
+    arched: true,
     leftCols: 4,
     rightCols: 3,
+    rows: 3,
     wu: 0.14,
     wv: 0.18,
-    arched: true,
   });
   drawGabledRoof(ctx, bx, by, bodyW, bodyD, bodyH, 10, s, pal);
   drawRidgeCap(ctx, bx, by, bodyW, bodyD, bodyH, 10, s, pal.accent);
@@ -207,7 +212,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     10,
     s,
     "rgba(40,80,50,0.05)",
-    5,
+    5
   );
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "left", 0.12);
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.18);
@@ -225,7 +230,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     "left",
     11,
     3,
-    "rgba(80,70,50,0.04)",
+    "rgba(80,70,50,0.04)"
   );
 
   const iW = Ws * ISO_COS;
@@ -244,7 +249,7 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
     4,
     3,
     "rgba(255,200,120,0.08)",
-    time,
+    time
   );
 
   // Rose window on right face of nave — projected onto the face via canvas transform
@@ -307,22 +312,22 @@ export function renderPrincetonChapel(p: LandmarkParams): void {
 // =========================================================================
 
 const LIBRARY_PAL: BuildingPalette = {
-  wallTop: "#A85A48",
-  wallLeft: "#944A3A",
-  wallRight: "#7A3828",
+  accent: "#B8943C",
+  cornice: "#F0E8D4",
+  door: "#2A1810",
+  foundLeft: "#807060",
+  foundRight: "#605040",
+  foundTop: "#908070",
+  glass: "#181828",
+  roofDark: "#2A4828",
   roofFront: "#4A6848",
   roofSide: "#3A5838",
   roofTop: "#5A7858",
-  roofDark: "#2A4828",
   trim: "#C8B898",
   trimLight: "#E8DCC4",
-  cornice: "#F0E8D4",
-  glass: "#181828",
-  foundTop: "#908070",
-  foundLeft: "#807060",
-  foundRight: "#605040",
-  door: "#2A1810",
-  accent: "#B8943C",
+  wallLeft: "#944A3A",
+  wallRight: "#7A3828",
+  wallTop: "#A85A48",
 };
 
 export function renderFirestoneLibrary(p: LandmarkParams): void {
@@ -336,12 +341,12 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = LIBRARY_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -352,9 +357,12 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
       48 * s,
       0.26,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const bodyW = 24;
   const bodyD = 24;
@@ -384,7 +392,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
   drawTowerFoundation(
     ctx,
@@ -394,7 +402,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Back tower — drawn BEFORE main body so it layers behind
@@ -407,7 +415,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     "#A85A48",
     "#944A3A",
-    "#7A3828",
+    "#7A3828"
   );
   drawCircularBattlements(ctx, backTx, backTy - tH * s, tR, s, pal.cornice, 10);
   drawConicalRoof(
@@ -418,7 +426,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     11,
     s,
     "#4A6848",
-    "#2A4828",
+    "#2A4828"
   );
   const backWinAngles = frontAngles(3);
   for (let row = 0; row < 3; row++) {
@@ -433,19 +441,19 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
       1.5,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
 
   // Main body
   drawBaseAO(ctx, bx, by, Ws, Ws, 0.15);
   drawBuildingSection(ctx, bx, by, bodyW, bodyD, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 6,
     rightCols: 4,
+    rows: 2,
     wu: 0.1,
     wv: 0.26,
-    arched: true,
   });
   drawBrickTexture(
     ctx,
@@ -456,7 +464,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     "#C06848",
     "rgba(0,0,0,0.08)",
-    "left",
+    "left"
   );
   drawBrickTexture(
     ctx,
@@ -467,7 +475,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     "#C06848",
     "rgba(0,0,0,0.08)",
-    "right",
+    "right"
   );
   drawHipRoof(ctx, bx, by, bodyW, bodyD, bodyH, 7, s, pal);
   drawFaceShading(ctx, bx, by, Ws, Ds_fl, Hs, "left", 0.12);
@@ -484,7 +492,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     7,
     s,
     "rgba(30,60,30,0.04)",
-    4,
+    4
   );
   drawWindowGlows(
     ctx,
@@ -498,7 +506,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     6,
     2,
     "rgba(255,224,176,0.07)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -512,7 +520,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     4,
     2,
     "rgba(255,224,176,0.07)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -525,7 +533,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     "left",
     22,
     4,
-    "rgba(100,60,30,0.03)",
+    "rgba(100,60,30,0.03)"
   );
 
   // Octagonal cupola with green dome on roof
@@ -539,7 +547,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     pal.trimLight,
     "#D8CCA8",
-    pal.trim,
+    pal.trim
   );
   drawCircularBattlements(ctx, bx, cupBaseY, 4, s, pal.cornice, 8);
   const cupWinAngles = frontAngles(4);
@@ -555,7 +563,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
       1.2,
       s,
       pal.trim,
-      "#2838A0",
+      "#2838A0"
     );
   }
   drawDome(
@@ -567,7 +575,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     "#6A9A6A",
     "#4A7A4A",
-    "#2A5A2A",
+    "#2A5A2A"
   );
 
   // Entrance portico on right face — columns supporting an entablature
@@ -609,7 +617,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     pal.trimLight,
     pal.cornice,
-    "right",
+    "right"
   );
 
   // Entrance arch below entablature
@@ -626,7 +634,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     pal.trim,
     0.4,
     0.14,
-    0.32,
+    0.32
   );
 
   // Limestone inscription band on right face
@@ -650,7 +658,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     "#A85A48",
     "#944A3A",
-    "#7A3828",
+    "#7A3828"
   );
   drawCircularBattlements(
     ctx,
@@ -659,7 +667,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     tR,
     s,
     pal.cornice,
-    10,
+    10
   );
   drawConicalRoof(
     ctx,
@@ -669,7 +677,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     11,
     s,
     "#4A6848",
-    "#2A4828",
+    "#2A4828"
   );
   const frontWinAngles = frontAngles(3);
   for (let row = 0; row < 3; row++) {
@@ -684,7 +692,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
       1.5,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
   drawFlagPole(
@@ -695,7 +703,7 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
     s,
     pal.trim,
     "#B8943C",
-    time,
+    time
   );
 
   // Warm library glow
@@ -713,22 +721,22 @@ export function renderFirestoneLibrary(p: LandmarkParams): void {
 // =========================================================================
 
 const ARCH_PAL: BuildingPalette = {
-  wallTop: "#C8B090",
-  wallLeft: "#B09878",
-  wallRight: "#907858",
+  accent: "#D4A840",
+  cornice: "#EAE0CC",
+  door: "#1A1008",
+  foundLeft: "#888070",
+  foundRight: "#686058",
+  foundTop: "#989080",
+  glass: "#141828",
+  roofDark: "#303848",
   roofFront: "#505868",
   roofSide: "#404858",
   roofTop: "#606878",
-  roofDark: "#303848",
   trim: "#8A7858",
   trimLight: "#DCD0B8",
-  cornice: "#EAE0CC",
-  glass: "#141828",
-  foundTop: "#989080",
-  foundLeft: "#888070",
-  foundRight: "#686058",
-  door: "#1A1008",
-  accent: "#D4A840",
+  wallLeft: "#B09878",
+  wallRight: "#907858",
+  wallTop: "#C8B090",
 };
 
 export function renderBlairArch(p: LandmarkParams): void {
@@ -742,12 +750,12 @@ export function renderBlairArch(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = ARCH_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -758,9 +766,12 @@ export function renderBlairArch(p: LandmarkParams): void {
       50 * s,
       0.25,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Turret foundations — drawn first so they layer behind everything
   const tOff = 16;
@@ -776,7 +787,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
   drawTowerFoundation(
     ctx,
@@ -786,7 +797,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Back-left turret — drawn BEFORE main wall so it layers behind
@@ -799,7 +810,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     s,
     "#C8B090",
     "#B8A480",
-    "#907858",
+    "#907858"
   );
   drawCircularBattlements(ctx, ltx, lty - 32 * s, 6, s, pal.cornice, 10);
   drawConicalRoof(
@@ -810,7 +821,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     12,
     s,
     "#606878",
-    "#404050",
+    "#404050"
   );
   const turretWinAngles = frontAngles(3);
   for (let row = 0; row < 3; row++) {
@@ -825,7 +836,7 @@ export function renderBlairArch(p: LandmarkParams): void {
       1.6,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
 
@@ -844,7 +855,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     Hs,
     pal.wallTop,
     pal.wallLeft,
-    pal.wallRight,
+    pal.wallRight
   );
   drawStoneBlockTexture(ctx, bx, by, Ws, Hs, s, "left", 42);
   drawMortarLines(ctx, bx, by, Ws, Hs, 5, "rgba(0,0,0,0.04)", s);
@@ -865,7 +876,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     "left",
     33,
     3,
-    "rgba(60,50,30,0.04)",
+    "rgba(60,50,30,0.04)"
   );
   drawWeatherStains(
     ctx,
@@ -878,7 +889,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     "right",
     44,
     3,
-    "rgba(60,50,30,0.04)",
+    "rgba(60,50,30,0.04)"
   );
   // Gabled roof on connecting wall
   drawGabledRoof(ctx, bx, by, wallW, wallW, wallH, 6, s, pal);
@@ -892,7 +903,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     6,
     s,
     "rgba(40,50,60,0.04)",
-    4,
+    4
   );
   drawRidgeCap(ctx, bx, by, wallW, wallW, wallH, 6, s, pal.accent);
 
@@ -914,7 +925,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     s,
     "#C8B090",
     "#B8A480",
-    "#907858",
+    "#907858"
   );
   drawCircularBattlements(ctx, rtx, rty - 32 * s, 6, s, pal.cornice, 10);
   drawConicalRoof(
@@ -925,7 +936,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     12,
     s,
     "#606878",
-    "#404050",
+    "#404050"
   );
   for (let row = 0; row < 3; row++) {
     drawRoundWindowOnCylinder(
@@ -939,7 +950,7 @@ export function renderBlairArch(p: LandmarkParams): void {
       1.6,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
 
@@ -986,7 +997,7 @@ export function renderBlairArch(p: LandmarkParams): void {
   ctx.moveTo(clockCx, clockCyy);
   ctx.lineTo(
     clockCx + Math.cos(hA) * clockR * 0.5,
-    clockCyy + Math.sin(hA) * clockR * 0.25,
+    clockCyy + Math.sin(hA) * clockR * 0.25
   );
   ctx.stroke();
   ctx.lineWidth = 0.35 * s;
@@ -994,7 +1005,7 @@ export function renderBlairArch(p: LandmarkParams): void {
   ctx.moveTo(clockCx, clockCyy);
   ctx.lineTo(
     clockCx + Math.cos(mA) * clockR * 0.78,
-    clockCyy + Math.sin(mA) * clockR * 0.39,
+    clockCyy + Math.sin(mA) * clockR * 0.39
   );
   ctx.stroke();
 
@@ -1006,7 +1017,7 @@ export function renderBlairArch(p: LandmarkParams): void {
     0,
     archCx,
     archCy - aH * 0.4,
-    4 * s,
+    4 * s
   );
   lanGlow.addColorStop(0, `rgba(255,190,90,${lanA})`);
   lanGlow.addColorStop(1, "rgba(255,190,90,0)");
@@ -1021,22 +1032,22 @@ export function renderBlairArch(p: LandmarkParams): void {
 // =========================================================================
 
 const WHIG_PAL: BuildingPalette = {
-  wallTop: "#A8B8A8",
-  wallLeft: "#90A090",
-  wallRight: "#688068",
+  accent: "#6AAA4A",
+  cornice: "#D8E8D8",
+  door: "#182818",
+  foundLeft: "#687868",
+  foundRight: "#506850",
+  foundTop: "#788878",
+  glass: "#081810",
+  roofDark: "#0A2010",
   roofFront: "#2A4030",
   roofSide: "#1A3020",
   roofTop: "#3A5040",
-  roofDark: "#0A2010",
   trim: "#506850",
   trimLight: "#C0D0C0",
-  cornice: "#D8E8D8",
-  glass: "#081810",
-  foundTop: "#788878",
-  foundLeft: "#687868",
-  foundRight: "#506850",
-  door: "#182818",
-  accent: "#6AAA4A",
+  wallLeft: "#90A090",
+  wallRight: "#688068",
+  wallTop: "#A8B8A8",
 };
 
 export function renderWhigHall(p: LandmarkParams): void {
@@ -1050,12 +1061,12 @@ export function renderWhigHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = WHIG_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -1066,9 +1077,12 @@ export function renderWhigHall(p: LandmarkParams): void {
       46 * s,
       0.3,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const bodyW = 16;
   const bodyD = 16;
@@ -1092,7 +1106,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Circular rotunda wing — back-left of main hall (draw before main for z-order)
@@ -1105,7 +1119,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     "#A8B8A8",
     "#98A898",
-    "#688068",
+    "#688068"
   );
   drawDome(
     ctx,
@@ -1116,7 +1130,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     "#5A8A5A",
     "#3A6A3A",
-    "#1A4A1A",
+    "#1A4A1A"
   );
 
   const rotWinAngles = frontAngles(5);
@@ -1132,19 +1146,19 @@ export function renderWhigHall(p: LandmarkParams): void {
       1.8,
       s,
       "#506850",
-      "#081810",
+      "#081810"
     );
   }
 
   // Main rectangular hall (drawn after rotunda since it's in front)
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.18);
   drawBuildingSection(ctx, bx, by, bodyW, bodyD, bodyH, s, pal, {
-    rows: 2,
+    arched: false,
     leftCols: 3,
     rightCols: 2,
+    rows: 2,
     wu: 0.18,
     wv: 0.26,
-    arched: false,
   });
 
   // Entablature + gabled roof + pediment
@@ -1157,7 +1171,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     2.5 * s,
     pal.cornice,
     pal.trimLight,
-    pal.trim,
+    pal.trim
   );
   drawGabledRoof(ctx, bx, by, bodyW + 2, bodyD + 2, bodyH + 2.5, 6, s, pal);
   drawRoofShingles(
@@ -1170,7 +1184,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     6,
     s,
     "rgba(10,30,10,0.04)",
-    4,
+    4
   );
   drawPediment(
     ctx,
@@ -1181,7 +1195,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     "right",
     pal.wallLeft,
-    pal.cornice,
+    pal.cornice
   );
 
   // Ionic columns on right face
@@ -1195,7 +1209,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     pal.cornice,
     pal.trimLight,
-    "right",
+    "right"
   );
 
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "left", 0.14);
@@ -1215,7 +1229,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     pal.trim,
     0.38,
     0.15,
-    0.35,
+    0.35
   );
   drawWindowGlows(
     ctx,
@@ -1229,7 +1243,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     3,
     2,
     "rgba(180,220,180,0.06)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -1242,7 +1256,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     "left",
     55,
     5,
-    "rgba(40,80,40,0.05)",
+    "rgba(40,80,40,0.05)"
   );
   drawWeatherStains(
     ctx,
@@ -1255,7 +1269,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     "right",
     66,
     4,
-    "rgba(40,80,40,0.05)",
+    "rgba(40,80,40,0.05)"
   );
   drawChimney(
     ctx,
@@ -1264,7 +1278,7 @@ export function renderWhigHall(p: LandmarkParams): void {
     s,
     pal.wallLeft,
     pal.cornice,
-    0.06,
+    0.06
   );
 
   // Vine growth on columns
@@ -1282,7 +1296,7 @@ export function renderWhigHall(p: LandmarkParams): void {
       vx - s,
       vy + 10 * s,
       vx + 0.5 * s,
-      vy + 15 * s,
+      vy + 15 * s
     );
     ctx.stroke();
     for (let l = 0; l < 3; l++) {
@@ -1295,7 +1309,7 @@ export function renderWhigHall(p: LandmarkParams): void {
         0.6 * s,
         l * 0.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -1315,22 +1329,22 @@ export function renderWhigHall(p: LandmarkParams): void {
 // =========================================================================
 
 const PYNE_PAL: BuildingPalette = {
-  wallTop: "#686868",
-  wallLeft: "#585858",
-  wallRight: "#404040",
+  accent: "#5A9A5A",
+  cornice: "#A0A0A0",
+  door: "#181818",
+  foundLeft: "#484848",
+  foundRight: "#383838",
+  foundTop: "#585858",
+  glass: "#0A1210",
+  roofDark: "#182808",
   roofFront: "#384828",
   roofSide: "#283818",
   roofTop: "#485838",
-  roofDark: "#182808",
   trim: "#484848",
   trimLight: "#909090",
-  cornice: "#A0A0A0",
-  glass: "#0A1210",
-  foundTop: "#585858",
-  foundLeft: "#484848",
-  foundRight: "#383838",
-  door: "#181818",
-  accent: "#5A9A5A",
+  wallLeft: "#585858",
+  wallRight: "#404040",
+  wallTop: "#686868",
 };
 
 export function renderEastPyne(p: LandmarkParams): void {
@@ -1344,12 +1358,12 @@ export function renderEastPyne(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = PYNE_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -1360,9 +1374,12 @@ export function renderEastPyne(p: LandmarkParams): void {
       50 * s,
       0.28,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Tower foundation — drawn first so it layers behind everything
   const tDist = 16;
@@ -1376,7 +1393,7 @@ export function renderEastPyne(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   const bodyW = 18;
@@ -1385,12 +1402,12 @@ export function renderEastPyne(p: LandmarkParams): void {
   const Hs_ep = bodyH * s;
   drawBaseAO(ctx, bx, by, Ws_ep, Ws_ep, 0.18);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 4,
     rightCols: 3,
+    rows: 2,
     wu: 0.14,
     wv: 0.24,
-    arched: true,
   });
   drawStoneBlockTexture(ctx, bx, by, bodyW * s, bodyH * s, s, "left", 17);
   drawGabledRoof(ctx, bx, by, bodyW, bodyW, bodyH, 8, s, pal);
@@ -1410,7 +1427,7 @@ export function renderEastPyne(p: LandmarkParams): void {
     8,
     s,
     "rgba(20,50,10,0.05)",
-    5,
+    5
   );
   drawWindowGlows(
     ctx,
@@ -1424,7 +1441,7 @@ export function renderEastPyne(p: LandmarkParams): void {
     4,
     2,
     "rgba(180,220,180,0.06)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -1437,7 +1454,7 @@ export function renderEastPyne(p: LandmarkParams): void {
     "left",
     77,
     5,
-    "rgba(30,70,30,0.06)",
+    "rgba(30,70,30,0.06)"
   );
 
   // Round Romanesque tower — front-right
@@ -1450,7 +1467,7 @@ export function renderEastPyne(p: LandmarkParams): void {
     s,
     "#707070",
     "#606060",
-    "#404040",
+    "#404040"
   );
 
   // Romanesque round-arch windows on tower — front-facing
@@ -1515,7 +1532,7 @@ export function renderEastPyne(p: LandmarkParams): void {
       1.2 * s,
       i * 0.4,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1527,22 +1544,22 @@ export function renderEastPyne(p: LandmarkParams): void {
 // =========================================================================
 
 const PROSPECT_PAL: BuildingPalette = {
-  wallTop: "#D8C080",
-  wallLeft: "#C4AA68",
-  wallRight: "#A08848",
+  accent: "#8AAA4A",
+  cornice: "#F0E8C0",
+  door: "#2A2010",
+  foundLeft: "#706850",
+  foundRight: "#585040",
+  foundTop: "#808060",
+  glass: "#0A1808",
+  roofDark: "#102808",
   roofFront: "#304828",
   roofSide: "#203818",
   roofTop: "#405838",
-  roofDark: "#102808",
   trim: "#887040",
   trimLight: "#E8D8A8",
-  cornice: "#F0E8C0",
-  glass: "#0A1808",
-  foundTop: "#808060",
-  foundLeft: "#706850",
-  foundRight: "#585040",
-  door: "#2A2010",
-  accent: "#8AAA4A",
+  wallLeft: "#C4AA68",
+  wallRight: "#A08848",
+  wallTop: "#D8C080",
 };
 
 export function renderProspectHouse(p: LandmarkParams): void {
@@ -1556,12 +1573,12 @@ export function renderProspectHouse(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = PROSPECT_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -1572,9 +1589,12 @@ export function renderProspectHouse(p: LandmarkParams): void {
       46 * s,
       0.28,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const bodyW = 20;
   const bodyH = 16;
@@ -1594,17 +1614,17 @@ export function renderProspectHouse(p: LandmarkParams): void {
     porchH,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   drawBaseAO(ctx, bx, by, Ws, Ws, 0.15);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: false,
     leftCols: 4,
     rightCols: 3,
+    rows: 2,
     wu: 0.14,
     wv: 0.24,
-    arched: false,
   });
   drawHipRoof(ctx, bx, by, bodyW, bodyW, bodyH, 6, s, pal);
 
@@ -1625,7 +1645,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     pal.trim,
     0.35,
     0.12,
-    0.3,
+    0.3
   );
   drawWindowGlows(
     ctx,
@@ -1639,7 +1659,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     4,
     2,
     "rgba(200,220,160,0.06)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -1653,7 +1673,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     3,
     2,
     "rgba(200,220,160,0.06)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -1666,7 +1686,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     "left",
     88,
     4,
-    "rgba(40,80,30,0.05)",
+    "rgba(40,80,30,0.05)"
   );
   drawChimney(
     ctx,
@@ -1675,7 +1695,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     s,
     pal.wallLeft,
     pal.cornice,
-    0.05,
+    0.05
   );
 
   // Round belvedere tower — centered on roof ridge
@@ -1689,7 +1709,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     s,
     "#D8C080",
     "#C8B468",
-    "#A08848",
+    "#A08848"
   );
   drawCircularBattlements(ctx, bx, belvBaseY, 4.5, s, pal.cornice, 8);
 
@@ -1706,7 +1726,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
       1.2,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
   drawDome(
@@ -1718,7 +1738,7 @@ export function renderProspectHouse(p: LandmarkParams): void {
     s,
     "#5A8A4A",
     "#3A6A2A",
-    "#1A4A0A",
+    "#1A4A0A"
   );
 
   // Thin porch columns along V-path (LT → FT → RT), offset outward from faces
@@ -1781,22 +1801,22 @@ export function renderProspectHouse(p: LandmarkParams): void {
 // =========================================================================
 
 const CLIO_PAL: BuildingPalette = {
-  wallTop: "#F0E8E0",
-  wallLeft: "#E0D4C8",
-  wallRight: "#C8B8A8",
+  accent: "#E8B838",
+  cornice: "#FFF8F0",
+  door: "#604830",
+  foundLeft: "#C8BCA8",
+  foundRight: "#A89878",
+  foundTop: "#D8CCC0",
+  glass: "#181510",
+  roofDark: "#A08028",
   roofFront: "#C49838",
   roofSide: "#B08830",
   roofTop: "#D4A848",
-  roofDark: "#A08028",
   trim: "#B8A888",
   trimLight: "#F8F0E8",
-  cornice: "#FFF8F0",
-  glass: "#181510",
-  foundTop: "#D8CCC0",
-  foundLeft: "#C8BCA8",
-  foundRight: "#A89878",
-  door: "#604830",
-  accent: "#E8B838",
+  wallLeft: "#E0D4C8",
+  wallRight: "#C8B8A8",
+  wallTop: "#F0E8E0",
 };
 
 export function renderClioHall(p: LandmarkParams): void {
@@ -1810,12 +1830,12 @@ export function renderClioHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = CLIO_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -1826,9 +1846,12 @@ export function renderClioHall(p: LandmarkParams): void {
       44 * s,
       0.22,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Cella foundation — drawn first so it layers behind everything
   drawTowerFoundation(
@@ -1839,7 +1862,7 @@ export function renderClioHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   drawBaseAO(ctx, bx, by, 11 * s, 11 * s, 0.15);
@@ -1856,7 +1879,7 @@ export function renderClioHall(p: LandmarkParams): void {
       1.5 * s,
       pal.foundTop,
       pal.foundLeft,
-      pal.foundRight,
+      pal.foundRight
     );
   }
 
@@ -1868,7 +1891,9 @@ export function renderClioHall(p: LandmarkParams): void {
 
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2;
-    if (Math.sin(angle) >= 0) continue;
+    if (Math.sin(angle) >= 0) {
+      continue;
+    }
     const ccx = bx + Math.cos(angle) * colR;
     const ccy = by + Math.sin(angle) * colR * 0.5;
     ctx.fillStyle = pal.cornice;
@@ -1895,7 +1920,9 @@ export function renderClioHall(p: LandmarkParams): void {
   // Front half of colonnade (drawn in front of cella)
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2;
-    if (Math.sin(angle) < 0) continue; // skip back columns (already drawn)
+    if (Math.sin(angle) < 0) {
+      continue;
+    } // skip back columns (already drawn)
     const ccx = bx + Math.cos(angle) * colR;
     const ccy = by + Math.sin(angle) * colR * 0.5;
     ctx.fillStyle = pal.cornice;
@@ -1928,7 +1955,7 @@ export function renderClioHall(p: LandmarkParams): void {
     3,
     1,
     "rgba(255,230,170,0.06)",
-    time,
+    time
   );
 
   // Entablature ring
@@ -1948,7 +1975,7 @@ export function renderClioHall(p: LandmarkParams): void {
     s,
     "#E8C848",
     "#D4A838",
-    "#B08828",
+    "#B08828"
   );
 
   // Acroterion finial
@@ -1969,7 +1996,7 @@ export function renderClioHall(p: LandmarkParams): void {
     colR * 0.3,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -1979,22 +2006,22 @@ export function renderClioHall(p: LandmarkParams): void {
 // =========================================================================
 
 const MCCOSH_PAL: BuildingPalette = {
-  wallTop: "#C89868",
-  wallLeft: "#B88858",
-  wallRight: "#986838",
+  accent: "#D4A030",
+  cornice: "#ECD8A8",
+  door: "#4A3018",
+  foundLeft: "#987858",
+  foundRight: "#786038",
+  foundTop: "#A88868",
+  glass: "#1A1508",
+  roofDark: "#6A3A08",
   roofFront: "#8A5A18",
   roofSide: "#7A4A10",
   roofTop: "#9A6A28",
-  roofDark: "#6A3A08",
   trim: "#887050",
   trimLight: "#E0C898",
-  cornice: "#ECD8A8",
-  glass: "#1A1508",
-  foundTop: "#A88868",
-  foundLeft: "#987858",
-  foundRight: "#786038",
-  door: "#4A3018",
-  accent: "#D4A030",
+  wallLeft: "#B88858",
+  wallRight: "#986838",
+  wallTop: "#C89868",
 };
 
 export function renderMcCoshHall(p: LandmarkParams): void {
@@ -2008,12 +2035,12 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = MCCOSH_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -2024,9 +2051,12 @@ export function renderMcCoshHall(p: LandmarkParams): void {
       54 * s,
       0.24,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Tower foundations — drawn first so they layer behind everything
   const apseDist = 14;
@@ -2042,7 +2072,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
   drawTowerFoundation(
     ctx,
@@ -2052,7 +2082,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Round lecture hall apse — back-left, drawn BEFORE main body so it layers behind
@@ -2065,7 +2095,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     s,
     "#C89868",
     "#B88858",
-    "#986838",
+    "#986838"
   );
   drawConicalRoof(
     ctx,
@@ -2075,7 +2105,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     8,
     s,
     "#9A6A28",
-    "#6A3A08",
+    "#6A3A08"
   );
   const apseAngles = frontAngles(5);
   for (let i = 0; i < 5; i++) {
@@ -2090,7 +2120,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
       2,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
 
@@ -2098,12 +2128,12 @@ export function renderMcCoshHall(p: LandmarkParams): void {
   const bodyH = 20;
   drawBaseAO(ctx, bx, by, bodyW * s, bodyW * s, 0.14);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 5,
     rightCols: 3,
+    rows: 2,
     wu: 0.12,
     wv: 0.26,
-    arched: true,
   });
   drawBrickTexture(
     ctx,
@@ -2114,7 +2144,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     s,
     "#C07850",
     "rgba(0,0,0,0.06)",
-    "left",
+    "left"
   );
   drawGabledRoof(ctx, bx, by, bodyW, bodyW, bodyH, 8, s, pal);
 
@@ -2136,7 +2166,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     8,
     s,
     "rgba(100,70,20,0.04)",
-    5,
+    5
   );
   drawEntrance(
     ctx,
@@ -2151,7 +2181,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     pal.trim,
     0.35,
     0.12,
-    0.3,
+    0.3
   );
   drawWindowGlows(
     ctx,
@@ -2165,7 +2195,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     5,
     2,
     "rgba(255,220,150,0.07)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -2178,7 +2208,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     "left",
     99,
     3,
-    "rgba(140,100,50,0.04)",
+    "rgba(140,100,50,0.04)"
   );
   drawWeatherStains(
     ctx,
@@ -2191,7 +2221,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     "right",
     111,
     3,
-    "rgba(140,100,50,0.04)",
+    "rgba(140,100,50,0.04)"
   );
 
   // Minaret tower with circular balcony — front-right
@@ -2205,7 +2235,7 @@ export function renderMcCoshHall(p: LandmarkParams): void {
     s,
     "#D0A070",
     "#C09060",
-    "#986838",
+    "#986838"
   );
 
   // Circular balcony ring at 30s height
@@ -2244,22 +2274,22 @@ export function renderMcCoshHall(p: LandmarkParams): void {
 // =========================================================================
 
 const ROBERTSON_PAL: BuildingPalette = {
-  wallTop: "#E8E0D8",
-  wallLeft: "#D8D0C8",
-  wallRight: "#B8B0A8",
+  accent: "#4080C0",
+  cornice: "#F8F4F0",
+  door: "#404040",
+  foundLeft: "#B8B0A8",
+  foundRight: "#989088",
+  foundTop: "#C8C0B8",
+  glass: "#2040A0",
+  roofDark: "#707070",
   roofFront: "#909090",
   roofSide: "#808080",
   roofTop: "#A0A0A0",
-  roofDark: "#707070",
   trim: "#A8A098",
   trimLight: "#F0E8E0",
-  cornice: "#F8F4F0",
-  glass: "#2040A0",
-  foundTop: "#C8C0B8",
-  foundLeft: "#B8B0A8",
-  foundRight: "#989088",
-  door: "#404040",
-  accent: "#4080C0",
+  wallLeft: "#D8D0C8",
+  wallRight: "#B8B0A8",
+  wallTop: "#E8E0D8",
 };
 
 export function renderRobertsonHall(p: LandmarkParams): void {
@@ -2273,12 +2303,12 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = ROBERTSON_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -2289,9 +2319,12 @@ export function renderRobertsonHall(p: LandmarkParams): void {
       40 * s,
       0.22,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Pavilion foundation — drawn first so it layers behind everything
   const pavDist = 14;
@@ -2305,7 +2338,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   drawBaseAO(ctx, bx, by, 24 * s, 24 * s, 0.12);
@@ -2320,7 +2353,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     4 * s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Main low-slung body
@@ -2335,7 +2368,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     bodyHs,
     pal.wallTop,
     pal.wallLeft,
-    pal.wallRight,
+    pal.wallRight
   );
 
   const iW = bodyWs * ISO_COS;
@@ -2360,7 +2393,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
         v,
         0.1,
         0.22,
-        "left",
+        "left"
       );
       ctx.fill();
     }
@@ -2382,7 +2415,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
         v,
         0.12,
         0.22,
-        "right",
+        "right"
       );
       ctx.fill();
     }
@@ -2398,7 +2431,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     1.5 * s,
     pal.cornice,
     pal.trimLight,
-    pal.trim,
+    pal.trim
   );
 
   drawFaceShading(ctx, bx, by, bodyWs, bodyWs, bodyHs, "left", 0.1);
@@ -2416,7 +2449,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     6,
     3,
     "rgba(100,180,255,0.05)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -2430,7 +2463,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     4,
     3,
     "rgba(100,180,255,0.05)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -2443,7 +2476,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     "left",
     123,
     2,
-    "rgba(120,100,60,0.03)",
+    "rgba(120,100,60,0.03)"
   );
   drawPinnacle(
     ctx,
@@ -2452,7 +2485,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     4,
     s,
     pal.trim,
-    pal.cornice,
+    pal.cornice
   );
   drawPinnacle(
     ctx,
@@ -2461,7 +2494,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     4,
     s,
     pal.trim,
-    pal.cornice,
+    pal.cornice
   );
 
   // Cylindrical entrance pavilion — front-right
@@ -2474,7 +2507,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     s,
     "#E0D8D0",
     "#D0C8C0",
-    "#B0A8A0",
+    "#B0A8A0"
   );
 
   // Glass band on pavilion
@@ -2498,7 +2531,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     5.8 * s * 0.5,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2509,7 +2542,7 @@ export function renderRobertsonHall(p: LandmarkParams): void {
     0,
     pavCx + 2 * s,
     pavCy + 8 * s,
-    7 * s,
+    7 * s
   );
   poolGrad.addColorStop(0, "rgba(60,120,180,0.2)");
   poolGrad.addColorStop(0.7, "rgba(60,120,180,0.08)");
@@ -2525,22 +2558,22 @@ export function renderRobertsonHall(p: LandmarkParams): void {
 // =========================================================================
 
 const HOLDER_PAL: BuildingPalette = {
-  wallTop: "#8898A8",
-  wallLeft: "#7888A0",
-  wallRight: "#586878",
+  accent: "#88C0D8",
+  cornice: "#D0D8E0",
+  door: "#1A2838",
+  foundLeft: "#586878",
+  foundRight: "#405060",
+  foundTop: "#687888",
+  glass: "#081018",
+  roofDark: "#0A1828",
   roofFront: "#2A3848",
   roofSide: "#1A2838",
   roofTop: "#3A4858",
-  roofDark: "#0A1828",
   trim: "#506878",
   trimLight: "#B0C0D0",
-  cornice: "#D0D8E0",
-  glass: "#081018",
-  foundTop: "#687888",
-  foundLeft: "#586878",
-  foundRight: "#405060",
-  door: "#1A2838",
-  accent: "#88C0D8",
+  wallLeft: "#7888A0",
+  wallRight: "#586878",
+  wallTop: "#8898A8",
 };
 
 export function renderHolderHall(p: LandmarkParams): void {
@@ -2554,12 +2587,12 @@ export function renderHolderHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = HOLDER_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -2570,9 +2603,12 @@ export function renderHolderHall(p: LandmarkParams): void {
       58 * s,
       0.25,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Tower foundation — drawn first so it layers behind everything
   const tDist = 16;
@@ -2586,7 +2622,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Round clock tower — back-left, drawn BEFORE main body so it layers behind
@@ -2599,7 +2635,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     s,
     "#8898A8",
     "#7888A0",
-    "#506070",
+    "#506070"
   );
   drawCircularBattlements(ctx, tbx, tby - 44 * s, 6, s, pal.cornice, 12);
   drawConicalRoof(
@@ -2610,7 +2646,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     14,
     s,
     "#3A4858",
-    "#1A2838",
+    "#1A2838"
   );
   const towerAngles = frontAngles(4);
   for (let row = 0; row < 4; row++) {
@@ -2625,7 +2661,7 @@ export function renderHolderHall(p: LandmarkParams): void {
       1.6,
       s,
       pal.trim,
-      pal.glass,
+      pal.glass
     );
   }
   const clockY = tby - 38 * s;
@@ -2651,7 +2687,7 @@ export function renderHolderHall(p: LandmarkParams): void {
       0.3 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2663,7 +2699,7 @@ export function renderHolderHall(p: LandmarkParams): void {
   ctx.moveTo(clockCx, clockCyy);
   ctx.lineTo(
     clockCx + Math.cos(hA) * clockR * 0.5,
-    clockCyy + Math.sin(hA) * clockR * 0.25,
+    clockCyy + Math.sin(hA) * clockR * 0.25
   );
   ctx.stroke();
   ctx.lineWidth = 0.35 * s;
@@ -2671,7 +2707,7 @@ export function renderHolderHall(p: LandmarkParams): void {
   ctx.moveTo(clockCx, clockCyy);
   ctx.lineTo(
     clockCx + Math.cos(mA) * clockR * 0.72,
-    clockCyy + Math.sin(mA) * clockR * 0.36,
+    clockCyy + Math.sin(mA) * clockR * 0.36
   );
   ctx.stroke();
 
@@ -2679,12 +2715,12 @@ export function renderHolderHall(p: LandmarkParams): void {
   const bodyH = 20;
   drawBaseAO(ctx, bx, by, bodyW * s, bodyW * s, 0.16);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 4,
     rightCols: 3,
+    rows: 2,
     wu: 0.14,
     wv: 0.24,
-    arched: true,
   });
   drawGabledRoof(ctx, bx, by, bodyW, bodyW, bodyH, 8, s, pal);
 
@@ -2706,7 +2742,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     8,
     s,
     "rgba(20,30,50,0.05)",
-    5,
+    5
   );
   drawEntrance(
     ctx,
@@ -2721,7 +2757,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     pal.trim,
     0.35,
     0.14,
-    0.35,
+    0.35
   );
   drawWindowGlows(
     ctx,
@@ -2735,7 +2771,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     4,
     2,
     "rgba(255,200,120,0.09)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -2749,7 +2785,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     3,
     2,
     "rgba(255,200,120,0.09)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -2762,7 +2798,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     "left",
     141,
     3,
-    "rgba(60,80,100,0.04)",
+    "rgba(60,80,100,0.04)"
   );
   drawChimney(
     ctx,
@@ -2771,7 +2807,7 @@ export function renderHolderHall(p: LandmarkParams): void {
     s,
     pal.wallLeft,
     pal.cornice,
-    0.04,
+    0.04
   );
 
   // Snow on roof ridge and icicles
@@ -2810,22 +2846,22 @@ export function renderHolderHall(p: LandmarkParams): void {
 // =========================================================================
 
 const CLEVE_PAL: BuildingPalette = {
-  wallTop: "#6A7A88",
-  wallLeft: "#5A6A78",
-  wallRight: "#3A4A58",
+  accent: "#70A8C8",
+  cornice: "#B0C0D0",
+  door: "#1A2030",
+  foundLeft: "#485868",
+  foundRight: "#384858",
+  foundTop: "#586878",
+  glass: "#060C18",
+  roofDark: "#0A1828",
   roofFront: "#2A3848",
   roofSide: "#1A2838",
   roofTop: "#3A4858",
-  roofDark: "#0A1828",
   trim: "#405060",
   trimLight: "#98A8B8",
-  cornice: "#B0C0D0",
-  glass: "#060C18",
-  foundTop: "#586878",
-  foundLeft: "#485868",
-  foundRight: "#384858",
-  door: "#1A2030",
-  accent: "#70A8C8",
+  wallLeft: "#5A6A78",
+  wallRight: "#3A4A58",
+  wallTop: "#6A7A88",
 };
 
 export function renderClevelandTower(p: LandmarkParams): void {
@@ -2839,12 +2875,12 @@ export function renderClevelandTower(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = CLEVE_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -2855,9 +2891,12 @@ export function renderClevelandTower(p: LandmarkParams): void {
       65 * s,
       0.28,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   drawBaseAO(ctx, bx, by, 16 * s, 16 * s, 0.18);
 
@@ -2871,7 +2910,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
     4 * s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Main rectangular tower shaft
@@ -2886,7 +2925,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
     THs,
     pal.wallTop,
     pal.wallLeft,
-    pal.wallRight,
+    pal.wallRight
   );
   drawStoneBlockTexture(ctx, bx, by, Ts, THs, s, "left", 73);
   drawMortarLines(ctx, bx, by, Ts, THs, 8, "rgba(0,0,0,0.04)", s);
@@ -2903,7 +2942,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
       s,
       pal.cornice,
       pal.trimLight,
-      pal.trim,
+      pal.trim
     );
   }
 
@@ -2926,7 +2965,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
       pal.trim,
       pal.glass,
       pal.trimLight,
-      true,
+      true
     );
     drawWindowOnFace(
       ctx,
@@ -2944,7 +2983,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
       pal.trim,
       pal.glass,
       pal.trimLight,
-      true,
+      true
     );
   }
 
@@ -2962,7 +3001,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
     "left",
     155,
     4,
-    "rgba(50,70,90,0.04)",
+    "rgba(50,70,90,0.04)"
   );
   // Pinnacles at foundation corners
   const ciW = 16 * s * ISO_COS;
@@ -2982,7 +3021,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
     s,
     "#6A7A88",
     "#5A6A78",
-    "#3A4A58",
+    "#3A4A58"
   );
 
   // Arched belfry openings — front-facing
@@ -2999,7 +3038,7 @@ export function renderClevelandTower(p: LandmarkParams): void {
       1.8,
       s,
       pal.trim,
-      "#060C18",
+      "#060C18"
     );
   }
 
@@ -3033,22 +3072,22 @@ export function renderClevelandTower(p: LandmarkParams): void {
 // =========================================================================
 
 const ALEX_PAL: BuildingPalette = {
-  wallTop: "#A87868",
-  wallLeft: "#986858",
-  wallRight: "#784838",
+  accent: "#A8C8D8",
+  cornice: "#D8B8A8",
+  door: "#2A1808",
+  foundLeft: "#786050",
+  foundRight: "#584030",
+  foundTop: "#887060",
+  glass: "#081018",
+  roofDark: "#0A2038",
   roofFront: "#2A4058",
   roofSide: "#1A3048",
   roofTop: "#3A5068",
-  roofDark: "#0A2038",
   trim: "#886050",
   trimLight: "#C8A898",
-  cornice: "#D8B8A8",
-  glass: "#081018",
-  foundTop: "#887060",
-  foundLeft: "#786050",
-  foundRight: "#584030",
-  door: "#2A1808",
-  accent: "#A8C8D8",
+  wallLeft: "#986858",
+  wallRight: "#784838",
+  wallTop: "#A87868",
 };
 
 export function renderAlexanderHall(p: LandmarkParams): void {
@@ -3062,12 +3101,12 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = ALEX_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -3078,9 +3117,12 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       46 * s,
       0.25,
       "0,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const bodyW = 20;
   const bodyH = 18;
@@ -3100,7 +3142,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
   const turretFrontRight = { dx: bodyW * 0.7, dy: bodyW * 0.3 };
   const turretBackLeft = { dx: -bodyW * 0.7, dy: -bodyW * 0.3 };
@@ -3116,7 +3158,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       s,
       pal.foundTop,
       pal.foundLeft,
-      pal.foundRight,
+      pal.foundRight
     );
   }
 
@@ -3134,7 +3176,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       s,
       "#A87868",
       "#986858",
-      "#784838",
+      "#784838"
     );
     drawCircularBattlements(ctx, turCx, turCy - 22 * s, 3.5, s, pal.cornice, 6);
     drawConicalRoof(
@@ -3145,7 +3187,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       7,
       s,
       "#3A5068",
-      "#1A3048",
+      "#1A3048"
     );
   }
 
@@ -3161,7 +3203,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     s,
     "#A87868",
     "#986858",
-    "#784838",
+    "#784838"
   );
   drawConicalRoof(
     ctx,
@@ -3171,7 +3213,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     8,
     s,
     "#3A5068",
-    "#1A3048",
+    "#1A3048"
   );
 
   // Romanesque windows on apse — front-facing
@@ -3191,7 +3233,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       3.5 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = pal.glass;
@@ -3203,19 +3245,19 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       2.8 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
 
   // Main building body (drawn in front of apse)
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 4,
     rightCols: 3,
+    rows: 2,
     wu: 0.14,
     wv: 0.24,
-    arched: true,
   });
   drawStoneBlockTexture(ctx, bx, by, Ws, Hs, s, "left", 55);
   drawHipRoof(ctx, bx, by, bodyW, bodyW, bodyH, 7, s, pal);
@@ -3236,7 +3278,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     4,
     2,
     "rgba(255,200,120,0.08)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -3250,7 +3292,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     3,
     2,
     "rgba(255,200,120,0.08)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -3263,7 +3305,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     "left",
     166,
     3,
-    "rgba(50,60,80,0.04)",
+    "rgba(50,60,80,0.04)"
   );
   drawRoofShingles(
     ctx,
@@ -3275,7 +3317,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     7,
     s,
     "rgba(20,40,60,0.04)",
-    4,
+    4
   );
 
   // Front-right turret — drawn AFTER main body so it layers in front
@@ -3292,7 +3334,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       s,
       "#A87868",
       "#986858",
-      "#784838",
+      "#784838"
     );
     drawCircularBattlements(ctx, turCx, turCy - 22 * s, 3.5, s, pal.cornice, 6);
     drawConicalRoof(
@@ -3303,7 +3345,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
       7,
       s,
       "#3A5068",
-      "#1A3048",
+      "#1A3048"
     );
   }
 
@@ -3321,7 +3363,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     s,
     "right",
     pal.trimLight,
-    false,
+    false
   );
   drawIsoFaceArch(ctx, archX, archY, aW, aH, s, "right", pal.door, false);
 
@@ -3338,7 +3380,7 @@ export function renderAlexanderHall(p: LandmarkParams): void {
     2 * s,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -3348,22 +3390,22 @@ export function renderAlexanderHall(p: LandmarkParams): void {
 // =========================================================================
 
 const FINE_PAL: BuildingPalette = {
-  wallTop: "#383030",
-  wallLeft: "#282020",
-  wallRight: "#181010",
+  accent: "#FF6A00",
+  cornice: "#585050",
+  door: "#080404",
+  foundLeft: "#201818",
+  foundRight: "#100808",
+  foundTop: "#302828",
+  glass: "#402008",
+  roofDark: "#080404",
   roofFront: "#100808",
   roofSide: "#0C0606",
   roofTop: "#1C1010",
-  roofDark: "#080404",
   trim: "#201818",
   trimLight: "#484040",
-  cornice: "#585050",
-  glass: "#402008",
-  foundTop: "#302828",
-  foundLeft: "#201818",
-  foundRight: "#100808",
-  door: "#080404",
-  accent: "#FF6A00",
+  wallLeft: "#282020",
+  wallRight: "#181010",
+  wallTop: "#383030",
 };
 
 export function renderFineHall(p: LandmarkParams): void {
@@ -3377,12 +3419,12 @@ export function renderFineHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = FINE_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -3393,9 +3435,12 @@ export function renderFineHall(p: LandmarkParams): void {
       50 * s,
       0.3,
       "20,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Stair tower foundation — drawn first so it layers behind everything
   const tDist_fine = 14;
@@ -3409,19 +3454,19 @@ export function renderFineHall(p: LandmarkParams): void {
     s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   const bodyW = 16;
   const bodyH = 22;
   drawBaseAO(ctx, bx, by, bodyW * s, bodyW * s, 0.2);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 3,
+    arched: false,
     leftCols: 3,
     rightCols: 2,
+    rows: 3,
     wu: 0.16,
     wv: 0.18,
-    arched: false,
   });
 
   // Amber-lit window overlay on left face
@@ -3433,7 +3478,7 @@ export function renderFineHall(p: LandmarkParams): void {
     for (let col = 0; col < 3; col++) {
       const u = 0.07 + col * 0.28;
       const v = 0.1 + row * 0.25;
-      const emA = 0.12 + Math.sin(time * 1.0 + row + col) * 0.06;
+      const emA = 0.12 + Math.sin(time * 1 + row + col) * 0.06;
       ctx.fillStyle = `rgba(255,120,20,${emA})`;
       ctx.beginPath();
       drawIsoFaceQuad(
@@ -3447,7 +3492,7 @@ export function renderFineHall(p: LandmarkParams): void {
         v + 0.02,
         0.12,
         0.14,
-        "left",
+        "left"
       );
       ctx.fill();
     }
@@ -3462,7 +3507,7 @@ export function renderFineHall(p: LandmarkParams): void {
     2 * s,
     pal.cornice,
     pal.trimLight,
-    pal.trim,
+    pal.trim
   );
 
   drawFaceShading(ctx, bx, by, Ws, Ws, Hs, "left", 0.2);
@@ -3479,7 +3524,7 @@ export function renderFineHall(p: LandmarkParams): void {
     "left",
     177,
     4,
-    "rgba(180,40,0,0.04)",
+    "rgba(180,40,0,0.04)"
   );
   drawWeatherStains(
     ctx,
@@ -3492,7 +3537,7 @@ export function renderFineHall(p: LandmarkParams): void {
     "right",
     188,
     3,
-    "rgba(180,40,0,0.04)",
+    "rgba(180,40,0,0.04)"
   );
   drawChimney(ctx, bx - iW * 0.3, wt + 2 * s, s, "#201010", "#302020", 0.08);
 
@@ -3509,7 +3554,7 @@ export function renderFineHall(p: LandmarkParams): void {
     s,
     "#383030",
     "#282020",
-    "#101010",
+    "#101010"
   );
   drawCircularBattlements(ctx, tBx, tBy - 34 * s, 5, s, "#585050", 8);
 
@@ -3528,7 +3573,7 @@ export function renderFineHall(p: LandmarkParams): void {
       1.3,
       s,
       "#201010",
-      `rgba(255,100,0,${rA})`,
+      `rgba(255,100,0,${rA})`
     );
   }
 
@@ -3542,7 +3587,7 @@ export function renderFineHall(p: LandmarkParams): void {
     5.5 * s * 0.5,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -3569,7 +3614,7 @@ export function renderFineHall(p: LandmarkParams): void {
     2 * s * ISO_SIN,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.stroke();
 
@@ -3593,22 +3638,22 @@ export function renderFineHall(p: LandmarkParams): void {
 // =========================================================================
 
 const FOULKE_PAL: BuildingPalette = {
-  wallTop: "#3A2828",
-  wallLeft: "#2A1818",
-  wallRight: "#1A0A0A",
+  accent: "#FF4000",
+  cornice: "#5A3838",
+  door: "#080202",
+  foundLeft: "#1A0A0A",
+  foundRight: "#100404",
+  foundTop: "#2A1818",
+  glass: "#300808",
+  roofDark: "#080202",
   roofFront: "#140606",
   roofSide: "#0E0404",
   roofTop: "#200C0C",
-  roofDark: "#080202",
   trim: "#281414",
   trimLight: "#4A3030",
-  cornice: "#5A3838",
-  glass: "#300808",
-  foundTop: "#2A1818",
-  foundLeft: "#1A0A0A",
-  foundRight: "#100404",
-  door: "#080202",
-  accent: "#FF4000",
+  wallLeft: "#2A1818",
+  wallRight: "#1A0A0A",
+  wallTop: "#3A2828",
 };
 
 export function renderFoulkeHall(p: LandmarkParams): void {
@@ -3622,12 +3667,12 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = FOULKE_PAL;
   const bx = cx;
   const by = cy - 6 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -3638,14 +3683,17 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       50 * s,
       0.32,
       "20,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   // Corner tower foundations — drawn first so they layer behind everything
   const corners = [
-    { dist: 16, dir: -1 },
-    { dist: 16, dir: 1 },
+    { dir: -1, dist: 16 },
+    { dir: 1, dist: 16 },
   ];
   for (const c of corners) {
     const tcx = bx + c.dir * c.dist * ISO_COS * s;
@@ -3658,7 +3706,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       s,
       pal.foundTop,
       pal.foundLeft,
-      pal.foundRight,
+      pal.foundRight
     );
   }
 
@@ -3677,7 +3725,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       s,
       "#3A2828",
       "#2A1818",
-      "#140A0A",
+      "#140A0A"
     );
     drawCircularBattlements(ctx, tcx, tcy - 28 * s, 4, s, pal.cornice, 8);
     drawConicalRoof(
@@ -3688,7 +3736,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       10,
       s,
       "#200C0C",
-      "#0E0404",
+      "#0E0404"
     );
     for (let row = 0; row < 3; row++) {
       const eyeA = 0.2 + Math.sin(time * 1.3 + row * 2 + c.dir) * 0.1;
@@ -3703,7 +3751,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
         1.2,
         s,
         "#1A0808",
-        `rgba(255,50,0,${eyeA})`,
+        `rgba(255,50,0,${eyeA})`
       );
     }
   }
@@ -3712,12 +3760,12 @@ export function renderFoulkeHall(p: LandmarkParams): void {
   const bodyH = 20;
   drawBaseAO(ctx, bx, by, bodyW * s, bodyW * s, 0.22);
   drawBuildingSection(ctx, bx, by, bodyW, bodyW, bodyH, s, pal, {
-    rows: 2,
+    arched: true,
     leftCols: 5,
     rightCols: 3,
+    rows: 2,
     wu: 0.12,
     wv: 0.26,
-    arched: true,
   });
   drawGabledRoof(ctx, bx, by, bodyW, bodyW, bodyH, 9, s, pal);
 
@@ -3740,7 +3788,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     "#1A0808",
     0.38,
     0.12,
-    0.3,
+    0.3
   );
   drawWindowGlows(
     ctx,
@@ -3754,7 +3802,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     5,
     2,
     "rgba(255,80,0,0.06)",
-    time,
+    time
   );
   drawWindowGlows(
     ctx,
@@ -3768,7 +3816,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     3,
     2,
     "rgba(255,80,0,0.06)",
-    time,
+    time
   );
   drawWeatherStains(
     ctx,
@@ -3781,7 +3829,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     "left",
     199,
     5,
-    "rgba(160,30,0,0.05)",
+    "rgba(160,30,0,0.05)"
   );
   drawWeatherStains(
     ctx,
@@ -3794,7 +3842,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     "right",
     210,
     4,
-    "rgba(160,30,0,0.05)",
+    "rgba(160,30,0,0.05)"
   );
   drawRoofShingles(
     ctx,
@@ -3806,7 +3854,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     9,
     s,
     "rgba(100,20,0,0.05)",
-    5,
+    5
   );
 
   const Ws = bodyW * s;
@@ -3828,7 +3876,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       s,
       "#3A2828",
       "#2A1818",
-      "#140A0A",
+      "#140A0A"
     );
     drawCircularBattlements(ctx, tcx, tcy - 28 * s, 4, s, pal.cornice, 8);
     drawConicalRoof(
@@ -3839,7 +3887,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       10,
       s,
       "#200C0C",
-      "#0E0404",
+      "#0E0404"
     );
     for (let row = 0; row < 3; row++) {
       const eyeA = 0.2 + Math.sin(time * 1.3 + row * 2 + c.dir) * 0.1;
@@ -3854,7 +3902,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
         1.2,
         s,
         "#1A0808",
-        `rgba(255,50,0,${eyeA})`,
+        `rgba(255,50,0,${eyeA})`
       );
     }
   }
@@ -3883,7 +3931,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       0.3 * s,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#2A1818";
@@ -3902,9 +3950,9 @@ export function renderFoulkeHall(p: LandmarkParams): void {
       s,
       "#3A2828",
       "#2A1818",
-      "#1A0808",
+      "#1A0808"
     );
-    const smokeA = 0.1 + Math.sin(time * 1.0 + i * 1.5) * 0.05;
+    const smokeA = 0.1 + Math.sin(time * 1 + i * 1.5) * 0.05;
     ctx.fillStyle = `rgba(255,60,0,${smokeA})`;
     ctx.beginPath();
     ctx.ellipse(chX, chY - 1 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
@@ -3919,7 +3967,7 @@ export function renderFoulkeHall(p: LandmarkParams): void {
     0,
     bx,
     by + Ws * ISO_SIN,
-    6 * s,
+    6 * s
   );
   doorGlow.addColorStop(0, `rgba(255,50,0,${glA})`);
   doorGlow.addColorStop(1, "rgba(255,50,0,0)");
@@ -3934,22 +3982,22 @@ export function renderFoulkeHall(p: LandmarkParams): void {
 // =========================================================================
 
 const STADIUM_PAL: BuildingPalette = {
-  wallTop: "#3A2020",
-  wallLeft: "#2A1010",
-  wallRight: "#1A0808",
+  accent: "#FF4400",
+  cornice: "#5A3030",
+  door: "#060202",
+  foundLeft: "#1A0A0A",
+  foundRight: "#100404",
+  foundTop: "#2A1818",
+  glass: "#200808",
+  roofDark: "#080202",
   roofFront: "#100404",
   roofSide: "#0C0202",
   roofTop: "#180808",
-  roofDark: "#080202",
   trim: "#201010",
   trimLight: "#4A2828",
-  cornice: "#5A3030",
-  glass: "#200808",
-  foundTop: "#2A1818",
-  foundLeft: "#1A0A0A",
-  foundRight: "#100404",
-  door: "#060202",
-  accent: "#FF4400",
+  wallLeft: "#2A1010",
+  wallRight: "#1A0808",
+  wallTop: "#3A2020",
 };
 
 export function renderTigerStadium(p: LandmarkParams): void {
@@ -3963,12 +4011,12 @@ export function renderTigerStadium(p: LandmarkParams): void {
     shadowOnly,
     zoom: z = 1,
   } = p;
-  const s = sRaw * 2.0;
+  const s = sRaw * 2;
   const pal = STADIUM_PAL;
   const bx = cx;
   const by = cy - 4 * s;
 
-  if (!skipShadow)
+  if (!skipShadow) {
     drawDirectionalShadow(
       ctx,
       cx,
@@ -3979,9 +4027,12 @@ export function renderTigerStadium(p: LandmarkParams): void {
       50 * s,
       0.32,
       "20,0,0",
-      z,
+      z
     );
-  if (shadowOnly) return;
+  }
+  if (shadowOnly) {
+    return;
+  }
 
   const wallWs = 26 * s;
   const wallHs = 18 * s;
@@ -4006,7 +4057,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       s,
       pal.foundTop,
       pal.foundLeft,
-      pal.foundRight,
+      pal.foundRight
     );
   }
 
@@ -4028,7 +4079,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     3 * s,
     pal.foundTop,
     pal.foundLeft,
-    pal.foundRight,
+    pal.foundRight
   );
 
   // Main outer wall — taller and more imposing
@@ -4041,7 +4092,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     wallHs,
     pal.wallTop,
     pal.wallLeft,
-    pal.wallRight,
+    pal.wallRight
   );
 
   // Rich wall textures
@@ -4056,7 +4107,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "#4A2020",
     "rgba(0,0,0,0.06)",
-    "left",
+    "left"
   );
   drawBrickTexture(
     ctx,
@@ -4067,7 +4118,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "#4A2020",
     "rgba(0,0,0,0.06)",
-    "right",
+    "right"
   );
   drawMortarLines(ctx, bx, by, wallWs, wallHs, 5, "rgba(0,0,0,0.05)", s);
 
@@ -4089,7 +4140,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       s,
       "left",
       "#0A0404",
-      false,
+      false
     );
   }
   for (let i = 0; i < 4; i++) {
@@ -4105,7 +4156,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       s,
       "right",
       "#0A0404",
-      false,
+      false
     );
   }
 
@@ -4119,7 +4170,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     2 * s,
     pal.cornice,
     pal.trimLight,
-    pal.trim,
+    pal.trim
   );
 
   // Tiered seating bowl — 5 tiers for depth
@@ -4155,7 +4206,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       tierH,
       tierTop,
       tierLeft,
-      pal.wallRight,
+      pal.wallRight
     );
   }
 
@@ -4187,7 +4238,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       bx + Math.cos(angle) * vr * 0.5,
       floorCy + Math.sin(angle) * vr * 0.25,
       bx + Math.cos(angle) * vr,
-      floorCy + Math.sin(angle) * vr * 0.5,
+      floorCy + Math.sin(angle) * vr * 0.5
     );
     ctx.stroke();
   }
@@ -4200,7 +4251,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     0,
     bx,
     floorCy,
-    fiW * 0.7,
+    fiW * 0.7
   );
   centralGlow.addColorStop(0, `rgba(255,80,0,${centralA})`);
   centralGlow.addColorStop(0.5, `rgba(255,40,0,${centralA * 0.4})`);
@@ -4225,7 +4276,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     "left",
     222,
     5,
-    "rgba(180,30,0,0.05)",
+    "rgba(180,30,0,0.05)"
   );
   drawWeatherStains(
     ctx,
@@ -4238,7 +4289,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     "right",
     233,
     4,
-    "rgba(180,30,0,0.05)",
+    "rgba(180,30,0,0.05)"
   );
 
   // Grand entrance archway on right face — deep recessed arch with voussoir trim
@@ -4253,19 +4304,9 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "right",
     pal.trimLight,
-    false,
+    false
   );
-  drawIsoFaceArch(
-    ctx,
-    gateX,
-    gateY,
-    4 * s,
-    7 * s,
-    s,
-    "right",
-    "#060202",
-    true,
-  );
+  drawIsoFaceArch(ctx, gateX, gateY, 4 * s, 7 * s, s, "right", "#060202", true);
 
   // Iron portcullis bars in the gate
   const gateFdx = -ISO_COS;
@@ -4302,16 +4343,16 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "left",
     "#060202",
-    false,
+    false
   );
 
   // Pennant flags along the parapet — multiple along each face
   const flagPositions = [
-    { t: 0.2, face: "left" as const },
-    { t: 0.5, face: "left" as const },
-    { t: 0.8, face: "left" as const },
-    { t: 0.25, face: "right" as const },
-    { t: 0.6, face: "right" as const },
+    { face: "left" as const, t: 0.2 },
+    { face: "left" as const, t: 0.5 },
+    { face: "left" as const, t: 0.8 },
+    { face: "right" as const, t: 0.25 },
+    { face: "right" as const, t: 0.6 },
   ];
   for (const fp of flagPositions) {
     let fx: number, fy: number;
@@ -4328,7 +4369,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
   // Tiger emblem on right wall — glowing isometric diamond shape
   const embX = bx + iW * 0.42;
   const embY = by + iD * 1.2 - wallHs * 0.5;
-  const embA = 0.35 + Math.sin(time * 1.0) * 0.12;
+  const embA = 0.35 + Math.sin(time * 1) * 0.12;
   const embS = 3.5 * s;
 
   // Diamond emblem outline
@@ -4389,7 +4430,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
       sx + 3 * s * Math.cos(ca + 0.3),
       sy + 1.5 * s * Math.sin(ca + 0.3),
       sx + 6 * s * Math.cos(ca),
-      sy + 0.5 * s,
+      sy + 0.5 * s
     );
     ctx.stroke();
   }
@@ -4402,7 +4443,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     0,
     bx,
     by + iD,
-    iW * 1.3,
+    iW * 1.3
   );
   hazeGrad.addColorStop(0, `rgba(255,50,0,${hazeA})`);
   hazeGrad.addColorStop(0.6, `rgba(200,30,0,${hazeA * 0.4})`);
@@ -4419,7 +4460,7 @@ function renderStadiumTower(
   baseY: number,
   s: number,
   pal: BuildingPalette,
-  time: number,
+  time: number
 ): void {
   const tR = 4;
   const tH = 26;
@@ -4433,7 +4474,7 @@ function renderStadiumTower(
     s,
     "#3A2020",
     "#2A1010",
-    "#140808",
+    "#140808"
   );
 
   // Round windows on the tower
@@ -4451,7 +4492,7 @@ function renderStadiumTower(
       1.3,
       s,
       "#1A0808",
-      `rgba(255,60,0,${winA})`,
+      `rgba(255,60,0,${winA})`
     );
   }
 
@@ -4464,19 +4505,18 @@ function renderStadiumTower(
     8,
     s,
     "#200C0C",
-    "#0E0404",
+    "#0E0404"
   );
 
   // Brazier fire atop the tower
-  const fireA =
-    0.4 + Math.sin(time * 2.5 + x * 0.01 + baseY * 0.02) * 0.15;
+  const fireA = 0.4 + Math.sin(time * 2.5 + x * 0.01 + baseY * 0.02) * 0.15;
   const fireGrad = ctx.createRadialGradient(
     x,
     baseY - tH * s - 10 * s,
     0,
     x,
     baseY - tH * s - 8 * s,
-    4 * s,
+    4 * s
   );
   fireGrad.addColorStop(0, `rgba(255,220,60,${fireA})`);
   fireGrad.addColorStop(0.35, `rgba(255,120,20,${fireA * 0.7})`);
@@ -4484,14 +4524,6 @@ function renderStadiumTower(
   fireGrad.addColorStop(1, "rgba(255,30,0,0)");
   ctx.fillStyle = fireGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    baseY - tH * s - 10 * s,
-    3.5 * s,
-    2.5 * s,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x, baseY - tH * s - 10 * s, 3.5 * s, 2.5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 }

@@ -1,4 +1,14 @@
 import type { Position } from "../../types";
+import { getScenePressure } from "../performance";
+import type { ReinforcementPalette } from "./reinforcementHelpers";
+import {
+  drawReinforcementHelmet,
+  drawChestMotif,
+  drawPauldrons,
+  drawBelt,
+  drawGreaves,
+} from "./reinforcementHelpers";
+import { getReinforcementVariation } from "./reinforcementThemes";
 import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
@@ -8,94 +18,84 @@ import {
   drawDetailedArm,
 } from "./troopHelpers";
 import type { ArmColors } from "./troopHelpers";
-import { getScenePressure } from "../performance";
-import { getReinforcementVariation } from "./reinforcementThemes";
-import type { ReinforcementPalette } from "./reinforcementHelpers";
-import {
-  drawReinforcementHelmet,
-  drawChestMotif,
-  drawPauldrons,
-  drawBelt,
-  drawGreaves,
-} from "./reinforcementHelpers";
 
 const PALETTES: readonly ReinforcementPalette[] = [
   {
     armorDark: "#3b3046",
-    armorMid: "#5a4b6e",
     armorLight: "#8f7ab2",
-    trim: "#b39261",
+    armorMid: "#5a4b6e",
     cape: "#2a1d3f",
     capeShadow: "#1b112d",
-    glow: "rgba(156, 108, 232, ",
     eye: "rgba(197, 169, 255, ",
     eyeShadow: "#8d63d6",
+    glow: "rgba(156, 108, 232, ",
+    trim: "#b39261",
   },
   {
     armorDark: "#383855",
-    armorMid: "#5a5e88",
     armorLight: "#9198c8",
-    trim: "#c2a36f",
+    armorMid: "#5a5e88",
     cape: "#2a2752",
     capeShadow: "#1a1536",
-    glow: "rgba(132, 152, 236, ",
     eye: "rgba(184, 206, 255, ",
     eyeShadow: "#5e79cf",
+    glow: "rgba(132, 152, 236, ",
+    trim: "#c2a36f",
   },
   {
     armorDark: "#2f3f57",
-    armorMid: "#4e6d93",
     armorLight: "#87a8d0",
-    trim: "#d6bb81",
+    armorMid: "#4e6d93",
     cape: "#20324e",
     capeShadow: "#142138",
-    glow: "rgba(104, 182, 236, ",
     eye: "rgba(162, 224, 255, ",
     eyeShadow: "#3b8bbf",
+    glow: "rgba(104, 182, 236, ",
+    trim: "#d6bb81",
   },
   {
     armorDark: "#2e3f44",
-    armorMid: "#4d6f79",
     armorLight: "#7fb2be",
-    trim: "#e0c890",
+    armorMid: "#4d6f79",
     cape: "#1f3d41",
     capeShadow: "#10272b",
-    glow: "rgba(109, 224, 203, ",
     eye: "rgba(183, 255, 236, ",
     eyeShadow: "#36a58d",
+    glow: "rgba(109, 224, 203, ",
+    trim: "#e0c890",
   },
   {
     armorDark: "#3d3b2f",
-    armorMid: "#706648",
     armorLight: "#b39d66",
-    trim: "#f2dd9d",
+    armorMid: "#706648",
     cape: "#4d3e21",
     capeShadow: "#2c220f",
-    glow: "rgba(246, 212, 110, ",
     eye: "rgba(255, 238, 170, ",
     eyeShadow: "#d39d34",
+    glow: "rgba(246, 212, 110, ",
+    trim: "#f2dd9d",
   },
   {
     armorDark: "#3a3422",
-    armorMid: "#6f5e2b",
     armorLight: "#c7ab56",
-    trim: "#ffe8a6",
+    armorMid: "#6f5e2b",
     cape: "#4f2f15",
     capeShadow: "#301b0b",
-    glow: "rgba(255, 195, 88, ",
     eye: "rgba(255, 241, 189, ",
     eyeShadow: "#e0aa3f",
+    glow: "rgba(255, 195, 88, ",
+    trim: "#ffe8a6",
   },
   {
     armorDark: "#4a4e5a",
-    armorMid: "#8a90a4",
     armorLight: "#d0d6e8",
-    trim: "#e8eaf6",
+    armorMid: "#8a90a4",
     cape: "#3a3854",
     capeShadow: "#24223a",
-    glow: "rgba(210, 220, 255, ",
     eye: "rgba(230, 240, 255, ",
     eyeShadow: "#8890cc",
+    glow: "rgba(210, 220, 255, ",
+    trim: "#e8eaf6",
   },
 ];
 
@@ -109,7 +109,7 @@ export function drawReinforcementTroop(
   attackPhase: number = 0,
   tierInput: number = 0,
   targetPos?: Position,
-  troopId?: string,
+  troopId?: string
 ) {
   const tier = Math.max(0, Math.min(6, Math.floor(tierInput)));
   const isAttacking = attackPhase > 0;
@@ -132,7 +132,14 @@ export function drawReinforcementTroop(
     if (reinfPressure.forceSimplifiedGradients) {
       ctx.fillStyle = `${palette.glow}${auraStrength * auraPulse * 0.3})`;
     } else {
-      const auraGrad = ctx.createRadialGradient(x, y + size * 0.08, size * 0.08, x, y + size * 0.08, size * 0.74);
+      const auraGrad = ctx.createRadialGradient(
+        x,
+        y + size * 0.08,
+        size * 0.08,
+        x,
+        y + size * 0.08,
+        size * 0.74
+      );
       auraGrad.addColorStop(0, `${palette.glow}${auraStrength * auraPulse})`);
       auraGrad.addColorStop(1, `${palette.glow}0)`);
       ctx.fillStyle = auraGrad;
@@ -157,7 +164,7 @@ export function drawReinforcementTroop(
         size * (0.6 + ringPhase * 0.3),
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -175,14 +182,14 @@ export function drawReinforcementTroop(
     x - size * 0.36 + capeWave,
     y + size * 0.22,
     x - size * 0.28 + capeWave * 1.2,
-    y + size * 0.60,
+    y + size * 0.6
   );
   ctx.lineTo(x + size * 0.14 + capeWave * 0.5, y + size * 0.57);
   ctx.quadraticCurveTo(
     x + size * 0.1 + capeWave * 0.25,
     y + size * 0.12,
     x + size * 0.14,
-    y - size * 0.14 + breathe * 0.4,
+    y - size * 0.14 + breathe * 0.4
   );
   ctx.closePath();
   ctx.fill();
@@ -194,14 +201,14 @@ export function drawReinforcementTroop(
     x - size * 0.2 + capeWave * 0.5,
     y + size * 0.18,
     x - size * 0.12 + capeWave,
-    y + size * 0.48,
+    y + size * 0.48
   );
   ctx.lineTo(x + size * 0.02 + capeWave * 0.4, y + size * 0.46);
   ctx.quadraticCurveTo(
     x + size * 0.01,
     y + size * 0.1,
     x + size * 0.06,
-    y - size * 0.08 + breathe * 0.4,
+    y - size * 0.08 + breathe * 0.4
   );
   ctx.closePath();
   ctx.fill();
@@ -212,7 +219,7 @@ export function drawReinforcementTroop(
     ctx.lineWidth = 1.2 * zoom;
     ctx.globalAlpha = 0.45;
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.28 + capeWave * 1.2, y + size * 0.60);
+    ctx.moveTo(x - size * 0.28 + capeWave * 1.2, y + size * 0.6);
     ctx.lineTo(x + size * 0.14 + capeWave * 0.5, y + size * 0.57);
     ctx.stroke();
     ctx.globalAlpha = 1;
@@ -243,8 +250,10 @@ export function drawReinforcementTroop(
 
   // Front chest plate — rich gradient
   const chestGrad = ctx.createLinearGradient(
-    x - size * 0.22, y - size * 0.20 + by * 0.4,
-    x + size * 0.22, y + size * 0.34 + by,
+    x - size * 0.22,
+    y - size * 0.2 + by * 0.4,
+    x + size * 0.22,
+    y + size * 0.34 + by
   );
   chestGrad.addColorStop(0, palette.armorDark);
   chestGrad.addColorStop(0.15, palette.armorMid);
@@ -256,7 +265,12 @@ export function drawReinforcementTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
   ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.4);
-  ctx.quadraticCurveTo(x, y - size * 0.25 + by * 0.2, x + size * 0.24, y - size * 0.14 + by * 0.4);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.25 + by * 0.2,
+    x + size * 0.24,
+    y - size * 0.14 + by * 0.4
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.closePath();
   ctx.fill();
@@ -268,8 +282,10 @@ export function drawReinforcementTroop(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.02, y - size * 0.12 + by * 0.4);
     ctx.quadraticCurveTo(
-      x + side * size * 0.11, y - size * 0.01 + by * 0.6,
-      x + side * size * 0.07, y + size * 0.10 + by,
+      x + side * size * 0.11,
+      y - size * 0.01 + by * 0.6,
+      x + side * size * 0.07,
+      y + size * 0.1 + by
     );
     ctx.stroke();
 
@@ -277,10 +293,12 @@ export function drawReinforcementTroop(
     ctx.strokeStyle = `rgba(255, 255, 255, 0.07)`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.03, y - size * 0.10 + by * 0.4);
+    ctx.moveTo(x + side * size * 0.03, y - size * 0.1 + by * 0.4);
     ctx.quadraticCurveTo(
-      x + side * size * 0.09, y + by * 0.6,
-      x + side * size * 0.06, y + size * 0.08 + by,
+      x + side * size * 0.09,
+      y + by * 0.6,
+      x + side * size * 0.06,
+      y + size * 0.08 + by
     );
     ctx.stroke();
   }
@@ -300,7 +318,7 @@ export function drawReinforcementTroop(
   ctx.arc(x, y + size * 0.04 + by * 0.7, size * 0.12, 0.3, Math.PI - 0.3);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.11 + by * 0.8, size * 0.10, 0.4, Math.PI - 0.4);
+  ctx.arc(x, y + size * 0.11 + by * 0.8, size * 0.1, 0.4, Math.PI - 0.4);
   ctx.stroke();
   ctx.beginPath();
   ctx.arc(x, y + size * 0.17 + by * 0.9, size * 0.08, 0.45, Math.PI - 0.45);
@@ -323,7 +341,12 @@ export function drawReinforcementTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
   ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.4);
-  ctx.quadraticCurveTo(x, y - size * 0.25 + by * 0.2, x + size * 0.24, y - size * 0.14 + by * 0.4);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.25 + by * 0.2,
+    x + size * 0.24,
+    y - size * 0.14 + by * 0.4
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.stroke();
 
@@ -356,20 +379,30 @@ export function drawReinforcementTroop(
     palette,
     armor.chestMotif,
     tier,
-    attackDrive,
+    attackDrive
   );
 
   // ── Belt (varies per troop) ──
   drawBelt(ctx, x, y, size, zoom, breathe, palette, armor.beltDetail);
 
   // ── Armored skirt (tassets) ──
-  drawArmoredSkirt(ctx, x, y, size, zoom, stride, breathe, {
-    armorPeak: palette.armorLight,
-    armorHigh: palette.armorMid,
-    armorMid: palette.armorDark,
-    armorDark: palette.armorDark,
-    trimColor: palette.trim,
-  }, { plateCount: 5, widthFactor: 0.44, depthFactor: 0.14, topOffset: 0.28 });
+  drawArmoredSkirt(
+    ctx,
+    x,
+    y,
+    size,
+    zoom,
+    stride,
+    breathe,
+    {
+      armorDark: palette.armorDark,
+      armorHigh: palette.armorMid,
+      armorMid: palette.armorDark,
+      armorPeak: palette.armorLight,
+      trimColor: palette.trim,
+    },
+    { depthFactor: 0.14, plateCount: 5, topOffset: 0.28, widthFactor: 0.44 }
+  );
 
   // ── Pauldrons (varies per troop, tier 2+) ──
   drawPauldrons(
@@ -381,7 +414,7 @@ export function drawReinforcementTroop(
     breathe,
     palette,
     armor.pauldronShape,
-    tier,
+    tier
   );
 
   // Gorget
@@ -390,7 +423,7 @@ export function drawReinforcementTroop(
       x - size * 0.12,
       0,
       x + size * 0.12,
-      0,
+      0
     );
     gorgetGrad.addColorStop(0, palette.armorDark);
     gorgetGrad.addColorStop(0.3, palette.armorMid);
@@ -414,7 +447,8 @@ export function drawReinforcementTroop(
 
   // ── Lancer mantle (tier 5) ──
   if (tier >= 5) {
-    const mantleColor = tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 234, 171, 0.85)";
+    const mantleColor =
+      tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 234, 171, 0.85)";
     ctx.strokeStyle = mantleColor;
     ctx.lineWidth = 2.2 * zoom;
     ctx.beginPath();
@@ -434,7 +468,14 @@ export function drawReinforcementTroop(
       ctx.save();
       ctx.shadowColor = hue;
       ctx.shadowBlur = (4 + jewelSparkle * 2) * zoom;
-      const jGrad = ctx.createRadialGradient(jx - r * 0.3, jy - r * 0.3, 0, jx, jy, r);
+      const jGrad = ctx.createRadialGradient(
+        jx - r * 0.3,
+        jy - r * 0.3,
+        0,
+        jx,
+        jy,
+        r
+      );
       jGrad.addColorStop(0, "#ffffff");
       jGrad.addColorStop(0.3, hue);
       jGrad.addColorStop(1, "rgba(80, 80, 120, 0.6)");
@@ -455,13 +496,38 @@ export function drawReinforcementTroop(
     const s = size;
     const by = breathe;
     // Chest centerpiece
-    drawJewel(x, y - s * 0.06 + by * 0.5, s * 0.035, "rgba(180, 200, 255, 0.9)");
+    drawJewel(
+      x,
+      y - s * 0.06 + by * 0.5,
+      s * 0.035,
+      "rgba(180, 200, 255, 0.9)"
+    );
     // Pauldron jewels
-    drawJewel(x - s * 0.22, y - s * 0.1 + by * 0.4, s * 0.025, "rgba(220, 180, 255, 0.85)");
-    drawJewel(x + s * 0.22, y - s * 0.1 + by * 0.4, s * 0.025, "rgba(220, 180, 255, 0.85)");
+    drawJewel(
+      x - s * 0.22,
+      y - s * 0.1 + by * 0.4,
+      s * 0.025,
+      "rgba(220, 180, 255, 0.85)"
+    );
+    drawJewel(
+      x + s * 0.22,
+      y - s * 0.1 + by * 0.4,
+      s * 0.025,
+      "rgba(220, 180, 255, 0.85)"
+    );
     // Belt jewels
-    drawJewel(x - s * 0.1, y + s * 0.18 + by * 0.8, s * 0.018, "rgba(180, 230, 255, 0.8)");
-    drawJewel(x + s * 0.1, y + s * 0.18 + by * 0.8, s * 0.018, "rgba(180, 230, 255, 0.8)");
+    drawJewel(
+      x - s * 0.1,
+      y + s * 0.18 + by * 0.8,
+      s * 0.018,
+      "rgba(180, 230, 255, 0.8)"
+    );
+    drawJewel(
+      x + s * 0.1,
+      y + s * 0.18 + by * 0.8,
+      s * 0.018,
+      "rgba(180, 230, 255, 0.8)"
+    );
 
     // Crystal shimmer lines on armor plates
     ctx.globalAlpha = 0.25 + jewelSparkle * 0.15;
@@ -487,14 +553,14 @@ export function drawReinforcementTroop(
     ? Math.atan2(reinfShieldY - reinfLShoulderY, reinfShieldX - reinfLShoulderX)
     : -0.24;
   const reinfArmColors: ArmColors = {
-    upper: palette.armorMid,
-    upperLight: palette.armorLight,
-    upperDark: palette.armorDark,
-    vambrace: palette.armorLight,
-    vambraceLight: palette.armorMid,
     elbow: palette.armorMid,
     hand: palette.armorMid,
     trim: palette.trim,
+    upper: palette.armorMid,
+    upperDark: palette.armorDark,
+    upperLight: palette.armorLight,
+    vambrace: palette.armorLight,
+    vambraceLight: palette.armorMid,
   };
 
   ctx.save();
@@ -525,8 +591,10 @@ export function drawReinforcementTroop(
 
     // Shield body — rich gradient
     const shieldGrad = ctx.createLinearGradient(
-      -shW * 0.5, -shH * 0.3,
-      shW * 0.5, shH * 0.3,
+      -shW * 0.5,
+      -shH * 0.3,
+      shW * 0.5,
+      shH * 0.3
     );
     shieldGrad.addColorStop(0, palette.armorDark);
     shieldGrad.addColorStop(0.2, palette.armorMid);
@@ -560,8 +628,10 @@ export function drawReinforcementTroop(
 
     // Inner field — slightly inset darker panel
     const innerGrad = ctx.createLinearGradient(
-      -shW * 0.3, -shH * 0.2,
-      shW * 0.3, shH * 0.2,
+      -shW * 0.3,
+      -shH * 0.2,
+      shW * 0.3,
+      shH * 0.2
     );
     innerGrad.addColorStop(0, palette.armorDark);
     innerGrad.addColorStop(0.5, palette.armorMid);
@@ -606,7 +676,13 @@ export function drawReinforcementTroop(
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.beginPath();
-      ctx.arc(riv.x - size * 0.002, riv.y - size * 0.002, size * 0.004, 0, Math.PI * 2);
+      ctx.arc(
+        riv.x - size * 0.002,
+        riv.y - size * 0.002,
+        size * 0.004,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
 
@@ -628,7 +704,7 @@ export function drawReinforcementTroop(
     ctx.strokeStyle = palette.trim;
     ctx.lineWidth = 2 * zoom;
     switch (armor.chestMotif) {
-      case "cross":
+      case "cross": {
         ctx.beginPath();
         ctx.moveTo(0, -shH * 0.28);
         ctx.lineTo(0, shH * 0.28);
@@ -644,7 +720,8 @@ export function drawReinforcementTroop(
         ctx.lineTo(shW * 0.08, shH * 0.26);
         ctx.stroke();
         break;
-      case "diamond":
+      }
+      case "diamond": {
         ctx.beginPath();
         ctx.moveTo(0, -shH * 0.2);
         ctx.lineTo(-shW * 0.16, 0);
@@ -658,7 +735,8 @@ export function drawReinforcementTroop(
         ctx.arc(0, 0, size * 0.012, 0, Math.PI * 2);
         ctx.fill();
         break;
-      case "scales":
+      }
+      case "scales": {
         // Overlapping scale arcs
         ctx.lineWidth = 1 * zoom;
         for (let row = -1; row <= 1; row++) {
@@ -671,7 +749,8 @@ export function drawReinforcementTroop(
           }
         }
         break;
-      case "fluted":
+      }
+      case "fluted": {
         // Vertical fluted lines
         ctx.lineWidth = 0.8 * zoom;
         for (let i = -2; i <= 2; i++) {
@@ -682,7 +761,8 @@ export function drawReinforcementTroop(
           ctx.stroke();
         }
         break;
-      case "runic":
+      }
+      case "runic": {
         // Angular rune marks
         ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
@@ -699,7 +779,8 @@ export function drawReinforcementTroop(
         ctx.lineTo(shW * 0.1, shH * 0.1);
         ctx.stroke();
         break;
-      default:
+      }
+      default: {
         ctx.beginPath();
         ctx.moveTo(0, -shH * 0.28);
         ctx.lineTo(0, shH * 0.28);
@@ -709,6 +790,7 @@ export function drawReinforcementTroop(
         ctx.lineTo(shW * 0.18, -size * 0.02);
         ctx.stroke();
         break;
+      }
     }
 
     // Center boss (raised dome)
@@ -765,7 +847,7 @@ export function drawReinforcementTroop(
       spearBaseAngle,
       Math.PI / 2,
       isAttacking ? 1.28 : 0.72,
-      WEAPON_LIMITS.rightPole,
+      WEAPON_LIMITS.rightPole
     );
 
     // Derive spear origin so grip lands exactly on the hand
@@ -806,7 +888,7 @@ export function drawReinforcementTroop(
         -size * 0.04,
         bandY,
         size * 0.04,
-        bandY,
+        bandY
       );
       ferruleGrad.addColorStop(0, "#6a5520");
       ferruleGrad.addColorStop(0.3, palette.trim);
@@ -821,7 +903,7 @@ export function drawReinforcementTroop(
       -size * 0.08,
       -size * 0.96,
       size * 0.08,
-      -size * 0.66,
+      -size * 0.66
     );
     tipGrad.addColorStop(0, "#e8e0d0");
     tipGrad.addColorStop(0.15, "#fff4dc");
@@ -835,7 +917,7 @@ export function drawReinforcementTroop(
       -size * 0.1,
       -size * 0.82,
       -size * 0.085,
-      -size * 0.68,
+      -size * 0.68
     );
     ctx.lineTo(-size * 0.02, -size * 0.64);
     ctx.lineTo(size * 0.02, -size * 0.64);
@@ -861,7 +943,7 @@ export function drawReinforcementTroop(
       -size * 0.09,
       -size * 0.81,
       -size * 0.075,
-      -size * 0.69,
+      -size * 0.69
     );
     ctx.stroke();
     ctx.beginPath();
@@ -891,13 +973,13 @@ export function drawReinforcementTroop(
       size * 0.18 + flagDrive * 0.6 + flagWave,
       -size * 0.35 + flagWave2,
       size * 0.28 + flagDrive + flagWave * 1.3,
-      -size * 0.32,
+      -size * 0.32
     );
     ctx.quadraticCurveTo(
       size * 0.2 + flagDrive * 0.7 + flagWave * 0.8,
       -size * 0.24 + flagWave2 * 0.5,
       size * 0.29 + flagDrive * 0.9 + flagWave * 1.1,
-      -size * 0.18,
+      -size * 0.18
     );
     ctx.lineTo(size * 0.035, -size * 0.1);
     ctx.closePath();
@@ -908,7 +990,7 @@ export function drawReinforcementTroop(
       size * 0.03,
       -size * 0.38,
       size * 0.28 + flagDrive,
-      -size * 0.18,
+      -size * 0.18
     );
     bannerGrad.addColorStop(0, palette.cape);
     bannerGrad.addColorStop(0.4, palette.capeShadow);
@@ -920,15 +1002,15 @@ export function drawReinforcementTroop(
       size * 0.17 + flagDrive * 0.5 + flagWave,
       -size * 0.345 + flagWave2,
       size * 0.27 + flagDrive + flagWave * 1.2,
-      -size * 0.315,
+      -size * 0.315
     );
     // Swallowtail notch
     ctx.lineTo(size * 0.22 + flagDrive * 0.8 + flagWave * 0.9, -size * 0.25);
     ctx.quadraticCurveTo(
       size * 0.19 + flagDrive * 0.6 + flagWave * 0.6,
       -size * 0.235 + flagWave2 * 0.3,
-      size * 0.28 + flagDrive * 0.85 + flagWave * 1.0,
-      -size * 0.19,
+      size * 0.28 + flagDrive * 0.85 + flagWave * 1,
+      -size * 0.19
     );
     ctx.lineTo(size * 0.032, -size * 0.11);
     ctx.closePath();
@@ -943,7 +1025,7 @@ export function drawReinforcementTroop(
       size * 0.17 + flagDrive * 0.5 + flagWave,
       -size * 0.345 + flagWave2,
       size * 0.27 + flagDrive + flagWave * 1.2,
-      -size * 0.315,
+      -size * 0.315
     );
     ctx.stroke();
     ctx.beginPath();
@@ -951,8 +1033,8 @@ export function drawReinforcementTroop(
     ctx.quadraticCurveTo(
       size * 0.15 + flagDrive * 0.5 + flagWave * 0.7,
       -size * 0.13 + flagWave2 * 0.4,
-      size * 0.28 + flagDrive * 0.85 + flagWave * 1.0,
-      -size * 0.19,
+      size * 0.28 + flagDrive * 0.85 + flagWave * 1,
+      -size * 0.19
     );
     ctx.stroke();
 
@@ -982,7 +1064,7 @@ export function drawReinforcementTroop(
         size * 0.14 + flagDrive * foldT + flagWave * foldT,
         fY + flagWave2 * foldT * 0.5,
         size * 0.24 + flagDrive * foldT * 0.8,
-        fY - size * 0.01,
+        fY - size * 0.01
       );
       ctx.stroke();
     }
@@ -992,7 +1074,7 @@ export function drawReinforcementTroop(
 
     // Arm swing: overhead chop (up → forward → down)
     const armSwingAngle = isAttacking
-      ? -0.3 + (1 - attackPhase) * 1.0
+      ? -0.3 + (1 - attackPhase) * 1
       : 0.15 + stride * 0.03;
 
     const handX = reinfRShoulderX + Math.cos(armSwingAngle) * armLength;
@@ -1009,7 +1091,7 @@ export function drawReinforcementTroop(
       swordBaseAngle,
       Math.PI / 2,
       isAttacking ? 1.38 : 0.78,
-      WEAPON_LIMITS.rightMelee,
+      WEAPON_LIMITS.rightMelee
     );
 
     // Derive sword origin so grip lands exactly on the hand
@@ -1037,7 +1119,7 @@ export function drawReinforcementTroop(
       0,
       0,
       size * 0.28,
-      size * 0.03,
+      size * 0.03
     );
     pommelGrad.addColorStop(0, "#6a5530");
     pommelGrad.addColorStop(0.5, "#4a3520");
@@ -1060,7 +1142,7 @@ export function drawReinforcementTroop(
       -size * 0.03,
       0,
       size * 0.03,
-      0,
+      0
     );
     handleGrad.addColorStop(0, "#1a0f08");
     handleGrad.addColorStop(0.3, "#3a2510");
@@ -1221,7 +1303,7 @@ export function drawReinforcementTroop(
         size * 0.32,
         -bladeLength * 0.6,
         size * 0.28,
-        -size * 0.08,
+        -size * 0.08
       );
       ctx.stroke();
       // Secondary shimmer trail
@@ -1233,7 +1315,7 @@ export function drawReinforcementTroop(
         size * 0.36,
         -bladeLength * 0.65,
         size * 0.32,
-        -size * 0.12,
+        -size * 0.12
       );
       ctx.stroke();
     }
@@ -1263,8 +1345,10 @@ export function drawReinforcementTroop(
 
     // Shield body — rich gradient
     const lancerShieldGrad = ctx.createLinearGradient(
-      -lshW * 0.5, -lshH * 0.3,
-      lshW * 0.5, lshH * 0.3,
+      -lshW * 0.5,
+      -lshH * 0.3,
+      lshW * 0.5,
+      lshH * 0.3
     );
     lancerShieldGrad.addColorStop(0, palette.armorDark);
     lancerShieldGrad.addColorStop(0.2, palette.armorMid);
@@ -1284,7 +1368,8 @@ export function drawReinforcementTroop(
     ctx.fill();
 
     // Outer rim — tier-dependent color
-    const shieldRimColor = tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 233, 171, 0.85)";
+    const shieldRimColor =
+      tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 233, 171, 0.85)";
     ctx.strokeStyle = shieldRimColor;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
@@ -1299,8 +1384,10 @@ export function drawReinforcementTroop(
 
     // Inner field — darker inset panel
     const innerGrad = ctx.createLinearGradient(
-      -lshW * 0.3, -lshH * 0.2,
-      lshW * 0.3, lshH * 0.2,
+      -lshW * 0.3,
+      -lshH * 0.2,
+      lshW * 0.3,
+      lshH * 0.2
     );
     innerGrad.addColorStop(0, palette.armorDark);
     innerGrad.addColorStop(0.5, palette.armorMid);
@@ -1345,7 +1432,13 @@ export function drawReinforcementTroop(
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.beginPath();
-      ctx.arc(riv.x - size * 0.002, riv.y - size * 0.002, size * 0.004, 0, Math.PI * 2);
+      ctx.arc(
+        riv.x - size * 0.002,
+        riv.y - size * 0.002,
+        size * 0.004,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
 
@@ -1371,7 +1464,7 @@ export function drawReinforcementTroop(
       -lshH * 0.22,
       size * 0.05,
       lshH * 0.44,
-      size * 0.01,
+      size * 0.01
     );
     ctx.fill();
     ctx.beginPath();
@@ -1380,7 +1473,7 @@ export function drawReinforcementTroop(
       -size * 0.02,
       lshW * 0.44,
       size * 0.04,
-      size * 0.01,
+      size * 0.01
     );
     ctx.fill();
 
@@ -1409,7 +1502,14 @@ export function drawReinforcementTroop(
       ctx.save();
       ctx.shadowColor = "rgba(180, 200, 255, 0.8)";
       ctx.shadowBlur = 5 * zoom;
-      const sJGrad = ctx.createRadialGradient(-size * 0.005, -size * 0.01, 0, 0, 0, size * 0.04);
+      const sJGrad = ctx.createRadialGradient(
+        -size * 0.005,
+        -size * 0.01,
+        0,
+        0,
+        0,
+        size * 0.04
+      );
       sJGrad.addColorStop(0, "#ffffff");
       sJGrad.addColorStop(0.35, "rgba(180, 200, 255, 0.9)");
       sJGrad.addColorStop(1, "rgba(100, 110, 160, 0.5)");
@@ -1446,7 +1546,7 @@ export function drawReinforcementTroop(
       y - size * 0.39 + breathe * 0.2 + headYOffset,
       size * 0.23,
       -2.5,
-      -0.65,
+      -0.65
     );
     ctx.stroke();
     ctx.beginPath();
@@ -1455,7 +1555,7 @@ export function drawReinforcementTroop(
       y - size * 0.39 + breathe * 0.2 + headYOffset,
       size * 0.23,
       -2.5 + Math.PI,
-      -0.65 + Math.PI,
+      -0.65 + Math.PI
     );
     ctx.stroke();
   }
@@ -1473,7 +1573,7 @@ export function drawReinforcementTroop(
     attackDrive,
     palette,
     helmet,
-    tier,
+    tier
   );
 
   // ── Helmet crown jewel (tier 6) ──
@@ -1483,8 +1583,12 @@ export function drawReinforcementTroop(
     ctx.shadowColor = "rgba(200, 210, 255, 0.9)";
     ctx.shadowBlur = (5 + Math.sin(time * 6) * 2) * zoom;
     const crownGrad = ctx.createRadialGradient(
-      x - size * 0.01, helmY - size * 0.12, 0,
-      x, helmY - size * 0.1, size * 0.03,
+      x - size * 0.01,
+      helmY - size * 0.12,
+      0,
+      x,
+      helmY - size * 0.1,
+      size * 0.03
     );
     crownGrad.addColorStop(0, "#ffffff");
     crownGrad.addColorStop(0.35, "rgba(200, 215, 255, 0.95)");
@@ -1529,7 +1633,7 @@ export function drawReinforcementTroop(
     time,
     zoom,
     reinforcementFinishStyle,
-    { vanguard: tier >= 3 },
+    { vanguard: tier >= 3 }
   );
   ctx.restore();
 }

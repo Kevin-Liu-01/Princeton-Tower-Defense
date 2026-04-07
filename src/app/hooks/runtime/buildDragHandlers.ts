@@ -1,6 +1,8 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
+
 import type { DraggingTower, TowerType } from "../../types";
-import { getCachedRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
+import { getCachedRect } from "./cachedCanvasRect";
+import type { CachedCanvasRectRef } from "./cachedCanvasRect";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
 
@@ -10,12 +12,17 @@ export function handleBuildTouchDragMoveImpl(
   towerType: TowerType,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   setDraggingTower: Setter<DraggingTower | null>,
-  cachedCanvasRectRef: CachedCanvasRectRef,
+  cachedCanvasRectRef: CachedCanvasRectRef
 ): void {
   const canvas = canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rect = getCachedRect(canvas, cachedCanvasRectRef);
-  setDraggingTower({ type: towerType, pos: { x: clientX - rect.left, y: clientY - rect.top } });
+  setDraggingTower({
+    pos: { x: clientX - rect.left, y: clientY - rect.top },
+    type: towerType,
+  });
 }
 
 export function handleBuildTouchDragEndImpl(
@@ -23,20 +30,22 @@ export function handleBuildTouchDragEndImpl(
   clientY: number,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   setDraggingTower: Setter<DraggingTower | null>,
-  cachedCanvasRectRef: CachedCanvasRectRef,
+  cachedCanvasRectRef: CachedCanvasRectRef
 ): void {
   const canvas = canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const rect = getCachedRect(canvas, cachedCanvasRectRef);
   const x = clientX - rect.left;
   const y = clientY - rect.top;
   if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
     canvas.dispatchEvent(
       new PointerEvent("pointerup", {
+        bubbles: true,
         clientX,
         clientY,
         pointerType: "touch",
-        bubbles: true,
       })
     );
   } else {

@@ -1,4 +1,3 @@
-import type { Tower, Position } from "../../types";
 import {
   TILE_SIZE,
   TOWER_COLORS,
@@ -7,11 +6,10 @@ import {
   ISO_PRISM_D_FACTOR,
   ISO_Y_RATIO,
 } from "../../constants";
-import { drawIsoFlushSlit } from "../isoFlush";
 import { LEVEL_DATA, REGION_THEMES } from "../../constants/maps";
 import type { MapTheme } from "../../constants/maps";
+import type { Tower, Position } from "../../types";
 import { gridToWorld, lightenColor, darkenColor } from "../../utils";
-import { setShadowBlur, clearShadow } from "../performance";
 import {
   generateIsoHexVertices,
   computeHexSideNormals,
@@ -20,9 +18,10 @@ import {
   drawHexBand,
   scaleVerts,
   drawOrganicBlobAt,
-  type IsoOffFn,
-  type Pt,
 } from "../helpers";
+import type { IsoOffFn, Pt } from "../helpers";
+import { drawIsoFlushSlit } from "../isoFlush";
+import { setShadowBlur, clearShadow } from "../performance";
 
 export function drawIsometricPrism(
   ctx: CanvasRenderingContext2D,
@@ -38,7 +37,7 @@ export function drawIsometricPrism(
     leftBack?: string;
     rightBack?: string;
   },
-  zoom: number = 1,
+  zoom: number = 1
 ) {
   const w = width * zoom * ISO_PRISM_W_FACTOR;
   const d = depth * zoom * ISO_PRISM_D_FACTOR;
@@ -130,7 +129,7 @@ export function drawIsoOctPrism(
   leftColor: string,
   rightColor: string,
   zoom: number,
-  cornerCut: number = 0.15,
+  cornerCut: number = 0.15
 ): { x: number; y: number }[] {
   const hw = w * zoom * 0.5;
   const hd = d * zoom * 0.25;
@@ -145,7 +144,7 @@ export function drawIsoOctPrism(
   const lp = (
     a: { x: number; y: number },
     b: { x: number; y: number },
-    t: number,
+    t: number
   ) => ({
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
@@ -165,7 +164,9 @@ export function drawIsoOctPrism(
   ctx.fillStyle = topColor;
   ctx.beginPath();
   ctx.moveTo(p[0].x, p[0].y - hh);
-  for (let i = 1; i < 8; i++) ctx.lineTo(p[i].x, p[i].y - hh);
+  for (let i = 1; i < 8; i++) {
+    ctx.lineTo(p[i].x, p[i].y - hh);
+  }
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.3)";
@@ -176,7 +177,7 @@ export function drawIsoOctPrism(
     a: { x: number; y: number },
     b: { x: number; y: number },
     color: string,
-    strokeAlpha: number,
+    strokeAlpha: number
   ) => {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -228,7 +229,7 @@ export function drawIsoDiamond(
   topColor: string,
   leftColor: string,
   rightColor: string,
-  zoom: number,
+  zoom: number
 ) {
   const hw = w * zoom * 0.5;
   const hd = d * zoom * 0.25;
@@ -290,7 +291,7 @@ export function drawIsometricRailing(
     frontPanel: string;
   },
   zoom: number,
-  half: "back" | "front" | "both" = "both",
+  half: "back" | "front" | "both" = "both"
 ) {
   const drawHalf = (isBack: boolean) => {
     const arcStart = isBack ? Math.PI : 0;
@@ -313,7 +314,9 @@ export function drawIsometricRailing(
     ctx.lineWidth = zoom;
     for (let bp = 0; bp < posts; bp++) {
       const pa = (bp / posts) * Math.PI * 2;
-      if (sinCheck(Math.sin(pa))) continue;
+      if (sinCheck(Math.sin(pa))) {
+        continue;
+      }
       const px = cx + Math.cos(pa) * rx;
       const py = cy + Math.sin(pa) * ry;
       ctx.beginPath();
@@ -326,7 +329,9 @@ export function drawIsometricRailing(
     for (let i = 0; i < segments; i++) {
       const a0 = (i / segments) * Math.PI * 2;
       const a1 = ((i + 1) / segments) * Math.PI * 2;
-      if (sinCheck(Math.sin((a0 + a1) / 2))) continue;
+      if (sinCheck(Math.sin((a0 + a1) / 2))) {
+        continue;
+      }
       const x0 = cx + Math.cos(a0) * rx;
       const y0b = cy + Math.sin(a0) * ry;
       const x1 = cx + Math.cos(a1) * rx;
@@ -341,8 +346,12 @@ export function drawIsometricRailing(
     }
   };
 
-  if (half === "back" || half === "both") drawHalf(true);
-  if (half === "front" || half === "both") drawHalf(false);
+  if (half === "back" || half === "both") {
+    drawHalf(true);
+  }
+  if (half === "front" || half === "both") {
+    drawHalf(false);
+  }
 }
 
 export function drawIsoCylinder(
@@ -351,7 +360,7 @@ export function drawIsoCylinder(
   cy: number,
   rx: number,
   h: number,
-  colors: { body: string; dark: string; light: string; top: string },
+  colors: { body: string; dark: string; light: string; top: string }
 ) {
   const ry = rx * ISO_Y_RATIO;
 
@@ -407,7 +416,7 @@ export function drawMerlon(
   h: number,
   colors: { top: string; left: string; right: string },
   zoom: number,
-  hasArrowSlit: boolean = true,
+  hasArrowSlit: boolean = true
 ) {
   const hw = w * zoom * 0.5;
   const hd = d * zoom * ISO_PRISM_D_FACTOR;
@@ -528,7 +537,7 @@ export function drawGear(
   teeth: number,
   rotation: number,
   colors: { outer: string; inner: string; teeth: string; highlight: string },
-  zoom: number,
+  zoom: number
 ) {
   const or_ = outerRadius * zoom;
   const ir = innerRadius * zoom;
@@ -544,7 +553,15 @@ export function drawGear(
   // Drop shadow
   ctx.fillStyle = "rgba(0,0,0,0.18)";
   ctx.beginPath();
-  ctx.ellipse(x + 1.5 * zoom, y + 1.5 * zoom, or_ * 1.05, or_ * 1.05 * isoY, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + 1.5 * zoom,
+    y + 1.5 * zoom,
+    or_ * 1.05,
+    or_ * 1.05 * isoY,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Outer rim ring
@@ -591,10 +608,12 @@ export function drawGear(
 
   // Radial gradient shading on body
   const grad = ctx.createRadialGradient(
-    x - ir * 0.2, y - ir * isoY * 0.2,
+    x - ir * 0.2,
+    y - ir * isoY * 0.2,
     ir * 0.1,
-    x, y,
-    ir,
+    x,
+    y,
+    ir
   );
   grad.addColorStop(0, "rgba(255,255,255,0.12)");
   grad.addColorStop(0.5, "rgba(0,0,0,0)");
@@ -628,7 +647,15 @@ export function drawGear(
     const holeDist = ir * 0.72;
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.beginPath();
-    ctx.ellipse(px(a, holeDist), py(a, holeDist), holeR, holeR * isoY, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      px(a, holeDist),
+      py(a, holeDist),
+      holeR,
+      holeR * isoY,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -660,7 +687,15 @@ export function drawGear(
   ctx.strokeStyle = "rgba(255,255,255,0.2)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - 0.3 * zoom, y - 0.3 * zoom, ir * 0.17, ir * 0.17 * isoY, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(
+    x - 0.3 * zoom,
+    y - 0.3 * zoom,
+    ir * 0.17,
+    ir * 0.17 * isoY,
+    0,
+    Math.PI,
+    Math.PI * 2
+  );
   ctx.stroke();
   ctx.strokeStyle = "rgba(0,0,0,0.3)";
   ctx.lineWidth = 0.8 * zoom;
@@ -684,7 +719,7 @@ export function drawSteamVent(
   time: number,
   intensity: number,
   zoom: number,
-  color: string = "rgba(200, 200, 200, ",
+  color: string = "rgba(200, 200, 200, "
 ) {
   const numPuffs = 4;
   for (let i = 0; i < numPuffs; i++) {
@@ -711,7 +746,7 @@ export function drawConveyorBelt(
   width: number,
   time: number,
   zoom: number,
-  itemColor: string,
+  itemColor: string
 ) {
   const dx = endX - startX;
   const dy = endY - startY;
@@ -739,7 +774,7 @@ export function drawConveyorBelt(
         segX,
         -width * zoom * 0.4,
         segmentWidth * 0.6,
-        width * zoom * 0.8,
+        width * zoom * 0.8
       );
     }
   }
@@ -755,7 +790,7 @@ export function drawConveyorBelt(
       itemX - 4 * zoom,
       -width * zoom * 0.35,
       8 * zoom,
-      width * zoom * 0.7,
+      width * zoom * 0.7
     );
 
     // Item detail
@@ -764,7 +799,7 @@ export function drawConveyorBelt(
       itemX - 3 * zoom,
       -width * zoom * 0.25,
       2 * zoom,
-      width * zoom * 0.5,
+      width * zoom * 0.5
     );
   }
 
@@ -781,7 +816,7 @@ export function drawEnergyTube(
   radius: number,
   time: number,
   zoom: number,
-  color: string,
+  color: string
 ) {
   const dx = endX - startX;
   const dy = endY - startY;
@@ -831,7 +866,7 @@ export function drawAmmoBox(
   depth: number,
   colors: { main: string; accent: string; label: string },
   zoom: number,
-  bouncePhase: number = 0,
+  bouncePhase: number = 0
 ) {
   const bounce = Math.sin(bouncePhase) * 2 * zoom;
   const boxY = y - bounce;
@@ -925,7 +960,7 @@ export function drawWarningLight(
   time: number,
   zoom: number,
   color: string,
-  flashSpeed: number = 3,
+  flashSpeed: number = 3
 ) {
   const flash = 0.5 + Math.sin(time * flashSpeed) * 0.5;
 
@@ -959,7 +994,7 @@ export function draw3DAmmoBox(
   time: number,
   isAttacking: boolean,
   attackPulse: number,
-  size: "small" | "medium" | "large" = "medium",
+  size: "small" | "medium" | "large" = "medium"
 ) {
   const sm = size === "small" ? 0.95 : size === "large" ? 1.4 : 1.15;
 
@@ -1027,22 +1062,26 @@ export function draw3DAmmoBox(
     return `rgb(${r},${g},${b})`;
   };
 
-  type Face = {
+  interface Face {
     corners: number[];
     lit: number;
     isTop?: boolean;
     normal: string;
-  };
+  }
   const faces: Face[] = [];
-  if (showBack)
+  if (showBack) {
     faces.push({ corners: [3, 2, 6, 7], lit: backLit, normal: "back" });
-  if (showLeft)
+  }
+  if (showLeft) {
     faces.push({ corners: [0, 3, 7, 4], lit: leftLit, normal: "left" });
-  if (showRight)
+  }
+  if (showRight) {
     faces.push({ corners: [2, 1, 5, 6], lit: rightLit, normal: "right" });
-  if (showFront)
+  }
+  if (showFront) {
     faces.push({ corners: [1, 0, 4, 5], lit: frontLit, normal: "front" });
-  faces.push({ corners: [4, 5, 6, 7], lit: 0.8, isTop: true, normal: "top" });
+  }
+  faces.push({ corners: [4, 5, 6, 7], isTop: true, lit: 0.8, normal: "top" });
 
   faces.sort((a, b) => {
     const avgYa = a.corners.reduce((s, i) => s + c[i].y, 0) / a.corners.length;
@@ -1160,7 +1199,7 @@ export function draw3DAmmoBox(
     }
 
     // Stencil label area on the last drawn side face
-    if (face === faces[faces.length - 2]) {
+    if (face === faces.at(-2)) {
       ctx.fillStyle = `rgba(15, 18, 12, 0.55)`;
       const la = facePoint(0.15, 0.7),
         lb = facePoint(0.85, 0.7);
@@ -1179,7 +1218,7 @@ export function draw3DAmmoBox(
   // Glowing status LED on the most visible side face
   const lastSide = faces.filter((f) => !f.isTop);
   if (lastSide.length > 0) {
-    const ledFace = lastSide[lastSide.length - 1];
+    const ledFace = lastSide.at(-1);
     const lp0 = c[ledFace.corners[0]],
       lp1 = c[ledFace.corners[1]];
     const lp2 = c[ledFace.corners[2]],
@@ -1206,13 +1245,13 @@ export function draw3DAmmoBox(
       ledY - 0.5 * zoom * sm,
       0.8 * zoom * sm,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
     // Red hazard indicator on opposite side if visible
     if (lastSide.length > 1) {
-      const hFace = lastSide[lastSide.length - 2];
+      const hFace = lastSide.at(-2);
       const hp0 = c[hFace.corners[0]],
         hp1 = c[hFace.corners[1]];
       const hp3 = c[hFace.corners[3]];
@@ -1239,7 +1278,7 @@ export function draw3DArmorShield(
   rotation: number,
   zoom: number,
   towerId: number | string,
-  size: "small" | "medium" | "large" = "medium",
+  size: "small" | "medium" | "large" = "medium"
 ) {
   const sm = size === "small" ? 0.8 : size === "large" ? 1.3 : 1.1;
 
@@ -1307,7 +1346,7 @@ export function draw3DArmorShield(
     3.5 * zoom * sm,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.strokeStyle = `rgb(${Math.floor(70 + lightness * 25)}, ${Math.floor(70 + lightness * 20)}, ${Math.floor(65 + lightness * 15)})`;
@@ -1316,16 +1355,14 @@ export function draw3DArmorShield(
 
   // Generate shield number from towerId
   let hashValue: number;
-  if (typeof towerId === "number" && !isNaN(towerId) && towerId !== 0) {
+  if (typeof towerId === "number" && !Number.isNaN(towerId) && towerId !== 0) {
     hashValue = towerId;
   } else {
     hashValue = Math.abs(
-      String(towerId)
-        .split("")
-        .reduce((a, b) => {
-          a = (a << 5) - a + b.charCodeAt(0);
-          return a & a;
-        }, 0),
+      [...String(towerId)].reduce((a, b) => {
+        a = (a << 5) - a + b.codePointAt(0);
+        return a & a;
+      }, 0)
     );
   }
   const shieldNumber = ((hashValue * 7 + 13) % 90) + 10;
@@ -1370,9 +1407,9 @@ export function draw3DFuelTank(
   _time: number,
   _isAttacking: boolean,
   _attackPulse: number,
-  size: "small" | "medium" | "large" = "medium",
+  size: "small" | "medium" | "large" = "medium"
 ) {
-  const sm = size === "small" ? 0.75 : size === "large" ? 1.2 : 1.0;
+  const sm = size === "small" ? 0.75 : size === "large" ? 1.2 : 1;
   const rX = 6 * zoom * sm;
   const rY = rX * 0.45;
   const topY = centerY - 12 * zoom * sm;
@@ -1424,7 +1461,7 @@ export function draw3DFuelTank(
       0,
       -0.1,
       Math.PI + 0.1,
-      false,
+      false
     );
     ctx.stroke();
   }
@@ -1442,7 +1479,7 @@ export function draw3DFuelTank(
     0,
     -0.1,
     Math.PI + 0.1,
-    false,
+    false
   );
   ctx.stroke();
 
@@ -1453,7 +1490,7 @@ export function draw3DFuelTank(
     0,
     centerX,
     topY,
-    rX,
+    rX
   );
   capGrad.addColorStop(0, "#5a5a62");
   capGrad.addColorStop(0.4, "#4a4a52");
@@ -1477,7 +1514,7 @@ export function draw3DFuelTank(
     1.2 * zoom * sm,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#7a7a82";
@@ -1498,7 +1535,7 @@ export function drawFuelFeedingTube(
   time: number,
   isAttacking: boolean,
   attackPulse: number,
-  tankSide: number,
+  tankSide: number
 ) {
   // Tube shake animation when firing - more intense vibration
   const shakeIntensity = isAttacking ? attackPulse : 0;
@@ -1570,7 +1607,7 @@ export function drawFuelFeedingTube(
     tubeMid2X,
     tubeMid2Y + 1 * zoom,
     tubeEntryX,
-    tubeEntryY + 1 * zoom,
+    tubeEntryY + 1 * zoom
   );
   ctx.stroke();
 
@@ -1579,7 +1616,7 @@ export function drawFuelFeedingTube(
     tubeExitX,
     tubeExitY - 4 * zoom,
     tubeEntryX,
-    tubeEntryY + 4 * zoom,
+    tubeEntryY + 4 * zoom
   );
   hoseGrad.addColorStop(0, "#3a3a42");
   hoseGrad.addColorStop(0.3, "#4a4a52");
@@ -1596,7 +1633,7 @@ export function drawFuelFeedingTube(
     tubeMid2X,
     tubeMid2Y,
     tubeEntryX,
-    tubeEntryY,
+    tubeEntryY
   );
   ctx.stroke();
 
@@ -1611,7 +1648,7 @@ export function drawFuelFeedingTube(
     tubeMid2X,
     tubeMid2Y,
     tubeEntryX,
-    tubeEntryY,
+    tubeEntryY
   );
   ctx.stroke();
 
@@ -1626,7 +1663,7 @@ export function drawFuelFeedingTube(
     tubeMid2X,
     tubeMid2Y - 2.5 * zoom,
     tubeEntryX,
-    tubeEntryY - 2.5 * zoom,
+    tubeEntryY - 2.5 * zoom
   );
   ctx.stroke();
 
@@ -1647,11 +1684,11 @@ export function drawFuelFeedingTube(
     ctx.beginPath();
     ctx.moveTo(
       p1.x + Math.cos(angle1 + Math.PI / 2) * offset,
-      p1.y + Math.sin(angle1 + Math.PI / 2) * offset * 0.5,
+      p1.y + Math.sin(angle1 + Math.PI / 2) * offset * 0.5
     );
     ctx.lineTo(
       p2.x + Math.cos(angle2 - Math.PI / 2) * offset,
-      p2.y + Math.sin(angle2 - Math.PI / 2) * offset * 0.5,
+      p2.y + Math.sin(angle2 - Math.PI / 2) * offset * 0.5
     );
     ctx.stroke();
   }
@@ -1679,7 +1716,7 @@ export function drawFuelFeedingTube(
       0,
       particle.x,
       particle.y,
-      particleSize * 2,
+      particleSize * 2
     );
     glowGrad.addColorStop(0, `rgba(255, 150, 50, ${particleAlpha})`);
     glowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${particleAlpha * 0.5})`);
@@ -1717,7 +1754,7 @@ export function drawFuelFeedingTube(
       2.5 * zoom,
       clampAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1726,7 +1763,7 @@ export function drawFuelFeedingTube(
       clampPos.x - perpX * 4 * zoom,
       clampPos.y - perpY * 4 * zoom,
       clampPos.x + perpX * 4 * zoom,
-      clampPos.y + perpY * 4 * zoom,
+      clampPos.y + perpY * 4 * zoom
     );
     clampGrad.addColorStop(0, "#5a5a62");
     clampGrad.addColorStop(0.3, "#8a8a92");
@@ -1742,7 +1779,7 @@ export function drawFuelFeedingTube(
       2 * zoom,
       clampAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1754,7 +1791,7 @@ export function drawFuelFeedingTube(
       clampPos.y + perpY * 2.5 * zoom * 0.5,
       1.2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#7a7a82";
@@ -1764,7 +1801,7 @@ export function drawFuelFeedingTube(
       clampPos.y + perpY * 2.5 * zoom * 0.5 - 0.3 * zoom,
       0.5 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1783,7 +1820,7 @@ export function drawFuelFeedingTube(
     0,
     tubeExitX,
     tubeExitY,
-    6 * zoom,
+    6 * zoom
   );
   connectorGrad1.addColorStop(0, "#7a7a82");
   connectorGrad1.addColorStop(0.5, "#5a5a62");
@@ -1820,7 +1857,7 @@ export function drawFuelFeedingTube(
   ctx.moveTo(tubeExitX, tubeExitY);
   ctx.lineTo(
     tubeExitX + Math.cos(leverAngle) * 8 * zoom,
-    tubeExitY + Math.sin(leverAngle) * 4 * zoom,
+    tubeExitY + Math.sin(leverAngle) * 4 * zoom
   );
   ctx.stroke();
   ctx.fillStyle = "#aa2020";
@@ -1830,7 +1867,7 @@ export function drawFuelFeedingTube(
     tubeExitY + Math.sin(leverAngle) * 4 * zoom,
     2 * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1848,7 +1885,7 @@ export function drawFuelFeedingTube(
     0,
     tubeEntryX,
     tubeEntryY,
-    5 * zoom,
+    5 * zoom
   );
   connectorGrad2.addColorStop(0, "#6a6a72");
   connectorGrad2.addColorStop(0.5, "#4a4a52");
@@ -1874,7 +1911,7 @@ export function drawFuelFeedingTube(
     0,
     tubeEntryX,
     tubeEntryY,
-    2.5 * zoom,
+    2.5 * zoom
   );
   inletGlowGrad.addColorStop(0, `rgba(255, 150, 50, ${inletGlow})`);
   inletGlowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${inletGlow * 0.6})`);
@@ -1898,7 +1935,7 @@ export function drawFuelFeedingTube(
     0,
     valveX,
     valveY,
-    2 * zoom,
+    2 * zoom
   );
   valveGrad.addColorStop(0, "#ee4040");
   valveGrad.addColorStop(0.5, "#cc2020");
@@ -1925,7 +1962,7 @@ export function drawFuelFeedingTube(
     tubeEntryY - 2 * zoom,
     1.2 * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   clearShadow(ctx);
@@ -1944,7 +1981,7 @@ export function drawCannonAmmoBelt(
   isAttacking: boolean,
   attackPulse: number,
   boxSide: number,
-  recoilOffset: number = 0,
+  recoilOffset: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -1999,7 +2036,9 @@ export function drawCannonAmmoBelt(
     const a0 = (i / wheelSegs) * Math.PI * 2;
     const a1 = ((i + 1) / wheelSegs) * Math.PI * 2;
     const normal = Math.cos(a0) * cosR + 0.5 * Math.sin(a0);
-    if (normal < -0.15) continue;
+    if (normal < -0.15) {
+      continue;
+    }
 
     const ox0 = perpX * Math.cos(a0) * wheelR;
     const oy0 = perpY * Math.cos(a0) * wheelR - Math.sin(a0) * wheelR;
@@ -2012,19 +2051,19 @@ export function drawCannonAmmoBelt(
     ctx.beginPath();
     ctx.moveTo(
       wheelCx + ox0 - backX * wheelThick,
-      wheelCy + oy0 - backY * wheelThick,
+      wheelCy + oy0 - backY * wheelThick
     );
     ctx.lineTo(
       wheelCx + ox1 - backX * wheelThick,
-      wheelCy + oy1 - backY * wheelThick,
+      wheelCy + oy1 - backY * wheelThick
     );
     ctx.lineTo(
       wheelCx + ox1 + backX * wheelThick,
-      wheelCy + oy1 + backY * wheelThick,
+      wheelCy + oy1 + backY * wheelThick
     );
     ctx.lineTo(
       wheelCx + ox0 + backX * wheelThick,
-      wheelCy + oy0 + backY * wheelThick,
+      wheelCy + oy0 + backY * wheelThick
     );
     ctx.closePath();
     ctx.fill();
@@ -2080,7 +2119,9 @@ export function drawCannonAmmoBelt(
     const tx = wheelCx + perpX * tLat;
     const ty = wheelCy + perpY * tLat - tVert;
     const tNormal = Math.cos(ta + rotation);
-    if (tNormal < 0) continue;
+    if (tNormal < 0) {
+      continue;
+    }
     ctx.fillStyle = `rgba(90, 90, 100, ${0.4 + tNormal * 0.5})`;
     ctx.beginPath();
     ctx.arc(tx, ty, 1 * zoom, 0, Math.PI * 2);
@@ -2094,21 +2135,21 @@ export function drawCannonAmmoBelt(
   ctx.beginPath();
   ctx.moveTo(
     wheelCx + perpX * (wheelR + 2 * zoom),
-    wheelCy + perpY * (wheelR + 2 * zoom),
+    wheelCy + perpY * (wheelR + 2 * zoom)
   );
   ctx.lineTo(
     wheelCx + perpX * (wheelR + 2 * zoom),
-    wheelCy + perpY * (wheelR + 2 * zoom) - bracketUp,
+    wheelCy + perpY * (wheelR + 2 * zoom) - bracketUp
   );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(
     wheelCx - perpX * (wheelR + 2 * zoom),
-    wheelCy - perpY * (wheelR + 2 * zoom),
+    wheelCy - perpY * (wheelR + 2 * zoom)
   );
   ctx.lineTo(
     wheelCx - perpX * (wheelR + 2 * zoom),
-    wheelCy - perpY * (wheelR + 2 * zoom) - bracketUp,
+    wheelCy - perpY * (wheelR + 2 * zoom) - bracketUp
   );
   ctx.stroke();
 
@@ -2120,7 +2161,12 @@ export function drawCannonAmmoBelt(
   ctx.lineWidth = 9 * zoom;
   ctx.beginPath();
   ctx.moveTo(beltExitX, beltExitY + 1.5 * zoom);
-  ctx.quadraticCurveTo(beltMidX, beltMidY + 1.5 * zoom, beltEntryX, beltEntryY + 1.5 * zoom);
+  ctx.quadraticCurveTo(
+    beltMidX,
+    beltMidY + 1.5 * zoom,
+    beltEntryX,
+    beltEntryY + 1.5 * zoom
+  );
   ctx.stroke();
 
   // Outer channel (dark steel rim)
@@ -2152,7 +2198,12 @@ export function drawCannonAmmoBelt(
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(beltExitX, beltExitY - 3.5 * zoom);
-  ctx.quadraticCurveTo(beltMidX, beltMidY - 3.5 * zoom, beltEntryX, beltEntryY - 3.5 * zoom);
+  ctx.quadraticCurveTo(
+    beltMidX,
+    beltMidY - 3.5 * zoom,
+    beltEntryX,
+    beltEntryY - 3.5 * zoom
+  );
   ctx.stroke();
 
   // Bottom edge dark bevel
@@ -2160,7 +2211,12 @@ export function drawCannonAmmoBelt(
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(beltExitX, beltExitY + 3.5 * zoom);
-  ctx.quadraticCurveTo(beltMidX, beltMidY + 3.5 * zoom, beltEntryX, beltEntryY + 3.5 * zoom);
+  ctx.quadraticCurveTo(
+    beltMidX,
+    beltMidY + 3.5 * zoom,
+    beltEntryX,
+    beltEntryY + 3.5 * zoom
+  );
   ctx.stroke();
 
   // === CARTRIDGES & LINK PLATES ===
@@ -2247,22 +2303,46 @@ export function drawCannonAmmoBelt(
       fx - perpCos * casingLen * 0.5,
       fy - perpSin * casingLen * 0.5,
       fx + perpCos * casingLen * 0.5,
-      fy + perpSin * casingLen * 0.5,
+      fy + perpSin * casingLen * 0.5
     );
     const brassBase = arcLight;
-    casingGrad.addColorStop(0, `rgba(${Math.floor(200 * brassBase)}, ${Math.floor(170 * brassBase)}, ${Math.floor(50 * brassBase)}, 1)`);
-    casingGrad.addColorStop(0.2, `rgba(${Math.floor(230 * brassBase)}, ${Math.floor(197 * brassBase)}, ${Math.floor(74 * brassBase)}, 1)`);
-    casingGrad.addColorStop(0.45, `rgba(${Math.floor(240 * brassBase)}, ${Math.floor(210 * brassBase)}, ${Math.floor(95 * brassBase)}, 1)`);
-    casingGrad.addColorStop(0.55, `rgba(${Math.floor(218 * brassBase)}, ${Math.floor(165 * brassBase)}, ${Math.floor(32 * brassBase)}, 1)`);
-    casingGrad.addColorStop(0.8, `rgba(${Math.floor(184 * brassBase)}, ${Math.floor(134 * brassBase)}, ${Math.floor(11 * brassBase)}, 1)`);
-    casingGrad.addColorStop(1, `rgba(${Math.floor(150 * brassBase)}, ${Math.floor(110 * brassBase)}, ${Math.floor(20 * brassBase)}, 1)`);
+    casingGrad.addColorStop(
+      0,
+      `rgba(${Math.floor(200 * brassBase)}, ${Math.floor(170 * brassBase)}, ${Math.floor(50 * brassBase)}, 1)`
+    );
+    casingGrad.addColorStop(
+      0.2,
+      `rgba(${Math.floor(230 * brassBase)}, ${Math.floor(197 * brassBase)}, ${Math.floor(74 * brassBase)}, 1)`
+    );
+    casingGrad.addColorStop(
+      0.45,
+      `rgba(${Math.floor(240 * brassBase)}, ${Math.floor(210 * brassBase)}, ${Math.floor(95 * brassBase)}, 1)`
+    );
+    casingGrad.addColorStop(
+      0.55,
+      `rgba(${Math.floor(218 * brassBase)}, ${Math.floor(165 * brassBase)}, ${Math.floor(32 * brassBase)}, 1)`
+    );
+    casingGrad.addColorStop(
+      0.8,
+      `rgba(${Math.floor(184 * brassBase)}, ${Math.floor(134 * brassBase)}, ${Math.floor(11 * brassBase)}, 1)`
+    );
+    casingGrad.addColorStop(
+      1,
+      `rgba(${Math.floor(150 * brassBase)}, ${Math.floor(110 * brassBase)}, ${Math.floor(20 * brassBase)}, 1)`
+    );
 
     ctx.fillStyle = casingGrad;
     ctx.save();
     ctx.translate(fx, fy);
     ctx.rotate(bulletAngle + Math.PI * 0.5);
     ctx.beginPath();
-    ctx.roundRect(-casingW, -casingLen * 0.45, casingW * 2, casingLen, 0.6 * zoom);
+    ctx.roundRect(
+      -casingW,
+      -casingLen * 0.45,
+      casingW * 2,
+      casingLen,
+      0.6 * zoom
+    );
     ctx.fill();
     ctx.restore();
 
@@ -2272,13 +2352,29 @@ export function drawCannonAmmoBelt(
     const rimY = fy + perpSin * rimDist;
     ctx.fillStyle = `rgba(${Math.floor(195 * arcLight)}, ${Math.floor(155 * arcLight)}, ${Math.floor(35 * arcLight)}, 1)`;
     ctx.beginPath();
-    ctx.ellipse(rimX, rimY, casingW + 0.6 * zoom, 1.2 * zoom, bulletAngle + Math.PI * 0.5, 0, Math.PI * 2);
+    ctx.ellipse(
+      rimX,
+      rimY,
+      casingW + 0.6 * zoom,
+      1.2 * zoom,
+      bulletAngle + Math.PI * 0.5,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     // Rim highlight
     ctx.strokeStyle = `rgba(255, 230, 140, ${0.3 * arcLight})`;
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
-    ctx.ellipse(rimX, rimY, casingW + 0.6 * zoom, 1.2 * zoom, bulletAngle + Math.PI * 0.5, Math.PI * 0.9, Math.PI * 1.6);
+    ctx.ellipse(
+      rimX,
+      rimY,
+      casingW + 0.6 * zoom,
+      1.2 * zoom,
+      bulletAngle + Math.PI * 0.5,
+      Math.PI * 0.9,
+      Math.PI * 1.6
+    );
     ctx.stroke();
 
     // Primer circle (small dot on cartridge base)
@@ -2293,7 +2389,15 @@ export function drawCannonAmmoBelt(
     const neckY = fy + perpSin * neckDist;
     ctx.fillStyle = `rgba(${Math.floor(210 * arcLight)}, ${Math.floor(175 * arcLight)}, ${Math.floor(55 * arcLight)}, 1)`;
     ctx.beginPath();
-    ctx.ellipse(neckX, neckY, casingW * 0.7, 1 * zoom, bulletAngle + Math.PI * 0.5, 0, Math.PI * 2);
+    ctx.ellipse(
+      neckX,
+      neckY,
+      casingW * 0.7,
+      1 * zoom,
+      bulletAngle + Math.PI * 0.5,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     // Specular highlight streak along casing
@@ -2302,11 +2406,11 @@ export function drawCannonAmmoBelt(
     ctx.beginPath();
     ctx.moveTo(
       fx + cosA * casingW * 0.4 + perpCos * (-casingLen * 0.3),
-      fy + sinA * casingW * 0.4 + perpSin * (-casingLen * 0.3),
+      fy + sinA * casingW * 0.4 + perpSin * (-casingLen * 0.3)
     );
     ctx.lineTo(
       fx + cosA * casingW * 0.4 + perpCos * (casingLen * 0.2),
-      fy + sinA * casingW * 0.4 + perpSin * (casingLen * 0.2),
+      fy + sinA * casingW * 0.4 + perpSin * (casingLen * 0.2)
     );
     ctx.stroke();
 
@@ -2322,13 +2426,25 @@ export function drawCannonAmmoBelt(
       tipX - cosA * tipW,
       tipY - sinA * tipW,
       tipX + cosA * tipW,
-      tipY + sinA * tipW,
+      tipY + sinA * tipW
     );
     const copperLit = arcLight;
-    tipGrad.addColorStop(0, `rgba(${Math.floor(120 * copperLit)}, ${Math.floor(65 * copperLit)}, ${Math.floor(25 * copperLit)}, 1)`);
-    tipGrad.addColorStop(0.3, `rgba(${Math.floor(165 * copperLit)}, ${Math.floor(95 * copperLit)}, ${Math.floor(40 * copperLit)}, 1)`);
-    tipGrad.addColorStop(0.6, `rgba(${Math.floor(180 * copperLit)}, ${Math.floor(110 * copperLit)}, ${Math.floor(50 * copperLit)}, 1)`);
-    tipGrad.addColorStop(1, `rgba(${Math.floor(110 * copperLit)}, ${Math.floor(55 * copperLit)}, ${Math.floor(20 * copperLit)}, 1)`);
+    tipGrad.addColorStop(
+      0,
+      `rgba(${Math.floor(120 * copperLit)}, ${Math.floor(65 * copperLit)}, ${Math.floor(25 * copperLit)}, 1)`
+    );
+    tipGrad.addColorStop(
+      0.3,
+      `rgba(${Math.floor(165 * copperLit)}, ${Math.floor(95 * copperLit)}, ${Math.floor(40 * copperLit)}, 1)`
+    );
+    tipGrad.addColorStop(
+      0.6,
+      `rgba(${Math.floor(180 * copperLit)}, ${Math.floor(110 * copperLit)}, ${Math.floor(50 * copperLit)}, 1)`
+    );
+    tipGrad.addColorStop(
+      1,
+      `rgba(${Math.floor(110 * copperLit)}, ${Math.floor(55 * copperLit)}, ${Math.floor(20 * copperLit)}, 1)`
+    );
 
     ctx.fillStyle = tipGrad;
     ctx.save();
@@ -2380,7 +2496,7 @@ export function drawTowerPassiveEffects(
   tower: Tower,
   zoom: number,
   time: number,
-  colors: { base: string; dark: string; light: string; accent: string },
+  colors: { base: string; dark: string; light: string; accent: string }
 ) {
   // Add ambient particles floating around all towers
   const particleCount = 3 + tower.level;
@@ -2413,7 +2529,7 @@ export function drawTowerPassiveEffects(
       15 * zoom * ringPulse,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -2423,9 +2539,9 @@ export function drawTowerPassiveEffects(
 export function hexToRgb(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (result) {
-    return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
+    return `${Number.parseInt(result[1], 16)}, ${Number.parseInt(result[2], 16)}, ${Number.parseInt(
       result[3],
-      16,
+      16
     )}`;
   }
   return "255, 255, 255";
@@ -2448,55 +2564,55 @@ export const GROUND_TRANSITION_PALETTES: Record<
     accentAlpha: number;
   }
 > = {
-  grassland: {
-    outerDirt: "#4a3a20",
-    innerDirt: "#3a2a15",
-    packedEarth: "#2a1e10",
-    rubbleLight: "#6a5a3a",
-    rubbleDark: "#3a2a18",
-    edgeDetail: "#5a7a4a",
-    accentGlow: "rgba(80, 130, 60, 0.15)",
-    accentAlpha: 0.12,
-  },
   desert: {
-    outerDirt: "#9a8050",
-    innerDirt: "#7a6540",
-    packedEarth: "#5a4830",
-    rubbleLight: "#c4a45a",
-    rubbleDark: "#6a5030",
-    edgeDetail: "#b8a060",
+    accentAlpha: 0.1,
     accentGlow: "rgba(200, 170, 80, 0.12)",
-    accentAlpha: 0.1,
+    edgeDetail: "#b8a060",
+    innerDirt: "#7a6540",
+    outerDirt: "#9a8050",
+    packedEarth: "#5a4830",
+    rubbleDark: "#6a5030",
+    rubbleLight: "#c4a45a",
   },
-  winter: {
-    outerDirt: "#5a6a7a",
-    innerDirt: "#3a4a5a",
-    packedEarth: "#2a3544",
-    rubbleLight: "#8899aa",
-    rubbleDark: "#3a4a5a",
-    edgeDetail: "#c8d8e8",
-    accentGlow: "rgba(150, 190, 220, 0.15)",
-    accentAlpha: 0.15,
-  },
-  volcanic: {
-    outerDirt: "#3a2020",
-    innerDirt: "#2a1515",
-    packedEarth: "#1a0a0a",
-    rubbleLight: "#5a3a3a",
-    rubbleDark: "#2a1010",
-    edgeDetail: "#ff4400",
-    accentGlow: "rgba(255, 68, 0, 0.12)",
-    accentAlpha: 0.1,
+  grassland: {
+    accentAlpha: 0.12,
+    accentGlow: "rgba(80, 130, 60, 0.15)",
+    edgeDetail: "#5a7a4a",
+    innerDirt: "#3a2a15",
+    outerDirt: "#4a3a20",
+    packedEarth: "#2a1e10",
+    rubbleDark: "#3a2a18",
+    rubbleLight: "#6a5a3a",
   },
   swamp: {
-    outerDirt: "#2a3a20",
-    innerDirt: "#1a2a15",
-    packedEarth: "#101a0a",
-    rubbleLight: "#4a5a3a",
-    rubbleDark: "#1a2a12",
-    edgeDetail: "#3a6a3a",
-    accentGlow: "rgba(60, 120, 60, 0.15)",
     accentAlpha: 0.12,
+    accentGlow: "rgba(60, 120, 60, 0.15)",
+    edgeDetail: "#3a6a3a",
+    innerDirt: "#1a2a15",
+    outerDirt: "#2a3a20",
+    packedEarth: "#101a0a",
+    rubbleDark: "#1a2a12",
+    rubbleLight: "#4a5a3a",
+  },
+  volcanic: {
+    accentAlpha: 0.1,
+    accentGlow: "rgba(255, 68, 0, 0.12)",
+    edgeDetail: "#ff4400",
+    innerDirt: "#2a1515",
+    outerDirt: "#3a2020",
+    packedEarth: "#1a0a0a",
+    rubbleDark: "#2a1010",
+    rubbleLight: "#5a3a3a",
+  },
+  winter: {
+    accentAlpha: 0.15,
+    accentGlow: "rgba(150, 190, 220, 0.15)",
+    edgeDetail: "#c8d8e8",
+    innerDirt: "#3a4a5a",
+    outerDirt: "#5a6a7a",
+    packedEarth: "#2a3544",
+    rubbleDark: "#3a4a5a",
+    rubbleLight: "#8899aa",
   },
 };
 
@@ -2505,55 +2621,60 @@ export function getTowerYShift(tower: Tower): number {
     case "cannon":
     case "library":
     case "lab":
-    case "club":
+    case "club": {
       return 8 + tower.level * 2;
-    case "station":
+    }
+    case "station": {
       return 8 + tower.level * 2;
-    case "arch":
+    }
+    case "arch": {
       return 5;
-    default:
+    }
+    default: {
       return 0;
+    }
   }
 }
 
 export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
-  const level = tower.level;
+  const { level } = tower;
   switch (tower.type) {
     case "cannon": {
       const base = 36 + level * 5;
       const fndScale = level * 4;
-      return { w: base + 24 + fndScale, d: base + 24 + fndScale };
+      return { d: base + 24 + fndScale, w: base + 24 + fndScale };
     }
     case "library": {
       const base = 34 + level * 5;
       const fndGrow = level * 5;
-      return { w: base + 26 + fndGrow, d: base + 26 + fndGrow };
+      return { d: base + 26 + fndGrow, w: base + 26 + fndGrow };
     }
     case "lab": {
       const base = 30 + level * 4;
       const fndGrow = level * 4;
-      return { w: base + 22 + fndGrow, d: base + 22 + fndGrow };
+      return { d: base + 22 + fndGrow, w: base + 22 + fndGrow };
     }
     case "arch": {
       const baseW = 38 + level * 5;
       const baseD = 30 + level * 4;
-      return { w: baseW + 52, d: baseD + 60 };
+      return { d: baseD + 60, w: baseW + 52 };
     }
     case "club": {
       const base = 34 + level * 5;
-      return { w: base + 38, d: base + 38 };
+      return { d: base + 38, w: base + 38 };
     }
     case "station": {
       const baseW = 56 + level * 6;
       const baseD = 44 + level * 5;
-      return { w: baseW + 47, d: baseD + 59 };
+      return { d: baseD + 59, w: baseW + 47 };
     }
     case "mortar": {
       const mBase = 38 + level * 5;
-      return { w: mBase + 24, d: mBase + 22 };
+      return { d: mBase + 22, w: mBase + 24 };
     }
-    default:
-      return { w: 60, d: 60 };
+    default: {
+      return { d: 60, w: 60 };
+    }
   }
 }
 
@@ -2566,7 +2687,7 @@ export function getTowerVisualMetrics(tower: Tower): {
   centerOffsetY: number;
   visualHeight: number;
 } {
-  const level = tower.level;
+  const { level } = tower;
   switch (tower.type) {
     case "cannon": {
       const h = 24 + level * 8;
@@ -2600,8 +2721,9 @@ export function getTowerVisualMetrics(tower: Tower): {
       const depotH = (22 + level * 10) * 0.42;
       return { centerOffsetY: depotH * 0.5 + 8, visualHeight: depotH + 28 };
     }
-    default:
+    default: {
       return { centerOffsetY: 20, visualHeight: 60 };
+    }
   }
 }
 
@@ -2611,7 +2733,7 @@ export function drawGroundTransition(
   tower: Tower,
   zoom: number,
   time: number,
-  selectedMap: string,
+  selectedMap: string
 ) {
   const levelData = LEVEL_DATA[selectedMap];
   const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
@@ -2634,12 +2756,12 @@ export function drawGroundTransition(
   // Scale element counts proportionally (reference: 60-unit foundation)
   const detailScale = Math.max(
     0.6,
-    Math.min(1.6, ((foundation.w + foundation.d) * 0.5) / 60),
+    Math.min(1.6, ((foundation.w + foundation.d) * 0.5) / 60)
   );
 
   // Stable seed per tower for organic terrain shape
   const blobSeed =
-    selectedMap.charCodeAt(0) + tower.pos.x * 73 + tower.pos.y * 137;
+    selectedMap.codePointAt(0) + tower.pos.x * 73 + tower.pos.y * 137;
 
   ctx.save();
 
@@ -2650,7 +2772,7 @@ export function drawGroundTransition(
     midW * 0.6,
     cx,
     cy,
-    outerW,
+    outerW
   );
   outerGrad.addColorStop(0, "rgba(0,0,0,0)");
   outerGrad.addColorStop(0.5, palette.outerDirt);
@@ -2684,7 +2806,7 @@ export function drawGroundTransition(
       ringH,
       0,
       startAngle,
-      startAngle + Math.PI * 0.6,
+      startAngle + Math.PI * 0.6
     );
     ctx.stroke();
   }
@@ -2696,7 +2818,7 @@ export function drawGroundTransition(
     0,
     cx,
     cy,
-    innerW * 0.9,
+    innerW * 0.9
   );
   innerGrad.addColorStop(0, palette.packedEarth);
   innerGrad.addColorStop(0.7, palette.innerDirt);
@@ -2727,7 +2849,7 @@ export function drawGroundTransition(
       rSize * 0.3,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2748,7 +2870,7 @@ export function drawGroundTransition(
         rsx + Math.cos(rAngle + 0.5) * 3 * zoom,
         rsy + Math.sin(rAngle + 0.5) * 2 * zoom,
         rsx + Math.cos(rAngle) * 5 * zoom,
-        rsy + Math.sin(rAngle) * 3 * zoom * (midH / midW),
+        rsy + Math.sin(rAngle) * 3 * zoom * (midH / midW)
       );
       ctx.stroke();
     }
@@ -2802,7 +2924,7 @@ export function drawGroundTransition(
         (sx + ex) / 2 + Math.cos(angle + 0.8) * 2 * zoom,
         (sy + ey) / 2 + Math.sin(angle + 0.8) * 1.5 * zoom,
         ex,
-        ey,
+        ey
       );
       ctx.stroke();
     }
@@ -2845,7 +2967,7 @@ export function drawGroundTransition(
         0.6 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -2867,7 +2989,7 @@ export function drawGroundTransition(
         (mx + ex) / 2 + Math.cos(angle + 1) * 1.5 * zoom,
         (my + ey) / 2,
         ex,
-        ey,
+        ey
       );
       ctx.stroke();
     }
@@ -2883,7 +3005,7 @@ export function drawGroundTransition(
     midW * 1.02,
     midH * 1.02,
     blobSeed + 17.3,
-    0.12,
+    0.12
   );
   ctx.stroke();
 
@@ -2910,7 +3032,7 @@ export function drawIsoSandbag(
   bagD: number,
   bagH: number,
   zoom: number,
-  shade: number = 0,
+  shade: number = 0
 ) {
   const w = bagW * zoom;
   const d = bagD * zoom;

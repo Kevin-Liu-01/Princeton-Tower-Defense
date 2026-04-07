@@ -100,13 +100,13 @@ export function CircleActionButton({
             : "hover:scale-110 hover:brightness-125 active:scale-95 cursor-pointer"
         }`}
         style={{
-          width: size,
-          height: size,
           background: bgGradient,
           border: `2.5px solid ${borderColor}`,
           boxShadow: disabled
             ? "0 2px 4px rgba(0,0,0,0.5)"
             : `0 0 10px ${glowColor}, 0 0 20px ${glowColor}, 0 2px 8px rgba(0,0,0,0.6)`,
+          height: size,
+          width: size,
         }}
       >
         {icon}
@@ -119,9 +119,9 @@ export function CircleActionButton({
         <div
           className="font-extrabold leading-tight px-1.5 py-0.5 rounded"
           style={{
-            fontSize: 11,
-            color: "#fff",
             background: "rgba(0,0,0,0.65)",
+            color: "#fff",
+            fontSize: 11,
             textShadow: "0 1px 2px rgba(0,0,0,1)",
           }}
         >
@@ -131,9 +131,9 @@ export function CircleActionButton({
           <div
             className="font-bold leading-tight px-1 rounded mt-px"
             style={{
-              fontSize: 10,
-              color: "rgba(255,210,80,0.95)",
               background: "rgba(0,0,0,0.5)",
+              color: "rgba(255,210,80,0.95)",
+              fontSize: 10,
               textShadow: "0 1px 2px rgba(0,0,0,1)",
             }}
           >
@@ -154,29 +154,29 @@ export function CircleActionButton({
           <div
             className="rounded-lg px-3 py-2"
             style={{
-              width: 220,
-              fontSize: 12,
-              lineHeight: 1.4,
-              color: "#fff",
               background: "rgba(0,0,0,0.88)",
               border: `1px solid ${borderColor}`,
               boxShadow: `0 0 8px ${glowColor}, 0 4px 12px rgba(0,0,0,0.6)`,
+              color: "#fff",
+              fontSize: 12,
+              lineHeight: 1.4,
+              textAlign: "center",
               textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               whiteSpace: "normal",
-              textAlign: "center",
+              width: 220,
             }}
           >
             {tooltip}
           </div>
           <div
             style={{
-              width: 10,
+              background: "rgba(0,0,0,0.88)",
+              borderBottom: `1px solid ${borderColor}`,
+              borderRight: `1px solid ${borderColor}`,
               height: 10,
               marginTop: -5.5,
-              background: "rgba(0,0,0,0.88)",
-              borderRight: `1px solid ${borderColor}`,
-              borderBottom: `1px solid ${borderColor}`,
               transform: "rotate(45deg)",
+              width: 10,
             }}
           />
         </div>

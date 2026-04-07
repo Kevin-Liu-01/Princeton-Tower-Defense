@@ -1,7 +1,7 @@
-import type { Decoration, Enemy, Hero, Position, Troop } from "../../types";
-import { distance, screenToWorld, worldToScreen } from "../../utils";
 import { ENEMY_DATA } from "../../constants";
 import type { RuntimeDecoration } from "../../rendering/decorations/decorationHelpers";
+import type { Decoration, Enemy, Hero, Position, Troop } from "../../types";
+import { distance, screenToWorld, worldToScreen } from "../../utils";
 
 interface InspectorHoverParams {
   screenPos: Position;
@@ -45,7 +45,7 @@ export function getInspectorHoverResult({
     height,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
 
   const FRIENDLY_BIAS = 12;
@@ -66,7 +66,10 @@ export function getInspectorHoverResult({
     const enemyDistance = distance(mouseWorldPos, adjustedEnemyPos);
     const hitRadius = (enemyData?.size || 20) * 1.5;
 
-    if (enemyDistance < hitRadius + hoverRadius && enemyDistance < closestDistance) {
+    if (
+      enemyDistance < hitRadius + hoverRadius &&
+      enemyDistance < closestDistance
+    ) {
       closestDistance = enemyDistance;
       hoveredEnemy = enemy;
       hoveredTroop = null;
@@ -76,7 +79,10 @@ export function getInspectorHoverResult({
 
   if (hero && !hero.dead) {
     const heroDistance = distance(mouseWorldPos, hero.pos);
-    if (heroDistance < 30 + hoverRadius && heroDistance - FRIENDLY_BIAS < closestDistance) {
+    if (
+      heroDistance < 30 + hoverRadius &&
+      heroDistance - FRIENDLY_BIAS < closestDistance
+    ) {
       closestDistance = heroDistance;
       hoveredEnemy = null;
       hoveredTroop = null;
@@ -85,9 +91,14 @@ export function getInspectorHoverResult({
   }
 
   for (const troop of troops) {
-    if (troop.dead) continue;
+    if (troop.dead) {
+      continue;
+    }
     const troopDistance = distance(mouseWorldPos, troop.pos);
-    if (troopDistance < 22 + hoverRadius && troopDistance - FRIENDLY_BIAS < closestDistance) {
+    if (
+      troopDistance < 22 + hoverRadius &&
+      troopDistance - FRIENDLY_BIAS < closestDistance
+    ) {
       closestDistance = troopDistance;
       hoveredEnemy = null;
       hoveredHero = false;
@@ -105,11 +116,14 @@ export function getInspectorHoverResult({
         height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       const hitRadius = cameraZoom * decoration.scale * 25;
       const decorationDistance = distance(screenPos, decorationScreenPos);
-      if (decorationDistance < hitRadius && decorationDistance < bestDecorationDistance) {
+      if (
+        decorationDistance < hitRadius &&
+        decorationDistance < bestDecorationDistance
+      ) {
         bestDecorationDistance = decorationDistance;
         hoveredDecoration = decoration;
       }
@@ -117,9 +131,9 @@ export function getInspectorHoverResult({
   }
 
   return {
-    hoveredEnemy,
-    hoveredTroop,
-    hoveredHero,
     hoveredDecoration,
+    hoveredEnemy,
+    hoveredHero,
+    hoveredTroop,
   };
 }

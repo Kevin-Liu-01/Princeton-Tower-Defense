@@ -1,9 +1,6 @@
+import { getIdolStatuePalette } from "./idolStatuePalettes";
+import type { IdolStatuePalette, IdolAccentType } from "./idolStatuePalettes";
 import { drawDirectionalShadow } from "./shadowHelpers";
-import {
-  getIdolStatuePalette,
-  type IdolStatuePalette,
-  type IdolAccentType,
-} from "./idolStatuePalettes";
 
 export interface IdolStatueParams {
   ctx: CanvasRenderingContext2D;
@@ -42,7 +39,18 @@ export function renderIdolStatue({
   drawUpperFace(ctx, ix, bodyBase, s, stone.deep, glow, glowPulse);
   drawCrown(ctx, ix, bodyBase, bodyH, s, stone);
   drawSidePatterns(ctx, ix, bodyBase, s, pal.carvingColor);
-  drawRegionalAccents(ctx, ix, bodyBase, s, bodyW, bodyTopW, bodyH, time, glowPulse, pal);
+  drawRegionalAccents(
+    ctx,
+    ix,
+    bodyBase,
+    s,
+    bodyW,
+    bodyTopW,
+    bodyH,
+    time,
+    glowPulse,
+    pal
+  );
 }
 
 function drawIdolAura(
@@ -51,10 +59,20 @@ function drawIdolAura(
   iy: number,
   s: number,
   time: number,
-  glow: IdolStatuePalette["glow"],
+  glow: IdolStatuePalette["glow"]
 ): void {
-  const grad = ctx.createRadialGradient(ix, iy + 4 * s, 0, ix, iy + 4 * s, 28 * s);
-  grad.addColorStop(0, `rgba(${glow.r},${glow.g},${glow.b},${0.08 + Math.sin(time * 1.5) * 0.04})`);
+  const grad = ctx.createRadialGradient(
+    ix,
+    iy + 4 * s,
+    0,
+    ix,
+    iy + 4 * s,
+    28 * s
+  );
+  grad.addColorStop(
+    0,
+    `rgba(${glow.r},${glow.g},${glow.b},${0.08 + Math.sin(time * 1.5) * 0.04})`
+  );
   grad.addColorStop(0.5, `rgba(${glow.r},${glow.g},${glow.b},0.02)`);
   grad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grad;
@@ -71,7 +89,7 @@ function drawIsoPedTier(
   h: number,
   light: string,
   mid: string,
-  dark: string,
+  dark: string
 ): void {
   ctx.fillStyle = light;
   ctx.beginPath();
@@ -106,16 +124,34 @@ function drawPedestal(
   ix: number,
   iy: number,
   s: number,
-  stone: IdolStatuePalette["stone"],
+  stone: IdolStatuePalette["stone"]
 ): number {
   const pedW1 = 14 * s;
   const pedH1 = 5 * s;
-  drawIsoPedTier(ctx, ix, iy - pedH1, pedW1, pedH1, stone.light, stone.mid, stone.dark);
+  drawIsoPedTier(
+    ctx,
+    ix,
+    iy - pedH1,
+    pedW1,
+    pedH1,
+    stone.light,
+    stone.mid,
+    stone.dark
+  );
 
   const pedY2 = iy - pedH1;
   const pedW2 = 10 * s;
   const pedH2 = 4 * s;
-  drawIsoPedTier(ctx, ix, pedY2 - pedH2, pedW2, pedH2, stone.light, stone.mid, stone.dark);
+  drawIsoPedTier(
+    ctx,
+    ix,
+    pedY2 - pedH2,
+    pedW2,
+    pedH2,
+    stone.light,
+    stone.mid,
+    stone.dark
+  );
 
   return pedY2;
 }
@@ -128,7 +164,7 @@ function drawBody(
   bodyW: number,
   bodyH: number,
   bodyTopW: number,
-  stone: IdolStatuePalette["stone"],
+  stone: IdolStatuePalette["stone"]
 ): void {
   ctx.fillStyle = stone.mid;
   ctx.beginPath();
@@ -171,7 +207,7 @@ function drawMouth(
   bodyBase: number,
   s: number,
   deep: string,
-  fangColor: string,
+  fangColor: string
 ): void {
   const mouthY = bodyBase - 10 * s;
   ctx.fillStyle = deep;
@@ -212,7 +248,7 @@ function drawCarvedBand(
   bodyBase: number,
   s: number,
   deep: string,
-  highlight: string,
+  highlight: string
 ): void {
   const bandY = bodyBase - 17 * s;
   ctx.strokeStyle = deep;
@@ -232,8 +268,11 @@ function drawCarvedBand(
   for (let z = 0; z < 8; z++) {
     const zx = ix - 7 * s + z * 2 * s;
     const zy = z % 2 === 0 ? bandY - 0.5 * s : bandY - 2.5 * s;
-    if (z === 0) ctx.moveTo(zx, zy);
-    else ctx.lineTo(zx, zy);
+    if (z === 0) {
+      ctx.moveTo(zx, zy);
+    } else {
+      ctx.lineTo(zx, zy);
+    }
   }
   ctx.stroke();
 }
@@ -245,7 +284,7 @@ function drawUpperFace(
   s: number,
   deep: string,
   glow: IdolStatuePalette["glow"],
-  glowPulse: number,
+  glowPulse: number
 ): void {
   ctx.fillStyle = deep;
   ctx.beginPath();
@@ -258,10 +297,26 @@ function drawUpperFace(
 
   ctx.fillStyle = deep;
   ctx.beginPath();
-  ctx.ellipse(ix - 4 * s, bodyBase - 28 * s, 3 * s, 2.5 * s, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix - 4 * s,
+    bodyBase - 28 * s,
+    3 * s,
+    2.5 * s,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(ix + 4 * s, bodyBase - 28 * s, 3 * s, 2.5 * s, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix + 4 * s,
+    bodyBase - 28 * s,
+    3 * s,
+    2.5 * s,
+    0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   ctx.fillStyle = `rgba(${glow.r},${glow.g},${glow.b},${glowPulse * 0.35})`;
@@ -297,7 +352,7 @@ function drawCrown(
   bodyBase: number,
   bodyH: number,
   s: number,
-  stone: IdolStatuePalette["stone"],
+  stone: IdolStatuePalette["stone"]
 ): void {
   const crownY = bodyBase - bodyH;
   ctx.fillStyle = stone.dark;
@@ -328,7 +383,7 @@ function drawSidePatterns(
   ix: number,
   bodyBase: number,
   s: number,
-  carvingColor: string,
+  carvingColor: string
 ): void {
   ctx.strokeStyle = carvingColor;
   ctx.lineWidth = 0.8 * s;
@@ -337,8 +392,11 @@ function drawSidePatterns(
     const sr = a * 0.5 * s;
     const sx = ix - 5 * s + Math.cos(a + 1) * sr;
     const sy = bodyBase - 7 * s + Math.sin(a + 1) * sr * 0.5;
-    if (a === 0) ctx.moveTo(sx, sy);
-    else ctx.lineTo(sx, sy);
+    if (a === 0) {
+      ctx.moveTo(sx, sy);
+    } else {
+      ctx.lineTo(sx, sy);
+    }
   }
   ctx.stroke();
 
@@ -370,7 +428,7 @@ function drawRegionalAccents(
   bodyH: number,
   time: number,
   glowPulse: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   const drawAccent = ACCENT_DRAWERS[pal.accentType];
   drawAccent(ctx, ix, bodyBase, s, bodyW, bodyTopW, bodyH, time, pal);
@@ -386,15 +444,15 @@ type AccentDrawFn = (
   bodyTopW: number,
   bodyH: number,
   time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ) => void;
 
 const ACCENT_DRAWERS: Record<IdolAccentType, AccentDrawFn> = {
-  moss: drawMossAccent,
-  ivy: drawIvyAccent,
-  sand: drawSandAccent,
   frost: drawFrostAccent,
+  ivy: drawIvyAccent,
   lava: drawLavaAccent,
+  moss: drawMossAccent,
+  sand: drawSandAccent,
 };
 
 function drawMossAccent(
@@ -406,15 +464,31 @@ function drawMossAccent(
   bodyTopW: number,
   _bodyH: number,
   _time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   ctx.fillStyle = pal.accent;
   ctx.globalAlpha = 0.6;
   ctx.beginPath();
-  ctx.ellipse(ix - 6 * s, bodyBase + 1 * s, 3 * s, 1.5 * s, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix - 6 * s,
+    bodyBase + 1 * s,
+    3 * s,
+    1.5 * s,
+    0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(ix + 5 * s, bodyBase - 1 * s, 2.5 * s, 1.2 * s, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix + 5 * s,
+    bodyBase - 1 * s,
+    2.5 * s,
+    1.2 * s,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.globalAlpha = 1;
 
@@ -422,13 +496,19 @@ function drawMossAccent(
   ctx.lineWidth = 1.5 * s;
   ctx.beginPath();
   ctx.moveTo(ix - bodyW + 1 * s, bodyBase);
-  ctx.quadraticCurveTo(ix - bodyW - 1 * s, bodyBase - 15 * s, ix - bodyTopW + 1 * s, bodyBase - 32 * s);
+  ctx.quadraticCurveTo(
+    ix - bodyW - 1 * s,
+    bodyBase - 15 * s,
+    ix - bodyTopW + 1 * s,
+    bodyBase - 32 * s
+  );
   ctx.stroke();
 
   ctx.fillStyle = pal.leafColor;
   for (let lf = 0; lf < 4; lf++) {
     const lt = lf / 3;
-    const lx = ix - bodyW + 1 * s + (bodyW - bodyTopW) * lt - Math.sin(lt * 3) * 2 * s;
+    const lx =
+      ix - bodyW + 1 * s + (bodyW - bodyTopW) * lt - Math.sin(lt * 3) * 2 * s;
     const ly = bodyBase - lt * 32 * s;
     ctx.beginPath();
     ctx.ellipse(lx - 2 * s, ly, 2 * s, 1 * s, -0.5 + lf * 0.3, 0, Math.PI * 2);
@@ -445,12 +525,20 @@ function drawIvyAccent(
   bodyTopW: number,
   _bodyH: number,
   _time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   ctx.fillStyle = pal.accent;
   ctx.globalAlpha = 0.5;
   ctx.beginPath();
-  ctx.ellipse(ix - 5 * s, bodyBase + 1 * s, 2.5 * s, 1.2 * s, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix - 5 * s,
+    bodyBase + 1 * s,
+    2.5 * s,
+    1.2 * s,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
   ctx.ellipse(ix + 4 * s, bodyBase, 2 * s, 1 * s, -0.3, 0, Math.PI * 2);
@@ -461,14 +549,24 @@ function drawIvyAccent(
   ctx.lineWidth = 1.2 * s;
   ctx.beginPath();
   ctx.moveTo(ix - bodyW + 1 * s, bodyBase);
-  ctx.quadraticCurveTo(ix - bodyW - 1 * s, bodyBase - 12 * s, ix - bodyTopW + 2 * s, bodyBase - 28 * s);
+  ctx.quadraticCurveTo(
+    ix - bodyW - 1 * s,
+    bodyBase - 12 * s,
+    ix - bodyTopW + 2 * s,
+    bodyBase - 28 * s
+  );
   ctx.stroke();
 
   ctx.strokeStyle = pal.vineColor;
   ctx.lineWidth = 1 * s;
   ctx.beginPath();
   ctx.moveTo(ix + bodyW - 2 * s, bodyBase - 4 * s);
-  ctx.quadraticCurveTo(ix + bodyW, bodyBase - 18 * s, ix + bodyTopW - 1 * s, bodyBase - 30 * s);
+  ctx.quadraticCurveTo(
+    ix + bodyW,
+    bodyBase - 18 * s,
+    ix + bodyTopW - 1 * s,
+    bodyBase - 30 * s
+  );
   ctx.stroke();
 
   ctx.fillStyle = pal.leafColor;
@@ -477,10 +575,21 @@ function drawIvyAccent(
     const side = lf % 2 === 0 ? -1 : 1;
     const bw = side < 0 ? bodyW : bodyW - 2;
     const btw = side < 0 ? bodyTopW - 2 : bodyTopW - 1;
-    const lx = ix + side * (bw * s - 1 * s + (bw - btw) * lt * s * -side) + Math.sin(lt * 4) * 1.5 * s * side;
+    const lx =
+      ix +
+      side * (bw * s - 1 * s + (bw - btw) * lt * s * -side) +
+      Math.sin(lt * 4) * 1.5 * s * side;
     const ly = bodyBase - lt * 28 * s - 2 * s;
     ctx.beginPath();
-    ctx.ellipse(lx, ly, 2.2 * s, 1.2 * s, -0.4 * side + lf * 0.2, 0, Math.PI * 2);
+    ctx.ellipse(
+      lx,
+      ly,
+      2.2 * s,
+      1.2 * s,
+      -0.4 * side + lf * 0.2,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 }
@@ -494,7 +603,7 @@ function drawSandAccent(
   _bodyTopW: number,
   bodyH: number,
   _time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   ctx.fillStyle = pal.accent;
   ctx.globalAlpha = 0.4;
@@ -502,7 +611,15 @@ function drawSandAccent(
   ctx.ellipse(ix - 7 * s, bodyBase + 2 * s, 5 * s, 2 * s, 0.15, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(ix + 6 * s, bodyBase + 1 * s, 4 * s, 1.5 * s, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix + 6 * s,
+    bodyBase + 1 * s,
+    4 * s,
+    1.5 * s,
+    -0.1,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.globalAlpha = 1;
 
@@ -513,7 +630,12 @@ function drawSandAccent(
     const wy = bodyBase - 3 * s - w * 8 * s;
     ctx.beginPath();
     ctx.moveTo(ix - bodyW + 2 * s, wy);
-    ctx.quadraticCurveTo(ix - bodyW + 1 * s, wy - 2 * s, ix - bodyW + 3 * s, wy - 4 * s);
+    ctx.quadraticCurveTo(
+      ix - bodyW + 1 * s,
+      wy - 2 * s,
+      ix - bodyW + 3 * s,
+      wy - 4 * s
+    );
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -542,7 +664,7 @@ function drawFrostAccent(
   bodyTopW: number,
   bodyH: number,
   _time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   ctx.fillStyle = pal.accent;
   ctx.globalAlpha = 0.35;
@@ -587,7 +709,15 @@ function drawFrostAccent(
   ctx.fillStyle = "#e8f0ff";
   ctx.globalAlpha = 0.3;
   ctx.beginPath();
-  ctx.ellipse(ix, bodyBase - bodyH + 1 * s, bodyTopW * 0.8, 2 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix,
+    bodyBase - bodyH + 1 * s,
+    bodyTopW * 0.8,
+    2 * s,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.globalAlpha = 1;
 }
@@ -596,7 +726,7 @@ function drawSnowflake(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
-  r: number,
+  r: number
 ): void {
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
@@ -616,17 +746,33 @@ function drawLavaAccent(
   _bodyTopW: number,
   bodyH: number,
   time: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   const lavaFlicker = 0.5 + Math.sin(time * 3) * 0.3;
 
   ctx.fillStyle = pal.accent;
   ctx.globalAlpha = 0.25 + lavaFlicker * 0.15;
   ctx.beginPath();
-  ctx.ellipse(ix - 6 * s, bodyBase + 2 * s, 4 * s, 1.8 * s, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix - 6 * s,
+    bodyBase + 2 * s,
+    4 * s,
+    1.8 * s,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(ix + 5 * s, bodyBase + 1 * s, 3 * s, 1.2 * s, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    ix + 5 * s,
+    bodyBase + 1 * s,
+    3 * s,
+    1.2 * s,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.globalAlpha = 1;
 
@@ -634,14 +780,24 @@ function drawLavaAccent(
   ctx.lineWidth = 1 * s;
   ctx.globalAlpha = 0.5 + lavaFlicker * 0.3;
   const crackPositions = [
-    { x: ix - 3 * s, y1: bodyBase - 5 * s, y2: bodyBase - 14 * s, dx: -1.5 },
-    { x: ix + 2 * s, y1: bodyBase - 8 * s, y2: bodyBase - 18 * s, dx: 1 },
-    { x: ix - 1 * s, y1: bodyBase - bodyH * 0.4, y2: bodyBase - bodyH * 0.65, dx: -0.8 },
+    { dx: -1.5, x: ix - 3 * s, y1: bodyBase - 5 * s, y2: bodyBase - 14 * s },
+    { dx: 1, x: ix + 2 * s, y1: bodyBase - 8 * s, y2: bodyBase - 18 * s },
+    {
+      dx: -0.8,
+      x: ix - 1 * s,
+      y1: bodyBase - bodyH * 0.4,
+      y2: bodyBase - bodyH * 0.65,
+    },
   ];
   for (const crack of crackPositions) {
     ctx.beginPath();
     ctx.moveTo(crack.x, crack.y1);
-    ctx.quadraticCurveTo(crack.x + crack.dx * s, (crack.y1 + crack.y2) / 2, crack.x + crack.dx * 0.5 * s, crack.y2);
+    ctx.quadraticCurveTo(
+      crack.x + crack.dx * s,
+      (crack.y1 + crack.y2) / 2,
+      crack.x + crack.dx * 0.5 * s,
+      crack.y2
+    );
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -664,7 +820,7 @@ function drawFloatingParticles(
   s: number,
   time: number,
   glowPulse: number,
-  pal: IdolStatuePalette,
+  pal: IdolStatuePalette
 ): void {
   const { glow } = pal;
   for (let p = 0; p < 5; p++) {

@@ -12,13 +12,22 @@ export type ParticleDensity = "off" | "reduced" | "full" | "extra";
 export type FogQuality = "off" | "reduced" | "full";
 export type GradientQuality = "simplified" | "full";
 export type EnvironmentEffects = "off" | "reduced" | "full";
-export type DecorationDensity = "minimal" | "sparse" | "normal" | "dense" | "lush";
+export type DecorationDensity =
+  | "minimal"
+  | "sparse"
+  | "normal"
+  | "dense"
+  | "lush";
 export type BattleDebrisDensity = "none" | "low" | "medium" | "high";
 export type DecorationScale = "small" | "normal" | "large" | "mixed";
 export type AnimationIntensity = "off" | "reduced" | "normal" | "enhanced";
 export type CameraEdgePan = "off" | "slow" | "normal" | "fast";
 export type DamageNumberStyle = "off" | "simple" | "animated";
-export type ColorblindMode = "off" | "protanopia" | "deuteranopia" | "tritanopia";
+export type ColorblindMode =
+  | "off"
+  | "protanopia"
+  | "deuteranopia"
+  | "tritanopia";
 export type UIScale = "compact" | "normal" | "large";
 
 // -----------------------------------------------------------------------------
@@ -113,86 +122,86 @@ export interface GameSettings {
 // -----------------------------------------------------------------------------
 
 export const DEFAULT_GRAPHICS: GraphicsSettings = {
-  shadowQuality: "high",
-  particleDensity: "full",
+  antiAliasing: true,
+  environmentEffects: "full",
   fogQuality: "full",
   gradientQuality: "full",
-  environmentEffects: "full",
-  antiAliasing: true,
-  showGodRays: true,
+  particleDensity: "full",
+  shadowQuality: "high",
   showAurora: true,
+  showGodRays: true,
   showScreenGlow: true,
 };
 
 export const DEFAULT_LANDSCAPING: LandscapingSettings = {
+  battleDebrisDensity: "medium",
   decorationDensity: "normal",
+  decorationScale: "normal",
+  showLandmarks: true,
+  showPathDecorations: true,
+  showWaterEffects: true,
   treeClusterDensity: "normal",
   villageDensity: "normal",
-  battleDebrisDensity: "medium",
-  decorationScale: "normal",
-  showPathDecorations: true,
-  showLandmarks: true,
-  showWaterEffects: true,
 };
 
 export const DEFAULT_ANIMATION: AnimationSettings = {
   animationIntensity: "normal",
-  screenShakeIntensity: 1.0,
   deathAnimations: true,
-  projectileTrails: true,
-  towerAnimations: true,
   idleAnimations: true,
+  projectileTrails: true,
+  screenShakeIntensity: 1,
+  towerAnimations: true,
 };
 
 export const DEFAULT_CAMERA: CameraSettings = {
-  defaultZoom: 1.0,
-  zoomSensitivity: 1.0,
+  defaultZoom: 1,
   edgePanSpeed: "normal",
   smoothCamera: true,
+  zoomSensitivity: 1,
   zoomToCursor: true,
 };
 
 export const DEFAULT_UI: UISettings = {
-  showFpsCounter: false,
-  showPerformanceOverlay: false,
-  damageNumbers: "animated",
-  uiScale: "normal",
-  showHealthBars: true,
-  showRangeIndicators: true,
-  showTowerRadii: true,
-  showTowerBadges: false,
-  showWavePreview: true,
-  tooltipDelay: 400,
   autoSendWaves: true,
+  damageNumbers: "animated",
   showCameraDpad: true,
   showControlsReference: true,
+  showFpsCounter: false,
   showGameTimer: true,
+  showHealthBars: true,
+  showPerformanceOverlay: false,
+  showRangeIndicators: true,
+  showTowerBadges: false,
+  showTowerRadii: true,
+  showWavePreview: true,
+  tooltipDelay: 400,
+  uiScale: "normal",
 };
 
 export const DEFAULT_AUDIO: AudioSettings = {
-  masterVolume: 0.8,
-  sfxVolume: 0.7,
-  musicVolume: 0.5,
   ambientVolume: 0.4,
+  masterVolume: 0.8,
+  musicVolume: 0.5,
   muteWhenUnfocused: true,
+  sfxVolume: 0.7,
 };
 
 export const DEFAULT_ACCESSIBILITY: AccessibilitySettings = {
   colorblindMode: "off",
-  reducedMotion: false,
   highContrastUI: false,
   largeText: false,
+  reducedMotion: false,
   screenReaderHints: false,
 };
 
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
+  accessibility: { ...DEFAULT_ACCESSIBILITY },
+  animation: { ...DEFAULT_ANIMATION },
+  audio: { ...DEFAULT_AUDIO },
+  camera: { ...DEFAULT_CAMERA },
   graphics: { ...DEFAULT_GRAPHICS },
   landscaping: { ...DEFAULT_LANDSCAPING },
-  animation: { ...DEFAULT_ANIMATION },
-  camera: { ...DEFAULT_CAMERA },
   ui: { ...DEFAULT_UI },
-  audio: { ...DEFAULT_AUDIO },
-  accessibility: { ...DEFAULT_ACCESSIBILITY },
 };
 
 // -----------------------------------------------------------------------------
@@ -200,133 +209,133 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
 // -----------------------------------------------------------------------------
 
 export const QUALITY_PRESETS: Record<QualityPreset, Partial<GameSettings>> = {
-  ultra: {
-    graphics: {
-      shadowQuality: "high",
-      particleDensity: "extra",
-      fogQuality: "full",
-      gradientQuality: "full",
-      environmentEffects: "full",
-      antiAliasing: true,
-      showGodRays: true,
-      showAurora: true,
-      showScreenGlow: true,
-    },
-    landscaping: {
-      decorationDensity: "lush",
-      treeClusterDensity: "lush",
-      villageDensity: "lush",
-      battleDebrisDensity: "high",
-      decorationScale: "large",
-      showPathDecorations: true,
-      showLandmarks: true,
-      showWaterEffects: true,
-    },
-    animation: {
-      animationIntensity: "enhanced",
-      screenShakeIntensity: 1.2,
-      deathAnimations: true,
-      projectileTrails: true,
-      towerAnimations: true,
-      idleAnimations: true,
-    },
-  },
   high: {
+    animation: { ...DEFAULT_ANIMATION },
     graphics: { ...DEFAULT_GRAPHICS },
     landscaping: { ...DEFAULT_LANDSCAPING },
-    animation: { ...DEFAULT_ANIMATION },
-  },
-  medium: {
-    graphics: {
-      shadowQuality: "medium",
-      particleDensity: "full",
-      fogQuality: "reduced",
-      gradientQuality: "full",
-      environmentEffects: "reduced",
-      antiAliasing: true,
-      showGodRays: true,
-      showAurora: false,
-      showScreenGlow: true,
-    },
-    landscaping: {
-      decorationDensity: "normal",
-      treeClusterDensity: "sparse",
-      villageDensity: "sparse",
-      battleDebrisDensity: "low",
-      decorationScale: "normal",
-      showPathDecorations: true,
-      showLandmarks: true,
-      showWaterEffects: true,
-    },
-    animation: {
-      animationIntensity: "normal",
-      screenShakeIntensity: 0.8,
-      deathAnimations: true,
-      projectileTrails: true,
-      towerAnimations: true,
-      idleAnimations: false,
-    },
   },
   low: {
+    animation: {
+      animationIntensity: "reduced",
+      deathAnimations: true,
+      idleAnimations: false,
+      projectileTrails: false,
+      screenShakeIntensity: 0.5,
+      towerAnimations: true,
+    },
     graphics: {
-      shadowQuality: "low",
-      particleDensity: "reduced",
+      antiAliasing: false,
+      environmentEffects: "off",
       fogQuality: "off",
       gradientQuality: "simplified",
-      environmentEffects: "off",
-      antiAliasing: false,
-      showGodRays: false,
+      particleDensity: "reduced",
+      shadowQuality: "low",
       showAurora: false,
+      showGodRays: false,
       showScreenGlow: false,
     },
     landscaping: {
+      battleDebrisDensity: "none",
       decorationDensity: "sparse",
+      decorationScale: "small",
+      showLandmarks: true,
+      showPathDecorations: true,
+      showWaterEffects: false,
       treeClusterDensity: "sparse",
       villageDensity: "minimal",
-      battleDebrisDensity: "none",
-      decorationScale: "small",
-      showPathDecorations: true,
-      showLandmarks: true,
-      showWaterEffects: false,
     },
+  },
+  medium: {
     animation: {
-      animationIntensity: "reduced",
-      screenShakeIntensity: 0.5,
+      animationIntensity: "normal",
       deathAnimations: true,
-      projectileTrails: false,
-      towerAnimations: true,
       idleAnimations: false,
+      projectileTrails: true,
+      screenShakeIntensity: 0.8,
+      towerAnimations: true,
+    },
+    graphics: {
+      antiAliasing: true,
+      environmentEffects: "reduced",
+      fogQuality: "reduced",
+      gradientQuality: "full",
+      particleDensity: "full",
+      shadowQuality: "medium",
+      showAurora: false,
+      showGodRays: true,
+      showScreenGlow: true,
+    },
+    landscaping: {
+      battleDebrisDensity: "low",
+      decorationDensity: "normal",
+      decorationScale: "normal",
+      showLandmarks: true,
+      showPathDecorations: true,
+      showWaterEffects: true,
+      treeClusterDensity: "sparse",
+      villageDensity: "sparse",
     },
   },
   potato: {
+    animation: {
+      animationIntensity: "off",
+      deathAnimations: false,
+      idleAnimations: false,
+      projectileTrails: false,
+      screenShakeIntensity: 0,
+      towerAnimations: false,
+    },
     graphics: {
-      shadowQuality: "off",
-      particleDensity: "off",
+      antiAliasing: false,
+      environmentEffects: "off",
       fogQuality: "off",
       gradientQuality: "simplified",
-      environmentEffects: "off",
-      antiAliasing: false,
-      showGodRays: false,
+      particleDensity: "off",
+      shadowQuality: "off",
       showAurora: false,
+      showGodRays: false,
       showScreenGlow: false,
     },
     landscaping: {
+      battleDebrisDensity: "none",
       decorationDensity: "minimal",
+      decorationScale: "small",
+      showLandmarks: true,
+      showPathDecorations: false,
+      showWaterEffects: false,
       treeClusterDensity: "minimal",
       villageDensity: "minimal",
-      battleDebrisDensity: "none",
-      decorationScale: "small",
-      showPathDecorations: false,
-      showLandmarks: true,
-      showWaterEffects: false,
     },
+  },
+  ultra: {
     animation: {
-      animationIntensity: "off",
-      screenShakeIntensity: 0,
-      deathAnimations: false,
-      projectileTrails: false,
-      towerAnimations: false,
-      idleAnimations: false,
+      animationIntensity: "enhanced",
+      deathAnimations: true,
+      idleAnimations: true,
+      projectileTrails: true,
+      screenShakeIntensity: 1.2,
+      towerAnimations: true,
+    },
+    graphics: {
+      antiAliasing: true,
+      environmentEffects: "full",
+      fogQuality: "full",
+      gradientQuality: "full",
+      particleDensity: "extra",
+      shadowQuality: "high",
+      showAurora: true,
+      showGodRays: true,
+      showScreenGlow: true,
+    },
+    landscaping: {
+      battleDebrisDensity: "high",
+      decorationDensity: "lush",
+      decorationScale: "large",
+      showLandmarks: true,
+      showPathDecorations: true,
+      showWaterEffects: true,
+      treeClusterDensity: "lush",
+      villageDensity: "lush",
     },
   },
 };
@@ -336,77 +345,81 @@ export const QUALITY_PRESETS: Record<QualityPreset, Partial<GameSettings>> = {
 // Used by rendering code to scale loop counts, radii, etc.
 // -----------------------------------------------------------------------------
 
-export const DECORATION_DENSITY_MULTIPLIER: Record<DecorationDensity, number> = {
-  minimal: 0.2,
-  sparse: 0.5,
-  normal: 1.0,
-  dense: 1.5,
-  lush: 2.0,
-};
+export const DECORATION_DENSITY_MULTIPLIER: Record<DecorationDensity, number> =
+  {
+    dense: 1.5,
+    lush: 2,
+    minimal: 0.2,
+    normal: 1,
+    sparse: 0.5,
+  };
 
 export const TREE_CLUSTER_COUNT: Record<DecorationDensity, number> = {
-  minimal: 8,
-  sparse: 20,
-  normal: 40,
   dense: 60,
   lush: 80,
+  minimal: 8,
+  normal: 40,
+  sparse: 20,
 };
 
 export const GROVE_COUNT: Record<DecorationDensity, number> = {
-  minimal: 2,
-  sparse: 6,
-  normal: 12,
   dense: 18,
   lush: 24,
+  minimal: 2,
+  normal: 12,
+  sparse: 6,
 };
 
 export const VILLAGE_COUNT: Record<DecorationDensity, number> = {
-  minimal: 2,
-  sparse: 6,
-  normal: 12,
   dense: 16,
   lush: 20,
+  minimal: 2,
+  normal: 12,
+  sparse: 6,
 };
 
 export const BATTLE_DEBRIS_COUNT: Record<BattleDebrisDensity, number> = {
-  none: 0,
+  high: 450,
   low: 100,
   medium: 280,
-  high: 450,
+  none: 0,
 };
 
 export const PARTICLE_DENSITY_MULTIPLIER: Record<ParticleDensity, number> = {
+  extra: 1.5,
+  full: 1,
   off: 0,
   reduced: 0.5,
-  full: 1.0,
-  extra: 1.5,
 };
 
 export const SHADOW_QUALITY_MULTIPLIER: Record<ShadowQuality, number> = {
-  off: 0,
+  high: 1,
   low: 0.35,
   medium: 0.6,
-  high: 1.0,
+  off: 0,
 };
 
 export const FOG_QUALITY_MULTIPLIER: Record<FogQuality, number> = {
+  full: 1,
   off: 0,
   reduced: 0.5,
-  full: 1.0,
 };
 
-export const DECORATION_SCALE_RANGE: Record<DecorationScale, { base: number; variance: number }> = {
-  small: { base: 0.5, variance: 0.3 },
-  normal: { base: 0.7, variance: 0.5 },
+export const DECORATION_SCALE_RANGE: Record<
+  DecorationScale,
+  { base: number; variance: number }
+> = {
   large: { base: 0.9, variance: 0.6 },
   mixed: { base: 0.6, variance: 0.8 },
+  normal: { base: 0.7, variance: 0.5 },
+  small: { base: 0.5, variance: 0.3 },
 };
 
 export const EDGE_PAN_SPEED: Record<CameraEdgePan, number> = {
+  fast: 2,
+  normal: 1,
   off: 0,
   slow: 0.5,
-  normal: 1.0,
-  fast: 2.0,
 };
 
 export const TOOLTIP_DELAY_OPTIONS = [0, 200, 400, 600, 1000] as const;
@@ -432,13 +445,48 @@ export interface SettingsCategoryMeta {
 }
 
 export const SETTINGS_CATEGORIES: SettingsCategoryMeta[] = [
-  { id: "graphics", label: "Graphics", icon: "monitor", description: "Shadows, particles, fog, and visual effects" },
-  { id: "landscaping", label: "Landscaping", icon: "trees", description: "Decoration density, trees, villages, and terrain" },
-  { id: "animation", label: "Animation", icon: "sparkles", description: "Animation quality, screen shake, and visual flair" },
-  { id: "camera", label: "Camera", icon: "move", description: "Zoom, panning, and camera behavior" },
-  { id: "ui", label: "Interface", icon: "layout", description: "HUD elements, damage numbers, and overlays" },
-  { id: "audio", label: "Audio", icon: "volume", description: "Volume controls for music, SFX, and ambience" },
-  { id: "accessibility", label: "Accessibility", icon: "eye", description: "Colorblind support, motion, and readability" },
+  {
+    description: "Shadows, particles, fog, and visual effects",
+    icon: "monitor",
+    id: "graphics",
+    label: "Graphics",
+  },
+  {
+    description: "Decoration density, trees, villages, and terrain",
+    icon: "trees",
+    id: "landscaping",
+    label: "Landscaping",
+  },
+  {
+    description: "Animation quality, screen shake, and visual flair",
+    icon: "sparkles",
+    id: "animation",
+    label: "Animation",
+  },
+  {
+    description: "Zoom, panning, and camera behavior",
+    icon: "move",
+    id: "camera",
+    label: "Camera",
+  },
+  {
+    description: "HUD elements, damage numbers, and overlays",
+    icon: "layout",
+    id: "ui",
+    label: "Interface",
+  },
+  {
+    description: "Volume controls for music, SFX, and ambience",
+    icon: "volume",
+    id: "audio",
+    label: "Audio",
+  },
+  {
+    description: "Colorblind support, motion, and readability",
+    icon: "eye",
+    id: "accessibility",
+    label: "Accessibility",
+  },
 ];
 
 // -----------------------------------------------------------------------------

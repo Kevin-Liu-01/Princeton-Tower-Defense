@@ -35,20 +35,32 @@ export function anchorWeaponToHand(
   targetPos: Position | undefined,
   forwardOffset: number,
   maxTurn: number,
-  limits: readonly [number, number],
+  limits: readonly [number, number]
 ): AnchoredWeapon {
   const handX = shoulderX + Math.cos(armSwingAngle) * armLength;
   const handY = shoulderY + Math.sin(armSwingAngle) * armLength;
 
   const weaponAngle = _resolveWeaponRotation(
-    targetPos, handX, handY, weaponBaseAngle,
-    forwardOffset, maxTurn, limits,
+    targetPos,
+    handX,
+    handY,
+    weaponBaseAngle,
+    forwardOffset,
+    maxTurn,
+    limits
   );
 
   const weaponX = handX + Math.sin(weaponAngle) * gripLocalY;
   const weaponY = handY - Math.cos(weaponAngle) * gripLocalY;
 
-  return { handX, handY, weaponX, weaponY, weaponAngle, armAngle: armSwingAngle };
+  return {
+    armAngle: armSwingAngle,
+    handX,
+    handY,
+    weaponAngle,
+    weaponX,
+    weaponY,
+  };
 }
 
 // ── Detailed arm drawing ─────────────────────────────────────
@@ -74,7 +86,7 @@ export function drawDetailedArm(
   size: number,
   armLength: number,
   zoom: number,
-  colors: ArmColors,
+  colors: ArmColors
 ) {
   const hw = size * 0.045;
   const elbowX = armLength * 0.48;
@@ -102,7 +114,12 @@ export function drawDetailedArm(
 
   // --- Elbow cop ---
   const elbowGrad = ctx.createRadialGradient(
-    elbowX, 0, 0, elbowX, 0, size * 0.04,
+    elbowX,
+    0,
+    0,
+    elbowX,
+    0,
+    size * 0.04
   );
   elbowGrad.addColorStop(0, colors.vambraceLight);
   elbowGrad.addColorStop(0.6, colors.elbow);
@@ -120,7 +137,10 @@ export function drawDetailedArm(
 
   // --- Forearm / vambrace ---
   const vambraceGrad = ctx.createLinearGradient(
-    forearmStart, -forearmW, forearmStart, forearmW,
+    forearmStart,
+    -forearmW,
+    forearmStart,
+    forearmW
   );
   vambraceGrad.addColorStop(0, colors.upperDark);
   vambraceGrad.addColorStop(0.2, colors.vambrace);
@@ -130,9 +150,11 @@ export function drawDetailedArm(
   ctx.fillStyle = vambraceGrad;
   ctx.beginPath();
   ctx.roundRect(
-    forearmStart, -forearmW,
-    armLength - forearmStart - size * 0.02, forearmW * 2,
-    size * 0.008,
+    forearmStart,
+    -forearmW,
+    armLength - forearmStart - size * 0.02,
+    forearmW * 2,
+    size * 0.008
   );
   ctx.fill();
 
@@ -153,7 +175,12 @@ export function drawDetailedArm(
   // --- Gauntlet (hand) ---
   const handX = armLength;
   const gauntletGrad = ctx.createRadialGradient(
-    handX, 0, 0, handX, 0, size * 0.035,
+    handX,
+    0,
+    0,
+    handX,
+    0,
+    size * 0.035
   );
   gauntletGrad.addColorStop(0, colors.vambraceLight);
   gauntletGrad.addColorStop(0.5, colors.vambrace);
@@ -190,61 +217,61 @@ export const TROOP_MASTERWORK_STYLES: Record<
   | "knight",
   TroopMasterworkStyle
 > = {
-  soldier: {
-    rimLight: "rgba(255, 190, 120, 0.65)",
-    aura: "rgba(255, 126, 40, ",
-    rune: "rgba(255, 181, 116, ",
-    metalSheen: "rgba(255, 240, 220, ",
-    crest: "#f27f2f",
-  },
   armored: {
-    rimLight: "rgba(230, 210, 160, 0.62)",
     aura: "rgba(230, 160, 70, ",
-    rune: "rgba(240, 200, 140, ",
-    metalSheen: "rgba(240, 235, 215, ",
     crest: "#d9a040",
-  },
-  elite: {
-    rimLight: "rgba(255, 227, 162, 0.72)",
-    aura: "rgba(255, 163, 74, ",
-    rune: "rgba(255, 213, 143, ",
-    metalSheen: "rgba(255, 244, 213, ",
-    crest: "#f5b04b",
+    metalSheen: "rgba(240, 235, 215, ",
+    rimLight: "rgba(230, 210, 160, 0.62)",
+    rune: "rgba(240, 200, 140, ",
   },
   cavalry: {
-    rimLight: "rgba(255, 215, 148, 0.72)",
     aura: "rgba(247, 145, 52, ",
-    rune: "rgba(255, 213, 136, ",
-    metalSheen: "rgba(255, 240, 198, ",
     crest: "#f7aa42",
+    metalSheen: "rgba(255, 240, 198, ",
+    rimLight: "rgba(255, 215, 148, 0.72)",
+    rune: "rgba(255, 213, 136, ",
   },
   centaur: {
-    rimLight: "rgba(242, 210, 158, 0.66)",
     aura: "rgba(210, 143, 74, ",
-    rune: "rgba(246, 212, 168, ",
-    metalSheen: "rgba(255, 229, 204, ",
     crest: "#d79f56",
+    metalSheen: "rgba(255, 229, 204, ",
+    rimLight: "rgba(242, 210, 158, 0.66)",
+    rune: "rgba(246, 212, 168, ",
   },
-  thesis: {
-    rimLight: "rgba(219, 182, 255, 0.75)",
-    aura: "rgba(184, 121, 250, ",
-    rune: "rgba(221, 186, 255, ",
-    metalSheen: "rgba(241, 224, 255, ",
-    crest: "#ba84ff",
-  },
-  rowing: {
-    rimLight: "rgba(255, 194, 132, 0.72)",
-    aura: "rgba(247, 130, 52, ",
-    rune: "rgba(255, 205, 148, ",
-    metalSheen: "rgba(255, 232, 205, ",
-    crest: "#ff9548",
+  elite: {
+    aura: "rgba(255, 163, 74, ",
+    crest: "#f5b04b",
+    metalSheen: "rgba(255, 244, 213, ",
+    rimLight: "rgba(255, 227, 162, 0.72)",
+    rune: "rgba(255, 213, 143, ",
   },
   knight: {
-    rimLight: "rgba(170, 212, 255, 0.62)",
     aura: "rgba(86, 141, 224, ",
-    rune: "rgba(181, 220, 255, ",
-    metalSheen: "rgba(231, 242, 255, ",
     crest: "#78b2ff",
+    metalSheen: "rgba(231, 242, 255, ",
+    rimLight: "rgba(170, 212, 255, 0.62)",
+    rune: "rgba(181, 220, 255, ",
+  },
+  rowing: {
+    aura: "rgba(247, 130, 52, ",
+    crest: "#ff9548",
+    metalSheen: "rgba(255, 232, 205, ",
+    rimLight: "rgba(255, 194, 132, 0.72)",
+    rune: "rgba(255, 205, 148, ",
+  },
+  soldier: {
+    aura: "rgba(255, 126, 40, ",
+    crest: "#f27f2f",
+    metalSheen: "rgba(255, 240, 220, ",
+    rimLight: "rgba(255, 190, 120, 0.65)",
+    rune: "rgba(255, 181, 116, ",
+  },
+  thesis: {
+    aura: "rgba(184, 121, 250, ",
+    crest: "#ba84ff",
+    metalSheen: "rgba(241, 224, 255, ",
+    rimLight: "rgba(219, 182, 255, 0.75)",
+    rune: "rgba(221, 186, 255, ",
   },
 };
 
@@ -266,15 +293,19 @@ export function drawMuscularHorseBody(
   radiusY: number,
   size: number,
   zoom: number,
-  colors: HorseBodyColors,
+  colors: HorseBodyColors
 ) {
   const rx = radiusX;
   const ry = radiusY;
 
   // Angular body shape — barrel chest tapering to hindquarters
   const bodyGrad = ctx.createRadialGradient(
-    centerX - rx * 0.25, centerY - ry * 0.3, 0,
-    centerX + rx * 0.1, centerY + ry * 0.1, Math.max(rx, ry) * 1.15,
+    centerX - rx * 0.25,
+    centerY - ry * 0.3,
+    0,
+    centerX + rx * 0.1,
+    centerY + ry * 0.1,
+    Math.max(rx, ry) * 1.15
   );
   bodyGrad.addColorStop(0, colors.coatLight);
   bodyGrad.addColorStop(0.18, colors.coatMid);
@@ -317,8 +348,12 @@ export function drawMuscularHorseBody(
   const shX = centerX - rx * 0.48;
   const shY = centerY - ry * 0.05;
   const shGrad = ctx.createRadialGradient(
-    shX - rx * 0.08, shY - ry * 0.15, 0,
-    shX, shY, rx * 0.4,
+    shX - rx * 0.08,
+    shY - ry * 0.15,
+    0,
+    shX,
+    shY,
+    rx * 0.4
   );
   shGrad.addColorStop(0, colors.muscleHighlight);
   shGrad.addColorStop(0.6, "rgba(0,0,0,0)");
@@ -326,14 +361,20 @@ export function drawMuscularHorseBody(
   ctx.beginPath();
   ctx.moveTo(shX - rx * 0.1, shY - ry * 0.5);
   ctx.bezierCurveTo(
-    shX - rx * 0.35, shY - ry * 0.2,
-    shX - rx * 0.35, shY + ry * 0.35,
-    shX - rx * 0.05, shY + ry * 0.5,
+    shX - rx * 0.35,
+    shY - ry * 0.2,
+    shX - rx * 0.35,
+    shY + ry * 0.35,
+    shX - rx * 0.05,
+    shY + ry * 0.5
   );
   ctx.bezierCurveTo(
-    shX + rx * 0.15, shY + ry * 0.35,
-    shX + rx * 0.2, shY - ry * 0.15,
-    shX - rx * 0.1, shY - ry * 0.5,
+    shX + rx * 0.15,
+    shY + ry * 0.35,
+    shX + rx * 0.2,
+    shY - ry * 0.15,
+    shX - rx * 0.1,
+    shY - ry * 0.5
   );
   ctx.fill();
 
@@ -342,7 +383,15 @@ export function drawMuscularHorseBody(
   ctx.globalAlpha = 0.12;
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.ellipse(shX - rx * 0.08, shY - ry * 0.2, rx * 0.14, ry * 0.2, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    shX - rx * 0.08,
+    shY - ry * 0.2,
+    rx * 0.14,
+    ry * 0.2,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.restore();
 
@@ -350,8 +399,12 @@ export function drawMuscularHorseBody(
   const hhX = centerX + rx * 0.48;
   const hhY = centerY - ry * 0.05;
   const hhGrad = ctx.createRadialGradient(
-    hhX + rx * 0.06, hhY - ry * 0.12, 0,
-    hhX, hhY, rx * 0.38,
+    hhX + rx * 0.06,
+    hhY - ry * 0.12,
+    0,
+    hhX,
+    hhY,
+    rx * 0.38
   );
   hhGrad.addColorStop(0, colors.muscleHighlight);
   hhGrad.addColorStop(0.6, "rgba(0,0,0,0)");
@@ -359,14 +412,20 @@ export function drawMuscularHorseBody(
   ctx.beginPath();
   ctx.moveTo(hhX + rx * 0.15, hhY - ry * 0.45);
   ctx.bezierCurveTo(
-    hhX + rx * 0.32, hhY - ry * 0.15,
-    hhX + rx * 0.3, hhY + ry * 0.35,
-    hhX + rx * 0.05, hhY + ry * 0.48,
+    hhX + rx * 0.32,
+    hhY - ry * 0.15,
+    hhX + rx * 0.3,
+    hhY + ry * 0.35,
+    hhX + rx * 0.05,
+    hhY + ry * 0.48
   );
   ctx.bezierCurveTo(
-    hhX - rx * 0.12, hhY + ry * 0.3,
-    hhX - rx * 0.15, hhY - ry * 0.1,
-    hhX + rx * 0.15, hhY - ry * 0.45,
+    hhX - rx * 0.12,
+    hhY + ry * 0.3,
+    hhX - rx * 0.15,
+    hhY - ry * 0.1,
+    hhX + rx * 0.15,
+    hhY - ry * 0.45
   );
   ctx.fill();
 
@@ -375,7 +434,15 @@ export function drawMuscularHorseBody(
   ctx.globalAlpha = 0.1;
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.ellipse(hhX + rx * 0.06, hhY - ry * 0.18, rx * 0.12, ry * 0.18, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    hhX + rx * 0.06,
+    hhY - ry * 0.18,
+    rx * 0.12,
+    ry * 0.18,
+    0.2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.restore();
 
@@ -386,9 +453,12 @@ export function drawMuscularHorseBody(
   ctx.beginPath();
   ctx.moveTo(centerX - rx * 0.55, centerY - ry * 0.45);
   ctx.bezierCurveTo(
-    centerX - rx * 0.2, centerY - ry * 0.92,
-    centerX + rx * 0.25, centerY - ry * 0.82,
-    centerX + rx * 0.62, centerY - ry * 0.38,
+    centerX - rx * 0.2,
+    centerY - ry * 0.92,
+    centerX + rx * 0.25,
+    centerY - ry * 0.82,
+    centerX + rx * 0.62,
+    centerY - ry * 0.38
   );
   ctx.stroke();
   ctx.lineCap = "butt";
@@ -397,8 +467,18 @@ export function drawMuscularHorseBody(
   ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
   ctx.beginPath();
   ctx.moveTo(centerX - rx * 0.5, centerY + ry * 0.55);
-  ctx.quadraticCurveTo(centerX, centerY + ry * 0.9, centerX + rx * 0.4, centerY + ry * 0.65);
-  ctx.quadraticCurveTo(centerX, centerY + ry * 0.6, centerX - rx * 0.5, centerY + ry * 0.55);
+  ctx.quadraticCurveTo(
+    centerX,
+    centerY + ry * 0.9,
+    centerX + rx * 0.4,
+    centerY + ry * 0.65
+  );
+  ctx.quadraticCurveTo(
+    centerX,
+    centerY + ry * 0.6,
+    centerX - rx * 0.5,
+    centerY + ry * 0.55
+  );
   ctx.fill();
 
   // --- Shoulder definition lines ---
@@ -406,24 +486,52 @@ export function drawMuscularHorseBody(
   ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
   ctx.moveTo(shX - rx * 0.08, shY - ry * 0.42);
-  ctx.bezierCurveTo(shX - rx * 0.3, shY - ry * 0.1, shX - rx * 0.25, shY + ry * 0.3, shX, shY + ry * 0.42);
+  ctx.bezierCurveTo(
+    shX - rx * 0.3,
+    shY - ry * 0.1,
+    shX - rx * 0.25,
+    shY + ry * 0.3,
+    shX,
+    shY + ry * 0.42
+  );
   ctx.stroke();
   ctx.lineWidth = 1.1 * zoom;
   ctx.beginPath();
   ctx.moveTo(shX + rx * 0.06, shY - ry * 0.28);
-  ctx.bezierCurveTo(shX + rx * 0.12, shY + ry * 0.1, shX + rx * 0.08, shY + ry * 0.3, shX - rx * 0.05, shY + ry * 0.38);
+  ctx.bezierCurveTo(
+    shX + rx * 0.12,
+    shY + ry * 0.1,
+    shX + rx * 0.08,
+    shY + ry * 0.3,
+    shX - rx * 0.05,
+    shY + ry * 0.38
+  );
   ctx.stroke();
 
   // --- Haunch definition lines ---
   ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
   ctx.moveTo(hhX + rx * 0.12, hhY - ry * 0.38);
-  ctx.bezierCurveTo(hhX + rx * 0.26, hhY - ry * 0.05, hhX + rx * 0.2, hhY + ry * 0.28, hhX, hhY + ry * 0.4);
+  ctx.bezierCurveTo(
+    hhX + rx * 0.26,
+    hhY - ry * 0.05,
+    hhX + rx * 0.2,
+    hhY + ry * 0.28,
+    hhX,
+    hhY + ry * 0.4
+  );
   ctx.stroke();
   ctx.lineWidth = 1.1 * zoom;
   ctx.beginPath();
   ctx.moveTo(hhX - rx * 0.06, hhY - ry * 0.22);
-  ctx.bezierCurveTo(hhX - rx * 0.1, hhY + ry * 0.12, hhX - rx * 0.06, hhY + ry * 0.3, hhX + rx * 0.08, hhY + ry * 0.36);
+  ctx.bezierCurveTo(
+    hhX - rx * 0.1,
+    hhY + ry * 0.12,
+    hhX - rx * 0.06,
+    hhY + ry * 0.3,
+    hhX + rx * 0.08,
+    hhY + ry * 0.36
+  );
   ctx.stroke();
 
   // --- Ribcage hints (angular) ---
@@ -436,9 +544,12 @@ export function drawMuscularHorseBody(
     ctx.beginPath();
     ctx.moveTo(ribX - rx * 0.02, ribTopY);
     ctx.bezierCurveTo(
-      ribX - rx * 0.08, ribTopY + ry * 0.25,
-      ribX - rx * 0.04, ribTopY + ry * 0.45,
-      ribX + rx * 0.02, ribTopY + ry * 0.5,
+      ribX - rx * 0.08,
+      ribTopY + ry * 0.25,
+      ribX - rx * 0.04,
+      ribTopY + ry * 0.45,
+      ribX + rx * 0.02,
+      ribTopY + ry * 0.5
     );
     ctx.stroke();
   }
@@ -450,21 +561,27 @@ export function drawMuscularHorseBody(
   ctx.beginPath();
   ctx.moveTo(centerX + rx * 0.22, centerY - ry * 0.62);
   ctx.bezierCurveTo(
-    centerX + rx * 0.35, centerY - ry * 0.68,
-    centerX + rx * 0.45, centerY - ry * 0.55,
-    centerX + rx * 0.42, centerY - ry * 0.4,
+    centerX + rx * 0.35,
+    centerY - ry * 0.68,
+    centerX + rx * 0.45,
+    centerY - ry * 0.55,
+    centerX + rx * 0.42,
+    centerY - ry * 0.4
   );
   ctx.stroke();
 
   // --- Withers notch ---
   ctx.strokeStyle = colors.muscleShadow;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(centerX - rx * 0.18, centerY - ry * 0.75);
   ctx.bezierCurveTo(
-    centerX - rx * 0.3, centerY - ry * 0.65,
-    centerX - rx * 0.32, centerY - ry * 0.5,
-    centerX - rx * 0.22, centerY - ry * 0.4,
+    centerX - rx * 0.3,
+    centerY - ry * 0.65,
+    centerX - rx * 0.32,
+    centerY - ry * 0.5,
+    centerX - rx * 0.22,
+    centerY - ry * 0.4
   );
   ctx.stroke();
 
@@ -474,9 +591,12 @@ export function drawMuscularHorseBody(
   ctx.beginPath();
   ctx.moveTo(centerX - rx * 0.15, centerY - ry * 0.65);
   ctx.bezierCurveTo(
-    centerX - rx * 0.25, centerY + ry * 0.2,
-    centerX - rx * 0.2, centerY + ry * 0.6,
-    centerX - rx * 0.05, centerY + ry * 0.72,
+    centerX - rx * 0.25,
+    centerY + ry * 0.2,
+    centerX - rx * 0.2,
+    centerY + ry * 0.6,
+    centerX - rx * 0.05,
+    centerY + ry * 0.72
   );
   ctx.stroke();
 }
@@ -504,13 +624,14 @@ export function drawMuscularHorseLeg(
   stride: number,
   phaseOffset: number,
   freq: number,
-  colors: HorseLegColors,
+  colors: HorseLegColors
 ) {
   const upperLen = size * 0.19;
   const cannonLen = size * 0.17;
   const pasternLen = size * 0.038;
   const kneeSwing = Math.sin(time * freq + phaseOffset) * size * 0.03;
-  const fetlockSwing = Math.sin(time * freq + phaseOffset + 0.85) * size * 0.025;
+  const fetlockSwing =
+    Math.sin(time * freq + phaseOffset + 0.85) * size * 0.025;
 
   ctx.save();
   ctx.translate(legX, legY);
@@ -533,16 +654,22 @@ export function drawMuscularHorseLeg(
   // Front edge — angular bulge at gastrocnemius
   ctx.lineTo(-bulgeW, gastrocBulge * 0.6);
   ctx.bezierCurveTo(
-    -bulgeW * 0.95, gastrocBulge * 1.2,
-    -kneeW * 1.6, upperLen * 0.75,
-    kneeSwing - kneeW, upperLen,
+    -bulgeW * 0.95,
+    gastrocBulge * 1.2,
+    -kneeW * 1.6,
+    upperLen * 0.75,
+    kneeSwing - kneeW,
+    upperLen
   );
   ctx.lineTo(kneeSwing + kneeW, upperLen);
   // Back edge — angular taper
   ctx.bezierCurveTo(
-    kneeW * 1.6, upperLen * 0.75,
-    bulgeW * 0.7, gastrocBulge * 1.0,
-    bulgeW * 0.65, gastrocBulge * 0.5,
+    kneeW * 1.6,
+    upperLen * 0.75,
+    bulgeW * 0.7,
+    gastrocBulge * 1,
+    bulgeW * 0.65,
+    gastrocBulge * 0.5
   );
   ctx.lineTo(hipW, 0);
   ctx.closePath();
@@ -555,15 +682,21 @@ export function drawMuscularHorseLeg(
   ctx.beginPath();
   ctx.moveTo(-hipW * 0.5, size * 0.01);
   ctx.bezierCurveTo(
-    -bulgeW * 0.75, gastrocBulge * 0.5,
-    -bulgeW * 0.6, gastrocBulge * 1.3,
-    -kneeW * 0.8, upperLen * 0.7,
+    -bulgeW * 0.75,
+    gastrocBulge * 0.5,
+    -bulgeW * 0.6,
+    gastrocBulge * 1.3,
+    -kneeW * 0.8,
+    upperLen * 0.7
   );
   ctx.lineTo(-kneeW * 0.3, upperLen * 0.7);
   ctx.bezierCurveTo(
-    -bulgeW * 0.25, gastrocBulge * 1.1,
-    -hipW * 0.15, gastrocBulge * 0.3,
-    -hipW * 0.2, size * 0.01,
+    -bulgeW * 0.25,
+    gastrocBulge * 1.1,
+    -hipW * 0.15,
+    gastrocBulge * 0.3,
+    -hipW * 0.2,
+    size * 0.01
   );
   ctx.closePath();
   ctx.fill();
@@ -571,13 +704,16 @@ export function drawMuscularHorseLeg(
 
   // Thigh muscle definition lines
   ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(-hipW * 0.3, size * 0.008);
   ctx.bezierCurveTo(
-    -bulgeW * 0.5, gastrocBulge * 0.7,
-    -kneeW * 1.2, upperLen * 0.65,
-    kneeSwing - kneeW * 0.3, upperLen * 0.9,
+    -bulgeW * 0.5,
+    gastrocBulge * 0.7,
+    -kneeW * 1.2,
+    upperLen * 0.65,
+    kneeSwing - kneeW * 0.3,
+    upperLen * 0.9
   );
   ctx.stroke();
   // Back muscle line
@@ -585,9 +721,12 @@ export function drawMuscularHorseLeg(
   ctx.beginPath();
   ctx.moveTo(hipW * 0.5, size * 0.01);
   ctx.bezierCurveTo(
-    bulgeW * 0.4, gastrocBulge * 0.8,
-    kneeW * 1.0, upperLen * 0.7,
-    kneeSwing + kneeW * 0.2, upperLen * 0.9,
+    bulgeW * 0.4,
+    gastrocBulge * 0.8,
+    kneeW * 1,
+    upperLen * 0.7,
+    kneeSwing + kneeW * 0.2,
+    upperLen * 0.9
   );
   ctx.stroke();
 
@@ -596,15 +735,21 @@ export function drawMuscularHorseLeg(
   ctx.beginPath();
   ctx.moveTo(hipW * 0.3, gastrocBulge * 0.3);
   ctx.bezierCurveTo(
-    bulgeW * 0.55, gastrocBulge * 0.8,
-    kneeW * 1.2, upperLen * 0.75,
-    kneeSwing + kneeW * 0.5, upperLen,
+    bulgeW * 0.55,
+    gastrocBulge * 0.8,
+    kneeW * 1.2,
+    upperLen * 0.75,
+    kneeSwing + kneeW * 0.5,
+    upperLen
   );
   ctx.lineTo(kneeSwing + kneeW, upperLen);
   ctx.bezierCurveTo(
-    kneeW * 1.5, upperLen * 0.75,
-    bulgeW * 0.65, gastrocBulge,
-    hipW, 0,
+    kneeW * 1.5,
+    upperLen * 0.75,
+    bulgeW * 0.65,
+    gastrocBulge,
+    hipW,
+    0
   );
   ctx.lineTo(hipW * 0.3, gastrocBulge * 0.3);
   ctx.closePath();
@@ -633,7 +778,15 @@ export function drawMuscularHorseLeg(
   ctx.globalAlpha = 0.14;
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.ellipse(kX - kW * 0.25, kY - kH * 0.3, kW * 0.35, kH * 0.5, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    kX - kW * 0.25,
+    kY - kH * 0.3,
+    kW * 0.35,
+    kH * 0.5,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.restore();
 
@@ -673,7 +826,7 @@ export function drawMuscularHorseLeg(
 
   // Front tendon — prominent ridge
   ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(kX - cTopW * 0.4, cannonTop + size * 0.005);
   ctx.lineTo(fetX - cBotW * 0.4, cannonBot - size * 0.01);
@@ -701,8 +854,13 @@ export function drawMuscularHorseLeg(
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.ellipse(
-    (kX + fetX) * 0.5 - size * 0.014, cannonTop + cannonLen * 0.4,
-    size * 0.01, cannonLen * 0.28, 0.05, 0, Math.PI * 2,
+    (kX + fetX) * 0.5 - size * 0.014,
+    cannonTop + cannonLen * 0.4,
+    size * 0.01,
+    cannonLen * 0.28,
+    0.05,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.restore();
@@ -712,7 +870,12 @@ export function drawMuscularHorseLeg(
   const armorH = cannonLen * 0.42;
   const armorLX = kX - cTopW - size * 0.012;
   const armorRX = kX + cTopW + size * 0.012;
-  const armorGrad = ctx.createLinearGradient(armorLX, armorTop, armorRX, armorTop);
+  const armorGrad = ctx.createLinearGradient(
+    armorLX,
+    armorTop,
+    armorRX,
+    armorTop
+  );
   armorGrad.addColorStop(0, colors.greaveBottom);
   armorGrad.addColorStop(0.2, colors.greaveMid);
   armorGrad.addColorStop(0.5, colors.greaveTop);
@@ -748,7 +911,7 @@ export function drawMuscularHorseLeg(
 
   // Armor top/bottom trim
   ctx.strokeStyle = colors.trimColor;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(armorLX, armorTop);
   ctx.lineTo(armorRX, armorTop);
@@ -764,7 +927,12 @@ export function drawMuscularHorseLeg(
   const lAH = cannonLen * 0.22;
   const lMidX = (kX + fetX) * 0.5;
   const lMidW = (cTopW + cBotW) * 0.52;
-  const lArmorGrad = ctx.createLinearGradient(lMidX - lMidW, lATop, lMidX + lMidW, lATop);
+  const lArmorGrad = ctx.createLinearGradient(
+    lMidX - lMidW,
+    lATop,
+    lMidX + lMidW,
+    lATop
+  );
   lArmorGrad.addColorStop(0, colors.greaveBottom);
   lArmorGrad.addColorStop(0.5, colors.greaveMid);
   lArmorGrad.addColorStop(1, colors.greaveBottom);
@@ -828,10 +996,30 @@ export function drawMuscularHorseLeg(
   ctx.fillStyle = colors.thighDark;
   ctx.beginPath();
   ctx.moveTo(ftX - cBotW * 0.9, ftY);
-  ctx.quadraticCurveTo(ftX - hairSpread - size * 0.01, ftY + hairLen * 0.3, ftX - hairSpread * 0.65, ftY + hairLen * 1.1);
-  ctx.quadraticCurveTo(ftX - hairSpread * 0.25, ftY + hairLen * 0.8, ftX, ftY + hairLen * 0.5);
-  ctx.quadraticCurveTo(ftX + hairSpread * 0.25, ftY + hairLen * 0.8, ftX + hairSpread * 0.65, ftY + hairLen * 1.1);
-  ctx.quadraticCurveTo(ftX + hairSpread + size * 0.01, ftY + hairLen * 0.3, ftX + cBotW * 0.9, ftY);
+  ctx.quadraticCurveTo(
+    ftX - hairSpread - size * 0.01,
+    ftY + hairLen * 0.3,
+    ftX - hairSpread * 0.65,
+    ftY + hairLen * 1.1
+  );
+  ctx.quadraticCurveTo(
+    ftX - hairSpread * 0.25,
+    ftY + hairLen * 0.8,
+    ftX,
+    ftY + hairLen * 0.5
+  );
+  ctx.quadraticCurveTo(
+    ftX + hairSpread * 0.25,
+    ftY + hairLen * 0.8,
+    ftX + hairSpread * 0.65,
+    ftY + hairLen * 1.1
+  );
+  ctx.quadraticCurveTo(
+    ftX + hairSpread + size * 0.01,
+    ftY + hairLen * 0.3,
+    ftX + cBotW * 0.9,
+    ftY
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -839,10 +1027,30 @@ export function drawMuscularHorseLeg(
   ctx.fillStyle = colors.thighMid;
   ctx.beginPath();
   ctx.moveTo(ftX - cBotW * 0.7, ftY + size * 0.002);
-  ctx.quadraticCurveTo(ftX - hairSpread * 0.7, ftY + hairLen * 0.35, ftX - hairSpread * 0.4, ftY + hairLen * 0.8);
-  ctx.quadraticCurveTo(ftX - hairSpread * 0.12, ftY + hairLen * 0.55, ftX, ftY + hairLen * 0.3);
-  ctx.quadraticCurveTo(ftX + hairSpread * 0.12, ftY + hairLen * 0.55, ftX + hairSpread * 0.4, ftY + hairLen * 0.8);
-  ctx.quadraticCurveTo(ftX + hairSpread * 0.7, ftY + hairLen * 0.35, ftX + cBotW * 0.7, ftY + size * 0.002);
+  ctx.quadraticCurveTo(
+    ftX - hairSpread * 0.7,
+    ftY + hairLen * 0.35,
+    ftX - hairSpread * 0.4,
+    ftY + hairLen * 0.8
+  );
+  ctx.quadraticCurveTo(
+    ftX - hairSpread * 0.12,
+    ftY + hairLen * 0.55,
+    ftX,
+    ftY + hairLen * 0.3
+  );
+  ctx.quadraticCurveTo(
+    ftX + hairSpread * 0.12,
+    ftY + hairLen * 0.55,
+    ftX + hairSpread * 0.4,
+    ftY + hairLen * 0.8
+  );
+  ctx.quadraticCurveTo(
+    ftX + hairSpread * 0.7,
+    ftY + hairLen * 0.35,
+    ftX + cBotW * 0.7,
+    ftY + size * 0.002
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -853,7 +1061,12 @@ export function drawMuscularHorseLeg(
     const sx = ftX + s * hairSpread * 0.22;
     ctx.beginPath();
     ctx.moveTo(sx, ftY + size * 0.004);
-    ctx.quadraticCurveTo(sx + s * size * 0.005, ftY + hairLen * 0.5, sx + s * size * 0.008, ftY + hairLen * 0.8);
+    ctx.quadraticCurveTo(
+      sx + s * size * 0.005,
+      ftY + hairLen * 0.5,
+      sx + s * size * 0.008,
+      ftY + hairLen * 0.8
+    );
     ctx.stroke();
   }
 
@@ -868,7 +1081,15 @@ export function drawMuscularHorseLeg(
   // Coronary band
   ctx.fillStyle = colors.thighDark;
   ctx.beginPath();
-  ctx.ellipse(0, -size * 0.004, hoofW + size * 0.004, size * 0.01, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    -size * 0.004,
+    hoofW + size * 0.004,
+    size * 0.01,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Hoof wall — angular shape
@@ -913,7 +1134,9 @@ export function drawMuscularHorseLeg(
     ctx.arc(
       Math.cos(nailAngle) * hoofW * 0.72,
       hoofH * 0.42 + Math.sin(nailAngle) * hoofW * 0.72,
-      size * 0.004, 0, Math.PI * 2,
+      size * 0.004,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -923,7 +1146,15 @@ export function drawMuscularHorseLeg(
   ctx.globalAlpha = 0.09;
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.ellipse(-size * 0.006, hoofH * 0.32, size * 0.018, size * 0.009, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    -size * 0.006,
+    hoofH * 0.32,
+    size * 0.018,
+    size * 0.009,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.restore();
 
@@ -960,7 +1191,7 @@ function fillTailBody(
   color: string,
   widthMul: number,
   dx: number,
-  dy: number,
+  dy: number
 ) {
   const rw = g.rootHW * widthMul * 0.65;
   const bulge = g.rootHW * widthMul * 1.5;
@@ -975,13 +1206,13 @@ function fillTailBody(
     g.cp2X - tipW + dx,
     g.cp2Y + dy,
     g.tipX - tipW * 0.55 + dx,
-    g.tipY + dy,
+    g.tipY + dy
   );
   ctx.quadraticCurveTo(
     g.tipX + dx,
     g.tipY + tipW * 0.4 + dy,
     g.tipX + tipW * 0.55 + dx,
-    g.tipY + dy,
+    g.tipY + dy
   );
   ctx.bezierCurveTo(
     g.cp2X + tipW + dx,
@@ -989,7 +1220,7 @@ function fillTailBody(
     g.cp1X + bulge + dx,
     g.cp1Y + g.size * 0.003 + dy,
     g.rootX + rw + dx,
-    g.rootY + dy,
+    g.rootY + dy
   );
   ctx.closePath();
   ctx.fill();
@@ -1006,7 +1237,7 @@ function drawTailStrand(
   ex: number,
   ey: number,
   color: string,
-  width: number,
+  width: number
 ) {
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
@@ -1027,23 +1258,23 @@ export function drawHorseTail(
   secondaryFreq: number,
   colors: HorseTailColors,
   glowAlpha: number,
-  sparkles?: { rgb: string; intensity: number; threshold: number },
+  sparkles?: { rgb: string; intensity: number; threshold: number }
 ) {
   const wave = Math.sin(time * primaryFreq);
   const wave2 = Math.sin(time * secondaryFreq + 0.5);
   const swish = Math.sin(time * primaryFreq * 0.68 + 0.4) * 0.6;
 
   const geo: TailGeo = {
+    cp1X: rootX + size * 0.12 + wave * 3,
+    cp1Y: rootY + size * 0.1 + wave2 * 1.5,
+    cp2X: rootX + size * 0.2 + wave * 5 + swish * 2,
+    cp2Y: rootY + size * 0.22 + wave2 * 2,
+    rootHW: size * 0.05,
     rootX,
     rootY,
-    cp1X: rootX + size * 0.12 + wave * 3,
-    cp1Y: rootY + size * 0.10 + wave2 * 1.5,
-    cp2X: rootX + size * 0.20 + wave * 5 + swish * 2,
-    cp2Y: rootY + size * 0.22 + wave2 * 2,
+    size,
     tipX: rootX + size * 0.14 + wave * 6 + swish * 3,
     tipY: rootY + size * 0.36 + wave2 * 2.5,
-    rootHW: size * 0.05,
-    size,
   };
 
   // Soft outer halo for bushy volume
@@ -1054,7 +1285,7 @@ export function drawHorseTail(
   ctx.restore();
 
   // Core filled body layers
-  fillTailBody(ctx, geo, colors.base, 1.0, 0, 0);
+  fillTailBody(ctx, geo, colors.base, 1, 0, 0);
   fillTailBody(ctx, geo, colors.mid, 0.75, size * 0.002, -size * 0.001);
   fillTailBody(ctx, geo, colors.highlight, 0.4, size * 0.004, -size * 0.003);
 
@@ -1090,7 +1321,19 @@ export function drawHorseTail(
       ci === 0 ? colors.base : ci === 1 ? colors.mid : colors.highlight;
 
     ctx.globalAlpha = 0.4 + (1 - Math.abs(offset)) * 0.35;
-    drawTailStrand(ctx, sx, sy, c1x, c1y, c2x, c2y, ex, ey, strandColor, thickness);
+    drawTailStrand(
+      ctx,
+      sx,
+      sy,
+      c1x,
+      c1y,
+      c2x,
+      c2y,
+      ex,
+      ey,
+      strandColor,
+      thickness
+    );
   }
   ctx.restore();
 
@@ -1121,7 +1364,7 @@ export function drawHorseTail(
       ex,
       ey,
       colors.highlight,
-      0.7 * zoom,
+      0.7 * zoom
     );
   }
   ctx.restore();
@@ -1133,14 +1376,7 @@ export function drawHorseTail(
   ctx.globalAlpha = 0.12;
   ctx.beginPath();
   ctx.moveTo(rootX, rootY);
-  ctx.bezierCurveTo(
-    geo.cp1X,
-    geo.cp1Y,
-    geo.cp2X,
-    geo.cp2Y,
-    geo.tipX,
-    geo.tipY,
-  );
+  ctx.bezierCurveTo(geo.cp1X, geo.cp1Y, geo.cp2X, geo.cp2Y, geo.tipX, geo.tipY);
   ctx.stroke();
   ctx.restore();
 
@@ -1154,7 +1390,7 @@ export function drawHorseTail(
     size * 0.02,
     wave * 0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1163,16 +1399,13 @@ export function drawHorseTail(
       const pt = p / 2;
       const pPhase = p * 1.1 + time * 3;
       const sX =
-        geo.cp2X +
-        (geo.tipX - geo.cp2X) * 0.4 +
-        Math.sin(pPhase) * size * 0.08;
+        geo.cp2X + (geo.tipX - geo.cp2X) * 0.4 + Math.sin(pPhase) * size * 0.08;
       const sY =
         geo.cp2Y +
         (geo.tipY - geo.cp2Y) * 0.4 +
         pt * size * 0.1 +
         Math.cos(pPhase * 1.3) * 4;
-      const sA =
-        (0.4 + Math.sin(pPhase * 2) * 0.3) * sparkles.intensity;
+      const sA = (0.4 + Math.sin(pPhase * 2) * 0.3) * sparkles.intensity;
       ctx.fillStyle = `rgba(${sparkles.rgb}, ${sA})`;
       ctx.beginPath();
       ctx.arc(sX, sY, size * 0.008, 0, Math.PI * 2);
@@ -1199,10 +1432,10 @@ export interface ArmoredSkirtConfig {
 }
 
 const DEFAULT_SKIRT_CONFIG: ArmoredSkirtConfig = {
-  plateCount: 5,
-  widthFactor: 0.48,
   depthFactor: 0.16,
-  topOffset: 0.30,
+  plateCount: 5,
+  topOffset: 0.3,
+  widthFactor: 0.48,
 };
 
 export function drawArmoredSkirt(
@@ -1214,7 +1447,7 @@ export function drawArmoredSkirt(
   stance: number,
   breathe: number,
   colors: ArmoredSkirtColors,
-  config: Partial<ArmoredSkirtConfig> = {},
+  config: Partial<ArmoredSkirtConfig> = {}
 ) {
   const cfg = { ...DEFAULT_SKIRT_CONFIG, ...config };
   const skirtTop = y + size * cfg.topOffset + breathe;
@@ -1235,8 +1468,10 @@ export function drawArmoredSkirt(
     ctx.rotate(splay + legMotion * 0.015);
 
     const plateGrad = ctx.createLinearGradient(
-      -plateWidth * 0.5, 0,
-      plateWidth * 0.5, plateDepth,
+      -plateWidth * 0.5,
+      0,
+      plateWidth * 0.5,
+      plateDepth
     );
     if (distFromCenter < -0.2) {
       plateGrad.addColorStop(0, colors.armorMid);
@@ -1270,7 +1505,7 @@ export function drawArmoredSkirt(
     ctx.moveTo(-topHalf, 0.5);
     ctx.lineTo(topHalf, 0.5);
     ctx.stroke();
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 
     ctx.strokeStyle = colors.armorDark;
     ctx.lineWidth = 1 * zoom;
@@ -1279,14 +1514,14 @@ export function drawArmoredSkirt(
     ctx.moveTo(-botHalf, plateDepth);
     ctx.quadraticCurveTo(0, plateDepth + size * 0.02, botHalf, plateDepth);
     ctx.stroke();
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 
     ctx.fillStyle = colors.trimColor;
     ctx.globalAlpha = 0.5;
     ctx.beginPath();
     ctx.arc(0, size * 0.02, size * 0.012, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 
     ctx.restore();
   }
@@ -1301,7 +1536,7 @@ export function drawTroopFinishMotes(
   glowColor: string,
   count: number,
   spreadX: number,
-  rise: number,
+  rise: number
 ) {
   for (let mote = 0; mote < count; mote++) {
     const phase = (time * 0.7 + mote * 0.19) % 1;
@@ -1324,7 +1559,7 @@ export function drawTroopMasterworkFinish(
   time: number,
   zoom: number,
   style: TroopMasterworkStyle,
-  options: { mounted?: boolean; scholar?: boolean; vanguard?: boolean } = {},
+  options: { mounted?: boolean; scholar?: boolean; vanguard?: boolean } = {}
 ) {
   const pulse = 0.58 + Math.sin(time * 4.1) * 0.18;
   const shimmer = 0.52 + Math.sin(time * 6.3 + 0.5) * 0.22;
@@ -1348,8 +1583,10 @@ export function drawTroopMasterworkFinish(
     ctx.beginPath();
     ctx.moveTo(x + side * shoulderSpan, shoulderY);
     ctx.quadraticCurveTo(
-      x + side * shoulderSpan * 0.72, shoulderY - size * 0.06,
-      x + side * chestWidth, chestY - size * 0.02,
+      x + side * shoulderSpan * 0.72,
+      shoulderY - size * 0.06,
+      x + side * chestWidth,
+      chestY - size * 0.02
     );
     ctx.stroke();
 
@@ -1359,8 +1596,10 @@ export function drawTroopMasterworkFinish(
     ctx.beginPath();
     ctx.moveTo(x + side * shoulderSpan, shoulderY);
     ctx.quadraticCurveTo(
-      x + side * shoulderSpan * 0.72, shoulderY - size * 0.06,
-      x + side * chestWidth, chestY - size * 0.02,
+      x + side * shoulderSpan * 0.72,
+      shoulderY - size * 0.06,
+      x + side * chestWidth,
+      chestY - size * 0.02
     );
     ctx.stroke();
 
@@ -1383,8 +1622,18 @@ export function drawTroopMasterworkFinish(
   // V-shaped chest filigree
   ctx.beginPath();
   ctx.moveTo(x - chestWidth, chestY - size * 0.01);
-  ctx.quadraticCurveTo(x - chestWidth * 0.5, chestY + size * 0.02, x, chestY + size * 0.05);
-  ctx.quadraticCurveTo(x + chestWidth * 0.5, chestY + size * 0.02, x + chestWidth, chestY - size * 0.01);
+  ctx.quadraticCurveTo(
+    x - chestWidth * 0.5,
+    chestY + size * 0.02,
+    x,
+    chestY + size * 0.05
+  );
+  ctx.quadraticCurveTo(
+    x + chestWidth * 0.5,
+    chestY + size * 0.02,
+    x + chestWidth,
+    chestY - size * 0.01
+  );
   ctx.stroke();
 
   // Filigree scrolls flanking the chest
@@ -1392,12 +1641,16 @@ export function drawTroopMasterworkFinish(
     ctx.beginPath();
     ctx.moveTo(x + side * chestWidth * 0.4, chestY + size * 0.01);
     ctx.quadraticCurveTo(
-      x + side * chestWidth * 0.8, chestY - size * 0.02,
-      x + side * chestWidth * 0.9, chestY + size * 0.03,
+      x + side * chestWidth * 0.8,
+      chestY - size * 0.02,
+      x + side * chestWidth * 0.9,
+      chestY + size * 0.03
     );
     ctx.quadraticCurveTo(
-      x + side * chestWidth * 0.75, chestY + size * 0.06,
-      x + side * chestWidth * 0.5, chestY + size * 0.04,
+      x + side * chestWidth * 0.75,
+      chestY + size * 0.06,
+      x + side * chestWidth * 0.5,
+      chestY + size * 0.04
     );
     ctx.stroke();
   }
@@ -1441,7 +1694,13 @@ export function drawTroopMasterworkFinish(
   // Gem specular pip
   ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + pulse * 0.2})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.006, crestGemY - size * 0.01, size * 0.006, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.006,
+    crestGemY - size * 0.01,
+    size * 0.006,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Gem setting (thin gold border)
@@ -1474,7 +1733,7 @@ export function drawTroopMasterworkFinish(
       // Cross-slash
       ctx.beginPath();
       ctx.moveTo(x + side * size * 0.05, chestY + size * 0.03);
-      ctx.lineTo(x + side * size * 0.10, chestY + size * 0.09);
+      ctx.lineTo(x + side * size * 0.1, chestY + size * 0.09);
       ctx.stroke();
     }
   } else if (options.scholar) {
@@ -1488,7 +1747,13 @@ export function drawTroopMasterworkFinish(
       // Rune glow spot
       ctx.fillStyle = `${style.aura}${runeGlow})`;
       ctx.beginPath();
-      ctx.arc(runeX + size * 0.014, runeY - size * 0.005 + runeLift, size * 0.012, 0, Math.PI * 2);
+      ctx.arc(
+        runeX + size * 0.014,
+        runeY - size * 0.005 + runeLift,
+        size * 0.012,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       // Rune glyph
@@ -1512,8 +1777,10 @@ export function drawTroopMasterworkFinish(
       ctx.beginPath();
       ctx.moveTo(x + side * size * 0.07, runeY);
       ctx.quadraticCurveTo(
-        x + side * size * 0.09, runeY - size * 0.015,
-        x + side * size * 0.085, runeY + size * 0.015,
+        x + side * size * 0.09,
+        runeY - size * 0.015,
+        x + side * size * 0.085,
+        runeY + size * 0.015
       );
       ctx.stroke();
     }
@@ -1529,15 +1796,25 @@ export function drawTroopMasterworkFinish(
   // Waist edge
   ctx.beginPath();
   ctx.moveTo(x - chestWidth * 0.9, chestY + size * 0.14);
-  ctx.quadraticCurveTo(x, chestY + size * 0.16, x + chestWidth * 0.9, chestY + size * 0.14);
+  ctx.quadraticCurveTo(
+    x,
+    chestY + size * 0.16,
+    x + chestWidth * 0.9,
+    chestY + size * 0.14
+  );
   ctx.stroke();
 
   // === Ambient motes (rising magic particles) ===
   drawTroopFinishMotes(
-    ctx, x, y + size * 0.16, size, time, style.rune,
+    ctx,
+    x,
+    y + size * 0.16,
+    size,
+    time,
+    style.rune,
     isMounted ? 5 : 4,
     size * (isMounted ? 0.16 : 0.11),
-    size * (isMounted ? 0.20 : 0.14),
+    size * (isMounted ? 0.2 : 0.14)
   );
 
   ctx.restore();

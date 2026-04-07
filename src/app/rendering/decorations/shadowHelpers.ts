@@ -29,7 +29,7 @@ export function drawDirectionalShadow(
   objectHeight: number,
   intensity: number = 0.3,
   tint: string = "0,0,0",
-  zoom: number = 1,
+  zoom: number = 1
 ): void {
   if (!ENABLE_DECORATION_GROUND_SHADOWS) {
     return;
@@ -48,9 +48,13 @@ export function drawDirectionalShadow(
   // Outer penumbra
   ctx.beginPath();
   ctx.ellipse(
-    scx + 2 * s, scy + 1 * s,
-    srx + 4 * s, sry + 2 * s,
-    rot, 0, Math.PI * 2,
+    scx + 2 * s,
+    scy + 1 * s,
+    srx + 4 * s,
+    sry + 2 * s,
+    rot,
+    0,
+    Math.PI * 2
   );
   ctx.fillStyle = `rgba(${tint},${fmtA(intensity * 0.14)})`;
   ctx.fill();
@@ -58,9 +62,13 @@ export function drawDirectionalShadow(
   // Mid penumbra
   ctx.beginPath();
   ctx.ellipse(
-    scx + 1 * s, scy + 0.5 * s,
-    srx + 2 * s, sry + 1 * s,
-    rot, 0, Math.PI * 2,
+    scx + 1 * s,
+    scy + 0.5 * s,
+    srx + 2 * s,
+    sry + 1 * s,
+    rot,
+    0,
+    Math.PI * 2
   );
   ctx.fillStyle = `rgba(${tint},${fmtA(intensity * 0.26)})`;
   ctx.fill();
@@ -69,8 +77,10 @@ export function drawDirectionalShadow(
   ctx.beginPath();
   ctx.ellipse(scx, scy, srx, sry, rot, 0, Math.PI * 2);
   const grad = ctx.createLinearGradient(
-    x - offX * 0.2, y - offY * 0.2,
-    x + offX, y + offY,
+    x - offX * 0.2,
+    y - offY * 0.2,
+    x + offX,
+    y + offY
   );
   grad.addColorStop(0, `rgba(${tint},${fmtA(intensity)})`);
   grad.addColorStop(0.45, `rgba(${tint},${fmtA(intensity * 0.52)})`);

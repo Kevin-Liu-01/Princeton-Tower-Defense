@@ -5,7 +5,7 @@ export function drawAshTree(
   dc: WorldMapDrawContext,
   ax: number,
   ayPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const ay = getY(ayPct);
@@ -21,7 +21,7 @@ export function drawAshTree(
     4 * scale,
     0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -41,12 +41,7 @@ export function drawAshTree(
     ax + trunkLean * 0.4 + (seededRandom(treeSeed + 3) - 0.5) * 4 * scale;
   const trunkMidY = ay - trunkH * 0.55;
 
-  const trunkGrad = ctx.createLinearGradient(
-    ax - trunkW,
-    ay,
-    ax + trunkW,
-    ay,
-  );
+  const trunkGrad = ctx.createLinearGradient(ax - trunkW, ay, ax + trunkW, ay);
   trunkGrad.addColorStop(0, "#0a0808");
   trunkGrad.addColorStop(0.3, "#1e1614");
   trunkGrad.addColorStop(0.5, "#2a201c");
@@ -161,7 +156,7 @@ export function drawAshTree(
       (seededRandom(treeSeed + e * 19 + 300) - 0.5) * trunkW * 0.8;
     const eY = ay + (trunkTopY - ay) * et;
     const ePulse = 0.4 + Math.sin(time * 2.5 + treeSeed + e * 1.8) * 0.3;
-    const eSize = (1.0 + seededRandom(treeSeed + e * 19 + 301) * 1.2) * scale;
+    const eSize = (1 + seededRandom(treeSeed + e * 19 + 301) * 1.2) * scale;
     const eGlow = ctx.createRadialGradient(eX, eY, 0, eX, eY, eSize * 2.5);
     eGlow.addColorStop(0, `rgba(255,100,20,${ePulse * 0.4})`);
     eGlow.addColorStop(1, "rgba(255,60,10,0)");
@@ -179,7 +174,7 @@ export function drawAshTree(
   const baseGlow = ctx.createRadialGradient(ax, ay, 0, ax, ay, 6 * scale);
   baseGlow.addColorStop(
     0,
-    `rgba(200,60,10,${0.12 + Math.sin(time * 1.5 + treeSeed) * 0.05})`,
+    `rgba(200,60,10,${0.12 + Math.sin(time * 1.5 + treeSeed) * 0.05})`
   );
   baseGlow.addColorStop(1, "rgba(150,30,5,0)");
   ctx.fillStyle = baseGlow;
@@ -193,7 +188,7 @@ export function drawVolcano(
   vx: number,
   vyPct: number,
   vw: number,
-  heightPx: number,
+  heightPx: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const vy = getY(vyPct);
@@ -207,15 +202,15 @@ export function drawVolcano(
     hw * 0.3,
     vx,
     vy - heightPx * 0.3,
-    hw * 1.4,
+    hw * 1.4
   );
   ambientGlow.addColorStop(
     0,
-    `rgba(200, 60, 10, ${0.12 + Math.sin(time * 1.5 + vx) * 0.04})`,
+    `rgba(200, 60, 10, ${0.12 + Math.sin(time * 1.5 + vx) * 0.04})`
   );
   ambientGlow.addColorStop(
     0.5,
-    `rgba(120, 30, 5, ${0.06 + Math.sin(time * 2 + vx) * 0.02})`,
+    `rgba(120, 30, 5, ${0.06 + Math.sin(time * 2 + vx) * 0.02})`
   );
   ambientGlow.addColorStop(1, "rgba(80, 20, 5, 0)");
   ctx.fillStyle = ambientGlow;
@@ -227,7 +222,7 @@ export function drawVolcano(
     heightPx * 0.8,
     vSeed + 50,
     0.12,
-    14,
+    14
   );
   ctx.fill();
 
@@ -241,7 +236,7 @@ export function drawVolcano(
     heightPx * 0.15,
     vSeed + 60,
     0.15,
-    12,
+    12
   );
   ctx.fill();
 
@@ -250,7 +245,7 @@ export function drawVolcano(
     vx,
     vy - heightPx,
     vx + hw * 0.6,
-    vy,
+    vy
   );
   backGrad.addColorStop(0, "#2a1510");
   backGrad.addColorStop(0.4, "#1e0e0a");
@@ -265,7 +260,7 @@ export function drawVolcano(
     vx + hw * 0.38,
     vy - heightPx * 0.4,
     vx + hw * 0.55,
-    vy + 6,
+    vy + 6
   );
   ctx.lineTo(vx + hw * 0.12, vy + 6);
   ctx.closePath();
@@ -276,7 +271,7 @@ export function drawVolcano(
     vx - hw * 0.6,
     vy - heightPx,
     vx + hw * 0.1,
-    vy,
+    vy
   );
   frontGrad.addColorStop(0, "#4a2a20");
   frontGrad.addColorStop(0.15, "#583028");
@@ -294,7 +289,7 @@ export function drawVolcano(
     vx - hw * 0.42,
     vy - heightPx * 0.3,
     vx - hw * 0.55,
-    vy + 6,
+    vy + 6
   );
   ctx.lineTo(vx + hw * 0.12, vy + 6);
   ctx.lineTo(vx + hw * 0.12, vy - heightPx);
@@ -306,7 +301,7 @@ export function drawVolcano(
     vx - hw * 0.55,
     vy - heightPx * 0.4,
     vx - hw * 0.2,
-    vy,
+    vy
   );
   buttGrad.addColorStop(0, "#3a2018");
   buttGrad.addColorStop(0.6, "#2a1410");
@@ -320,7 +315,7 @@ export function drawVolcano(
     vx - hw * 0.62,
     vy - heightPx * 0.15,
     vx - hw * 0.65,
-    vy + 6,
+    vy + 6
   );
   ctx.lineTo(vx - hw * 0.55, vy + 6);
   ctx.bezierCurveTo(
@@ -329,7 +324,7 @@ export function drawVolcano(
     vx - hw * 0.38,
     vy - heightPx * 0.28,
     vx - hw * 0.35,
-    vy - heightPx * 0.45,
+    vy - heightPx * 0.45
   );
   ctx.closePath();
   ctx.fill();
@@ -348,7 +343,7 @@ export function drawVolcano(
       vx - ridgeW * 0.3,
       ridgeY - 2 + seededRandom(vx + r + 1) * 3,
       vx + ridgeW * 0.4,
-      ridgeY + 1 + seededRandom(vx + r + 2) * 3,
+      ridgeY + 1 + seededRandom(vx + r + 2) * 3
     );
     ctx.stroke();
   }
@@ -389,7 +384,7 @@ export function drawVolcano(
       (fiStartX + fiEndX) / 2 + (seededRandom(vSeed + fi * 19) - 0.5) * 5,
       (fiStartY + fiEndY) / 2,
       fiEndX,
-      fiEndY,
+      fiEndY
     );
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 200, 80, ${fiPulse * 0.6})`;
@@ -433,7 +428,7 @@ export function drawVolcano(
       brSize * 0.55,
       vSeed + br * 2.3,
       0.25,
-      7,
+      7
     );
     ctx.fill();
   }
@@ -462,7 +457,7 @@ export function drawVolcano(
         flowMid2X,
         flowMid2Y,
         flowEndX,
-        vy + 2,
+        vy + 2
       );
     };
 
@@ -509,7 +504,7 @@ export function drawVolcano(
       tribX + (tribEndX - tribX) * 0.4,
       tribY + (tribEndY - tribY) * 0.6,
       tribEndX,
-      tribEndY,
+      tribEndY
     );
     ctx.stroke();
     ctx.strokeStyle = `rgba(255, 140, 40, ${tribPulse * 0.5})`;
@@ -539,7 +534,7 @@ export function drawVolcano(
     0,
     vx,
     craterY,
-    craterW + 4,
+    craterW + 4
   );
   rimGrad.addColorStop(0, "#5a3020");
   rimGrad.addColorStop(0.5, "#3a1a12");
@@ -563,7 +558,7 @@ export function drawVolcano(
     0,
     vx,
     craterY + 1,
-    craterW * 0.8,
+    craterW * 0.8
   );
   craterLavaGrad.addColorStop(0, `rgba(255, 240, 140, ${glowPulse * 0.9})`);
   craterLavaGrad.addColorStop(0.3, `rgba(255, 160, 40, ${glowPulse * 0.8})`);
@@ -578,7 +573,7 @@ export function drawVolcano(
     craterH * 0.7,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -587,8 +582,7 @@ export function drawVolcano(
     const bubPhase = (time * 1.5 + bub * 2.1 + vSeed) % 3;
     if (bubPhase < 1.5) {
       const bubScale = Math.sin((bubPhase / 1.5) * Math.PI);
-      const bubX =
-        vx + (seededRandom(vSeed + bub * 41) - 0.5) * craterW * 0.5;
+      const bubX = vx + (seededRandom(vSeed + bub * 41) - 0.5) * craterW * 0.5;
       const bubY =
         craterY + (seededRandom(vSeed + bub * 43) - 0.5) * craterH * 0.3;
       const bubR = (1.5 + seededRandom(vSeed + bub * 45) * 2) * bubScale;
@@ -607,7 +601,7 @@ export function drawVolcano(
     0,
     vx,
     craterY + 1,
-    craterW * 1.8,
+    craterW * 1.8
   );
   lavaGlow.addColorStop(0, `rgba(255, 220, 100, ${glowPulse * 0.5})`);
   lavaGlow.addColorStop(0.2, `rgba(255, 140, 40, ${glowPulse * 0.35})`);
@@ -629,7 +623,7 @@ export function drawVolcano(
     craterH + 1,
     0,
     Math.PI + 0.5,
-    Math.PI * 2 - 0.5,
+    Math.PI * 2 - 0.5
   );
   ctx.stroke();
 
@@ -641,10 +635,12 @@ export function drawVolcano(
     ctx.fillStyle = "#ff6020";
     ctx.beginPath();
     for (let hx = vx - hw * 0.3; hx < vx + hw * 0.3; hx += 3) {
-      const distort =
-        Math.sin(time * 7 + hx * 0.1 + hs * 0.9) * (2 + hs * 0.5);
-      if (hx === vx - hw * 0.3) ctx.moveTo(hx, hsY + distort);
-      else ctx.lineTo(hx, hsY + distort);
+      const distort = Math.sin(time * 7 + hx * 0.1 + hs * 0.9) * (2 + hs * 0.5);
+      if (hx === vx - hw * 0.3) {
+        ctx.moveTo(hx, hsY + distort);
+      } else {
+        ctx.lineTo(hx, hsY + distort);
+      }
     }
     ctx.lineTo(vx + hw * 0.3, hsY + 5);
     ctx.lineTo(vx - hw * 0.3, hsY + 5);
@@ -660,7 +656,9 @@ export function drawVolcano(
     const drift = Math.sin(time * 0.8 + s * 2.2) * (4 + smokeAge * 0.3);
     const smokeR = 5 + smokeAge * 0.5;
     const alpha = Math.max(0, 0.35 - smokeAge / 80);
-    if (alpha <= 0) continue;
+    if (alpha <= 0) {
+      continue;
+    }
 
     ctx.fillStyle = `rgba(45, 35, 30, ${alpha})`;
     drawOrganicBlobAt(
@@ -671,7 +669,7 @@ export function drawVolcano(
       smokeR * 0.8,
       vSeed + s * 3.7,
       0.2,
-      10,
+      10
     );
     ctx.fill();
 
@@ -684,7 +682,7 @@ export function drawVolcano(
       smokeR * 0.55,
       vSeed + s * 5.1,
       0.2,
-      8,
+      8
     );
     ctx.fill();
 
@@ -698,7 +696,7 @@ export function drawVolcano(
         smokeR * 0.35,
         vSeed + s * 7.3,
         0.25,
-        8,
+        8
       );
       ctx.fill();
     }
@@ -707,7 +705,9 @@ export function drawVolcano(
   // --- Volcanic bombs (ejected glowing rocks arcing out) ---
   for (let vb = 0; vb < 3; vb++) {
     const vbCycle = (time * 8 + vb * 18 + vSeed) % 50;
-    if (vbCycle > 35) continue;
+    if (vbCycle > 35) {
+      continue;
+    }
     const vbProgress = vbCycle / 35;
     const vbAngle =
       -Math.PI * 0.5 + (seededRandom(vSeed + vb * 51) - 0.5) * 1.2;
@@ -760,7 +760,7 @@ export function drawVolcano(
         ashY,
         0.8 + seededRandom(vSeed + ash * 63) * 0.8,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -773,7 +773,7 @@ export function drawLavaPool(
   px: number,
   pyPct: number,
   width: number,
-  heightRatio: number,
+  heightRatio: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const py = getY(pyPct);
@@ -789,8 +789,11 @@ export function drawLavaPool(
     ctx.beginPath();
     for (let hx = px - width; hx < px + width; hx += 4) {
       const distort = Math.sin(time * 6 + hx * 0.08 + hh * 0.7) * 2;
-      if (hx === px - width) ctx.moveTo(hx, heatY + distort);
-      else ctx.lineTo(hx, heatY + distort);
+      if (hx === px - width) {
+        ctx.moveTo(hx, heatY + distort);
+      } else {
+        ctx.lineTo(hx, heatY + distort);
+      }
     }
     ctx.lineTo(px + width, heatY + 4);
     ctx.lineTo(px - width, heatY + 4);
@@ -803,11 +806,11 @@ export function drawLavaPool(
   const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, width * 1.6);
   glowGrad.addColorStop(
     0,
-    `rgba(255,100,30,${0.28 + Math.sin(time * 2) * 0.1})`,
+    `rgba(255,100,30,${0.28 + Math.sin(time * 2) * 0.1})`
   );
   glowGrad.addColorStop(
     0.4,
-    `rgba(255,60,20,${0.15 + Math.sin(time * 2.5) * 0.06})`,
+    `rgba(255,60,20,${0.15 + Math.sin(time * 2.5) * 0.06})`
   );
   glowGrad.addColorStop(1, "rgba(200,40,10,0)");
   ctx.fillStyle = glowGrad;
@@ -833,7 +836,7 @@ export function drawLavaPool(
       2 + seededRandom(px + ec + 61) * 2,
       ec * 4.3,
       0.3,
-      8,
+      8
     );
     ctx.fill();
   }
@@ -845,7 +848,7 @@ export function drawLavaPool(
     0,
     px,
     py,
-    width,
+    width
   );
   lavaGrad.addColorStop(0, "#ffdd55");
   lavaGrad.addColorStop(0.2, "#ffaa22");
@@ -875,7 +878,7 @@ export function drawLavaPool(
         crSize * 0.6,
         cr * 7.1,
         0.25,
-        10,
+        10
       );
       ctx.fill();
       ctx.strokeStyle = `rgba(255,180,60,${0.4 + Math.sin(time * 3 + cr) * 0.2})`;
@@ -888,7 +891,7 @@ export function drawLavaPool(
         crSize * 0.6 + 1,
         cr * 7.1,
         0.25,
-        10,
+        10
       );
       ctx.stroke();
     }
@@ -916,7 +919,7 @@ export function drawLavaPool(
           by - bSize * 0.3,
           bSize * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       } else if (bubbleCycle < 2.1) {
@@ -931,7 +934,7 @@ export function drawLavaPool(
             by + Math.sin(spAngle) * spDist * 0.5,
             1.5 - popPhase,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -950,7 +953,7 @@ export function drawLavaPool(
     h * 0.2,
     seed + 20,
     0.2,
-    8,
+    8
   );
   ctx.stroke();
   drawOrganicBlobAt(
@@ -961,7 +964,7 @@ export function drawLavaPool(
     h * 0.15,
     seed + 30,
     0.2,
-    8,
+    8
   );
   ctx.stroke();
 }
@@ -969,7 +972,7 @@ export function drawLavaPool(
 export function drawLavaRiver(
   dc: WorldMapDrawContext,
   points: number[][],
-  riverWidth?: number,
+  riverWidth?: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   ctx.save();
@@ -1079,7 +1082,7 @@ export function drawLavaRiver(
       0,
       poolX,
       poolY,
-      poolR * 1.5,
+      poolR * 1.5
     );
     bendGrad.addColorStop(0, `rgba(255,200,80,${0.3 + pulse * 0.15})`);
     bendGrad.addColorStop(0.5, `rgba(255,100,20,${0.2 + pulse * 0.1})`);
@@ -1093,7 +1096,7 @@ export function drawLavaRiver(
       poolR,
       seed + i * 3.7,
       0.25,
-      10,
+      10
     );
     ctx.fill();
   }
@@ -1108,7 +1111,7 @@ export function drawLavaRiver(
       t < 0.99
         ? Math.atan2(
             sampleSpline(Math.min(1, t + 0.05))[1] - sy,
-            sampleSpline(Math.min(1, t + 0.05))[0] - sx,
+            sampleSpline(Math.min(1, t + 0.05))[0] - sx
           ) +
           Math.PI / 2
         : 0;
@@ -1117,16 +1120,7 @@ export function drawLavaRiver(
     const rockR = 2 + seededRandom(seed + rb * 11 + 2) * 4;
     ctx.fillStyle =
       seededRandom(seed + rb * 11 + 3) > 0.5 ? "#2a1508" : "#1a0c04";
-    drawOrganicBlobAt(
-      ctx,
-      rockX,
-      rockY,
-      rockR,
-      rockR * 0.6,
-      rb * 3.1,
-      0.3,
-      8,
-    );
+    drawOrganicBlobAt(ctx, rockX, rockY, rockR, rockR * 0.6, rb * 3.1, 0.3, 8);
     ctx.fill();
   }
 
@@ -1145,7 +1139,7 @@ export function drawLavaRiver(
       raftSize * 0.5,
       r * 4.3,
       0.3,
-      6,
+      6
     );
     ctx.fill();
     ctx.strokeStyle = `rgba(255,120,30,${0.2 + pulse * 0.15})`;
@@ -1176,8 +1170,7 @@ export function drawLavaRiver(
   for (let i = 1; i < points.length - 1; i++) {
     for (let s = 0; s < 3; s++) {
       const sAge = (time * 6 + s * 10 + i * 8) % 22;
-      const sx =
-        points[i][0] + Math.sin(time * 1.5 + s + i) * 6 + (s - 1) * 5;
+      const sx = points[i][0] + Math.sin(time * 1.5 + s + i) * 6 + (s - 1) * 5;
       const sy = getY(points[i][1]) - 4 - sAge * 1.2;
       const sAlpha = Math.max(0, 0.12 - sAge / 35);
       if (sAlpha > 0) {
@@ -1196,7 +1189,7 @@ export function drawObsidianSpire(
   dc: WorldMapDrawContext,
   sx: number,
   syPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time } = dc;
   const sy = getY(syPct);
@@ -1211,7 +1204,7 @@ export function drawObsidianSpire(
     5 * scale,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1222,15 +1215,15 @@ export function drawObsidianSpire(
     0,
     sx,
     sy - 15 * scale,
-    20 * scale,
+    20 * scale
   );
   magicGlow.addColorStop(
     0,
-    `rgba(120, 80, 200, ${0.15 + Math.sin(time * 2 + sx) * 0.08})`,
+    `rgba(120, 80, 200, ${0.15 + Math.sin(time * 2 + sx) * 0.08})`
   );
   magicGlow.addColorStop(
     0.5,
-    `rgba(80, 60, 180, ${0.08 + Math.sin(time * 1.5 + sx) * 0.04})`,
+    `rgba(80, 60, 180, ${0.08 + Math.sin(time * 1.5 + sx) * 0.04})`
   );
   magicGlow.addColorStop(1, "rgba(60, 40, 150, 0)");
   ctx.fillStyle = magicGlow;
@@ -1243,7 +1236,7 @@ export function drawObsidianSpire(
     sx - 10 * scale,
     sy,
     sx + 10 * scale,
-    sy - 42 * scale,
+    sy - 42 * scale
   );
   spireGrad.addColorStop(0, "#1a1018");
   spireGrad.addColorStop(0.3, "#2a1a25");
@@ -1272,7 +1265,7 @@ export function drawObsidianSpire(
     sx - 6 * scale,
     sy,
     sx - 2 * scale,
-    sy - 40 * scale,
+    sy - 40 * scale
   );
   reflectGrad.addColorStop(0, "rgba(120, 100, 140, 0)");
   reflectGrad.addColorStop(0.3, "rgba(140, 120, 160, 0.5)");
@@ -1348,7 +1341,7 @@ export function drawDemonStatue(
   dc: WorldMapDrawContext,
   dx: number,
   dyPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time } = dc;
   const dy = getY(dyPct);
@@ -1363,11 +1356,11 @@ export function drawDemonStatue(
     circleRadius * 0.5,
     dx,
     dy,
-    circleRadius * 1.3,
+    circleRadius * 1.3
   );
   ritualGlow.addColorStop(
     0,
-    `rgba(180, 40, 20, ${0.1 + Math.sin(time * 1.5) * 0.05})`,
+    `rgba(180, 40, 20, ${0.1 + Math.sin(time * 1.5) * 0.05})`
   );
   ritualGlow.addColorStop(1, "rgba(150, 30, 15, 0)");
   ctx.fillStyle = ritualGlow;
@@ -1409,7 +1402,7 @@ export function drawDemonStatue(
     dx - 10 * scale,
     dy - 42 * scale,
     dx + 10 * scale,
-    dy - 12 * scale,
+    dy - 12 * scale
   );
   statueGrad.addColorStop(0, "#2a2025");
   statueGrad.addColorStop(0.3, "#3a2a30");
@@ -1439,25 +1432,25 @@ export function drawDemonStatue(
     dx - 22 * scale,
     dy - 45 * scale,
     dx - 28 * scale,
-    dy - 38 * scale,
+    dy - 38 * scale
   );
   ctx.quadraticCurveTo(
     dx - 25 * scale,
     dy - 32 * scale,
     dx - 18 * scale,
-    dy - 28 * scale,
+    dy - 28 * scale
   );
   ctx.quadraticCurveTo(
     dx - 22 * scale,
     dy - 26 * scale,
     dx - 24 * scale,
-    dy - 20 * scale,
+    dy - 20 * scale
   );
   ctx.quadraticCurveTo(
     dx - 18 * scale,
     dy - 22 * scale,
     dx - 8 * scale,
-    dy - 24 * scale,
+    dy - 24 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1468,25 +1461,25 @@ export function drawDemonStatue(
     dx + 22 * scale,
     dy - 45 * scale,
     dx + 28 * scale,
-    dy - 38 * scale,
+    dy - 38 * scale
   );
   ctx.quadraticCurveTo(
     dx + 25 * scale,
     dy - 32 * scale,
     dx + 18 * scale,
-    dy - 28 * scale,
+    dy - 28 * scale
   );
   ctx.quadraticCurveTo(
     dx + 22 * scale,
     dy - 26 * scale,
     dx + 24 * scale,
-    dy - 20 * scale,
+    dy - 20 * scale
   );
   ctx.quadraticCurveTo(
     dx + 18 * scale,
     dy - 22 * scale,
     dx + 8 * scale,
-    dy - 24 * scale,
+    dy - 24 * scale
   );
   ctx.closePath();
   ctx.fill();
@@ -1505,7 +1498,7 @@ export function drawDemonStatue(
     dx - 14 * scale,
     dy - 55 * scale,
     dx - 12 * scale,
-    dy - 48 * scale,
+    dy - 48 * scale
   );
   ctx.lineTo(dx - 6 * scale, dy - 44 * scale);
   ctx.fill();
@@ -1515,7 +1508,7 @@ export function drawDemonStatue(
     dx + 14 * scale,
     dy - 55 * scale,
     dx + 12 * scale,
-    dy - 48 * scale,
+    dy - 48 * scale
   );
   ctx.lineTo(dx + 6 * scale, dy - 44 * scale);
   ctx.fill();
@@ -1553,11 +1546,11 @@ export function drawDemonStatue(
     0,
     dx,
     dy - 43 * scale,
-    12 * scale,
+    12 * scale
   );
   eyeGlow.addColorStop(
     0,
-    `rgba(255, 50, 20, ${0.25 + Math.sin(time * 3) * 0.1})`,
+    `rgba(255, 50, 20, ${0.25 + Math.sin(time * 3) * 0.1})`
   );
   eyeGlow.addColorStop(1, "rgba(255, 50, 20, 0)");
   ctx.fillStyle = eyeGlow;
@@ -1570,7 +1563,7 @@ export function drawFireElemental(
   dc: WorldMapDrawContext,
   fx: number,
   fyPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time } = dc;
   const fy = getY(fyPct);
@@ -1592,8 +1585,11 @@ export function drawFireElemental(
         12 * scale +
         bob +
         Math.sin(a) * (ringSize * 0.6 + distort) * scale;
-      if (a === 0) ctx.moveTo(rx, ry);
-      else ctx.lineTo(rx, ry);
+      if (a === 0) {
+        ctx.moveTo(rx, ry);
+      } else {
+        ctx.lineTo(rx, ry);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -1607,19 +1603,19 @@ export function drawFireElemental(
     0,
     fx,
     fy - 15 * scale + bob,
-    28 * scale,
+    28 * scale
   );
   auraGrad.addColorStop(
     0,
-    `rgba(255, 160, 60, ${0.35 + Math.sin(time * 4 + fx) * 0.12})`,
+    `rgba(255, 160, 60, ${0.35 + Math.sin(time * 4 + fx) * 0.12})`
   );
   auraGrad.addColorStop(
     0.3,
-    `rgba(255, 100, 30, ${0.2 + Math.sin(time * 3) * 0.08})`,
+    `rgba(255, 100, 30, ${0.2 + Math.sin(time * 3) * 0.08})`
   );
   auraGrad.addColorStop(
     0.6,
-    `rgba(255, 60, 15, ${0.1 + Math.sin(time * 2.5) * 0.04})`,
+    `rgba(255, 60, 15, ${0.1 + Math.sin(time * 2.5) * 0.04})`
   );
   auraGrad.addColorStop(1, "rgba(255, 40, 10, 0)");
   ctx.fillStyle = auraGrad;
@@ -1647,13 +1643,13 @@ export function drawFireElemental(
         flamex - flameWidth * scale * 0.2,
         flamey - flameHeight * scale * 0.6,
         flamex,
-        flamey - flameHeight * scale,
+        flamey - flameHeight * scale
       );
       ctx.quadraticCurveTo(
         flamex + flameWidth * scale * 0.2,
         flamey - flameHeight * scale * 0.6,
         flamex + flameWidth * scale * 0.5,
-        flamey,
+        flamey
       );
       ctx.fill();
     }
@@ -1670,7 +1666,7 @@ export function drawFireElemental(
     2 * scale,
     -0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     fx + 4 * scale,
@@ -1679,7 +1675,7 @@ export function drawFireElemental(
     2 * scale,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Pupils (menacing slits)
@@ -1719,7 +1715,7 @@ export function drawBurningRuins(
   dc: WorldMapDrawContext,
   rx: number,
   ryPct: number,
-  scale: number,
+  scale: number
 ) {
   const { ctx, getY, time, seededRandom } = dc;
   const ry = getY(ryPct);
@@ -1739,16 +1735,16 @@ export function drawBurningRuins(
 
   // Standing columns (3 at varying heights)
   const columnPositions = [
-    { x: -20, h: 35, w: 5 },
-    { x: -5, h: 28, w: 6 },
-    { x: 15, h: 22, w: 5 },
+    { h: 35, w: 5, x: -20 },
+    { h: 28, w: 6, x: -5 },
+    { h: 22, w: 5, x: 15 },
   ];
   columnPositions.forEach((col) => {
     const colGrad = ctx.createLinearGradient(
       rx + col.x * scale,
       ry - col.h * scale,
       rx + (col.x + col.w) * scale,
-      ry,
+      ry
     );
     colGrad.addColorStop(0, "#3a2a28");
     colGrad.addColorStop(0.5, "#2a1a18");
@@ -1758,7 +1754,7 @@ export function drawBurningRuins(
       rx + col.x * scale,
       ry - col.h * scale,
       col.w * scale,
-      (col.h + 5) * scale,
+      (col.h + 5) * scale
     );
 
     // Column top (broken/jagged)
@@ -1793,7 +1789,7 @@ export function drawBurningRuins(
     rx - 10 * scale,
     ry - 40 * scale,
     rx - 3 * scale,
-    ry - 26 * scale,
+    ry - 26 * scale
   );
   ctx.stroke();
 
@@ -1807,7 +1803,7 @@ export function drawBurningRuins(
     3 * scale,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -1818,17 +1814,17 @@ export function drawBurningRuins(
     2.5 * scale,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
   // Multiple fire sources
   const firePositions = [
-    { x: -18, y: -28, size: 1 },
-    { x: -3, y: -22, size: 0.8 },
-    { x: 16, y: -18, size: 0.9 },
-    { x: -10, y: -8, size: 0.6 },
-    { x: 8, y: -5, size: 0.5 },
+    { size: 1, x: -18, y: -28 },
+    { size: 0.8, x: -3, y: -22 },
+    { size: 0.9, x: 16, y: -18 },
+    { size: 0.6, x: -10, y: -8 },
+    { size: 0.5, x: 8, y: -5 },
   ];
   firePositions.forEach((fire, fi) => {
     const flameX = rx + fire.x * scale;
@@ -1842,11 +1838,11 @@ export function drawBurningRuins(
       0,
       flameX,
       flameY,
-      10 * scale * fSize,
+      10 * scale * fSize
     );
     fGlow.addColorStop(
       0,
-      `rgba(255, 120, 30, ${0.2 + Math.sin(time * 4 + fi) * 0.1})`,
+      `rgba(255, 120, 30, ${0.2 + Math.sin(time * 4 + fi) * 0.1})`
     );
     fGlow.addColorStop(1, "rgba(255, 60, 10, 0)");
     ctx.fillStyle = fGlow;
@@ -1862,12 +1858,7 @@ export function drawBurningRuins(
       ctx.fillStyle = `rgba(${255 - ft * 25}, ${80 + ft * 50}, ${20 + ft * 10}, ${0.85 - ft * 0.15})`;
       ctx.beginPath();
       ctx.moveTo(ftx - fw * scale, flameY);
-      ctx.quadraticCurveTo(
-        ftx,
-        flameY - fh * scale,
-        ftx + fw * scale,
-        flameY,
-      );
+      ctx.quadraticCurveTo(ftx, flameY - fh * scale, ftx + fw * scale, flameY);
       ctx.fill();
     }
   });

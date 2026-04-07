@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { isValidRoute } from "../constants/routes";
 import { getRouteMetadata } from "../seo/routeMeta";
-import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { GamePage } from "./GamePage";
 
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
 }
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return [
     { slug: undefined },
     ...WORLD_LEVELS.map((l) => ({ slug: [l.id] })),
@@ -27,9 +28,13 @@ export async function generateStaticParams() {
   ];
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  if (slug && !isValidRoute(slug)) return {};
+  if (slug && !isValidRoute(slug)) {
+    return {};
+  }
   return getRouteMetadata(slug);
 }
 

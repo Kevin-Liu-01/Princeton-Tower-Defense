@@ -11,7 +11,7 @@ export function drawMiniKnight(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -28,7 +28,7 @@ export function drawMiniKnight(
     x - dir * 8 + capeWave,
     y + 2 + bob,
     x - dir * 6 + capeWave * 0.7,
-    y + 8 + bob,
+    y + 8 + bob
   );
   ctx.lineTo(x + dir * 1, y + 6 + bob);
   ctx.closePath();
@@ -139,7 +139,7 @@ export function drawMiniSoldier(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -156,7 +156,7 @@ export function drawMiniSoldier(
     x - dir * 6 + capeWave,
     y + 2 + bob,
     x - dir * 4 + capeWave * 0.5,
-    y + 6 + bob,
+    y + 6 + bob
   );
   ctx.lineTo(x + dir * 1, y + 5 + bob);
   ctx.closePath();
@@ -229,7 +229,7 @@ export function drawMiniArcher(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -247,7 +247,7 @@ export function drawMiniArcher(
     x - dir * 5 + capeWave,
     y + 2 + bob,
     x - dir * 4 + capeWave * 0.5,
-    y + 5 + bob,
+    y + 5 + bob
   );
   ctx.lineTo(x + dir * 1, y + 4 + bob);
   ctx.closePath();
@@ -299,9 +299,15 @@ export function drawMiniArcher(
   ctx.strokeStyle = "#c8b080";
   ctx.lineWidth = 0.6;
   ctx.beginPath();
-  ctx.moveTo(dir * 2 + Math.cos(-Math.PI * 0.4) * 9, Math.sin(-Math.PI * 0.4) * 9);
+  ctx.moveTo(
+    dir * 2 + Math.cos(-Math.PI * 0.4) * 9,
+    Math.sin(-Math.PI * 0.4) * 9
+  );
   ctx.lineTo(-dir * pullBack * 4, 0);
-  ctx.lineTo(dir * 2 + Math.cos(Math.PI * 0.4) * 9, Math.sin(Math.PI * 0.4) * 9);
+  ctx.lineTo(
+    dir * 2 + Math.cos(Math.PI * 0.4) * 9,
+    Math.sin(Math.PI * 0.4) * 9
+  );
   ctx.stroke();
   if (pullBack > 0.3) {
     ctx.fillStyle = "#5a4020";
@@ -332,7 +338,7 @@ export function drawMiniCavalry(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
   const gallop = Math.sin(t * 3.5) * 2;
@@ -366,7 +372,12 @@ export function drawMiniCavalry(
   ctx.fillStyle = "#4a3520";
   ctx.beginPath();
   ctx.moveTo(x + dir * 10, y - 3 + gallop);
-  ctx.quadraticCurveTo(x + dir * 14, y - 8 + gallop, x + dir * 12, y - 14 + gallop);
+  ctx.quadraticCurveTo(
+    x + dir * 14,
+    y - 8 + gallop,
+    x + dir * 12,
+    y - 14 + gallop
+  );
   ctx.lineTo(x + dir * 8, y - 6 + gallop);
   ctx.closePath();
   ctx.fill();
@@ -397,7 +408,12 @@ export function drawMiniCavalry(
     const mWave = Math.sin(t * 2.5 + m) * 1.5;
     ctx.beginPath();
     ctx.moveTo(mx, y - 6 + gallop);
-    ctx.quadraticCurveTo(mx - dir * 2, y - 10 + gallop + mWave, mx - dir * 1, y - 13 + gallop + mWave);
+    ctx.quadraticCurveTo(
+      mx - dir * 2,
+      y - 10 + gallop + mWave,
+      mx - dir * 1,
+      y - 13 + gallop + mWave
+    );
     ctx.lineTo(mx + dir * 1, y - 7 + gallop);
     ctx.closePath();
     ctx.fill();
@@ -407,7 +423,12 @@ export function drawMiniCavalry(
   const tailWave = Math.sin(t * 2) * 3;
   ctx.beginPath();
   ctx.moveTo(x - dir * 12, y - 2 + gallop);
-  ctx.quadraticCurveTo(x - dir * 18 + tailWave, y - 4 + gallop, x - dir * 20 + tailWave * 1.3, y + 2 + gallop);
+  ctx.quadraticCurveTo(
+    x - dir * 18 + tailWave,
+    y - 4 + gallop,
+    x - dir * 20 + tailWave * 1.3,
+    y + 2 + gallop
+  );
   ctx.lineWidth = 2;
   ctx.strokeStyle = "#1a0e06";
   ctx.stroke();
@@ -488,7 +509,7 @@ export function drawMiniDarkKnight(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -505,7 +526,12 @@ export function drawMiniDarkKnight(
   ctx.fillStyle = "#3a0808";
   ctx.beginPath();
   ctx.moveTo(x - dir * 2, y - 4 + bob);
-  ctx.quadraticCurveTo(x - dir * 7 + capeWave, y + 1 + bob, x - dir * 5 + capeWave * 0.8, y + 8 + bob);
+  ctx.quadraticCurveTo(
+    x - dir * 7 + capeWave,
+    y + 1 + bob,
+    x - dir * 5 + capeWave * 0.8,
+    y + 8 + bob
+  );
   ctx.lineTo(x + dir * 1, y + 6 + bob);
   ctx.closePath();
   ctx.fill();
@@ -613,7 +639,7 @@ export function drawMiniSkeletonWarrior(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -693,7 +719,7 @@ export function drawMiniEnemyArcher(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -743,9 +769,15 @@ export function drawMiniEnemyArcher(
   ctx.strokeStyle = "#8a7a60";
   ctx.lineWidth = 0.7;
   ctx.beginPath();
-  ctx.moveTo(dir * 2 + Math.cos(-Math.PI * 0.4) * 8, Math.sin(-Math.PI * 0.4) * 8);
+  ctx.moveTo(
+    dir * 2 + Math.cos(-Math.PI * 0.4) * 8,
+    Math.sin(-Math.PI * 0.4) * 8
+  );
   ctx.lineTo(-dir * pullBack * 4, 0);
-  ctx.lineTo(dir * 2 + Math.cos(Math.PI * 0.4) * 8, Math.sin(Math.PI * 0.4) * 8);
+  ctx.lineTo(
+    dir * 2 + Math.cos(Math.PI * 0.4) * 8,
+    Math.sin(Math.PI * 0.4) * 8
+  );
   ctx.stroke();
   if (pullBack > 0.3) {
     ctx.fillStyle = "#4a3a20";
@@ -777,7 +809,7 @@ export function drawMiniOrcBrute(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -885,7 +917,7 @@ export function drawMiniNecromancer(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -972,7 +1004,7 @@ export function drawMiniNecromancer(
 
   // Floating dark particles
   for (let p = 0; p < 3; p++) {
-    const pAngle = t * 1.2 + p * (Math.PI * 2 / 3);
+    const pAngle = t * 1.2 + p * ((Math.PI * 2) / 3);
     const pDist = 8 + Math.sin(t * 1.5 + p) * 2;
     const px = x + Math.cos(pAngle) * pDist;
     const py = y - 4 + bob + Math.sin(pAngle) * pDist * 0.3;
@@ -991,7 +1023,7 @@ export function drawMiniGoblin(
   t: number,
   flip: boolean,
   combatSway: number,
-  bob: number,
+  bob: number
 ) {
   const dir = flip ? -1 : 1;
 
@@ -1091,7 +1123,7 @@ export function drawMiniHarpy(
   x: number,
   y: number,
   t: number,
-  flip: boolean,
+  flip: boolean
 ) {
   const dir = flip ? -1 : 1;
   const wingFlap = Math.sin(t * 4) * 0.6;
@@ -1187,7 +1219,7 @@ export function drawMiniWyvern(
   x: number,
   y: number,
   t: number,
-  flip: boolean,
+  flip: boolean
 ) {
   const dir = flip ? -1 : 1;
   const wingFlap = Math.sin(t * 3) * 0.5;
@@ -1273,7 +1305,12 @@ export function drawMiniWyvern(
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.moveTo(x - dir * 5, drawY + 2);
-  ctx.quadraticCurveTo(x - dir * 12 + tailWave, drawY + 4, x - dir * 16 + tailWave * 1.5, drawY + 1);
+  ctx.quadraticCurveTo(
+    x - dir * 12 + tailWave,
+    drawY + 4,
+    x - dir * 16 + tailWave * 1.5,
+    drawY + 1
+  );
   ctx.stroke();
   ctx.fillStyle = "#2a3828";
   ctx.beginPath();
@@ -1327,11 +1364,16 @@ export function drawMiniWyvern(
 
   const breathPhase = (t * 1) % 5;
   if (breathPhase < 1.5) {
-    const breathAlpha = Math.sin(breathPhase / 1.5 * Math.PI) * 0.4;
+    const breathAlpha = Math.sin((breathPhase / 1.5) * Math.PI) * 0.4;
     ctx.fillStyle = `rgba(255,100,20,${breathAlpha})`;
     ctx.beginPath();
     ctx.moveTo(x + dir * 15, drawY - 10);
-    ctx.quadraticCurveTo(x + dir * 20, drawY - 11, x + dir * 24, drawY - 8 + Math.sin(t * 4) * 2);
+    ctx.quadraticCurveTo(
+      x + dir * 20,
+      drawY - 11,
+      x + dir * 24,
+      drawY - 8 + Math.sin(t * 4) * 2
+    );
     ctx.quadraticCurveTo(x + dir * 20, drawY - 7, x + dir * 15, drawY - 9);
     ctx.closePath();
     ctx.fill();
@@ -1353,7 +1395,7 @@ export function drawFallenKnight(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  rotation: number,
+  rotation: number
 ) {
   ctx.save();
   ctx.translate(x, y);
@@ -1385,7 +1427,7 @@ export function drawFallenEnemy(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  rotation: number,
+  rotation: number
 ) {
   ctx.save();
   ctx.translate(x, y);
@@ -1418,7 +1460,7 @@ export function drawFallenSkeleton(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  rotation: number,
+  rotation: number
 ) {
   ctx.save();
   ctx.translate(x, y);

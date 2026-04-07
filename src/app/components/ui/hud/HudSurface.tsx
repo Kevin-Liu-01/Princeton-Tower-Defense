@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import { OrnateFrame } from "../primitives/OrnateFrame";
 
 interface HudSurfaceProps {
@@ -10,11 +11,11 @@ interface HudSurfaceProps {
 }
 
 const OVERLAY_SURFACE_STYLE = {
+  backdropFilter: "blur(14px)",
   background:
     "linear-gradient(180deg, rgba(52,36,20,0.97) 0%, rgba(24,16,9,0.98) 100%)",
   boxShadow:
     "0 14px 36px rgba(0,0,0,0.45), inset 0 0 22px rgba(245,158,11,0.06)",
-  backdropFilter: "blur(14px)",
 } as const;
 
 export function HudSurface({

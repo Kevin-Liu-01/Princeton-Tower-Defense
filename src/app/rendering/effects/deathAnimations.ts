@@ -20,7 +20,7 @@ function getDeathSize(effect: Effect, zoom: number): number {
 }
 
 function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 127.1 + seed * 311.7) * 43758.5453;
+  const x = Math.sin(seed * 127.1 + seed * 311.7) * 43_758.5453;
   return x - Math.floor(x);
 }
 
@@ -38,7 +38,12 @@ function easeOutQuad(t: number): number {
   return 1 - u * u;
 }
 
-function drawDot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+function drawDot(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number
+): void {
   if (r < 1.5) {
     ctx.fillRect(x - r, y - r, r * 2, r * 2);
   } else {
@@ -61,16 +66,26 @@ function renderDustPile(
   pileAppear: number,
   pileW: number,
   pileH: number,
-  colors: readonly [string, string, string, string],
+  colors: readonly [string, string, string, string]
 ): void {
-  if (pileAlpha < MIN_ALPHA) return;
+  if (pileAlpha < MIN_ALPHA) {
+    return;
+  }
   const pa = pileAppear;
   const [shadow, base, mid, highlight] = colors;
 
   ctx.globalAlpha = pileAlpha * 0.3;
   ctx.fillStyle = shadow;
   ctx.beginPath();
-  ctx.ellipse(cx, groundY + 3 * zoom, pileW * 1.2 * pa, pileH * 1.15 * pa, 0, 0, TAU);
+  ctx.ellipse(
+    cx,
+    groundY + 3 * zoom,
+    pileW * 1.2 * pa,
+    pileH * 1.15 * pa,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   ctx.globalAlpha = pileAlpha * 0.85;
@@ -82,14 +97,30 @@ function renderDustPile(
   ctx.globalAlpha = pileAlpha * 0.9;
   ctx.fillStyle = mid;
   ctx.beginPath();
-  ctx.ellipse(cx, groundY - pileH * 0.3 * pa, pileW * 0.6 * pa, pileH * 0.55 * pa, 0, 0, TAU);
+  ctx.ellipse(
+    cx,
+    groundY - pileH * 0.3 * pa,
+    pileW * 0.6 * pa,
+    pileH * 0.55 * pa,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   if (pileAlpha * 0.4 >= MIN_ALPHA) {
     ctx.globalAlpha = pileAlpha * 0.4;
     ctx.fillStyle = highlight;
     ctx.beginPath();
-    ctx.ellipse(cx - pileW * 0.08, groundY - pileH * 0.4 * pa, pileW * 0.25 * pa, pileH * 0.2 * pa, 0, 0, TAU);
+    ctx.ellipse(
+      cx - pileW * 0.08,
+      groundY - pileH * 0.4 * pa,
+      pileW * 0.25 * pa,
+      pileH * 0.2 * pa,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
   }
 
@@ -101,17 +132,25 @@ function renderDustPile(
       const angle = seededRandom(i * 47) * TAU;
       const dist = pileW * (0.5 + seededRandom(i * 53) * 0.7) * pa;
       ctx.fillStyle = speckColors[i % 3];
-      drawDot(ctx, cx + Math.cos(angle) * dist, groundY + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO, zoom * (1.5 + seededRandom(i * 61) * 2));
+      drawDot(
+        ctx,
+        cx + Math.cos(angle) * dist,
+        groundY + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO,
+        zoom * (1.5 + seededRandom(i * 61) * 2)
+      );
     }
   }
 }
 
 // Shared helper to compute standard pile timing from a phase start
-function pileTimings(t: number, start: number): { pileAlpha: number; pileFade: number; pileAppear: number } {
+function pileTimings(
+  t: number,
+  start: number
+): { pileAlpha: number; pileFade: number; pileAppear: number } {
   const pileT = (t - start) / (1 - start);
   const pileAppear = Math.min(1, easeOutCubic(pileT * 4));
   const pileFade = pileT > 0.6 ? easeInQuad((pileT - 0.6) / 0.4) : 0;
-  return { pileAlpha: pileAppear * (1 - pileFade), pileFade, pileAppear };
+  return { pileAlpha: pileAppear * (1 - pileFade), pileAppear, pileFade };
 }
 
 // Shared zap-style death used by both lightning (blue) and sonic (green)
@@ -123,7 +162,7 @@ function renderZapDeath(
   outlineColor: string,
   arcColors: readonly [string, string],
   particleColors: readonly [string, string, string],
-  sparkColor: string,
+  sparkColor: string
 ): void {
   const cx = screenPos.x;
   const cy = screenPos.y;
@@ -165,7 +204,15 @@ function renderZapDeath(
       ctx.globalAlpha = alpha;
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
-      ctx.ellipse(cx, cy + size * 0.25 * collapseT, bodyW, Math.max(2, bodyH), 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        cy + size * 0.25 * collapseT,
+        bodyW,
+        Math.max(2, bodyH),
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       ctx.globalAlpha = (1 - collapseT) * 0.6;
@@ -184,23 +231,34 @@ function renderZapDeath(
         const angle = (i / 7) * TAU + seededRandom(i * 7) * 0.6;
         const dist = arcT * size * (1.2 + seededRandom(i * 11) * 0.8);
         const ax = cx + Math.cos(angle) * dist;
-        const ay = cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO - arcT * size * 0.15;
+        const ay =
+          cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO - arcT * size * 0.15;
 
         ctx.globalAlpha = baseAlpha;
         ctx.strokeStyle = i % 2 === 0 ? "#ffffff" : arcColors[i % 2];
         ctx.lineWidth = Math.max(0.5, (1 - arcT) * 2.5 * zoom);
         ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(angle) * size * 0.2, cy + Math.sin(angle) * size * 0.1);
+        ctx.moveTo(
+          cx + Math.cos(angle) * size * 0.2,
+          cy + Math.sin(angle) * size * 0.1
+        );
         ctx.lineTo(
-          cx + Math.cos(angle + 0.3) * dist * 0.5 + seededRandom(i * 13) * size * 0.15,
-          cy + Math.sin(angle + 0.3) * dist * 0.25 - size * 0.1,
+          cx +
+            Math.cos(angle + 0.3) * dist * 0.5 +
+            seededRandom(i * 13) * size * 0.15,
+          cy + Math.sin(angle + 0.3) * dist * 0.25 - size * 0.1
         );
         ctx.lineTo(ax, ay);
         ctx.stroke();
 
         ctx.globalAlpha = (1 - arcT) * 0.95;
         ctx.fillStyle = "#ffffff";
-        drawDot(ctx, ax, ay, zoom * (1.5 + seededRandom(i * 17) * 1.5) * (1 - arcT));
+        drawDot(
+          ctx,
+          ax,
+          ay,
+          zoom * (1.5 + seededRandom(i * 17) * 1.5) * (1 - arcT)
+        );
       }
     }
   }
@@ -219,8 +277,10 @@ function renderZapDeath(
         drawDot(
           ctx,
           cx + Math.cos(angle) * dist,
-          cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO - partT * size * (0.3 + seededRandom(i * 37) * 0.5),
-          zoom * (1 + seededRandom(i * 41) * 2) * (1 - partT),
+          cy +
+            Math.sin(angle) * dist * TRUE_ISO_Y_RATIO -
+            partT * size * (0.3 + seededRandom(i * 37) * 0.5),
+          zoom * (1 + seededRandom(i * 41) * 2) * (1 - partT)
         );
       }
     }
@@ -231,11 +291,16 @@ function renderZapDeath(
     const dustT = (t - 0.1) / 0.25;
     for (let i = 0; i < 4; i++) {
       const delay = seededRandom(i * 51) * 0.15;
-      if (dustT < delay) continue;
+      if (dustT < delay) {
+        continue;
+      }
       const localT = Math.min(1, (dustT - delay) / (1 - delay));
       const alpha = (1 - easeInQuad(localT)) * 0.3;
-      if (alpha < MIN_ALPHA) continue;
-      const cloudSize = size * (0.25 + i * 0.08) * (0.3 + easeOutQuad(localT) * 0.7);
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
+      const cloudSize =
+        size * (0.25 + i * 0.08) * (0.3 + easeOutQuad(localT) * 0.7);
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "#9a8a7a";
@@ -243,7 +308,11 @@ function renderZapDeath(
       ctx.ellipse(
         cx + (seededRandom(i * 57) - 0.5) * size * 0.6 * easeOutQuad(localT),
         groundY - localT * size * 0.6,
-        cloudSize, cloudSize * TRUE_ISO_Y_RATIO, 0, 0, TAU,
+        cloudSize,
+        cloudSize * TRUE_ISO_Y_RATIO,
+        0,
+        0,
+        TAU
       );
       ctx.fill();
     }
@@ -253,8 +322,18 @@ function renderZapDeath(
   if (t > 0.15) {
     const { pileAlpha, pileFade, pileAppear } = pileTimings(t, 0.15);
     const pileW = size * 1.1;
-    renderDustPile(ctx, cx, groundY, zoom, pileAlpha, pileFade, pileAppear, pileW, pileW * TRUE_ISO_Y_RATIO,
-      ["#2a2015", "#7a6e5e", "#908070", "#b0a090"]);
+    renderDustPile(
+      ctx,
+      cx,
+      groundY,
+      zoom,
+      pileAlpha,
+      pileFade,
+      pileAppear,
+      pileW,
+      pileW * TRUE_ISO_Y_RATIO,
+      ["#2a2015", "#7a6e5e", "#908070", "#b0a090"]
+    );
   }
 
   // Phase 7 (0.18–0.5): Residual sparks
@@ -264,17 +343,25 @@ function renderZapDeath(
     if (fadeAlpha >= MIN_ALPHA) {
       for (let i = 0; i < 5; i++) {
         const phase = seededRandom(i * 13 + 5);
-        if (Math.sin((sparkT * 8 + phase * 6) * Math.PI) <= 0.3) continue;
+        if (Math.sin((sparkT * 8 + phase * 6) * Math.PI) <= 0.3) {
+          continue;
+        }
         const twinkle = Math.abs(Math.sin((sparkT * 12 + phase * 4) * Math.PI));
         const alpha = twinkle * 0.9 * fadeAlpha;
-        if (alpha < MIN_ALPHA) continue;
+        if (alpha < MIN_ALPHA) {
+          continue;
+        }
         const angle = seededRandom(i * 19) * TAU;
         const dist = size * (0.2 + seededRandom(i * 31) * 0.4);
 
         ctx.globalAlpha = alpha;
         ctx.fillStyle = sparkColor;
-        drawDot(ctx, cx + Math.cos(angle) * dist, groundY - size * 0.05 + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO,
-          zoom * (1.5 + seededRandom(i * 37) * 1.5));
+        drawDot(
+          ctx,
+          cx + Math.cos(angle) * dist,
+          groundY - size * 0.05 + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO,
+          zoom * (1.5 + seededRandom(i * 37) * 1.5)
+        );
       }
     }
   }
@@ -285,12 +372,15 @@ function renderZapDeath(
 // ---------------------------------------------------------------------------
 export function renderLightningDeath(params: DeathAnimationParams): void {
   const size = getDeathSize(params.effect, params.zoom);
-  renderZapDeath(params, size,
+  renderZapDeath(
+    params,
+    size,
     ["#4488ff", "#88ccff"],
-    "#3a4466", "#66aaff",
+    "#3a4466",
+    "#66aaff",
     ["#88ccff", "#5599ff"],
     ["#88bbdd", "#667799", "#aaccee"],
-    "#88ccff",
+    "#88ccff"
   );
 }
 
@@ -299,12 +389,15 @@ export function renderLightningDeath(params: DeathAnimationParams): void {
 // ---------------------------------------------------------------------------
 export function renderSonicDeath(params: DeathAnimationParams): void {
   const size = getDeathSize(params.effect, params.zoom);
-  renderZapDeath(params, size,
+  renderZapDeath(
+    params,
+    size,
     ["#44aa44", "#88ee88"],
-    "#3a5a3a", "#66cc66",
+    "#3a5a3a",
+    "#66cc66",
     ["#88ee88", "#55cc55"],
     ["#88cc88", "#668866", "#aaddaa"],
-    "#88ee88",
+    "#88ee88"
   );
 }
 
@@ -358,7 +451,15 @@ export function renderFireDeath({
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "#1a0800";
       ctx.beginPath();
-      ctx.ellipse(cx, cy + size * 0.2 * burnT, bodyW, Math.max(2, bodyH), 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        cy + size * 0.2 * burnT,
+        bodyW,
+        Math.max(2, bodyH),
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
       ctx.globalAlpha = (1 - burnT) * 0.7;
       ctx.strokeStyle = "#ff6600";
@@ -379,10 +480,12 @@ export function renderFireDeath({
         const dist = burstT * size * speed * 1.6;
         ctx.globalAlpha = baseAlpha;
         ctx.fillStyle = fireColors[i % 4];
-        drawDot(ctx,
+        drawDot(
+          ctx,
           cx + Math.cos(angle) * dist,
           cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO - burstT * size * 0.25,
-          size * (0.06 + seededRandom(i * 23) * 0.08) * (1 - burstT * 0.7));
+          size * (0.06 + seededRandom(i * 23) * 0.08) * (1 - burstT * 0.7)
+        );
       }
     }
   }
@@ -392,17 +495,31 @@ export function renderFireDeath({
     const flameT = (t - 0.08) / 0.27;
     for (let i = 0; i < 5; i++) {
       const delay = seededRandom(i * 31) * 0.15;
-      if (flameT < delay) continue;
+      if (flameT < delay) {
+        continue;
+      }
       const localT = Math.min(1, (flameT - delay) / (1 - delay));
       const alpha = (1 - localT) * 0.7;
-      if (alpha < MIN_ALPHA) continue;
-      const flameH = size * (0.6 + seededRandom(i * 43) * 0.6) * (1 - easeInQuad(localT));
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
+      const flameH =
+        size * (0.6 + seededRandom(i * 43) * 0.6) * (1 - easeInQuad(localT));
       const flameW = size * 0.12 * (1 - localT * 0.5);
 
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = localT < 0.3 ? "#ffaa00" : localT < 0.6 ? "#ff6600" : "#cc3300";
+      ctx.fillStyle =
+        localT < 0.3 ? "#ffaa00" : localT < 0.6 ? "#ff6600" : "#cc3300";
       ctx.beginPath();
-      ctx.ellipse(cx + (seededRandom(i * 37) - 0.5) * size * 0.7, groundY - flameH * 0.5, flameW, flameH * 0.5, 0, 0, TAU);
+      ctx.ellipse(
+        cx + (seededRandom(i * 37) - 0.5) * size * 0.7,
+        groundY - flameH * 0.5,
+        flameW,
+        flameH * 0.5,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
     }
   }
@@ -421,7 +538,15 @@ export function renderFireDeath({
       ctx.globalAlpha = pileAlpha * 0.25;
       ctx.fillStyle = "#0a0500";
       ctx.beginPath();
-      ctx.ellipse(cx, groundY + 3 * zoom, pileW * 1.2 * pa, pileH * 1.15 * pa, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY + 3 * zoom,
+        pileW * 1.2 * pa,
+        pileH * 1.15 * pa,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       ctx.globalAlpha = pileAlpha * 0.85;
@@ -433,7 +558,15 @@ export function renderFireDeath({
       ctx.globalAlpha = pileAlpha * 0.7;
       ctx.fillStyle = "#3a3a3a";
       ctx.beginPath();
-      ctx.ellipse(cx, groundY - pileH * 0.25 * pa, pileW * 0.55 * pa, pileH * 0.45 * pa, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY - pileH * 0.25 * pa,
+        pileW * 0.55 * pa,
+        pileH * 0.45 * pa,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       const glowIntensity = Math.max(0, 1 - pileT * 1.3);
@@ -444,7 +577,15 @@ export function renderFireDeath({
           ctx.globalAlpha = ga * 0.65;
           ctx.fillStyle = "#cc3300";
           ctx.beginPath();
-          ctx.ellipse(cx, groundY - pileH * 0.08, pileW * 0.5 * pa, pileH * 0.4 * pa, 0, 0, TAU);
+          ctx.ellipse(
+            cx,
+            groundY - pileH * 0.08,
+            pileW * 0.5 * pa,
+            pileH * 0.4 * pa,
+            0,
+            0,
+            TAU
+          );
           ctx.fill();
         }
       }
@@ -453,16 +594,23 @@ export function renderFireDeath({
       const glowI = Math.max(0, 1 - pileT * 1.3);
       for (let i = 0; i < 5; i++) {
         const emberGlow = Math.max(0, glowI + seededRandom(i * 71) * 0.2);
-        if (emberGlow <= 0) continue;
-        const flicker = 0.5 + 0.5 * Math.sin(pileT * 20 + seededRandom(i * 77) * 10);
+        if (emberGlow <= 0) {
+          continue;
+        }
+        const flicker =
+          0.5 + 0.5 * Math.sin(pileT * 20 + seededRandom(i * 77) * 10);
         const alpha = pileAlpha * emberGlow * flicker * 0.9;
-        if (alpha < MIN_ALPHA) continue;
+        if (alpha < MIN_ALPHA) {
+          continue;
+        }
         ctx.globalAlpha = alpha;
         ctx.fillStyle = "#ff8800";
-        drawDot(ctx,
+        drawDot(
+          ctx,
           cx + (seededRandom(i * 79) - 0.5) * pileW * 0.75 * pa,
           groundY + (seededRandom(i * 83) - 0.5) * pileH * 0.5 * pa,
-          zoom * (1.5 + seededRandom(i * 89) * 2));
+          zoom * (1.5 + seededRandom(i * 89) * 2)
+        );
       }
     }
   }
@@ -472,21 +620,29 @@ export function renderFireDeath({
     const emberT = (t - 0.12) / 0.53;
     for (let i = 0; i < 7; i++) {
       const startT = seededRandom(i * 17 + 3) * 0.3;
-      if (emberT < startT) continue;
+      if (emberT < startT) {
+        continue;
+      }
       const localT = Math.min(1, (emberT - startT) / (1 - startT));
       const alpha = (1 - easeInQuad(localT)) * 0.85;
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
 
       const xSpread = (seededRandom(i * 23) - 0.5) * size * 0.8;
       const drift = (seededRandom(i * 37) - 0.5) * size * 0.5 * localT;
-      const sway = Math.sin(localT * Math.PI * 3 + seededRandom(i * 41) * 6) * size * 0.08;
+      const sway =
+        Math.sin(localT * Math.PI * 3 + seededRandom(i * 41) * 6) * size * 0.08;
 
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = localT < 0.25 ? "#ffdd44" : localT < 0.5 ? "#ff8800" : "#cc3300";
-      drawDot(ctx,
+      ctx.fillStyle =
+        localT < 0.25 ? "#ffdd44" : localT < 0.5 ? "#ff8800" : "#cc3300";
+      drawDot(
+        ctx,
         cx + xSpread * (0.2 + localT * 0.8) + drift + sway,
-        groundY - localT * size * 2.0,
-        zoom * (1 + seededRandom(i * 43) * 2) * (1 - localT * 0.4));
+        groundY - localT * size * 2,
+        zoom * (1 + seededRandom(i * 43) * 2) * (1 - localT * 0.4)
+      );
     }
   }
 
@@ -495,19 +651,29 @@ export function renderFireDeath({
     const smokeT = (t - 0.15) / 0.4;
     for (let i = 0; i < 3; i++) {
       const delay = seededRandom(i * 97) * 0.15;
-      if (smokeT < delay) continue;
+      if (smokeT < delay) {
+        continue;
+      }
       const localT = Math.min(1, (smokeT - delay) / (1 - delay));
       const alpha = (1 - easeInQuad(localT)) * 0.25;
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
       const smokeSize = size * (0.2 + i * 0.1) * (0.5 + easeOutQuad(localT));
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = "#444444";
       ctx.beginPath();
       ctx.ellipse(
-        cx + (seededRandom(i * 101) - 0.5) * size * 0.4 + Math.sin(localT * TAU + i) * size * 0.1,
+        cx +
+          (seededRandom(i * 101) - 0.5) * size * 0.4 +
+          Math.sin(localT * TAU + i) * size * 0.1,
         groundY - localT * size * 1.5,
-        smokeSize, smokeSize * TRUE_ISO_Y_RATIO, 0, 0, TAU,
+        smokeSize,
+        smokeSize * TRUE_ISO_Y_RATIO,
+        0,
+        0,
+        TAU
       );
       ctx.fill();
     }
@@ -557,8 +723,10 @@ export function renderFreezeDeath({
         const speed = 0.8 + seededRandom(i * 7) * 0.6;
         const dist = shardT * size * speed * 1.5;
         const sx = cx + Math.cos(angle) * dist;
-        const sy = cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO + shardT * size * 0.15;
-        const shardW = size * (0.06 + seededRandom(i * 29) * 0.08) * (1 - shardT * 0.5);
+        const sy =
+          cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO + shardT * size * 0.15;
+        const shardW =
+          size * (0.06 + seededRandom(i * 29) * 0.08) * (1 - shardT * 0.5);
         const shardH = shardW * (1.8 + seededRandom(i * 43) * 2.5);
         const rot = angle + shardT * (seededRandom(i * 53) - 0.5) * 4;
         const cosR = Math.cos(rot);
@@ -584,15 +752,21 @@ export function renderFreezeDeath({
     const sparkleT = (t - 0.05) / 0.5;
     for (let i = 0; i < 6; i++) {
       const phase = seededRandom(i * 67);
-      if (Math.sin((sparkleT * 6 + phase * 8) * Math.PI) <= 0.2) continue;
+      if (Math.sin((sparkleT * 6 + phase * 8) * Math.PI) <= 0.2) {
+        continue;
+      }
       const twinkle = Math.abs(Math.sin((sparkleT * 10 + phase * 5) * Math.PI));
       const alpha = twinkle * 0.95 * (1 - sparkleT);
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
       const angle = seededRandom(i * 79) * TAU;
-      const dist = size * (0.3 + seededRandom(i * 83) * 1.0) * easeOutQuad(sparkleT);
+      const dist =
+        size * (0.3 + seededRandom(i * 83) * 1) * easeOutQuad(sparkleT);
       const starX = cx + Math.cos(angle) * dist;
       const starY = cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO;
-      const starSize = zoom * (2 + seededRandom(i * 89) * 2.5) * (1 - sparkleT * 0.5);
+      const starSize =
+        zoom * (2 + seededRandom(i * 89) * 2.5) * (1 - sparkleT * 0.5);
       const q = starSize * 0.25;
 
       ctx.globalAlpha = alpha;
@@ -616,7 +790,15 @@ export function renderFreezeDeath({
       ctx.globalAlpha = mistAlpha;
       ctx.fillStyle = "#b0e8ff";
       ctx.beginPath();
-      ctx.ellipse(cx, cy + size * 0.2, mistW, mistW * TRUE_ISO_Y_RATIO, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        cy + size * 0.2,
+        mistW,
+        mistW * TRUE_ISO_Y_RATIO,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
     }
   }
@@ -661,10 +843,14 @@ export function renderPoisonDeath({
     const dripColors = ["#44cc22", "#7733aa", "#33bb11"];
     for (let i = 0; i < 5; i++) {
       const dripDelay = seededRandom(i * 47) * 0.2;
-      if (meltT < dripDelay) continue;
+      if (meltT < dripDelay) {
+        continue;
+      }
       const localT = Math.min(1, (meltT - dripDelay) / (1 - dripDelay));
       const alpha = (1 - localT) * 0.7;
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
       const xOff = (seededRandom(i * 31) - 0.5) * size * 0.8;
 
       ctx.globalAlpha = alpha;
@@ -674,7 +860,10 @@ export function renderPoisonDeath({
         cx + xOff * (1 - localT * 0.3),
         cy + easeInQuad(localT) * size * 0.6,
         size * 0.06 * (1 - localT * 0.3),
-        size * 0.12 * (0.5 + localT * 0.5), 0, 0, TAU,
+        size * 0.12 * (0.5 + localT * 0.5),
+        0,
+        0,
+        TAU
       );
       ctx.fill();
     }
@@ -693,21 +882,39 @@ export function renderPoisonDeath({
       ctx.globalAlpha = poolAlpha;
       ctx.fillStyle = "#28aa18";
       ctx.beginPath();
-      ctx.ellipse(cx, groundY, poolW * poolAppear, poolH * poolAppear, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY,
+        poolW * poolAppear,
+        poolH * poolAppear,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       ctx.globalAlpha = poolAlpha * 0.6;
       ctx.fillStyle = "#1a7710";
       ctx.beginPath();
-      ctx.ellipse(cx, groundY, poolW * 0.5 * poolAppear, poolH * 0.5 * poolAppear, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY,
+        poolW * 0.5 * poolAppear,
+        poolH * 0.5 * poolAppear,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       // Bubbles (reduced)
       for (let i = 0; i < 4; i++) {
         const phase = seededRandom(i * 59);
-        const bubbleCycle = ((poolT * 5 + phase) % 1);
+        const bubbleCycle = (poolT * 5 + phase) % 1;
         const alpha = poolAlpha * (1 - bubbleCycle) * 0.7;
-        if (alpha < MIN_ALPHA) continue;
+        if (alpha < MIN_ALPHA) {
+          continue;
+        }
         ctx.globalAlpha = alpha;
         ctx.strokeStyle = "#66ff44";
         ctx.lineWidth = zoom * 0.8;
@@ -715,7 +922,9 @@ export function renderPoisonDeath({
         ctx.arc(
           cx + (seededRandom(i * 71) - 0.5) * poolW * 0.8 * poolAppear,
           groundY - bubbleCycle * size * 0.25,
-          zoom * (2 + seededRandom(i * 73) * 2) * (1 - bubbleCycle), 0, TAU,
+          zoom * (2 + seededRandom(i * 73) * 2) * (1 - bubbleCycle),
+          0,
+          TAU
         );
         ctx.stroke();
       }
@@ -727,17 +936,25 @@ export function renderPoisonDeath({
     const vaporT = (t - 0.25) / 0.55;
     for (let i = 0; i < 5; i++) {
       const startT = seededRandom(i * 61) * 0.3;
-      if (vaporT < startT) continue;
+      if (vaporT < startT) {
+        continue;
+      }
       const localT = Math.min(1, (vaporT - startT) / (1 - startT));
       const alpha = (1 - easeInQuad(localT)) * 0.3;
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = i % 2 === 0 ? "#44cc22" : "#7744aa";
-      drawDot(ctx,
-        cx + (seededRandom(i * 67) - 0.5) * size * 0.6 + Math.sin(localT * Math.PI * 2.5 + i * 2) * size * 0.1,
+      drawDot(
+        ctx,
+        cx +
+          (seededRandom(i * 67) - 0.5) * size * 0.6 +
+          Math.sin(localT * Math.PI * 2.5 + i * 2) * size * 0.1,
         groundY - localT * size * 1.5,
-        size * 0.15 * (0.3 + easeOutQuad(localT) * 0.7) * (1 - localT * 0.3));
+        size * 0.15 * (0.3 + easeOutQuad(localT) * 0.7) * (1 - localT * 0.3)
+      );
     }
   }
 }
@@ -757,7 +974,11 @@ export function renderDefaultDeath({
   const cy = screenPos.y;
   const groundY = cy + size * 0.25;
 
-  const groundColors = effect.regionGroundColors || ["#5a4e3e", "#4a3e2e", "#3a2e1e"];
+  const groundColors = effect.regionGroundColors || [
+    "#5a4e3e",
+    "#4a3e2e",
+    "#3a2e1e",
+  ];
   const baseColor = groundColors[0];
   const midColor = groundColors[1] || groundColors[0];
   const darkColor = groundColors[2] || groundColors[1] || groundColors[0];
@@ -780,19 +1001,27 @@ export function renderDefaultDeath({
 
       for (let i = 0; i < 6; i++) {
         const spawnT = seededRandom(i * 13) * 0.5;
-        if (crumbleT < spawnT) continue;
+        if (crumbleT < spawnT) {
+          continue;
+        }
         const localT = Math.min(1, (crumbleT - spawnT) / (1 - spawnT));
         const alpha = (1 - crumbleT) * (1 - localT) * 0.6;
-        if (alpha < MIN_ALPHA) continue;
+        if (alpha < MIN_ALPHA) {
+          continue;
+        }
         const angle = seededRandom(i * 17) * TAU;
         const drift = localT * size * (0.15 + seededRandom(i * 23) * 0.25);
 
         ctx.globalAlpha = alpha;
         ctx.fillStyle = i % 2 === 0 ? baseColor : midColor;
-        drawDot(ctx,
+        drawDot(
+          ctx,
           cx + Math.cos(angle) * drift,
-          bodyY + Math.sin(angle) * drift * TRUE_ISO_Y_RATIO - localT * size * 0.05,
-          zoom * (1 + seededRandom(i * 29) * 1.5) * (1 - localT));
+          bodyY +
+            Math.sin(angle) * drift * TRUE_ISO_Y_RATIO -
+            localT * size * 0.05,
+          zoom * (1 + seededRandom(i * 29) * 1.5) * (1 - localT)
+        );
       }
     }
   }
@@ -811,10 +1040,12 @@ export function renderDefaultDeath({
         const speed = 0.4 + seededRandom(i * 37) * 0.7;
         const dist = outT * size * speed * 1.3;
         ctx.fillStyle = burstColors[i % 3];
-        drawDot(ctx,
+        drawDot(
+          ctx,
           cx + Math.cos(angle) * dist,
           cy + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO + fall,
-          zoom * (1.5 + seededRandom(i * 41) * 2.5) * (1 - burstT * 0.6));
+          zoom * (1.5 + seededRandom(i * 41) * 2.5) * (1 - burstT * 0.6)
+        );
       }
     }
   }
@@ -824,12 +1055,17 @@ export function renderDefaultDeath({
     const cloudT = (t - 0.12) / 0.38;
     for (let i = 0; i < 4; i++) {
       const delay = seededRandom(i * 51) * 0.2;
-      if (cloudT < delay) continue;
+      if (cloudT < delay) {
+        continue;
+      }
       const localT = Math.min(1, (cloudT - delay) / (1 - delay));
       const alpha = (1 - easeInQuad(localT)) * 0.3;
-      if (alpha < MIN_ALPHA) continue;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
       const rise = localT < 0.4 ? localT / 0.4 : 1 - (localT - 0.4) / 0.6;
-      const cloudSize = size * (0.18 + i * 0.06) * (0.3 + easeOutQuad(localT) * 0.7);
+      const cloudSize =
+        size * (0.18 + i * 0.06) * (0.3 + easeOutQuad(localT) * 0.7);
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = i % 2 === 0 ? baseColor : midColor;
@@ -837,7 +1073,11 @@ export function renderDefaultDeath({
       ctx.ellipse(
         cx + (seededRandom(i * 53) - 0.5) * size * 0.7 * easeOutQuad(localT),
         groundY - rise * size * 0.4,
-        cloudSize, cloudSize * TRUE_ISO_Y_RATIO, 0, 0, TAU,
+        cloudSize,
+        cloudSize * TRUE_ISO_Y_RATIO,
+        0,
+        0,
+        TAU
       );
       ctx.fill();
     }
@@ -849,20 +1089,27 @@ export function renderDefaultDeath({
     const settleColors = [lightColor, baseColor, midColor];
     for (let i = 0; i < 8; i++) {
       const startT = seededRandom(i * 59) * 0.35;
-      if (settleT < startT) continue;
+      if (settleT < startT) {
+        continue;
+      }
       const localT = Math.min(1, (settleT - startT) / (1 - startT));
       const alpha = (1 - easeInQuad(localT)) * 0.55;
-      if (alpha < MIN_ALPHA) continue;
-      const xSpread = (seededRandom(i * 61) - 0.5) * size * 1.0;
-      const sway = Math.sin(localT * TAU + seededRandom(i * 67) * 6) * size * 0.06;
+      if (alpha < MIN_ALPHA) {
+        continue;
+      }
+      const xSpread = (seededRandom(i * 61) - 0.5) * size * 1;
+      const sway =
+        Math.sin(localT * TAU + seededRandom(i * 67) * 6) * size * 0.06;
       const startY = cy - size * 0.2;
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = settleColors[i % 3];
-      drawDot(ctx,
+      drawDot(
+        ctx,
         cx + xSpread * (0.3 + localT * 0.7) + sway,
         startY + (groundY - startY) * localT,
-        zoom * (1 + seededRandom(i * 71) * 1.5) * (1 - localT * 0.4));
+        zoom * (1 + seededRandom(i * 71) * 1.5) * (1 - localT * 0.4)
+      );
     }
   }
 
@@ -870,32 +1117,64 @@ export function renderDefaultDeath({
   if (t > 0.2) {
     const { pileAlpha, pileFade, pileAppear } = pileTimings(t, 0.2);
     if (pileAlpha >= MIN_ALPHA) {
-      const pileW = size * 1.0;
+      const pileW = size * 1;
       const pileH = pileW * TRUE_ISO_Y_RATIO;
 
       ctx.globalAlpha = pileAlpha * 0.2;
       ctx.fillStyle = darkColor;
       ctx.beginPath();
-      ctx.ellipse(cx, groundY + 3 * zoom, pileW * 1.15 * pileAppear, pileH * 1.1 * pileAppear, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY + 3 * zoom,
+        pileW * 1.15 * pileAppear,
+        pileH * 1.1 * pileAppear,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       ctx.globalAlpha = pileAlpha * 0.35;
       ctx.fillStyle = midColor;
       ctx.beginPath();
-      ctx.ellipse(cx, groundY, pileW * pileAppear, pileH * pileAppear, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY,
+        pileW * pileAppear,
+        pileH * pileAppear,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       ctx.globalAlpha = pileAlpha * 0.7;
       ctx.fillStyle = baseColor;
       ctx.beginPath();
-      ctx.ellipse(cx, groundY - pileH * 0.15 * pileAppear, pileW * 0.6 * pileAppear, pileH * 0.5 * pileAppear, 0, 0, TAU);
+      ctx.ellipse(
+        cx,
+        groundY - pileH * 0.15 * pileAppear,
+        pileW * 0.6 * pileAppear,
+        pileH * 0.5 * pileAppear,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
 
       if (pileAlpha * 0.3 >= MIN_ALPHA) {
         ctx.globalAlpha = pileAlpha * 0.3;
         ctx.fillStyle = lightColor;
         ctx.beginPath();
-        ctx.ellipse(cx - pileW * 0.06, groundY - pileH * 0.25 * pileAppear, pileW * 0.25 * pileAppear, pileH * 0.18 * pileAppear, 0, 0, TAU);
+        ctx.ellipse(
+          cx - pileW * 0.06,
+          groundY - pileH * 0.25 * pileAppear,
+          pileW * 0.25 * pileAppear,
+          pileH * 0.18 * pileAppear,
+          0,
+          0,
+          TAU
+        );
         ctx.fill();
       }
 
@@ -905,10 +1184,15 @@ export function renderDefaultDeath({
         ctx.globalAlpha = speckAlpha;
         for (let i = 0; i < 6; i++) {
           const angle = seededRandom(i * 47) * TAU;
-          const dist = pileW * (0.45 + seededRandom(i * 53) * 0.65) * pileAppear;
+          const dist =
+            pileW * (0.45 + seededRandom(i * 53) * 0.65) * pileAppear;
           ctx.fillStyle = speckColors[i % 3];
-          drawDot(ctx, cx + Math.cos(angle) * dist, groundY + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO,
-            zoom * (1 + seededRandom(i * 61) * 1.5));
+          drawDot(
+            ctx,
+            cx + Math.cos(angle) * dist,
+            groundY + Math.sin(angle) * dist * TRUE_ISO_Y_RATIO,
+            zoom * (1 + seededRandom(i * 61) * 1.5)
+          );
         }
       }
     }
@@ -916,9 +1200,9 @@ export function renderDefaultDeath({
 }
 
 function lightenColor(hex: string, amount: number): string {
-  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
-  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
-  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
+  const r = Math.min(255, Number.parseInt(hex.slice(1, 3), 16) + amount);
+  const g = Math.min(255, Number.parseInt(hex.slice(3, 5), 16) + amount);
+  const b = Math.min(255, Number.parseInt(hex.slice(5, 7), 16) + amount);
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
@@ -930,28 +1214,40 @@ export function renderEnemyDeath(
   screenPos: Position,
   zoom: number,
   progress: number,
-  effect: Effect,
+  effect: Effect
 ): void {
-  const params: DeathAnimationParams = { ctx, screenPos, zoom, progress, effect };
+  const params: DeathAnimationParams = {
+    ctx,
+    effect,
+    progress,
+    screenPos,
+    zoom,
+  };
 
   switch (effect.deathCause) {
-    case "lightning":
+    case "lightning": {
       renderLightningDeath(params);
       break;
-    case "fire":
+    }
+    case "fire": {
       renderFireDeath(params);
       break;
-    case "freeze":
+    }
+    case "freeze": {
       renderFreezeDeath(params);
       break;
-    case "sonic":
+    }
+    case "sonic": {
       renderSonicDeath(params);
       break;
-    case "poison":
+    }
+    case "poison": {
       renderPoisonDeath(params);
       break;
-    default:
+    }
+    default: {
       renderDefaultDeath(params);
       break;
+    }
   }
 }

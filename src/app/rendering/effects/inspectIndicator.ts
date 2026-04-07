@@ -30,46 +30,52 @@ interface ColorTheme {
 }
 
 const ENEMY_THEME: ColorTheme = {
-  idle: "rgba(239, 68, 68, 0.7)",
-  idleRing: "rgba(239, 68, 68, 0.4)",
-  primary: "rgba(239, 68, 68, 0.85)",
-  secondary: "rgba(252, 165, 165, 0.5)",
   glow: "rgba(239, 68, 68, 0.35)",
   glowFade: "rgba(239, 68, 68, 0)",
-  text: "rgba(252, 165, 165, 0.95)",
+  idle: "rgba(239, 68, 68, 0.7)",
+  idleRing: "rgba(239, 68, 68, 0.4)",
   marker: "rgba(239, 68, 68, 0.9)",
   markerStroke: "rgba(255, 255, 255, 0.7)",
+  primary: "rgba(239, 68, 68, 0.85)",
+  secondary: "rgba(252, 165, 165, 0.5)",
+  text: "rgba(252, 165, 165, 0.95)",
 };
 
 const TROOP_THEME: ColorTheme = {
-  idle: "rgba(59, 130, 246, 0.7)",
-  idleRing: "rgba(59, 130, 246, 0.4)",
-  primary: "rgba(59, 130, 246, 0.85)",
-  secondary: "rgba(147, 197, 253, 0.5)",
   glow: "rgba(59, 130, 246, 0.35)",
   glowFade: "rgba(59, 130, 246, 0)",
-  text: "rgba(147, 197, 253, 0.95)",
+  idle: "rgba(59, 130, 246, 0.7)",
+  idleRing: "rgba(59, 130, 246, 0.4)",
   marker: "rgba(59, 130, 246, 0.9)",
   markerStroke: "rgba(255, 255, 255, 0.7)",
+  primary: "rgba(59, 130, 246, 0.85)",
+  secondary: "rgba(147, 197, 253, 0.5)",
+  text: "rgba(147, 197, 253, 0.95)",
 };
 
 const HERO_THEME: ColorTheme = {
-  idle: "rgba(245, 158, 11, 0.75)",
-  idleRing: "rgba(245, 158, 11, 0.45)",
-  primary: "rgba(245, 158, 11, 0.9)",
-  secondary: "rgba(253, 224, 71, 0.55)",
   glow: "rgba(245, 158, 11, 0.4)",
   glowFade: "rgba(245, 158, 11, 0)",
-  text: "rgba(253, 224, 71, 0.95)",
+  idle: "rgba(245, 158, 11, 0.75)",
+  idleRing: "rgba(245, 158, 11, 0.45)",
   marker: "rgba(245, 158, 11, 0.95)",
   markerStroke: "rgba(255, 255, 255, 0.85)",
+  primary: "rgba(245, 158, 11, 0.9)",
+  secondary: "rgba(253, 224, 71, 0.55)",
+  text: "rgba(253, 224, 71, 0.95)",
 };
 
 function getTheme(unitType: InspectUnitType): ColorTheme {
   switch (unitType) {
-    case "enemy": return ENEMY_THEME;
-    case "troop": return TROOP_THEME;
-    case "hero": return HERO_THEME;
+    case "enemy": {
+      return ENEMY_THEME;
+    }
+    case "troop": {
+      return TROOP_THEME;
+    }
+    case "hero": {
+      return HERO_THEME;
+    }
   }
 }
 
@@ -80,7 +86,7 @@ function drawGroundEllipse(
   zoom: number,
   rx: number,
   color: string,
-  lineWidth: number,
+  lineWidth: number
 ): void {
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth * zoom;
@@ -96,7 +102,7 @@ function drawDiamondMarker(
   size: number,
   fillColor: string,
   strokeColor: string,
-  strokeWidth: number,
+  strokeWidth: number
 ): void {
   ctx.fillStyle = fillColor;
   ctx.strokeStyle = strokeColor;
@@ -117,9 +123,17 @@ function drawIdleGround(
   groundY: number,
   zoom: number,
   baseRadius: number,
-  theme: ColorTheme,
+  theme: ColorTheme
 ): void {
-  drawGroundEllipse(ctx, screenPos.x, groundY, zoom, baseRadius, theme.idle, 2.5);
+  drawGroundEllipse(
+    ctx,
+    screenPos.x,
+    groundY,
+    zoom,
+    baseRadius,
+    theme.idle,
+    2.5
+  );
 }
 
 function drawIdleOverlay(
@@ -128,12 +142,17 @@ function drawIdleOverlay(
   markerY: number,
   zoom: number,
   theme: ColorTheme,
-  time: number,
+  time: number
 ): void {
   const bobOffset = Math.sin(time * 2) * 2 * zoom;
   drawDiamondMarker(
-    ctx, screenPos.x, markerY + bobOffset, 4 * zoom,
-    theme.idle, theme.idleRing, 1 * zoom,
+    ctx,
+    screenPos.x,
+    markerY + bobOffset,
+    4 * zoom,
+    theme.idle,
+    theme.idleRing,
+    1 * zoom
   );
 }
 
@@ -144,23 +163,51 @@ function drawHoveredGround(
   zoom: number,
   baseRadius: number,
   pulsePhase: number,
-  theme: ColorTheme,
+  theme: ColorTheme
 ): void {
   const pulseRadius = baseRadius + pulsePhase * 5 * zoom;
 
   const glowGrad = ctx.createRadialGradient(
-    screenPos.x, groundY, 0,
-    screenPos.x, groundY, pulseRadius * 1.3,
+    screenPos.x,
+    groundY,
+    0,
+    screenPos.x,
+    groundY,
+    pulseRadius * 1.3
   );
   glowGrad.addColorStop(0, theme.glow);
   glowGrad.addColorStop(1, theme.glowFade);
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, groundY, pulseRadius * 1.3, pulseRadius * 1.3 * ISO_ELLIPSE_RATIO, 0, 0, TWO_PI);
+  ctx.ellipse(
+    screenPos.x,
+    groundY,
+    pulseRadius * 1.3,
+    pulseRadius * 1.3 * ISO_ELLIPSE_RATIO,
+    0,
+    0,
+    TWO_PI
+  );
   ctx.fill();
 
-  drawGroundEllipse(ctx, screenPos.x, groundY, zoom, pulseRadius, theme.primary, 2.5 + pulsePhase);
-  drawGroundEllipse(ctx, screenPos.x, groundY, zoom, baseRadius * 0.6, theme.secondary, 1.5);
+  drawGroundEllipse(
+    ctx,
+    screenPos.x,
+    groundY,
+    zoom,
+    pulseRadius,
+    theme.primary,
+    2.5 + pulsePhase
+  );
+  drawGroundEllipse(
+    ctx,
+    screenPos.x,
+    groundY,
+    zoom,
+    baseRadius * 0.6,
+    theme.secondary,
+    1.5
+  );
 }
 
 function drawHoveredOverlay(
@@ -169,12 +216,17 @@ function drawHoveredOverlay(
   markerY: number,
   zoom: number,
   theme: ColorTheme,
-  time: number,
+  time: number
 ): void {
   const bobOffset = Math.sin(time * 3) * 3 * zoom;
   drawDiamondMarker(
-    ctx, screenPos.x, markerY + bobOffset, 6 * zoom,
-    theme.marker, theme.markerStroke, 1.5 * zoom,
+    ctx,
+    screenPos.x,
+    markerY + bobOffset,
+    6 * zoom,
+    theme.marker,
+    theme.markerStroke,
+    1.5 * zoom
   );
 }
 
@@ -185,27 +237,63 @@ function drawSelectedGround(
   zoom: number,
   baseRadius: number,
   pulsePhase: number,
-  theme: ColorTheme,
+  theme: ColorTheme
 ): void {
   const pulseRadius = baseRadius + pulsePhase * 8 * zoom;
 
   const glowGrad = ctx.createRadialGradient(
-    screenPos.x, groundY, 0,
-    screenPos.x, groundY, pulseRadius * 1.3,
+    screenPos.x,
+    groundY,
+    0,
+    screenPos.x,
+    groundY,
+    pulseRadius * 1.3
   );
   glowGrad.addColorStop(0, theme.glow);
   glowGrad.addColorStop(1, theme.glowFade);
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, groundY, pulseRadius * 1.3, pulseRadius * 1.3 * ISO_ELLIPSE_RATIO, 0, 0, TWO_PI);
+  ctx.ellipse(
+    screenPos.x,
+    groundY,
+    pulseRadius * 1.3,
+    pulseRadius * 1.3 * ISO_ELLIPSE_RATIO,
+    0,
+    0,
+    TWO_PI
+  );
   ctx.fill();
 
-  drawGroundEllipse(ctx, screenPos.x, groundY, zoom, pulseRadius, theme.primary, 3 + pulsePhase * 1.5);
-  drawGroundEllipse(ctx, screenPos.x, groundY, zoom, baseRadius * 0.55, theme.secondary, 2);
+  drawGroundEllipse(
+    ctx,
+    screenPos.x,
+    groundY,
+    zoom,
+    pulseRadius,
+    theme.primary,
+    3 + pulsePhase * 1.5
+  );
+  drawGroundEllipse(
+    ctx,
+    screenPos.x,
+    groundY,
+    zoom,
+    baseRadius * 0.55,
+    theme.secondary,
+    2
+  );
 
   ctx.fillStyle = theme.primary;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, groundY, 3 * zoom, 3 * zoom * ISO_ELLIPSE_RATIO, 0, 0, TWO_PI);
+  ctx.ellipse(
+    screenPos.x,
+    groundY,
+    3 * zoom,
+    3 * zoom * ISO_ELLIPSE_RATIO,
+    0,
+    0,
+    TWO_PI
+  );
   ctx.fill();
 }
 
@@ -218,12 +306,17 @@ function drawSelectedOverlay(
   baseRadius: number,
   theme: ColorTheme,
   time: number,
-  label: string,
+  label: string
 ): void {
   const bobOffset = Math.sin(time * 3) * 3 * zoom;
   drawDiamondMarker(
-    ctx, screenPos.x, markerY + bobOffset, 7 * zoom,
-    theme.marker, theme.markerStroke, 2 * zoom,
+    ctx,
+    screenPos.x,
+    markerY + bobOffset,
+    7 * zoom,
+    theme.marker,
+    theme.markerStroke,
+    2 * zoom
   );
 
   ctx.font = `bold ${9 * zoom}px Arial`;
@@ -235,8 +328,8 @@ function drawSelectedOverlay(
 
 const SELECTED_LABELS: Record<InspectUnitType, string> = {
   enemy: "INSPECTING",
-  troop: "TROOP",
   hero: "HERO",
+  troop: "TROOP",
 };
 
 export function renderUnitInspectIndicator(
@@ -247,26 +340,31 @@ export function renderUnitInspectIndicator(
   isSelected: boolean,
   isHovered: boolean,
   unitType: InspectUnitType,
-  renderPass: InspectRenderPass = "all",
+  renderPass: InspectRenderPass = "all"
 ): void {
   renderInspectIndicator(ctx, {
-    screenPos,
-    zoom,
-    unitSize,
-    isSelected,
     isHovered,
-    unitType,
+    isSelected,
     renderPass,
+    screenPos,
+    unitSize,
+    unitType,
+    zoom,
   });
 }
 
 export function renderInspectIndicator(
   ctx: CanvasRenderingContext2D,
-  config: InspectIndicatorConfig,
+  config: InspectIndicatorConfig
 ): void {
   const {
-    screenPos, zoom, unitSize, isSelected, isHovered,
-    unitType = "enemy", renderPass = "all",
+    screenPos,
+    zoom,
+    unitSize,
+    isSelected,
+    isHovered,
+    unitType = "enemy",
+    renderPass = "all",
   } = config;
   const theme = getTheme(unitType);
 
@@ -283,8 +381,12 @@ export function renderInspectIndicator(
   ctx.save();
 
   if (!isSelected && !isHovered) {
-    if (doGround) drawIdleGround(ctx, screenPos, groundY, zoom, baseRadius, theme);
-    if (doOverlay) drawIdleOverlay(ctx, screenPos, markerY, zoom, theme, time);
+    if (doGround) {
+      drawIdleGround(ctx, screenPos, groundY, zoom, baseRadius, theme);
+    }
+    if (doOverlay) {
+      drawIdleOverlay(ctx, screenPos, markerY, zoom, theme, time);
+    }
     ctx.restore();
     return;
   }
@@ -293,17 +395,40 @@ export function renderInspectIndicator(
 
   if (isSelected) {
     if (doGround) {
-      drawSelectedGround(ctx, screenPos, groundY, zoom, baseRadius, pulsePhase, theme);
+      drawSelectedGround(
+        ctx,
+        screenPos,
+        groundY,
+        zoom,
+        baseRadius,
+        pulsePhase,
+        theme
+      );
     }
     if (doOverlay) {
       drawSelectedOverlay(
-        ctx, screenPos, markerY, groundY, zoom, baseRadius,
-        theme, time, SELECTED_LABELS[unitType],
+        ctx,
+        screenPos,
+        markerY,
+        groundY,
+        zoom,
+        baseRadius,
+        theme,
+        time,
+        SELECTED_LABELS[unitType]
       );
     }
   } else {
     if (doGround) {
-      drawHoveredGround(ctx, screenPos, groundY, zoom, baseRadius, pulsePhase, theme);
+      drawHoveredGround(
+        ctx,
+        screenPos,
+        groundY,
+        zoom,
+        baseRadius,
+        pulsePhase,
+        theme
+      );
     }
     if (doOverlay) {
       drawHoveredOverlay(ctx, screenPos, markerY, zoom, theme, time);

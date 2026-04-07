@@ -21,7 +21,7 @@ export function drawOrganicBlobAt(
   radiusY: number,
   seed: number,
   bumpiness: number = 0.15,
-  points: number = 24,
+  points: number = 24
 ): void {
   ctx.beginPath();
   for (let i = 0; i <= points; i++) {
@@ -43,32 +43,40 @@ export function drawOrganicBlobAt(
   ctx.closePath();
 }
 
-export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+export function hexToRgb(
+  hex: string
+): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
+        b: Number.parseInt(result[3], 16),
+        g: Number.parseInt(result[2], 16),
+        r: Number.parseInt(result[1], 16),
       }
     : null;
 }
 
 export function lightenColor(color: string, amount: number): string {
   const rgb = hexToRgb(color);
-  if (!rgb) return color;
+  if (!rgb) {
+    return color;
+  }
   return `rgb(${Math.min(255, rgb.r + amount)}, ${Math.min(255, rgb.g + amount)}, ${Math.min(255, rgb.b + amount)})`;
 }
 
 export function darkenColor(color: string, amount: number): string {
   const rgb = hexToRgb(color);
-  if (!rgb) return color;
+  if (!rgb) {
+    return color;
+  }
   return `rgb(${Math.max(0, rgb.r - amount)}, ${Math.max(0, rgb.g - amount)}, ${Math.max(0, rgb.b - amount)})`;
 }
 
 export function colorWithAlpha(color: string, alpha: number): string {
   const rgb = hexToRgb(color);
-  if (!rgb) return `rgba(128, 128, 128, ${alpha})`;
+  if (!rgb) {
+    return `rgba(128, 128, 128, ${alpha})`;
+  }
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
@@ -77,12 +85,15 @@ export function colorWithAlpha(color: string, alpha: number): string {
 // ============================================================================
 
 export type IsoOffFn = (dx: number, dy: number) => { x: number; y: number };
-export type Pt = { x: number; y: number };
+export interface Pt {
+  x: number;
+  y: number;
+}
 
 export function generateIsoHexVertices(
   isoOff: IsoOffFn,
   radius: number,
-  sides: number = 6,
+  sides: number = 6
 ): Pt[] {
   const verts: Pt[] = [];
   for (let i = 0; i < sides; i++) {
@@ -94,7 +105,7 @@ export function generateIsoHexVertices(
 
 export function computeHexSideNormals(
   cosR: number,
-  sides: number = 6,
+  sides: number = 6
 ): number[] {
   const normals: number[] = [];
   for (let i = 0; i < sides; i++) {
@@ -105,8 +116,8 @@ export function computeHexSideNormals(
 }
 
 export function sortSidesByDepth(normals: number[]): number[] {
-  return Array.from({ length: normals.length }, (_, i) => i).sort(
-    (a, b) => normals[a] - normals[b],
+  return Array.from({ length: normals.length }, (_, i) => i).toSorted(
+    (a, b) => normals[a] - normals[b]
   );
 }
 
@@ -116,13 +127,14 @@ export function drawHexCap(
   verts: Pt[],
   fillColor: string,
   strokeColor?: string,
-  lineWidth?: number,
+  lineWidth?: number
 ): void {
   ctx.fillStyle = fillColor;
   ctx.beginPath();
   ctx.moveTo(center.x + verts[0].x, center.y + verts[0].y);
-  for (let i = 1; i < verts.length; i++)
+  for (let i = 1; i < verts.length; i++) {
     ctx.lineTo(center.x + verts[i].x, center.y + verts[i].y);
+  }
   ctx.closePath();
   ctx.fill();
   if (strokeColor) {
@@ -142,7 +154,7 @@ export function drawHexBarrelBody(
   facingFwd: boolean,
   colorFn: (normal: number, index: number) => string,
   strokeColor: string = "rgba(0,0,0,0.3)",
-  lineWidth: number = 0.6,
+  lineWidth: number = 0.6
 ): void {
   const sides = baseVerts.length;
   const sorted = sortSidesByDepth(sideNormals);
@@ -185,7 +197,7 @@ export function drawHexBand(
   colorFn: (normal: number) => string,
   strokeColor: string = "rgba(0,0,0,0.3)",
   lineWidth: number = 0.6,
-  normalThreshold: number = -0.15,
+  normalThreshold: number = -0.15
 ): void {
   const sides = hexVerts.length;
   const bVerts = hexVerts.map((v) => ({ x: v.x * scale, y: v.y * scale }));
@@ -193,7 +205,9 @@ export function drawHexBand(
 
   for (const i of sorted) {
     const ni = (i + 1) % sides;
-    if (sideNormals[i] < normalThreshold) continue;
+    if (sideNormals[i] < normalThreshold) {
+      continue;
+    }
 
     ctx.fillStyle = colorFn(sideNormals[i]);
     ctx.beginPath();
@@ -216,8 +230,9 @@ export function drawHexBand(
     if (
       sideNormals[i] < normalThreshold &&
       sideNormals[ni === 0 ? sides - 1 : ni - 1] < normalThreshold
-    )
+    ) {
       continue;
+    }
     ctx.moveTo(capPt.x + bVerts[i].x, capPt.y + bVerts[i].y);
     ctx.lineTo(capPt.x + bVerts[ni].x, capPt.y + bVerts[ni].y);
   }
@@ -239,7 +254,7 @@ export function drawGroundShadow(
   rx: number,
   ry: number,
   alpha: number = 0.2,
-  rotation: number = 0,
+  rotation: number = 0
 ): void {
   ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
   ctx.beginPath();
@@ -259,7 +274,7 @@ export function drawIsoDome(
   height: number,
   bodyColor: string,
   highlightColor: string,
-  topColor: string,
+  topColor: string
 ): void {
   const ry = rx * ISO_Y_RATIO;
 
@@ -297,7 +312,7 @@ export function drawIsoConicalRoof(
   baseWidth: number,
   leftColor: string,
   rightColor: string,
-  topColor: string,
+  topColor: string
 ): void {
   const iW = baseWidth * ISO_COS;
   const iD = baseWidth * ISO_SIN;
@@ -350,7 +365,7 @@ export function drawBrickFace(
   mortarColor: string,
   scale: number,
   rows: number,
-  cols: number,
+  cols: number
 ): void {
   const dx = x2 - x1;
   const dy = y2 - y1;
@@ -370,7 +385,9 @@ export function drawBrickFace(
     for (let c = 0; c < cols; c++) {
       const t1 = Math.max(0, (c + bondOff) / cols);
       const t2 = Math.min(1, (c + 1 + bondOff) / cols);
-      if (t1 >= 1 || t2 <= 0) continue;
+      if (t1 >= 1 || t2 <= 0) {
+        continue;
+      }
       const bx1 = x1 + t1 * dx;
       const by1 = y1 + t1 * dy - r * bH;
       const bx2 = x1 + t2 * dx;
@@ -480,15 +497,15 @@ export function drawIsometricPyramid(
   height: number,
   topColor: string,
   leftColor: string,
-  rightColor: string,
+  rightColor: string
 ): void {
   const iW = baseWidth * ISO_COS;
   const iD = baseWidth * ISO_SIN;
-  const back = { x: x, y: y };
+  const back = { x, y };
   const left = { x: x - iW, y: y + iD };
-  const front = { x: x, y: y + iD * 2 };
+  const front = { x, y: y + iD * 2 };
   const right = { x: x + iW, y: y + iD };
-  const tip = { x: x, y: y + iD - height };
+  const tip = { x, y: y + iD - height };
 
   ctx.fillStyle = leftColor;
   ctx.beginPath();
@@ -546,7 +563,7 @@ export function drawIsometricCrystalSpire(
   light: string,
   mid: string,
   dark: string,
-  tilt: number = 0,
+  tilt: number = 0
 ): void {
   const iW = baseSize * ISO_COS;
   const iD = baseSize * ISO_SIN;
@@ -649,9 +666,18 @@ export function drawGear(
     const outerRadius = radius;
 
     ctx.lineTo(Math.cos(angle) * innerRadius, Math.sin(angle) * innerRadius);
-    ctx.lineTo(Math.cos(angle + 0.15) * outerRadius, Math.sin(angle + 0.15) * outerRadius);
-    ctx.lineTo(Math.cos(nextAngle - 0.15) * outerRadius, Math.sin(nextAngle - 0.15) * outerRadius);
-    ctx.lineTo(Math.cos(nextAngle) * innerRadius, Math.sin(nextAngle) * innerRadius);
+    ctx.lineTo(
+      Math.cos(angle + 0.15) * outerRadius,
+      Math.sin(angle + 0.15) * outerRadius
+    );
+    ctx.lineTo(
+      Math.cos(nextAngle - 0.15) * outerRadius,
+      Math.sin(nextAngle - 0.15) * outerRadius
+    );
+    ctx.lineTo(
+      Math.cos(nextAngle) * innerRadius,
+      Math.sin(nextAngle) * innerRadius
+    );
   }
 
   ctx.closePath();
@@ -725,7 +751,13 @@ export function drawSteamVent(
       const offset = Math.sin(time * 3 + i) * size * 0.3;
       const riseOffset = ((time * 50 + i * 20) % 30) * size * 0.02;
       ctx.beginPath();
-      ctx.arc(x + offset, y - size * 0.3 - riseOffset, size * (0.15 + i * 0.05), 0, Math.PI * 2);
+      ctx.arc(
+        x + offset,
+        y - size * 0.3 - riseOffset,
+        size * (0.15 + i * 0.05),
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
   }
@@ -815,7 +847,12 @@ export function drawAmmoBox(
 
   // Handle
   ctx.fillStyle = "#333333";
-  ctx.fillRect(x - width * 0.15, y - height / 2 - height * 0.1, width * 0.3, height * 0.1);
+  ctx.fillRect(
+    x - width * 0.15,
+    y - height / 2 - height * 0.1,
+    width * 0.3,
+    height * 0.1
+  );
 
   // Ammo symbol
   ctx.fillStyle = "#ffcc00";
@@ -875,10 +912,12 @@ export function drawHealthBar(
   let healthColor: string;
   if (isEnemy) {
     // Enemies: red health bar that gets darker as health decreases
-    healthColor = percentage > 0.5 ? "#ef4444" : percentage > 0.25 ? "#dc2626" : "#b91c1c";
+    healthColor =
+      percentage > 0.5 ? "#ef4444" : percentage > 0.25 ? "#dc2626" : "#b91c1c";
   } else {
     // Friendly (heroes/troops): green health bar that changes to yellow/red when low
-    healthColor = percentage > 0.6 ? "#22c55e" : percentage > 0.3 ? "#eab308" : "#ef4444";
+    healthColor =
+      percentage > 0.6 ? "#22c55e" : percentage > 0.3 ? "#eab308" : "#ef4444";
   }
   ctx.fillStyle = healthColor;
   ctx.fillRect(x - scaledWidth / 2, y, scaledWidth * percentage, scaledHeight);
@@ -907,7 +946,15 @@ export function drawSelectionIndicator(
   ctx.setLineDash([5, 5]);
   ctx.lineDashOffset = -time * 20;
   ctx.beginPath();
-  ctx.ellipse(x, y, scaledRadius, scaledRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y,
+    scaledRadius,
+    scaledRadius * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
   ctx.setLineDash([]);
 }
@@ -940,56 +987,86 @@ export function drawRangeIndicator(
 // EFFECT HELPERS
 // ============================================================================
 
-export type LightningColorScheme = "blue" | "yellow" | "red" | "violet" | "teal" | "green";
+export type LightningColorScheme =
+  | "blue"
+  | "yellow"
+  | "red"
+  | "violet"
+  | "teal"
+  | "green";
 
-const LIGHTNING_COLORS: Record<LightningColorScheme, {
-  outerGlow: string; outerStroke: string;
-  midGlow: string; midStroke: string;
-  coreStroke: string;
-  branchStroke: string; branchCore: string;
-  impactFill: string;
-}> = {
+const LIGHTNING_COLORS: Record<
+  LightningColorScheme,
+  {
+    outerGlow: string;
+    outerStroke: string;
+    midGlow: string;
+    midStroke: string;
+    coreStroke: string;
+    branchStroke: string;
+    branchCore: string;
+    impactFill: string;
+  }
+> = {
   blue: {
-    outerGlow: "#0088ff", outerStroke: "30, 100, 255",
-    midGlow: "#00ffff", midStroke: "0, 220, 255",
+    branchCore: "200, 255, 255",
+    branchStroke: "0, 200, 255",
     coreStroke: "220, 255, 255",
-    branchStroke: "0, 200, 255", branchCore: "200, 255, 255",
     impactFill: "150, 255, 255",
-  },
-  yellow: {
-    outerGlow: "#ff8800", outerStroke: "255, 170, 30",
-    midGlow: "#ffee00", midStroke: "255, 230, 50",
-    coreStroke: "255, 255, 220",
-    branchStroke: "255, 200, 0", branchCore: "255, 255, 200",
-    impactFill: "255, 255, 150",
-  },
-  red: {
-    outerGlow: "#ff2200", outerStroke: "255, 60, 30",
-    midGlow: "#ff4444", midStroke: "255, 100, 80",
-    coreStroke: "255, 220, 210",
-    branchStroke: "255, 80, 40", branchCore: "255, 200, 190",
-    impactFill: "255, 150, 130",
-  },
-  violet: {
-    outerGlow: "#4444dd", outerStroke: "70, 65, 230",
-    midGlow: "#7788ff", midStroke: "110, 110, 255",
-    coreStroke: "215, 225, 255",
-    branchStroke: "100, 100, 255", branchCore: "200, 210, 255",
-    impactFill: "180, 190, 255",
-  },
-  teal: {
-    outerGlow: "#10aa88", outerStroke: "20, 150, 130",
-    midGlow: "#50dcb4", midStroke: "80, 220, 180",
-    coreStroke: "200, 255, 240",
-    branchStroke: "60, 200, 160", branchCore: "180, 255, 230",
-    impactFill: "120, 255, 210",
+    midGlow: "#00ffff",
+    midStroke: "0, 220, 255",
+    outerGlow: "#0088ff",
+    outerStroke: "30, 100, 255",
   },
   green: {
-    outerGlow: "#66aa10", outerStroke: "80, 170, 20",
-    midGlow: "#a0e650", midStroke: "160, 230, 80",
+    branchCore: "210, 255, 180",
+    branchStroke: "120, 200, 40",
     coreStroke: "230, 255, 200",
-    branchStroke: "120, 200, 40", branchCore: "210, 255, 180",
     impactFill: "180, 240, 120",
+    midGlow: "#a0e650",
+    midStroke: "160, 230, 80",
+    outerGlow: "#66aa10",
+    outerStroke: "80, 170, 20",
+  },
+  red: {
+    branchCore: "255, 200, 190",
+    branchStroke: "255, 80, 40",
+    coreStroke: "255, 220, 210",
+    impactFill: "255, 150, 130",
+    midGlow: "#ff4444",
+    midStroke: "255, 100, 80",
+    outerGlow: "#ff2200",
+    outerStroke: "255, 60, 30",
+  },
+  teal: {
+    branchCore: "180, 255, 230",
+    branchStroke: "60, 200, 160",
+    coreStroke: "200, 255, 240",
+    impactFill: "120, 255, 210",
+    midGlow: "#50dcb4",
+    midStroke: "80, 220, 180",
+    outerGlow: "#10aa88",
+    outerStroke: "20, 150, 130",
+  },
+  violet: {
+    branchCore: "200, 210, 255",
+    branchStroke: "100, 100, 255",
+    coreStroke: "215, 225, 255",
+    impactFill: "180, 190, 255",
+    midGlow: "#7788ff",
+    midStroke: "110, 110, 255",
+    outerGlow: "#4444dd",
+    outerStroke: "70, 65, 230",
+  },
+  yellow: {
+    branchCore: "255, 255, 200",
+    branchStroke: "255, 200, 0",
+    coreStroke: "255, 255, 220",
+    impactFill: "255, 255, 150",
+    midGlow: "#ffee00",
+    midStroke: "255, 230, 50",
+    outerGlow: "#ff8800",
+    outerStroke: "255, 170, 30",
   },
 };
 
@@ -1002,7 +1079,7 @@ export function drawLightningBolt(
   intensity: number = 1,
   zoom: number = 1,
   alpha: number = 1,
-  colorScheme: LightningColorScheme = "blue",
+  colorScheme: LightningColorScheme = "blue"
 ): void {
   const dx = x2 - x1;
   const dy = y2 - y1;
@@ -1012,7 +1089,7 @@ export function drawLightningBolt(
 
   const boltSeed = Math.floor(Date.now() / 50);
   const noise = (seed: number) => {
-    const v = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    const v = Math.sin(seed * 127.1 + 311.7) * 43_758.5453;
     return v - Math.floor(v);
   };
 
@@ -1044,7 +1121,9 @@ export function drawLightningBolt(
   ctx.lineWidth = 9 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
   ctx.stroke();
 
   // Layer 2: mid glow
@@ -1054,7 +1133,9 @@ export function drawLightningBolt(
   ctx.lineWidth = 3.5 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
   ctx.stroke();
 
   // Layer 3: bright core
@@ -1063,7 +1144,9 @@ export function drawLightningBolt(
   ctx.lineWidth = 1.2 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
   ctx.stroke();
 
   // One branch fork
@@ -1081,11 +1164,11 @@ export function drawLightningBolt(
     const midN = (noise(boltSeed + 91) - 0.5) * 5 * zoom;
     ctx.lineTo(
       bp.x + Math.cos(brAngle) * brLen * 0.5 + Math.cos(brAngle + 1.5) * midN,
-      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN,
+      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN
     );
     ctx.lineTo(
       bp.x + Math.cos(brAngle) * brLen,
-      bp.y + Math.sin(brAngle) * brLen,
+      bp.y + Math.sin(brAngle) * brLen
     );
     ctx.stroke();
 
@@ -1095,11 +1178,11 @@ export function drawLightningBolt(
     ctx.moveTo(bp.x, bp.y);
     ctx.lineTo(
       bp.x + Math.cos(brAngle) * brLen * 0.5 + Math.cos(brAngle + 1.5) * midN,
-      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN,
+      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN
     );
     ctx.lineTo(
       bp.x + Math.cos(brAngle) * brLen,
-      bp.y + Math.sin(brAngle) * brLen,
+      bp.y + Math.sin(brAngle) * brLen
     );
     ctx.stroke();
   }
@@ -1151,14 +1234,22 @@ export function drawWaterRipple(
 ): void {
   const rippleCount = 3;
   for (let i = 0; i < rippleCount; i++) {
-    const rippleProgress = ((time + i * 0.3) % 1);
+    const rippleProgress = (time + i * 0.3) % 1;
     const rippleRadius = radius * rippleProgress;
     const rippleAlpha = (1 - rippleProgress) * 0.3;
 
     ctx.strokeStyle = colorWithAlpha(color, rippleAlpha);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(x, y, rippleRadius, rippleRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      rippleRadius,
+      rippleRadius * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
   }
 }
@@ -1191,7 +1282,7 @@ export function drawIceShimmer(
   height: number,
   time: number
 ): void {
-  const shimmerX = x + (Math.sin(time * 2) * width * 0.3);
+  const shimmerX = x + Math.sin(time * 2) * width * 0.3;
   const shimmerAlpha = 0.2 + Math.sin(time * 3) * 0.1;
 
   const grad = ctx.createLinearGradient(shimmerX - 20, y, shimmerX + 20, y);

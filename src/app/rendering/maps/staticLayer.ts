@@ -9,6 +9,7 @@ import {
   getLevelPathKeys,
 } from "../../constants";
 import type { DecorationType, GridPosition, Position } from "../../types";
+import type { MapTheme } from "../../types";
 import {
   gridToWorld,
   gridToWorldPath,
@@ -16,8 +17,10 @@ import {
   hexToRgba,
   worldToScreen,
 } from "../../utils";
-import { createSeededRandom } from "../../utils/seededRandom";
 import { clampRgb } from "../../utils/colorUtils";
+import { createSeededRandom } from "../../utils/seededRandom";
+import { renderDecorationItem } from "../decorations/renderDecorationItem";
+import { getPerformanceSettings } from "../performance";
 import {
   CHALLENGE_MOUNTAIN_DEPTH,
   CHALLENGE_MOUNTAIN_SKIRT_LAYERS,
@@ -26,6 +29,7 @@ import {
   isChallengeMountainTopCell,
   isMountainTerrainKind,
 } from "./challengeTerrain";
+import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
 import {
   drawPathDecorations,
   drawBatchedPathEdgeBlend,
@@ -34,12 +38,8 @@ import {
   buildStonePalettes,
   fillIsoBlob,
 } from "./pathDecorations";
-import { renderDecorationItem } from "../decorations/renderDecorationItem";
-import { getPerformanceSettings } from "../performance";
-import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
-import { renderTerrainTexture } from "./terrainTexture";
 import { domainWarpedNoise } from "./terrainNoise";
-import type { MapTheme } from "../../types";
+import { renderTerrainTexture } from "./terrainTexture";
 
 export interface RegionTheme {
   ground: string[];
@@ -113,96 +113,96 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
   "grassland" | "swamp" | "desert" | "winter" | "volcanic",
   ChallengeBackdropPalette
 > = {
-  grassland: {
-    skyTop: "#3474b4",
-    skyMid: "#68a8c8",
-    skyBottom: "#c8ddb0",
-    haze: "rgba(170, 215, 155, 0.24)",
-    farRidge: "#7ea07c",
-    midRidge: "#567c48",
-    nearRidge: "#2e5828",
-    mountainTop: "#5a9a60",
-    mountainLeft: "#3a3820",
-    mountainRight: "#50481e",
-    mountainFacetA: "#44381a",
-    mountainFacetB: "#2e2410",
-    mountainShadow: "#181008",
-    landHighlight: "#7cc060",
-    skyAccent: "rgba(255,255,248,0.32)",
-    skyDecor: "rgba(90,150,100,0.5)",
-  },
-  swamp: {
-    skyTop: "#2a3e30",
-    skyMid: "#3d5840",
-    skyBottom: "#6a8a6a",
-    haze: "rgba(100, 150, 100, 0.35)",
-    farRidge: "#2a3e2a",
-    midRidge: "#1e3020",
-    nearRidge: "#142418",
-    mountainTop: "#2a4a2a",
-    mountainLeft: "#1a2a1a",
-    mountainRight: "#2a3a22",
-    mountainFacetA: "#1e2e16",
-    mountainFacetB: "#12200e",
-    mountainShadow: "#0a150a",
-    landHighlight: "#3a6a3a",
-    skyAccent: "rgba(160,210,160,0.15)",
-    skyDecor: "rgba(74,138,74,0.5)",
-  },
   desert: {
-    skyTop: "#a87a48",
-    skyMid: "#d4a460",
-    skyBottom: "#f5dca0",
-    haze: "rgba(255, 230, 180, 0.25)",
     farRidge: "#a88050",
+    haze: "rgba(255, 230, 180, 0.25)",
+    landHighlight: "#daa520",
     midRidge: "#8b6838",
-    nearRidge: "#7a5530",
-    mountainTop: "#c4a060",
-    mountainLeft: "#8b7355",
-    mountainRight: "#a88860",
     mountainFacetA: "#9a7850",
     mountainFacetB: "#7a5e3a",
+    mountainLeft: "#8b7355",
+    mountainRight: "#a88860",
     mountainShadow: "#4a3820",
-    landHighlight: "#daa520",
+    mountainTop: "#c4a060",
+    nearRidge: "#7a5530",
     skyAccent: "rgba(255,240,200,0.28)",
+    skyBottom: "#f5dca0",
     skyDecor: "rgba(218,165,32,0.55)",
+    skyMid: "#d4a460",
+    skyTop: "#a87a48",
   },
-  winter: {
-    skyTop: "#4a6080",
-    skyMid: "#78a0c0",
-    skyBottom: "#c8ddf0",
-    haze: "rgba(200, 220, 255, 0.35)",
-    farRidge: "#5a7088",
-    midRidge: "#4a6078",
-    nearRidge: "#3a5068",
-    mountainTop: "#6ba3be",
-    mountainLeft: "#4a5a6a",
-    mountainRight: "#5a6a7a",
-    mountainFacetA: "#3a4a5a",
-    mountainFacetB: "#2e3e50",
-    mountainShadow: "#1e2a38",
-    landHighlight: "#7ab0cc",
-    skyAccent: "rgba(220,240,255,0.30)",
-    skyDecor: "rgba(107,163,190,0.6)",
-    mountainSnow: "#dceef8",
+  grassland: {
+    farRidge: "#7ea07c",
+    haze: "rgba(170, 215, 155, 0.24)",
+    landHighlight: "#7cc060",
+    midRidge: "#567c48",
+    mountainFacetA: "#44381a",
+    mountainFacetB: "#2e2410",
+    mountainLeft: "#3a3820",
+    mountainRight: "#50481e",
+    mountainShadow: "#181008",
+    mountainTop: "#5a9a60",
+    nearRidge: "#2e5828",
+    skyAccent: "rgba(255,255,248,0.32)",
+    skyBottom: "#c8ddb0",
+    skyDecor: "rgba(90,150,100,0.5)",
+    skyMid: "#68a8c8",
+    skyTop: "#3474b4",
+  },
+  swamp: {
+    farRidge: "#2a3e2a",
+    haze: "rgba(100, 150, 100, 0.35)",
+    landHighlight: "#3a6a3a",
+    midRidge: "#1e3020",
+    mountainFacetA: "#1e2e16",
+    mountainFacetB: "#12200e",
+    mountainLeft: "#1a2a1a",
+    mountainRight: "#2a3a22",
+    mountainShadow: "#0a150a",
+    mountainTop: "#2a4a2a",
+    nearRidge: "#142418",
+    skyAccent: "rgba(160,210,160,0.15)",
+    skyBottom: "#6a8a6a",
+    skyDecor: "rgba(74,138,74,0.5)",
+    skyMid: "#3d5840",
+    skyTop: "#2a3e30",
   },
   volcanic: {
-    skyTop: "#2a1010",
-    skyMid: "#4a1818",
-    skyBottom: "#7a2e20",
-    haze: "rgba(255, 68, 0, 0.14)",
     farRidge: "#3a1818",
+    haze: "rgba(255, 68, 0, 0.14)",
+    landHighlight: "#6a2818",
     midRidge: "#2e1212",
-    nearRidge: "#200c0c",
-    mountainTop: "#4a2020",
-    mountainLeft: "#2a1a1a",
-    mountainRight: "#3a2424",
     mountainFacetA: "#301818",
     mountainFacetB: "#200e0e",
+    mountainLeft: "#2a1a1a",
+    mountainRight: "#3a2424",
     mountainShadow: "#100606",
-    landHighlight: "#6a2818",
+    mountainTop: "#4a2020",
+    nearRidge: "#200c0c",
     skyAccent: "rgba(255,100,30,0.12)",
+    skyBottom: "#7a2e20",
     skyDecor: "rgba(255,68,0,0.45)",
+    skyMid: "#4a1818",
+    skyTop: "#2a1010",
+  },
+  winter: {
+    farRidge: "#5a7088",
+    haze: "rgba(200, 220, 255, 0.35)",
+    landHighlight: "#7ab0cc",
+    midRidge: "#4a6078",
+    mountainFacetA: "#3a4a5a",
+    mountainFacetB: "#2e3e50",
+    mountainLeft: "#4a5a6a",
+    mountainRight: "#5a6a7a",
+    mountainShadow: "#1e2a38",
+    mountainSnow: "#dceef8",
+    mountainTop: "#6ba3be",
+    nearRidge: "#3a5068",
+    skyAccent: "rgba(220,240,255,0.30)",
+    skyBottom: "#c8ddf0",
+    skyDecor: "rgba(107,163,190,0.6)",
+    skyMid: "#78a0c0",
+    skyTop: "#4a6080",
   },
 };
 
@@ -212,7 +212,7 @@ function catmullRom(
   p2: Position,
   p3: Position,
   t: number,
-  tension: number = PATH_TENSION,
+  tension: number = PATH_TENSION
 ): Position {
   const t2 = t * t;
   const t3 = t2 * t;
@@ -240,9 +240,11 @@ function catmullRom(
 function generateSmoothPath(
   controlPoints: Position[],
   tension: number = PATH_TENSION,
-  subdivisions: number = PATH_SUBDIVISIONS,
+  subdivisions: number = PATH_SUBDIVISIONS
 ): Position[] {
-  if (controlPoints.length < 2) return controlPoints;
+  if (controlPoints.length < 2) {
+    return controlPoints;
+  }
   const smoothPath: Position[] = [];
   const extended = [
     {
@@ -251,12 +253,8 @@ function generateSmoothPath(
     },
     ...controlPoints,
     {
-      x:
-        controlPoints[controlPoints.length - 1].x * 2 -
-        controlPoints[controlPoints.length - 2].x,
-      y:
-        controlPoints[controlPoints.length - 1].y * 2 -
-        controlPoints[controlPoints.length - 2].y,
+      x: controlPoints.at(-1).x * 2 - controlPoints.at(-2).x,
+      y: controlPoints.at(-1).y * 2 - controlPoints.at(-2).y,
     },
   ];
   for (let i = 1; i < extended.length - 2; i++) {
@@ -268,19 +266,19 @@ function generateSmoothPath(
           extended[i + 1],
           extended[i + 2],
           j / subdivisions,
-          tension,
-        ),
+          tension
+        )
       );
     }
   }
-  smoothPath.push(controlPoints[controlPoints.length - 1]);
+  smoothPath.push(controlPoints.at(-1));
   return smoothPath;
 }
 
 function getSmoothedPerpendicular(
   pathPoints: Position[],
   index: number,
-  lookAhead: number = 4,
+  lookAhead: number = 4
 ): { perpX: number; perpY: number } {
   let avgPerpX = 0;
   let avgPerpY = 0;
@@ -322,7 +320,7 @@ function addPathWobble(
   pathPoints: Position[],
   mapSeed: number,
   wobbleAmount: number = ROAD_WOBBLE,
-  pathWidth: number = ROAD_BASE_WIDTH,
+  pathWidth: number = ROAD_BASE_WIDTH
 ): { left: Position[]; right: Position[] } {
   const seededRandom = createSeededRandom(mapSeed + 100);
   const left: Position[] = [];
@@ -369,7 +367,9 @@ function addPathWobble(
  * consistent regardless of how many input points exist.
  */
 function resampleByArcLength(points: Position[], spacing: number): Position[] {
-  if (points.length < 2) return points;
+  if (points.length < 2) {
+    return points;
+  }
 
   const arcLengths = [0];
   for (let i = 1; i < points.length; i++) {
@@ -378,8 +378,10 @@ function resampleByArcLength(points: Position[], spacing: number): Position[] {
     arcLengths.push(arcLengths[i - 1] + Math.sqrt(dx * dx + dy * dy));
   }
 
-  const totalLength = arcLengths[arcLengths.length - 1];
-  if (totalLength < spacing) return points;
+  const totalLength = arcLengths.at(-1);
+  if (totalLength < spacing) {
+    return points;
+  }
 
   const numSamples = Math.max(2, Math.round(totalLength / spacing));
   const result: Position[] = [];
@@ -410,7 +412,7 @@ function resampleByArcLength(points: Position[], spacing: number): Position[] {
 function buildRoadGeometry(
   path: GridPosition[],
   mapSeed: number,
-  toScreen: (pos: Position) => Position,
+  toScreen: (pos: Position) => Position
 ): RoadGeometry | null {
   if (path.length < 2) {
     return null;
@@ -420,28 +422,31 @@ function buildRoadGeometry(
   const smoothPath = resampleByArcLength(rawSmooth, SMOOTH_PATH_SPACING);
   const { left, right } = addPathWobble(smoothPath, mapSeed);
   return {
-    smoothPath,
     screenCenter: smoothPath.map(toScreen),
     screenLeft: left.map(toScreen),
     screenRight: right.map(toScreen),
+    smoothPath,
   };
 }
 
-const ROAD_HALF_WIDTH_SQ =
-  (ROAD_BASE_WIDTH * 0.55) * (ROAD_BASE_WIDTH * 0.55);
+const ROAD_HALF_WIDTH_SQ = ROAD_BASE_WIDTH * 0.55 * (ROAD_BASE_WIDTH * 0.55);
 
 function isInsideOtherRoad(
   worldPt: Position,
   skipIdx: number,
-  allSmooth: Position[][],
+  allSmooth: Position[][]
 ): boolean {
   for (let r = 0; r < allSmooth.length; r++) {
-    if (r === skipIdx) continue;
+    if (r === skipIdx) {
+      continue;
+    }
     const other = allSmooth[r];
     for (let j = 0; j < other.length; j += 2) {
       const dx = worldPt.x - other[j].x;
       const dy = worldPt.y - other[j].y;
-      if (dx * dx + dy * dy < ROAD_HALF_WIDTH_SQ) return true;
+      if (dx * dx + dy * dy < ROAD_HALF_WIDTH_SQ) {
+        return true;
+      }
     }
   }
   return false;
@@ -452,7 +457,7 @@ function traceRoadOutline(
   screenLeft: Position[],
   screenRight: Position[],
   ox = 0,
-  oy = 0,
+  oy = 0
 ): void {
   ctx.moveTo(screenLeft[0].x + ox, screenLeft[0].y + oy);
   for (let i = 1; i < screenLeft.length; i++) {
@@ -470,15 +475,18 @@ function traceInsetOutline(
   screenLeft: Position[],
   screenRight: Position[],
   blend: number,
-  liftY = 0,
+  liftY = 0
 ): void {
   for (let i = 0; i < screenCenter.length; i++) {
     const lx =
       screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * blend;
     const ly =
       screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * blend - liftY;
-    if (i === 0) ctx.moveTo(lx, ly);
-    else ctx.lineTo(lx, ly);
+    if (i === 0) {
+      ctx.moveTo(lx, ly);
+    } else {
+      ctx.lineTo(lx, ly);
+    }
   }
   for (let i = screenCenter.length - 1; i >= 0; i--) {
     const rx =
@@ -500,10 +508,12 @@ function drawRoadsBatched(
   mapSeed: number,
   topLayerBlend: number,
   includePatches: boolean,
-  toScreen: (pos: Position) => Position,
+  toScreen: (pos: Position) => Position
 ): void {
   const active = roads.filter((r) => r.screenCenter.length > 0);
-  if (active.length === 0) return;
+  if (active.length === 0) {
+    return;
+  }
 
   // Soft outer fringe: terrain-colored rings drawn *under* the opaque road
   // body. The opaque layers above cover the interior, leaving only the soft
@@ -551,7 +561,7 @@ function drawRoadsBatched(
       screenLeft,
       screenRight,
       topLayerBlend,
-      topLayerLift,
+      topLayerLift
     );
   }
   ctx.fill();
@@ -566,7 +576,7 @@ function drawRoadsBatched(
       screenLeft,
       screenRight,
       0.38,
-      topLayerLift * 0.5,
+      topLayerLift * 0.5
     );
   }
   ctx.fill();
@@ -574,31 +584,50 @@ function drawRoadsBatched(
   const allSmooth = active.map((r) => r.smoothPath);
 
   for (let roadIdx = 0; roadIdx < active.length; roadIdx++) {
-    const { smoothPath, screenCenter, screenLeft, screenRight } = active[roadIdx];
+    const { smoothPath, screenCenter, screenLeft, screenRight } =
+      active[roadIdx];
 
     if (includePatches) {
       const patchRandom = createSeededRandom(mapSeed + 200);
       for (let i = 0; i < smoothPath.length; i += 3) {
-        if (i >= screenCenter.length) break;
+        if (i >= screenCenter.length) {
+          break;
+        }
         const sp = screenCenter[i];
         const patchSize = (3 + patchRandom() * 6) * cameraZoom;
         const ox = sp.x + (patchRandom() - 0.5) * 35 * cameraZoom;
         const oy = sp.y + (patchRandom() - 0.5) * 18 * cameraZoom;
         const wobble = patchRandom() * patchSize * 0.1;
 
-        fillIsoBlob(ctx,
-          ox + 1.5 * cameraZoom, oy + 0.9 * cameraZoom,
-          patchSize, patchSize * 0.5,
-          hexToRgba(theme.ground[2], 0.06 + patchRandom() * 0.04), wobble);
+        fillIsoBlob(
+          ctx,
+          ox + 1.5 * cameraZoom,
+          oy + 0.9 * cameraZoom,
+          patchSize,
+          patchSize * 0.5,
+          hexToRgba(theme.ground[2], 0.06 + patchRandom() * 0.04),
+          wobble
+        );
 
-        fillIsoBlob(ctx, ox, oy,
-          patchSize, patchSize * 0.5,
-          hexToRgba(theme.ground[2], 0.1 + patchRandom() * 0.05), wobble);
+        fillIsoBlob(
+          ctx,
+          ox,
+          oy,
+          patchSize,
+          patchSize * 0.5,
+          hexToRgba(theme.ground[2], 0.1 + patchRandom() * 0.05),
+          wobble
+        );
 
-        fillIsoBlob(ctx,
-          ox - patchSize * 0.25, oy - patchSize * 0.12,
-          patchSize * 0.42, patchSize * 0.16,
-          hexToRgba(theme.path[0], 0.03 + patchRandom() * 0.02), wobble * 0.4);
+        fillIsoBlob(
+          ctx,
+          ox - patchSize * 0.25,
+          oy - patchSize * 0.12,
+          patchSize * 0.42,
+          patchSize * 0.16,
+          hexToRgba(theme.path[0], 0.03 + patchRandom() * 0.02),
+          wobble * 0.4
+        );
       }
     }
 
@@ -637,7 +666,9 @@ function drawRoadsBatched(
     const pebbleRandom = createSeededRandom(mapSeed + 300);
     const stonePalettes = buildStonePalettes(theme.path, 0.75);
     for (let i = 0; i < smoothPath.length; i += 2) {
-      if (i >= screenLeft.length || pebbleRandom() > 0.5) continue;
+      if (i >= screenLeft.length || pebbleRandom() > 0.5) {
+        continue;
+      }
       const side = pebbleRandom() > 0.5 ? screenLeft : screenRight;
       const p = side[i];
       const hw = (2 + pebbleRandom() * 3.5) * cameraZoom;
@@ -666,7 +697,7 @@ function drawRoadsBatched(
           h,
           pal.top,
           pal.left,
-          pal.right,
+          pal.right
         );
       } else {
         drawIsoPathStone(ctx, p.x, p.y, hw, h, pal.top, pal.left, pal.right);
@@ -696,12 +727,12 @@ function getFogEndpoints(geometry: RoadGeometry): StaticMapFogEndpoint[] {
   }
   const directionOffset = Math.min(
     FOG_DIRECTION_OFFSET,
-    Math.floor(screenCenter.length / 4),
+    Math.floor(screenCenter.length / 4)
   );
   const firstScreenPos = screenCenter[0];
   const secondScreenPos =
     screenCenter[Math.min(directionOffset, screenCenter.length - 1)];
-  const lastScreenPos = screenCenter[screenCenter.length - 1];
+  const lastScreenPos = screenCenter.at(-1);
   const secondLastScreenPos =
     screenCenter[Math.max(0, screenCenter.length - 1 - directionOffset)];
   return [
@@ -711,11 +742,11 @@ function getFogEndpoints(geometry: RoadGeometry): StaticMapFogEndpoint[] {
 }
 
 const TERRACE_DECO_TYPES: Record<ChallengeThemeKey, string[]> = {
+  desert: ["palm", "cactus", "rock", "dune", "sand_pile"],
   grassland: ["tree", "bush", "rock", "grass", "hedge", "flowers"],
   swamp: ["swamp_tree", "mushroom", "rock", "grass", "bush"],
-  desert: ["palm", "cactus", "rock", "dune", "sand_pile"],
-  winter: ["pine", "pine_tree", "rock", "snow_pile", "grass"],
   volcanic: ["charred_tree", "rock", "ember_rock", "grass"],
+  winter: ["pine", "pine_tree", "rock", "snow_pile", "grass"],
 };
 
 function drawCellTerraceDecorations(
@@ -728,15 +759,19 @@ function drawCellTerraceDecorations(
   mapSeed: number,
   maxLayerIndex: number,
   themeKey: ChallengeThemeKey,
-  selectedMap: string,
+  selectedMap: string
 ): void {
-  if (cell.layerIndex <= 0) return;
+  if (cell.layerIndex <= 0) {
+    return;
+  }
 
   const types = TERRACE_DECO_TYPES[themeKey];
   const rng = createSeededRandom(mapSeed + cell.gx * 73 + cell.gy * 137 + 9001);
   const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
   const decorChance = 0.45 * (1 - layerNorm * 0.6);
-  if (rng() > decorChance) return;
+  if (rng() > decorChance) {
+    return;
+  }
 
   const count = 1 + Math.floor(rng() * 2);
   for (let i = 0; i < count; i++) {
@@ -761,17 +796,17 @@ function drawCellTerraceDecorations(
 
     renderDecorationItem({
       ctx,
-      screenPos: { x: cx, y: cy },
-      scale,
-      type,
-      rotation,
-      variant,
       decorTime: 0,
       decorX: cell.gx + rng(),
       decorY: cell.gy + rng(),
-      selectedMap,
       mapTheme: themeKey,
+      rotation,
+      scale,
+      screenPos: { x: cx, y: cy },
+      selectedMap,
       skipShadow: true,
+      type,
+      variant,
     });
   }
 }
@@ -782,7 +817,7 @@ function drawIsoTile(
   y: number,
   tileWidth: number,
   tileHeight: number,
-  fillStyle: string,
+  fillStyle: string
 ): void {
   ctx.fillStyle = fillStyle;
   ctx.beginPath();
@@ -807,13 +842,13 @@ function parseColorToRgb(color: string): { r: number; g: number; b: number } {
   }
 
   const rgbMatch = trimmed.match(
-    /^rgba?\(\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)/i,
+    /^rgba?\(\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)/i
   );
   if (rgbMatch) {
     return {
-      r: Number.parseFloat(rgbMatch[1] ?? "0"),
-      g: Number.parseFloat(rgbMatch[2] ?? "0"),
       b: Number.parseFloat(rgbMatch[3] ?? "0"),
+      g: Number.parseFloat(rgbMatch[2] ?? "0"),
+      r: Number.parseFloat(rgbMatch[1] ?? "0"),
     };
   }
 
@@ -835,13 +870,13 @@ function shadeHexColor(color: string, amount: number): string {
   return rgbToHex(
     clampRgb(rgb.r + amount),
     clampRgb(rgb.g + amount),
-    clampRgb(rgb.b + amount),
+    clampRgb(rgb.b + amount)
   );
 }
 
 function tileNoise(gx: number, gy: number, seed: number): number {
   const value =
-    Math.sin(gx * 12.9898 + gy * 78.233 + seed * 0.137) * 43758.5453;
+    Math.sin(gx * 12.9898 + gy * 78.233 + seed * 0.137) * 43_758.5453;
   return value - Math.floor(value);
 }
 
@@ -865,7 +900,7 @@ function drawSoftCloud(
   y: number,
   width: number,
   height: number,
-  color: string,
+  color: string
 ): void {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -877,7 +912,7 @@ function drawSoftCloud(
     height * 0.26,
     -0.08,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + width * 0.22,
@@ -886,7 +921,7 @@ function drawSoftCloud(
     height * 0.23,
     0.12,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -897,7 +932,7 @@ function renderChallengeSkyDecorations(
   height: number,
   mapSeed: number,
   themeKey: ChallengeThemeKey,
-  palette: ChallengeBackdropPalette,
+  palette: ChallengeBackdropPalette
 ): void {
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
@@ -908,7 +943,7 @@ function renderChallengeSkyDecorations(
       0,
       height * 0.12,
       0,
-      height * 0.35,
+      height * 0.35
     );
     horizonGlow.addColorStop(0, "rgba(255,245,200,0)");
     horizonGlow.addColorStop(0.4, "rgba(255,240,190,0.06)");
@@ -944,7 +979,7 @@ function renderChallengeSkyDecorations(
           ph,
           skyRandom() * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -967,7 +1002,7 @@ function renderChallengeSkyDecorations(
           ph,
           skyRandom() * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -985,7 +1020,7 @@ function renderChallengeSkyDecorations(
       0,
       sunGlowX,
       sunGlowY,
-      sunGlowR,
+      sunGlowR
     );
     sunGlow.addColorStop(0, "rgba(255,248,210,0.14)");
     sunGlow.addColorStop(0.25, "rgba(255,242,185,0.09)");
@@ -1007,7 +1042,7 @@ function renderChallengeSkyDecorations(
         0,
         fogY - fogThickness,
         0,
-        fogY + fogThickness,
+        fogY + fogThickness
       );
       fog.addColorStop(0, "rgba(216,240,220,0)");
       fog.addColorStop(0.35, `rgba(176,214,185,${0.12 + i * 0.02})`);
@@ -1032,7 +1067,7 @@ function renderChallengeSkyDecorations(
         8 + skyRandom() * 15,
         skyRandom() * 0.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1060,7 +1095,7 @@ function renderChallengeSkyDecorations(
       width * 0.04,
       sunX,
       sunY,
-      width * 0.22,
+      width * 0.22
     );
     outerGlow.addColorStop(0, "rgba(255,240,190,0.1)");
     outerGlow.addColorStop(0.5, "rgba(255,225,160,0.04)");
@@ -1076,7 +1111,7 @@ function renderChallengeSkyDecorations(
       2,
       sunX,
       sunY,
-      width * 0.1,
+      width * 0.1
     );
     sunGrad.addColorStop(0, "rgba(255,252,230,0.95)");
     sunGrad.addColorStop(0.2, "rgba(255,245,200,0.85)");
@@ -1096,7 +1131,7 @@ function renderChallengeSkyDecorations(
         hy,
         width * (0.06 + skyRandom() * 0.04),
         height * 0.035,
-        "rgba(255,235,190,0.12)",
+        "rgba(255,235,190,0.12)"
       );
     }
 
@@ -1114,7 +1149,7 @@ function renderChallengeSkyDecorations(
         sx + len * 0.66,
         sy + (skyRandom() - 0.5) * 2,
         sx + len,
-        sy + (skyRandom() - 0.5) * 3,
+        sy + (skyRandom() - 0.5) * 3
       );
       ctx.stroke();
     }
@@ -1126,7 +1161,7 @@ function renderChallengeSkyDecorations(
       0,
       height * 0.02,
       width,
-      height * 0.35,
+      height * 0.35
     );
     auroraGreen.addColorStop(0, "rgba(100, 240, 180, 0)");
     auroraGreen.addColorStop(0.15, "rgba(100, 240, 180, 0.08)");
@@ -1142,7 +1177,7 @@ function renderChallengeSkyDecorations(
       width * 0.6,
       height * 0.22,
       width * 0.88,
-      height * 0.1,
+      height * 0.1
     );
     ctx.stroke();
 
@@ -1150,7 +1185,7 @@ function renderChallengeSkyDecorations(
       0,
       height * 0.03,
       width,
-      height * 0.42,
+      height * 0.42
     );
     aurora.addColorStop(0, "rgba(128, 215, 255, 0)");
     aurora.addColorStop(0.2, "rgba(128, 215, 255, 0.16)");
@@ -1166,7 +1201,7 @@ function renderChallengeSkyDecorations(
       width * 0.54,
       height * 0.28,
       width * 0.92,
-      height * 0.15,
+      height * 0.15
     );
     ctx.stroke();
 
@@ -1174,7 +1209,7 @@ function renderChallengeSkyDecorations(
       width * 0.3,
       height * 0.05,
       width * 0.8,
-      height * 0.3,
+      height * 0.3
     );
     auroraPurple.addColorStop(0, "rgba(180, 130, 255, 0)");
     auroraPurple.addColorStop(0.3, "rgba(180, 130, 255, 0.06)");
@@ -1190,7 +1225,7 @@ function renderChallengeSkyDecorations(
       width * 0.65,
       height * 0.26,
       width * 0.85,
-      height * 0.18,
+      height * 0.18
     );
     ctx.stroke();
 
@@ -1203,7 +1238,7 @@ function renderChallengeSkyDecorations(
         cy,
         width * (0.07 + skyRandom() * 0.04),
         height * 0.04,
-        "rgba(200,225,255,0.1)",
+        "rgba(200,225,255,0.1)"
       );
     }
 
@@ -1255,7 +1290,9 @@ function renderChallengeSkyDecorations(
       const drift = i * 7 * plumeSize;
       const spread = (8 + i * 3) * plumeSize;
       const alpha = 0.09 - i * 0.006;
-      if (alpha <= 0) break;
+      if (alpha <= 0) {
+        break;
+      }
 
       const r = 55 + i * 4;
       const g = 40 + i * 3;
@@ -1281,7 +1318,7 @@ function renderChallengeSkyDecorations(
             puffCy +
               Math.sin(midAngle) * spread * 0.55 * (0.6 + smokeRandom() * 0.2),
             px,
-            py,
+            py
           );
         }
       }
@@ -1299,7 +1336,7 @@ function renderChallengeSkyDecorations(
         0,
         baseX,
         baseY + 10,
-        20,
+        20
       );
       glowGrad.addColorStop(0, "rgba(255,100,40,1)");
       glowGrad.addColorStop(0.5, "rgba(255,70,20,0.5)");
@@ -1349,7 +1386,7 @@ export function renderChallengeMountainBackdrop(
   width: number,
   height: number,
   mapSeed: number,
-  themeKey: ChallengeThemeKey,
+  themeKey: ChallengeThemeKey
 ): void {
   const palette = CHALLENGE_BACKDROP_PALETTES[themeKey];
 
@@ -1381,7 +1418,7 @@ export function renderChallengeMountainBackdrop(
     height,
     mapSeed,
     themeKey,
-    palette,
+    palette
   );
 
   // atmospheric depth overlay — grassland uses lighter treatment to preserve
@@ -1392,15 +1429,15 @@ export function renderChallengeMountainBackdrop(
   atmosphere.addColorStop(0, shadowTransparent);
   atmosphere.addColorStop(
     0.5,
-    hexToRgba(palette.mountainShadow, isGrassland ? 0.03 : 0.05),
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.03 : 0.05)
   );
   atmosphere.addColorStop(
     0.7,
-    hexToRgba(palette.mountainShadow, isGrassland ? 0.05 : 0.08),
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.05 : 0.08)
   );
   atmosphere.addColorStop(
     1,
-    hexToRgba(palette.mountainShadow, isGrassland ? 0.12 : 0.22),
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.12 : 0.22)
   );
   ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, width, height);
@@ -1413,7 +1450,7 @@ function renderChallengeWorldMountain(
   tileWidth: number,
   tileHeight: number,
   toScreen: (p: Position) => Position,
-  themeKey: ChallengeThemeKey,
+  themeKey: ChallengeThemeKey
 ): number[] | null {
   const segments = getChallengePathSegments(selectedMap);
   const palette = CHALLENGE_BACKDROP_PALETTES[themeKey];
@@ -1422,12 +1459,16 @@ function renderChallengeWorldMountain(
 
   for (let gy = bounds.minY; gy <= bounds.maxY; gy++) {
     for (let gx = bounds.minX; gx <= bounds.maxX; gx++) {
-      if (!isChallengeMountainTopCell(gx, gy, segments)) continue;
+      if (!isChallengeMountainTopCell(gx, gy, segments)) {
+        continue;
+      }
       topCells.add(toCellKey(gx, gy));
     }
   }
 
-  if (topCells.size === 0) return null;
+  if (topCells.size === 0) {
+    return null;
+  }
 
   const layerIndexByCell = new Map<string, number>();
   topCells.forEach((key) => {
@@ -1464,12 +1505,16 @@ function renderChallengeWorldMountain(
           continue;
         }
         const nextKey = toCellKey(nx, ny);
-        if (layerIndexByCell.has(nextKey)) continue;
+        if (layerIndexByCell.has(nextKey)) {
+          continue;
+        }
         layerIndexByCell.set(nextKey, layer + 1);
         ring.add(nextKey);
       }
     });
-    if (ring.size === 0) break;
+    if (ring.size === 0) {
+      break;
+    }
     frontier = ring;
   }
 
@@ -1502,7 +1547,7 @@ function renderChallengeWorldMountain(
       depthProfileRandom() * Math.max(0, boostedMaxBlocks - minBlocks);
     const quantizedBlocks = Math.max(
       minBlocks,
-      Math.round(randomBlocks * 2) / 2,
+      Math.round(randomBlocks * 2) / 2
     );
     cumulativeLayerDepth += quantizedBlocks * blockHeight;
     layerDepthByIndex[layer] = cumulativeLayerDepth;
@@ -1512,7 +1557,9 @@ function renderChallengeWorldMountain(
       ? layerDepthByIndex[maxLayerIndex] - layerDepthByIndex[maxLayerIndex - 1]
       : blockHeight * CHALLENGE_TOP_TIER_MIN_BLOCKS;
   const depthForLayer = (layerIndex: number): number => {
-    if (layerIndex <= 0) return 0;
+    if (layerIndex <= 0) {
+      return 0;
+    }
     if (layerIndex <= maxLayerIndex) {
       return layerDepthByIndex[layerIndex] ?? 0;
     }
@@ -1521,7 +1568,7 @@ function renderChallengeWorldMountain(
   };
   const voidDepth = Math.max(
     CHALLENGE_MOUNTAIN_DEPTH.baseShadow * zoom,
-    depthForLayer(maxLayerIndex + 2),
+    depthForLayer(maxLayerIndex + 2)
   );
   const seamOverlap = Math.max(1.5, tileHeight * 0.14);
   const getLayerIndex = (gx: number, gy: number): number | null => {
@@ -1530,39 +1577,41 @@ function renderChallengeWorldMountain(
   };
   const getNeighborInfo = (
     gx: number,
-    gy: number,
+    gy: number
   ): { exists: boolean; depth: number } => {
     const layer = getLayerIndex(gx, gy);
     if (layer === null) {
-      return { exists: false, depth: voidDepth };
+      return { depth: voidDepth, exists: false };
     }
-    return { exists: true, depth: depthForLayer(layer) };
+    return { depth: depthForLayer(layer), exists: true };
   };
 
-  const renderCells = Array.from(layerIndexByCell.entries())
+  const renderCells = [...layerIndexByCell.entries()]
     .map(([key, rawLayerIndex]) => {
       const { gx, gy } = parseCellKey(key);
       const worldPos = gridToWorld({ x: gx, y: gy });
       const screenPos = toScreen(worldPos);
       const towerLayerIndex = towerLayerIndexByCell.get(key) ?? 0;
       return {
-        key,
+        depth: depthForLayer(towerLayerIndex),
         gx,
         gy,
+        key,
         layerIndex: towerLayerIndex,
         rawLayerIndex,
-        depth: depthForLayer(towerLayerIndex),
         screenPos,
       };
     })
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       const ay = a.screenPos.y + a.depth;
       const by = b.screenPos.y + b.depth;
-      if (Math.abs(ay - by) > 0.001) return ay - by;
+      if (Math.abs(ay - by) > 0.001) {
+        return ay - by;
+      }
       return a.screenPos.x - b.screenPos.x;
     });
 
-  type PrecomputedCell = {
+  interface PrecomputedCell {
     cell: (typeof renderCells)[0];
     topNoise: number;
     cliffNoise: number;
@@ -1583,18 +1632,18 @@ function renderChallengeWorldMountain(
     leftY: number;
     bottomX: number;
     bottomY: number;
-  };
+  }
 
   const precomputed: PrecomputedCell[] = renderCells.map((cell) => {
     const topNoise = tileNoise(
       cell.gx,
       cell.gy,
-      mapSeed + 257 + cell.rawLayerIndex * 11,
+      mapSeed + 257 + cell.rawLayerIndex * 11
     );
     const cliffNoise = tileNoise(
       cell.gx,
       cell.gy,
-      mapSeed + 743 + cell.rawLayerIndex * 17,
+      mapSeed + 743 + cell.rawLayerIndex * 17
     );
     const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
     const isTopPlateauCell = cell.layerIndex === 0;
@@ -1635,38 +1684,39 @@ function renderChallengeWorldMountain(
 
     const tileTopY = cell.screenPos.y + cell.depth;
     return {
-      cell,
-      topNoise,
-      cliffNoise,
-      layerNorm,
-      northDrop,
-      westDrop,
-      northwestDrop,
-      northeastDrop,
-      southwestDrop,
-      rightDrop,
-      southDrop,
-      southeastDrop,
-      topX: cell.screenPos.x,
-      topY: tileTopY,
-      rightX: cell.screenPos.x + tileWidth * 0.5,
-      rightY: tileTopY + tileHeight * 0.5,
-      leftX: cell.screenPos.x - tileWidth * 0.5,
-      leftY: tileTopY + tileHeight * 0.5,
       bottomX: cell.screenPos.x,
       bottomY: tileTopY + tileHeight,
+      cell,
+      cliffNoise,
+      layerNorm,
+      leftX: cell.screenPos.x - tileWidth * 0.5,
+      leftY: tileTopY + tileHeight * 0.5,
+      northDrop,
+      northeastDrop,
+      northwestDrop,
+      rightDrop,
+      rightX: cell.screenPos.x + tileWidth * 0.5,
+      rightY: tileTopY + tileHeight * 0.5,
+      southDrop,
+      southeastDrop,
+      southwestDrop,
+      topNoise,
+      topX: cell.screenPos.x,
+      topY: tileTopY,
+      westDrop,
     };
   });
 
   const cellsByLayer = new Map<number, PrecomputedCell[]>();
   for (const d of precomputed) {
     const arr = cellsByLayer.get(d.cell.layerIndex);
-    if (arr) arr.push(d);
-    else cellsByLayer.set(d.cell.layerIndex, [d]);
+    if (arr) {
+      arr.push(d);
+    } else {
+      cellsByLayer.set(d.cell.layerIndex, [d]);
+    }
   }
-  const sortedLayerIndices = Array.from(cellsByLayer.keys()).sort(
-    (a, b) => b - a,
-  );
+  const sortedLayerIndices = [...cellsByLayer.keys()].toSorted((a, b) => b - a);
 
   const drawBackFaces = (d: PrecomputedCell) => {
     if (d.northDrop > 0.5) {
@@ -1674,9 +1724,9 @@ function renderChallengeWorldMountain(
         blendHexColors(
           palette.mountainRight,
           palette.mountainFacetB,
-          0.08 + d.layerNorm * 0.26 + d.cliffNoise * 0.1,
+          0.08 + d.layerNorm * 0.26 + d.cliffNoise * 0.1
         ),
-        -14,
+        -14
       );
       ctx.fillStyle = northColor;
       ctx.beginPath();
@@ -1693,9 +1743,9 @@ function renderChallengeWorldMountain(
         blendHexColors(
           palette.mountainLeft,
           palette.mountainFacetA,
-          0.08 + d.layerNorm * 0.22 + d.cliffNoise * 0.1,
+          0.08 + d.layerNorm * 0.22 + d.cliffNoise * 0.1
         ),
-        -12,
+        -12
       );
       ctx.fillStyle = westColor;
       ctx.beginPath();
@@ -1709,7 +1759,7 @@ function renderChallengeWorldMountain(
 
     const topCornerDrop = Math.max(
       Math.min(d.northDrop, d.westDrop),
-      d.northwestDrop > 0.5 ? d.northwestDrop * 0.74 : 0,
+      d.northwestDrop > 0.5 ? d.northwestDrop * 0.74 : 0
     );
     if (topCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.16);
@@ -1726,11 +1776,11 @@ function renderChallengeWorldMountain(
     const topBase = blendHexColors(
       palette.mountainTop,
       palette.landHighlight,
-      0.32 + (1 - d.layerNorm) * 0.12 + d.topNoise * 0.15,
+      0.32 + (1 - d.layerNorm) * 0.12 + d.topNoise * 0.15
     );
     const topColor = shadeHexColor(
       blendHexColors(topBase, palette.mountainFacetA, d.layerNorm * 0.26),
-      Math.round((d.topNoise - 0.48) * 12),
+      Math.round((d.topNoise - 0.48) * 12)
     );
     drawIsoTile(
       ctx,
@@ -1738,13 +1788,13 @@ function renderChallengeWorldMountain(
       d.cell.screenPos.y + d.cell.depth,
       tileWidth,
       tileHeight,
-      topColor,
+      topColor
     );
 
     if (d.topNoise > 0.34) {
       ctx.strokeStyle = hexToRgba(
         palette.mountainShadow,
-        0.14 + d.topNoise * 0.08,
+        0.14 + d.topNoise * 0.08
       );
       ctx.lineWidth = Math.max(0.52, tileHeight * 0.045);
       ctx.beginPath();
@@ -1752,13 +1802,13 @@ function renderChallengeWorldMountain(
         d.cell.screenPos.x - tileWidth * 0.16,
         d.cell.screenPos.y +
           d.cell.depth +
-          tileHeight * (0.43 + d.topNoise * 0.06),
+          tileHeight * (0.43 + d.topNoise * 0.06)
       );
       ctx.lineTo(
         d.cell.screenPos.x + tileWidth * (0.18 + d.topNoise * 0.05),
         d.cell.screenPos.y +
           d.cell.depth +
-          tileHeight * (0.5 + d.topNoise * 0.07),
+          tileHeight * (0.5 + d.topNoise * 0.07)
       );
       ctx.stroke();
     }
@@ -1770,19 +1820,19 @@ function renderChallengeWorldMountain(
         blendHexColors(
           palette.mountainRight,
           palette.mountainFacetB,
-          0.22 + d.layerNorm * 0.45 + d.cliffNoise * 0.15,
+          0.22 + d.layerNorm * 0.45 + d.cliffNoise * 0.15
         ),
-        -4,
+        -4
       );
       const rightColorBot = shadeHexColor(
         rightColorTop,
-        -18 - Math.round(d.layerNorm * 8),
+        -18 - Math.round(d.layerNorm * 8)
       );
       const rightGrad = ctx.createLinearGradient(
         0,
         (d.rightY + d.bottomY) * 0.5,
         0,
-        (d.rightY + d.bottomY) * 0.5 + d.rightDrop,
+        (d.rightY + d.bottomY) * 0.5 + d.rightDrop
       );
       rightGrad.addColorStop(0, rightColorTop);
       rightGrad.addColorStop(1, rightColorBot);
@@ -1797,12 +1847,12 @@ function renderChallengeWorldMountain(
 
       ctx.strokeStyle = hexToRgba(
         palette.mountainShadow,
-        0.22 + d.layerNorm * 0.18,
+        0.22 + d.layerNorm * 0.18
       );
       ctx.lineWidth = Math.max(0.6, tileHeight * 0.05);
       const rightLineCount = Math.max(
         1,
-        Math.floor(d.rightDrop / (blockHeight * 0.9)),
+        Math.floor(d.rightDrop / (blockHeight * 0.9))
       );
       for (let i = 1; i <= rightLineCount; i++) {
         const t = i / (rightLineCount + 1);
@@ -1819,19 +1869,19 @@ function renderChallengeWorldMountain(
         blendHexColors(
           palette.mountainLeft,
           palette.mountainFacetA,
-          0.2 + d.layerNorm * 0.4 + d.cliffNoise * 0.12,
+          0.2 + d.layerNorm * 0.4 + d.cliffNoise * 0.12
         ),
-        0,
+        0
       );
       const leftColorBot = shadeHexColor(
         leftColorTop,
-        -16 - Math.round(d.layerNorm * 6),
+        -16 - Math.round(d.layerNorm * 6)
       );
       const leftGrad = ctx.createLinearGradient(
         0,
         (d.leftY + d.bottomY) * 0.5,
         0,
-        (d.leftY + d.bottomY) * 0.5 + d.southDrop,
+        (d.leftY + d.bottomY) * 0.5 + d.southDrop
       );
       leftGrad.addColorStop(0, leftColorTop);
       leftGrad.addColorStop(1, leftColorBot);
@@ -1846,12 +1896,12 @@ function renderChallengeWorldMountain(
 
       ctx.strokeStyle = hexToRgba(
         palette.mountainShadow,
-        0.18 + d.layerNorm * 0.16,
+        0.18 + d.layerNorm * 0.16
       );
       ctx.lineWidth = Math.max(0.55, tileHeight * 0.045);
       const southLineCount = Math.max(
         1,
-        Math.floor(d.southDrop / (blockHeight * 0.88)),
+        Math.floor(d.southDrop / (blockHeight * 0.88))
       );
       for (let i = 1; i <= southLineCount; i++) {
         const t = i / (southLineCount + 1);
@@ -1865,7 +1915,7 @@ function renderChallengeWorldMountain(
 
     const rightCornerDrop = Math.max(
       Math.min(d.northDrop, d.rightDrop),
-      d.northeastDrop > 0.5 ? d.northeastDrop * 0.74 : 0,
+      d.northeastDrop > 0.5 ? d.northeastDrop * 0.74 : 0
     );
     if (rightCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
@@ -1873,11 +1923,11 @@ function renderChallengeWorldMountain(
       ctx.moveTo(d.rightX + seamOverlap * 0.25, d.rightY);
       ctx.lineTo(
         d.rightX + tileWidth * 0.08,
-        d.rightY + rightCornerDrop * 0.78,
+        d.rightY + rightCornerDrop * 0.78
       );
       ctx.lineTo(
         d.rightX - tileWidth * 0.08,
-        d.rightY + rightCornerDrop * 0.78,
+        d.rightY + rightCornerDrop * 0.78
       );
       ctx.closePath();
       ctx.fill();
@@ -1885,7 +1935,7 @@ function renderChallengeWorldMountain(
 
     const leftCornerDrop = Math.max(
       Math.min(d.westDrop, d.southDrop),
-      d.southwestDrop > 0.5 ? d.southwestDrop * 0.74 : 0,
+      d.southwestDrop > 0.5 ? d.southwestDrop * 0.74 : 0
     );
     if (leftCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
@@ -1899,7 +1949,7 @@ function renderChallengeWorldMountain(
 
     const bottomCornerDrop = Math.max(
       Math.min(d.rightDrop, d.southDrop),
-      d.southeastDrop > 0.5 ? d.southeastDrop * 0.78 : 0,
+      d.southeastDrop > 0.5 ? d.southeastDrop * 0.78 : 0
     );
     if (bottomCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.28);
@@ -1907,11 +1957,11 @@ function renderChallengeWorldMountain(
       ctx.moveTo(d.bottomX, d.bottomY - seamOverlap);
       ctx.lineTo(
         d.bottomX + tileWidth * 0.09,
-        d.bottomY + bottomCornerDrop * 0.8,
+        d.bottomY + bottomCornerDrop * 0.8
       );
       ctx.lineTo(
         d.bottomX - tileWidth * 0.09,
-        d.bottomY + bottomCornerDrop * 0.8,
+        d.bottomY + bottomCornerDrop * 0.8
       );
       ctx.closePath();
       ctx.fill();
@@ -1925,7 +1975,9 @@ function renderChallengeWorldMountain(
     layerCells.sort((a, b) => {
       const ay = a.topY;
       const by = b.topY;
-      if (Math.abs(ay - by) > 0.001) return ay - by;
+      if (Math.abs(ay - by) > 0.001) {
+        return ay - by;
+      }
       return a.topX - b.topX;
     });
 
@@ -1943,7 +1995,7 @@ function renderChallengeWorldMountain(
           mapSeed,
           maxLayerIndex,
           themeKey,
-          selectedMap,
+          selectedMap
         );
       }
       drawFrontFaces(d);
@@ -1962,7 +2014,7 @@ function renderChallengeWorldMountain(
         mapSeed,
         maxLayerIndex,
         themeKey,
-        selectedMap,
+        selectedMap
       );
     }
 
@@ -1988,7 +2040,7 @@ function renderChallengeWorldMountain(
       mapSeed,
       maxLayerIndex,
       themeKey,
-      selectedMap,
+      selectedMap
     );
   }
 
@@ -2019,9 +2071,10 @@ export function renderStaticMapLayer({
   preRoadCallback,
   skipBackdrop,
 }: RenderStaticMapLayerParams): { fogEndpoints: StaticMapFogEndpoint[] } {
-  const mapSeed = selectedMap
-    .split("")
-    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const mapSeed = [...selectedMap].reduce(
+    (acc, c) => acc + c.codePointAt(0),
+    0
+  );
   const levelData = LEVEL_DATA[selectedMap];
   const mapThemeKey = levelData?.theme as
     | "grassland"
@@ -2041,7 +2094,7 @@ export function renderStaticMapLayer({
       canvasHeightPx,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
 
   const tileWidth = TILE_SIZE * cameraZoom;
@@ -2055,7 +2108,7 @@ export function renderStaticMapLayer({
         cssWidth,
         cssHeight,
         mapSeed,
-        mapThemeKey,
+        mapThemeKey
       );
     }
 
@@ -2066,7 +2119,7 @@ export function renderStaticMapLayer({
       tileWidth,
       tileHeight,
       toScreen,
-      mapThemeKey,
+      mapThemeKey
     );
   } else {
     if (!skipBackdrop) {
@@ -2076,7 +2129,7 @@ export function renderStaticMapLayer({
         0,
         cssWidth / 2,
         cssHeight / 2,
-        cssWidth,
+        cssWidth
       );
       gradient.addColorStop(0, theme.ground[0]);
       gradient.addColorStop(0.5, theme.ground[1]);
@@ -2093,11 +2146,11 @@ export function renderStaticMapLayer({
       ctx.fillRect(0, 0, cssWidth, cssHeight);
 
       renderTerrainTexture({
-        ctx,
-        cssWidth,
         cssHeight,
-        themeName: (mapThemeKey || "grassland") as MapTheme,
+        cssWidth,
+        ctx,
         mapSeed,
+        themeName: (mapThemeKey || "grassland") as MapTheme,
       });
     }
   }
@@ -2181,10 +2234,14 @@ export function renderStaticMapLayer({
   for (let i = 0; i < pathKeys.length; i++) {
     const pathKey = pathKeys[i];
     const pathPoints = MAP_PATHS[pathKey];
-    if (!pathPoints || pathPoints.length < 2) continue;
+    if (!pathPoints || pathPoints.length < 2) {
+      continue;
+    }
 
     const road = buildRoadGeometry(pathPoints, mapSeed, toScreen);
-    if (!road) continue;
+    if (!road) {
+      continue;
+    }
 
     roads.push(road);
     fogEndpoints.push(...getFogEndpoints(road));
@@ -2198,7 +2255,7 @@ export function renderStaticMapLayer({
     mapSeed,
     0.72,
     true,
-    toScreen,
+    toScreen
   );
 
   const themeName = LEVEL_DATA[selectedMap]?.theme || "grassland";
@@ -2206,15 +2263,15 @@ export function renderStaticMapLayer({
     drawBatchedPathEdgeBlend(ctx, roads, theme);
     for (const road of roads) {
       drawPathDecorations({
+        cameraZoom,
         ctx,
+        mapSeed,
         screenCenter: road.screenCenter,
         screenLeft: road.screenLeft,
         screenRight: road.screenRight,
         smoothPath: road.smoothPath,
         theme,
         themeName,
-        cameraZoom,
-        mapSeed,
         toScreen,
       });
     }

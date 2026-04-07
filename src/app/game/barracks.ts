@@ -1,10 +1,6 @@
-import type { Position } from "../types";
 import { MAP_PATHS, getLevelPathKeys } from "../constants";
-import {
-  gridToWorldPath,
-  closestPointOnLine,
-  distance,
-} from "../utils";
+import type { Position } from "../types";
+import { gridToWorldPath, closestPointOnLine, distance } from "../utils";
 
 const BARRACKS_OWNER_PREFIX = "special_barracks";
 
@@ -29,7 +25,9 @@ export function findClosestRoadPoint(
     activeWaveSpawnPaths.length > 0
       ? activeWaveSpawnPaths
       : getLevelPathKeys(selectedMap);
-  if (pathKeys.length === 0) return pos;
+  if (pathKeys.length === 0) {
+    return pos;
+  }
 
   let closestPoint: Position = pos;
   let minDist = Infinity;
@@ -38,7 +36,9 @@ export function findClosestRoadPoint(
     for (let i = 0; i < pathPoints.length - 1; i++) {
       const p1Grid = pathPoints[i];
       const p2Grid = pathPoints[i + 1];
-      if (!p1Grid || !p2Grid) continue;
+      if (!p1Grid || !p2Grid) {
+        continue;
+      }
       const p1 = gridToWorldPath(p1Grid);
       const p2 = gridToWorldPath(p2Grid);
       const roadPoint = closestPointOnLine(pos, p1, p2);

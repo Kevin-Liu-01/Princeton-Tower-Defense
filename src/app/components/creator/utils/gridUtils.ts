@@ -12,8 +12,16 @@ export const normalizeMapPoint = (point: GridPoint): GridPoint => ({
 });
 
 export const normalizePathPoint = (point: GridPoint): GridPoint => ({
-  x: clamp(Math.round(point.x), -PATH_MARGIN_TILES, GRID_WIDTH - 1 + PATH_MARGIN_TILES),
-  y: clamp(Math.round(point.y), -PATH_MARGIN_TILES, GRID_HEIGHT - 1 + PATH_MARGIN_TILES),
+  x: clamp(
+    Math.round(point.x),
+    -PATH_MARGIN_TILES,
+    GRID_WIDTH - 1 + PATH_MARGIN_TILES
+  ),
+  y: clamp(
+    Math.round(point.y),
+    -PATH_MARGIN_TILES,
+    GRID_HEIGHT - 1 + PATH_MARGIN_TILES
+  ),
 });
 
 export const isInsideMap = (point: GridPoint): boolean =>
@@ -29,9 +37,7 @@ export const formatPointLabel = (point: GridPoint | null): string =>
   point ? `(${point.x},${point.y})` : "(--,--)";
 
 export const formatAssetName = (value: string): string =>
-  value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  value.replaceAll("_", " ").replaceAll(/\b\w/g, (char) => char.toUpperCase());
 
 export const distanceSq = (a: GridPoint, b: GridPoint): number => {
   const dx = a.x - b.x;

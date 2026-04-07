@@ -1,5 +1,4 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -10,6 +9,8 @@ import {
   Wind,
   Flame,
 } from "lucide-react";
+import React, { useRef, useEffect, useState } from "react";
+
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import { GOLD, DEFEAT, OVERLAY, RED_CARD } from "../ui/system/theme";
 import { formatDuration } from "./shared/menuMath";
@@ -39,9 +40,13 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
@@ -55,7 +60,14 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     const t = time * 0.05;
 
     // --- Ambient dark red glow ---
-    const ambientGlow = ctx.createRadialGradient(cx, cy, 10 * s, cx, cy, 75 * s);
+    const ambientGlow = ctx.createRadialGradient(
+      cx,
+      cy,
+      10 * s,
+      cx,
+      cy,
+      75 * s
+    );
     const ambAlpha = 0.12 + Math.sin(t * 1.5) * 0.04;
     ambientGlow.addColorStop(0, `rgba(139,0,0,${ambAlpha})`);
     ambientGlow.addColorStop(0.5, `rgba(80,0,0,${ambAlpha * 0.5})`);
@@ -83,12 +95,15 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 
       // Bone knobs at ends
       const knobR = 5 * s;
-      for (const [kx, ky] of [[x1, y1], [x2, y2]]) {
+      for (const [kx, ky] of [
+        [x1, y1],
+        [x2, y2],
+      ]) {
         const dx = x2 - x1;
         const dy = y2 - y1;
         const len = Math.sqrt(dx * dx + dy * dy);
-        const nx = -dy / len * knobR * 0.5;
-        const ny = dx / len * knobR * 0.5;
+        const nx = (-dy / len) * knobR * 0.5;
+        const ny = (dx / len) * knobR * 0.5;
         ctx.fillStyle = "#d8d0c0";
         ctx.beginPath();
         ctx.arc(kx + nx, ky + ny, knobR * 0.7, 0, Math.PI * 2);
@@ -106,7 +121,12 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.shadowBlur = 20 * s * shieldGlowPulse;
 
     // Shield - left half (slightly separated/cracked)
-    const shieldGradL = ctx.createLinearGradient(cx - 48 * s, cy - 30 * s, cx, cy + 10 * s);
+    const shieldGradL = ctx.createLinearGradient(
+      cx - 48 * s,
+      cy - 30 * s,
+      cx,
+      cy + 10 * s
+    );
     shieldGradL.addColorStop(0, "#4a4a4a");
     shieldGradL.addColorStop(0.4, "#555555");
     shieldGradL.addColorStop(1, "#3a3a3a");
@@ -121,7 +141,12 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.fill();
 
     // Shield - right half
-    const shieldGradR = ctx.createLinearGradient(cx, cy - 30 * s, cx + 48 * s, cy + 10 * s);
+    const shieldGradR = ctx.createLinearGradient(
+      cx,
+      cy - 30 * s,
+      cx + 48 * s,
+      cy + 10 * s
+    );
     shieldGradR.addColorStop(0, "#505050");
     shieldGradR.addColorStop(0.4, "#5a5a5a");
     shieldGradR.addColorStop(1, "#404040");
@@ -197,9 +222,16 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     // Shield rivets along border
     ctx.fillStyle = "#7a6a5a";
     const rivetPositions = [
-      [-42, -28], [-44, -5], [-40, 14], [-20, 38],
-      [42, -28], [44, -5], [40, 14], [20, 38],
-      [-20, -45], [20, -45],
+      [-42, -28],
+      [-44, -5],
+      [-40, 14],
+      [-20, 38],
+      [42, -28],
+      [44, -5],
+      [40, 14],
+      [20, 38],
+      [-20, -45],
+      [20, -45],
     ];
     for (const [rx, ry] of rivetPositions) {
       ctx.beginPath();
@@ -215,7 +247,14 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     ctx.fill();
 
     // Skull cranium with gradient
-    const skullGrad = ctx.createRadialGradient(cx - 3 * s, cy - 18 * s, 2 * s, cx, cy - 10 * s, 30 * s);
+    const skullGrad = ctx.createRadialGradient(
+      cx - 3 * s,
+      cy - 18 * s,
+      2 * s,
+      cx,
+      cy - 10 * s,
+      30 * s
+    );
     skullGrad.addColorStop(0, "#f0ece4");
     skullGrad.addColorStop(0.3, "#e0d8cc");
     skullGrad.addColorStop(0.7, "#c8c0b0");
@@ -382,7 +421,14 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
       const smokeYOff = Math.abs(Math.sin(t * 0.8 + i * 0.7)) * 25 * s;
       const smokeAlpha = 0.06 + Math.sin(t * 0.5 + i) * 0.03;
       const smokeSize = (18 + Math.sin(t + i) * 5) * s;
-      const smokeGrad = ctx.createRadialGradient(smokeX, smokeYBase - smokeYOff, 0, smokeX, smokeYBase - smokeYOff, smokeSize);
+      const smokeGrad = ctx.createRadialGradient(
+        smokeX,
+        smokeYBase - smokeYOff,
+        0,
+        smokeX,
+        smokeYBase - smokeYOff,
+        smokeSize
+      );
       smokeGrad.addColorStop(0, `rgba(40, 0, 0, ${smokeAlpha * 2})`);
       smokeGrad.addColorStop(1, "rgba(30, 0, 0, 0)");
       ctx.fillStyle = smokeGrad;
@@ -392,7 +438,7 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
     }
   }, [size, time]);
 
-  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
+  return <canvas ref={canvasRef} style={{ height: size, width: size }} />;
 };
 
 export function DefeatScreen({
@@ -435,16 +481,19 @@ export function DefeatScreen({
 
   return (
     <div
-      className={`${overlay
-        ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
-        : "w-full h-[100dvh] flex flex-col items-center justify-center relative overflow-auto"
-        } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
+      className={`${
+        overlay
+          ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
+          : "w-full h-[100dvh] flex flex-col items-center justify-center relative overflow-auto"
+      } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
       style={{
+        WebkitBackdropFilter: overlay
+          ? "blur(1.5px) saturate(0.88)"
+          : undefined,
+        backdropFilter: overlay ? "blur(1.5px) saturate(0.88)" : undefined,
         background: overlay
           ? "rgba(10, 4, 4, 0.36)"
           : "linear-gradient(180deg, #0d0808 0%, #1a0c0c 40%, #0d0808 100%)",
-        backdropFilter: overlay ? "blur(1.5px) saturate(0.88)" : undefined,
-        WebkitBackdropFilter: overlay ? "blur(1.5px) saturate(0.88)" : undefined,
       }}
     >
       {!overlay && (
@@ -465,13 +514,13 @@ export function DefeatScreen({
                 key={i}
                 className="absolute rounded-full animate-pulse"
                 style={{
-                  width: `${1 + (i % 2)}px`,
+                  animationDelay: `${i * 0.4}s`,
+                  animationDuration: `${2 + (i % 3)}s`,
+                  background: `rgba(200, ${40 + (i % 3) * 20}, 0, ${0.12 + (i % 4) * 0.06})`,
                   height: `${1 + (i % 2)}px`,
                   left: `${(i * 5.7) % 100}%`,
                   top: `${(i * 6.3) % 100}%`,
-                  background: `rgba(200, ${40 + (i % 3) * 20}, 0, ${0.12 + (i % 4) * 0.06})`,
-                  animationDelay: `${i * 0.4}s`,
-                  animationDuration: `${2 + (i % 3)}s`,
+                  width: `${1 + (i % 2)}px`,
                 }}
               />
             ))}
@@ -480,7 +529,9 @@ export function DefeatScreen({
       )}
 
       {/* Main panel */}
-      <div className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+      <div
+        className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+      >
         <OrnateFrame
           className="rounded-2xl overflow-hidden shadow-2xl"
           style={{ border: `2px solid ${DEFEAT.border35}` }}
@@ -492,16 +543,23 @@ export function DefeatScreen({
           <div
             className="rounded-2xl overflow-hidden"
             style={{
-              background: "linear-gradient(180deg, rgba(30,18,18,0.98) 0%, rgba(18,10,10,0.99) 100%)",
+              background:
+                "linear-gradient(180deg, rgba(30,18,18,0.98) 0%, rgba(18,10,10,0.99) 100%)",
               boxShadow: `inset 0 0 30px ${DEFEAT.glow06}, 0 8px 40px ${OVERLAY.black60}`,
             }}
           >
             {/* Inner border glow */}
-            <div className="absolute inset-[3px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${DEFEAT.innerBorder12}` }} />
+            <div
+              className="absolute inset-[3px] rounded-[14px] pointer-events-none"
+              style={{ border: `1px solid ${DEFEAT.innerBorder12}` }}
+            />
 
             {/* ===== Skull + Title Header ===== */}
-            <div className="flex flex-col items-center pt-4 sm:pt-5 pb-1 sm:pb-2 relative"
-              style={{ background: `linear-gradient(180deg, ${DEFEAT.glow07} 0%, transparent 100%)` }}
+            <div
+              className="flex flex-col items-center pt-4 sm:pt-5 pb-1 sm:pb-2 relative"
+              style={{
+                background: `linear-gradient(180deg, ${DEFEAT.glow07} 0%, transparent 100%)`,
+              }}
             >
               <DefeatSprite size={64} />
 
@@ -509,7 +567,8 @@ export function DefeatScreen({
                 className="text-3xl sm:text-4xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-1"
                 style={{
                   color: "#dc2626",
-                  textShadow: "0 0 50px rgba(220,38,38,0.45), 0 0 20px rgba(220,38,38,0.25), 0 3px 0 #450a0a, 0 4px 8px rgba(0,0,0,0.7)",
+                  textShadow:
+                    "0 0 50px rgba(220,38,38,0.45), 0 0 20px rgba(220,38,38,0.25), 0 3px 0 #450a0a, 0 4px 8px rgba(0,0,0,0.7)",
                 }}
               >
                 DEFEAT
@@ -517,11 +576,27 @@ export function DefeatScreen({
 
               {/* Ornate divider with skull */}
               <div className="flex items-center gap-3 mt-2 w-full px-6 sm:px-10">
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border40} 30%, ${DEFEAT.accent50} 100%)` }} />
-                <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${DEFEAT.border25}, rgba(80,10,10,0.2))`, border: `1px solid ${DEFEAT.border35}` }}>
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${DEFEAT.border40} 30%, ${DEFEAT.accent50} 100%)`,
+                  }}
+                />
+                <div
+                  className="p-1.5 rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${DEFEAT.border25}, rgba(80,10,10,0.2))`,
+                    border: `1px solid ${DEFEAT.border35}`,
+                  }}
+                >
                   <Skull size={12} className="text-red-700/80" />
                 </div>
-                <div className="flex-1 h-px" style={{ background: `linear-gradient(270deg, transparent, ${DEFEAT.border40} 30%, ${DEFEAT.accent50} 100%)` }} />
+                <div
+                  className="flex-1 h-px"
+                  style={{
+                    background: `linear-gradient(270deg, transparent, ${DEFEAT.border40} 30%, ${DEFEAT.accent50} 100%)`,
+                  }}
+                />
               </div>
 
               {/* Level name */}
@@ -529,11 +604,18 @@ export function DefeatScreen({
                 {levelName}
               </p>
               {isFreeplay && (
-                <div className="mt-2 px-3 py-1 rounded-full" style={{
-                  background: "linear-gradient(135deg, rgba(120,80,200,0.2), rgba(80,50,140,0.15))",
-                  border: "1px solid rgba(140,100,220,0.35)",
-                }}>
-                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(180,150,240,0.8)" }}>
+                <div
+                  className="mt-2 px-3 py-1 rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(120,80,200,0.2), rgba(80,50,140,0.15))",
+                    border: "1px solid rgba(140,100,220,0.35)",
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-bold tracking-[0.2em] uppercase"
+                    style={{ color: "rgba(180,150,240,0.8)" }}
+                  >
                     Freeplay — Not Saved to Campaign
                   </span>
                 </div>
@@ -547,123 +629,214 @@ export function DefeatScreen({
 
             {/* ===== Ornate Divider ===== */}
             <div className="px-6">
-              <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)` }} />
+              <div
+                className="h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)`,
+                }}
+              />
             </div>
 
             {/* ===== Stats Grid ===== */}
             <div className="px-3 sm:px-5 py-2.5 sm:py-3">
               <div className="grid grid-cols-2 gap-2">
                 {/* Time survived */}
-                <div className="rounded-xl p-2.5 relative" style={{
-                  background: "linear-gradient(135deg, rgba(35,30,38,0.6), rgba(25,22,30,0.4))",
-                  border: "1.5px solid rgba(100,90,120,0.2)",
-                  boxShadow: "inset 0 0 12px rgba(80,70,100,0.05)",
-                }}>
+                <div
+                  className="rounded-xl p-2.5 relative"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(35,30,38,0.6), rgba(25,22,30,0.4))",
+                    border: "1.5px solid rgba(100,90,120,0.2)",
+                    boxShadow: "inset 0 0 12px rgba(80,70,100,0.05)",
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-1">
                     <Clock size={11} className="text-stone-400/80" />
-                    <span className="text-[10px] font-bold text-stone-400/70 tracking-[0.2em] uppercase">Time</span>
+                    <span className="text-[10px] font-bold text-stone-400/70 tracking-[0.2em] uppercase">
+                      Time
+                    </span>
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-stone-300/90">
                     {formatDuration(timeSpent)}
                   </div>
                   {bestTime ? (
-                    <span className="text-[9px] text-stone-400/50 mt-1 block">Best: {formatDuration(bestTime)}</span>
+                    <span className="text-[9px] text-stone-400/50 mt-1 block">
+                      Best: {formatDuration(bestTime)}
+                    </span>
                   ) : null}
                 </div>
 
                 {/* Waves reached */}
-                <div className="rounded-xl p-2.5 relative" style={{
-                  background: "linear-gradient(135deg, rgba(45,22,22,0.6), rgba(35,15,15,0.4))",
-                  border: `1.5px solid ${DEFEAT.border20}`,
-                  boxShadow: "inset 0 0 12px rgba(139,0,0,0.05)",
-                }}>
+                <div
+                  className="rounded-xl p-2.5 relative"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(45,22,22,0.6), rgba(35,15,15,0.4))",
+                    border: `1.5px solid ${DEFEAT.border20}`,
+                    boxShadow: "inset 0 0 12px rgba(139,0,0,0.05)",
+                  }}
+                >
                   <div className="flex items-center gap-1.5 mb-1">
                     <Wind size={11} className="text-red-500/70" />
-                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.2em] uppercase">Waves</span>
+                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.2em] uppercase">
+                      Waves
+                    </span>
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-red-400/90">
                     {waveReached}/{totalWaves}
                   </div>
-                  <span className="text-[9px] text-red-400/50 mt-1 block">{waveProgress}% cleared</span>
+                  <span className="text-[9px] text-red-400/50 mt-1 block">
+                    {waveProgress}% cleared
+                  </span>
                 </div>
               </div>
 
               {/* Wave progress bar */}
-              <div className="mt-2 rounded-xl p-2" style={{
-                background: `linear-gradient(90deg, ${DEFEAT.glow06}, ${DEFEAT.innerBorder10}, ${DEFEAT.glow06})`,
-                border: `1.5px solid ${DEFEAT.border25}`,
-              }}>
+              <div
+                className="mt-2 rounded-xl p-2"
+                style={{
+                  background: `linear-gradient(90deg, ${DEFEAT.glow06}, ${DEFEAT.innerBorder10}, ${DEFEAT.glow06})`,
+                  border: `1.5px solid ${DEFEAT.border25}`,
+                }}
+              >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <Swords size={12} className="text-red-500/60" />
-                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.15em] uppercase">Battle Progress</span>
+                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.15em] uppercase">
+                      Battle Progress
+                    </span>
                   </div>
-                  <span className="text-[10px] text-red-400/70 font-bold">{waveProgress}%</span>
+                  <span className="text-[10px] text-red-400/70 font-bold">
+                    {waveProgress}%
+                  </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: DEFEAT.progressBg }}>
+                <div
+                  className="w-full h-1.5 rounded-full overflow-hidden"
+                  style={{ background: DEFEAT.progressBg }}
+                >
                   <div
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      width: `${waveProgress}%`,
-                      background: "linear-gradient(90deg, #7f1d1d, #dc2626, #f87171)",
+                      background:
+                        "linear-gradient(90deg, #7f1d1d, #dc2626, #f87171)",
                       boxShadow: "0 0 8px rgba(220,38,38,0.3)",
+                      width: `${waveProgress}%`,
                     }}
                   />
                 </div>
               </div>
 
               {/* Attempt counter */}
-              <div className="mt-2 rounded-xl p-2 flex items-center justify-between" style={{
-                background: "linear-gradient(90deg, rgba(60,50,40,0.08), rgba(60,50,40,0.12), rgba(60,50,40,0.08))",
-                border: "1.5px solid rgba(80,70,60,0.15)",
-              }}>
+              <div
+                className="mt-2 rounded-xl p-2 flex items-center justify-between"
+                style={{
+                  background:
+                    "linear-gradient(90deg, rgba(60,50,40,0.08), rgba(60,50,40,0.12), rgba(60,50,40,0.08))",
+                  border: "1.5px solid rgba(80,70,60,0.15)",
+                }}
+              >
                 <div className="flex items-center gap-1.5">
                   <Shield size={12} className="text-stone-400/60" />
-                  <span className="text-[10px] font-bold text-stone-400/60 tracking-[0.15em] uppercase">Attempt</span>
+                  <span className="text-[10px] font-bold text-stone-400/60 tracking-[0.15em] uppercase">
+                    Attempt
+                  </span>
                 </div>
-                <span className="text-sm font-black text-stone-300/70">#{timesPlayed}</span>
+                <span className="text-sm font-black text-stone-300/70">
+                  #{timesPlayed}
+                </span>
               </div>
             </div>
 
             {/* ===== Ornate Divider ===== */}
             <div className="px-6">
-              <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)` }} />
+              <div
+                className="h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)`,
+                }}
+              />
             </div>
 
             {/* ===== Encouragement ===== */}
             <div className="px-3 sm:px-5 py-2.5 sm:py-3">
-              <div className="relative rounded-xl overflow-hidden" style={{
-                background: "linear-gradient(180deg, rgba(60,42,14,0.14) 0%, rgba(40,28,10,0.10) 50%, rgba(60,42,14,0.14) 100%)",
-                border: `1.5px solid ${GOLD.innerBorder12}`,
-                boxShadow: `inset 0 0 20px rgba(180,140,60,0.04), 0 0 12px rgba(180,140,60,0.03)`,
-              }}>
+              <div
+                className="relative rounded-xl overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(60,42,14,0.14) 0%, rgba(40,28,10,0.10) 50%, rgba(60,42,14,0.14) 100%)",
+                  border: `1.5px solid ${GOLD.innerBorder12}`,
+                  boxShadow: `inset 0 0 20px rgba(180,140,60,0.04), 0 0 12px rgba(180,140,60,0.03)`,
+                }}
+              >
                 {/* Top inner highlight */}
-                <div className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.15) 30%, rgba(180,140,60,0.25) 50%, rgba(180,140,60,0.15) 70%, transparent)" }} />
+                <div
+                  className="absolute inset-x-0 top-0 h-px"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(180,140,60,0.15) 30%, rgba(180,140,60,0.25) 50%, rgba(180,140,60,0.15) 70%, transparent)",
+                  }}
+                />
                 {/* Bottom inner highlight */}
-                <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.1) 30%, rgba(180,140,60,0.18) 50%, rgba(180,140,60,0.1) 70%, transparent)" }} />
+                <div
+                  className="absolute inset-x-0 bottom-0 h-px"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(180,140,60,0.1) 30%, rgba(180,140,60,0.18) 50%, rgba(180,140,60,0.1) 70%, transparent)",
+                  }}
+                />
 
                 <div className="flex flex-col items-center px-5 sm:px-8 py-3 sm:py-3.5">
                   {/* Glowing flame icon */}
                   <div className="relative mb-2">
-                    <div className="absolute inset-0 rounded-full" style={{
-                      background: "radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(180,140,60,0.06) 50%, transparent 70%)",
-                      transform: "scale(2.5)",
-                    }} />
-                    <Flame size={20} className="relative text-amber-500/80" style={{ filter: "drop-shadow(0 0 6px rgba(245,158,11,0.35))" }} />
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background:
+                          "radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(180,140,60,0.06) 50%, transparent 70%)",
+                        transform: "scale(2.5)",
+                      }}
+                    />
+                    <Flame
+                      size={20}
+                      className="relative text-amber-500/80"
+                      style={{
+                        filter: "drop-shadow(0 0 6px rgba(245,158,11,0.35))",
+                      }}
+                    />
                   </div>
 
                   {/* Label with decorative lines */}
                   <div className="flex items-center gap-3 w-full mb-2">
-                    <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))" }} />
-                    <span className="text-[9px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(245,180,60,0.65)" }}>Wisdom</span>
-                    <div className="flex-1 h-px" style={{ background: "linear-gradient(270deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))" }} />
+                    <div
+                      className="flex-1 h-px"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))",
+                      }}
+                    />
+                    <span
+                      className="text-[9px] font-bold tracking-[0.3em] uppercase"
+                      style={{ color: "rgba(245,180,60,0.65)" }}
+                    >
+                      Wisdom
+                    </span>
+                    <div
+                      className="flex-1 h-px"
+                      style={{
+                        background:
+                          "linear-gradient(270deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))",
+                      }}
+                    />
                   </div>
 
                   {/* Quote text */}
-                  <p className="text-xs sm:text-sm text-center leading-relaxed italic" style={{
-                    color: "rgba(252,211,77,0.72)",
-                    textShadow: "0 0 16px rgba(180,140,60,0.12)",
-                  }}>
+                  <p
+                    className="text-xs sm:text-sm text-center leading-relaxed italic"
+                    style={{
+                      color: "rgba(252,211,77,0.72)",
+                      textShadow: "0 0 16px rgba(180,140,60,0.12)",
+                    }}
+                  >
                     {encouragement}
                   </p>
                 </div>
@@ -672,7 +845,12 @@ export function DefeatScreen({
 
             {/* ===== Ornate Divider ===== */}
             <div className="px-6">
-              <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)` }} />
+              <div
+                className="h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)`,
+                }}
+              />
             </div>
 
             {/* ===== Footer Actions ===== */}
@@ -683,9 +861,10 @@ export function DefeatScreen({
                 style={{
                   background: `linear-gradient(180deg, ${DEFEAT.btnLight} 0%, ${DEFEAT.btnDark} 100%)`,
                   border: `1.5px solid ${RED_CARD.accent35}`,
-                  color: "#fbbcb0",
-                  textShadow: "0 0 12px rgba(248,113,113,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                   boxShadow: `inset 0 1px 0 ${OVERLAY.white10}, 0 4px 16px ${OVERLAY.black40}, 0 0 20px rgba(220,38,38,0.12)`,
+                  color: "#fbbcb0",
+                  textShadow:
+                    "0 0 12px rgba(248,113,113,0.3), 0 2px 4px rgba(0,0,0,0.6)",
                 }}
               >
                 <span className="flex items-center justify-center gap-2 sm:gap-2.5">
@@ -702,10 +881,11 @@ export function DefeatScreen({
                     background:
                       "linear-gradient(180deg, rgba(70,56,40,0.95) 0%, rgba(52,38,28,0.96) 100%)",
                     border: "1.5px solid rgba(180,140,60,0.45)",
-                    color: "rgba(245, 216, 168, 0.95)",
-                    textShadow: "0 0 10px rgba(180,140,60,0.2), 0 2px 4px rgba(0,0,0,0.5)",
                     boxShadow:
                       "inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.4)",
+                    color: "rgba(245, 216, 168, 0.95)",
+                    textShadow:
+                      "0 0 10px rgba(180,140,60,0.2), 0 2px 4px rgba(0,0,0,0.5)",
                   }}
                 >
                   <span className="flex items-center justify-center gap-2">

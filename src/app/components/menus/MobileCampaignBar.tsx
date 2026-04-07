@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect } from "react";
 import { Star, Map as MapIcon } from "lucide-react";
+import React, { useMemo, useRef, useEffect } from "react";
+
+import { RegionIcon } from "../../sprites";
 import type { LevelStars } from "../../types";
 import { GOLD, PANEL } from "../ui/system/theme";
-import { WORLD_LEVELS } from "./world-map/worldMapData";
-import { RegionIcon } from "../../sprites";
 import {
   REGION_META,
   REGION_ORDER,
   getCampaignLevels,
   getRegionProgressList,
 } from "./shared/worldMapRegions";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 
 interface MobileCampaignBarProps {
   levelStars: LevelStars;
@@ -32,27 +33,38 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const campaignLevels = getCampaignLevels(isDevMode);
-  const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
+  const totalStars = campaignLevels.reduce(
+    (a, l) => a + (levelStars[l.id] || 0),
+    0
+  );
   const maxStars = campaignLevels.length * 3;
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
 
   const activeRegion = useMemo(() => {
-    if (!selectedLevel) return null;
+    if (!selectedLevel) {
+      return null;
+    }
     const level = WORLD_LEVELS.find((l) => l.id === selectedLevel);
     return level?.region ?? null;
   }, [selectedLevel]);
 
   const regionStats = useMemo(
     () => getRegionProgressList(levelStars, unlockedSet, isDevMode),
-    [levelStars, unlockedSet, isDevMode],
+    [levelStars, unlockedSet, isDevMode]
   );
 
   useEffect(() => {
-    if (!activeRegion || !scrollRef.current) return;
+    if (!activeRegion || !scrollRef.current) {
+      return;
+    }
     const idx = REGION_ORDER.indexOf(activeRegion);
     const pill = scrollRef.current.children[idx] as HTMLElement | undefined;
     if (pill) {
-      pill.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      pill.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     }
   }, [activeRegion]);
 
@@ -81,10 +93,10 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${progressPct}%`,
               background:
                 "linear-gradient(90deg, rgba(180,120,20,0.9), rgba(220,170,40,0.95), rgba(180,120,20,0.9))",
               boxShadow: "0 0 6px rgba(220,170,40,0.4)",
+              width: `${progressPct}%`,
             }}
           />
         </div>
@@ -104,63 +116,76 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
         className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        {regionStats.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }) => {
-          const meta = REGION_META[region];
-          const isActive = activeRegion === region;
-          const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
-          const isComplete = stars === rMax;
+        {regionStats.map(
+          ({
+            region,
+            stars,
+            maxStars: rMax,
+            completed,
+            total,
+            targetLevel,
+          }) => {
+            const meta = REGION_META[region];
+            const isActive = activeRegion === region;
+            const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
+            const isComplete = stars === rMax;
 
-          return (
-            <button
-              key={region}
-              onClick={() => {
-                if (targetLevel) onSelectLevel(targetLevel.id);
-              }}
-              className="flex-shrink-0 flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-lg transition-all active:scale-95 relative overflow-hidden"
-              style={{
-                background: isActive
-                  ? `linear-gradient(135deg, ${meta.bg}, ${meta.bgDark})`
-                  : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                border: `1.5px solid ${isActive ? meta.border : GOLD.border25}`,
-                boxShadow: isActive
-                  ? `0 0 10px ${meta.glow}, inset 0 0 8px ${meta.glow}`
-                  : "none",
-              }}
-            >
-              <RegionIcon type={region} size={18} framed />
-              <div className="flex flex-col items-start gap-0.5 min-w-0">
-                <span
-                  className="text-[9px] font-bold whitespace-nowrap leading-none"
-                  style={{ color: isActive ? meta.accent : "rgba(252,211,77,0.8)" }}
-                >
-                  {meta.displayName}
-                </span>
-                <div className="flex items-center gap-1">
-                  <div
-                    className="w-12 h-1 rounded-full overflow-hidden"
+            return (
+              <button
+                key={region}
+                onClick={() => {
+                  if (targetLevel) {
+                    onSelectLevel(targetLevel.id);
+                  }
+                }}
+                className="flex-shrink-0 flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-lg transition-all active:scale-95 relative overflow-hidden"
+                style={{
+                  background: isActive
+                    ? `linear-gradient(135deg, ${meta.bg}, ${meta.bgDark})`
+                    : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                  border: `1.5px solid ${isActive ? meta.border : GOLD.border25}`,
+                  boxShadow: isActive
+                    ? `0 0 10px ${meta.glow}, inset 0 0 8px ${meta.glow}`
+                    : "none",
+                }}
+              >
+                <RegionIcon type={region} size={18} framed />
+                <div className="flex flex-col items-start gap-0.5 min-w-0">
+                  <span
+                    className="text-[9px] font-bold whitespace-nowrap leading-none"
                     style={{
-                      background: "rgba(0,0,0,0.4)",
-                      border: "1px solid rgba(255,255,255,0.04)",
+                      color: isActive ? meta.accent : "rgba(252,211,77,0.8)",
                     }}
                   >
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${pct}%`,
-                        background: isComplete
-                          ? "linear-gradient(90deg, rgba(220,170,40,0.9), rgba(250,200,60,0.95))"
-                          : meta.border,
-                      }}
-                    />
-                  </div>
-                  <span className="text-[8px] text-amber-400/60 font-medium whitespace-nowrap">
-                    {completed}/{total}
+                    {meta.displayName}
                   </span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="w-12 h-1 rounded-full overflow-hidden"
+                      style={{
+                        background: "rgba(0,0,0,0.4)",
+                        border: "1px solid rgba(255,255,255,0.04)",
+                      }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          background: isComplete
+                            ? "linear-gradient(90deg, rgba(220,170,40,0.9), rgba(250,200,60,0.95))"
+                            : meta.border,
+                          width: `${pct}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-[8px] text-amber-400/60 font-medium whitespace-nowrap">
+                      {completed}/{total}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          }
+        )}
       </div>
     </div>
   );

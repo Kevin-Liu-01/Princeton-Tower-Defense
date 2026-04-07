@@ -1,20 +1,3 @@
-import type {
-  Position,
-  Tower,
-  Enemy,
-  EnemyType,
-  Hero,
-  Troop,
-  Projectile,
-  Effect,
-  Particle,
-  SpellType,
-  DraggingTower,
-  Renderable,
-  DecorationType,
-  DecorationHeightTag,
-  SpecialTower,
-} from "../../types";
 import {
   TILE_SIZE,
   GRID_WIDTH,
@@ -35,7 +18,6 @@ import {
   SUNFORGE_ORRERY_STATS,
   SPECIAL_TOWER_WARMUP_MS,
 } from "../../constants";
-import { calculateTowerStats } from "../../constants/towerStats";
 import {
   DECORATION_DENSITY_MULTIPLIER,
   TREE_CLUSTER_COUNT,
@@ -44,53 +26,18 @@ import {
   BATTLE_DEBRIS_COUNT,
   DECORATION_SCALE_RANGE,
 } from "../../constants/settings";
+import { calculateTowerStats } from "../../constants/towerStats";
 import {
-  gridToWorld,
-  worldToScreen,
-  screenToWorld,
-  screenToGrid,
-  distance,
-  isValidBuildPosition,
-  hexToRgb,
-  isoTileDiamondHalfH,
-  type TroopMoveInfo,
-  LANDMARK_DECORATION_TYPES,
-  BACKGROUND_BLOCKING_DECORATION_TYPES,
-  getMapDecorationWorldPos,
-  getDecorationVolumeSpec,
-  getLandmarkSpawnExclusion,
-  resolveMapDecorationRuntimePlacement,
-} from "../../utils";
+  getEnemyPosWithPath,
+  getLevelSpecialTowers,
+  vaultPosKey,
+} from "../../game/setup";
 import {
-  buildPathSegments,
-  minDistanceToPath,
-  type PathSegment,
-} from "../../utils/pathUtils";
-import { createSeededRandom } from "../../utils/seededRandom";
-import {
-  DecorationSpatialGrid,
-  getExclusionRadius,
-} from "../../utils/decorationSpacing";
-import {
-  getDecorationRenderLayer,
-  getDecorationIsoY,
-  getRuntimeDecorationHeightTag,
-  getLayerPriority,
-  getSourcePriority,
-  type RuntimeDecoration,
-} from "../../rendering/decorations/decorationHelpers";
-import {
-  getOcclusionState,
-  type CachedVisibleDecoration,
-  type OcclusionAnchor,
-} from "../../rendering/decorations/occlusion";
-import { drawTriangle, drawRoundedRect } from "../../rendering/utils/drawUtils";
-import { insertionSortBy } from "../../rendering/utils/insertionSort";
-import {
-  prerenderDecorationSprite,
-  drawDecorationSprite,
-  type DecorationSprite,
-} from "../../rendering/decorations/spriteCache";
+  isInSpecialTowerZone,
+  isInLandmarkCore,
+  isInLandmarkFull,
+} from "../../game/spatial";
+import type { LandmarkZone } from "../../game/spatial";
 import {
   renderTower,
   renderTowerGroundTransition,
@@ -120,60 +67,110 @@ import {
   drawRoadEndFog,
   computeFogCounts,
 } from "../../rendering";
-import { renderEnemyDeath } from "../../rendering/effects/deathAnimations";
-import { renderAbilityTethers } from "../../rendering/effects/tethers";
-import { getSentinelPalette } from "../../rendering/towers/sentinelTheme";
-import { drawWaveStartBubble } from "../../rendering/ui/waveStartBubble";
-import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
 import { renderDecorationItem } from "../../rendering/decorations";
 import { getDecorationCategories } from "../../rendering/decorations/decorationCategories";
+import {
+  getDecorationRenderLayer,
+  getDecorationIsoY,
+  getRuntimeDecorationHeightTag,
+  getLayerPriority,
+  getSourcePriority,
+} from "../../rendering/decorations/decorationHelpers";
+import type { RuntimeDecoration } from "../../rendering/decorations/decorationHelpers";
 import {
   renderDecorationTransitions,
   renderSpecialTowerTransitions,
 } from "../../rendering/decorations/landmarkTransition";
+import { getOcclusionState } from "../../rendering/decorations/occlusion";
+import type {
+  CachedVisibleDecoration,
+  OcclusionAnchor,
+} from "../../rendering/decorations/occlusion";
 import {
-  renderStaticMapLayer,
-  renderChallengeMountainBackdrop,
-  type StaticMapFogEndpoint,
-} from "../../rendering/maps/staticLayer";
-import {
-  updateScenePressure,
-  interceptShadows,
-  refreshShadowCache,
-  getPerformanceSettings,
-} from "../../rendering/performance";
-import { getGameSettings, getSettingsVersion } from "../useSettings";
+  prerenderDecorationSprite,
+  drawDecorationSprite,
+} from "../../rendering/decorations/spriteCache";
+import type { DecorationSprite } from "../../rendering/decorations/spriteCache";
+import { renderEnemyDeath } from "../../rendering/effects/deathAnimations";
+import { renderAbilityTethers } from "../../rendering/effects/tethers";
 import {
   getChallengePathSegments,
   isMountainTerrainKind,
   isWorldPosInChallengeDecorationFootprint,
 } from "../../rendering/maps/challengeTerrain";
 import {
+  renderStaticMapLayer,
+  renderChallengeMountainBackdrop,
+} from "../../rendering/maps/staticLayer";
+import type { StaticMapFogEndpoint } from "../../rendering/maps/staticLayer";
+import {
+  updateScenePressure,
+  interceptShadows,
+  refreshShadowCache,
+  getPerformanceSettings,
+} from "../../rendering/performance";
+import { getSentinelPalette } from "../../rendering/towers/sentinelTheme";
+import { renderDamageNumbers } from "../../rendering/ui/damageNumbers";
+import {
   renderSpellReticle,
   renderTargetingReticle,
   RETICLE_COLORS,
-  type SpellReticleVariant,
 } from "../../rendering/ui/reticles";
-import { renderDamageNumbers } from "../../rendering/ui/damageNumbers";
+import type { SpellReticleVariant } from "../../rendering/ui/reticles";
+import { drawWaveStartBubble } from "../../rendering/ui/waveStartBubble";
+import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
+import { drawTriangle, drawRoundedRect } from "../../rendering/utils/drawUtils";
+import { insertionSortBy } from "../../rendering/utils/insertionSort";
+import type {
+  Position,
+  Tower,
+  Enemy,
+  EnemyType,
+  Hero,
+  Troop,
+  Projectile,
+  Effect,
+  Particle,
+  SpellType,
+  DraggingTower,
+  Renderable,
+  DecorationType,
+  DecorationHeightTag,
+  SpecialTower,
+} from "../../types";
 import {
-  getEnemyPosWithPath,
-  getLevelSpecialTowers,
-  vaultPosKey,
-} from "../../game/setup";
+  gridToWorld,
+  worldToScreen,
+  screenToWorld,
+  screenToGrid,
+  distance,
+  isValidBuildPosition,
+  hexToRgb,
+  isoTileDiamondHalfH,
+  LANDMARK_DECORATION_TYPES,
+  BACKGROUND_BLOCKING_DECORATION_TYPES,
+  getMapDecorationWorldPos,
+  getDecorationVolumeSpec,
+  getLandmarkSpawnExclusion,
+  resolveMapDecorationRuntimePlacement,
+} from "../../utils";
+import type { TroopMoveInfo } from "../../utils";
 import {
-  isInSpecialTowerZone,
-  isInLandmarkCore,
-  isInLandmarkFull,
-  type LandmarkZone,
-} from "../../game/spatial";
+  DecorationSpatialGrid,
+  getExclusionRadius,
+} from "../../utils/decorationSpacing";
+import { buildPathSegments, minDistanceToPath } from "../../utils/pathUtils";
+import type { PathSegment } from "../../utils/pathUtils";
+import { createSeededRandom } from "../../utils/seededRandom";
+import { getGameSettings, getSettingsVersion } from "../useSettings";
 import {
   BG_OVERSCAN_X,
   BG_OVERSCAN_Y,
   DECOR_OVERSCAN,
   QUALITY_DECORATION_MARGIN_PX,
   WATER_DECORATION_TYPES,
-  type RenderQuality,
 } from "./runtimeConfig";
+import type { RenderQuality } from "./runtimeConfig";
 import type { WaveStartConfirmState } from "./waveStartBubbles";
 
 // ---------------------------------------------------------------------------
@@ -345,7 +342,7 @@ export interface RenderSceneParams {
   getWaveStartBubblesScreenData: (
     canvasWidth: number,
     canvasHeight: number,
-    dpr: number,
+    dpr: number
   ) => WaveStartBubbleScreenData[];
   getSpecialTowerKey: (tower: Pick<SpecialTower, "type" | "pos">) => string;
 }
@@ -426,9 +423,13 @@ export function renderScene(params: RenderSceneParams): void {
   } = params;
 
   const canvas = canvasRef.current;
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) {
+    return;
+  }
   refreshShadowCache();
   interceptShadows(ctx);
   const perfSettings = getPerformanceSettings();
@@ -497,9 +498,10 @@ export function renderScene(params: RenderSceneParams): void {
   const challengePathSegments = isChallengeTerrainLevel
     ? getChallengePathSegments(selectedMap)
     : [];
-  const mapSeed = selectedMap
-    .split("")
-    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const mapSeed = [...selectedMap].reduce(
+    (acc, c) => acc + c.codePointAt(0),
+    0
+  );
   let seededRandom = createSeededRandom(mapSeed);
 
   const toScreen = (p: Position) =>
@@ -509,7 +511,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   const toScreenForCache = hasZoomMismatch
     ? (p: Position) =>
@@ -519,7 +521,7 @@ export function renderScene(params: RenderSceneParams): void {
           canvas.height,
           dpr,
           cameraOffset,
-          cacheZoomForKey,
+          cacheZoomForKey
         )
     : toScreen;
 
@@ -570,7 +572,7 @@ export function renderScene(params: RenderSceneParams): void {
           overscanCssW,
           overscanCssH,
           mapSeed,
-          mapThemeKeyForBackdrop,
+          mapThemeKeyForBackdrop
         );
       } else {
         const gradient = bdCtx.createRadialGradient(
@@ -579,7 +581,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           overscanCssW / 2,
           overscanCssH / 2,
-          overscanCssW,
+          overscanCssW
         );
         gradient.addColorStop(0, theme.ground[0]);
         gradient.addColorStop(0.5, theme.ground[1]);
@@ -587,7 +589,7 @@ export function renderScene(params: RenderSceneParams): void {
         bdCtx.fillStyle = gradient;
         bdCtx.fillRect(0, 0, overscanCssW, overscanCssH);
       }
-      cachedBackdropRef.current = { key: backdropKey, canvas: backdropCanvas };
+      cachedBackdropRef.current = { canvas: backdropCanvas, key: backdropKey };
     }
   }
   const hasBackdropCanvas = !!cachedBackdropRef.current;
@@ -625,30 +627,30 @@ export function renderScene(params: RenderSceneParams): void {
             offscreenStaticCanvas.height,
             dpr,
             cameraOffset,
-            cacheZoomForKey,
+            cacheZoomForKey
           );
         };
         const staticLayerResult = renderStaticMapLayer({
-          ctx: staticCtx,
-          selectedMap,
-          theme,
-          canvasWidthPx: offscreenStaticCanvas.width,
-          canvasHeightPx: offscreenStaticCanvas.height,
-          cssWidth: overscanCssW,
-          cssHeight: overscanCssH,
-          dpr,
           cameraOffset,
           cameraZoom: cacheZoomForKey,
+          canvasHeightPx: offscreenStaticCanvas.height,
+          canvasWidthPx: offscreenStaticCanvas.width,
+          cssHeight: overscanCssH,
+          cssWidth: overscanCssW,
+          ctx: staticCtx,
+          dpr,
           preRoadCallback: preRoadCb,
+          selectedMap,
           skipBackdrop: hasBackdropCanvas,
+          theme,
         });
-        fogEndpoints = staticLayerResult.fogEndpoints;
+        ({ fogEndpoints } = staticLayerResult);
         cachedStaticMapLayerRef.current = {
-          key: staticBaseKey,
-          canvas: offscreenStaticCanvas,
-          fogEndpoints,
           anchorOffset: { ...cameraOffset },
           cacheZoom: cacheZoomForKey,
+          canvas: offscreenStaticCanvas,
+          fogEndpoints,
+          key: staticBaseKey,
         };
       }
     } else {
@@ -660,34 +662,34 @@ export function renderScene(params: RenderSceneParams): void {
           canvas.height,
           dpr,
           cameraOffset,
-          cacheZoomForKey,
+          cacheZoomForKey
         );
       };
       const staticLayerResult = renderStaticMapLayer({
-        ctx,
-        selectedMap,
-        theme,
-        canvasWidthPx: canvas.width,
-        canvasHeightPx: canvas.height,
-        cssWidth: width,
-        cssHeight: height,
-        dpr,
         cameraOffset,
         cameraZoom: cacheZoomForKey,
+        canvasHeightPx: canvas.height,
+        canvasWidthPx: canvas.width,
+        cssHeight: height,
+        cssWidth: width,
+        ctx,
+        dpr,
         preRoadCallback: preRoadCb,
+        selectedMap,
         skipBackdrop: hasBackdropCanvas,
+        theme,
       });
-      fogEndpoints = staticLayerResult.fogEndpoints;
+      ({ fogEndpoints } = staticLayerResult);
     }
     cachedFogLayerRef.current = null;
   } else {
-    fogEndpoints = cachedStaticMapLayer.fogEndpoints;
+    ({ fogEndpoints } = cachedStaticMapLayer);
   }
 
   // Fog — cached separately with a slower refresh rate (uses overscan dims)
   const FOG_CACHE_REFRESH_MS = 200;
   const fogCacheKey = [staticBaseKey, isChallengeTerrainLevel ? "c" : "n"].join(
-    "|",
+    "|"
   );
   const cachedFog = cachedFogLayerRef.current;
   const fogNeedsRedraw =
@@ -712,32 +714,32 @@ export function renderScene(params: RenderSceneParams): void {
       const fogAccentRgb = hexToRgb(theme.accent);
       const fogPathRgb = hexToRgb(theme.path[2]);
       const { fogBlobCount, fogWispCount } = computeFogCounts(
-        isChallengeTerrainLevel,
+        isChallengeTerrainLevel
       );
       const roadEndFogSize = isChallengeTerrainLevel ? 215 : 300;
       for (const endpoint of fogEndpoints) {
         drawRoadEndFog({
+          accentRgb: fogAccentRgb,
+          cameraZoom: cacheZoomForKey,
           ctx: fogCtx,
           endPos: endpoint.endPos,
-          towardsPos: endpoint.towardsPos,
-          size: roadEndFogSize,
-          nowSeconds,
-          cameraZoom: cacheZoomForKey,
-          groundRgb: fogGroundRgb,
-          accentRgb: fogAccentRgb,
-          pathRgb: fogPathRgb,
-          isChallengeTerrainLevel,
           fogBlobCount,
           fogWispCount,
+          groundRgb: fogGroundRgb,
+          isChallengeTerrainLevel,
+          nowSeconds,
+          pathRgb: fogPathRgb,
+          size: roadEndFogSize,
+          towardsPos: endpoint.towardsPos,
         });
       }
       cachedFogLayerRef.current = {
-        key: fogCacheKey,
-        canvas: fogOffscreen,
-        renderedAtMs: frameNowMs,
         anchorOffset: cachedStaticMapLayerRef.current?.anchorOffset ?? {
           ...cameraOffset,
         },
+        canvas: fogOffscreen,
+        key: fogCacheKey,
+        renderedAtMs: frameNowMs,
       };
     }
   }
@@ -756,7 +758,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           overscanCssW,
-          overscanCssH,
+          overscanCssH
         );
       }
       if (cachedFogLayerRef.current) {
@@ -765,7 +767,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           overscanCssW,
-          overscanCssH,
+          overscanCssH
         );
       }
     }
@@ -811,7 +813,7 @@ export function renderScene(params: RenderSceneParams): void {
         0,
         0,
         width,
-        height,
+        height
       );
     }
     const fbAnchor =
@@ -838,7 +840,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
       if (cachedFogLayerRef.current) {
@@ -851,7 +853,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
       ctx.restore();
@@ -868,7 +870,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
       if (cachedFogLayerRef.current) {
@@ -881,7 +883,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
     }
@@ -897,7 +899,7 @@ export function renderScene(params: RenderSceneParams): void {
     canvas.height,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
 
   // Generate theme-specific decorations (CACHED for performance)
@@ -909,7 +911,7 @@ export function renderScene(params: RenderSceneParams): void {
     cachedDecorationsRef.current &&
     cachedDecorationsRef.current.mapKey === decorCacheKey
   ) {
-    decorations = cachedDecorationsRef.current.decorations;
+    ({ decorations } = cachedDecorationsRef.current);
   } else {
     // Generate decorations and cache them
     decorations = [];
@@ -956,7 +958,7 @@ export function renderScene(params: RenderSceneParams): void {
       (tower) => ({
         cx: tower.pos.x,
         cy: tower.pos.y,
-      }),
+      })
     );
 
     // Build landmark exclusion zones from map-defined decorations.
@@ -964,7 +966,9 @@ export function renderScene(params: RenderSceneParams): void {
     if (levelData?.decorations) {
       for (const deco of levelData.decorations) {
         const decoType = deco.category || deco.type;
-        if (!decoType || !LANDMARK_DECORATION_TYPES.has(decoType)) continue;
+        if (!decoType || !LANDMARK_DECORATION_TYPES.has(decoType)) {
+          continue;
+        }
         const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
         const decoWorldPos = getMapDecorationWorldPos(deco);
         const decoGridX = decoWorldPos.x / TILE_SIZE - 0.5;
@@ -972,13 +976,15 @@ export function renderScene(params: RenderSceneParams): void {
         const exclusion = getLandmarkSpawnExclusion(
           decoType,
           resolvedPlacement?.scale ?? (deco.size || 1),
-          deco.heightTag,
+          deco.heightTag
         );
-        if (!exclusion) continue;
+        if (!exclusion) {
+          continue;
+        }
         landmarkZones.push({
+          coreR: exclusion.coreR,
           cx: decoGridX,
           cy: decoGridY,
-          coreR: exclusion.coreR,
           fullR: exclusion.fullR,
         });
       }
@@ -991,10 +997,15 @@ export function renderScene(params: RenderSceneParams): void {
       for (let zy = 0; zy < zonesY; zy++) {
         const zoneHash = (mapSeed * 31 + zx * 17 + zy * 13) % 100;
         let cat: keyof typeof categories;
-        if (zoneHash < 45) cat = "trees";
-        else if (zoneHash < 70) cat = "terrain";
-        else if (zoneHash < 88) cat = "structures";
-        else cat = "scattered";
+        if (zoneHash < 45) {
+          cat = "trees";
+        } else if (zoneHash < 70) {
+          cat = "terrain";
+        } else if (zoneHash < 88) {
+          cat = "structures";
+        } else {
+          cat = "scattered";
+        }
         zoneAssignments[zx][zy] = cat;
       }
     }
@@ -1011,7 +1022,9 @@ export function renderScene(params: RenderSceneParams): void {
       const zoneY = Math.floor(seededRandom() * zonesY);
       const category = zoneAssignments[zoneX][zoneY];
       const categoryDecors = categories[category];
-      if (!categoryDecors || categoryDecors.length === 0) continue;
+      if (!categoryDecors || categoryDecors.length === 0) {
+        continue;
+      }
 
       const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
       const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
@@ -1022,38 +1035,46 @@ export function renderScene(params: RenderSceneParams): void {
       const gridX = zoneCenterX + offsetX;
       const gridY = zoneCenterY + offsetY;
 
-      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE)
+      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) {
         continue;
+      }
 
       const worldPos = gridToWorld({ x: gridX, y: gridY });
-      if (isOnPath(worldPos)) continue;
+      if (isOnPath(worldPos)) {
+        continue;
+      }
 
       const isLargeCategory = category === "trees" || category === "structures";
-      if (isLargeCategory && isInLandmarkCore(gridX, gridY, landmarkZones))
+      if (isLargeCategory && isInLandmarkCore(gridX, gridY, landmarkZones)) {
         continue;
-      if (!isLargeCategory && isInLandmarkFull(gridX, gridY, landmarkZones))
+      }
+      if (!isLargeCategory && isInLandmarkFull(gridX, gridY, landmarkZones)) {
         continue;
+      }
       if (
         isLargeCategory &&
         isInSpecialTowerZone(gridX, gridY, 1.9, specialTowerZones)
-      )
+      ) {
         continue;
+      }
       if (
         !isLargeCategory &&
         isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)
-      )
+      ) {
         continue;
+      }
 
       const typeIndex = Math.floor(
-        seededRandom() * seededRandom() * categoryDecors.length,
+        seededRandom() * seededRandom() * categoryDecors.length
       );
       const type = categoryDecors[typeIndex] as DecorationType;
 
       if (
         !landscapeSettings.showWaterEffects &&
         WATER_DECORATION_TYPES.has(type)
-      )
+      ) {
         continue;
+      }
 
       let baseScale = scaleRange.base;
       let scaleVar = scaleRange.variance;
@@ -1073,15 +1094,17 @@ export function renderScene(params: RenderSceneParams): void {
       const variant = Math.floor(seededRandom() * 4);
 
       const exR = getExclusionRadius(type, scale);
-      if (!spacingGrid.tryPlace(gridX, gridY, exR)) continue;
+      if (!spacingGrid.tryPlace(gridX, gridY, exR)) {
+        continue;
+      }
 
       decorations.push({
+        rotation,
+        scale,
         type,
+        variant,
         x: worldPos.x,
         y: worldPos.y,
-        scale,
-        rotation,
-        variant,
       });
     }
 
@@ -1094,8 +1117,9 @@ export function renderScene(params: RenderSceneParams): void {
       if (
         isBeyondGrid(clusterX, clusterY) &&
         seededRandom() > BEYOND_GRID_REDUCE
-      )
+      ) {
         continue;
+      }
 
       const treesInCluster = 8 + Math.floor(seededRandom() * 10);
       const treeTypes = categories.trees;
@@ -1103,10 +1127,15 @@ export function renderScene(params: RenderSceneParams): void {
         const treeX = clusterX + (seededRandom() - 0.5) * 2.9;
         const treeY = clusterY + (seededRandom() - 0.5) * 2.9;
         const worldPos = gridToWorld({ x: treeX, y: treeY });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(treeX, treeY, landmarkZones)) continue;
-        if (isInSpecialTowerZone(treeX, treeY, 1.9, specialTowerZones))
+        if (isOnPath(worldPos)) {
           continue;
+        }
+        if (isInLandmarkCore(treeX, treeY, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(treeX, treeY, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const treeType = treeTypes[
           Math.floor(seededRandom() * treeTypes.length)
@@ -1116,15 +1145,17 @@ export function renderScene(params: RenderSceneParams): void {
         const treeVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(treeType, treeScale);
-        if (!spacingGrid.tryPlace(treeX, treeY, exR)) continue;
+        if (!spacingGrid.tryPlace(treeX, treeY, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: treeRot,
+          scale: treeScale,
           type: treeType,
+          variant: treeVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: treeScale,
-          rotation: treeRot,
-          variant: treeVar,
         });
       }
     }
@@ -1134,7 +1165,9 @@ export function renderScene(params: RenderSceneParams): void {
       const groveX = minX + 3 + seededRandom() * (maxX - minX - 6);
       const groveY = minY + 3 + seededRandom() * (maxY - minY - 6);
       const groveDist = distFromPath(groveX, groveY);
-      if (groveDist < GROVE_PATH_MIN_DISTANCE) continue;
+      if (groveDist < GROVE_PATH_MIN_DISTANCE) {
+        continue;
+      }
 
       const groveSize = 6 + Math.floor(seededRandom() * 8);
       const treeTypes = categories.trees;
@@ -1142,9 +1175,15 @@ export function renderScene(params: RenderSceneParams): void {
         const tx = groveX + (seededRandom() - 0.5) * 2.62;
         const ty = groveY + (seededRandom() - 0.5) * 2.62;
         const worldPos = gridToWorld({ x: tx, y: ty });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
-        if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkCore(tx, ty, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const groveType = treeTypes[
           Math.floor(seededRandom() * treeTypes.length)
@@ -1154,15 +1193,17 @@ export function renderScene(params: RenderSceneParams): void {
         const groveVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(groveType, groveScale);
-        if (!spacingGrid.tryPlace(tx, ty, exR)) continue;
+        if (!spacingGrid.tryPlace(tx, ty, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: groveRot,
+          scale: groveScale,
           type: groveType,
+          variant: groveVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: groveScale,
-          rotation: groveRot,
-          variant: groveVar,
         });
       }
     }
@@ -1172,11 +1213,15 @@ export function renderScene(params: RenderSceneParams): void {
       const villageX = minX + 5 + seededRandom() * (maxX - minX - 10);
       const villageY = minY + 5 + seededRandom() * (maxY - minY - 10);
       const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
-      if (isOnPath(villageCenterWorld)) continue;
-      if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25)
+      if (isOnPath(villageCenterWorld)) {
         continue;
-      if (isInSpecialTowerZone(villageX, villageY, 2.3, specialTowerZones))
+      }
+      if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25) {
         continue;
+      }
+      if (isInSpecialTowerZone(villageX, villageY, 2.3, specialTowerZones)) {
+        continue;
+      }
 
       const structureTypes = categories.structures;
       const scatteredTypes = categories.scattered;
@@ -1184,13 +1229,18 @@ export function renderScene(params: RenderSceneParams): void {
 
       // Core structures
       for (let si = 0; si < structCount; si++) {
-        const structX = villageX + (seededRandom() - 0.5) * 3.0;
-        const structY = villageY + (seededRandom() - 0.5) * 3.0;
+        const structX = villageX + (seededRandom() - 0.5) * 3;
+        const structY = villageY + (seededRandom() - 0.5) * 3;
         const worldPos = gridToWorld({ x: structX, y: structY });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(structX, structY, landmarkZones)) continue;
-        if (isInSpecialTowerZone(structX, structY, 1.9, specialTowerZones))
+        if (isOnPath(worldPos)) {
           continue;
+        }
+        if (isInLandmarkCore(structX, structY, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(structX, structY, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const sType = structureTypes[
           Math.floor(seededRandom() * structureTypes.length)
@@ -1200,15 +1250,17 @@ export function renderScene(params: RenderSceneParams): void {
         const sVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(sType, sScale);
-        if (!spacingGrid.tryPlace(structX, structY, exR)) continue;
+        if (!spacingGrid.tryPlace(structX, structY, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: sRot,
+          scale: sScale,
           type: sType,
+          variant: sVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: sScale,
-          rotation: sRot,
-          variant: sVar,
         });
       }
 
@@ -1220,9 +1272,15 @@ export function renderScene(params: RenderSceneParams): void {
         const sx = villageX + Math.cos(angle) * dist2;
         const sy = villageY + Math.sin(angle) * dist2;
         const worldPos = gridToWorld({ x: sx, y: sy });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkFull(sx, sy, landmarkZones)) continue;
-        if (isInSpecialTowerZone(sx, sy, 1.15, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkFull(sx, sy, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(sx, sy, 1.15, specialTowerZones)) {
+          continue;
+        }
 
         const scType = (
           scatteredTypes.length > 0
@@ -1234,15 +1292,17 @@ export function renderScene(params: RenderSceneParams): void {
         const scVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(scType, scScale);
-        if (!spacingGrid.tryPlace(sx, sy, exR)) continue;
+        if (!spacingGrid.tryPlace(sx, sy, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: scRot,
+          scale: scScale,
           type: scType,
+          variant: scVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: scScale,
-          rotation: scRot,
-          variant: scVar,
         });
       }
 
@@ -1255,9 +1315,15 @@ export function renderScene(params: RenderSceneParams): void {
         const tx = villageX + Math.cos(angle) * dist2;
         const ty = villageY + Math.sin(angle) * dist2;
         const worldPos = gridToWorld({ x: tx, y: ty });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
-        if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkCore(tx, ty, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const ptType = treeTypes[
           Math.floor(seededRandom() * treeTypes.length)
@@ -1267,15 +1333,17 @@ export function renderScene(params: RenderSceneParams): void {
         const ptVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(ptType, ptScale);
-        if (!spacingGrid.tryPlace(tx, ty, exR)) continue;
+        if (!spacingGrid.tryPlace(tx, ty, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: ptRot,
+          scale: ptScale,
           type: ptType,
+          variant: ptVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: ptScale,
-          rotation: ptRot,
-          variant: ptVar,
         });
       }
     }
@@ -1287,14 +1355,24 @@ export function renderScene(params: RenderSceneParams): void {
       const pathDist = distFromPath(gx, gy);
 
       const pathFactor = Math.min(1, pathDist / DECORATION_PATH_SOFT_RADIUS);
-      if (seededRandom() > pathFactor) continue;
+      if (seededRandom() > pathFactor) {
+        continue;
+      }
 
-      if (isBeyondGrid(gx, gy) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+      if (isBeyondGrid(gx, gy) && seededRandom() > BEYOND_GRID_REDUCE) {
+        continue;
+      }
 
       const worldPos = gridToWorld({ x: gx, y: gy });
-      if (isOnPath(worldPos)) continue;
-      if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
-      if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) continue;
+      if (isOnPath(worldPos)) {
+        continue;
+      }
+      if (isInLandmarkCore(gx, gy, landmarkZones)) {
+        continue;
+      }
+      if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) {
+        continue;
+      }
 
       const allDecorTypes = [...categories.trees, ...categories.terrain];
       const fillType = allDecorTypes[
@@ -1305,15 +1383,17 @@ export function renderScene(params: RenderSceneParams): void {
       const fillVar = Math.floor(seededRandom() * 4);
 
       const exR = getExclusionRadius(fillType, fillScale);
-      if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
+      if (!spacingGrid.tryPlace(gx, gy, exR)) {
+        continue;
+      }
 
       decorations.push({
+        rotation: fillRot,
+        scale: fillScale,
         type: fillType,
+        variant: fillVar,
         x: worldPos.x,
         y: worldPos.y,
-        scale: fillScale,
-        rotation: fillRot,
-        variant: fillVar,
       });
     }
 
@@ -1343,10 +1423,15 @@ export function renderScene(params: RenderSceneParams): void {
       const gridX = seededRandom() * (GRID_WIDTH + 23) - 11.5;
       const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
 
-      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE)
+      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) {
         continue;
-      if (isInLandmarkFull(gridX, gridY, landmarkZones)) continue;
-      if (isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)) continue;
+      }
+      if (isInLandmarkFull(gridX, gridY, landmarkZones)) {
+        continue;
+      }
+      if (isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)) {
+        continue;
+      }
 
       const worldPos = gridToWorld({ x: gridX, y: gridY });
       const bdType =
@@ -1356,15 +1441,17 @@ export function renderScene(params: RenderSceneParams): void {
       const bdVar = Math.floor(seededRandom() * 4);
 
       const exR = getExclusionRadius(bdType, bdScale);
-      if (!spacingGrid.tryPlace(gridX, gridY, exR)) continue;
+      if (!spacingGrid.tryPlace(gridX, gridY, exR)) {
+        continue;
+      }
 
       decorations.push({
+        rotation: bdRot,
+        scale: bdScale,
         type: bdType,
+        variant: bdVar,
         x: worldPos.x,
         y: worldPos.y,
-        scale: bdScale,
-        rotation: bdRot,
-        variant: bdVar,
       });
     }
 
@@ -1374,21 +1461,21 @@ export function renderScene(params: RenderSceneParams): void {
     const edgeTerrainTypes = categories.terrain;
 
     const edgeSegments = [
-      { startX: -3, startY: -2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
+      { dx: 1, dy: 0, length: GRID_WIDTH + 6, startX: -3, startY: -2 },
       {
-        startX: -3,
-        startY: GRID_HEIGHT + 2,
         dx: 1,
         dy: 0,
         length: GRID_WIDTH + 6,
+        startX: -3,
+        startY: GRID_HEIGHT + 2,
       },
-      { startX: -2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
+      { dx: 0, dy: 1, length: GRID_HEIGHT + 6, startX: -2, startY: -3 },
       {
-        startX: GRID_WIDTH + 2,
-        startY: -3,
         dx: 0,
         dy: 1,
         length: GRID_HEIGHT + 6,
+        startX: GRID_WIDTH + 2,
+        startY: -3,
       },
     ];
 
@@ -1397,7 +1484,9 @@ export function renderScene(params: RenderSceneParams): void {
       while (travelled < seg.length) {
         const step = 1.2 + seededRandom() * 1.3;
         travelled += step;
-        if (travelled > seg.length) break;
+        if (travelled > seg.length) {
+          break;
+        }
 
         const baseX = seg.startX + seg.dx * travelled;
         const baseY = seg.startY + seg.dy * travelled;
@@ -1409,9 +1498,15 @@ export function renderScene(params: RenderSceneParams): void {
         const gy = baseY + perpY * offsetPerp + seg.dy * offsetAlong;
 
         const worldPos = gridToWorld({ x: gx, y: gy });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
-        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkCore(gx, gy, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const isTree = seededRandom() > 0.3;
         const edgeType = (
@@ -1428,15 +1523,17 @@ export function renderScene(params: RenderSceneParams): void {
         const edgeVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(edgeType, edgeScale);
-        if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
+        if (!spacingGrid.tryPlace(gx, gy, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: edgeRot,
+          scale: edgeScale,
           type: edgeType,
+          variant: edgeVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: edgeScale,
-          rotation: edgeRot,
-          variant: edgeVar,
         });
       }
     }
@@ -1446,8 +1543,10 @@ export function renderScene(params: RenderSceneParams): void {
     const pathEndpoints: { x: number; y: number }[] = [];
     for (const pathKey of levelPathKeys) {
       const pathPoints = MAP_PATHS[pathKey];
-      if (!pathPoints || pathPoints.length < 2) continue;
-      pathEndpoints.push(pathPoints[0], pathPoints[pathPoints.length - 1]);
+      if (!pathPoints || pathPoints.length < 2) {
+        continue;
+      }
+      pathEndpoints.push(pathPoints[0], pathPoints.at(-1));
     }
 
     const endpointTreeTypes = categories.trees;
@@ -1462,9 +1561,15 @@ export function renderScene(params: RenderSceneParams): void {
         const gx = endpoint.x + Math.cos(angle) * dist2;
         const gy = endpoint.y + Math.sin(angle) * dist2;
         const worldPos = gridToWorld({ x: gx, y: gy });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
-        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkCore(gx, gy, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const epInType = (
           seededRandom() > 0.3
@@ -1480,15 +1585,17 @@ export function renderScene(params: RenderSceneParams): void {
         const epInVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(epInType, epInScale);
-        if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
+        if (!spacingGrid.tryPlace(gx, gy, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: epInRot,
+          scale: epInScale,
           type: epInType,
+          variant: epInVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: epInScale,
-          rotation: epInRot,
-          variant: epInVar,
         });
       }
 
@@ -1500,9 +1607,15 @@ export function renderScene(params: RenderSceneParams): void {
         const gx = endpoint.x + Math.cos(angle) * dist2;
         const gy = endpoint.y + Math.sin(angle) * dist2;
         const worldPos = gridToWorld({ x: gx, y: gy });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
-        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkCore(gx, gy, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) {
+          continue;
+        }
 
         const epMidType = (
           seededRandom() > 0.25
@@ -1518,15 +1631,17 @@ export function renderScene(params: RenderSceneParams): void {
         const epMidVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(epMidType, epMidScale);
-        if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
+        if (!spacingGrid.tryPlace(gx, gy, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: epMidRot,
+          scale: epMidScale,
           type: epMidType,
+          variant: epMidVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: epMidScale,
-          rotation: epMidRot,
-          variant: epMidVar,
         });
       }
 
@@ -1538,9 +1653,15 @@ export function renderScene(params: RenderSceneParams): void {
         const gx = endpoint.x + Math.cos(angle) * dist2;
         const gy = endpoint.y + Math.sin(angle) * dist2;
         const worldPos = gridToWorld({ x: gx, y: gy });
-        if (isOnPath(worldPos)) continue;
-        if (isInLandmarkFull(gx, gy, landmarkZones)) continue;
-        if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) continue;
+        if (isOnPath(worldPos)) {
+          continue;
+        }
+        if (isInLandmarkFull(gx, gy, landmarkZones)) {
+          continue;
+        }
+        if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) {
+          continue;
+        }
 
         const epOutTypes = [...categories.scattered, ...endpointTerrainTypes];
         const epOutType = epOutTypes[
@@ -1551,15 +1672,17 @@ export function renderScene(params: RenderSceneParams): void {
         const epOutVar = Math.floor(seededRandom() * 4);
 
         const exR = getExclusionRadius(epOutType, epOutScale);
-        if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
+        if (!spacingGrid.tryPlace(gx, gy, exR)) {
+          continue;
+        }
 
         decorations.push({
+          rotation: epOutRot,
+          scale: epOutScale,
           type: epOutType,
+          variant: epOutVar,
           x: worldPos.x,
           y: worldPos.y,
-          scale: epOutScale,
-          rotation: epOutRot,
-          variant: epOutVar,
         });
       }
     }
@@ -1568,21 +1691,23 @@ export function renderScene(params: RenderSceneParams): void {
     const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
     if (levelDecorations && landscapeSettings.showLandmarks) {
       const specialTowerWorldPositions = getLevelSpecialTowers(selectedMap).map(
-        (tower) => gridToWorld(tower.pos),
+        (tower) => gridToWorld(tower.pos)
       );
       let manualDecorationCount = 0;
       for (const dec of levelDecorations) {
         const resolvedPlacement = resolveMapDecorationRuntimePlacement(dec);
-        if (!resolvedPlacement) continue;
+        if (!resolvedPlacement) {
+          continue;
+        }
 
         const worldPos = getMapDecorationWorldPos(dec);
         if (specialTowerWorldPositions.length > 0) {
           const clearRadius = Math.max(
             TILE_SIZE * 0.8,
-            resolvedPlacement.scale * 18,
+            resolvedPlacement.scale * 18
           );
           const overlapsSpecialTower = specialTowerWorldPositions.some(
-            (specPos) => distance(worldPos, specPos) < clearRadius,
+            (specPos) => distance(worldPos, specPos) < clearRadius
           );
           if (overlapsSpecialTower) {
             continue;
@@ -1595,14 +1720,14 @@ export function renderScene(params: RenderSceneParams): void {
               ? Number.parseInt(dec.variant, 10) || 0
               : 0;
         const manualDecoration: RuntimeDecoration = {
+          manualOrder: manualDecorationCount,
+          rotation: 0,
+          scale: resolvedPlacement.scale,
+          source: "manual",
           type: resolvedPlacement.runtimeType,
+          variant: decorationVariant,
           x: worldPos.x,
           y: worldPos.y,
-          scale: resolvedPlacement.scale,
-          rotation: 0,
-          variant: decorationVariant,
-          source: "manual",
-          manualOrder: manualDecorationCount,
         };
         manualDecorationCount += 1;
 
@@ -1623,24 +1748,34 @@ export function renderScene(params: RenderSceneParams): void {
     // Stable decoration order: background layer -> depth -> manual tie-breakers.
     decorations.sort((a, b) => {
       const layerDiff = getLayerPriority(a) - getLayerPriority(b);
-      if (layerDiff !== 0) return layerDiff;
+      if (layerDiff !== 0) {
+        return layerDiff;
+      }
 
       const depthDiff = getDecorationIsoY(a) - getDecorationIsoY(b);
-      if (Math.abs(depthDiff) > 0.001) return depthDiff;
+      if (Math.abs(depthDiff) > 0.001) {
+        return depthDiff;
+      }
 
       const sourceDiff = getSourcePriority(a) - getSourcePriority(b);
-      if (sourceDiff !== 0) return sourceDiff;
+      if (sourceDiff !== 0) {
+        return sourceDiff;
+      }
 
       return (a.manualOrder ?? 0) - (b.manualOrder ?? 0);
     });
 
     // Cache the generated decorations
-    cachedDecorationsRef.current = { mapKey: decorCacheKey, decorations };
+    cachedDecorationsRef.current = { decorations, mapKey: decorCacheKey };
 
     // Add blocked positions from procedural background decorations (water, lava, etc.)
     for (const dec of decorations) {
-      if (dec.source === "manual") continue;
-      if (!BACKGROUND_BLOCKING_DECORATION_TYPES.has(dec.type)) continue;
+      if (dec.source === "manual") {
+        continue;
+      }
+      if (!BACKGROUND_BLOCKING_DECORATION_TYPES.has(dec.type)) {
+        continue;
+      }
       const gx = Math.floor(dec.x / TILE_SIZE - 0.5);
       const gy = Math.floor(dec.y / TILE_SIZE - 0.5);
       const range = Math.ceil(dec.scale);
@@ -1665,7 +1800,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     ),
     screenToWorld(
       { x: width + decorCullMarginPx, y: -decorCullMarginPx },
@@ -1673,7 +1808,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     ),
     screenToWorld(
       { x: -decorCullMarginPx, y: height + decorCullMarginPx },
@@ -1681,7 +1816,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     ),
     screenToWorld(
       { x: width + decorCullMarginPx, y: height + decorCullMarginPx },
@@ -1689,7 +1824,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     ),
   ];
   const minVisibleWorldX = Math.min(...worldCorners.map((p) => p.x));
@@ -1703,7 +1838,9 @@ export function renderScene(params: RenderSceneParams): void {
   const enemyWorldPosById = new Map<string, Position>();
   const getEnemyWorldPos = (enemy: Enemy): Position => {
     const cached = enemyWorldPosById.get(enemy.id);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
     const pos = getEnemyPosWithPath(enemy, selectedMap);
     enemyWorldPosById.set(enemy.id, pos);
     return pos;
@@ -1724,11 +1861,15 @@ export function renderScene(params: RenderSceneParams): void {
     entries: CachedVisibleDecoration[],
     offsetCorrectionX = 0,
     offsetCorrectionY = 0,
-    scaleZoom = cameraZoom,
+    scaleZoom = cameraZoom
   ) => {
     const hasCorrection = offsetCorrectionX !== 0 || offsetCorrectionY !== 0;
-    if (hasCorrection) ctx.save();
-    if (hasCorrection) ctx.translate(offsetCorrectionX, offsetCorrectionY);
+    if (hasCorrection) {
+      ctx.save();
+    }
+    if (hasCorrection) {
+      ctx.translate(offsetCorrectionX, offsetCorrectionY);
+    }
     for (const entry of entries) {
       if (entry.sprite) {
         drawDecorationSprite(ctx, entry.sprite, entry.screenPos);
@@ -1740,27 +1881,31 @@ export function renderScene(params: RenderSceneParams): void {
       ctx.save();
       renderDecorationItem({
         ctx,
-        screenPos: entry.screenPos,
-        scale: scaleZoom * dec.scale,
-        type: dec.type,
-        rotation: dec.rotation,
-        variant: dec.variant,
         decorTime,
         decorX: dec.x,
         decorY: dec.y,
-        selectedMap,
         mapTheme,
+        rotation: dec.rotation,
+        scale: scaleZoom * dec.scale,
+        screenPos: entry.screenPos,
+        selectedMap,
         shadowOnly: !!entry.shadowOnly,
         skipShadow: hasBackgroundShadowPass && !entry.shadowOnly,
+        type: dec.type,
+        variant: dec.variant,
         zoom: scaleZoom,
       });
       ctx.restore();
     }
-    if (hasCorrection) ctx.restore();
+    if (hasCorrection) {
+      ctx.restore();
+    }
   };
   const drawLevelHazards = () => {
     const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
-    if (!levelHazards || levelHazards.length === 0) return;
+    if (!levelHazards || levelHazards.length === 0) {
+      return;
+    }
 
     for (const hazard of levelHazards) {
       renderHazard(
@@ -1770,7 +1915,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
     }
   };
@@ -1786,7 +1931,9 @@ export function renderScene(params: RenderSceneParams): void {
   const now = performance.now();
   const survivingPending: Effect[] = [];
   for (const de of pendingDeath) {
-    if (effectIds.has(de.id)) continue;
+    if (effectIds.has(de.id)) {
+      continue;
+    }
     const spawnedAt =
       (de as Effect & { _spawnedAt?: number })._spawnedAt || now;
     const elapsed = now - spawnedAt;
@@ -1811,9 +1958,13 @@ export function renderScene(params: RenderSceneParams): void {
   const skyEffects: Effect[] = [];
   const deathEffects: Effect[] = [];
   for (const eff of mergedEffects) {
-    if (groundEffectTypes.has(eff.type)) groundEffects.push(eff);
-    else if (skyEffectTypes.has(eff.type)) skyEffects.push(eff);
-    else if (eff.type === deathEffectType) deathEffects.push(eff);
+    if (groundEffectTypes.has(eff.type)) {
+      groundEffects.push(eff);
+    } else if (skyEffectTypes.has(eff.type)) {
+      skyEffects.push(eff);
+    } else if (eff.type === deathEffectType) {
+      deathEffects.push(eff);
+    }
   }
   for (const eff of groundEffects) {
     renderEffect(
@@ -1827,7 +1978,7 @@ export function renderScene(params: RenderSceneParams): void {
       selectedMap,
       cameraOffset,
       cameraZoom,
-      mergedEffects.length,
+      mergedEffects.length
     );
   }
 
@@ -1839,7 +1990,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const deathZoom = cameraZoom || 1;
     ctx.save();
@@ -1886,7 +2037,7 @@ export function renderScene(params: RenderSceneParams): void {
         cachedStaticDecorationLayer.backgroundDecorations,
         0,
         0,
-        decorCacheZoomVal,
+        decorCacheZoomVal
       );
       if (cachedStaticDecorationLayer.canvas) {
         const dSrcX = (DECOR_OVERSCAN / 2) * dpr;
@@ -1900,7 +2051,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
       ctx.restore();
@@ -1910,7 +2061,7 @@ export function renderScene(params: RenderSceneParams): void {
       drawBackgroundDecorations(
         cachedStaticDecorationLayer.backgroundDecorations,
         decorPosCorrectX,
-        decorPosCorrectY,
+        decorPosCorrectY
       );
       if (cachedStaticDecorationLayer.canvas) {
         const dSrcX = (DECOR_OVERSCAN / 2 - decorPosCorrectX) * dpr;
@@ -1924,7 +2075,7 @@ export function renderScene(params: RenderSceneParams): void {
           0,
           0,
           width,
-          height,
+          height
         );
       }
     }
@@ -1939,7 +2090,7 @@ export function renderScene(params: RenderSceneParams): void {
         isChallengeTerrainLevel &&
         !isWorldPosInChallengeDecorationFootprint(
           { x: dec.x, y: dec.y },
-          challengePathSegments,
+          challengePathSegments
         )
       ) {
         continue;
@@ -1963,8 +2114,8 @@ export function renderScene(params: RenderSceneParams): void {
       }
       visibleDecorations.push({
         decoration: dec,
-        screenPos: decScreenPos,
         isoY: getDecorationIsoY(dec),
+        screenPos: decScreenPos,
       });
     }
 
@@ -1976,21 +2127,21 @@ export function renderScene(params: RenderSceneParams): void {
     >((anchors, entry) => {
       const volume = getDecorationVolumeSpec(
         entry.decoration.type,
-        entry.decoration.heightTag,
+        entry.decoration.heightTag
       );
       if (volume.heightTag !== "landmark") {
         return anchors;
       }
       const screenScale = cacheZoomForKey * entry.decoration.scale;
       anchors.push({
-        source: entry,
-        heightTag: volume.heightTag,
         centerX: entry.screenPos.x,
         centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
+        frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
+        heightTag: volume.heightTag,
+        isoY: entry.isoY,
         radiusX: volume.width * 0.35 * screenScale,
         radiusY: volume.length * 0.35 * screenScale,
-        isoY: entry.isoY,
-        frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
+        source: entry,
       });
       return anchors;
     }, []);
@@ -2042,7 +2193,7 @@ export function renderScene(params: RenderSceneParams): void {
       const renderLayer = getDecorationRenderLayer(entry.decoration);
       const volume = getDecorationVolumeSpec(
         entry.decoration.type,
-        entry.decoration.heightTag,
+        entry.decoration.heightTag
       );
       const occlusionState = getOcclusionState(entry, occlusionAnchors);
       const resolvedEntry =
@@ -2058,7 +2209,7 @@ export function renderScene(params: RenderSceneParams): void {
       const isNearRoad =
         minDistanceToPath(
           { x: entry.decoration.x, y: entry.decoration.y },
-          decorPathSegments,
+          decorPathSegments
         ) <= DEPTH_LAYER_ROAD_DIST;
       const isDepthAnimated = ANIMATED_DEPTH_TYPES.has(entry.decoration.type);
       const isBgAnimated = ANIMATED_BG_TYPES.has(entry.decoration.type);
@@ -2105,13 +2256,15 @@ export function renderScene(params: RenderSceneParams): void {
             dec.heightTag,
             false,
             vol.backgroundShadowOnly,
-            cacheZoomForKey,
+            cacheZoomForKey
           ) ?? undefined;
         spriteCachedDepthDecorations.push(entry);
       }
     }
     for (const entry of backgroundDecorations) {
-      if (ANIMATED_BG_TYPES.has(entry.decoration.type)) continue;
+      if (ANIMATED_BG_TYPES.has(entry.decoration.type)) {
+        continue;
+      }
       const dec = entry.decoration;
       entry.sprite =
         prerenderDecorationSprite(
@@ -2127,7 +2280,7 @@ export function renderScene(params: RenderSceneParams): void {
           dec.heightTag,
           !!entry.shadowOnly,
           false,
-          cacheZoomForKey,
+          cacheZoomForKey
         ) ?? undefined;
     }
 
@@ -2146,18 +2299,18 @@ export function renderScene(params: RenderSceneParams): void {
           layerCtx.save();
           renderDecorationItem({
             ctx: layerCtx,
-            screenPos: entry.screenPos,
-            scale: cacheZoomForKey * dec.scale,
-            type: dec.type,
-            rotation: dec.rotation,
-            variant: dec.variant,
             decorTime: 0,
             decorX: dec.x,
             decorY: dec.y,
-            selectedMap,
             mapTheme,
+            rotation: dec.rotation,
+            scale: cacheZoomForKey * dec.scale,
+            screenPos: entry.screenPos,
+            selectedMap,
             skipShadow: getDecorationVolumeSpec(dec.type, dec.heightTag)
               .backgroundShadowOnly,
+            type: dec.type,
+            variant: dec.variant,
             zoom: cacheZoomForKey,
           });
           layerCtx.restore();
@@ -2179,20 +2332,20 @@ export function renderScene(params: RenderSceneParams): void {
         0,
         0,
         width,
-        height,
+        height
       );
     } else {
       liveAnimatedDecorations.push(...staticDecorations);
     }
 
     cachedStaticDecorationLayerRef.current = {
-      key: decorBaseKey,
-      canvas: staticDecorationCanvas,
-      backgroundDecorations,
-      animatedDecorations: liveAnimatedDecorations,
-      depthSensitiveDecorations: spriteCachedDepthDecorations,
       anchorOffset: { ...cameraOffset },
+      animatedDecorations: liveAnimatedDecorations,
+      backgroundDecorations,
       cacheZoom: cacheZoomForKey,
+      canvas: staticDecorationCanvas,
+      depthSensitiveDecorations: spriteCachedDepthDecorations,
+      key: decorBaseKey,
     };
     animatedVisibleDecorations = liveAnimatedDecorations;
     depthSensitiveVisibleDecorations = spriteCachedDepthDecorations;
@@ -2221,17 +2374,17 @@ export function renderScene(params: RenderSceneParams): void {
         y: entry.screenPos.y + decorPosCorrectY,
       };
     } else {
-      screenPos = entry.screenPos;
+      ({ screenPos } = entry);
     }
     renderables.push({
-      type: "decoration",
       data: {
         ...entry.decoration,
         decorTime,
-        selectedMap,
         screenPos,
+        selectedMap,
       },
       isoY: entry.isoY,
+      type: "decoration",
     });
   }
   for (const entry of depthSensitiveVisibleDecorations) {
@@ -2250,30 +2403,30 @@ export function renderScene(params: RenderSceneParams): void {
       correctedPos = entry.screenPos;
     }
     renderables.push({
-      type: "decoration",
       data: {
         ...entry.decoration,
-        decorTime,
-        selectedMap,
-        screenPos: correctedPos,
         _sprite: entry.sprite,
+        decorTime,
+        screenPos: correctedPos,
+        selectedMap,
       },
       isoY: entry.isoY,
+      type: "decoration",
     });
   }
   towers.forEach((tower) => {
     const worldPos = gridToWorld(tower.pos);
     renderables.push({
-      type: "tower",
       data: tower,
       isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
+      type: "tower",
     });
   });
   // Collect range reticle data (rendered in consolidated reticle pass, not depth-sorted with entities)
-  const pendingRangeReticles: Array<{
+  const pendingRangeReticles: {
     kind: "station" | "tower";
     tower: Tower & { isHovered?: boolean };
-  }> = [];
+  }[] = [];
   const uiSettings = getGameSettings().ui;
   if (uiSettings.showTowerRadii) {
     towers.forEach((tower) => {
@@ -2317,7 +2470,7 @@ export function renderScene(params: RenderSceneParams): void {
     if (stableOffset === undefined) {
       let idHash = 0;
       for (let i = 0; i < enemy.id.length; i++) {
-        idHash += enemy.id.charCodeAt(i);
+        idHash += enemy.id.codePointAt(i);
       }
       stableOffset = (idHash % 1000) * 0.0001;
       if (enemySortOffsetCacheRef.current.size > 4000) {
@@ -2326,27 +2479,29 @@ export function renderScene(params: RenderSceneParams): void {
       enemySortOffsetCacheRef.current.set(enemy.id, stableOffset);
     }
     renderables.push({
-      type: "enemy",
       data: enemy,
       isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR + stableOffset,
+      type: "enemy",
     });
   });
   if (hero && !hero.dead) {
     renderables.push({
-      type: "hero",
       data: hero,
       isoY: (hero.pos.x + hero.pos.y) * ISO_Y_FACTOR,
+      type: "hero",
     });
   }
   troops.forEach((troop) => {
     renderables.push({
-      type: "troop",
       data: troop,
       isoY: (troop.pos.x + troop.pos.y) * ISO_Y_FACTOR,
+      type: "troop",
     });
   });
   projectiles.forEach((proj) => {
-    if (proj.spawnDelay && proj.spawnDelay > 0) return;
+    if (proj.spawnDelay && proj.spawnDelay > 0) {
+      return;
+    }
     const x = proj.from.x + (proj.to.x - proj.from.x) * proj.progress;
     const y = proj.from.y + (proj.to.y - proj.from.y) * proj.progress;
     if (
@@ -2358,9 +2513,9 @@ export function renderScene(params: RenderSceneParams): void {
       return;
     }
     renderables.push({
-      type: "projectile",
       data: proj,
       isoY: (x + y) * ISO_Y_FACTOR + 0.005,
+      type: "projectile",
     });
   });
   const overlayEffectTypes = new Set(["lightning", "beam", "chain", "zap"]);
@@ -2375,8 +2530,9 @@ export function renderScene(params: RenderSceneParams): void {
       groundEffectTypes.has(eff.type) ||
       skyEffectTypes.has(eff.type) ||
       eff.type === deathEffectType
-    )
+    ) {
       return;
+    }
     const fromX = eff.pos.x;
     const fromY = eff.pos.y;
     const toX = eff.targetPos?.x ?? fromX;
@@ -2408,9 +2564,9 @@ export function renderScene(params: RenderSceneParams): void {
       depthBias = -0.01;
     }
     renderables.push({
-      type: "effect",
       data: eff,
       isoY: (depthX + depthY) * ISO_Y_FACTOR + depthBias,
+      type: "effect",
     });
   });
   // Read active particles from pool (ref-based, no React state)
@@ -2419,9 +2575,9 @@ export function renderScene(params: RenderSceneParams): void {
   for (let i = 0; i < activeParticles.length; i++) {
     const p = activeParticles[i];
     renderables.push({
-      type: "particle",
       data: p,
       isoY: (p.pos.x + p.pos.y) * ISO_Y_FACTOR,
+      type: "particle",
     });
   }
   // Add special building to renderables for proper depth sorting
@@ -2432,14 +2588,18 @@ export function renderScene(params: RenderSceneParams): void {
     if (spec.type === "beacon" || spec.type === "chrono_relay") {
       const boostRange = spec.type === "beacon" ? 250 : 220;
       boostedTowerCount = towers.filter((tower) => {
-        if (tower.type === "club") return false;
+        if (tower.type === "club") {
+          return false;
+        }
         const towerWorldPos = gridToWorld(tower.pos);
         return distance(towerWorldPos, worldPos) < boostRange;
       }).length;
     } else if (spec.type === "sunforge_orrery") {
       const heatRange = 260;
       boostedTowerCount = enemies.filter((enemy) => {
-        if (enemy.dead || enemy.hp <= 0) return false;
+        if (enemy.dead || enemy.hp <= 0) {
+          return false;
+        }
         return distance(getEnemyWorldPos(enemy), worldPos) < heatRange;
       }).length;
     }
@@ -2466,7 +2626,7 @@ export function renderScene(params: RenderSceneParams): void {
           ? 1
           : Math.min(
               1,
-              (Date.now() - lastStrike) / SENTINEL_NEXUS_STATS.strikeIntervalMs,
+              (Date.now() - lastStrike) / SENTINEL_NEXUS_STATS.strikeIntervalMs
             );
     } else if (spec.type === "sunforge_orrery") {
       const key = getSpecialTowerKey(spec);
@@ -2477,20 +2637,20 @@ export function renderScene(params: RenderSceneParams): void {
           : Math.min(
               1,
               (Date.now() - lastBarrage) /
-                SUNFORGE_ORRERY_STATS.barrageIntervalMs,
+                SUNFORGE_ORRERY_STATS.barrageIntervalMs
             );
     }
 
     renderables.push({
-      type: "special-building",
       data: {
         ...spec,
+        __towerIndex: index,
         boostedTowerCount,
         chargeProgress,
         warmupProgress,
-        __towerIndex: index,
       },
       isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
+      type: "special-building",
     });
   });
   if (draggingTower) {
@@ -2500,13 +2660,13 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const worldPos = gridToWorld(gridPos);
     renderables.push({
-      type: "tower-preview",
       data: draggingTower,
       isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
+      type: "tower-preview",
     });
   }
   // Tower repositioning preview
@@ -2519,7 +2679,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       const worldPos = gridToWorld(gridPos);
       const otherTowers = towers.filter((t) => t.id !== repositioningTower);
@@ -2531,19 +2691,19 @@ export function renderScene(params: RenderSceneParams): void {
         GRID_HEIGHT,
         TOWER_PLACEMENT_BUFFER,
         blockedPositions,
-        tower.type,
+        tower.type
       );
       renderables.push({
-        type: "tower-preview",
         data: {
-          type: tower.type,
-          pos: repositionPreviewPos,
           isRepositioning: true,
           isValid,
           level: tower.level,
+          pos: repositionPreviewPos,
+          type: tower.type,
           upgrade: tower.upgrade,
         },
         isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
+        type: "tower-preview",
       });
     }
   }
@@ -2671,10 +2831,14 @@ export function renderScene(params: RenderSceneParams): void {
   const sentinelCursorPos = mousePosRef.current;
   const sentinelPal = getSentinelPalette(mapTheme);
   levelSpecialTowersForRenderable.forEach((spec) => {
-    if (spec.type !== "sentinel_nexus") return;
+    if (spec.type !== "sentinel_nexus") {
+      return;
+    }
     const key = getSpecialTowerKey(spec);
     const targetPos = sentinelTargets[key];
-    if (!targetPos) return;
+    if (!targetPos) {
+      return;
+    }
     const sourceScreenPos = toScreen(gridToWorld(spec.pos));
     sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const isActiveTargeting = activeSentinelTargetKey === key;
@@ -2690,25 +2854,25 @@ export function renderScene(params: RenderSceneParams): void {
         ? 1
         : Math.min(
             1,
-            (sentinelReticleNow - lastStrike) / sentinelVisualInterval,
+            (sentinelReticleNow - lastStrike) / sentinelVisualInterval
           );
 
     renderTargetingReticle(ctx, {
-      x: targetScreenPos.x,
-      y: targetScreenPos.y,
-      zoom: cameraZoom,
-      time: nowSeconds,
-      color: sentinelPal.reticleColor,
-      glowColor: sentinelPal.reticleGlow,
-      radius: 58,
+      active: isActiveTargeting,
       aoeRadius: sentinelStrikeRadiusWorld,
+      color: sentinelPal.reticleColor,
+      cooldownColor: sentinelPal.reticleColor,
+      cooldownProgress: sentinelCooldown,
+      glowColor: sentinelPal.reticleGlow,
       laserLine: {
         fromX: sourceScreenPos.x,
         fromY: sourceScreenPos.y - 30 * cameraZoom,
       },
-      active: isActiveTargeting,
-      cooldownProgress: sentinelCooldown,
-      cooldownColor: sentinelPal.reticleColor,
+      radius: 58,
+      time: nowSeconds,
+      x: targetScreenPos.x,
+      y: targetScreenPos.y,
+      zoom: cameraZoom,
     });
   });
 
@@ -2716,10 +2880,14 @@ export function renderScene(params: RenderSceneParams): void {
   const sunforgeStrikeRadiusWorld = SUNFORGE_ORRERY_STATS.strikeRadius;
   const sunforgeReticleNow = Date.now();
   levelSpecialTowersForRenderable.forEach((spec) => {
-    if (spec.type !== "sunforge_orrery") return;
+    if (spec.type !== "sunforge_orrery") {
+      return;
+    }
     const key = getSpecialTowerKey(spec);
     const aimPos = sunforgeAimRef.current.get(key);
-    if (!aimPos) return;
+    if (!aimPos) {
+      return;
+    }
     const sourceScreenPos = toScreen(gridToWorld(spec.pos));
     sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const targetScreenPos = toScreen(aimPos);
@@ -2731,24 +2899,24 @@ export function renderScene(params: RenderSceneParams): void {
         : Math.min(
             1,
             (sunforgeReticleNow - lastBarrage) /
-              SUNFORGE_ORRERY_STATS.barrageIntervalMs,
+              SUNFORGE_ORRERY_STATS.barrageIntervalMs
           );
 
     renderTargetingReticle(ctx, {
-      x: targetScreenPos.x,
-      y: targetScreenPos.y,
-      zoom: cameraZoom,
-      time: nowSeconds,
-      color: RETICLE_COLORS.orange,
-      glowColor: { r: 255, g: 120, b: 30 },
-      radius: 50,
+      active: false,
       aoeRadius: sunforgeStrikeRadiusWorld,
+      color: RETICLE_COLORS.orange,
+      cooldownProgress: sunforgeCooldown,
+      glowColor: { b: 30, g: 120, r: 255 },
       laserLine: {
         fromX: sourceScreenPos.x,
         fromY: sourceScreenPos.y - 40 * cameraZoom,
       },
-      active: false,
-      cooldownProgress: sunforgeCooldown,
+      radius: 50,
+      time: nowSeconds,
+      x: targetScreenPos.x,
+      y: targetScreenPos.y,
+      zoom: cameraZoom,
     });
   });
 
@@ -2766,7 +2934,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
     } else {
       renderTowerRange(
@@ -2776,7 +2944,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
     }
   }
@@ -2787,15 +2955,15 @@ export function renderScene(params: RenderSceneParams): void {
       ctx,
       {
         anchorPos: selectedUnitMoveInfo.anchorPos,
+        isSelected: true,
         moveRadius: selectedUnitMoveInfo.moveRadius,
         ownerType: selectedUnitMoveInfo.ownerType,
-        isSelected: true,
       },
       canvas.width,
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   }
 
@@ -2830,17 +2998,17 @@ export function renderScene(params: RenderSceneParams): void {
     renderPathTargetIndicator(
       ctx,
       {
-        targetPos: moveTargetPos,
-        isValid: moveTargetValid,
         isHero: !!heroIsSelectedForIndicator || draggingUnit?.kind === "hero",
-        unitPos: unitPos,
-        themeColor: themeColor,
+        isValid: moveTargetValid,
+        targetPos: moveTargetPos,
+        themeColor,
+        unitPos,
       },
       canvas.width,
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   }
 
@@ -2866,12 +3034,12 @@ export function renderScene(params: RenderSceneParams): void {
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom,
+              cameraZoom
             );
       const tStats = calculateTowerStats(
         tower.type,
         tower.level,
-        tower.upgrade,
+        tower.upgrade
       );
       const missileSpeed = gameSpeedRef.current;
       const cd =
@@ -2885,18 +3053,23 @@ export function renderScene(params: RenderSceneParams): void {
         targetScreenPos,
         cameraZoom,
         nowSeconds,
-        cooldownProgress,
+        cooldownProgress
       );
     }
   }
 
   // 4b. Missile battery auto-aim reticle
   for (const tower of towers) {
-    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A")
+    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") {
       continue;
-    if (tower.mortarAutoAim === false) continue;
+    }
+    if (tower.mortarAutoAim === false) {
+      continue;
+    }
     const aimPos = missileAutoAimRef.current.get(tower.id);
-    if (!aimPos) continue;
+    if (!aimPos) {
+      continue;
+    }
     const towerWorldPos = gridToWorld(tower.pos);
     const sourceScreenPos = worldToScreen(
       towerWorldPos,
@@ -2904,7 +3077,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const targetScreenPos = worldToScreen(
@@ -2913,7 +3086,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
     const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
     const missileSpeed = gameSpeedRef.current;
@@ -2924,20 +3097,20 @@ export function renderScene(params: RenderSceneParams): void {
     const elapsed = missileReticleNow - tower.lastAttack;
     const cooldownProgress = Math.min(1, elapsed / cd);
     renderTargetingReticle(ctx, {
-      x: targetScreenPos.x,
-      y: targetScreenPos.y,
-      zoom: cameraZoom,
-      time: nowSeconds,
+      active: false,
       color: RETICLE_COLORS.gold,
-      glowColor: { r: 255, g: 180, b: 40 },
-      radius: 50,
+      cooldownColor: RETICLE_COLORS.gold,
+      cooldownProgress,
+      glowColor: { b: 40, g: 180, r: 255 },
       laserLine: {
         fromX: sourceScreenPos.x,
         fromY: sourceScreenPos.y - 20 * cameraZoom,
       },
-      active: false,
-      cooldownProgress,
-      cooldownColor: RETICLE_COLORS.gold,
+      radius: 50,
+      time: nowSeconds,
+      x: targetScreenPos.x,
+      y: targetScreenPos.y,
+      zoom: cameraZoom,
     });
   }
 
@@ -2953,11 +3126,11 @@ export function renderScene(params: RenderSceneParams): void {
           ? "lightning"
           : "placement";
     renderSpellReticle(ctx, {
+      time: Date.now() * 0.003,
+      variant,
       x: rMouse.x,
       y: rMouse.y,
       zoom: cameraZoom ?? 1,
-      time: Date.now() * 0.003,
-      variant,
     });
   }
 
@@ -2972,7 +3145,7 @@ export function renderScene(params: RenderSceneParams): void {
         dpr,
         selectedMap,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
     }
   }
@@ -2985,41 +3158,42 @@ export function renderScene(params: RenderSceneParams): void {
     const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
     const hasAttackSpeedBuff = t.attackSpeedBoost && t.attackSpeedBoost > 1;
 
-    if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed)
+    if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed) {
       return;
+    }
 
     const activeBuffCount =
       Number(hasDamageBuff) + Number(hasRangeBuff) + Number(hasAttackSpeedBuff);
     const buffTheme =
       activeBuffCount >= 2
         ? {
-            base: "255, 220, 140",
             accent: "255, 200, 90",
-            glow: "#ffe08c",
+            base: "255, 220, 140",
             fill: "rgba(255, 220, 140, 0.08)",
+            glow: "#ffe08c",
             icon: "✦",
           }
         : hasAttackSpeedBuff
           ? {
-              base: "165, 180, 255",
               accent: "129, 140, 248",
-              glow: "#a5b4fc",
+              base: "165, 180, 255",
               fill: "rgba(165, 180, 255, 0.08)",
+              glow: "#a5b4fc",
               icon: "⌁",
             }
           : hasDamageBuff
             ? {
-                base: "255, 100, 100",
                 accent: "255, 150, 50",
-                glow: "#ff6464",
+                base: "255, 100, 100",
                 fill: "rgba(255, 100, 100, 0.06)",
+                glow: "#ff6464",
                 icon: "◆",
               }
             : {
-                base: "100, 200, 255",
                 accent: "50, 150, 255",
-                glow: "#64c8ff",
+                base: "100, 200, 255",
                 fill: "rgba(100, 200, 255, 0.06)",
+                glow: "#64c8ff",
                 icon: "◎",
               };
 
@@ -3165,18 +3339,20 @@ export function renderScene(params: RenderSceneParams): void {
         hoveredInspectEnemy === enemy.id,
         cameraOffset,
         cameraZoom,
-        "ground",
+        "ground"
       );
     });
     troops.forEach((troop) => {
-      if (troop.dead) return;
+      if (troop.dead) {
+        return;
+      }
       const troopScreen = worldToScreen(
         troop.pos,
         canvas.width,
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       renderUnitInspectIndicator(
         ctx,
@@ -3186,7 +3362,7 @@ export function renderScene(params: RenderSceneParams): void {
         selectedInspectTroop?.id === troop.id,
         hoveredInspectTroop === troop.id,
         "troop",
-        "ground",
+        "ground"
       );
     });
     if (hero && !hero.dead) {
@@ -3196,7 +3372,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       renderUnitInspectIndicator(
         ctx,
@@ -3206,7 +3382,7 @@ export function renderScene(params: RenderSceneParams): void {
         selectedInspectHero,
         hoveredInspectHero,
         "hero",
-        "ground",
+        "ground"
       );
     }
   }
@@ -3242,14 +3418,15 @@ export function renderScene(params: RenderSceneParams): void {
           spec.boostedTowerCount || 0,
           spec.chargeProgress ?? 0,
           spec.warmupProgress ?? 1,
-          mapTheme,
+          mapTheme
         );
         break;
       }
 
       case "station-range":
-      case "tower-range":
+      case "tower-range": {
         break;
+      }
       case "decoration": {
         const decData = r.data as {
           type: DecorationType;
@@ -3282,25 +3459,25 @@ export function renderScene(params: RenderSceneParams): void {
           ctx.save();
           renderDecorationItem({
             ctx,
-            screenPos: decScreenPos,
-            scale: decScale,
-            type: decData.type,
-            rotation: decData.rotation,
-            variant: decData.variant,
             decorTime: decData.decorTime,
             decorX: decData.x,
             decorY: decData.y,
-            selectedMap: decData.selectedMap,
             mapTheme,
+            rotation: decData.rotation,
+            scale: decScale,
+            screenPos: decScreenPos,
+            selectedMap: decData.selectedMap,
             skipShadow: getDecorationVolumeSpec(decData.type, decData.heightTag)
               .backgroundShadowOnly,
+            type: decData.type,
+            variant: decData.variant,
             zoom: cameraZoom,
           });
           ctx.restore();
         }
         break;
       }
-      case "tower":
+      case "tower": {
         renderTower(
           ctx,
           r.data as Tower,
@@ -3312,12 +3489,12 @@ export function renderScene(params: RenderSceneParams): void {
           enemies,
           selectedMap,
           cameraOffset,
-          cameraZoom,
+          cameraZoom
         );
         {
           const tower = r.data as Tower;
           const activeDebuffs = tower.debuffs?.filter(
-            (d) => d.until > frameNowMs,
+            (d) => d.until > frameNowMs
           );
           if (activeDebuffs && activeDebuffs.length > 0) {
             const towerPos = gridToWorld(tower.pos);
@@ -3327,7 +3504,7 @@ export function renderScene(params: RenderSceneParams): void {
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom,
+              cameraZoom
             );
             towerScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
             renderTowerDebuffEffects(
@@ -3335,12 +3512,13 @@ export function renderScene(params: RenderSceneParams): void {
               { ...tower, debuffs: activeDebuffs },
               towerScreenPos,
               cameraZoom,
-              pausedAtRef.current ?? undefined,
+              pausedAtRef.current ?? undefined
             );
           }
         }
         break;
-      case "enemy":
+      }
+      case "enemy": {
         renderEnemy(
           ctx,
           r.data as Enemy,
@@ -3350,12 +3528,13 @@ export function renderScene(params: RenderSceneParams): void {
           selectedMap,
           cameraOffset,
           cameraZoom,
-          enemies.length,
+          enemies.length
         );
         break;
+      }
       case "hero": {
         const heroRenderable = r.data as Hero;
-        let heroTargetPos: Position | undefined = undefined;
+        let heroTargetPos;
         if (heroRenderable.aggroTarget) {
           const aggroEnemy = enemyById.get(heroRenderable.aggroTarget);
           if (aggroEnemy) {
@@ -3374,7 +3553,7 @@ export function renderScene(params: RenderSceneParams): void {
           cameraOffset,
           cameraZoom,
           heroTargetPos,
-          mapTheme,
+          mapTheme
         );
         {
           const heroData = heroRenderable;
@@ -3390,14 +3569,14 @@ export function renderScene(params: RenderSceneParams): void {
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom,
+              cameraZoom
             );
             renderUnitStatusEffects(
               ctx,
               heroData,
               heroScreenPos,
               cameraZoom,
-              pausedAtRef.current ?? undefined,
+              pausedAtRef.current ?? undefined
             );
           }
         }
@@ -3405,7 +3584,7 @@ export function renderScene(params: RenderSceneParams): void {
       }
       case "troop": {
         const troopRenderable = r.data as Troop;
-        let targetPos: Position | undefined = undefined;
+        let targetPos;
         if (troopRenderable.targetEnemy) {
           const targetEnemy = enemyById.get(troopRenderable.targetEnemy);
           if (targetEnemy) {
@@ -3428,7 +3607,7 @@ export function renderScene(params: RenderSceneParams): void {
           cameraOffset,
           cameraZoom,
           targetPos,
-          mapTheme,
+          mapTheme
         );
         {
           const troopData = troopRenderable;
@@ -3444,20 +3623,20 @@ export function renderScene(params: RenderSceneParams): void {
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom,
+              cameraZoom
             );
             renderUnitStatusEffects(
               ctx,
               troopData,
               troopScreenPos,
               cameraZoom,
-              pausedAtRef.current ?? undefined,
+              pausedAtRef.current ?? undefined
             );
           }
         }
         break;
       }
-      case "projectile":
+      case "projectile": {
         renderProjectile(
           ctx,
           r.data as Projectile,
@@ -3466,10 +3645,11 @@ export function renderScene(params: RenderSceneParams): void {
           dpr,
           cameraOffset,
           cameraZoom,
-          projectiles.length,
+          projectiles.length
         );
         break;
-      case "effect":
+      }
+      case "effect": {
         renderEffect(
           ctx,
           r.data as Effect,
@@ -3481,10 +3661,11 @@ export function renderScene(params: RenderSceneParams): void {
           selectedMap,
           cameraOffset,
           cameraZoom,
-          mergedEffects.length,
+          mergedEffects.length
         );
         break;
-      case "particle":
+      }
+      case "particle": {
         renderParticle(
           ctx,
           r.data as Particle,
@@ -3493,9 +3674,10 @@ export function renderScene(params: RenderSceneParams): void {
           dpr,
           cameraOffset,
           cameraZoom,
-          particlesRef.current.length,
+          particlesRef.current.length
         );
         break;
+      }
       case "tower-preview": {
         const previewData = r.data as DraggingTower & {
           isRepositioning?: boolean;
@@ -3515,7 +3697,7 @@ export function renderScene(params: RenderSceneParams): void {
           GRID_HEIGHT,
           cameraOffset,
           cameraZoom,
-          blockedPositions,
+          blockedPositions
         );
         break;
       }
@@ -3534,11 +3716,11 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       ),
     selectedMap,
     cameraZoom,
-    Date.now(),
+    Date.now()
   );
 
   // Sky-level spell effects (falling meteors, lightning bolts) render above all map objects.
@@ -3554,7 +3736,7 @@ export function renderScene(params: RenderSceneParams): void {
       selectedMap,
       cameraOffset,
       cameraZoom,
-      mergedEffects.length,
+      mergedEffects.length
     );
   }
 
@@ -3572,18 +3754,20 @@ export function renderScene(params: RenderSceneParams): void {
         hoveredInspectEnemy === enemy.id,
         cameraOffset,
         cameraZoom,
-        "overlay",
+        "overlay"
       );
     });
     troops.forEach((troop) => {
-      if (troop.dead) return;
+      if (troop.dead) {
+        return;
+      }
       const troopScreen = worldToScreen(
         troop.pos,
         canvas.width,
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       renderUnitInspectIndicator(
         ctx,
@@ -3593,7 +3777,7 @@ export function renderScene(params: RenderSceneParams): void {
         selectedInspectTroop?.id === troop.id,
         hoveredInspectTroop === troop.id,
         "troop",
-        "overlay",
+        "overlay"
       );
     });
     if (hero && !hero.dead) {
@@ -3603,7 +3787,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom,
+        cameraZoom
       );
       renderUnitInspectIndicator(
         ctx,
@@ -3613,7 +3797,7 @@ export function renderScene(params: RenderSceneParams): void {
         selectedInspectHero,
         hoveredInspectHero,
         "hero",
-        "overlay",
+        "overlay"
       );
     }
   }
@@ -3628,7 +3812,7 @@ export function renderScene(params: RenderSceneParams): void {
       dpr,
       dmgNumberStyle,
       cameraOffset,
-      cameraZoom,
+      cameraZoom
     );
   }
 
@@ -3638,14 +3822,14 @@ export function renderScene(params: RenderSceneParams): void {
   const waveStartBubbles = getWaveStartBubblesScreenData(
     canvas.width,
     canvas.height,
-    dpr,
+    dpr
   );
   const primedWaveBubble = waveStartConfirm
     ? waveStartBubbles.find(
         (bubble) =>
           bubble.pathKey === waveStartConfirm.pathKey &&
           waveStartConfirm.mapId === selectedMap &&
-          waveStartConfirm.waveIndex === currentWave,
+          waveStartConfirm.waveIndex === currentWave
       )
     : null;
 
@@ -3707,8 +3891,8 @@ export function renderScene(params: RenderSceneParams): void {
     }
 
     cachedAmbientLayerRef.current = {
-      key: ambientLayerKey,
       canvas: ambientCanvas,
+      key: ambientLayerKey,
       renderedAtMs: frameNowMs,
     };
 
@@ -3722,11 +3906,11 @@ export function renderScene(params: RenderSceneParams): void {
   // Draw wave start bubbles after ambient/vignette pass so they're readable over fog.
   for (const bubble of waveStartBubbles) {
     drawWaveStartBubble({
-      ctx,
       bubble,
-      primedPathKey,
-      hoveredPathKey: hoveredWaveBubblePathKey,
+      ctx,
       frameNowMs,
+      hoveredPathKey: hoveredWaveBubblePathKey,
+      primedPathKey,
     });
   }
 
@@ -3751,7 +3935,7 @@ export function renderScene(params: RenderSceneParams): void {
     const maxY = height - panelHeight - panelMargin;
     const panelY = Math.max(
       panelMargin,
-      Math.min(maxY, screenPos.y - radius * 2.25),
+      Math.min(maxY, screenPos.y - radius * 2.25)
     );
 
     const panelPulse = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(frameNowMs * 0.008));
@@ -3763,7 +3947,7 @@ export function renderScene(params: RenderSceneParams): void {
       panelX,
       panelY,
       panelX,
-      panelY + panelHeight,
+      panelY + panelHeight
     );
     panelGradient.addColorStop(0, "rgba(36, 18, 18, 0.95)");
     panelGradient.addColorStop(1, "rgba(14, 10, 12, 0.95)");
@@ -3783,7 +3967,7 @@ export function renderScene(params: RenderSceneParams): void {
     ctx.fillText(
       `${pathLabel} - Wave ${currentWave + 1}`,
       panelX + 12,
-      panelY + 16,
+      panelY + 16
     );
 
     ctx.fillStyle = "rgba(255, 170, 150, 0.92)";

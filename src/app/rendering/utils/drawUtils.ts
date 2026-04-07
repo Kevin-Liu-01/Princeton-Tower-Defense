@@ -8,8 +8,11 @@ export function drawTriangle(
     const angle = (i * Math.PI * 2) / 3;
     const x = Math.cos(angle) * size;
     const y = Math.sin(angle) * size;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   }
   ctx.closePath();
   ctx.strokeStyle = color;

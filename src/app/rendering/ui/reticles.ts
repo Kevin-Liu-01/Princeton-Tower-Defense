@@ -12,12 +12,12 @@ import { ISO_Y_RATIO } from "../../constants";
 // -----------------------------------------------------------------------------
 
 export type ReticleCategory =
-  | "targeting"    // Offensive aiming (mortar manual, spell AoE)
-  | "relocation"   // Troop/hero move destination
-  | "spell"        // Spell cast area
-  | "selection"    // Selected unit ring
-  | "range"        // Tower/station/building range ellipse
-  | "aesthetic";   // Decorative crosshairs (scope, turret sight)
+  | "targeting" // Offensive aiming (mortar manual, spell AoE)
+  | "relocation" // Troop/hero move destination
+  | "spell" // Spell cast area
+  | "selection" // Selected unit ring
+  | "range" // Tower/station/building range ellipse
+  | "aesthetic"; // Decorative crosshairs (scope, turret sight)
 
 export interface ReticleColor {
   r: number;
@@ -45,16 +45,16 @@ export interface ReticleStyle {
 // -----------------------------------------------------------------------------
 
 export const RETICLE_COLORS = {
-  orange:   { r: 255, g: 120, b: 20 }  as ReticleColor,
-  red:      { r: 255, g: 40,  b: 40 }  as ReticleColor,
-  blue:     { r: 120, g: 180, b: 255 } as ReticleColor,
-  cyan:     { r: 0,   g: 230, b: 200 } as ReticleColor,
-  green:    { r: 100, g: 220, b: 140 } as ReticleColor,
-  gold:     { r: 255, g: 200, b: 100 } as ReticleColor,
-  purple:   { r: 180, g: 130, b: 255 } as ReticleColor,
-  white:    { r: 255, g: 255, b: 255 } as ReticleColor,
-  violet:   { r: 160, g: 100, b: 200 } as ReticleColor,
-  rose:     { r: 251, g: 113, b: 133 } as ReticleColor,
+  blue: { b: 255, g: 180, r: 120 } as ReticleColor,
+  cyan: { b: 200, g: 230, r: 0 } as ReticleColor,
+  gold: { b: 100, g: 200, r: 255 } as ReticleColor,
+  green: { b: 140, g: 220, r: 100 } as ReticleColor,
+  orange: { b: 20, g: 120, r: 255 } as ReticleColor,
+  purple: { b: 255, g: 130, r: 180 } as ReticleColor,
+  red: { b: 40, g: 40, r: 255 } as ReticleColor,
+  rose: { b: 133, g: 113, r: 251 } as ReticleColor,
+  violet: { b: 200, g: 100, r: 160 } as ReticleColor,
+  white: { b: 255, g: 255, r: 255 } as ReticleColor,
 } as const;
 
 // -----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ export function drawIsometricEllipse(
     dashOffset?: number;
     shadowColor?: string;
     shadowBlur?: number;
-  } = {},
+  } = {}
 ): void {
   const rX = radiusX * zoom;
   const rY = rX * ISO_Y_RATIO;
@@ -95,7 +95,9 @@ export function drawIsometricEllipse(
 
   if (options.dash) {
     ctx.setLineDash(options.dash.map((d) => d * zoom));
-    if (options.dashOffset !== undefined) ctx.lineDashOffset = options.dashOffset;
+    if (options.dashOffset !== undefined) {
+      ctx.lineDashOffset = options.dashOffset;
+    }
   }
 
   ctx.beginPath();
@@ -111,7 +113,9 @@ export function drawIsometricEllipse(
     ctx.stroke();
   }
 
-  if (options.dash) ctx.setLineDash([]);
+  if (options.dash) {
+    ctx.setLineDash([]);
+  }
   if (options.shadowColor) {
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
@@ -127,7 +131,7 @@ export function drawCrosshairLines(
   zoom: number,
   color: string,
   lineWidth: number = 1.5,
-  isometric: boolean = true,
+  isometric: boolean = true
 ): void {
   const iR = innerRadius * zoom;
   const oR = outerRadius * zoom;
@@ -161,7 +165,7 @@ export function drawRotatingTicks(
   rotation: number,
   zoom: number,
   color: string,
-  lineWidth: number = 2,
+  lineWidth: number = 2
 ): void {
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth * zoom;
@@ -186,7 +190,7 @@ function drawRadialGlow(
   radius: number,
   zoom: number,
   color: ReticleColor,
-  alpha: number,
+  alpha: number
 ): void {
   const r = radius * zoom;
   ctx.save();
@@ -208,7 +212,7 @@ function drawCenterDot(
   y: number,
   zoom: number,
   color: string,
-  radius: number = 2.5,
+  radius: number = 2.5
 ): void {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -226,7 +230,7 @@ function drawRotatingCrosshairArms(
   zoom: number,
   color: string,
   armCount: number = 4,
-  lineWidth: number = 1.5,
+  lineWidth: number = 1.5
 ): void {
   ctx.save();
   ctx.translate(x, y);
@@ -276,12 +280,15 @@ export interface TargetingReticleConfig {
 
 export function renderTargetingReticle(
   ctx: CanvasRenderingContext2D,
-  config: TargetingReticleConfig,
+  config: TargetingReticleConfig
 ): void {
   const {
-    x, y, zoom, time,
+    x,
+    y,
+    zoom,
+    time,
     color = RETICLE_COLORS.orange,
-    glowColor = { r: 255, g: 80, b: 0 },
+    glowColor = { b: 0, g: 80, r: 255 },
     radius = 48,
     showGlow = true,
     showRotatingArms = true,
@@ -294,20 +301,17 @@ export function renderTargetingReticle(
     cooldownColor,
   } = config;
 
-  const p = pulse(time, 3, 0.6, 1.0);
+  const p = pulse(time, 3, 0.6, 1);
   const rot = time * 0.8;
 
   // Scale radius from 70% to 100% as cooldown fills
-  const cdScale = cooldownProgress !== undefined
-    ? 0.7 + cooldownProgress * 0.3
-    : 1;
+  const cdScale =
+    cooldownProgress !== undefined ? 0.7 + cooldownProgress * 0.3 : 1;
   const r = radius * cdScale;
   const innerR = r * 0.29;
 
   const aboutToFire = cooldownProgress !== undefined && cooldownProgress > 0.85;
-  const fireFlash = aboutToFire
-    ? 0.5 + Math.sin(time * 18) * 0.5
-    : 0;
+  const fireFlash = aboutToFire ? 0.5 + Math.sin(time * 18) * 0.5 : 0;
 
   ctx.save();
 
@@ -361,7 +365,9 @@ export function renderTargetingReticle(
     // Filled arc foreground
     ctx.beginPath();
     ctx.arc(0, 0, rX, startAngle, startAngle + fillAngle);
-    const arcAlpha = aboutToFire ? 0.7 + fireFlash * 0.3 : 0.35 + cooldownProgress * 0.35;
+    const arcAlpha = aboutToFire
+      ? 0.7 + fireFlash * 0.3
+      : 0.35 + cooldownProgress * 0.35;
     ctx.strokeStyle = rgba(cdColor, arcAlpha);
     ctx.lineWidth = 3.5 * zoom;
     ctx.lineCap = "round";
@@ -377,35 +383,49 @@ export function renderTargetingReticle(
   }
 
   // Outer pulsing dashed ring (brighter when about to fire)
-  const outerAlpha = aboutToFire
-    ? 0.55 + fireFlash * 0.3
-    : 0.35 + p * 0.25;
+  const outerAlpha = aboutToFire ? 0.55 + fireFlash * 0.3 : 0.35 + p * 0.25;
   drawIsometricEllipse(ctx, x, y, r, zoom, {
-    strokeColor: rgba(color, outerAlpha),
-    lineWidth: aboutToFire ? 2.5 : 2,
     dash: [6, 4],
     dashOffset: -time * 40,
+    lineWidth: aboutToFire ? 2.5 : 2,
+    strokeColor: rgba(color, outerAlpha),
   });
 
   // Inner solid ring
   drawIsometricEllipse(ctx, x, y, r * 0.6, zoom, {
-    strokeColor: rgba(color, 0.45 * p),
     lineWidth: 1.5,
+    strokeColor: rgba(color, 0.45 * p),
   });
 
   // Rotating crosshair arms
   if (showRotatingArms) {
     drawRotatingCrosshairArms(
-      ctx, x, y, innerR, r * 0.7, rot, zoom,
-      rgba(color, 0.5 + p * 0.3), 4, 1.5,
+      ctx,
+      x,
+      y,
+      innerR,
+      r * 0.7,
+      rot,
+      zoom,
+      rgba(color, 0.5 + p * 0.3),
+      4,
+      1.5
     );
   }
 
   // Rotating tick marks
   if (showTicks) {
     drawRotatingTicks(
-      ctx, x, y, r * 0.85, 6, tickCount, rot, zoom,
-      rgba(color, 0.5 * p), 2,
+      ctx,
+      x,
+      y,
+      r * 0.85,
+      6,
+      tickCount,
+      rot,
+      zoom,
+      rgba(color, 0.5 * p),
+      2
     );
   }
 
@@ -422,14 +442,29 @@ export function renderTargetingReticle(
 
 export type SpellReticleVariant = "fireball" | "lightning" | "placement";
 
-const SPELL_PRESETS: Record<SpellReticleVariant, {
-  color: ReticleColor;
-  glowColor: ReticleColor;
-  radius: number;
-}> = {
-  fireball:  { color: { r: 255, g: 120, b: 20 },  glowColor: { r: 255, g: 80,  b: 0 },   radius: 50 },
-  lightning: { color: { r: 120, g: 180, b: 255 }, glowColor: { r: 80,  g: 140, b: 255 }, radius: 45 },
-  placement: { color: { r: 100, g: 220, b: 140 }, glowColor: { r: 50,  g: 200, b: 120 }, radius: 40 },
+const SPELL_PRESETS: Record<
+  SpellReticleVariant,
+  {
+    color: ReticleColor;
+    glowColor: ReticleColor;
+    radius: number;
+  }
+> = {
+  fireball: {
+    color: { b: 20, g: 120, r: 255 },
+    glowColor: { b: 0, g: 80, r: 255 },
+    radius: 50,
+  },
+  lightning: {
+    color: { b: 255, g: 180, r: 120 },
+    glowColor: { b: 255, g: 140, r: 80 },
+    radius: 45,
+  },
+  placement: {
+    color: { b: 140, g: 220, r: 100 },
+    glowColor: { b: 120, g: 200, r: 50 },
+    radius: 40,
+  },
 };
 
 export interface SpellReticleConfig {
@@ -445,17 +480,20 @@ export interface SpellReticleConfig {
 
 export function renderSpellReticle(
   ctx: CanvasRenderingContext2D,
-  config: SpellReticleConfig,
+  config: SpellReticleConfig
 ): void {
   const preset = config.variant ? SPELL_PRESETS[config.variant] : undefined;
   const {
-    x, y, zoom, time,
+    x,
+    y,
+    zoom,
+    time,
     color = preset?.color ?? RETICLE_COLORS.orange,
     glowColor = preset?.glowColor ?? RETICLE_COLORS.orange,
     radius = preset?.radius ?? 50,
   } = config;
 
-  const p = pulse(time, 3, 0.7, 1.0);
+  const p = pulse(time, 3, 0.7, 1);
 
   ctx.save();
 
@@ -465,29 +503,46 @@ export function renderSpellReticle(
 
   // Main dashed reticle ellipse
   drawIsometricEllipse(ctx, x, y, radius, zoom, {
-    strokeColor: rgba(color, 0.6 * p),
-    lineWidth: 2,
     dash: [8, 5],
+    lineWidth: 2,
+    strokeColor: rgba(color, 0.6 * p),
   });
 
   // Inner solid ring
   drawIsometricEllipse(ctx, x, y, radius * 0.6, zoom, {
-    strokeColor: rgba(color, 0.45 * p),
     lineWidth: 1.5,
+    strokeColor: rgba(color, 0.45 * p),
   });
 
   // Crosshair lines with gap
   const chOuter = radius * 0.5;
   const chInner = radius * 0.15;
-  drawCrosshairLines(ctx, x, y, chInner, chOuter, zoom, rgba(color, 0.7 * p), 1.5);
+  drawCrosshairLines(
+    ctx,
+    x,
+    y,
+    chInner,
+    chOuter,
+    zoom,
+    rgba(color, 0.7 * p),
+    1.5
+  );
 
   // Center dot
   drawCenterDot(ctx, x, y, zoom, rgba(RETICLE_COLORS.white, 0.8 * p));
 
   // Rotating tick marks
   drawRotatingTicks(
-    ctx, x, y, radius * 0.85, 6, 4, time * 0.8, zoom,
-    rgba(color, 0.5 * p), 2,
+    ctx,
+    x,
+    y,
+    radius * 0.85,
+    6,
+    4,
+    time * 0.8,
+    zoom,
+    rgba(color, 0.5 * p),
+    2
   );
 
   ctx.restore();
@@ -513,11 +568,15 @@ export interface RelocationReticleConfig {
 
 export function renderRelocationReticle(
   ctx: CanvasRenderingContext2D,
-  config: RelocationReticleConfig,
+  config: RelocationReticleConfig
 ): void {
   const {
-    targetX: tx, targetY: ty, unitX: ux, unitY: uy,
-    zoom, time,
+    targetX: tx,
+    targetY: ty,
+    unitX: ux,
+    unitY: uy,
+    zoom,
+    time,
     color = RETICLE_COLORS.gold,
     isValid = true,
     showTrailLine = true,
@@ -525,7 +584,7 @@ export function renderRelocationReticle(
   } = config;
 
   const validMul = isValid ? 1 : 0.4;
-  const p = pulse(time, 3, 0.85, 1.0);
+  const p = pulse(time, 3, 0.85, 1);
   const outerR = 16 * p;
 
   ctx.save();
@@ -545,8 +604,8 @@ export function renderRelocationReticle(
 
   // Outer isometric ring
   drawIsometricEllipse(ctx, tx, ty, outerR, zoom, {
-    strokeColor: rgba(color, 0.65 * validMul),
     lineWidth: 2,
+    strokeColor: rgba(color, 0.65 * validMul),
   });
 
   // Inner filled dot
@@ -557,7 +616,16 @@ export function renderRelocationReticle(
   // Crosshair spurs outside the ring
   const spurOuter = outerR + 11;
   const spurInner = outerR + 4;
-  drawCrosshairLines(ctx, tx, ty, spurInner, spurOuter, zoom, rgba(color, 0.5 * validMul), 1.5);
+  drawCrosshairLines(
+    ctx,
+    tx,
+    ty,
+    spurInner,
+    spurOuter,
+    zoom,
+    rgba(color, 0.5 * validMul),
+    1.5
+  );
 
   // Direction arrow along the trail
   if (showDirectionArrow) {
@@ -571,15 +639,15 @@ export function renderRelocationReticle(
     ctx.beginPath();
     ctx.moveTo(
       arrowX + Math.cos(angle) * arrowSize,
-      arrowY + Math.sin(angle) * arrowSize * ISO_Y_RATIO,
+      arrowY + Math.sin(angle) * arrowSize * ISO_Y_RATIO
     );
     ctx.lineTo(
       arrowX + Math.cos(angle - 2.3) * arrowSize * 0.7,
-      arrowY + Math.sin(angle - 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
+      arrowY + Math.sin(angle - 2.3) * arrowSize * 0.7 * ISO_Y_RATIO
     );
     ctx.lineTo(
       arrowX + Math.cos(angle + 2.3) * arrowSize * 0.7,
-      arrowY + Math.sin(angle + 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
+      arrowY + Math.sin(angle + 2.3) * arrowSize * 0.7 * ISO_Y_RATIO
     );
     ctx.closePath();
     ctx.fill();
@@ -622,10 +690,13 @@ export interface SelectionReticleConfig {
 
 export function renderSelectionReticle(
   ctx: CanvasRenderingContext2D,
-  config: SelectionReticleConfig,
+  config: SelectionReticleConfig
 ): void {
   const {
-    x, y, zoom, time,
+    x,
+    y,
+    zoom,
+    time,
     color = RETICLE_COLORS.gold,
     radius = 35,
     dashPattern = [6, 3],
@@ -634,14 +705,14 @@ export function renderSelectionReticle(
     lineWidth = 2,
   } = config;
 
-  const p = pulse(time, pulseSpeed, 0.5, 1.0);
+  const p = pulse(time, pulseSpeed, 0.5, 1);
 
   ctx.save();
   drawIsometricEllipse(ctx, x, y, radius, zoom, {
-    strokeColor: rgba(color, p),
-    lineWidth,
     dash: dashPattern,
     dashOffset: -time * dashSpeed,
+    lineWidth,
+    strokeColor: rgba(color, p),
   });
   ctx.restore();
 }
@@ -651,7 +722,12 @@ export function renderSelectionReticle(
 // Used by: towerRange, stationRange, special building ranges
 // =============================================================================
 
-export type RangeState = "normal" | "buffed" | "debuffed" | "hovered" | "preview";
+export type RangeState =
+  | "normal"
+  | "buffed"
+  | "debuffed"
+  | "hovered"
+  | "preview";
 
 export interface RangeReticleConfig {
   x: number;
@@ -667,19 +743,22 @@ export interface RangeReticleConfig {
 }
 
 const RANGE_STATE_COLORS: Record<RangeState, ReticleColor> = {
-  normal:   { r: 100, g: 200, b: 255 },
-  buffed:   { r: 0,   g: 230, b: 200 },
-  debuffed: { r: 160, g: 100, b: 200 },
-  hovered:  { r: 100, g: 200, b: 255 },
-  preview:  { r: 100, g: 200, b: 255 },
+  buffed: { b: 200, g: 230, r: 0 },
+  debuffed: { b: 200, g: 100, r: 160 },
+  hovered: { b: 255, g: 200, r: 100 },
+  normal: { b: 255, g: 200, r: 100 },
+  preview: { b: 255, g: 200, r: 100 },
 };
 
 export function renderRangeReticle(
   ctx: CanvasRenderingContext2D,
-  config: RangeReticleConfig,
+  config: RangeReticleConfig
 ): void {
   const {
-    x, y, range, zoom,
+    x,
+    y,
+    range,
+    zoom,
     state = "normal",
     dashed = false,
     lineWidth = 2,
@@ -692,10 +771,10 @@ export function renderRangeReticle(
 
   ctx.save();
   drawIsometricEllipse(ctx, x, y, range * 0.7, zoom, {
-    fillColor: rgba(color, fillA),
-    strokeColor: rgba(color, strokeA),
-    lineWidth,
     dash: dashed ? [8, 4] : undefined,
+    fillColor: rgba(color, fillA),
+    lineWidth,
+    strokeColor: rgba(color, strokeA),
   });
   ctx.restore();
 }
@@ -718,10 +797,12 @@ export interface AestheticCrosshairConfig {
 
 export function renderAestheticCrosshair(
   ctx: CanvasRenderingContext2D,
-  config: AestheticCrosshairConfig,
+  config: AestheticCrosshairConfig
 ): void {
   const {
-    x, y, zoom,
+    x,
+    y,
+    zoom,
     radius,
     color = "rgba(200, 220, 240, 0.5)",
     lineWidth = 1,
@@ -766,6 +847,10 @@ export function renderAestheticCrosshair(
 export function hexToReticleColor(hex: string): ReticleColor {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
-    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+    ? {
+        b: Number.parseInt(result[3], 16),
+        g: Number.parseInt(result[2], 16),
+        r: Number.parseInt(result[1], 16),
+      }
     : RETICLE_COLORS.gold;
 }

@@ -3,8 +3,8 @@
 // The actual rendering logic lives in renderDecorationItem.ts switch cases;
 // these wrappers delegate to it with the appropriate params.
 
-import { renderDecorationItem } from "./renderDecorationItem";
 import type { DecorationType } from "../../types";
+import { renderDecorationItem } from "./renderDecorationItem";
 
 function renderLandmark(
   ctx: CanvasRenderingContext2D,
@@ -13,19 +13,19 @@ function renderLandmark(
   scale: number,
   type: DecorationType,
   variant: number,
-  time: number,
+  time: number
 ): void {
   renderDecorationItem({
     ctx,
-    screenPos: { x, y },
-    scale,
-    type,
-    rotation: 0,
-    variant,
     decorTime: time,
     decorX: x,
     decorY: y,
+    rotation: 0,
+    scale,
+    screenPos: { x, y },
     selectedMap: "",
+    type,
+    variant,
   });
 }
 
@@ -35,7 +35,7 @@ export function drawPyramid(
   y: number,
   scale: number,
   variant: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "pyramid", variant, time);
 }
@@ -46,9 +46,17 @@ export function drawSphinx(
   y: number,
   scale: number,
   isGiant: boolean,
-  time: number,
+  time: number
 ): void {
-  renderLandmark(ctx, x, y, scale, isGiant ? "giant_sphinx" : "sphinx", 0, time);
+  renderLandmark(
+    ctx,
+    x,
+    y,
+    scale,
+    isGiant ? "giant_sphinx" : "sphinx",
+    0,
+    time
+  );
 }
 
 export function drawNassauHall(
@@ -56,7 +64,7 @@ export function drawNassauHall(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "nassau_hall", 0, time);
 }
@@ -66,7 +74,7 @@ export function drawGlacier(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "glacier", 0, time);
 }
@@ -76,7 +84,7 @@ export function drawFortress(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "fortress", 0, time);
 }
@@ -86,7 +94,7 @@ export function drawIceThrone(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "ice_throne", 0, time);
 }
@@ -96,7 +104,7 @@ export function drawObsidianCastle(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "obsidian_castle", 0, time);
 }
@@ -106,7 +114,7 @@ export function drawWitchCottage(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "witch_cottage", 0, time);
 }
@@ -116,7 +124,7 @@ export function drawCannonCrest(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "cannon_crest", 0, time);
 }
@@ -126,7 +134,7 @@ export function drawIvyCrossroads(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "ivy_crossroads", 0, time);
 }
@@ -136,7 +144,7 @@ export function drawBlightBasin(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "blight_basin", 0, time);
 }
@@ -146,7 +154,7 @@ export function drawTriadKeep(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "triad_keep", 0, time);
 }
@@ -156,7 +164,7 @@ export function drawSunscorchLabyrinth(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "sunscorch_labyrinth", 0, time);
 }
@@ -166,7 +174,7 @@ export function drawFrontierOutpost(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "frist_outpost", 0, time);
 }
@@ -176,7 +184,7 @@ export function drawAshenSpiral(
   x: number,
   y: number,
   scale: number,
-  time: number,
+  time: number
 ): void {
   renderLandmark(ctx, x, y, scale, "ashen_spiral", 0, time);
 }

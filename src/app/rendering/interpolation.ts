@@ -20,7 +20,7 @@ interface SmoothedPos {
 const smoothedPositions = new Map<string, SmoothedPos>();
 
 const SMOOTHING_SPEED = 18;
-const SNAP_DISTANCE_SQ = 10000;
+const SNAP_DISTANCE_SQ = 10_000;
 const STALE_MS = 2000;
 
 let lastCleanup = 0;
@@ -36,13 +36,13 @@ export function getSmoothedScreenPos(
   id: string,
   targetX: number,
   targetY: number,
-  frameDtSec: number,
+  frameDtSec: number
 ): Position {
   const now = performance.now();
   const existing = smoothedPositions.get(id);
 
   if (!existing) {
-    smoothedPositions.set(id, { x: targetX, y: targetY, lastUpdate: now });
+    smoothedPositions.set(id, { lastUpdate: now, x: targetX, y: targetY });
     return { x: targetX, y: targetY };
   }
 
@@ -71,7 +71,9 @@ export function removeSmoothedPos(id: string): void {
 
 export function cleanupStalePositions(): void {
   const now = performance.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  if (now - lastCleanup < CLEANUP_INTERVAL) {
+    return;
+  }
   lastCleanup = now;
 
   const cutoff = now - STALE_MS;

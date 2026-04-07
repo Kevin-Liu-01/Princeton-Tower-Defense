@@ -1,10 +1,11 @@
 import type { MutableRefObject, RefObject } from "react";
-import type { Position, SpecialTower } from "../../types";
+
 import { TILE_SIZE, GRID_WIDTH, GRID_HEIGHT } from "../../constants";
+import type { Position, SpecialTower } from "../../types";
 
 export function getSpecialTowerKeyImpl(
   selectedMap: string,
-  tower: Pick<SpecialTower, "type" | "pos">,
+  tower: Pick<SpecialTower, "type" | "pos">
 ): string {
   return `${selectedMap}:${tower.type}:${tower.pos.x.toFixed(2)}:${tower.pos.y.toFixed(2)}`;
 }
@@ -32,19 +33,21 @@ export function getRandomMapTargetImpl(): Position {
 }
 
 export function getRenderDprImpl(renderDprCap: number): number {
-  if (typeof window === "undefined") return 1;
+  if (typeof window === "undefined") {
+    return 1;
+  }
   return Math.min(window.devicePixelRatio || 1, renderDprCap);
 }
 
 export function getCanvasDimensionsImpl(
   canvasRef: RefObject<HTMLCanvasElement | null>,
-  renderDprCap: number,
+  renderDprCap: number
 ): { width: number; height: number; dpr: number } {
   const canvas = canvasRef.current;
   const dpr = getRenderDprImpl(renderDprCap);
   return {
-    width: canvas ? canvas.width : 1000,
-    height: canvas ? canvas.height : 600,
     dpr,
+    height: canvas ? canvas.height : 600,
+    width: canvas ? canvas.width : 1000,
   };
 }

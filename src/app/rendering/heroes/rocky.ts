@@ -11,7 +11,7 @@ function drawStoneSkirtArmor(
   isAttacking: boolean,
   attackIntensity: number,
   yOffset: number,
-  cracked: boolean,
+  cracked: boolean
 ) {
   const skirtTop = y - hop + s * yOffset;
   const bandCount = 4;
@@ -27,7 +27,7 @@ function drawStoneSkirtArmor(
     skirtTop,
     totalHeight,
     gapHalf,
-    cracked,
+    cracked
   );
   for (let side = -1; side <= 1; side += 2) {
     drawStoneTassetSide(
@@ -43,7 +43,7 @@ function drawStoneSkirtArmor(
       gapHalf,
       isAttacking,
       attackIntensity,
-      cracked,
+      cracked
     );
   }
   const bridgeY = skirtTop + s * 0.025;
@@ -54,7 +54,7 @@ function drawStoneSkirtArmor(
     bridgeLeft,
     bridgeY,
     bridgeRight,
-    bridgeY,
+    bridgeY
   );
   bridgeGrad.addColorStop(0, "#484038");
   bridgeGrad.addColorStop(0.3, "#585050");
@@ -88,7 +88,7 @@ function drawStoneTassetSide(
   gapHalf: number,
   isAttacking: boolean,
   attackIntensity: number,
-  cracked: boolean,
+  cracked: boolean
 ) {
   const shear = s * -0.1;
 
@@ -108,7 +108,12 @@ function drawStoneTassetSide(
     const plateAlpha = tattered ? Math.max(0.15, 0.82 - band * 0.22) : 1;
     ctx.globalAlpha = plateAlpha;
 
-    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    const plateG = ctx.createLinearGradient(
+      innerX,
+      innerTopY,
+      outerX,
+      outerBotY
+    );
     if (cracked) {
       if (side === -1) {
         plateG.addColorStop(0, "#706860");
@@ -145,13 +150,15 @@ function drawStoneTassetSide(
       ctx.moveTo(innerX + chipI, innerTopY);
       ctx.lineTo(outerX + chipO, outerTopY);
       if (band >= 2) {
-        const mx = outerX + chipO + (side * s * 0.004 + chipO * 0.5 - chipO) * 0.5;
+        const mx =
+          outerX + chipO + (side * s * 0.004 + chipO * 0.5 - chipO) * 0.5;
         const my = (outerTopY + outerBotY) * 0.5;
         ctx.lineTo(mx + jagO * 0.6, my);
       }
       ctx.lineTo(outerX + side * s * 0.004 + chipO * 0.5, outerBotY);
       if (band >= 1) {
-        const mx = innerX + chipI + (-side * s * 0.002 + chipI * 0.5 - chipI) * 0.5;
+        const mx =
+          innerX + chipI + (-side * s * 0.002 + chipI * 0.5 - chipI) * 0.5;
         const my = (innerBotY + innerTopY) * 0.5 + bandHeight * 0.1;
         ctx.lineTo(mx + jagI * 0.5, my);
       }
@@ -174,8 +181,12 @@ function drawStoneTassetSide(
       const rivetY =
         innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
       const rg = ctx.createRadialGradient(
-        rivetX - s * 0.002, rivetY - s * 0.002, 0,
-        rivetX, rivetY, s * 0.009,
+        rivetX - s * 0.002,
+        rivetY - s * 0.002,
+        0,
+        rivetX,
+        rivetY,
+        s * 0.009
       );
       rg.addColorStop(0, "#686058");
       rg.addColorStop(0.4, "#585050");
@@ -241,12 +252,24 @@ function drawStoneTassetSide(
       ctx.fill();
       if (band >= 1) {
         ctx.beginPath();
-        ctx.arc(mossX + s * 0.025, mossY - s * 0.006, s * (0.009 + band * 0.004), 0, Math.PI * 2);
+        ctx.arc(
+          mossX + s * 0.025,
+          mossY - s * 0.006,
+          s * (0.009 + band * 0.004),
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
       if (band >= 2) {
         ctx.beginPath();
-        ctx.arc(mossX - s * 0.018, mossY + s * 0.016, s * (0.011 + band * 0.003), 0, Math.PI * 2);
+        ctx.arc(
+          mossX - s * 0.018,
+          mossY + s * 0.016,
+          s * (0.011 + band * 0.003),
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         ctx.beginPath();
         ctx.arc(mossX + s * 0.04, mossY + s * 0.01, s * 0.007, 0, Math.PI * 2);
@@ -298,7 +321,7 @@ function drawStoneCenterBanner(
   skirtTop: number,
   totalHeight: number,
   gapHalf: number,
-  cracked: boolean,
+  cracked: boolean
 ) {
   const tabletTop = skirtTop + s * 0.04;
   const tabletBottom = skirtTop + totalHeight * 0.92;
@@ -363,7 +386,7 @@ function drawStoneSkirtBelt(
   x: number,
   s: number,
   zoom: number,
-  skirtTop: number,
+  skirtTop: number
 ) {
   const beltHalfW = s * 0.43;
   const beltThick = s * 0.048;
@@ -373,7 +396,7 @@ function drawStoneSkirtBelt(
     x - beltHalfW,
     skirtTop,
     x + beltHalfW,
-    skirtTop,
+    skirtTop
   );
   beltGrad.addColorStop(0, "#484038");
   beltGrad.addColorStop(0.25, "#585050");
@@ -412,7 +435,7 @@ export function drawRockyHero(
   _color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const s = size;
   const isAttacking = attackPhase > 0;
@@ -446,7 +469,7 @@ export function drawRockyHero(
     isAttacking,
     attackIntensity,
     -0.32,
-    false,
+    false
   );
   drawStoneSkirtArmor(
     ctx,
@@ -459,7 +482,7 @@ export function drawRockyHero(
     isAttacking,
     attackIntensity,
     0.16,
-    true,
+    true
   );
   drawStoneClaws(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
   drawShoulderPads(ctx, x, y, s, hop, time, zoom);
@@ -473,7 +496,7 @@ export function drawRockyHero(
     zoom,
     isAttacking,
     attackPhase,
-    tossPhase,
+    tossPhase
   );
   drawHead(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
   drawIdleStoneToss(ctx, x, y, s, hop, tossX, tossY, time, zoom, isAttacking);
@@ -493,7 +516,7 @@ function drawAura(
   hop: number,
   time: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const strength = isAttacking ? 0.45 : 0.18;
   const pulse = 0.85 + Math.sin(time * 3) * 0.15;
@@ -522,7 +545,7 @@ function drawAura(
     0,
     x - s * 0.12,
     y - s * 0.54 - hop,
-    s * 0.4,
+    s * 0.4
   );
   gg.addColorStop(0, `rgba(0, 220, 255, ${gemGlow})`);
   gg.addColorStop(0.5, `rgba(0, 160, 220, ${gemGlow * 0.3})`);
@@ -541,7 +564,7 @@ function drawDebrisParticles(
   y: number,
   s: number,
   hop: number,
-  time: number,
+  time: number
 ) {
   for (let p = 0; p < 12; p++) {
     const angle = (time * 1.2 + (p * Math.PI * 2) / 12) % (Math.PI * 2);
@@ -572,7 +595,7 @@ function drawAttackShockwaves(
   hop: number,
   attackPhase: number,
   attackIntensity: number,
-  zoom: number,
+  zoom: number
 ) {
   for (let ring = 0; ring < 4; ring++) {
     const phase = (attackPhase * 2 + ring * 0.18) % 1;
@@ -587,7 +610,7 @@ function drawAttackShockwaves(
       s * (ISO_Y_RATIO + phase * 0.45),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -604,7 +627,7 @@ function drawSquirrelTail(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackPhase: number,
+  attackPhase: number
 ) {
   const wave1 = Math.sin(time * 4) * 7;
   const wave2 = Math.sin(time * 5.2 + 0.5) * 4;
@@ -622,7 +645,7 @@ function drawSquirrelTail(
     x + s * 0.95 + tw * 1.05,
     y - s * 0.18 - hop * 0.4,
     x + s * 0.72 + tw * 0.6,
-    y - s * 0.82 - hop * 0.45,
+    y - s * 0.82 - hop * 0.45
   );
   ctx.bezierCurveTo(
     x + s * 0.58 + tw * 0.4,
@@ -630,7 +653,7 @@ function drawSquirrelTail(
     x + s * 0.36 + wave2 * 0.3,
     y - s * 0.76 - hop * 0.45,
     x + s * 0.48 + wave2 * 0.35,
-    y - s * 0.5 - hop * 0.38,
+    y - s * 0.5 - hop * 0.38
   );
   ctx.bezierCurveTo(
     x + s * 0.34 + wave2 * 0.2,
@@ -638,7 +661,7 @@ function drawSquirrelTail(
     x + s * 0.24,
     y + s * 0.04 - hop * 0.3,
     x + s * 0.14,
-    y + s * 0.2 - hop * 0.3,
+    y + s * 0.2 - hop * 0.3
   );
   ctx.closePath();
   ctx.fill();
@@ -648,7 +671,7 @@ function drawSquirrelTail(
     x + s * 0.2,
     y - hop,
     x + s * 0.7 + tw * 0.4,
-    y - s * 0.7 - hop,
+    y - s * 0.7 - hop
   );
   tg.addColorStop(0, "#c08020");
   tg.addColorStop(0.15, "#b07018");
@@ -666,7 +689,7 @@ function drawSquirrelTail(
     x + s * 0.88 + tw,
     y - s * 0.22 - hop * 0.4,
     x + s * 0.68 + tw * 0.55,
-    y - s * 0.76 - hop * 0.45,
+    y - s * 0.76 - hop * 0.45
   );
   // Curled tip
   ctx.bezierCurveTo(
@@ -675,7 +698,7 @@ function drawSquirrelTail(
     x + s * 0.4 + wave2 * 0.3,
     y - s * 0.82 - hop * 0.46,
     x + s * 0.46 + wave2 * 0.3,
-    y - s * 0.62 - hop * 0.42,
+    y - s * 0.62 - hop * 0.42
   );
   // Inner edge — narrower, creates the volume
   ctx.bezierCurveTo(
@@ -684,7 +707,7 @@ function drawSquirrelTail(
     x + s * 0.28,
     y - s * 0.1 - hop * 0.3,
     x + s * 0.19,
-    y + s * 0.14 - hop * 0.3,
+    y + s * 0.14 - hop * 0.3
   );
   ctx.closePath();
   ctx.fill();
@@ -717,7 +740,7 @@ function drawSquirrelTail(
     x + s * 0.6 + tw * 0.75,
     y - s * 0.3 - hop * 0.4,
     x + s * 0.52 + tw * 0.38,
-    y - s * 0.58 - hop * 0.43,
+    y - s * 0.58 - hop * 0.43
   );
   ctx.bezierCurveTo(
     x + s * 0.38 + wave2 * 0.2,
@@ -725,7 +748,7 @@ function drawSquirrelTail(
     x + s * 0.28,
     y - s * 0.04 - hop * 0.3,
     x + s * 0.24,
-    y + s * 0.1 - hop * 0.3,
+    y + s * 0.1 - hop * 0.3
   );
   ctx.closePath();
   ctx.fill();
@@ -741,7 +764,7 @@ function drawSquirrelTail(
     x + s * 0.48 + tw * 0.55,
     y - s * 0.28 - hop * 0.38,
     x + s * 0.46 + tw * 0.3,
-    y - s * 0.48 - hop * 0.4,
+    y - s * 0.48 - hop * 0.4
   );
   ctx.bezierCurveTo(
     x + s * 0.36 + wave2 * 0.15,
@@ -749,7 +772,7 @@ function drawSquirrelTail(
     x + s * 0.27,
     y - s * 0.02 - hop * 0.3,
     x + s * 0.23,
-    y + s * 0.06 - hop * 0.3,
+    y + s * 0.06 - hop * 0.3
   );
   ctx.closePath();
   ctx.fill();
@@ -767,7 +790,7 @@ function drawSquirrelTail(
       tx + s * 0.12 + tuftW,
       ty,
       tx + s * 0.06,
-      ty + s * 0.025,
+      ty + s * 0.025
     );
     ctx.closePath();
     ctx.fill();
@@ -787,7 +810,7 @@ function drawSquirrelTail(
       sx + s * 0.04 + sw,
       sy - s * 0.03,
       sx + s * 0.08 + sw,
-      sy - s * 0.05,
+      sy - s * 0.05
     );
     ctx.stroke();
   }
@@ -803,7 +826,7 @@ function drawSquirrelTail(
     x + s * 0.86 + tw * 0.98,
     y - s * 0.24 - hop * 0.4,
     x + s * 0.66 + tw * 0.53,
-    y - s * 0.76 - hop * 0.45,
+    y - s * 0.76 - hop * 0.45
   );
   ctx.stroke();
 
@@ -819,7 +842,7 @@ function drawSquirrelTail(
     tipX + s * 0.04,
     tipY - s * 0.16,
     tipX + s * 0.08,
-    tipY - s * 0.1,
+    tipY - s * 0.1
   );
   ctx.bezierCurveTo(
     tipX + s * 0.12,
@@ -827,7 +850,7 @@ function drawSquirrelTail(
     tipX + s * 0.06,
     tipY + s * 0.04,
     tipX,
-    tipY,
+    tipY
   );
   ctx.closePath();
   ctx.fill();
@@ -856,7 +879,7 @@ function drawWing(
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
-  side: number,
+  side: number
 ) {
   const by = y - hop;
   const isStone = side === -1;
@@ -894,7 +917,7 @@ function drawWing(
     { angle: -0.9, len: 0.52 },
     { angle: -0.6, len: 0.56 },
     { angle: -0.3, len: 0.5 },
-    { angle: 0.0, len: 0.42 },
+    { angle: 0, len: 0.42 },
     { angle: 0.3, len: 0.32 },
   ];
   const elbowX = -s * 0.46;
@@ -932,26 +955,26 @@ function drawWing(
       elbowX,
       elbowY,
       (fx1 + fx2) / 2,
-      (fy1 + fy2) / 2,
+      (fy1 + fy2) / 2
     );
     const shade = 0.85 - i * 0.08;
     if (isStone) {
       panelG.addColorStop(
         0,
-        `rgba(${Math.round(100 * shade)}, ${Math.round(90 * shade)}, ${Math.round(80 * shade)}, 0.85)`,
+        `rgba(${Math.round(100 * shade)}, ${Math.round(90 * shade)}, ${Math.round(80 * shade)}, 0.85)`
       );
       panelG.addColorStop(
         1,
-        `rgba(${Math.round(70 * shade)}, ${Math.round(65 * shade)}, ${Math.round(58 * shade)}, 0.75)`,
+        `rgba(${Math.round(70 * shade)}, ${Math.round(65 * shade)}, ${Math.round(58 * shade)}, 0.75)`
       );
     } else {
       panelG.addColorStop(
         0,
-        `rgba(${Math.round(190 * shade)}, ${Math.round(140 * shade)}, ${Math.round(50 * shade)}, 0.8)`,
+        `rgba(${Math.round(190 * shade)}, ${Math.round(140 * shade)}, ${Math.round(50 * shade)}, 0.8)`
       );
       panelG.addColorStop(
         1,
-        `rgba(${Math.round(150 * shade)}, ${Math.round(100 * shade)}, ${Math.round(30 * shade)}, 0.7)`,
+        `rgba(${Math.round(150 * shade)}, ${Math.round(100 * shade)}, ${Math.round(30 * shade)}, 0.7)`
       );
     }
     ctx.fillStyle = panelG;
@@ -980,7 +1003,7 @@ function drawWing(
     ctx.moveTo(fx - s * 0.02, fy);
     ctx.lineTo(
       fx + Math.cos(tipAngle) * tipLen,
-      fy + Math.sin(tipAngle) * tipLen,
+      fy + Math.sin(tipAngle) * tipLen
     );
     ctx.lineTo(fx + s * 0.02, fy);
     ctx.closePath();
@@ -1019,7 +1042,7 @@ function drawWing(
       0,
       elbowX,
       elbowY,
-      s * 0.018,
+      s * 0.018
     );
     gemG.addColorStop(0, "#80ffff");
     gemG.addColorStop(0.5, "#00c8e0");
@@ -1048,7 +1071,7 @@ function drawBody(
   hop: number,
   breathe: number,
   zoom: number,
-  time: number,
+  time: number
 ) {
   const bw = s * (0.42 + breathe);
   const bh = s * (0.46 + breathe * 0.5);
@@ -1061,7 +1084,7 @@ function drawBody(
     s * 0.1,
     x,
     by,
-    s * 0.5,
+    s * 0.5
   );
   g.addColorStop(0, "#d8a840");
   g.addColorStop(0.25, "#c09030");
@@ -1077,7 +1100,7 @@ function drawBody(
     x + bw * 1.05,
     by - bh * 0.5,
     x + bw,
-    by - bh * 0.1,
+    by - bh * 0.1
   );
   ctx.bezierCurveTo(
     x + bw * 1.08,
@@ -1085,7 +1108,7 @@ function drawBody(
     x + bw * 0.85,
     by + bh * 0.8,
     x + bw * 0.4,
-    by + bh,
+    by + bh
   );
   ctx.bezierCurveTo(
     x + bw * 0.15,
@@ -1093,7 +1116,7 @@ function drawBody(
     x - bw * 0.15,
     by + bh * 1.05,
     x - bw * 0.4,
-    by + bh,
+    by + bh
   );
   ctx.bezierCurveTo(
     x - bw * 0.85,
@@ -1101,7 +1124,7 @@ function drawBody(
     x - bw * 1.12,
     by + bh * 0.3,
     x - bw * 1.05,
-    by - bh * 0.1,
+    by - bh * 0.1
   );
   ctx.bezierCurveTo(
     x - bw * 1.1,
@@ -1109,7 +1132,7 @@ function drawBody(
     x - bw * 0.65,
     by - bh,
     x,
-    by - bh,
+    by - bh
   );
   ctx.closePath();
   ctx.fill();
@@ -1126,7 +1149,7 @@ function drawBody(
     s * 0.03,
     x + s * 0.04,
     by + s * 0.06,
-    s * 0.24,
+    s * 0.24
   );
   belly.addColorStop(0, "#fff8e8");
   belly.addColorStop(0.4, "#f0dcc0");
@@ -1141,7 +1164,7 @@ function drawBody(
     x + s * 0.24,
     by - s * 0.08,
     x + s * 0.22,
-    by + s * 0.1,
+    by + s * 0.1
   );
   ctx.bezierCurveTo(
     x + s * 0.2,
@@ -1149,7 +1172,7 @@ function drawBody(
     x + s * 0.05,
     by + s * 0.34,
     x - s * 0.06,
-    by + s * 0.3,
+    by + s * 0.3
   );
   ctx.bezierCurveTo(
     x - s * 0.18,
@@ -1157,7 +1180,7 @@ function drawBody(
     x - s * 0.18,
     by - s * 0.1,
     x - s * 0.08,
-    by - s * 0.16,
+    by - s * 0.16
   );
   ctx.closePath();
   ctx.fill();
@@ -1224,7 +1247,7 @@ function drawBody(
     x + s * 0.02,
     by - s * 0.31,
     x + s * 0.09,
-    by - s * 0.22,
+    by - s * 0.22
   );
   ctx.bezierCurveTo(
     x + s * 0.07,
@@ -1232,7 +1255,7 @@ function drawBody(
     x + s * 0.03,
     by - s * 0.12,
     x,
-    by - s * 0.1,
+    by - s * 0.1
   );
   ctx.bezierCurveTo(
     x - s * 0.04,
@@ -1240,7 +1263,7 @@ function drawBody(
     x - s * 0.06,
     by - s * 0.17,
     x - s * 0.06,
-    by - s * 0.22,
+    by - s * 0.22
   );
   ctx.closePath();
   ctx.fill();
@@ -1254,7 +1277,7 @@ function drawBody(
     x + s * 0.02,
     by - s * 0.27,
     x + s * 0.05,
-    by - s * 0.21,
+    by - s * 0.21
   );
   ctx.bezierCurveTo(
     x + s * 0.03,
@@ -1262,7 +1285,7 @@ function drawBody(
     x + s * 0.01,
     by - s * 0.14,
     x,
-    by - s * 0.13,
+    by - s * 0.13
   );
   ctx.bezierCurveTo(
     x - s * 0.02,
@@ -1270,7 +1293,7 @@ function drawBody(
     x - s * 0.03,
     by - s * 0.18,
     x - s * 0.03,
-    by - s * 0.21,
+    by - s * 0.21
   );
   ctx.closePath();
   ctx.fill();
@@ -1285,14 +1308,14 @@ function drawLeftStonePlating(
   x: number,
   by: number,
   s: number,
-  zoom: number,
+  zoom: number
 ) {
   // Large stone plate covering upper-left torso
   const pg = ctx.createLinearGradient(
     x - s * 0.45,
     by - s * 0.3,
     x - s * 0.05,
-    by + s * 0.15,
+    by + s * 0.15
   );
   pg.addColorStop(0, "#8a8278");
   pg.addColorStop(0.3, "#706860");
@@ -1354,7 +1377,7 @@ function drawLeftStonePlating(
     x - s * 0.35,
     by - s * 0.38,
     x - s * 0.2,
-    by - s * 0.15,
+    by - s * 0.15
   );
   hl.addColorStop(0, "rgba(200, 190, 180, 0.35)");
   hl.addColorStop(1, "rgba(200, 190, 180, 0)");
@@ -1388,13 +1411,13 @@ function drawLeftStonePlating(
     x - s * 0.32,
     by + s * 0.02,
     x - s * 0.26,
-    by + s * 0.06,
+    by + s * 0.06
   );
   ctx.quadraticCurveTo(
     x - s * 0.22,
     by + s * 0.02,
     x - s * 0.28,
-    by - s * 0.05,
+    by - s * 0.05
   );
   ctx.fill();
   ctx.fillStyle = "rgba(70, 95, 55, 0.15)";
@@ -1405,7 +1428,7 @@ function drawLeftStonePlating(
     x - s * 0.06,
     by + s * 0.16,
     x - s * 0.12,
-    by + s * 0.12,
+    by + s * 0.12
   );
   ctx.fill();
 }
@@ -1416,7 +1439,7 @@ function drawBodyStoneFragments(
   y: number,
   s: number,
   hop: number,
-  zoom: number,
+  zoom: number
 ) {
   // Heavy left-side fragments + a few scattered right-side chips
   const fragments: { ox: number; oy: number; pts: number[][]; rot: number }[] =
@@ -1425,7 +1448,6 @@ function drawBodyStoneFragments(
       {
         ox: -0.28,
         oy: -0.2,
-        rot: 0.4,
         pts: [
           [-0.5, -0.3],
           [-0.2, -0.6],
@@ -1435,11 +1457,11 @@ function drawBodyStoneFragments(
           [-0.2, 0.55],
           [-0.55, 0.15],
         ],
+        rot: 0.4,
       },
       {
         ox: -0.34,
         oy: 0.15,
-        rot: -0.2,
         pts: [
           [-0.45, -0.35],
           [-0.1, -0.55],
@@ -1449,11 +1471,11 @@ function drawBodyStoneFragments(
           [-0.3, 0.5],
           [-0.5, 0.1],
         ],
+        rot: -0.2,
       },
       {
         ox: -0.15,
         oy: 0.32,
-        rot: 0.5,
         pts: [
           [-0.4, -0.2],
           [0, -0.5],
@@ -1462,11 +1484,11 @@ function drawBodyStoneFragments(
           [-0.1, 0.5],
           [-0.45, 0.2],
         ],
+        rot: 0.5,
       },
       {
         ox: -0.38,
         oy: -0.04,
-        rot: 0.1,
         pts: [
           [-0.5, -0.25],
           [-0.15, -0.5],
@@ -1476,11 +1498,11 @@ function drawBodyStoneFragments(
           [-0.25, 0.45],
           [-0.5, 0.1],
         ],
+        rot: 0.1,
       },
       {
         ox: -0.08,
         oy: -0.12,
-        rot: -0.3,
         pts: [
           [-0.4, -0.3],
           [0.1, -0.5],
@@ -1489,12 +1511,12 @@ function drawBodyStoneFragments(
           [-0.15, 0.5],
           [-0.45, 0.1],
         ],
+        rot: -0.3,
       },
       // RIGHT SIDE: smaller scattered chips
       {
         ox: 0.2,
         oy: 0.18,
-        rot: -0.5,
         pts: [
           [-0.4, -0.25],
           [0.05, -0.5],
@@ -1503,11 +1525,11 @@ function drawBodyStoneFragments(
           [-0.15, 0.45],
           [-0.45, 0.1],
         ],
+        rot: -0.5,
       },
       {
         ox: 0.26,
         oy: -0.08,
-        rot: 0.3,
         pts: [
           [-0.35, -0.35],
           [0.15, -0.5],
@@ -1516,11 +1538,11 @@ function drawBodyStoneFragments(
           [-0.3, 0.4],
           [-0.45, -0.05],
         ],
+        rot: 0.3,
       },
       {
         ox: 0.12,
         oy: 0.3,
-        rot: -0.6,
         pts: [
           [-0.4, -0.2],
           [0.1, -0.45],
@@ -1528,6 +1550,7 @@ function drawBodyStoneFragments(
           [0.15, 0.45],
           [-0.35, 0.3],
         ],
+        rot: -0.6,
       },
     ];
 
@@ -1549,7 +1572,7 @@ function drawBodyStoneFragments(
       0,
       0,
       0,
-      sz * 1.2,
+      sz * 1.2
     );
     fg.addColorStop(0, "#9a9288");
     fg.addColorStop(0.4, "#807870");
@@ -1558,7 +1581,7 @@ function drawBodyStoneFragments(
     ctx.fillStyle = fg;
 
     ctx.beginPath();
-    const pts = frag.pts;
+    const { pts } = frag;
     ctx.moveTo(pts[0][0] * sz, pts[0][1] * sz);
     for (let p = 1; p < pts.length; p++) {
       ctx.lineTo(pts[p][0] * sz, pts[p][1] * sz);
@@ -1602,7 +1625,7 @@ function drawStoneClaws(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const by = y - hop;
   const footY = by + s * 0.44;
@@ -1637,7 +1660,7 @@ function drawStoneClaws(
       -s * 0.1,
       -s * 0.02,
       s * 0.12,
-      s * 0.06,
+      s * 0.06
     );
     footG.addColorStop(0, "#706860");
     footG.addColorStop(0.4, "#605850");
@@ -1667,9 +1690,9 @@ function drawStoneClaws(
 
     // Three talons
     const talonOffsets = [
-      { tx: s * 0.1, ty: s * 0.04, angle: 0.15, len: s * 0.1 },
-      { tx: s * 0.04, ty: s * 0.07, angle: 0.0, len: s * 0.12 },
-      { tx: -s * 0.04, ty: s * 0.07, angle: -0.2, len: s * 0.1 },
+      { angle: 0.15, len: s * 0.1, tx: s * 0.1, ty: s * 0.04 },
+      { angle: 0, len: s * 0.12, tx: s * 0.04, ty: s * 0.07 },
+      { angle: -0.2, len: s * 0.1, tx: -s * 0.04, ty: s * 0.07 },
     ];
 
     for (const talon of talonOffsets) {
@@ -1744,7 +1767,7 @@ function drawShoulderPads(
   s: number,
   hop: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   for (let side = -1; side <= 1; side += 2) {
     const padX = x + side * s * 0.37;
@@ -1763,7 +1786,7 @@ function drawShoulderPads(
       padW * 0.1,
       0,
       0,
-      padW * 1.1,
+      padW * 1.1
     );
     pg.addColorStop(0, "#a09890");
     pg.addColorStop(0.25, "#8a8278");
@@ -1778,7 +1801,7 @@ function drawShoulderPads(
       -padW * 0.92,
       -padH * 0.55,
       -padW * 0.42,
-      -padH * 0.85,
+      -padH * 0.85
     );
     ctx.quadraticCurveTo(0, -padH * 1.05, padW * 0.42, -padH * 0.85);
     ctx.quadraticCurveTo(padW * 0.92, -padH * 0.55, padW * 0.88, padH * 0.12);
@@ -1838,7 +1861,7 @@ function drawShoulderPads(
     ctx.fillStyle = hl;
     ctx.beginPath();
     ctx.moveTo(-padW * 0.38, -padH * 0.78);
-    ctx.quadraticCurveTo(0, -padH * 1.0, padW * 0.38, -padH * 0.78);
+    ctx.quadraticCurveTo(0, -padH * 1, padW * 0.38, -padH * 0.78);
     ctx.quadraticCurveTo(0, -padH * 0.45, -padW * 0.38, -padH * 0.78);
     ctx.closePath();
     ctx.fill();
@@ -1882,7 +1905,7 @@ function drawStoneArms(
   zoom: number,
   isAttacking: boolean,
   attackPhase: number,
-  tossPhase: number,
+  tossPhase: number
 ) {
   const rightIdleLift = isAttacking ? 0 : Math.sin(tossPhase * Math.PI) * 0.4;
   const leftSwing = isAttacking
@@ -1974,7 +1997,7 @@ function drawStoneArms(
       0,
       0,
       s * 0.27,
-      s * 0.07,
+      s * 0.07
     );
     pawG.addColorStop(0, "#d8c0a0");
     pawG.addColorStop(0.6, "#c0a080");
@@ -2019,7 +2042,7 @@ function drawHead(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const headY = y - s * 0.55 - hop;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
@@ -2036,7 +2059,7 @@ function drawHead(
       x + headW * 1.1,
       headY - headH * 0.45,
       x + headW,
-      headY,
+      headY
     );
     ctx.bezierCurveTo(
       x + headW * 1.05,
@@ -2044,7 +2067,7 @@ function drawHead(
       x + headW * 0.6,
       headY + headH * 1.05,
       x,
-      headY + headH,
+      headY + headH
     );
     ctx.bezierCurveTo(
       x - headW * 0.6,
@@ -2052,7 +2075,7 @@ function drawHead(
       x - headW * 1.05,
       headY + headH * 0.5,
       x - headW,
-      headY,
+      headY
     );
     ctx.bezierCurveTo(
       x - headW * 1.1,
@@ -2060,7 +2083,7 @@ function drawHead(
       x - headW * 0.55,
       headY - headH * 1.05,
       x,
-      headY - headH,
+      headY - headH
     );
     ctx.closePath();
   }
@@ -2076,7 +2099,7 @@ function drawHead(
     s * 0.05,
     x,
     headY,
-    headW * 1.05,
+    headW * 1.05
   );
   rg.addColorStop(0, "#d8a840");
   rg.addColorStop(0.35, "#c09030");
@@ -2098,7 +2121,7 @@ function drawHead(
     s * 0.05,
     x,
     headY,
-    headW * 1.05,
+    headW * 1.05
   );
   lg.addColorStop(0, "#908880");
   lg.addColorStop(0.35, "#787068");
@@ -2160,7 +2183,7 @@ function drawHead(
   ctx.fillStyle = "#686058";
   ctx.beginPath();
   ctx.moveTo(x - headW * 0.85, headY + headH * 0.3);
-  ctx.lineTo(x - headW * 1.0, headY + headH * 0.45);
+  ctx.lineTo(x - headW * 1, headY + headH * 0.45);
   ctx.lineTo(x - headW * 0.9, headY + headH * 0.6);
   ctx.lineTo(x - headW * 0.7, headY + headH * 0.5);
   ctx.closePath();
@@ -2176,21 +2199,21 @@ function drawHead(
     s * 0.02,
     x + s * 0.16,
     headY + s * 0.06,
-    s * 0.13,
+    s * 0.13
   );
   cG.addColorStop(0, "#fff8e8");
   cG.addColorStop(0.5, "#f5deb3");
   cG.addColorStop(1, "#e0c8a0");
   ctx.fillStyle = cG;
   ctx.beginPath();
-  ctx.moveTo(x + s * 0.06, headY + s * 0.0);
+  ctx.moveTo(x + s * 0.06, headY + 0);
   ctx.bezierCurveTo(
     x + s * 0.14,
     headY - s * 0.06,
     x + s * 0.26,
     headY - s * 0.02,
     x + s * 0.27,
-    headY + s * 0.06,
+    headY + s * 0.06
   );
   ctx.bezierCurveTo(
     x + s * 0.28,
@@ -2198,7 +2221,7 @@ function drawHead(
     x + s * 0.2,
     headY + s * 0.18,
     x + s * 0.1,
-    headY + s * 0.15,
+    headY + s * 0.15
   );
   ctx.bezierCurveTo(
     x + s * 0.05,
@@ -2206,7 +2229,7 @@ function drawHead(
     x + s * 0.04,
     headY + s * 0.05,
     x + s * 0.06,
-    headY + s * 0.0,
+    headY + 0
   );
   ctx.closePath();
   ctx.fill();
@@ -2214,7 +2237,7 @@ function drawHead(
   // Stone cheek detail (left - angular slab)
   ctx.fillStyle = "rgba(100, 90, 80, 0.25)";
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.08, headY + s * 0.0);
+  ctx.moveTo(x - s * 0.08, headY + 0);
   ctx.lineTo(x - s * 0.18, headY - s * 0.02);
   ctx.lineTo(x - s * 0.25, headY + s * 0.06);
   ctx.lineTo(x - s * 0.22, headY + s * 0.14);
@@ -2233,7 +2256,7 @@ function drawHead(
     s * 0.02,
     x,
     headY + s * 0.12,
-    s * 0.16,
+    s * 0.16
   );
   mG.addColorStop(0, "#f0e0c8");
   mG.addColorStop(0.4, "#dccab0");
@@ -2249,7 +2272,7 @@ function drawHead(
     x - s * 0.08,
     headY - s * 0.04,
     x,
-    headY - s * 0.02,
+    headY - s * 0.02
   );
   ctx.bezierCurveTo(
     x + s * 0.08,
@@ -2257,7 +2280,7 @@ function drawHead(
     x + s * 0.17,
     headY - s * 0.01,
     x + s * 0.15,
-    headY + s * 0.04,
+    headY + s * 0.04
   );
   ctx.bezierCurveTo(
     x + s * 0.18,
@@ -2265,7 +2288,7 @@ function drawHead(
     x + s * 0.14,
     headY + s * 0.22,
     x + s * 0.06,
-    headY + s * 0.26,
+    headY + s * 0.26
   );
   ctx.lineTo(x, headY + s * 0.28);
   ctx.lineTo(x - s * 0.06, headY + s * 0.26);
@@ -2275,7 +2298,7 @@ function drawHead(
     x - s * 0.18,
     headY + s * 0.12,
     x - s * 0.15,
-    headY + s * 0.04,
+    headY + s * 0.04
   );
   ctx.closePath();
   ctx.fill();
@@ -2296,7 +2319,7 @@ function drawHead(
     x - s * 0.04,
     headY - s * 0.06,
     x,
-    headY - s * 0.04,
+    headY - s * 0.04
   );
   ctx.bezierCurveTo(
     x + s * 0.04,
@@ -2304,7 +2327,7 @@ function drawHead(
     x + s * 0.14,
     headY - s * 0.15,
     x + s * 0.22,
-    headY - s * 0.1,
+    headY - s * 0.1
   );
   ctx.bezierCurveTo(
     x + s * 0.2,
@@ -2312,7 +2335,7 @@ function drawHead(
     x + s * 0.1,
     headY + s * 0.04,
     x,
-    headY + s * 0.02,
+    headY + s * 0.02
   );
   ctx.bezierCurveTo(
     x - s * 0.1,
@@ -2320,7 +2343,7 @@ function drawHead(
     x - s * 0.2,
     headY + s * 0.02,
     x - s * 0.22,
-    headY - s * 0.1,
+    headY - s * 0.1
   );
   ctx.closePath();
   ctx.fill();
@@ -2336,7 +2359,7 @@ function drawHead(
     zoom,
     isAttacking,
     attackIntensity,
-    gemPulse,
+    gemPulse
   );
 
   // Eyebrows (thicker, angrier)
@@ -2350,7 +2373,7 @@ function drawHead(
     x + s * 0.14,
     headY - s * 0.17 - browAnger,
     x + s * 0.04,
-    headY - s * 0.11,
+    headY - s * 0.11
   );
   ctx.stroke();
   ctx.strokeStyle = "#3a3430";
@@ -2361,7 +2384,7 @@ function drawHead(
     x - s * 0.14,
     headY - s * 0.18 - browAnger,
     x - s * 0.04,
-    headY - s * 0.11,
+    headY - s * 0.11
   );
   ctx.stroke();
 
@@ -2372,7 +2395,7 @@ function drawHead(
     0,
     x,
     headY + s * 0.1,
-    s * 0.055,
+    s * 0.055
   );
   nG.addColorStop(0, "#3a1a0a");
   nG.addColorStop(0.5, "#2a0a00");
@@ -2391,7 +2414,7 @@ function drawHead(
     s * 0.014,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Nostrils
@@ -2404,7 +2427,7 @@ function drawHead(
     s * 0.008,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -2415,7 +2438,7 @@ function drawHead(
     s * 0.008,
     0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2434,7 +2457,7 @@ function drawHead(
         x + side * s * 0.22 + ww,
         headY + s * 0.1 + spread * 0.6,
         x + side * s * 0.34 + ww,
-        headY + s * 0.09 + spread * 1.4,
+        headY + s * 0.09 + spread * 1.4
       );
       ctx.stroke();
     }
@@ -2453,7 +2476,7 @@ function drawHead(
       x + s * 0.06,
       headY + s * 0.14,
       x + s * 0.09,
-      headY + s * 0.16,
+      headY + s * 0.16
     );
     ctx.bezierCurveTo(
       x + s * 0.08,
@@ -2461,7 +2484,7 @@ function drawHead(
       x + s * 0.04,
       headY + s * 0.27,
       x,
-      headY + s * 0.28,
+      headY + s * 0.28
     );
     ctx.bezierCurveTo(
       x - s * 0.04,
@@ -2469,7 +2492,7 @@ function drawHead(
       x - s * 0.08,
       headY + s * 0.24,
       x - s * 0.09,
-      headY + s * 0.16,
+      headY + s * 0.16
     );
     ctx.closePath();
     ctx.fill();
@@ -2513,7 +2536,7 @@ function drawHead(
       x + s * 0.04,
       headY + s * 0.15,
       x + s * 0.07,
-      headY + s * 0.17,
+      headY + s * 0.17
     );
     ctx.bezierCurveTo(
       x + s * 0.05,
@@ -2521,7 +2544,7 @@ function drawHead(
       x - s * 0.05,
       headY + s * 0.2,
       x - s * 0.07,
-      headY + s * 0.17,
+      headY + s * 0.17
     );
     ctx.closePath();
     ctx.fill();
@@ -2546,7 +2569,7 @@ function drawHead(
       x + s * 0.03,
       headY + s * 0.19,
       x + s * 0.07,
-      headY + s * 0.17,
+      headY + s * 0.17
     );
     ctx.stroke();
   }
@@ -2562,7 +2585,7 @@ function drawHead(
     x + s * 0.04,
     headY + s * 0.32,
     x + s * 0.06,
-    headY + s * 0.26,
+    headY + s * 0.26
   );
   ctx.bezierCurveTo(
     x + s * 0.03,
@@ -2570,7 +2593,7 @@ function drawHead(
     x - s * 0.03,
     headY + s * 0.28,
     x - s * 0.06,
-    headY + s * 0.26,
+    headY + s * 0.26
   );
   ctx.closePath();
   ctx.fill();
@@ -2583,7 +2606,7 @@ function drawSquirrelEar(
   headY: number,
   s: number,
   side: number,
-  zoom: number,
+  zoom: number
 ) {
   const earX = x + side * s * 0.25;
   const earY = headY - s * 0.25;
@@ -2599,7 +2622,7 @@ function drawSquirrelEar(
     0,
     earX,
     earY + s * 0.02,
-    s * 0.1,
+    s * 0.1
   );
   inner.addColorStop(0, "#f5d0b8");
   inner.addColorStop(0.7, "#d4a040");
@@ -2613,7 +2636,7 @@ function drawSquirrelEar(
     s * 0.12,
     side * 0.35,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2643,7 +2666,7 @@ function drawGargoyleEar(
   x: number,
   headY: number,
   s: number,
-  zoom: number,
+  zoom: number
 ) {
   const earX = x - s * 0.25;
   const earY = headY - s * 0.28;
@@ -2652,7 +2675,7 @@ function drawGargoyleEar(
     earX,
     earY + s * 0.12,
     earX,
-    earY - s * 0.18,
+    earY - s * 0.18
   );
   hG.addColorStop(0, "#787068");
   hG.addColorStop(0.5, "#605850");
@@ -2695,7 +2718,7 @@ function drawRightEye(
   s: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   const eyeX = x + s * 0.12;
   const eyeY = headY - s * 0.02;
@@ -2758,7 +2781,7 @@ function drawGemstoneLeftEye(
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
-  gemPulse: number,
+  gemPulse: number
 ) {
   const eyeX = x - s * 0.12;
   const eyeY = headY - s * 0.02;
@@ -2771,7 +2794,7 @@ function drawGemstoneLeftEye(
     s * 0.04,
     eyeX,
     eyeY,
-    s * 0.12 * sc,
+    s * 0.12 * sc
   );
   sG.addColorStop(0, "#484040");
   sG.addColorStop(0.6, "#3a3434");
@@ -2806,8 +2829,11 @@ function drawGemstoneLeftEye(
     const py1 = eyeY + Math.sin(a) * r1;
     const px2 = eyeX + Math.cos(a + Math.PI / 6) * r2;
     const py2 = eyeY + Math.sin(a + Math.PI / 6) * r2;
-    if (i === 0) ctx.moveTo(px1, py1);
-    else ctx.lineTo(px1, py1);
+    if (i === 0) {
+      ctx.moveTo(px1, py1);
+    } else {
+      ctx.lineTo(px1, py1);
+    }
     ctx.lineTo(px2, py2);
   }
   ctx.closePath();
@@ -2842,9 +2868,11 @@ function drawIdleStoneToss(
   tossY: number,
   time: number,
   zoom: number,
-  isAttacking: boolean,
+  isAttacking: boolean
 ) {
-  if (isAttacking) return;
+  if (isAttacking) {
+    return;
+  }
 
   const pawBaseX = x + s * 0.38;
   const pawBaseY = y - s * 0.35 - hop;
@@ -2865,7 +2893,7 @@ function drawIdleStoneToss(
     s * 0.035 * shadowScale,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2879,7 +2907,7 @@ function drawIdleStoneToss(
     r * 0.05,
     0,
     0,
-    r * 1.1,
+    r * 1.1
   );
   sg.addColorStop(0, "#b0a898");
   sg.addColorStop(0.25, "#908878");
@@ -2942,7 +2970,7 @@ function drawIdleStoneToss(
     0,
     -r * 0.3,
     -r * 0.45,
-    r * 0.5,
+    r * 0.5
   );
   hlG.addColorStop(0, "rgba(220, 210, 200, 0.4)");
   hlG.addColorStop(0.5, "rgba(200, 190, 180, 0.15)");
@@ -2958,7 +2986,7 @@ function drawIdleStoneToss(
     0,
     r * 0.3,
     r * 0.35,
-    r * 0.55,
+    r * 0.55
   );
   shG.addColorStop(0, "rgba(30, 25, 20, 0.25)");
   shG.addColorStop(1, "rgba(30, 25, 20, 0)");
@@ -2976,7 +3004,7 @@ function drawIdleStoneToss(
     [0.25, 0.55],
     [-0.55, -0.05],
     [0.6, -0.05],
-    [0.0, -0.7],
+    [0, -0.7],
     [-0.3, 0.55],
   ];
   for (const [sx, sy] of speckles) {
@@ -2997,7 +3025,7 @@ function drawGroundCracks(
   s: number,
   time: number,
   attackIntensity: number,
-  zoom: number,
+  zoom: number
 ) {
   ctx.strokeStyle = `rgba(100, 70, 30, ${0.5 * attackIntensity})`;
   ctx.lineWidth = 2 * zoom;
@@ -3008,7 +3036,7 @@ function drawGroundCracks(
     ctx.moveTo(x + Math.cos(a) * s * 0.14, y + s * 0.48);
     ctx.lineTo(
       x + Math.cos(a) * len,
-      y + s * 0.48 + Math.sin(a + 0.3) * s * 0.07,
+      y + s * 0.48 + Math.sin(a + 0.3) * s * 0.07
     );
     ctx.stroke();
   }

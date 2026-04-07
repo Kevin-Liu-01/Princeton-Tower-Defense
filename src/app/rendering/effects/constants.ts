@@ -19,7 +19,7 @@ export const STATUS_FADE_WINDOW_SECS = 2;
 export function statusEffectAlpha(
   remainingMs: number,
   floor = MIN_STATUS_EFFECT_ALPHA,
-  fadeWindowSecs = STATUS_FADE_WINDOW_SECS,
+  fadeWindowSecs = STATUS_FADE_WINDOW_SECS
 ): number {
   const remaining = remainingMs / 1000;
   const t = Math.min(1, remaining / fadeWindowSecs);

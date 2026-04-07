@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import {
   getPerformanceSettings,
   setPerformanceSettings,
@@ -39,15 +40,19 @@ export function useAutoPerformanceMode() {
         const fps = Math.round(1000 / avgFrameTime);
         setCurrentFps(fps);
 
-        if (fps < 45 && !performanceMode && autoToggleCooldownRef.current <= 0) {
+        if (
+          fps < 45 &&
+          !performanceMode &&
+          autoToggleCooldownRef.current <= 0
+        ) {
           setPerformanceMode(true);
           setPerformanceSettings({
             disableShadows: true,
+            reducedFogQuality: true,
             reducedParticles: true,
             simplifiedGradients: true,
-            reducedFogQuality: true,
           });
-          autoToggleCooldownRef.current = 10000;
+          autoToggleCooldownRef.current = 10_000;
         }
 
         if (autoToggleCooldownRef.current > 0) {
@@ -67,16 +72,16 @@ export function useAutoPerformanceMode() {
     setPerformanceMode(nextMode);
     setPerformanceSettings({
       disableShadows: nextMode,
+      reducedFogQuality: nextMode,
       reducedParticles: nextMode,
       simplifiedGradients: nextMode,
-      reducedFogQuality: nextMode,
     });
     autoToggleCooldownRef.current = 5000;
   };
 
   return {
-    performanceMode,
     currentFps,
+    performanceMode,
     togglePerformanceMode,
   };
 }

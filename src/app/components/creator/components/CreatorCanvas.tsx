@@ -1,4 +1,3 @@
-import React from "react";
 import {
   AlertTriangle,
   Compass,
@@ -11,15 +10,17 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import React from "react";
+
 import { GRID_HEIGHT, GRID_WIDTH } from "../../../constants";
 import { LANDMARK_DECORATION_TYPES } from "../../../utils";
+import { TOOL_HINTS, TOOL_OPTIONS } from "../constants";
 import type {
   CreatorDraftState,
   GridPoint,
   SelectionTarget,
   ToolMode,
 } from "../types";
-import { TOOL_HINTS, TOOL_OPTIONS } from "../constants";
 import { formatPointLabel, normalizePathPoint } from "../utils/gridUtils";
 import {
   gridFloatToIso,
@@ -96,12 +97,12 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
   const hoverIsErase = tool === "erase";
   const hoverSelectionTarget = hoverPoint
     ? findSelectionNearPoint(
-      tool === "path_primary" || tool === "path_secondary"
-        ? normalizePathPoint(hoverPoint)
-        : hoverPoint,
-      draft,
-      tool === "erase" ? 3.6 : 2.3
-    )
+        tool === "path_primary" || tool === "path_secondary"
+          ? normalizePathPoint(hoverPoint)
+          : hoverPoint,
+        draft,
+        tool === "erase" ? 3.6 : 2.3
+      )
     : null;
   const primaryPathEmphasized =
     targetMatches(selection, "primary_path") ||
@@ -111,8 +112,9 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
     targetMatches(hoverSelectionTarget, "secondary_path");
 
   const activeToolHint = TOOL_HINTS[tool] ?? "";
-  const ActiveToolIcon =
-    (TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0]).icon;
+  const ActiveToolIcon = (
+    TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0]
+  ).icon;
 
   return (
     <section className="rounded-2xl border border-amber-800/30 bg-black/20 p-2 min-h-0 flex flex-col overflow-hidden">
@@ -139,10 +141,11 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
           <div className="w-px h-4 bg-amber-800/25" />
           <button
             onClick={() => onToolSelect("erase")}
-            className={`inline-flex h-6 w-7 items-center justify-center rounded-md transition-colors ${tool === "erase"
-              ? "bg-red-600/25 text-red-200"
-              : "text-amber-300/80 hover:bg-stone-800/80"
-              }`}
+            className={`inline-flex h-6 w-7 items-center justify-center rounded-md transition-colors ${
+              tool === "erase"
+                ? "bg-red-600/25 text-red-200"
+                : "text-amber-300/80 hover:bg-stone-800/80"
+            }`}
             title="Erase tool"
           >
             <Eraser size={12} />
@@ -199,7 +202,9 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
             onPointerUp={onBoardPointerUp}
             onPointerLeave={onBoardPointerLeave}
             onWheel={onBoardWheel}
-            onDragEnter={() => {/* handled by dragOver */}}
+            onDragEnter={() => {
+              /* handled by dragOver */
+            }}
             onDragOver={onBoardDragOver}
             onDragLeave={onBoardDragLeave}
             onDrop={onDropOnBoard}
@@ -227,8 +232,10 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
               return (
                 <line
                   key={`iso-v-${x}`}
-                  x1={start.x} y1={start.y}
-                  x2={end.x} y2={end.y}
+                  x1={start.x}
+                  y1={start.y}
+                  x2={end.x}
+                  y2={end.y}
                   stroke="rgba(255,220,140,0.12)"
                   strokeWidth={1}
                 />
@@ -240,8 +247,10 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
               return (
                 <line
                   key={`iso-h-${y}`}
-                  x1={start.x} y1={start.y}
-                  x2={end.x} y2={end.y}
+                  x1={start.x}
+                  y1={start.y}
+                  x2={end.x}
+                  y2={end.y}
                   stroke="rgba(255,220,140,0.12)"
                   strokeWidth={1}
                 />
@@ -264,14 +273,26 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
               <>
                 <polygon
                   points={getIsoTilePolygon(hoverPoint, 0.08)}
-                  fill={hoverIsErase ? "rgba(160, 32, 32, 0.26)" : "rgba(255, 245, 200, 0.18)"}
-                  stroke={hoverIsErase ? "rgba(248, 113, 113, 0.98)" : "rgba(255, 255, 255, 0.95)"}
+                  fill={
+                    hoverIsErase
+                      ? "rgba(160, 32, 32, 0.26)"
+                      : "rgba(255, 245, 200, 0.18)"
+                  }
+                  stroke={
+                    hoverIsErase
+                      ? "rgba(248, 113, 113, 0.98)"
+                      : "rgba(255, 255, 255, 0.95)"
+                  }
                   strokeWidth={1.6}
                 />
                 <polygon
                   points={getIsoTilePolygon(hoverPoint, -0.05)}
                   fill="none"
-                  stroke={hoverIsErase ? "rgba(252, 165, 165, 0.92)" : "rgba(251, 191, 36, 0.94)"}
+                  stroke={
+                    hoverIsErase
+                      ? "rgba(252, 165, 165, 0.92)"
+                      : "rgba(251, 191, 36, 0.94)"
+                  }
                   strokeDasharray={hoverIsErase ? "3 2" : "4 3"}
                   strokeWidth={1.2}
                 />
@@ -286,14 +307,16 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                   fill="none"
                   stroke="rgba(251, 191, 36, 0.25)"
                   strokeWidth={primaryPathEmphasized ? 10 : 7.5}
-                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
                 <polyline
                   points={pathToIsoPoints(draft.primaryPath)}
                   fill="none"
                   stroke="rgba(251, 191, 36, 0.96)"
                   strokeWidth={primaryPathEmphasized ? 6.4 : 5}
-                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </>
             )}
@@ -306,14 +329,16 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                   fill="none"
                   stroke="rgba(34, 211, 238, 0.24)"
                   strokeWidth={secondaryPathEmphasized ? 10 : 7.5}
-                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
                 <polyline
                   points={pathToIsoPoints(draft.secondaryPath)}
                   fill="none"
                   stroke="rgba(34, 211, 238, 0.96)"
                   strokeWidth={secondaryPathEmphasized ? 6.4 : 5}
-                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </>
             )}
@@ -327,9 +352,18 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                 fill="rgba(251, 191, 36, 0.98)"
                 stroke="rgba(40, 24, 8, 0.95)"
                 selected={targetMatches(selection, "primary_path", index)}
-                highlighted={targetMatches(hoverSelectionTarget, "primary_path", index)}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "primary_path", index)}
-                onPointerDown={(event) => startDragTarget({ kind: "primary_path", index }, event)}
+                highlighted={targetMatches(
+                  hoverSelectionTarget,
+                  "primary_path",
+                  index
+                )}
+                danger={
+                  hoverIsErase &&
+                  targetMatches(hoverSelectionTarget, "primary_path", index)
+                }
+                onPointerDown={(event) =>
+                  startDragTarget({ index, kind: "primary_path" }, event)
+                }
               />
             ))}
 
@@ -342,35 +376,66 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                 fill="rgba(34, 211, 238, 0.98)"
                 stroke="rgba(7, 41, 52, 0.95)"
                 selected={targetMatches(selection, "secondary_path", index)}
-                highlighted={targetMatches(hoverSelectionTarget, "secondary_path", index)}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "secondary_path", index)}
-                onPointerDown={(event) => startDragTarget({ kind: "secondary_path", index }, event)}
+                highlighted={targetMatches(
+                  hoverSelectionTarget,
+                  "secondary_path",
+                  index
+                )}
+                danger={
+                  hoverIsErase &&
+                  targetMatches(hoverSelectionTarget, "secondary_path", index)
+                }
+                onPointerDown={(event) =>
+                  startDragTarget({ index, kind: "secondary_path" }, event)
+                }
               />
             ))}
 
             {/* Decorations */}
             {draft.decorations.map((deco, index) => {
               const decorationType = deco.type ?? deco.category;
-              const isLandmark = Boolean(decorationType && LANDMARK_DECORATION_TYPES.has(decorationType));
+              const isLandmark = Boolean(
+                decorationType && LANDMARK_DECORATION_TYPES.has(decorationType)
+              );
               return (
                 <IsoMarker
                   key={`d-${index}-${deco.pos.x}-${deco.pos.y}`}
                   point={deco.pos}
                   label={isLandmark ? "L" : "D"}
-                  fill={isLandmark ? "rgba(125, 211, 252, 0.96)" : "rgba(250, 244, 224, 0.96)"}
-                  stroke={isLandmark ? "rgba(8, 47, 73, 0.95)" : "rgba(45, 34, 20, 0.95)"}
+                  fill={
+                    isLandmark
+                      ? "rgba(125, 211, 252, 0.96)"
+                      : "rgba(250, 244, 224, 0.96)"
+                  }
+                  stroke={
+                    isLandmark
+                      ? "rgba(8, 47, 73, 0.95)"
+                      : "rgba(45, 34, 20, 0.95)"
+                  }
                   selected={targetMatches(selection, "decoration", index)}
-                  highlighted={targetMatches(hoverSelectionTarget, "decoration", index)}
-                  danger={hoverIsErase && targetMatches(hoverSelectionTarget, "decoration", index)}
-                  onPointerDown={(event) => startDragTarget({ kind: "decoration", index }, event)}
+                  highlighted={targetMatches(
+                    hoverSelectionTarget,
+                    "decoration",
+                    index
+                  )}
+                  danger={
+                    hoverIsErase &&
+                    targetMatches(hoverSelectionTarget, "decoration", index)
+                  }
+                  onPointerDown={(event) =>
+                    startDragTarget({ index, kind: "decoration" }, event)
+                  }
                 />
               );
             })}
 
             {/* Hazards */}
             {draft.hazards.map((hazard, index) => {
-              const point = (hazard.pos as GridPoint | undefined) ?? hazard.gridPos;
-              if (!point) return null;
+              const point =
+                (hazard.pos as GridPoint | undefined) ?? hazard.gridPos;
+              if (!point) {
+                return null;
+              }
               return (
                 <IsoMarker
                   key={`h-${index}-${point.x}-${point.y}`}
@@ -379,9 +444,18 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                   fill="rgba(248, 113, 113, 0.96)"
                   stroke="rgba(66, 13, 13, 0.95)"
                   selected={targetMatches(selection, "hazard", index)}
-                  highlighted={targetMatches(hoverSelectionTarget, "hazard", index)}
-                  danger={hoverIsErase && targetMatches(hoverSelectionTarget, "hazard", index)}
-                  onPointerDown={(event) => startDragTarget({ kind: "hazard", index }, event)}
+                  highlighted={targetMatches(
+                    hoverSelectionTarget,
+                    "hazard",
+                    index
+                  )}
+                  danger={
+                    hoverIsErase &&
+                    targetMatches(hoverSelectionTarget, "hazard", index)
+                  }
+                  onPointerDown={(event) =>
+                    startDragTarget({ index, kind: "hazard" }, event)
+                  }
                 />
               );
             })}
@@ -395,8 +469,13 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                 stroke="rgba(7, 40, 30, 0.95)"
                 selected={targetMatches(selection, "hero_spawn")}
                 highlighted={targetMatches(hoverSelectionTarget, "hero_spawn")}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "hero_spawn")}
-                onPointerDown={(event) => startDragTarget({ kind: "hero_spawn" }, event)}
+                danger={
+                  hoverIsErase &&
+                  targetMatches(hoverSelectionTarget, "hero_spawn")
+                }
+                onPointerDown={(event) =>
+                  startDragTarget({ kind: "hero_spawn" }, event)
+                }
               />
             )}
 
@@ -409,9 +488,18 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                 fill="rgba(217, 70, 239, 0.98)"
                 stroke="rgba(60, 16, 74, 0.95)"
                 selected={targetMatches(selection, "special_tower", index)}
-                highlighted={targetMatches(hoverSelectionTarget, "special_tower", index)}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "special_tower", index)}
-                onPointerDown={(event) => startDragTarget({ kind: "special_tower", index }, event)}
+                highlighted={targetMatches(
+                  hoverSelectionTarget,
+                  "special_tower",
+                  index
+                )}
+                danger={
+                  hoverIsErase &&
+                  targetMatches(hoverSelectionTarget, "special_tower", index)
+                }
+                onPointerDown={(event) =>
+                  startDragTarget({ index, kind: "special_tower" }, event)
+                }
               />
             ))}
 
@@ -424,9 +512,18 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
                 fill="rgba(59, 130, 246, 0.98)"
                 stroke="rgba(15, 23, 42, 0.95)"
                 selected={targetMatches(selection, "tower", index)}
-                highlighted={targetMatches(hoverSelectionTarget, "tower", index)}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "tower", index)}
-                onPointerDown={(event) => startDragTarget({ kind: "tower", index }, event)}
+                highlighted={targetMatches(
+                  hoverSelectionTarget,
+                  "tower",
+                  index
+                )}
+                danger={
+                  hoverIsErase &&
+                  targetMatches(hoverSelectionTarget, "tower", index)
+                }
+                onPointerDown={(event) =>
+                  startDragTarget({ index, kind: "tower" }, event)
+                }
               />
             ))}
           </svg>

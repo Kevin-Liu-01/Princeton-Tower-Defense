@@ -1,10 +1,11 @@
 "use client";
 import React, { useRef, useCallback, useEffect, useState } from "react";
-import type { TowerType, EnemyType } from "../../../types";
+
 import { ENEMY_DATA } from "../../../constants/enemies";
-import { drawTowerSprite } from "../../../rendering/towers";
 import { drawEnemySprite } from "../../../rendering/enemies";
 import { drawHeroSprite } from "../../../rendering/heroes";
+import { drawTowerSprite } from "../../../rendering/towers";
+import type { TowerType, EnemyType } from "../../../types";
 import { LANDING_THEME } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 
@@ -16,9 +17,18 @@ const TILE_W = 56;
 const TILE_H = 28;
 
 const PATH_CELLS: [number, number][] = [
-  [0, 2], [1, 2], [2, 2], [2, 3], [3, 3],
-  [4, 3], [4, 2], [5, 2], [6, 2], [6, 3],
-  [7, 3], [8, 3],
+  [0, 2],
+  [1, 2],
+  [2, 2],
+  [2, 3],
+  [3, 3],
+  [4, 3],
+  [4, 2],
+  [5, 2],
+  [6, 2],
+  [6, 3],
+  [7, 3],
+  [8, 3],
 ];
 const PATH_SET = new Set(PATH_CELLS.map(([c, r]) => `${c},${r}`));
 
@@ -30,10 +40,10 @@ interface PlacedTower {
 }
 
 const TOWERS: PlacedTower[] = [
-  { col: 1, row: 1, type: "cannon", level: 3 },
-  { col: 3, row: 2, type: "library", level: 2 },
-  { col: 5, row: 1, type: "lab", level: 3 },
-  { col: 7, row: 2, type: "mortar", level: 2 },
+  { col: 1, level: 3, row: 1, type: "cannon" },
+  { col: 3, level: 2, row: 2, type: "library" },
+  { col: 5, level: 3, row: 1, type: "lab" },
+  { col: 7, level: 2, row: 2, type: "mortar" },
 ];
 
 interface WalkingEnemy {
@@ -55,7 +65,7 @@ function gridToScreen(
   col: number,
   row: number,
   offsetX: number,
-  offsetY: number,
+  offsetY: number
 ): { x: number; y: number } {
   return {
     x: offsetX + (col - row) * (TILE_W / 2),
@@ -70,11 +80,11 @@ function lerp(a: number, b: number, t: number): number {
 function getEnemyScreenPos(
   progress: number,
   offsetX: number,
-  offsetY: number,
+  offsetY: number
 ): { x: number; y: number } {
   const idx = Math.min(
     Math.floor(progress * (PATH_CELLS.length - 1)),
-    PATH_CELLS.length - 2,
+    PATH_CELLS.length - 2
   );
   const frac = progress * (PATH_CELLS.length - 1) - idx;
   const [c1, r1] = PATH_CELLS[idx];
@@ -91,7 +101,7 @@ function drawIsoDiamond(
   w: number,
   h: number,
   fill: string,
-  stroke?: string,
+  stroke?: string
 ) {
   ctx.beginPath();
   ctx.moveTo(cx, cy - h / 2);
@@ -121,9 +131,9 @@ export function IsoBattleDemo() {
     const enemies: WalkingEnemy[] = [];
     for (let i = 0; i < 6; i++) {
       enemies.push({
-        type: ENEMY_TYPES[i % ENEMY_TYPES.length],
         progress: -0.1 - i * 0.12,
         speed: 0.018 + (i % 3) * 0.004,
+        type: ENEMY_TYPES[i % ENEMY_TYPES.length],
       });
     }
     enemiesRef.current = enemies;
@@ -131,9 +141,13 @@ export function IsoBattleDemo() {
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     const cssW = canvas.clientWidth;
@@ -144,7 +158,9 @@ export function IsoBattleDemo() {
     ctx.clearRect(0, 0, cssW, cssH);
 
     const now = performance.now();
-    if (!startRef.current) startRef.current = now;
+    if (!startRef.current) {
+      startRef.current = now;
+    }
     const elapsed = (now - startRef.current) / 50;
 
     const offsetX = cssW / 2 - ((COLS - ROWS) * TILE_W) / 4;
@@ -162,7 +178,7 @@ export function IsoBattleDemo() {
           TILE_W - 2,
           TILE_H - 1,
           isPath ? "rgba(90,65,30,0.5)" : "rgba(40,55,30,0.4)",
-          isPath ? "rgba(140,100,40,0.3)" : "rgba(60,80,40,0.25)",
+          isPath ? "rgba(140,100,40,0.3)" : "rgba(60,80,40,0.25)"
         );
       }
     }
@@ -177,19 +193,27 @@ export function IsoBattleDemo() {
     for (const t of TOWERS) {
       const { x, y } = gridToScreen(t.col, t.row, offsetX, offsetY);
       renderables.push({
-        y,
         draw: () => {
           ctx.save();
-          drawTowerSprite(ctx, x, y - 8, 38, t.type, t.level, undefined, elapsed);
+          drawTowerSprite(
+            ctx,
+            x,
+            y - 8,
+            38,
+            t.type,
+            t.level,
+            undefined,
+            elapsed
+          );
           ctx.restore();
         },
+        y,
       });
     }
 
     // Hero on the field
     const heroPos = gridToScreen(4, 1, offsetX, offsetY);
     renderables.push({
-      y: heroPos.y,
       draw: () => {
         ctx.save();
         const heroSize = 22;
@@ -203,10 +227,11 @@ export function IsoBattleDemo() {
           "#f97316",
           elapsed * 0.08,
           zoom,
-          0,
+          0
         );
         ctx.restore();
       },
+      y: heroPos.y,
     });
 
     // Enemies
@@ -219,14 +244,17 @@ export function IsoBattleDemo() {
           ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
       }
 
-      if (enemy.progress < 0 || enemy.progress > 1) continue;
+      if (enemy.progress < 0 || enemy.progress > 1) {
+        continue;
+      }
 
       const eData = ENEMY_DATA[enemy.type];
-      if (!eData) continue;
+      if (!eData) {
+        continue;
+      }
 
       const pos = getEnemyScreenPos(enemy.progress, offsetX, offsetY);
       renderables.push({
-        y: pos.y,
         draw: () => {
           ctx.save();
           drawEnemySprite(
@@ -241,10 +269,11 @@ export function IsoBattleDemo() {
             !!eData.flying,
             0.65,
             0,
-            "grassland",
+            "grassland"
           );
           ctx.restore();
         },
+        y: pos.y,
       });
     }
 
@@ -269,7 +298,9 @@ export function IsoBattleDemo() {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     initEnemies();
     rafRef.current = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafRef.current);
@@ -278,7 +309,10 @@ export function IsoBattleDemo() {
   if (!mounted) {
     return (
       <section className="py-14 sm:py-20 px-6">
-        <div className="max-w-3xl mx-auto aspect-[16/9] rounded-2xl" style={{ background: `rgba(${T.accentDarkRgb},0.06)` }} />
+        <div
+          className="max-w-3xl mx-auto aspect-[16/9] rounded-2xl"
+          style={{ background: `rgba(${T.accentDarkRgb},0.06)` }}
+        />
       </section>
     );
   }
@@ -308,9 +342,9 @@ export function IsoBattleDemo() {
       <div
         className="relative max-w-3xl mx-auto rounded-2xl overflow-hidden"
         style={{
+          background: `linear-gradient(180deg, rgba(18,14,8,0.95) 0%, rgba(${T.bgRgb},0.98) 100%)`,
           border: `1.5px solid rgba(${T.accentDarkRgb},0.2)`,
           boxShadow: `0 0 60px rgba(${T.accentRgb},0.06), 0 20px 60px rgba(0,0,0,0.4)`,
-          background: `linear-gradient(180deg, rgba(18,14,8,0.95) 0%, rgba(${T.bgRgb},0.98) 100%)`,
         }}
       >
         {/* Perspective wrapper for 3D tilt */}
@@ -352,7 +386,8 @@ export function IsoBattleDemo() {
         className="text-center text-[10px] sm:text-xs mt-6 italic"
         style={{ color: `rgba(${T.accentRgb},0.2)` }}
       >
-        Real-time isometric rendering &mdash; towers, heroes, and enemies drawn with the Canvas 2D API
+        Real-time isometric rendering &mdash; towers, heroes, and enemies drawn
+        with the Canvas 2D API
       </p>
     </section>
   );

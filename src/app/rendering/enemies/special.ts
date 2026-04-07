@@ -1,15 +1,9 @@
-import { setShadowBlur, clearShadow } from "../performance";
 import { ISO_Y_RATIO } from "../../constants/isometric";
-import { drawFaceCircle } from "./helpers";
-import {
-  drawPulsingGlowRings,
-  drawShiftingSegments,
-} from "./animationHelpers";
-import {
-  drawPathArm,
-  drawPathLegs,
-} from "./darkFantasyHelpers";
 import type { MapTheme } from "../../types";
+import { setShadowBlur, clearShadow } from "../performance";
+import { drawPulsingGlowRings, drawShiftingSegments } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import { drawFaceCircle } from "./helpers";
 import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
@@ -26,7 +20,7 @@ export function drawMascotEnemy(
   zoom: number,
   isFlying: boolean,
   attackPhase: number = 0,
-  region: MapTheme = "grassland",
+  region: MapTheme = "grassland"
 ) {
   // TEMPEST GRIFFIN - Elemental chaos beast with storm wings and lightning breath
   const isAttacking = attackPhase > 0;
@@ -114,7 +108,7 @@ export function drawMascotEnemy(
   // Spectral fire particles (optimized - no shadowBlur in loop)
   for (let i = 0; i < 12; i++) {
     const particlePhase = (time * 2.5 + i * 0.25) % 1.5;
-    const px = x + Math.sin(time * 3.5 + i * 1.0) * size * 0.45;
+    const px = x + Math.sin(time * 3.5 + i * 1) * size * 0.45;
     const py = y + size * 0.25 - particlePhase * size * 0.6;
     ctx.fillStyle = `rgba(100, 230, 255, ${(1 - particlePhase / 1.5) * 0.8})`;
     ctx.beginPath();
@@ -225,13 +219,13 @@ export function drawMascotEnemy(
       size * 0.6 + i * size * 0.12,
       flameY - size * 0.1,
       size * 0.68 + i * size * 0.14,
-      flameY,
+      flameY
     );
     ctx.quadraticCurveTo(
       size * 0.6 + i * size * 0.12,
       flameY + size * 0.08,
       size * 0.5 + i * size * 0.1,
-      flameY,
+      flameY
     );
     ctx.fill();
   }
@@ -244,7 +238,7 @@ export function drawMascotEnemy(
     0,
     x,
     y + swoop * 0.2,
-    size * 0.48,
+    size * 0.48
   );
   bodyGrad.addColorStop(0, costumeDeep);
   bodyGrad.addColorStop(0.4, costumeDark);
@@ -259,7 +253,7 @@ export function drawMascotEnemy(
     size * 0.44,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Scale pattern
@@ -282,7 +276,7 @@ export function drawMascotEnemy(
     0,
     x,
     y - size * 0.08 + swoop * 0.2,
-    size * 0.24,
+    size * 0.24
   );
   chestGrad.addColorStop(0, "#cffafe");
   chestGrad.addColorStop(0.5, "#a5f3fc");
@@ -296,7 +290,7 @@ export function drawMascotEnemy(
     size * 0.25,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Feather texture - more detailed
@@ -310,7 +304,7 @@ export function drawMascotEnemy(
       size * 0.09 + i * size * 0.028,
       0.55 * Math.PI,
       0.45 * Math.PI,
-      true,
+      true
     );
     ctx.stroke();
   }
@@ -322,7 +316,7 @@ export function drawMascotEnemy(
     0,
     x,
     y - size * 0.4 + swoop,
-    size * 0.28,
+    size * 0.28
   );
   headGrad.addColorStop(0, costumeDark);
   headGrad.addColorStop(0.6, costumeMain);
@@ -340,7 +334,7 @@ export function drawMascotEnemy(
     ctx.save();
     ctx.translate(
       x + Math.cos(crestAngle) * size * 0.2,
-      y - size * 0.55 + swoop,
+      y - size * 0.55 + swoop
     );
     ctx.rotate(crestAngle + Math.PI * 0.5);
     ctx.beginPath();
@@ -363,7 +357,7 @@ export function drawMascotEnemy(
     size * 0.055,
     -0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.1,
@@ -372,7 +366,7 @@ export function drawMascotEnemy(
     size * 0.055,
     0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Predator slit pupils
@@ -385,7 +379,7 @@ export function drawMascotEnemy(
     size * 0.045,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.1,
@@ -394,7 +388,7 @@ export function drawMascotEnemy(
     size * 0.045,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Lightning reflection in eyes
@@ -405,14 +399,14 @@ export function drawMascotEnemy(
     y - size * 0.44 + swoop,
     size * 0.015,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.arc(
     x + size * 0.08,
     y - size * 0.44 + swoop,
     size * 0.015,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -421,7 +415,7 @@ export function drawMascotEnemy(
     x - size * 0.1,
     y - size * 0.35,
     x + size * 0.1,
-    y - size * 0.2,
+    y - size * 0.2
   );
   beakGrad.addColorStop(0, beakBase);
   beakGrad.addColorStop(0.5, beakBright);
@@ -433,7 +427,7 @@ export function drawMascotEnemy(
     x - size * 0.1,
     y - size * 0.34 + swoop,
     x - size * 0.06,
-    y - size * 0.22 + swoop,
+    y - size * 0.22 + swoop
   );
   ctx.lineTo(x, y - size * 0.17 + swoop);
   ctx.lineTo(x + size * 0.06, y - size * 0.22 + swoop);
@@ -441,7 +435,7 @@ export function drawMascotEnemy(
     x + size * 0.1,
     y - size * 0.34 + swoop,
     x,
-    y - size * 0.37 + swoop,
+    y - size * 0.37 + swoop
   );
   ctx.fill();
   // Beak detail
@@ -501,7 +495,7 @@ export function drawMascotEnemy(
         size * 0.34 - t * size * 0.06,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -513,21 +507,21 @@ export function drawMascotEnemy(
     color: costumeMain,
     colorDark: costumeDark,
     footColor: clawColor,
-    strideSpeed: 3,
-    strideAmt: 0.45,
     legLen: 0.22,
-    width: 0.07,
+    strideAmt: 0.45,
+    strideSpeed: 3,
     style: "fleshy",
+    width: 0.07,
   });
 
   // Storm glow rings around body
   drawPulsingGlowRings(ctx, x, y + swoop * 0.2, size * 0.5, time, zoom, {
     color: "rgba(34, 211, 238, 0.5)",
     count: 4,
-    speed: 2,
-    maxAlpha: 0.35,
     expansion: 1.2,
     lineWidth: 2,
+    maxAlpha: 0.35,
+    speed: 2,
   });
 
   // Floating storm scale segments (diamond shape)
@@ -536,8 +530,8 @@ export function drawMascotEnemy(
     colorAlt: costumeLight,
     count: 8,
     orbitRadius: 0.55,
-    segmentSize: 0.04,
     orbitSpeed: 1.8,
+    segmentSize: 0.04,
     shape: "diamond",
   });
 
@@ -554,7 +548,7 @@ export function drawDefaultEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
@@ -580,8 +574,11 @@ export function drawDefaultEnemy(
       const r = ripSize + Math.sin(a * 6 + time * 3) * size * 0.03;
       const wx = x + Math.cos(a) * r;
       const wy = y + Math.sin(a) * r * 0.6;
-      if (a === 0) ctx.moveTo(wx, wy);
-      else ctx.lineTo(wx, wy);
+      if (a === 0) {
+        ctx.moveTo(wx, wy);
+      } else {
+        ctx.lineTo(wx, wy);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -616,7 +613,7 @@ export function drawDefaultEnemy(
     ctx.moveTo(px, py);
     ctx.lineTo(
       px + Math.cos(shardAngle + Math.PI) * size * 0.07,
-      py + Math.sin(shardAngle + Math.PI) * size * 0.04,
+      py + Math.sin(shardAngle + Math.PI) * size * 0.04
     );
     ctx.stroke();
     // Shard
@@ -648,7 +645,7 @@ export function drawDefaultEnemy(
       x + Math.cos(tendrilAngle + tendrilSway) * size * 0.45,
       y + size * 0.15,
       x + Math.cos(tendrilAngle + tendrilSway * 1.5) * size * 0.35,
-      y - size * 0.05 + Math.sin(time * 3 + t) * size * 0.05,
+      y - size * 0.05 + Math.sin(time * 3 + t) * size * 0.05
     );
     ctx.stroke();
   }
@@ -665,14 +662,14 @@ export function drawDefaultEnemy(
     {
       color: "#3730a3",
       colorDark: "#1e1b4b",
+      elbowAngle: 0.4 + Math.sin(time * 3.5 + 1) * 0.12,
+      foreLen: 0.12,
       handColor: "#c7d2fe",
       shoulderAngle: -0.5 + Math.sin(time * 3) * 0.15,
-      elbowAngle: 0.4 + Math.sin(time * 3.5 + 1) * 0.12,
-      upperLen: 0.15,
-      foreLen: 0.12,
-      width: 0.05,
       style: "fleshy",
-    },
+      upperLen: 0.15,
+      width: 0.05,
+    }
   );
   drawPathArm(
     ctx,
@@ -685,14 +682,14 @@ export function drawDefaultEnemy(
     {
       color: "#3730a3",
       colorDark: "#1e1b4b",
+      elbowAngle: 0.4 + Math.sin(time * 3.5 + 2.5) * 0.12,
+      foreLen: 0.12,
       handColor: "#c7d2fe",
       shoulderAngle: 0.5 + Math.sin(time * 3 + Math.PI) * 0.15,
-      elbowAngle: 0.4 + Math.sin(time * 3.5 + 2.5) * 0.12,
-      upperLen: 0.15,
-      foreLen: 0.12,
-      width: 0.05,
       style: "fleshy",
-    },
+      upperLen: 0.15,
+      width: 0.05,
+    }
   );
 
   // Basic walking legs (behind robe)
@@ -700,11 +697,11 @@ export function drawDefaultEnemy(
     color: "#312e81",
     colorDark: "#1e1b4b",
     footColor: "#0f0d24",
-    strideSpeed: 4,
-    strideAmt: 0.3,
     legLen: 0.14,
-    width: 0.05,
+    strideAmt: 0.3,
+    strideSpeed: 4,
     style: "fleshy",
+    width: 0.05,
   });
 
   // Shadowy robes with flowing tattered edges
@@ -712,7 +709,7 @@ export function drawDefaultEnemy(
     x - size * 0.4,
     y - size * 0.3,
     x + size * 0.4,
-    y + size * 0.3,
+    y + size * 0.3
   );
   robeGrad.addColorStop(0, "#1e1b4b");
   robeGrad.addColorStop(0.2, "#312e81");
@@ -736,14 +733,14 @@ export function drawDefaultEnemy(
     x + size * 0.45,
     y + size * 0.05,
     x + size * 0.18,
-    y - size * 0.32 + bob * 0.3,
+    y - size * 0.32 + bob * 0.3
   );
   ctx.lineTo(x - size * 0.18, y - size * 0.32 + bob * 0.3);
   ctx.quadraticCurveTo(
     x - size * 0.45,
     y + size * 0.05,
     x - size * 0.38,
-    y + size * 0.48,
+    y + size * 0.48
   );
   ctx.closePath();
   ctx.fill();
@@ -761,7 +758,7 @@ export function drawDefaultEnemy(
       veinX - Math.cos(time * 2 + v) * size * 0.04,
       y + size * 0.2,
       veinX + Math.sin(v) * size * 0.06,
-      y + size * 0.4,
+      y + size * 0.4
     );
     ctx.stroke();
   }
@@ -806,7 +803,7 @@ export function drawDefaultEnemy(
     size * 0.05,
     x,
     y - size * 0.38 + bob * 0.3,
-    size * 0.25,
+    size * 0.25
   );
   hoodGrad.addColorStop(0, "#0f0d24");
   hoodGrad.addColorStop(0.5, "#1e1b4b");
@@ -820,7 +817,7 @@ export function drawDefaultEnemy(
     size * 0.15,
     0,
     Math.PI,
-    0,
+    0
   );
   ctx.fill();
   // Hood sides draping down
@@ -831,14 +828,14 @@ export function drawDefaultEnemy(
     x - size * 0.28,
     y - size * 0.12,
     x - size * 0.2,
-    y + size * 0.02,
+    y + size * 0.02
   );
   ctx.lineTo(x - size * 0.14, y - size * 0.1);
   ctx.quadraticCurveTo(
     x - size * 0.2,
     y - size * 0.22,
     x - size * 0.16,
-    y - size * 0.32 + bob * 0.3,
+    y - size * 0.32 + bob * 0.3
   );
   ctx.fill();
   ctx.beginPath();
@@ -847,14 +844,14 @@ export function drawDefaultEnemy(
     x + size * 0.28,
     y - size * 0.12,
     x + size * 0.2,
-    y + size * 0.02,
+    y + size * 0.02
   );
   ctx.lineTo(x + size * 0.14, y - size * 0.1);
   ctx.quadraticCurveTo(
     x + size * 0.2,
     y - size * 0.22,
     x + size * 0.16,
-    y - size * 0.32 + bob * 0.3,
+    y - size * 0.32 + bob * 0.3
   );
   ctx.fill();
 
@@ -866,20 +863,20 @@ export function drawDefaultEnemy(
     x,
     y - size * 0.58 + bob * 0.3,
     x + size * 0.15,
-    y - size * 0.48 + bob * 0.3,
+    y - size * 0.48 + bob * 0.3
   );
   ctx.quadraticCurveTo(
     x + size * 0.22,
     y - size * 0.38,
     x + size * 0.22,
-    y - size * 0.35 + bob * 0.3,
+    y - size * 0.35 + bob * 0.3
   );
   ctx.lineTo(x - size * 0.22, y - size * 0.35 + bob * 0.3);
   ctx.quadraticCurveTo(
     x - size * 0.22,
     y - size * 0.38,
     x - size * 0.15,
-    y - size * 0.48 + bob * 0.3,
+    y - size * 0.48 + bob * 0.3
   );
   ctx.fill();
 
@@ -890,7 +887,7 @@ export function drawDefaultEnemy(
     size * 0.02,
     x,
     y - size * 0.4 + bob,
-    size * 0.16,
+    size * 0.16
   );
   faceGrad.addColorStop(0, "#e0e7ff");
   faceGrad.addColorStop(0.5, "#c7d2fe");
@@ -927,7 +924,7 @@ export function drawDefaultEnemy(
     size * 0.035,
     -0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.06,
@@ -936,7 +933,7 @@ export function drawDefaultEnemy(
     size * 0.035,
     0.1,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Inner eye glow
@@ -962,7 +959,7 @@ export function drawDefaultEnemy(
     x,
     y - size * 0.31 + bob,
     x + size * 0.04,
-    y - size * 0.33 + bob,
+    y - size * 0.33 + bob
   );
   ctx.stroke();
 
@@ -982,7 +979,7 @@ export function drawDefaultEnemy(
       size * 0.06,
       side * 0.3,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -996,7 +993,7 @@ export function drawDefaultEnemy(
       size * 0.04,
       side * 0.2,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1009,11 +1006,11 @@ export function drawDefaultEnemy(
       ctx.beginPath();
       ctx.moveTo(
         handX + handSway + Math.cos(fingerAngle) * size * 0.04,
-        handY + Math.sin(fingerAngle) * size * 0.03,
+        handY + Math.sin(fingerAngle) * size * 0.03
       );
       ctx.lineTo(
         handX + handSway + Math.cos(fingerAngle) * size * 0.09,
-        handY + Math.sin(fingerAngle) * size * 0.06,
+        handY + Math.sin(fingerAngle) * size * 0.06
       );
       ctx.stroke();
     }
@@ -1029,7 +1026,7 @@ export function drawDefaultEnemy(
         0,
         orbX,
         orbY,
-        size * 0.1,
+        size * 0.1
       );
       orbGrad.addColorStop(0, `rgba(165, 180, 252, ${orbPulse})`);
       orbGrad.addColorStop(0.4, `rgba(99, 102, 241, ${orbPulse * 0.7})`);
@@ -1052,7 +1049,7 @@ export function drawDefaultEnemy(
         ctx.moveTo(orbX, orbY);
         ctx.lineTo(
           orbX + Math.cos(arcAngle) * size * 0.07,
-          orbY + Math.sin(arcAngle) * size * 0.07,
+          orbY + Math.sin(arcAngle) * size * 0.07
         );
         ctx.stroke();
       }
@@ -1120,7 +1117,7 @@ export function drawDefaultEnemy(
       0,
       x,
       y + size * 0.08,
-      size * attackIntensity * 0.5,
+      size * attackIntensity * 0.5
     );
     burstGrad.addColorStop(0, `rgba(199, 210, 254, ${attackIntensity * 0.5})`);
     burstGrad.addColorStop(0.5, `rgba(99, 102, 241, ${attackIntensity * 0.3})`);
@@ -1135,10 +1132,10 @@ export function drawDefaultEnemy(
   drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.4, time, zoom, {
     color: "rgba(99, 102, 241, 0.4)",
     count: 2,
-    speed: 1.5,
-    maxAlpha: 0.3,
     expansion: 1.3,
     lineWidth: 1.5,
+    maxAlpha: 0.3,
+    speed: 1.5,
   });
 }
 
@@ -1156,7 +1153,7 @@ export function drawTrusteeEnemy(
   bodyColorLight: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0,
+  attackPhase: number = 0
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -1177,18 +1174,32 @@ export function drawTrusteeEnemy(
 
   // === HELLFIRE CORRUPTION AURA ===
   // Outer dark corruption ring
-  const darkAura = ctx.createRadialGradient(x, y - size * 0.1, size * 0.4, x, y - size * 0.1, size * 1.0);
+  const darkAura = ctx.createRadialGradient(
+    x,
+    y - size * 0.1,
+    size * 0.4,
+    x,
+    y - size * 0.1,
+    size * 1
+  );
   darkAura.addColorStop(0, "rgba(0,0,0,0)");
   darkAura.addColorStop(0.5, `rgba(40,10,60,${goldPulse * 0.08})`);
   darkAura.addColorStop(0.75, `rgba(80,20,20,${goldPulse * 0.05})`);
   darkAura.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = darkAura;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.1, size * 1.0, size * 0.7 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(x, y - size * 0.1, size * 1, size * 0.7 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
   // Inner hellfire aura
-  const auraGrad = ctx.createRadialGradient(x, y - size * 0.1, 0, x, y - size * 0.1, size * 0.7);
+  const auraGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.1,
+    0,
+    x,
+    y - size * 0.1,
+    size * 0.7
+  );
   auraGrad.addColorStop(0, `rgba(255, 100, 30, ${goldPulse * 0.15})`);
   auraGrad.addColorStop(0.2, `rgba(251, 191, 36, ${goldPulse * 0.12})`);
   auraGrad.addColorStop(0.45, `rgba(180, 40, 80, ${goldPulse * 0.08})`);
@@ -1196,13 +1207,21 @@ export function drawTrusteeEnemy(
   auraGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.1, size * 0.7, size * 0.5 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(
+    x,
+    y - size * 0.1,
+    size * 0.7,
+    size * 0.5 * ISO_Y_RATIO,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // Ground hellfire cracks emanating from base
   setShadowBlur(ctx, 4 * zoom, "#ff4020");
   for (let c = 0; c < 8; c++) {
-    const cAngle = c * TAU / 8 + Math.sin(time * 0.5 + c) * 0.15;
+    const cAngle = (c * TAU) / 8 + Math.sin(time * 0.5 + c) * 0.15;
     const cLen = size * 0.3 + Math.sin(time * 1.8 + c * 1.7) * size * 0.08;
     const cAlpha = 0.12 + Math.sin(time * 2.5 + c * 0.9) * 0.06;
     ctx.strokeStyle = `rgba(255, 80, 20, ${cAlpha})`;
@@ -1214,7 +1233,7 @@ export function drawTrusteeEnemy(
       const jx = Math.sin(time * 1.5 + c * 2.3 + s * 1.7) * size * 0.015;
       ctx.lineTo(
         x + Math.cos(cAngle) * cLen * sf + jx,
-        y + size * 0.1 + Math.sin(cAngle) * cLen * sf * ISO_Y_RATIO,
+        y + size * 0.1 + Math.sin(cAngle) * cLen * sf * ISO_Y_RATIO
       );
     }
     ctx.stroke();
@@ -1223,7 +1242,7 @@ export function drawTrusteeEnemy(
 
   // Slow-orbiting demonic sigils
   for (let i = 0; i < 8; i++) {
-    const sAngle = time * 0.5 + i * TAU / 8;
+    const sAngle = time * 0.5 + (i * TAU) / 8;
     const sR = size * 0.55 + Math.sin(time * 1.5 + i * 1.3) * size * 0.06;
     const sx = x + Math.cos(sAngle) * sR;
     const sy = y - size * 0.12 + Math.sin(sAngle) * sR * 0.3;
@@ -1232,9 +1251,10 @@ export function drawTrusteeEnemy(
     ctx.translate(sx, sy);
     ctx.rotate(time * 1.2 + i);
     setShadowBlur(ctx, 6 * zoom, i % 2 === 0 ? "#ff4020" : goldBright);
-    ctx.strokeStyle = i % 2 === 0
-      ? `rgba(255, 80, 30, ${sAlpha})`
-      : `rgba(251, 191, 36, ${sAlpha})`;
+    ctx.strokeStyle =
+      i % 2 === 0
+        ? `rgba(255, 80, 30, ${sAlpha})`
+        : `rgba(251, 191, 36, ${sAlpha})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.02);
@@ -1248,7 +1268,12 @@ export function drawTrusteeEnemy(
   }
 
   // === GRAND ERMINE CORONATION MANTLE (behind body) ===
-  const mantleGrad = ctx.createLinearGradient(x, y - size * 0.4, x, y + size * 0.32);
+  const mantleGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.4,
+    x,
+    y + size * 0.32
+  );
   mantleGrad.addColorStop(0, "#2d1050");
   mantleGrad.addColorStop(0.2, deepPurple);
   mantleGrad.addColorStop(0.5, royalPurple);
@@ -1258,20 +1283,26 @@ export function drawTrusteeEnemy(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.2, y - size * 0.38 - bodyBob);
   ctx.bezierCurveTo(
-    x - size * 0.42, y - size * 0.08,
-    x - size * 0.44, y + size * 0.1,
-    x - size * 0.34, y + size * 0.28,
+    x - size * 0.42,
+    y - size * 0.08,
+    x - size * 0.44,
+    y + size * 0.1,
+    x - size * 0.34,
+    y + size * 0.28
   );
   for (let t = 0; t < 10; t++) {
     const tx = x - size * 0.34 + t * size * 0.068;
     const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
-    const dip = (t % 2 === 0) ? size * 0.025 : 0;
-    ctx.lineTo(tx, y + size * 0.30 + billow + dip);
+    const dip = t % 2 === 0 ? size * 0.025 : 0;
+    ctx.lineTo(tx, y + size * 0.3 + billow + dip);
   }
   ctx.bezierCurveTo(
-    x + size * 0.44, y + size * 0.1,
-    x + size * 0.42, y - size * 0.08,
-    x + size * 0.2, y - size * 0.38 - bodyBob,
+    x + size * 0.44,
+    y + size * 0.1,
+    x + size * 0.42,
+    y - size * 0.08,
+    x + size * 0.2,
+    y - size * 0.38 - bodyBob
   );
   ctx.closePath();
   ctx.fill();
@@ -1282,15 +1313,18 @@ export function drawTrusteeEnemy(
   for (let t = 0; t < 10; t++) {
     const tx = x - size * 0.34 + t * size * 0.068;
     const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
-    const dip = (t % 2 === 0) ? size * 0.025 : 0;
-    if (t === 0) ctx.moveTo(tx, y + size * 0.28 + billow + dip);
-    else ctx.lineTo(tx, y + size * 0.28 + billow + dip);
+    const dip = t % 2 === 0 ? size * 0.025 : 0;
+    if (t === 0) {
+      ctx.moveTo(tx, y + size * 0.28 + billow + dip);
+    } else {
+      ctx.lineTo(tx, y + size * 0.28 + billow + dip);
+    }
   }
   for (let t = 9; t >= 0; t--) {
     const tx = x - size * 0.34 + t * size * 0.068;
     const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
-    const dip = (t % 2 === 0) ? size * 0.025 : 0;
-    ctx.lineTo(tx, y + size * 0.30 + billow + dip + size * 0.025);
+    const dip = t % 2 === 0 ? size * 0.025 : 0;
+    ctx.lineTo(tx, y + size * 0.3 + billow + dip + size * 0.025);
   }
   ctx.closePath();
   ctx.fill();
@@ -1298,7 +1332,7 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = "#1a0a0a";
   for (let d = 0; d < 14; d++) {
     const dx = x - size * 0.32 + d * size * 0.048;
-    const dy = y + size * 0.30 + Math.sin(time * 1.8 + d * 0.55) * size * 0.008;
+    const dy = y + size * 0.3 + Math.sin(time * 1.8 + d * 0.55) * size * 0.008;
     ctx.beginPath();
     ctx.arc(dx, dy + size * 0.015, size * 0.005, 0, TAU);
     ctx.fill();
@@ -1311,9 +1345,12 @@ export function drawTrusteeEnemy(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.2, y - size * 0.38 - bodyBob);
     ctx.bezierCurveTo(
-      x + side * size * 0.42, y - size * 0.08,
-      x + side * size * 0.44, y + size * 0.1,
-      x + side * size * 0.34, y + size * 0.28,
+      x + side * size * 0.42,
+      y - size * 0.08,
+      x + side * size * 0.44,
+      y + size * 0.1,
+      x + side * size * 0.34,
+      y + size * 0.28
     );
     ctx.stroke();
   }
@@ -1329,7 +1366,7 @@ export function drawTrusteeEnemy(
       x + fOff + Math.sin(time * 1.5 + f) * size * 0.015,
       y + size * 0.06,
       x + fOff,
-      y + size * 0.22,
+      y + size * 0.22
     );
     ctx.stroke();
   }
@@ -1341,13 +1378,19 @@ export function drawTrusteeEnemy(
     const wingY = y - size * 0.3 - bodyBob;
     ctx.translate(wingX, wingY);
 
-    const wingFlap = Math.sin(time * 2.5 + (side === 1 ? 0 : Math.PI * 0.3)) * 0.12;
-    const wingSpread = isAttacking ? 1.15 : 1.0;
+    const wingFlap =
+      Math.sin(time * 2.5 + (side === 1 ? 0 : Math.PI * 0.3)) * 0.12;
+    const wingSpread = isAttacking ? 1.15 : 1;
     ctx.scale(side, 1);
     ctx.rotate(wingFlap);
 
     // Wing membrane — dark purple-black with veins
-    const memGrad = ctx.createLinearGradient(0, 0, size * 0.55 * wingSpread, -size * 0.2);
+    const memGrad = ctx.createLinearGradient(
+      0,
+      0,
+      size * 0.55 * wingSpread,
+      -size * 0.2
+    );
     memGrad.addColorStop(0, "rgba(30,10,50,0.9)");
     memGrad.addColorStop(0.3, "rgba(50,15,80,0.85)");
     memGrad.addColorStop(0.6, "rgba(25,8,40,0.75)");
@@ -1358,15 +1401,40 @@ export function drawTrusteeEnemy(
     ctx.beginPath();
     ctx.moveTo(0, 0);
     // First bone
-    ctx.quadraticCurveTo(size * 0.12, -size * 0.25, size * 0.2 * wingSpread, -size * 0.42);
+    ctx.quadraticCurveTo(
+      size * 0.12,
+      -size * 0.25,
+      size * 0.2 * wingSpread,
+      -size * 0.42
+    );
     // Scallop between 1st and 2nd finger
-    ctx.quadraticCurveTo(size * 0.25 * wingSpread, -size * 0.3, size * 0.32 * wingSpread, -size * 0.38);
+    ctx.quadraticCurveTo(
+      size * 0.25 * wingSpread,
+      -size * 0.3,
+      size * 0.32 * wingSpread,
+      -size * 0.38
+    );
     // Second finger
-    ctx.quadraticCurveTo(size * 0.36 * wingSpread, -size * 0.28, size * 0.42 * wingSpread, -size * 0.32);
+    ctx.quadraticCurveTo(
+      size * 0.36 * wingSpread,
+      -size * 0.28,
+      size * 0.42 * wingSpread,
+      -size * 0.32
+    );
     // Scallop between 2nd and 3rd
-    ctx.quadraticCurveTo(size * 0.44 * wingSpread, -size * 0.2, size * 0.5 * wingSpread, -size * 0.22);
+    ctx.quadraticCurveTo(
+      size * 0.44 * wingSpread,
+      -size * 0.2,
+      size * 0.5 * wingSpread,
+      -size * 0.22
+    );
     // Third finger
-    ctx.quadraticCurveTo(size * 0.52 * wingSpread, -size * 0.12, size * 0.55 * wingSpread, -size * 0.08);
+    ctx.quadraticCurveTo(
+      size * 0.52 * wingSpread,
+      -size * 0.12,
+      size * 0.55 * wingSpread,
+      -size * 0.08
+    );
     // Trailing edge back to body
     ctx.quadraticCurveTo(size * 0.42, size * 0.06, size * 0.2, size * 0.12);
     ctx.quadraticCurveTo(size * 0.08, size * 0.1, 0, size * 0.05);
@@ -1378,10 +1446,30 @@ export function drawTrusteeEnemy(
     ctx.lineWidth = 2.5 * zoom;
     ctx.lineCap = "round";
     const boneEnds = [
-      { cx: size * 0.12, cy: -size * 0.25, ex: size * 0.2 * wingSpread, ey: -size * 0.42 },
-      { cx: size * 0.2, cy: -size * 0.18, ex: size * 0.32 * wingSpread, ey: -size * 0.38 },
-      { cx: size * 0.25, cy: -size * 0.12, ex: size * 0.42 * wingSpread, ey: -size * 0.32 },
-      { cx: size * 0.3, cy: -size * 0.06, ex: size * 0.55 * wingSpread, ey: -size * 0.08 },
+      {
+        cx: size * 0.12,
+        cy: -size * 0.25,
+        ex: size * 0.2 * wingSpread,
+        ey: -size * 0.42,
+      },
+      {
+        cx: size * 0.2,
+        cy: -size * 0.18,
+        ex: size * 0.32 * wingSpread,
+        ey: -size * 0.38,
+      },
+      {
+        cx: size * 0.25,
+        cy: -size * 0.12,
+        ex: size * 0.42 * wingSpread,
+        ey: -size * 0.32,
+      },
+      {
+        cx: size * 0.3,
+        cy: -size * 0.06,
+        ex: size * 0.55 * wingSpread,
+        ey: -size * 0.08,
+      },
     ];
     for (const b of boneEnds) {
       ctx.beginPath();
@@ -1422,7 +1510,15 @@ export function drawTrusteeEnemy(
       const hx = size * 0.15 + h * size * 0.12;
       const hy = -size * 0.12 - h * size * 0.05;
       ctx.beginPath();
-      ctx.ellipse(hx, hy, size * 0.012 + h * size * 0.004, size * 0.008, h * 0.5, 0, TAU);
+      ctx.ellipse(
+        hx,
+        hy,
+        size * 0.012 + h * size * 0.004,
+        size * 0.008,
+        h * 0.5,
+        0,
+        TAU
+      );
       ctx.fill();
     }
 
@@ -1449,9 +1545,24 @@ export function drawTrusteeEnemy(
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(size * 0.2 * wingSpread, -size * 0.42);
-    ctx.quadraticCurveTo(size * 0.25 * wingSpread, -size * 0.3, size * 0.32 * wingSpread, -size * 0.38);
-    ctx.quadraticCurveTo(size * 0.36 * wingSpread, -size * 0.28, size * 0.42 * wingSpread, -size * 0.32);
-    ctx.quadraticCurveTo(size * 0.44 * wingSpread, -size * 0.2, size * 0.5 * wingSpread, -size * 0.22);
+    ctx.quadraticCurveTo(
+      size * 0.25 * wingSpread,
+      -size * 0.3,
+      size * 0.32 * wingSpread,
+      -size * 0.38
+    );
+    ctx.quadraticCurveTo(
+      size * 0.36 * wingSpread,
+      -size * 0.28,
+      size * 0.42 * wingSpread,
+      -size * 0.32
+    );
+    ctx.quadraticCurveTo(
+      size * 0.44 * wingSpread,
+      -size * 0.2,
+      size * 0.5 * wingSpread,
+      -size * 0.22
+    );
     ctx.stroke();
     clearShadow(ctx);
 
@@ -1463,11 +1574,11 @@ export function drawTrusteeEnemy(
     color: "#2a2040",
     colorDark: "#1a1030",
     footColor: goldDark,
-    strideSpeed: 2.0,
-    strideAmt: 0.18,
     legLen: 0.28,
-    width: 0.075,
+    strideAmt: 0.18,
+    strideSpeed: 2,
     style: "armored",
+    width: 0.075,
   });
 
   // === TORSO — heavy ornate plate armor ===
@@ -1475,7 +1586,12 @@ export function drawTrusteeEnemy(
   const torsoBot = y + size * 0.06 - bodyBob;
 
   // Base dark plate
-  const plateGrad = ctx.createLinearGradient(x - size * 0.22, torsoTop, x + size * 0.22, torsoBot);
+  const plateGrad = ctx.createLinearGradient(
+    x - size * 0.22,
+    torsoTop,
+    x + size * 0.22,
+    torsoBot
+  );
   plateGrad.addColorStop(0, "#1a1030");
   plateGrad.addColorStop(0.15, "#2a2048");
   plateGrad.addColorStop(0.4, "#3a2860");
@@ -1485,9 +1601,19 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = plateGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, torsoTop);
-  ctx.quadraticCurveTo(x - size * 0.27, y - size * 0.12 - bodyBob, x - size * 0.2, torsoBot);
+  ctx.quadraticCurveTo(
+    x - size * 0.27,
+    y - size * 0.12 - bodyBob,
+    x - size * 0.2,
+    torsoBot
+  );
   ctx.lineTo(x + size * 0.2, torsoBot);
-  ctx.quadraticCurveTo(x + size * 0.27, y - size * 0.12 - bodyBob, x + size * 0.22, torsoTop);
+  ctx.quadraticCurveTo(
+    x + size * 0.27,
+    y - size * 0.12 - bodyBob,
+    x + size * 0.22,
+    torsoTop
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -1496,15 +1622,32 @@ export function drawTrusteeEnemy(
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, torsoTop);
-  ctx.quadraticCurveTo(x - size * 0.27, y - size * 0.12 - bodyBob, x - size * 0.2, torsoBot);
+  ctx.quadraticCurveTo(
+    x - size * 0.27,
+    y - size * 0.12 - bodyBob,
+    x - size * 0.2,
+    torsoBot
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.22, torsoTop);
-  ctx.quadraticCurveTo(x + size * 0.27, y - size * 0.12 - bodyBob, x + size * 0.2, torsoBot);
+  ctx.quadraticCurveTo(
+    x + size * 0.27,
+    y - size * 0.12 - bodyBob,
+    x + size * 0.2,
+    torsoBot
+  );
   ctx.stroke();
 
   // Raised center plate with Princeton shield
-  const cpGrad = ctx.createRadialGradient(x, y - size * 0.2 - bodyBob, 0, x, y - size * 0.2 - bodyBob, size * 0.15);
+  const cpGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.2 - bodyBob,
+    0,
+    x,
+    y - size * 0.2 - bodyBob,
+    size * 0.15
+  );
   cpGrad.addColorStop(0, "#3a2860");
   cpGrad.addColorStop(0.6, "#2a1848");
   cpGrad.addColorStop(1, "#1a1030");
@@ -1513,7 +1656,12 @@ export function drawTrusteeEnemy(
   ctx.moveTo(x - size * 0.1, torsoTop + size * 0.04);
   ctx.lineTo(x + size * 0.1, torsoTop + size * 0.04);
   ctx.lineTo(x + size * 0.08, torsoBot - size * 0.02);
-  ctx.quadraticCurveTo(x, torsoBot + size * 0.02, x - size * 0.08, torsoBot - size * 0.02);
+  ctx.quadraticCurveTo(
+    x,
+    torsoBot + size * 0.02,
+    x - size * 0.08,
+    torsoBot - size * 0.02
+  );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = goldMid;
@@ -1527,7 +1675,12 @@ export function drawTrusteeEnemy(
   ctx.moveTo(x - size * 0.04, embY - size * 0.05);
   ctx.lineTo(x + size * 0.04, embY - size * 0.05);
   ctx.lineTo(x + size * 0.04, embY + size * 0.015);
-  ctx.quadraticCurveTo(x, embY + size * 0.055, x - size * 0.04, embY + size * 0.015);
+  ctx.quadraticCurveTo(
+    x,
+    embY + size * 0.055,
+    x - size * 0.04,
+    embY + size * 0.015
+  );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = goldBright;
@@ -1551,7 +1704,13 @@ export function drawTrusteeEnemy(
       const sx = x + side * size * (0.12 + s * 0.03);
       const sy = torsoTop + size * 0.08 + s * size * 0.1;
       ctx.beginPath();
-      ctx.arc(sx, sy, size * 0.015, side > 0 ? 0 : Math.PI, side > 0 ? Math.PI : TAU);
+      ctx.arc(
+        sx,
+        sy,
+        size * 0.015,
+        side > 0 ? 0 : Math.PI,
+        side > 0 ? Math.PI : TAU
+      );
       ctx.stroke();
     }
   }
@@ -1583,7 +1742,12 @@ export function drawTrusteeEnemy(
     ctx.moveTo(pX - pW * 0.5, skirtY);
     ctx.lineTo(pX + pW * 0.5, skirtY);
     ctx.lineTo(pX + pW * 0.4, skirtY + pH);
-    ctx.quadraticCurveTo(pX, skirtY + pH + size * 0.01, pX - pW * 0.4, skirtY + pH);
+    ctx.quadraticCurveTo(
+      pX,
+      skirtY + pH + size * 0.01,
+      pX - pW * 0.4,
+      skirtY + pH
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = goldMid;
@@ -1614,7 +1778,13 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = goldPale;
   for (const side of [-1, 1]) {
     ctx.beginPath();
-    ctx.arc(buckCX + side * size * 0.004, buckCY - size * 0.005, size * 0.003, 0, TAU);
+    ctx.arc(
+      buckCX + side * size * 0.004,
+      buckCY - size * 0.005,
+      size * 0.003,
+      0,
+      TAU
+    );
     ctx.fill();
   }
   ctx.fillStyle = goldPale;
@@ -1637,7 +1807,12 @@ export function drawTrusteeEnemy(
   }
 
   // === GOLD GORGET (high collar armor) ===
-  const gorgetGrad = ctx.createLinearGradient(x - size * 0.24, torsoTop - size * 0.04, x + size * 0.24, torsoTop + size * 0.06);
+  const gorgetGrad = ctx.createLinearGradient(
+    x - size * 0.24,
+    torsoTop - size * 0.04,
+    x + size * 0.24,
+    torsoTop + size * 0.06
+  );
   gorgetGrad.addColorStop(0, goldDark);
   gorgetGrad.addColorStop(0.2, goldMid);
   gorgetGrad.addColorStop(0.5, goldBright);
@@ -1646,11 +1821,31 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = gorgetGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, torsoTop - size * 0.02);
-  ctx.quadraticCurveTo(x - size * 0.18, torsoTop - size * 0.08, x - size * 0.08, torsoTop - size * 0.06);
-  ctx.quadraticCurveTo(x, torsoTop + size * 0.02, x + size * 0.08, torsoTop - size * 0.06);
-  ctx.quadraticCurveTo(x + size * 0.18, torsoTop - size * 0.08, x + size * 0.24, torsoTop - size * 0.02);
+  ctx.quadraticCurveTo(
+    x - size * 0.18,
+    torsoTop - size * 0.08,
+    x - size * 0.08,
+    torsoTop - size * 0.06
+  );
+  ctx.quadraticCurveTo(
+    x,
+    torsoTop + size * 0.02,
+    x + size * 0.08,
+    torsoTop - size * 0.06
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    torsoTop - size * 0.08,
+    x + size * 0.24,
+    torsoTop - size * 0.02
+  );
   ctx.lineTo(x + size * 0.22, torsoTop + size * 0.03);
-  ctx.quadraticCurveTo(x, torsoTop + size * 0.1, x - size * 0.22, torsoTop + size * 0.03);
+  ctx.quadraticCurveTo(
+    x,
+    torsoTop + size * 0.1,
+    x - size * 0.22,
+    torsoTop + size * 0.03
+  );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = goldDark;
@@ -1662,7 +1857,13 @@ export function drawTrusteeEnemy(
     ctx.fillStyle = "#dc2626";
     setShadowBlur(ctx, 3 * zoom, "#dc2626");
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.14, torsoTop - size * 0.03, size * 0.01, 0, TAU);
+    ctx.arc(
+      x + side * size * 0.14,
+      torsoTop - size * 0.03,
+      size * 0.01,
+      0,
+      TAU
+    );
     ctx.fill();
     clearShadow(ctx);
   }
@@ -1674,13 +1875,12 @@ export function drawTrusteeEnemy(
   drawPathArm(ctx, x - size * 0.26, armShY, size, time, zoom, -1, {
     color: "#2a2048",
     colorDark: "#1a1030",
-    handColor: "#5a4878",
-    shoulderAngle: -0.7 + Math.sin(time * 1.3) * 0.04 + (isAttacking ? -attackIntensity * 0.2 : 0),
-    elbowAngle: -0.2 + Math.sin(time * 1.8 + 0.5) * 0.05 + (isAttacking ? -attackIntensity * 0.15 : 0),
-    upperLen: 0.17,
+    elbowAngle:
+      -0.2 +
+      Math.sin(time * 1.8 + 0.5) * 0.05 +
+      (isAttacking ? -attackIntensity * 0.15 : 0),
     foreLen: 0.14,
-    width: 0.065,
-    style: "armored",
+    handColor: "#5a4878",
     onWeapon: (wCtx) => {
       wCtx.translate(0, size * 0.02);
       wCtx.scale(-1, 1);
@@ -1688,7 +1888,12 @@ export function drawTrusteeEnemy(
       const shH = size * 0.28;
 
       // Shield body — dark obsidian tower shield
-      const shGrad = wCtx.createLinearGradient(-shW, -shH * 0.5, shW, shH * 0.5);
+      const shGrad = wCtx.createLinearGradient(
+        -shW,
+        -shH * 0.5,
+        shW,
+        shH * 0.5
+      );
       shGrad.addColorStop(0, "#0a0014");
       shGrad.addColorStop(0.2, "#1a1030");
       shGrad.addColorStop(0.4, "#2a1848");
@@ -1735,19 +1940,42 @@ export function drawTrusteeEnemy(
       for (const es of [-1, 1]) {
         wCtx.fillStyle = "#050010";
         wCtx.beginPath();
-        wCtx.ellipse(es * shW * 0.22, -shH * 0.12, shW * 0.12, shH * 0.07, es * 0.15, 0, TAU);
+        wCtx.ellipse(
+          es * shW * 0.22,
+          -shH * 0.12,
+          shW * 0.12,
+          shH * 0.07,
+          es * 0.15,
+          0,
+          TAU
+        );
         wCtx.fill();
 
         // Burning eye within
         const seAlpha = 0.5 + corruptPulse * 0.3;
         setShadowBlur(wCtx, 6 * zoom, `rgba(255,80,30,${seAlpha})`);
-        const seGrad = wCtx.createRadialGradient(es * shW * 0.22, -shH * 0.12, 0, es * shW * 0.22, -shH * 0.12, shW * 0.08);
+        const seGrad = wCtx.createRadialGradient(
+          es * shW * 0.22,
+          -shH * 0.12,
+          0,
+          es * shW * 0.22,
+          -shH * 0.12,
+          shW * 0.08
+        );
         seGrad.addColorStop(0, `rgba(255,220,100,${seAlpha})`);
         seGrad.addColorStop(0.4, `rgba(255,80,20,${seAlpha * 0.8})`);
         seGrad.addColorStop(1, `rgba(100,10,0,0)`);
         wCtx.fillStyle = seGrad;
         wCtx.beginPath();
-        wCtx.ellipse(es * shW * 0.22, -shH * 0.12, shW * 0.08, shH * 0.05, 0, 0, TAU);
+        wCtx.ellipse(
+          es * shW * 0.22,
+          -shH * 0.12,
+          shW * 0.08,
+          shH * 0.05,
+          0,
+          0,
+          TAU
+        );
         wCtx.fill();
         clearShadow(wCtx);
       }
@@ -1770,7 +1998,12 @@ export function drawTrusteeEnemy(
       wCtx.fillStyle = goldPale;
       for (let t = 0; t < 7; t++) {
         const tx = -shW * 0.2 + t * shW * 0.067;
-        const tH = (t === 0 || t === 6) ? shH * 0.04 : (t === 2 || t === 4) ? shH * 0.06 : shH * 0.035;
+        const tH =
+          t === 0 || t === 6
+            ? shH * 0.04
+            : t === 2 || t === 4
+              ? shH * 0.06
+              : shH * 0.035;
         wCtx.beginPath();
         wCtx.moveTo(tx - shW * 0.015, shH * 0.1);
         wCtx.lineTo(tx, shH * 0.1 + tH);
@@ -1789,7 +2022,7 @@ export function drawTrusteeEnemy(
           Math.cos(va + 0.3) * shW * 0.5,
           Math.sin(va + 0.3) * shH * 0.4,
           Math.cos(va + 0.6) * shW * 0.7,
-          Math.sin(va + 0.6) * shH * 0.55,
+          Math.sin(va + 0.6) * shH * 0.55
         );
         wCtx.stroke();
       }
@@ -1797,10 +2030,10 @@ export function drawTrusteeEnemy(
       // Spikes at shield edges
       wCtx.fillStyle = goldBright;
       const spikePositions = [
-        { x: 0, y: -shH, a: -Math.PI / 2 },
-        { x: shW * 0.85, y: -shH * 0.1, a: 0.2 },
-        { x: -shW * 0.85, y: -shH * 0.1, a: Math.PI - 0.2 },
-        { x: 0, y: shH * 0.9, a: Math.PI / 2 },
+        { a: -Math.PI / 2, x: 0, y: -shH },
+        { a: 0.2, x: shW * 0.85, y: -shH * 0.1 },
+        { a: Math.PI - 0.2, x: -shW * 0.85, y: -shH * 0.1 },
+        { a: Math.PI / 2, x: 0, y: shH * 0.9 },
       ];
       for (const sp of spikePositions) {
         wCtx.save();
@@ -1823,20 +2056,25 @@ export function drawTrusteeEnemy(
         wCtx.fill();
       }
     },
+    shoulderAngle:
+      -0.7 +
+      Math.sin(time * 1.3) * 0.04 +
+      (isAttacking ? -attackIntensity * 0.2 : 0),
+    style: "armored",
+    upperLen: 0.17,
+    width: 0.065,
   });
 
   // Right arm — massive hellfire war-axe
   drawPathArm(ctx, x + size * 0.26, armShY, size, time, zoom, 1, {
     color: "#2a2048",
     colorDark: "#1a1030",
-    handColor: "#5a4878",
-    shoulderAngle: -(0.55 + Math.sin(time * 1.3 + Math.PI) * 0.04) + (isAttacking ? -attackIntensity * 0.5 : 0),
-    elbowAngle: -0.35 + Math.sin(time * 1.8 + 2) * 0.03 + (isAttacking ? -attackIntensity * 0.4 : 0),
-    upperLen: 0.17,
+    elbowAngle:
+      -0.35 +
+      Math.sin(time * 1.8 + 2) * 0.03 +
+      (isAttacking ? -attackIntensity * 0.4 : 0),
     foreLen: 0.14,
-    width: 0.065,
-    style: "armored",
-    weaponAngle: -0.5,
+    handColor: "#5a4878",
     onWeapon: (wCtx) => {
       const sH = size * 0.6;
       const sW = size * 0.018;
@@ -1893,7 +2131,12 @@ export function drawTrusteeEnemy(
 
       for (const bSide of [-1, 1]) {
         // Blade body — curved, jagged-edged
-        const blGrad = wCtx.createLinearGradient(0, axY - bladeH * 0.5, bSide * bladeW, axY);
+        const blGrad = wCtx.createLinearGradient(
+          0,
+          axY - bladeH * 0.5,
+          bSide * bladeW,
+          axY
+        );
         blGrad.addColorStop(0, "#1a0a18");
         blGrad.addColorStop(0.3, "#3a1848");
         blGrad.addColorStop(0.6, "#5a2870");
@@ -1902,14 +2145,24 @@ export function drawTrusteeEnemy(
         wCtx.fillStyle = blGrad;
         wCtx.beginPath();
         wCtx.moveTo(0, axY - bladeH * 0.5);
-        wCtx.quadraticCurveTo(bSide * bladeW * 0.3, axY - bladeH * 0.55, bSide * bladeW * 0.7, axY - bladeH * 0.35);
+        wCtx.quadraticCurveTo(
+          bSide * bladeW * 0.3,
+          axY - bladeH * 0.55,
+          bSide * bladeW * 0.7,
+          axY - bladeH * 0.35
+        );
         // Jagged cutting edge
         wCtx.lineTo(bSide * bladeW * 0.85, axY - bladeH * 0.25);
         wCtx.lineTo(bSide * bladeW * 0.95, axY - bladeH * 0.15);
         wCtx.lineTo(bSide * bladeW, axY);
         wCtx.lineTo(bSide * bladeW * 0.95, axY + bladeH * 0.15);
         wCtx.lineTo(bSide * bladeW * 0.85, axY + bladeH * 0.25);
-        wCtx.quadraticCurveTo(bSide * bladeW * 0.5, axY + bladeH * 0.4, 0, axY + bladeH * 0.5);
+        wCtx.quadraticCurveTo(
+          bSide * bladeW * 0.5,
+          axY + bladeH * 0.4,
+          0,
+          axY + bladeH * 0.5
+        );
         wCtx.closePath();
         wCtx.fill();
 
@@ -1945,7 +2198,12 @@ export function drawTrusteeEnemy(
         wCtx.lineWidth = 1 * zoom;
         wCtx.beginPath();
         wCtx.moveTo(bSide * bladeW * 0.2, axY - bladeH * 0.3);
-        wCtx.quadraticCurveTo(bSide * bladeW * 0.5, axY, bSide * bladeW * 0.2, axY + bladeH * 0.3);
+        wCtx.quadraticCurveTo(
+          bSide * bladeW * 0.5,
+          axY,
+          bSide * bladeW * 0.2,
+          axY + bladeH * 0.3
+        );
         wCtx.stroke();
 
         // Inner lava cracks
@@ -1999,12 +2257,20 @@ export function drawTrusteeEnemy(
       setShadowBlur(wCtx, 5 * zoom, "#ff6020");
       for (let d = 0; d < 4; d++) {
         const dx = -bladeW * 0.6 + d * bladeW * 0.4;
-        const dPhase = (time * 2.5 + d * 1.3) % 1.0;
+        const dPhase = (time * 2.5 + d * 1.3) % 1;
         const dy = axY + bladeH * 0.3 + dPhase * size * 0.06;
         const dAlpha = (1 - dPhase) * 0.6;
         wCtx.fillStyle = `rgba(255,100,30,${dAlpha})`;
         wCtx.beginPath();
-        wCtx.ellipse(dx, dy, size * 0.004, size * 0.008 + dPhase * size * 0.006, 0, 0, TAU);
+        wCtx.ellipse(
+          dx,
+          dy,
+          size * 0.004,
+          size * 0.008 + dPhase * size * 0.006,
+          0,
+          0,
+          TAU
+        );
         wCtx.fill();
       }
       clearShadow(wCtx);
@@ -2022,6 +2288,13 @@ export function drawTrusteeEnemy(
       wCtx.closePath();
       wCtx.fill();
     },
+    shoulderAngle:
+      -(0.55 + Math.sin(time * 1.3 + Math.PI) * 0.04) +
+      (isAttacking ? -attackIntensity * 0.5 : 0),
+    style: "armored",
+    upperLen: 0.17,
+    weaponAngle: -0.5,
+    width: 0.065,
   });
 
   // === MASSIVE LAYERED PAULDRONS ===
@@ -2030,26 +2303,56 @@ export function drawTrusteeEnemy(
     const epY = y - size * 0.38 - bodyBob;
 
     // Bottom plate
-    const p1Grad = ctx.createRadialGradient(epX, epY + size * 0.02, 0, epX, epY + size * 0.02, size * 0.09);
+    const p1Grad = ctx.createRadialGradient(
+      epX,
+      epY + size * 0.02,
+      0,
+      epX,
+      epY + size * 0.02,
+      size * 0.09
+    );
     p1Grad.addColorStop(0, "#3a2860");
     p1Grad.addColorStop(0.6, "#2a2048");
     p1Grad.addColorStop(1, "#1a1030");
     ctx.fillStyle = p1Grad;
     ctx.beginPath();
-    ctx.ellipse(epX + side * size * 0.01, epY + size * 0.02, size * 0.09, size * 0.05, side * 0.25, 0, TAU);
+    ctx.ellipse(
+      epX + side * size * 0.01,
+      epY + size * 0.02,
+      size * 0.09,
+      size * 0.05,
+      side * 0.25,
+      0,
+      TAU
+    );
     ctx.fill();
     ctx.strokeStyle = goldMid;
     ctx.lineWidth = 1 * zoom;
     ctx.stroke();
 
     // Top plate (overlapping)
-    const p2Grad = ctx.createRadialGradient(epX, epY - size * 0.01, 0, epX, epY - size * 0.01, size * 0.075);
+    const p2Grad = ctx.createRadialGradient(
+      epX,
+      epY - size * 0.01,
+      0,
+      epX,
+      epY - size * 0.01,
+      size * 0.075
+    );
     p2Grad.addColorStop(0, goldBright);
     p2Grad.addColorStop(0.4, goldMid);
     p2Grad.addColorStop(1, goldDark);
     ctx.fillStyle = p2Grad;
     ctx.beginPath();
-    ctx.ellipse(epX, epY - size * 0.01, size * 0.075, size * 0.045, side * 0.2, 0, TAU);
+    ctx.ellipse(
+      epX,
+      epY - size * 0.01,
+      size * 0.075,
+      size * 0.045,
+      side * 0.2,
+      0,
+      TAU
+    );
     ctx.fill();
     ctx.strokeStyle = goldDark;
     ctx.lineWidth = 0.8 * zoom;
@@ -2095,14 +2398,31 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = "#2a2048";
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.08, headY + size * 0.1);
-  ctx.quadraticCurveTo(headX, headY + size * 0.14, headX + size * 0.08, headY + size * 0.1);
+  ctx.quadraticCurveTo(
+    headX,
+    headY + size * 0.14,
+    headX + size * 0.08,
+    headY + size * 0.1
+  );
   ctx.lineTo(headX + size * 0.06, headY + size * 0.06);
-  ctx.quadraticCurveTo(headX, headY + size * 0.08, headX - size * 0.06, headY + size * 0.06);
+  ctx.quadraticCurveTo(
+    headX,
+    headY + size * 0.08,
+    headX - size * 0.06,
+    headY + size * 0.06
+  );
   ctx.closePath();
   ctx.fill();
 
   // Face — corrupted demonic visage visible through helm opening
-  const faceGrad = ctx.createRadialGradient(headX, headY + size * 0.01, 0, headX, headY + size * 0.01, size * 0.09);
+  const faceGrad = ctx.createRadialGradient(
+    headX,
+    headY + size * 0.01,
+    0,
+    headX,
+    headY + size * 0.01,
+    size * 0.09
+  );
   faceGrad.addColorStop(0, "#5a1040");
   faceGrad.addColorStop(0.25, "#4a0838");
   faceGrad.addColorStop(0.5, "#3a0028");
@@ -2115,7 +2435,7 @@ export function drawTrusteeEnemy(
 
   // Burning corruption cracks radiating from center — deterministic
   for (let c = 0; c < 8; c++) {
-    const cAngle = c * TAU / 8 + Math.sin(time * 1.5 + c * 0.7) * 0.1;
+    const cAngle = (c * TAU) / 8 + Math.sin(time * 1.5 + c * 0.7) * 0.1;
     const crackAlpha = 0.3 + corruptPulse * 0.25;
     ctx.strokeStyle = `rgba(255, 80, 30, ${crackAlpha * 0.6})`;
     ctx.lineWidth = 0.7 * zoom;
@@ -2125,7 +2445,7 @@ export function drawTrusteeEnemy(
       const jitter = Math.sin(time * 2 + c * 3.7 + s * 2.1) * size * 0.005;
       ctx.lineTo(
         headX + Math.cos(cAngle + s * 0.1) * size * (0.015 * s) + jitter,
-        headY + size * 0.01 + Math.sin(cAngle + s * 0.1) * size * (0.015 * s),
+        headY + size * 0.01 + Math.sin(cAngle + s * 0.1) * size * (0.015 * s)
       );
     }
     ctx.stroke();
@@ -2150,7 +2470,14 @@ export function drawTrusteeEnemy(
 
     // Hellfire iris — intense burning
     setShadowBlur(ctx, 14 * zoom, "#ff4020");
-    const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.02);
+    const eyeGrad = ctx.createRadialGradient(
+      eyeX,
+      eyeY,
+      0,
+      eyeX,
+      eyeY,
+      size * 0.02
+    );
     eyeGrad.addColorStop(0, `rgba(255, 255, 200, ${goldPulse})`);
     eyeGrad.addColorStop(0.2, `rgba(255, 200, 60, ${goldPulse * 0.95})`);
     eyeGrad.addColorStop(0.4, `rgba(255, 80, 20, ${goldPulse * 0.8})`);
@@ -2180,7 +2507,7 @@ export function drawTrusteeEnemy(
         eyeX + side * (size * 0.03 + wLen * 0.5),
         eyeY - size * 0.01 + Math.sin(time * 5 + w) * size * 0.005,
         eyeX + side * (size * 0.025 + wLen),
-        eyeY - size * 0.015 + Math.sin(time * 3 + w * 2) * size * 0.008,
+        eyeY - size * 0.015 + Math.sin(time * 3 + w * 2) * size * 0.008
       );
       ctx.stroke();
     }
@@ -2190,12 +2517,27 @@ export function drawTrusteeEnemy(
   // Gaping maw — wider, more menacing
   ctx.fillStyle = "#050008";
   ctx.beginPath();
-  ctx.ellipse(headX, headY + size * 0.055, size * 0.05, size * 0.025, 0, 0, TAU);
+  ctx.ellipse(
+    headX,
+    headY + size * 0.055,
+    size * 0.05,
+    size * 0.025,
+    0,
+    0,
+    TAU
+  );
   ctx.fill();
 
   // Inner glow from maw
   setShadowBlur(ctx, 5 * zoom, "#ff2000");
-  const mawGrad = ctx.createRadialGradient(headX, headY + size * 0.055, 0, headX, headY + size * 0.055, size * 0.035);
+  const mawGrad = ctx.createRadialGradient(
+    headX,
+    headY + size * 0.055,
+    0,
+    headX,
+    headY + size * 0.055,
+    size * 0.035
+  );
   mawGrad.addColorStop(0, `rgba(255,80,20,${0.3 + corruptPulse * 0.2})`);
   mawGrad.addColorStop(0.5, `rgba(120,20,0,${0.15 + corruptPulse * 0.1})`);
   mawGrad.addColorStop(1, "rgba(0,0,0,0)");
@@ -2209,7 +2551,12 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = "#e8dcc0";
   for (let f = 0; f < 6; f++) {
     const fx = headX - size * 0.035 + f * size * 0.014;
-    const fH = (f === 1 || f === 4) ? size * 0.03 : (f === 2 || f === 3) ? size * 0.022 : size * 0.014;
+    const fH =
+      f === 1 || f === 4
+        ? size * 0.03
+        : f === 2 || f === 3
+          ? size * 0.022
+          : size * 0.014;
     ctx.beginPath();
     ctx.moveTo(fx - size * 0.004, headY + size * 0.035);
     ctx.lineTo(fx, headY + size * 0.035 + fH);
@@ -2220,7 +2567,7 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = "#d4c8a0";
   for (let f = 0; f < 5; f++) {
     const fx = headX - size * 0.028 + f * size * 0.014;
-    const fH = (f === 1 || f === 3) ? size * 0.018 : size * 0.01;
+    const fH = f === 1 || f === 3 ? size * 0.018 : size * 0.01;
     ctx.beginPath();
     ctx.moveTo(fx - size * 0.003, headY + size * 0.075);
     ctx.lineTo(fx, headY + size * 0.075 - fH);
@@ -2231,17 +2578,33 @@ export function drawTrusteeEnemy(
   // Drool/corruption + hellfire drips from mouth
   for (let d = 0; d < 3; d++) {
     const dx = headX + (d - 1) * size * 0.025;
-    const dPhase = (time * 2.2 + d * 1.8) % 1.0;
+    const dPhase = (time * 2.2 + d * 1.8) % 1;
     const dLen = size * 0.015 + dPhase * size * 0.025;
     const dAlpha = (1 - dPhase) * 0.5;
     setShadowBlur(ctx, 3 * zoom, "#ff4020");
     ctx.fillStyle = `rgba(255, 60, 20, ${dAlpha * 0.6})`;
     ctx.beginPath();
-    ctx.ellipse(dx, headY + size * 0.08 + dLen, size * 0.003, size * 0.006 + dPhase * size * 0.004, 0, 0, TAU);
+    ctx.ellipse(
+      dx,
+      headY + size * 0.08 + dLen,
+      size * 0.003,
+      size * 0.006 + dPhase * size * 0.004,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
     ctx.fillStyle = `rgba(120, 50, 200, ${dAlpha * 0.5})`;
     ctx.beginPath();
-    ctx.ellipse(dx + size * 0.005, headY + size * 0.082 + dLen * 0.8, size * 0.002, size * 0.005, 0, 0, TAU);
+    ctx.ellipse(
+      dx + size * 0.005,
+      headY + size * 0.082 + dLen * 0.8,
+      size * 0.002,
+      size * 0.005,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
     clearShadow(ctx);
   }
@@ -2250,7 +2613,12 @@ export function drawTrusteeEnemy(
   const helmY = headY - size * 0.04;
 
   // Main helm shell
-  const helmGrad = ctx.createLinearGradient(headX - size * 0.14, helmY - size * 0.15, headX + size * 0.14, helmY + size * 0.08);
+  const helmGrad = ctx.createLinearGradient(
+    headX - size * 0.14,
+    helmY - size * 0.15,
+    headX + size * 0.14,
+    helmY + size * 0.08
+  );
   helmGrad.addColorStop(0, "#1a1030");
   helmGrad.addColorStop(0.15, "#2a2048");
   helmGrad.addColorStop(0.4, "#3a2860");
@@ -2260,9 +2628,24 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.14, headY + size * 0.04);
-  ctx.quadraticCurveTo(headX - size * 0.16, helmY - size * 0.06, headX - size * 0.12, helmY - size * 0.14);
-  ctx.quadraticCurveTo(headX, helmY - size * 0.2, headX + size * 0.12, helmY - size * 0.14);
-  ctx.quadraticCurveTo(headX + size * 0.16, helmY - size * 0.06, headX + size * 0.14, headY + size * 0.04);
+  ctx.quadraticCurveTo(
+    headX - size * 0.16,
+    helmY - size * 0.06,
+    headX - size * 0.12,
+    helmY - size * 0.14
+  );
+  ctx.quadraticCurveTo(
+    headX,
+    helmY - size * 0.2,
+    headX + size * 0.12,
+    helmY - size * 0.14
+  );
+  ctx.quadraticCurveTo(
+    headX + size * 0.16,
+    helmY - size * 0.06,
+    headX + size * 0.14,
+    headY + size * 0.04
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -2297,13 +2680,23 @@ export function drawTrusteeEnemy(
   for (const side of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(headX + side * size * 0.06, helmY - size * 0.1);
-    ctx.quadraticCurveTo(headX + side * size * 0.12, helmY - size * 0.02, headX + side * size * 0.1, headY + size * 0.04);
+    ctx.quadraticCurveTo(
+      headX + side * size * 0.12,
+      helmY - size * 0.02,
+      headX + side * size * 0.1,
+      headY + size * 0.04
+    );
     ctx.stroke();
   }
 
   // Ornate gold crown band integrated into helm
   const crownBandY = helmY - size * 0.08;
-  const cbGrad = ctx.createLinearGradient(headX - size * 0.14, crownBandY, headX + size * 0.14, crownBandY);
+  const cbGrad = ctx.createLinearGradient(
+    headX - size * 0.14,
+    crownBandY,
+    headX + size * 0.14,
+    crownBandY
+  );
   cbGrad.addColorStop(0, goldDark);
   cbGrad.addColorStop(0.2, goldBright);
   cbGrad.addColorStop(0.5, goldPale);
@@ -2312,16 +2705,33 @@ export function drawTrusteeEnemy(
   ctx.fillStyle = cbGrad;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.14, crownBandY);
-  ctx.quadraticCurveTo(headX, crownBandY + size * 0.02, headX + size * 0.14, crownBandY);
+  ctx.quadraticCurveTo(
+    headX,
+    crownBandY + size * 0.02,
+    headX + size * 0.14,
+    crownBandY
+  );
   ctx.lineTo(headX + size * 0.13, crownBandY + size * 0.03);
-  ctx.quadraticCurveTo(headX, crownBandY + size * 0.05, headX - size * 0.13, crownBandY + size * 0.03);
+  ctx.quadraticCurveTo(
+    headX,
+    crownBandY + size * 0.05,
+    headX - size * 0.13,
+    crownBandY + size * 0.03
+  );
   ctx.closePath();
   ctx.fill();
 
   // Crown points rising from helm
   for (let p = 0; p < 7; p++) {
     const px = headX - size * 0.12 + p * size * 0.04;
-    const pointH = (p === 3) ? size * 0.08 : (p === 2 || p === 4) ? size * 0.06 : (p === 1 || p === 5) ? size * 0.04 : size * 0.025;
+    const pointH =
+      p === 3
+        ? size * 0.08
+        : p === 2 || p === 4
+          ? size * 0.06
+          : p === 1 || p === 5
+            ? size * 0.04
+            : size * 0.025;
     ctx.fillStyle = goldBright;
     ctx.beginPath();
     ctx.moveTo(px - size * 0.008, crownBandY);
@@ -2332,7 +2742,15 @@ export function drawTrusteeEnemy(
   }
 
   // Gems in crown band
-  const helmGems = ["#dc2626", "#059669", "#2563eb", "#7c3aed", "#2563eb", "#059669", "#dc2626"];
+  const helmGems = [
+    "#dc2626",
+    "#059669",
+    "#2563eb",
+    "#7c3aed",
+    "#2563eb",
+    "#059669",
+    "#dc2626",
+  ];
   for (let g = 0; g < 7; g++) {
     const gx = headX - size * 0.12 + g * size * 0.04;
     ctx.fillStyle = helmGems[g];
@@ -2347,7 +2765,12 @@ export function drawTrusteeEnemy(
   for (const side of [-1, 1]) {
     ctx.save();
     ctx.translate(headX + side * size * 0.12, helmY - size * 0.06);
-    const hornGrad = ctx.createLinearGradient(0, 0, side * size * 0.12, -size * 0.18);
+    const hornGrad = ctx.createLinearGradient(
+      0,
+      0,
+      side * size * 0.12,
+      -size * 0.18
+    );
     hornGrad.addColorStop(0, goldMid);
     hornGrad.addColorStop(0.4, goldBright);
     hornGrad.addColorStop(0.7, goldMid);
@@ -2355,9 +2778,24 @@ export function drawTrusteeEnemy(
     ctx.fillStyle = hornGrad;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(side * size * 0.06, -size * 0.06, side * size * 0.12, -size * 0.16);
-    ctx.quadraticCurveTo(side * size * 0.13, -size * 0.18, side * size * 0.14, -size * 0.22);
-    ctx.quadraticCurveTo(side * size * 0.08, -size * 0.1, size * 0.005, size * 0.005);
+    ctx.quadraticCurveTo(
+      side * size * 0.06,
+      -size * 0.06,
+      side * size * 0.12,
+      -size * 0.16
+    );
+    ctx.quadraticCurveTo(
+      side * size * 0.13,
+      -size * 0.18,
+      side * size * 0.14,
+      -size * 0.22
+    );
+    ctx.quadraticCurveTo(
+      side * size * 0.08,
+      -size * 0.1,
+      size * 0.005,
+      size * 0.005
+    );
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = goldDark;
@@ -2369,7 +2807,14 @@ export function drawTrusteeEnemy(
   // Monde (orb) at helm apex
   const mondeY = crownBandY - size * 0.1;
   setShadowBlur(ctx, 10 * zoom, goldBright);
-  const mondeGrad = ctx.createRadialGradient(headX, mondeY, 0, headX, mondeY, size * 0.025);
+  const mondeGrad = ctx.createRadialGradient(
+    headX,
+    mondeY,
+    0,
+    headX,
+    mondeY,
+    size * 0.025
+  );
   mondeGrad.addColorStop(0, goldPale);
   mondeGrad.addColorStop(0.5, goldBright);
   mondeGrad.addColorStop(1, goldMid);
@@ -2381,8 +2826,18 @@ export function drawTrusteeEnemy(
 
   // Cross on monde
   ctx.fillStyle = goldPale;
-  ctx.fillRect(headX - size * 0.003, mondeY - size * 0.04, size * 0.006, size * 0.03);
-  ctx.fillRect(headX - size * 0.012, mondeY - size * 0.035, size * 0.024, size * 0.006);
+  ctx.fillRect(
+    headX - size * 0.003,
+    mondeY - size * 0.04,
+    size * 0.006,
+    size * 0.03
+  );
+  ctx.fillRect(
+    headX - size * 0.012,
+    mondeY - size * 0.035,
+    size * 0.024,
+    size * 0.006
+  );
 
   // Amethyst in monde
   ctx.fillStyle = "#7c3aed";
@@ -2421,7 +2876,7 @@ export function drawTrusteeEnemy(
         headX + side * (size * 0.04 + beamLen * 0.5),
         headY - size * 0.01 + beamLen * 0.15 + Math.sin(time * 8) * size * 0.01,
         headX + side * (size * 0.04 + beamLen),
-        headY - size * 0.01 + beamLen * 0.3,
+        headY - size * 0.01 + beamLen * 0.3
       );
       ctx.stroke();
 
@@ -2435,12 +2890,13 @@ export function drawTrusteeEnemy(
     // Hellfire ground eruption particles
     setShadowBlur(ctx, 6 * zoom, "#ff4020");
     for (let p = 0; p < 8; p++) {
-      const pAngle = p * TAU / 8 + time * 3;
+      const pAngle = (p * TAU) / 8 + time * 3;
       const pDist = size * 0.25 + attackIntensity * size * 0.3;
       const px = x + Math.cos(pAngle) * pDist;
       const py = y + size * 0.1 + Math.sin(pAngle) * pDist * 0.35;
       const pRise = Math.sin(time * 5 + p * 1.3) * size * 0.04;
-      const pAlpha = attackIntensity * (0.3 + Math.sin(time * 4 + p * 2) * 0.15);
+      const pAlpha =
+        attackIntensity * (0.3 + Math.sin(time * 4 + p * 2) * 0.15);
       ctx.fillStyle = `rgba(255, 100, 20, ${pAlpha})`;
       ctx.beginPath();
       ctx.arc(px, py - pRise, size * 0.008, 0, TAU);
@@ -2456,29 +2912,50 @@ export function drawTrusteeEnemy(
   }
 
   // === CORRUPTED AUTHORITY HALO — double ring, gold and hellfire ===
-  drawPulsingGlowRings(ctx, headX, helmY - size * 0.06, size * 0.22, time, zoom, {
-    color: "rgba(255, 80, 20, 0.35)",
-    count: 2,
-    speed: 0.8,
-    maxAlpha: 0.35,
-    expansion: 1.5,
-    lineWidth: 2.0,
-  });
-  drawPulsingGlowRings(ctx, headX, helmY - size * 0.06, size * 0.18, time, zoom, {
-    color: "rgba(251, 191, 36, 0.25)",
-    count: 2,
-    speed: 0.6,
-    maxAlpha: 0.25,
-    expansion: 1.3,
-    lineWidth: 1.5,
-  });
+  drawPulsingGlowRings(
+    ctx,
+    headX,
+    helmY - size * 0.06,
+    size * 0.22,
+    time,
+    zoom,
+    {
+      color: "rgba(255, 80, 20, 0.35)",
+      count: 2,
+      expansion: 1.5,
+      lineWidth: 2,
+      maxAlpha: 0.35,
+      speed: 0.8,
+    }
+  );
+  drawPulsingGlowRings(
+    ctx,
+    headX,
+    helmY - size * 0.06,
+    size * 0.18,
+    time,
+    zoom,
+    {
+      color: "rgba(251, 191, 36, 0.25)",
+      count: 2,
+      expansion: 1.3,
+      lineWidth: 1.5,
+      maxAlpha: 0.25,
+      speed: 0.6,
+    }
+  );
 
   // Floating hellfire + corruption embers
   for (let m = 0; m < 10; m++) {
-    const mPhase = time * 0.7 + m * TAU / 10;
+    const mPhase = time * 0.7 + (m * TAU) / 10;
     const mR = size * 0.35 + Math.sin(time * 1.5 + m * 1.3) * size * 0.08;
     const mx = x + Math.cos(mPhase) * mR;
-    const my = y - size * 0.15 + Math.sin(mPhase) * mR * 0.3 - bodyBob - Math.sin(time * 2.5 + m) * size * 0.02;
+    const my =
+      y -
+      size * 0.15 +
+      Math.sin(mPhase) * mR * 0.3 -
+      bodyBob -
+      Math.sin(time * 2.5 + m) * size * 0.02;
     const mAlpha = 0.25 + Math.sin(time * 3 + m * 1.7) * 0.15;
     if (m % 3 === 0) {
       setShadowBlur(ctx, 4 * zoom, "#ff4020");
@@ -2491,20 +2968,34 @@ export function drawTrusteeEnemy(
       ctx.fillStyle = `rgba(251, 191, 36, ${mAlpha})`;
     }
     ctx.beginPath();
-    ctx.arc(mx, my, size * (0.004 + Math.sin(time * 4 + m * 2.3) * 0.002), 0, TAU);
+    ctx.arc(
+      mx,
+      my,
+      size * (0.004 + Math.sin(time * 4 + m * 2.3) * 0.002),
+      0,
+      TAU
+    );
     ctx.fill();
     clearShadow(ctx);
   }
 
   // Rising smoke/soul wisps from body
   for (let s = 0; s < 4; s++) {
-    const sPhase = (time * 0.8 + s * 0.5) % 2.0;
+    const sPhase = (time * 0.8 + s * 0.5) % 2;
     const sRise = sPhase * size * 0.15;
     const sAlpha = Math.max(0, 0.15 - sPhase * 0.075);
     const sx = x + Math.sin(time * 1.2 + s * 2.5) * size * 0.08;
     ctx.fillStyle = `rgba(60, 20, 80, ${sAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(sx, y - size * 0.3 - sRise - bodyBob, size * 0.015 + sPhase * size * 0.008, size * 0.008 + sPhase * size * 0.005, 0, 0, TAU);
+    ctx.ellipse(
+      sx,
+      y - size * 0.3 - sRise - bodyBob,
+      size * 0.015 + sPhase * size * 0.008,
+      size * 0.008 + sPhase * size * 0.005,
+      0,
+      0,
+      TAU
+    );
     ctx.fill();
   }
 }

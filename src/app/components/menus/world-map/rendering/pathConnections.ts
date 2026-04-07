@@ -1,5 +1,6 @@
+import { CONNECTION_OVERRIDES } from "../worldMapData";
+import type { LevelNode } from "../worldMapData";
 import { seededRandom } from "../worldMapUtils";
-import { CONNECTION_OVERRIDES, type LevelNode } from "../worldMapData";
 import {
   traceCatmullRom,
   samplePoint,
@@ -18,21 +19,20 @@ export interface PathConnectionsParams {
   isMobile: boolean;
 }
 
-const LOCKED_PATH_COLORS: Record<
-  string,
-  { partial: string; locked: string }
-> = {
-  grassland: { partial: "#9a8a72", locked: "#6a5e44" },
-  swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
-  desert: { partial: "#c4a878", locked: "#9a7e52" },
-  winter: { partial: "#8aa8c4", locked: "#5a7a98" },
-  volcanic: { partial: "#b07060", locked: "#7a4838" },
-};
+const LOCKED_PATH_COLORS: Record<string, { partial: string; locked: string }> =
+  {
+    desert: { locked: "#9a7e52", partial: "#c4a878" },
+    grassland: { locked: "#6a5e44", partial: "#9a8a72" },
+    swamp: { locked: "#4e6a4e", partial: "#7a9a7a" },
+    volcanic: { locked: "#7a4838", partial: "#b07060" },
+    winter: { locked: "#5a7a98", partial: "#8aa8c4" },
+  };
 
 function hashConnectionSeed(fromId: string, toId: string): number {
-  return `${fromId}->${toId}`
-    .split("")
-    .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
+  return [...`${fromId}->${toId}`].reduce(
+    (acc, ch) => acc * 31 + ch.codePointAt(0),
+    7
+  );
 }
 
 /**
@@ -47,13 +47,18 @@ function generateWaypoints(
   toY: number,
   seed: number,
   mapHeight: number,
-  flip: boolean = false,
+  flip: boolean = false
 ): [number, number][] {
   const dx = toX - fromX;
   const dy = toY - fromY;
   const dist = Math.hypot(dx, dy);
 
-  if (dist < 20) return [[fromX, fromY], [toX, toY]];
+  if (dist < 20) {
+    return [
+      [fromX, fromY],
+      [toX, toY],
+    ];
+  }
 
   const angle = Math.atan2(dy, dx);
   const perpX = -Math.sin(angle);
@@ -121,7 +126,9 @@ export function drawPathConnections({
 
     level.connectsTo.forEach((toId) => {
       const toLevel = getLevelById(toId);
-      if (!toLevel) return;
+      if (!toLevel) {
+        return;
+      }
 
       const toX = toLevel.x;
       const toY = getLevelY(toLevel.y);
@@ -132,7 +139,13 @@ export function drawPathConnections({
       const connKey = `${level.id}->${toId}`;
       const override = CONNECTION_OVERRIDES[connKey];
       const pts = generateWaypoints(
-        fromX, fromY, toX, toY, seed, height, override?.flip,
+        fromX,
+        fromY,
+        toX,
+        toY,
+        seed,
+        height,
+        override?.flip
       );
 
       if (isUnlocked) {
@@ -144,7 +157,7 @@ export function drawPathConnections({
           ctx,
           pts,
           isPartial ? lockedColors.partial : lockedColors.locked,
-          isPartial ? 6 : 4,
+          isPartial ? 6 : 4
         );
       }
     });

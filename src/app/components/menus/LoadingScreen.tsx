@@ -1,24 +1,25 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { ChevronLeft, MapPin, Shield, Star, Swords } from "lucide-react";
+import Image from "next/image";
+import React, { useState, useEffect, useRef } from "react";
+
+import { LEVEL_DATA } from "../../constants";
 import {
   LOADING_TIPS,
   LOADING_LORE,
   DEFAULT_LOADING_THEME,
-  type LoadingTheme,
 } from "../../constants/loadingAssets";
-import { LEVEL_DATA } from "../../constants";
-import { WORLD_LEVELS } from "./world-map/worldMapData";
-import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import type { LoadingTheme } from "../../constants/loadingAssets";
 import type { RegionType } from "../../sprites";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 
 const REGION_LABEL: Record<string, string> = {
+  desert: "Sahara Sands",
   grassland: "Princeton Grounds",
   swamp: "Murky Marshes",
-  desert: "Sahara Sands",
-  winter: "Frozen Frontier",
   volcanic: "Volcanic Depths",
+  winter: "Frozen Frontier",
 };
 
 const DIFFICULTY_LABEL: Record<number, string> = {
@@ -45,17 +46,17 @@ interface LoadingScreenProps {
 }
 
 const CONTEXT_TITLES: Record<string, string> = {
-  worldmap: "PREPARING THE KINGDOM",
   battle: "MARCHING TO BATTLE",
+  worldmap: "PREPARING THE KINGDOM",
 };
 
 const CONTEXT_ICONS: Record<string, typeof Shield> = {
-  worldmap: Shield,
   battle: Swords,
+  worldmap: Shield,
 };
 
 function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  const x = Math.sin(seed * 9301 + 49_297) * 233_280;
   return x - Math.floor(x);
 }
 
@@ -66,13 +67,13 @@ function round(n: number, decimals: number): number {
 
 const EMBER_COUNT = 22;
 const EMBERS = Array.from({ length: EMBER_COUNT }, (_, i) => ({
-  id: i,
-  x: round(seededRandom(i) * 100, 3),
-  size: round(1 + seededRandom(i + 100) * 2.5, 3),
-  duration: round(9 + seededRandom(i + 200) * 14, 3),
   delay: round(seededRandom(i + 300) * 10, 3),
+  duration: round(9 + seededRandom(i + 200) * 14, 3),
+  id: i,
   opacity: round(0.15 + seededRandom(i + 400) * 0.45, 4),
+  size: round(1 + seededRandom(i + 100) * 2.5, 3),
   variant: i % 4,
+  x: round(seededRandom(i) * 100, 3),
 }));
 
 function useAnimatedProgress(target: number): number {
@@ -83,12 +84,14 @@ function useAnimatedProgress(target: number): number {
   useEffect(() => {
     let running = true;
     const animate = () => {
-      if (!running) return;
+      if (!running) {
+        return;
+      }
       const diff = target - displayRef.current;
       const step = diff * 0.08 + (diff > 0 ? 0.003 : 0);
       displayRef.current = Math.min(
         target,
-        displayRef.current + Math.max(step, 0),
+        displayRef.current + Math.max(step, 0)
       );
       setDisplay(displayRef.current);
       if (Math.abs(target - displayRef.current) > 0.001) {
@@ -113,7 +116,9 @@ function EmberField({ theme }: { theme: LoadingTheme }) {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="absolute inset-0 overflow-hidden pointer-events-none" />;
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" />
+    );
   }
 
   return (
@@ -125,13 +130,17 @@ function EmberField({ theme }: { theme: LoadingTheme }) {
             key={e.id}
             className="absolute rounded-full"
             style={{
-              left: `${e.x}%`,
-              bottom: "-4%",
-              width: `${e.size}px`,
-              height: `${e.size}px`,
-              background: `radial-gradient(circle, rgba(${theme.accentRgb},${e.opacity}) 0%, ${color}${Math.round(e.opacity * 0.4 * 255).toString(16).padStart(2, "0")} 60%, transparent 100%)`,
-              boxShadow: `0 0 ${round(e.size * 2, 3)}px rgba(${theme.accentRgb},${round(e.opacity * 0.35, 4)})`,
               animation: `emberRise${e.variant} ${e.duration}s ${e.delay}s linear infinite`,
+              background: `radial-gradient(circle, rgba(${theme.accentRgb},${e.opacity}) 0%, ${color}${Math.round(
+                e.opacity * 0.4 * 255
+              )
+                .toString(16)
+                .padStart(2, "0")} 60%, transparent 100%)`,
+              bottom: "-4%",
+              boxShadow: `0 0 ${round(e.size * 2, 3)}px rgba(${theme.accentRgb},${round(e.opacity * 0.35, 4)})`,
+              height: `${e.size}px`,
+              left: `${e.x}%`,
+              width: `${e.size}px`,
             }}
           />
         );
@@ -142,8 +151,18 @@ function EmberField({ theme }: { theme: LoadingTheme }) {
 
 const RING_R = 56;
 
-type RingMark = { deg: number; cx: string; cy: string };
-type RingTick = { deg: number; x1: string; y1: string; x2: string; y2: string };
+interface RingMark {
+  deg: number;
+  cx: string;
+  cy: string;
+}
+interface RingTick {
+  deg: number;
+  x1: string;
+  y1: string;
+  x2: string;
+  y2: string;
+}
 
 function ringPoint(deg: number, r: number): { x: string; y: string } {
   const rad = (deg * Math.PI) / 180;
@@ -155,29 +174,39 @@ function ringPoint(deg: number, r: number): { x: string; y: string } {
 
 const CARDINAL_MARKS: RingMark[] = [0, 90, 180, 270].map((deg) => {
   const p = ringPoint(deg, RING_R);
-  return { deg, cx: p.x, cy: p.y };
+  return { cx: p.x, cy: p.y, deg };
 });
 
 const INTERCARDINAL_MARKS: RingMark[] = [45, 135, 225, 315].map((deg) => {
   const p = ringPoint(deg, RING_R);
-  return { deg, cx: p.x, cy: p.y };
+  return { cx: p.x, cy: p.y, deg };
 });
 
-const TICK_MARKS: RingTick[] = [30, 60, 120, 150, 210, 240, 300, 330].map((deg) => {
-  const inner = ringPoint(deg, RING_R - 2);
-  const outer = ringPoint(deg, RING_R + 2);
-  return { deg, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y };
-});
+const TICK_MARKS: RingTick[] = [30, 60, 120, 150, 210, 240, 300, 330].map(
+  (deg) => {
+    const inner = ringPoint(deg, RING_R - 2);
+    const outer = ringPoint(deg, RING_R + 2);
+    return { deg, x1: inner.x, x2: outer.x, y1: inner.y, y2: outer.y };
+  }
+);
 
-function LogoShield({ isComplete, theme }: { isComplete: boolean; theme: LoadingTheme }) {
+function LogoShield({
+  isComplete,
+  theme,
+}: {
+  isComplete: boolean;
+  theme: LoadingTheme;
+}) {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 128, height: 128 }}>
+    <div
+      className="relative flex items-center justify-center"
+      style={{ height: 128, width: 128 }}
+    >
       <div
         className="absolute inset-[-20px] rounded-full"
         style={{
-          background:
-            `radial-gradient(circle, rgba(${theme.accentRgb},0.1) 0%, rgba(${theme.accentDarkRgb},0.04) 50%, transparent 75%)`,
           animation: "pulseGlow 4s ease-in-out infinite",
+          background: `radial-gradient(circle, rgba(${theme.accentRgb},0.1) 0%, rgba(${theme.accentDarkRgb},0.04) 50%, transparent 75%)`,
         }}
       />
 
@@ -185,34 +214,74 @@ function LogoShield({ isComplete, theme }: { isComplete: boolean; theme: Loading
         className="absolute"
         viewBox="-60 -60 120 120"
         style={{
-          width: 128,
-          height: 128,
           animation: "slowSpin 40s linear infinite",
           filter: `drop-shadow(0 0 6px rgba(${theme.accentRgb},0.2))`,
+          height: 128,
+          width: 128,
         }}
         fill="none"
       >
-        <circle cx="0" cy="0" r={RING_R} stroke={theme.accentDark} strokeWidth="1" opacity="0.3" />
-        <circle cx="0" cy="0" r={RING_R - 5} stroke={theme.accentDark} strokeWidth="0.5" opacity="0.15" />
+        <circle
+          cx="0"
+          cy="0"
+          r={RING_R}
+          stroke={theme.accentDark}
+          strokeWidth="1"
+          opacity="0.3"
+        />
+        <circle
+          cx="0"
+          cy="0"
+          r={RING_R - 5}
+          stroke={theme.accentDark}
+          strokeWidth="0.5"
+          opacity="0.15"
+        />
         {CARDINAL_MARKS.map((m) => (
-          <g key={m.deg} transform={`translate(${m.cx},${m.cy}) rotate(${m.deg})`}>
-            <path d="M0 -4 L2.5 0 L0 4 L-2.5 0 Z" fill={theme.accent} opacity="0.7" />
-            <path d="M0 -2.5 L1.5 0 L0 2.5 L-1.5 0 Z" fill={theme.frameGlow} opacity="0.5" />
+          <g
+            key={m.deg}
+            transform={`translate(${m.cx},${m.cy}) rotate(${m.deg})`}
+          >
+            <path
+              d="M0 -4 L2.5 0 L0 4 L-2.5 0 Z"
+              fill={theme.accent}
+              opacity="0.7"
+            />
+            <path
+              d="M0 -2.5 L1.5 0 L0 2.5 L-1.5 0 Z"
+              fill={theme.frameGlow}
+              opacity="0.5"
+            />
           </g>
         ))}
         {INTERCARDINAL_MARKS.map((m) => (
-          <circle key={m.deg} cx={m.cx} cy={m.cy} r="1.5" fill={theme.accent} opacity="0.45" />
+          <circle
+            key={m.deg}
+            cx={m.cx}
+            cy={m.cy}
+            r="1.5"
+            fill={theme.accent}
+            opacity="0.45"
+          />
         ))}
         {TICK_MARKS.map((m) => (
-          <line key={m.deg} x1={m.x1} y1={m.y1} x2={m.x2} y2={m.y2} stroke={theme.accentDark} strokeWidth="0.6" opacity="0.25" />
+          <line
+            key={m.deg}
+            x1={m.x1}
+            y1={m.y1}
+            x2={m.x2}
+            y2={m.y2}
+            stroke={theme.accentDark}
+            strokeWidth="0.6"
+            opacity="0.25"
+          />
         ))}
       </svg>
 
       <div
         className="relative w-[88px] h-[88px] flex items-center justify-center rounded-full"
         style={{
-          background:
-            `linear-gradient(150deg, rgba(${theme.accentDarkRgb},0.55) 0%, rgba(${theme.bgRgb},0.92) 50%, rgba(${theme.bgRgb},0.98) 100%)`,
+          background: `linear-gradient(150deg, rgba(${theme.accentDarkRgb},0.55) 0%, rgba(${theme.bgRgb},0.92) 50%, rgba(${theme.bgRgb},0.98) 100%)`,
           border: `2.5px solid rgba(${theme.accentDarkRgb},0.4)`,
           boxShadow: isComplete
             ? `0 0 40px rgba(${theme.accentRgb},0.25), 0 0 80px rgba(${theme.accentRgb},0.08), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 6px rgba(0,0,0,0.3)`
@@ -239,22 +308,40 @@ function LogoShield({ isComplete, theme }: { isComplete: boolean; theme: Loading
   );
 }
 
-function TitleOrnament({ flip, theme }: { flip?: boolean; theme: LoadingTheme }) {
+function TitleOrnament({
+  flip,
+  theme,
+}: {
+  flip?: boolean;
+  theme: LoadingTheme;
+}) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{
-        width: 18,
+        filter: `drop-shadow(0 0 4px rgba(${theme.accentRgb},0.3))`,
         height: 18,
         transform: flip ? "scaleX(-1)" : undefined,
-        filter: `drop-shadow(0 0 4px rgba(${theme.accentRgb},0.3))`,
+        width: 18,
       }}
     >
-      <path d="M4 12 L9 7 L12 10 L15 7 L20 12 L15 17 L12 14 L9 17 Z" fill={theme.accent} opacity="0.7" />
-      <path d="M6 12 L9 9 L12 12 L15 9 L18 12 L15 15 L12 12 L9 15 Z" fill={theme.accentDark} opacity="0.5" />
-      <path d="M12 8 L14 12 L12 16 L10 12 Z" fill={theme.frameGlow} opacity="0.9" />
+      <path
+        d="M4 12 L9 7 L12 10 L15 7 L20 12 L15 17 L12 14 L9 17 Z"
+        fill={theme.accent}
+        opacity="0.7"
+      />
+      <path
+        d="M6 12 L9 9 L12 12 L15 9 L18 12 L15 15 L12 12 L9 15 Z"
+        fill={theme.accentDark}
+        opacity="0.5"
+      />
+      <path
+        d="M12 8 L14 12 L12 16 L10 12 Z"
+        fill={theme.frameGlow}
+        opacity="0.9"
+      />
     </svg>
   );
 }
@@ -266,32 +353,126 @@ function AccentFlourish({ theme }: { theme: LoadingTheme }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="w-full"
-      style={{ maxWidth: 300, height: 20 }}
+      style={{ height: 20, maxWidth: 300 }}
     >
-      <path d="M0 10 L120 10" stroke={theme.accentDark} strokeWidth="1" opacity="0.55" />
-      <path d="M15 7.5 L110 7.5" stroke={theme.accentDark} strokeWidth="0.4" opacity="0.25" />
-      <path d="M25 12.5 L105 12.5" stroke={theme.accentDark} strokeWidth="0.3" opacity="0.18" />
-      <path d="M200 10 L320 10" stroke={theme.accentDark} strokeWidth="1" opacity="0.55" />
-      <path d="M210 7.5 L305 7.5" stroke={theme.accentDark} strokeWidth="0.4" opacity="0.25" />
-      <path d="M215 12.5 L295 12.5" stroke={theme.accentDark} strokeWidth="0.3" opacity="0.18" />
-      <path d="M160 2 L168 10 L160 18 L152 10 Z" fill={theme.accent} opacity="0.2" stroke={theme.accent} strokeWidth="1" />
-      <path d="M160 4.5 L165.5 10 L160 15.5 L154.5 10 Z" fill="none" stroke={theme.frameGlow} strokeWidth="0.7" opacity="0.6" />
+      <path
+        d="M0 10 L120 10"
+        stroke={theme.accentDark}
+        strokeWidth="1"
+        opacity="0.55"
+      />
+      <path
+        d="M15 7.5 L110 7.5"
+        stroke={theme.accentDark}
+        strokeWidth="0.4"
+        opacity="0.25"
+      />
+      <path
+        d="M25 12.5 L105 12.5"
+        stroke={theme.accentDark}
+        strokeWidth="0.3"
+        opacity="0.18"
+      />
+      <path
+        d="M200 10 L320 10"
+        stroke={theme.accentDark}
+        strokeWidth="1"
+        opacity="0.55"
+      />
+      <path
+        d="M210 7.5 L305 7.5"
+        stroke={theme.accentDark}
+        strokeWidth="0.4"
+        opacity="0.25"
+      />
+      <path
+        d="M215 12.5 L295 12.5"
+        stroke={theme.accentDark}
+        strokeWidth="0.3"
+        opacity="0.18"
+      />
+      <path
+        d="M160 2 L168 10 L160 18 L152 10 Z"
+        fill={theme.accent}
+        opacity="0.2"
+        stroke={theme.accent}
+        strokeWidth="1"
+      />
+      <path
+        d="M160 4.5 L165.5 10 L160 15.5 L154.5 10 Z"
+        fill="none"
+        stroke={theme.frameGlow}
+        strokeWidth="0.7"
+        opacity="0.6"
+      />
       <circle cx="160" cy="10" r="2.8" fill={theme.accent} opacity="0.85" />
       <circle cx="160" cy="10" r="1.4" fill={theme.accentDark} opacity="0.5" />
-      <path d="M135 10 L138 7.5 L141 10 L138 12.5 Z" fill={theme.accent} opacity="0.5" />
-      <path d="M179 10 L182 7.5 L185 10 L182 12.5 Z" fill={theme.accent} opacity="0.5" />
-      <path d="M125 10 L127 8.5 L129 10 L127 11.5 Z" fill={theme.frameGlow} opacity="0.35" />
-      <path d="M191 10 L193 8.5 L195 10 L193 11.5 Z" fill={theme.frameGlow} opacity="0.35" />
-      <path d="M120 10 Q125 5 132 8" fill="none" stroke={theme.frameGlow} strokeWidth="0.8" opacity="0.4" strokeLinecap="round" />
-      <path d="M200 10 Q195 5 188 8" fill="none" stroke={theme.frameGlow} strokeWidth="0.8" opacity="0.4" strokeLinecap="round" />
-      <path d="M120 10 Q125 15 132 12" fill="none" stroke={theme.frameGlow} strokeWidth="0.8" opacity="0.4" strokeLinecap="round" />
-      <path d="M200 10 Q195 15 188 12" fill="none" stroke={theme.frameGlow} strokeWidth="0.8" opacity="0.4" strokeLinecap="round" />
+      <path
+        d="M135 10 L138 7.5 L141 10 L138 12.5 Z"
+        fill={theme.accent}
+        opacity="0.5"
+      />
+      <path
+        d="M179 10 L182 7.5 L185 10 L182 12.5 Z"
+        fill={theme.accent}
+        opacity="0.5"
+      />
+      <path
+        d="M125 10 L127 8.5 L129 10 L127 11.5 Z"
+        fill={theme.frameGlow}
+        opacity="0.35"
+      />
+      <path
+        d="M191 10 L193 8.5 L195 10 L193 11.5 Z"
+        fill={theme.frameGlow}
+        opacity="0.35"
+      />
+      <path
+        d="M120 10 Q125 5 132 8"
+        fill="none"
+        stroke={theme.frameGlow}
+        strokeWidth="0.8"
+        opacity="0.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M200 10 Q195 5 188 8"
+        fill="none"
+        stroke={theme.frameGlow}
+        strokeWidth="0.8"
+        opacity="0.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M120 10 Q125 15 132 12"
+        fill="none"
+        stroke={theme.frameGlow}
+        strokeWidth="0.8"
+        opacity="0.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M200 10 Q195 15 188 12"
+        fill="none"
+        stroke={theme.frameGlow}
+        strokeWidth="0.8"
+        opacity="0.4"
+        strokeLinecap="round"
+      />
       <circle cx="45" cy="10" r="1.2" fill={theme.frameGlow} opacity="0.45" />
       <circle cx="80" cy="10" r="0.9" fill={theme.frameGlow} opacity="0.35" />
       <circle cx="240" cy="10" r="0.9" fill={theme.frameGlow} opacity="0.35" />
       <circle cx="275" cy="10" r="1.2" fill={theme.frameGlow} opacity="0.45" />
-      <path d="M0 10 L4 7 L8 10 L4 13 Z" fill={theme.accentDark} opacity="0.3" />
-      <path d="M312 10 L316 7 L320 10 L316 13 Z" fill={theme.accentDark} opacity="0.3" />
+      <path
+        d="M0 10 L4 7 L8 10 L4 13 Z"
+        fill={theme.accentDark}
+        opacity="0.3"
+      />
+      <path
+        d="M312 10 L316 7 L320 10 L316 13 Z"
+        fill={theme.accentDark}
+        opacity="0.3"
+      />
     </svg>
   );
 }
@@ -312,11 +493,9 @@ function ProgressBar({
       <div
         className="relative"
         style={{
-          background:
-            `linear-gradient(180deg, rgba(${theme.bgRgb},0.6) 0%, rgba(${theme.bgRgb},0.5) 100%)`,
+          background: `linear-gradient(180deg, rgba(${theme.bgRgb},0.6) 0%, rgba(${theme.bgRgb},0.5) 100%)`,
           borderTop: `1px solid rgba(${theme.accentDarkRgb},0.25)`,
-          boxShadow:
-            `0 -4px 16px rgba(0,0,0,0.3), 0 -1px 8px rgba(${theme.accentDarkRgb},0.06)`,
+          boxShadow: `0 -4px 16px rgba(0,0,0,0.3), 0 -1px 8px rgba(${theme.accentDarkRgb},0.06)`,
         }}
       >
         <div
@@ -334,8 +513,11 @@ function ProgressBar({
               key={mark}
               className="absolute top-[2px] bottom-[2px] w-px z-10 pointer-events-none"
               style={{
+                background:
+                  pct >= mark
+                    ? "rgba(255,255,255,0.07)"
+                    : "rgba(255,255,255,0.025)",
                 left: `${mark}%`,
-                background: pct >= mark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.025)",
               }}
             />
           ))}
@@ -343,25 +525,29 @@ function ProgressBar({
           <div
             className="h-full relative overflow-hidden"
             style={{
-              width: `${pct}%`,
-              background: isComplete ? theme.barGradientComplete : theme.barGradient,
+              background: isComplete
+                ? theme.barGradientComplete
+                : theme.barGradient,
               boxShadow: isComplete
                 ? `0 0 20px rgba(${theme.accentRgb},0.5), inset 0 -1px 2px rgba(0,0,0,0.2)`
                 : `0 0 10px rgba(${theme.accentRgb},0.3), inset 0 -1px 2px rgba(0,0,0,0.2)`,
               transition: "background 0.5s, box-shadow 0.5s",
+              width: `${pct}%`,
             }}
           >
             <div
               className="absolute inset-0"
               style={{
-                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)",
                 animation: "loadingShimmer 2s ease-in-out infinite",
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)",
               }}
             />
             <div
               className="absolute top-0 left-0 right-0 h-[40%]"
               style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%)",
                 borderRadius: "inherit",
               }}
             />
@@ -378,7 +564,9 @@ function ProgressBar({
         <span
           className="text-[10px] font-bold tabular-nums transition-colors duration-500"
           style={{
-            color: isComplete ? `rgba(${theme.accentRgb},1)` : `rgba(${theme.accentRgb},0.7)`,
+            color: isComplete
+              ? `rgba(${theme.accentRgb},1)`
+              : `rgba(${theme.accentRgb},0.7)`,
             textShadow: "0 1px 2px rgba(0,0,0,0.8)",
           }}
         >
@@ -389,7 +577,13 @@ function ProgressBar({
   );
 }
 
-function TipDisplay({ context, theme }: { context: "worldmap" | "battle"; theme: LoadingTheme }) {
+function TipDisplay({
+  context,
+  theme,
+}: {
+  context: "worldmap" | "battle";
+  theme: LoadingTheme;
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -436,11 +630,34 @@ function TipDisplay({ context, theme }: { context: "worldmap" | "battle"; theme:
           }}
         />
         <div className="flex items-center justify-center gap-2.5 mb-2.5">
-          <div className="w-4 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(${theme.accentDarkRgb},0.4))` }} />
-          <IconComponent size={12} style={{ color: `rgba(${theme.accentRgb},0.4)` }} strokeWidth={1.5} />
-          <span className="text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: `rgba(${theme.accentRgb},0.5)` }}>Tip</span>
-          <IconComponent size={12} style={{ color: `rgba(${theme.accentRgb},0.4)` }} strokeWidth={1.5} />
-          <div className="w-4 h-px" style={{ background: `linear-gradient(90deg, rgba(${theme.accentDarkRgb},0.4), transparent)` }} />
+          <div
+            className="w-4 h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent, rgba(${theme.accentDarkRgb},0.4))`,
+            }}
+          />
+          <IconComponent
+            size={12}
+            style={{ color: `rgba(${theme.accentRgb},0.4)` }}
+            strokeWidth={1.5}
+          />
+          <span
+            className="text-[9px] font-bold uppercase tracking-[0.25em]"
+            style={{ color: `rgba(${theme.accentRgb},0.5)` }}
+          >
+            Tip
+          </span>
+          <IconComponent
+            size={12}
+            style={{ color: `rgba(${theme.accentRgb},0.4)` }}
+            strokeWidth={1.5}
+          />
+          <div
+            className="w-4 h-px"
+            style={{
+              background: `linear-gradient(90deg, rgba(${theme.accentDarkRgb},0.4), transparent)`,
+            }}
+          />
         </div>
         <p
           className="text-[12px] leading-relaxed italic"
@@ -468,9 +685,14 @@ function LoreQuote({ theme }: { theme: LoadingTheme }) {
     <div className="flex flex-col items-center gap-1.5 max-w-xs">
       <div
         className="w-12 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, rgba(${theme.accentDarkRgb},0.2), transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(${theme.accentDarkRgb},0.2), transparent)`,
+        }}
       />
-      <p className="text-[10px] italic text-center leading-relaxed" style={{ color: `rgba(${theme.accentRgb},0.3)` }}>
+      <p
+        className="text-[10px] italic text-center leading-relaxed"
+        style={{ color: `rgba(${theme.accentRgb},0.3)` }}
+      >
         {LOADING_LORE[quoteIndex]}
       </p>
     </div>
@@ -499,7 +721,7 @@ export function LoadingScreen({
     : context === "battle" && levelName
       ? levelName
       : (CONTEXT_TITLES[context] ?? "LOADING");
-  const subtitle = theme.subtitle;
+  const { subtitle } = theme;
   const [stageVisible, setStageVisible] = useState([
     false,
     false,
@@ -517,7 +739,7 @@ export function LoadingScreen({
           next[i] = true;
           return next;
         });
-      }, delay),
+      }, delay)
     );
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -592,7 +814,11 @@ export function LoadingScreen({
             transform: stageVisible[2] ? "translateY(0)" : "translateY(8px)",
           }}
         >
-          <ProgressBar progress={animatedProgress} isComplete={isComplete} theme={theme} />
+          <ProgressBar
+            progress={animatedProgress}
+            isComplete={isComplete}
+            theme={theme}
+          />
         </div>
 
         {/* CSS animations */}
@@ -718,29 +944,41 @@ interface LevelMeta {
 }
 
 function useLevelMeta(levelId?: string): LevelMeta | null {
-  if (!levelId) return null;
+  if (!levelId) {
+    return null;
+  }
   const levelData = LEVEL_DATA[levelId];
   const worldLevel = WORLD_LEVELS.find((l) => l.id === levelId);
-  if (!levelData && !worldLevel) return null;
+  if (!levelData && !worldLevel) {
+    return null;
+  }
 
   const name = levelData?.name ?? worldLevel?.name ?? levelId;
-  const region = (worldLevel?.region ?? levelData?.region ?? "grassland") as RegionType;
-  const difficulty = (worldLevel?.difficulty ?? levelData?.difficulty ?? 1) as 1 | 2 | 3;
-  const description = (worldLevel?.description?.replace(/\n/g, " ") ?? levelData?.description ?? "");
+  const region = (worldLevel?.region ??
+    levelData?.region ??
+    "grassland") as RegionType;
+  const difficulty = (worldLevel?.difficulty ?? levelData?.difficulty ?? 1) as
+    | 1
+    | 2
+    | 3;
+  const description =
+    worldLevel?.description?.replaceAll("\n", " ") ??
+    levelData?.description ??
+    "";
   const tags = worldLevel?.tags ?? [];
   const kind = worldLevel?.kind ?? "campaign";
 
   return {
+    description,
+    difficulty,
+    difficultyColor: DIFFICULTY_COLOR[difficulty],
+    difficultyLabel: DIFFICULTY_LABEL[difficulty],
+    kind,
     name,
+    previewImage: levelData?.previewImage,
     region,
     regionLabel: REGION_LABEL[region] ?? region,
-    difficulty,
-    difficultyLabel: DIFFICULTY_LABEL[difficulty],
-    difficultyColor: DIFFICULTY_COLOR[difficulty],
-    description,
     tags,
-    kind,
-    previewImage: levelData?.previewImage,
   };
 }
 
@@ -821,7 +1059,9 @@ function BattleLevelContent({
           className="w-full max-w-sm transition-all duration-700 ease-out"
           style={{
             opacity: stageVisible[1] ? 1 : 0,
-            transform: stageVisible[1] ? "translateY(0) scale(1)" : "translateY(10px) scale(0.97)",
+            transform: stageVisible[1]
+              ? "translateY(0) scale(1)"
+              : "translateY(10px) scale(0.97)",
           }}
         >
           <OrnateFrame
@@ -877,9 +1117,9 @@ function BattleLevelContent({
                 key={tag}
                 className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full"
                 style={{
-                  color: `rgba(${theme.accentRgb},0.5)`,
                   background: `rgba(${theme.accentDarkRgb},0.15)`,
                   border: `1px solid rgba(${theme.accentDarkRgb},0.2)`,
+                  color: `rgba(${theme.accentRgb},0.5)`,
                 }}
               >
                 {tag}
@@ -994,9 +1234,9 @@ function BattleBackground({ theme }: { theme: LoadingTheme }) {
       <div
         className="absolute inset-[-8%]"
         style={{
-          width: "116%",
-          height: "116%",
           animation: "kenBurns 28s ease-in-out infinite alternate",
+          height: "116%",
+          width: "116%",
         }}
       >
         <Image
@@ -1006,7 +1246,7 @@ function BattleBackground({ theme }: { theme: LoadingTheme }) {
           priority
           sizes="120vw"
           className="object-cover"
-          style={{ opacity: 0.32, filter: "blur(1.5px) saturate(0.7)" }}
+          style={{ filter: "blur(1.5px) saturate(0.7)", opacity: 0.32 }}
         />
       </div>
       <div
@@ -1063,14 +1303,16 @@ export function LoadingOverlay({
     }
   }, [visible, fadeDurationMs]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div
       style={{
         opacity: visible ? 1 : 0,
-        transition: `opacity ${fadeDurationMs}ms ease-out`,
         pointerEvents: visible ? "auto" : "none",
+        transition: `opacity ${fadeDurationMs}ms ease-out`,
       }}
     >
       {children}
@@ -1100,7 +1342,9 @@ export function SceneTransitionOverlay({
     }
   }, [visible, fadeDurationMs]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div
@@ -1108,8 +1352,8 @@ export function SceneTransitionOverlay({
       style={{
         background: "linear-gradient(180deg, #0c0804 0%, #1a0f06 100%)",
         opacity: visible ? 1 : 0,
-        transition: `opacity ${fadeDurationMs}ms ease-out`,
         pointerEvents: visible ? "auto" : "none",
+        transition: `opacity ${fadeDurationMs}ms ease-out`,
       }}
     />
   );

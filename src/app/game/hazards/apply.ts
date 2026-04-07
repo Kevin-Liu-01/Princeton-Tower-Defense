@@ -6,7 +6,7 @@ function getUpdatedSlowState(
   effectSlow: number,
   slowed: boolean | undefined,
   slowUntil: number | undefined,
-  slowIntensity: number | undefined,
+  slowIntensity: number | undefined
 ) {
   const now = Date.now();
   const activeSlow =
@@ -17,19 +17,19 @@ function getUpdatedSlowState(
   }
 
   return {
-    slowed: true,
     slowIntensity: effectSlow,
     slowUntil: now + 500,
+    slowed: true,
   };
 }
 
 export function applyHazardEffect(
   enemy: Enemy,
   effect: HazardEffect,
-  baseSpeed: number,
+  baseSpeed: number
 ): Enemy {
   let newHp = enemy.hp;
-  let damageFlash = enemy.damageFlash;
+  let { damageFlash } = enemy;
 
   if (effect.poisonDamage > 0) {
     newHp = Math.max(0, newHp - effect.poisonDamage);
@@ -42,26 +42,27 @@ export function applyHazardEffect(
 
   const newSlowEffect = Math.max(enemy.slowEffect, effect.environmentalSlow);
   const slowSource =
-    effect.environmentalSlow > enemy.slowEffect && effect.environmentalSlowSource
+    effect.environmentalSlow > enemy.slowEffect &&
+    effect.environmentalSlowSource
       ? effect.environmentalSlowSource
       : enemy.slowSource;
 
   const tookDamage = newHp < enemy.hp;
   return {
     ...enemy,
-    hp: newHp,
     damageFlash,
+    dead: newHp <= 0,
+    hp: newHp,
+    lastDamageTaken: tookDamage ? Date.now() : enemy.lastDamageTaken,
     slowEffect: newSlowEffect,
     slowSource,
     speed: baseSpeed * effect.environmentalSpeed,
-    dead: newHp <= 0,
-    lastDamageTaken: tookDamage ? Date.now() : enemy.lastDamageTaken,
   };
 }
 
 export function applyHazardEffectToTroop(
   troop: Troop,
-  effect: HazardEffect,
+  effect: HazardEffect
 ): Troop {
   let newHp = troop.hp;
 
@@ -77,10 +78,10 @@ export function applyHazardEffectToTroop(
 
   const updated: Troop = {
     ...troop,
-    hp: newHp,
     dead: newHp <= 0 ? true : troop.dead,
-    lastCombatTime: tookDamage ? now : troop.lastCombatTime,
     healFlash: tookDamage ? undefined : troop.healFlash,
+    hp: newHp,
+    lastCombatTime: tookDamage ? now : troop.lastCombatTime,
   };
 
   const slowState = getUpdatedSlowState(
@@ -88,7 +89,7 @@ export function applyHazardEffectToTroop(
     effect.environmentalSlow,
     troop.slowed,
     troop.slowUntil,
-    troop.slowIntensity,
+    troop.slowIntensity
   );
   if (slowState) {
     updated.slowed = slowState.slowed;
@@ -101,7 +102,7 @@ export function applyHazardEffectToTroop(
 
 export function applyHazardEffectToHero(
   hero: Hero,
-  effect: HazardEffect,
+  effect: HazardEffect
 ): Hero {
   let newHp = hero.hp;
 
@@ -117,10 +118,10 @@ export function applyHazardEffectToHero(
 
   const updated: Hero = {
     ...hero,
-    hp: newHp,
     dead: newHp <= 0 ? true : hero.dead,
-    lastCombatTime: tookDamage ? now : hero.lastCombatTime,
     healFlash: tookDamage ? undefined : hero.healFlash,
+    hp: newHp,
+    lastCombatTime: tookDamage ? now : hero.lastCombatTime,
   };
 
   const slowState = getUpdatedSlowState(
@@ -128,7 +129,7 @@ export function applyHazardEffectToHero(
     effect.environmentalSlow,
     hero.slowed,
     hero.slowUntil,
-    hero.slowIntensity,
+    hero.slowIntensity
   );
   if (slowState) {
     updated.slowed = slowState.slowed;

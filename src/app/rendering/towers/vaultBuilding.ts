@@ -25,29 +25,29 @@ export interface VaultPalette {
 export function getVaultPalette(isFlashing: boolean): VaultPalette {
   if (isFlashing) {
     return {
-      baseLight: "#E8E8E8",
+      accent: "#FFFFFF",
       baseDark: "#C0C0C0",
+      baseLight: "#E8E8E8",
+      dark: "#6B3030",
+      frame: "#CC8080",
+      glow: "#FF6B6B",
+      trim: "#B06060",
       wallLeft: "#D4A5A5",
       wallRight: "#E8BFBF",
       wallTop: "#F0D0D0",
-      frame: "#CC8080",
-      trim: "#B06060",
-      dark: "#6B3030",
-      accent: "#FFFFFF",
-      glow: "#FF6B6B",
     };
   }
   return {
-    baseLight: "#787068",
+    accent: "#C8A860",
     baseDark: "#4A4440",
+    baseLight: "#787068",
+    dark: "#2D2118",
+    frame: "#6E5540",
+    glow: "#4CB898",
+    trim: "#90704E",
     wallLeft: "#7E6B52",
     wallRight: "#9C8464",
     wallTop: "#B09A7A",
-    frame: "#6E5540",
-    trim: "#90704E",
-    dark: "#2D2118",
-    accent: "#C8A860",
-    glow: "#4CB898",
   };
 }
 
@@ -62,7 +62,7 @@ function isoBox(
   h: number,
   left: string,
   right: string,
-  top: string,
+  top: string
 ): void {
   const t = ISO_TAN;
   ctx.fillStyle = left;
@@ -101,7 +101,7 @@ function isoBoxAt(
   height: number,
   left: string,
   right: string,
-  top: string,
+  top: string
 ): void {
   const hd = hw * ISO_Y_RATIO;
   ctx.fillStyle = left;
@@ -140,7 +140,7 @@ function isoCylinder(
   height: number,
   bodyColor: string,
   darkColor: string,
-  topColor: string,
+  topColor: string
 ): void {
   const ry = rx * ISO_Y_RATIO;
 
@@ -177,7 +177,7 @@ function drawVaultFoundation(
   ctx: CanvasRenderingContext2D,
   s2: number,
   w: number,
-  tanAngle: number,
+  tanAngle: number
 ): number {
   const step1W = w + 7 * s2;
   const step1H = 4 * s2;
@@ -228,7 +228,15 @@ function drawVaultFoundation(
   ctx.lineTo(step2W, -step2W * tanAngle - step1H - step2H);
   ctx.stroke();
 
-  isoBox(ctx, -step1H - step2H, step3W, step3H, "#403A34", "#645E56", "#56524C");
+  isoBox(
+    ctx,
+    -step1H - step2H,
+    step3W,
+    step3H,
+    "#403A34",
+    "#645E56",
+    "#56524C"
+  );
 
   ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 0.5 * s2;
@@ -255,7 +263,7 @@ function drawVaultWalls(
   h: number,
   bodyY: number,
   tanAngle: number,
-  c: VaultPalette,
+  c: VaultPalette
 ): void {
   const lg = ctx.createLinearGradient(-w, bodyY - w * tanAngle, 0, bodyY);
   lg.addColorStop(0, "#3E3228");
@@ -340,7 +348,7 @@ function drawVaultStonework(
   w: number,
   h: number,
   bodyY: number,
-  tanAngle: number,
+  tanAngle: number
 ): void {
   const courseCount = 7;
 
@@ -365,7 +373,8 @@ function drawVaultStonework(
       const jfrac = (j + (row % 2 === 0 ? 0.5 : 0)) / 3;
       const jx = -w * jfrac;
       const jyTop = ly - w * tanAngle * jfrac;
-      const jyBot = bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
+      const jyBot =
+        bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
       ctx.beginPath();
       ctx.moveTo(jx, jyTop);
       ctx.lineTo(jx, jyBot);
@@ -395,7 +404,8 @@ function drawVaultStonework(
       const jfrac = (j + (row % 2 === 0 ? 0.5 : 0)) / 3;
       const jx = w * jfrac;
       const jyTop = ry - w * tanAngle * jfrac;
-      const jyBot = bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
+      const jyBot =
+        bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
       ctx.beginPath();
       ctx.moveTo(jx, jyTop);
       ctx.lineTo(jx, jyBot);
@@ -446,7 +456,7 @@ function drawVaultButtresses(
   h: number,
   bodyY: number,
   tanAngle: number,
-  c: VaultPalette,
+  c: VaultPalette
 ): void {
   const bw = 3.5 * s2;
   const bDepth = 2.5 * s2;
@@ -546,7 +556,7 @@ function drawVaultCrest(
   bodyY: number,
   tanAngle: number,
   c: VaultPalette,
-  isFlashing: boolean,
+  isFlashing: boolean
 ): void {
   ctx.save();
   ctx.translate(-w * 0.5, bodyY - w * tanAngle * 0.5 - h * 0.5);
@@ -622,7 +632,7 @@ function drawVaultDoor(
   tanAngle: number,
   c: VaultPalette,
   isFlashing: boolean,
-  time: number,
+  time: number
 ): { doorCenterX: number; doorCenterY: number } {
   const doorCenterX = w * 0.5;
   const doorCenterY = bodyY - h * 0.5 - w * tanAngle * 0.5;
@@ -670,8 +680,12 @@ function drawVaultDoor(
   ctx.fill();
 
   const dg = ctx.createRadialGradient(
-    1 * s2, -0.5 * s2, 0,
-    2 * s2, 1 * s2, 11 * s2,
+    1 * s2,
+    -0.5 * s2,
+    0,
+    2 * s2,
+    1 * s2,
+    11 * s2
   );
   dg.addColorStop(0, "#A09080");
   dg.addColorStop(0.3, c.frame);
@@ -691,7 +705,13 @@ function drawVaultDoor(
   for (let n = 0; n < 12; n++) {
     const a = (n * Math.PI * 2) / 12;
     ctx.beginPath();
-    ctx.arc(2 * s2 + Math.cos(a) * 9.5 * s2, 1 * s2 + Math.sin(a) * 9.5 * s2, 1.3 * s2, 0, Math.PI * 2);
+    ctx.arc(
+      2 * s2 + Math.cos(a) * 9.5 * s2,
+      1 * s2 + Math.sin(a) * 9.5 * s2,
+      1.3 * s2,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -736,7 +756,13 @@ function drawVaultDoor(
   for (let sp = 0; sp < 4; sp++) {
     const a = (sp * Math.PI * 2) / 4;
     ctx.beginPath();
-    ctx.arc(Math.cos(a) * 4 * s2, Math.sin(a) * 4 * s2, 1.3 * s2, 0, Math.PI * 2);
+    ctx.arc(
+      Math.cos(a) * 4 * s2,
+      Math.sin(a) * 4 * s2,
+      1.3 * s2,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
@@ -793,11 +819,16 @@ function drawVaultCornice(
   h: number,
   bodyY: number,
   tanAngle: number,
-  c: VaultPalette,
+  c: VaultPalette
 ): void {
   const corniceH = 6 * s2;
 
-  const clg = ctx.createLinearGradient(-w - 2 * s2, bodyY - w * tanAngle - h, 0, bodyY - h);
+  const clg = ctx.createLinearGradient(
+    -w - 2 * s2,
+    bodyY - w * tanAngle - h,
+    0,
+    bodyY - h
+  );
   clg.addColorStop(0, "#6A5840");
   clg.addColorStop(1, c.trim);
   ctx.fillStyle = clg;
@@ -809,7 +840,12 @@ function drawVaultCornice(
   ctx.closePath();
   ctx.fill();
 
-  const crg = ctx.createLinearGradient(0, bodyY - h, w + 2 * s2, bodyY - w * tanAngle - h);
+  const crg = ctx.createLinearGradient(
+    0,
+    bodyY - h,
+    w + 2 * s2,
+    bodyY - w * tanAngle - h
+  );
   crg.addColorStop(0, c.accent);
   crg.addColorStop(1, "#A08850");
   ctx.fillStyle = crg;
@@ -827,13 +863,23 @@ function drawVaultCornice(
     const f = (d + 0.5) / (dentilCount + 1);
     const dx = -w * f - 2 * s2 * f;
     const dy = bodyY - w * tanAngle * f - h - 1 * s2 * f;
-    ctx.fillRect(dx - 1.5 * s2, dy - corniceH + 1 * s2, 2.5 * s2, corniceH - 2 * s2);
+    ctx.fillRect(
+      dx - 1.5 * s2,
+      dy - corniceH + 1 * s2,
+      2.5 * s2,
+      corniceH - 2 * s2
+    );
   }
   for (let d = 0; d < dentilCount; d++) {
     const f = (d + 0.5) / (dentilCount + 1);
     const dx = w * f + 2 * s2 * f;
     const dy = bodyY - w * tanAngle * f - h - 1 * s2 * f;
-    ctx.fillRect(dx - 1.5 * s2, dy - corniceH + 1 * s2, 2.5 * s2, corniceH - 2 * s2);
+    ctx.fillRect(
+      dx - 1.5 * s2,
+      dy - corniceH + 1 * s2,
+      2.5 * s2,
+      corniceH - 2 * s2
+    );
   }
 
   ctx.strokeStyle = c.dark;
@@ -864,7 +910,7 @@ function drawVaultRivets(
   h: number,
   bodyY: number,
   tanAngle: number,
-  c: VaultPalette,
+  c: VaultPalette
 ): void {
   const positions = [
     { x: -w + 3 * s2, yBase: bodyY - w * tanAngle },
@@ -904,7 +950,7 @@ function drawVaultRoof(
   tanAngle: number,
   roofOffset: number,
   c: VaultPalette,
-  time: number,
+  time: number
 ): { roofPeakY: number; parH: number; rcy: number } {
   const roofPeakY = bodyY - h - roofOffset;
   const parH = 4 * s2;
@@ -1029,7 +1075,16 @@ function drawVaultRoof(
   // --- Back elements first (painter's algorithm) ---
 
   // Back corner turret (rb)
-  isoCylinder(ctx, rb.x, rb.y - parH, turretR * tSm, turretH * 0.8, "#6A5A48", "#3A2A1A", "#A09070");
+  isoCylinder(
+    ctx,
+    rb.x,
+    rb.y - parH,
+    turretR * tSm,
+    turretH * 0.8,
+    "#6A5A48",
+    "#3A2A1A",
+    "#A09070"
+  );
   ctx.fillStyle = c.trim;
   ctx.beginPath();
   ctx.moveTo(rb.x, rb.y - parH - turretH * 0.8 - capH * 0.8);
@@ -1039,7 +1094,13 @@ function drawVaultRoof(
   ctx.fill();
   ctx.fillStyle = c.dark;
   ctx.beginPath();
-  ctx.arc(rb.x, rb.y - parH - turretH * 0.8 - capH * 0.8 - 1.2 * s2, 1.3 * s2, 0, Math.PI * 2);
+  ctx.arc(
+    rb.x,
+    rb.y - parH - turretH * 0.8 - capH * 0.8 - 1.2 * s2,
+    1.3 * s2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Merlons on back-left edge (rl → rb)
@@ -1061,7 +1122,16 @@ function drawVaultRoof(
   // --- Side turrets (drawn before front elements) ---
 
   // Left corner turret (rl)
-  isoCylinder(ctx, rl.x, rl.y - parH, turretR * tSm, turretH * 0.85, "#6A5A48", "#3A2A1A", "#A09070");
+  isoCylinder(
+    ctx,
+    rl.x,
+    rl.y - parH,
+    turretR * tSm,
+    turretH * 0.85,
+    "#6A5A48",
+    "#3A2A1A",
+    "#A09070"
+  );
   ctx.fillStyle = c.trim;
   ctx.beginPath();
   ctx.moveTo(rl.x, rl.y - parH - turretH * 0.85 - capH * 0.85);
@@ -1071,11 +1141,26 @@ function drawVaultRoof(
   ctx.fill();
   ctx.fillStyle = c.dark;
   ctx.beginPath();
-  ctx.arc(rl.x, rl.y - parH - turretH * 0.85 - capH * 0.85 - 1.2 * s2, 1.3 * s2, 0, Math.PI * 2);
+  ctx.arc(
+    rl.x,
+    rl.y - parH - turretH * 0.85 - capH * 0.85 - 1.2 * s2,
+    1.3 * s2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Right corner turret (rr)
-  isoCylinder(ctx, rr.x, rr.y - parH, turretR * tSm, turretH * 0.85, "#8A7A65", "#5A4A38", "#B8A882");
+  isoCylinder(
+    ctx,
+    rr.x,
+    rr.y - parH,
+    turretR * tSm,
+    turretH * 0.85,
+    "#8A7A65",
+    "#5A4A38",
+    "#B8A882"
+  );
   ctx.fillStyle = c.accent;
   ctx.beginPath();
   ctx.moveTo(rr.x, rr.y - parH - turretH * 0.85 - capH * 0.85);
@@ -1085,7 +1170,13 @@ function drawVaultRoof(
   ctx.fill();
   ctx.fillStyle = c.dark;
   ctx.beginPath();
-  ctx.arc(rr.x, rr.y - parH - turretH * 0.85 - capH * 0.85 - 1.2 * s2, 1.3 * s2, 0, Math.PI * 2);
+  ctx.arc(
+    rr.x,
+    rr.y - parH - turretH * 0.85 - capH * 0.85 - 1.2 * s2,
+    1.3 * s2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // --- Front merlons ---
@@ -1099,7 +1190,12 @@ function drawVaultRoof(
     ctx.fillStyle = "rgba(0,0,0,0.15)";
     const slitW = 0.8 * s2;
     const slitH = 2.5 * s2;
-    ctx.fillRect(mx - slitW * 0.5 - merlonW * 0.25, my - merlonH * 0.6, slitW, slitH);
+    ctx.fillRect(
+      mx - slitW * 0.5 - merlonW * 0.25,
+      my - merlonH * 0.6,
+      slitW,
+      slitH
+    );
   }
 
   // Merlons on front-right edge (rf → rr)
@@ -1111,11 +1207,25 @@ function drawVaultRoof(
     ctx.fillStyle = "rgba(0,0,0,0.12)";
     const slitW = 0.8 * s2;
     const slitH = 2.5 * s2;
-    ctx.fillRect(mx - slitW * 0.5 + merlonW * 0.15, my - merlonH * 0.6, slitW, slitH);
+    ctx.fillRect(
+      mx - slitW * 0.5 + merlonW * 0.15,
+      my - merlonH * 0.6,
+      slitW,
+      slitH
+    );
   }
 
   // --- Front corner turret (rf) — drawn last, closest to viewer ---
-  isoCylinder(ctx, rf.x, rf.y - parH, turretR, turretH, "#7A6A55", "#4A3A2A", "#B09A7A");
+  isoCylinder(
+    ctx,
+    rf.x,
+    rf.y - parH,
+    turretR,
+    turretH,
+    "#7A6A55",
+    "#4A3A2A",
+    "#B09A7A"
+  );
   ctx.fillStyle = c.accent;
   ctx.beginPath();
   ctx.moveTo(rf.x, rf.y - parH - turretH - capH);
@@ -1125,7 +1235,13 @@ function drawVaultRoof(
   ctx.fill();
   ctx.fillStyle = c.dark;
   ctx.beginPath();
-  ctx.arc(rf.x, rf.y - parH - turretH - capH - 1.5 * s2, 1.5 * s2, 0, Math.PI * 2);
+  ctx.arc(
+    rf.x,
+    rf.y - parH - turretH - capH - 1.5 * s2,
+    1.5 * s2,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Central golden dome
@@ -1137,10 +1253,12 @@ function drawVaultRoof(
   isoBoxAt(ctx, rcx, rcy - parH, w * 0.16, 3 * s2, c.frame, c.trim, c.accent);
 
   const dg = ctx.createRadialGradient(
-    rcx - domeR * 0.2, domeBaseY - 3 * s2 - domeH * 0.6,
+    rcx - domeR * 0.2,
+    domeBaseY - 3 * s2 - domeH * 0.6,
     0,
-    rcx, domeBaseY - 3 * s2 - domeH * 0.3,
-    domeR * 1.2,
+    rcx,
+    domeBaseY - 3 * s2 - domeH * 0.3,
+    domeR * 1.2
   );
   dg.addColorStop(0, "#F0D870");
   dg.addColorStop(0.3, "#D4B850");
@@ -1150,12 +1268,16 @@ function drawVaultRoof(
   ctx.beginPath();
   ctx.ellipse(rcx, domeBaseY - 3 * s2, domeR, domeRy, 0, Math.PI, 0, true);
   ctx.quadraticCurveTo(
-    rcx + domeR * 0.4, domeBaseY - 3 * s2 - domeH * 1.1,
-    rcx, domeBaseY - 3 * s2 - domeH,
+    rcx + domeR * 0.4,
+    domeBaseY - 3 * s2 - domeH * 1.1,
+    rcx,
+    domeBaseY - 3 * s2 - domeH
   );
   ctx.quadraticCurveTo(
-    rcx - domeR * 0.4, domeBaseY - 3 * s2 - domeH * 1.1,
-    rcx - domeR, domeBaseY - 3 * s2,
+    rcx - domeR * 0.4,
+    domeBaseY - 3 * s2 - domeH * 1.1,
+    rcx - domeR,
+    domeBaseY - 3 * s2
   );
   ctx.fill();
 
@@ -1167,7 +1289,15 @@ function drawVaultRoof(
 
   ctx.fillStyle = "rgba(255,255,200,0.25)";
   ctx.beginPath();
-  ctx.ellipse(rcx - domeR * 0.3, domeBaseY - 3 * s2 - domeH * 0.55, domeR * 0.25, domeH * 0.25, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(
+    rcx - domeR * 0.3,
+    domeBaseY - 3 * s2 - domeH * 0.55,
+    domeR * 0.25,
+    domeH * 0.25,
+    -0.4,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   // Finial orb
@@ -1175,8 +1305,12 @@ function drawVaultRoof(
   ctx.fillStyle = c.dark;
   ctx.fillRect(rcx - 0.8 * s2, finialY + 0.5 * s2, 1.6 * s2, 2.5 * s2);
   const fg = ctx.createRadialGradient(
-    rcx - 0.5 * s2, finialY - 0.5 * s2, 0,
-    rcx, finialY, 3 * s2,
+    rcx - 0.5 * s2,
+    finialY - 0.5 * s2,
+    0,
+    rcx,
+    finialY,
+    3 * s2
   );
   fg.addColorStop(0, "#F8E888");
   fg.addColorStop(0.5, c.accent);
@@ -1199,7 +1333,7 @@ function drawVaultRoof(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  return { roofPeakY, parH, rcy };
+  return { parH, rcy, roofPeakY };
 }
 
 // ---------------------------------------------------------------------------
@@ -1212,12 +1346,16 @@ function drawVaultAmbient(
   doorCenterX: number,
   doorCenterY: number,
   isFlashing: boolean,
-  time: number,
+  time: number
 ): void {
   const glowPulse = 0.12 + Math.sin(time * 2.5) * 0.04;
   const ag = ctx.createRadialGradient(
-    doorCenterX, doorCenterY, 0,
-    doorCenterX, doorCenterY, 28 * s2,
+    doorCenterX,
+    doorCenterY,
+    0,
+    doorCenterX,
+    doorCenterY,
+    28 * s2
   );
   if (isFlashing) {
     ag.addColorStop(0, "rgba(255, 100, 100, 0.25)");
@@ -1237,7 +1375,7 @@ function drawVaultAmbient(
     for (let i = 0; i < 5; i++) {
       const phase = (time * 0.6 + i * 1.3) % 4;
       const alpha = Math.max(0, 0.5 - phase * 0.13);
-      const angle = time * 0.4 + i * (Math.PI * 2) / 5;
+      const angle = time * 0.4 + (i * (Math.PI * 2)) / 5;
       const radius = (18 + phase * 5) * s2;
       const px = doorCenterX + Math.cos(angle) * radius * 0.6;
       const py = doorCenterY - phase * 8 * s2 + Math.sin(angle) * radius * 0.3;
@@ -1263,7 +1401,7 @@ export function drawActiveVaultBuilding(
   tanAngle: number,
   roofOffset: number,
   time: number,
-  isFlashing: boolean,
+  isFlashing: boolean
 ): VaultGeometry {
   const c = getVaultPalette(isFlashing);
 
@@ -1277,13 +1415,29 @@ export function drawActiveVaultBuilding(
   drawVaultCrest(ctx, s2, w, h, bodyY, tanAngle, c, isFlashing);
 
   const { doorCenterX, doorCenterY } = drawVaultDoor(
-    ctx, s2, w, h, bodyY, tanAngle, c, isFlashing, time,
+    ctx,
+    s2,
+    w,
+    h,
+    bodyY,
+    tanAngle,
+    c,
+    isFlashing,
+    time
   );
 
   drawVaultCornice(ctx, s2, w, h, bodyY, tanAngle, c);
 
   const { roofPeakY, parH, rcy } = drawVaultRoof(
-    ctx, s2, w, h, bodyY, tanAngle, roofOffset, c, time,
+    ctx,
+    s2,
+    w,
+    h,
+    bodyY,
+    tanAngle,
+    roofOffset,
+    c,
+    time
   );
 
   drawVaultAmbient(ctx, s2, doorCenterX, doorCenterY, isFlashing, time);
@@ -1297,5 +1451,5 @@ export function drawActiveVaultBuilding(
     y: bodyY - w * tanAngle * fx - h * fy,
   });
 
-  return { bodyY, roofPeakY, parH, rcy, lWallPt, rWallPt };
+  return { bodyY, lWallPt, parH, rWallPt, rcy, roofPeakY };
 }

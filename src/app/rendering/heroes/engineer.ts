@@ -10,7 +10,7 @@ export function drawEngineerHero(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   const s = size;
   const isAttacking = attackPhase > 0;
@@ -31,16 +31,55 @@ export function drawEngineerHero(
   drawFloatingParticles(ctx, x, y, s, time);
   drawCircuitLines(ctx, x, y, s, time, dataPulse, zoom);
   drawHoloGears(ctx, x, y, s, time, zoom, "behind");
-  drawBackpack(ctx, x + idleSway, y + bodyBob, s, time, dataPulse, zoom, isAttacking, attackIntensity);
+  drawBackpack(
+    ctx,
+    x + idleSway,
+    y + bodyBob,
+    s,
+    time,
+    dataPulse,
+    zoom,
+    isAttacking,
+    attackIntensity
+  );
   drawBody(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse, zoom);
-  drawEngineerSkirtArmor(ctx, x + idleSway, y + bodyBob, s, time, zoom, isAttacking, attackIntensity, dataPulse);
+  drawEngineerSkirtArmor(
+    ctx,
+    x + idleSway,
+    y + bodyBob,
+    s,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    dataPulse
+  );
   drawBeltAndPouches(ctx, x + idleSway, y + bodyBob, s, time, dataPulse);
   drawThighRigs(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse);
   drawArmsAndRifle(
-    ctx, x + idleSway, y + bodyBob, s, workAnimation, dataPulse, time, zoom,
-    isAttacking, attackIntensity, targetPos, toolFidget,
+    ctx,
+    x + idleSway,
+    y + bodyBob,
+    s,
+    workAnimation,
+    dataPulse,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    targetPos,
+    toolFidget
   );
-  drawHead(ctx, x + idleSway + headScan, y + bodyBob, s, time, dataPulse, holoFlicker, zoom);
+  drawHead(
+    ctx,
+    x + idleSway + headScan,
+    y + bodyBob,
+    s,
+    time,
+    dataPulse,
+    holoFlicker,
+    zoom
+  );
   drawHoloGears(ctx, x, y, s, time, zoom, "front");
   if (isAttacking) {
     drawAttackEffects(ctx, x, y, s, attackIntensity, holoFlicker, time, zoom);
@@ -56,14 +95,19 @@ function drawAura(
   s: number,
   time: number,
   dataPulse: number,
-  isAttacking: boolean,
+  isAttacking: boolean
 ) {
   const auraBase = isAttacking ? 0.38 : 0.22;
   const auraPulse = 0.85 + Math.sin(time * 4) * 0.15;
   for (let layer = 0; layer < 4; layer++) {
     const offset = layer * 0.08;
     const g = ctx.createRadialGradient(
-      x, y, s * (0.1 + offset), x, y, s * (0.9 + offset * 0.3),
+      x,
+      y,
+      s * (0.1 + offset),
+      x,
+      y,
+      s * (0.9 + offset * 0.3)
     );
     const a = (auraBase - layer * 0.04) * auraPulse;
     g.addColorStop(0, `rgba(0, 200, 255, ${a * 0.4})`);
@@ -72,7 +116,15 @@ function drawAura(
     g.addColorStop(1, "rgba(0, 200, 255, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(x, y, s * (0.85 + offset * 0.2), s * (0.55 + offset * 0.12), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      s * (0.85 + offset * 0.2),
+      s * (0.55 + offset * 0.12),
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 }
@@ -84,7 +136,7 @@ function drawFloatingParticles(
   x: number,
   y: number,
   s: number,
-  time: number,
+  time: number
 ) {
   for (let p = 0; p < 14; p++) {
     const pAngle = (time * 2 + (p * Math.PI * 2) / 14) % (Math.PI * 2);
@@ -113,7 +165,7 @@ function drawCircuitLines(
   s: number,
   time: number,
   dataPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   ctx.strokeStyle = `rgba(0, 200, 255, ${0.3 + dataPulse * 0.2})`;
   ctx.lineWidth = 1 * zoom;
@@ -129,7 +181,9 @@ function drawCircuitLines(
     ctx.arc(
       x + Math.cos(angle) * dist * 0.7,
       y + Math.sin(angle) * dist * 0.35,
-      s * 0.018, 0, Math.PI * 2,
+      s * 0.018,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -146,9 +200,14 @@ function drawBackpack(
   dataPulse: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
-  const g = ctx.createLinearGradient(x - s * 0.25, y - s * 0.2, x + s * 0.25, y + s * 0.3);
+  const g = ctx.createLinearGradient(
+    x - s * 0.25,
+    y - s * 0.2,
+    x + s * 0.25,
+    y + s * 0.3
+  );
   g.addColorStop(0, "#2e2e3e");
   g.addColorStop(0.3, "#3e3e4e");
   g.addColorStop(0.7, "#2e2e3e");
@@ -164,23 +223,35 @@ function drawBackpack(
   // Backpack armored panels
   ctx.fillStyle = "#222232";
   for (let panel = 0; panel < 5; panel++) {
-    ctx.fillRect(x - s * 0.2, y - s * 0.17 + panel * s * 0.1, s * 0.4, s * 0.065);
+    ctx.fillRect(
+      x - s * 0.2,
+      y - s * 0.17 + panel * s * 0.1,
+      s * 0.4,
+      s * 0.065
+    );
     const panelGlow = Math.sin(time * 4 + panel * 0.8) * 0.3 + 0.5;
     ctx.fillStyle = `rgba(0, 200, 255, ${panelGlow})`;
-    ctx.fillRect(x - s * 0.18, y - s * 0.16 + panel * s * 0.1, s * 0.36, s * 0.018);
+    ctx.fillRect(
+      x - s * 0.18,
+      y - s * 0.16 + panel * s * 0.1,
+      s * 0.36,
+      s * 0.018
+    );
     ctx.fillStyle = "#222232";
   }
 
   // Main comms antenna (tall, prominent, with sway)
-  const antTipX = x + s * 0.22 + Math.sin(time * 1.0) * s * 0.04;
+  const antTipX = x + s * 0.22 + Math.sin(time * 1) * s * 0.04;
   const antTipY = y - s * 0.58;
   ctx.strokeStyle = "#6a6a6a";
   ctx.lineWidth = 3.5;
   ctx.beginPath();
   ctx.moveTo(x + s * 0.18, y - s * 0.18);
   ctx.quadraticCurveTo(
-    x + s * 0.2 + Math.sin(time * 1.0) * s * 0.02, y - s * 0.38,
-    antTipX, antTipY,
+    x + s * 0.2 + Math.sin(time * 1) * s * 0.02,
+    y - s * 0.38,
+    antTipX,
+    antTipY
   );
   ctx.stroke();
   // Antenna thinner top section
@@ -188,14 +259,20 @@ function drawBackpack(
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(antTipX, antTipY);
-  ctx.lineTo(antTipX + Math.sin(time * 1.0) * s * 0.01, antTipY - s * 0.08);
+  ctx.lineTo(antTipX + Math.sin(time * 1) * s * 0.01, antTipY - s * 0.08);
   ctx.stroke();
   // Blinking red tip
   ctx.fillStyle = `rgba(255, 40, 40, ${0.5 + dataPulse * 0.5})`;
   ctx.shadowColor = "#ff2222";
   ctx.shadowBlur = 8 * zoom;
   ctx.beginPath();
-  ctx.arc(antTipX + Math.sin(time * 1.0) * s * 0.01, antTipY - s * 0.08, s * 0.022, 0, Math.PI * 2);
+  ctx.arc(
+    antTipX + Math.sin(time * 1) * s * 0.01,
+    antTipY - s * 0.08,
+    s * 0.022,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
   // Antenna base mount
@@ -212,8 +289,10 @@ function drawBackpack(
   ctx.beginPath();
   ctx.moveTo(x - s * 0.16, y - s * 0.18);
   ctx.quadraticCurveTo(
-    x - s * 0.18 + Math.sin(time * 1.2 + 1) * s * 0.015, y - s * 0.32,
-    ant2TipX, ant2TipY,
+    x - s * 0.18 + Math.sin(time * 1.2 + 1) * s * 0.015,
+    y - s * 0.32,
+    ant2TipX,
+    ant2TipY
   );
   ctx.stroke();
   // Blinking green tip
@@ -231,7 +310,14 @@ function drawBackpack(
   ctx.fill();
 
   // Reactor core
-  const rg = ctx.createRadialGradient(x, y + s * 0.06, 0, x, y + s * 0.06, s * 0.12);
+  const rg = ctx.createRadialGradient(
+    x,
+    y + s * 0.06,
+    0,
+    x,
+    y + s * 0.06,
+    s * 0.12
+  );
   rg.addColorStop(0, `rgba(0, 255, 200, ${0.85 + dataPulse * 0.15})`);
   rg.addColorStop(0.5, `rgba(0, 200, 255, ${0.65 + dataPulse * 0.2})`);
   rg.addColorStop(1, "rgba(0, 100, 150, 0.3)");
@@ -315,8 +401,11 @@ function drawBackpack(
   for (let c = 0; c < 8; c++) {
     const cx = x - s * 0.08 + c * s * 0.02;
     const cy = y - s * 0.16 + Math.sin(c * 1.2) * s * 0.015;
-    if (c === 0) ctx.moveTo(cx, cy);
-    else ctx.lineTo(cx, cy);
+    if (c === 0) {
+      ctx.moveTo(cx, cy);
+    } else {
+      ctx.lineTo(cx, cy);
+    }
   }
   ctx.stroke();
 
@@ -344,10 +433,15 @@ function drawBody(
   breathe: number,
   time: number,
   dataPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   // Main exosuit torso
-  const sg = ctx.createLinearGradient(x - s * 0.52, y - s * 0.3, x + s * 0.52, y + s * 0.4);
+  const sg = ctx.createLinearGradient(
+    x - s * 0.52,
+    y - s * 0.3,
+    x + s * 0.52,
+    y + s * 0.4
+  );
   sg.addColorStop(0, "#2e3e24");
   sg.addColorStop(0.2, "#4a5a36");
   sg.addColorStop(0.5, "#5a6a42");
@@ -368,7 +462,12 @@ function drawBody(
   ctx.stroke();
 
   // Contrasting belly armor plate (tan/khaki)
-  const bellyG = ctx.createLinearGradient(x - s * 0.2, y - s * 0.06, x + s * 0.2, y + s * 0.14);
+  const bellyG = ctx.createLinearGradient(
+    x - s * 0.2,
+    y - s * 0.06,
+    x + s * 0.2,
+    y + s * 0.14
+  );
   bellyG.addColorStop(0, "#8a7a5a");
   bellyG.addColorStop(0.5, "#9a8a68");
   bellyG.addColorStop(1, "#7a6a4e");
@@ -385,16 +484,21 @@ function drawBody(
   ctx.stroke();
 
   // Upper chest armor plate (dark gray/gunmetal)
-  const chestPlateG = ctx.createLinearGradient(x - s * 0.30, y - s * 0.27, x + s * 0.30, y - s * 0.08);
+  const chestPlateG = ctx.createLinearGradient(
+    x - s * 0.3,
+    y - s * 0.27,
+    x + s * 0.3,
+    y - s * 0.08
+  );
   chestPlateG.addColorStop(0, "#3a3a42");
   chestPlateG.addColorStop(0.5, "#4a4a55");
   chestPlateG.addColorStop(1, "#3a3a42");
   ctx.fillStyle = chestPlateG;
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.30, y - s * 0.08);
+  ctx.moveTo(x - s * 0.3, y - s * 0.08);
   ctx.lineTo(x - s * 0.34, y - s * 0.22);
   ctx.quadraticCurveTo(x, y - s * 0.28, x + s * 0.34, y - s * 0.22);
-  ctx.lineTo(x + s * 0.30, y - s * 0.08);
+  ctx.lineTo(x + s * 0.3, y - s * 0.08);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#2a2a32";
@@ -417,17 +521,20 @@ function drawBody(
   for (const side of [-1, 1]) {
     const sx = x + side * s * 0.46;
     const ridgeG = ctx.createLinearGradient(
-      sx - side * s * 0.18, y - s * 0.30, sx + side * s * 0.12, y - s * 0.12,
+      sx - side * s * 0.18,
+      y - s * 0.3,
+      sx + side * s * 0.12,
+      y - s * 0.12
     );
     ridgeG.addColorStop(0, "#7a6a48");
     ridgeG.addColorStop(0.5, "#8a7a58");
     ridgeG.addColorStop(1, "#6a5a3e");
     ctx.fillStyle = ridgeG;
     ctx.beginPath();
-    ctx.moveTo(sx - side * s * 0.20, y - s * 0.32);
+    ctx.moveTo(sx - side * s * 0.2, y - s * 0.32);
     ctx.lineTo(sx + side * s * 0.14, y - s * 0.22);
     ctx.lineTo(sx + side * s * 0.14, y - s * 0.12);
-    ctx.lineTo(sx - side * s * 0.20, y - s * 0.18);
+    ctx.lineTo(sx - side * s * 0.2, y - s * 0.18);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#5a4a32";
@@ -438,27 +545,26 @@ function drawBody(
     ctx.fillStyle = "#2a2a3a";
     ctx.beginPath();
     ctx.roundRect(
-      x + side * s * 0.40 - s * 0.07,
+      x + side * s * 0.4 - s * 0.07,
       y - s * 0.32,
-      s * 0.14, s * 0.11, s * 0.02,
+      s * 0.14,
+      s * 0.11,
+      s * 0.02
     );
     ctx.fill();
     ctx.strokeStyle = "#3a3a4a";
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    const podColor = side > 0
-      ? `rgba(255, 60, 60, ${0.5 + dataPulse * 0.4})`
-      : `rgba(0, 200, 255, ${0.5 + dataPulse * 0.4})`;
+    const podColor =
+      side > 0
+        ? `rgba(255, 60, 60, ${0.5 + dataPulse * 0.4})`
+        : `rgba(0, 200, 255, ${0.5 + dataPulse * 0.4})`;
     ctx.fillStyle = podColor;
     ctx.shadowColor = side > 0 ? "#ff3030" : "#00ccff";
     ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
-    ctx.arc(
-      x + side * s * 0.40,
-      y - s * 0.27,
-      s * 0.024, 0, Math.PI * 2,
-    );
+    ctx.arc(x + side * s * 0.4, y - s * 0.27, s * 0.024, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -466,7 +572,10 @@ function drawBody(
   // Side torso armor plates (brown/tan, flanking belly)
   for (const side of [-1, 1]) {
     const sideG = ctx.createLinearGradient(
-      x + side * s * 0.15, y - s * 0.05, x + side * s * 0.46, y + s * 0.12,
+      x + side * s * 0.15,
+      y - s * 0.05,
+      x + side * s * 0.46,
+      y + s * 0.12
     );
     sideG.addColorStop(0, "#6a5a3e");
     sideG.addColorStop(0.5, "#7a6a4e");
@@ -485,14 +594,14 @@ function drawBody(
   }
 
   // Hi-vis orange reflective strips
-  const stripG = ctx.createLinearGradient(x - s * 0.50, y, x - s * 0.36, y);
+  const stripG = ctx.createLinearGradient(x - s * 0.5, y, x - s * 0.36, y);
   stripG.addColorStop(0, "#bb3800");
   stripG.addColorStop(0.3, "#ff5500");
   stripG.addColorStop(0.5, "#ff9933");
   stripG.addColorStop(0.7, "#ff5500");
   stripG.addColorStop(1, "#bb3800");
   ctx.fillStyle = stripG;
-  ctx.fillRect(x - s * 0.50, y - s * 0.2, s * 0.12, s * 0.52);
+  ctx.fillRect(x - s * 0.5, y - s * 0.2, s * 0.12, s * 0.52);
   ctx.fillRect(x + s * 0.38, y - s * 0.2, s * 0.12, s * 0.52);
 
   ctx.fillStyle = "rgba(255, 255, 200, 0.35)";
@@ -536,9 +645,10 @@ function drawBody(
     const ly = y - s * 0.1 + line * s * 0.025;
     const barWidth = s * 0.05 + Math.sin(time * 3 + line * 1.2) * s * 0.03;
     const barAlpha = 0.6 + Math.sin(time * 4 + line) * 0.3;
-    ctx.fillStyle = line < 2
-      ? `rgba(0, 255, 200, ${barAlpha})`
-      : `rgba(234, 179, 8, ${barAlpha})`;
+    ctx.fillStyle =
+      line < 2
+        ? `rgba(0, 255, 200, ${barAlpha})`
+        : `rgba(234, 179, 8, ${barAlpha})`;
     ctx.fillRect(x - s * 0.05, ly, barWidth, s * 0.015);
   }
 }
@@ -554,7 +664,7 @@ function drawEngineerSkirtArmor(
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   drawEngineerTassetSide(ctx, x, y, s, time, dataPulse, true);
   drawEngineerTassetSide(ctx, x, y, s, time, dataPulse, false);
@@ -570,13 +680,13 @@ function drawEngineerTassetSide(
   s: number,
   time: number,
   dataPulse: number,
-  isLeft: boolean,
+  isLeft: boolean
 ) {
   const skirtTop = y + s * 0.28;
   const bandCount = 4;
-  const totalHeight = s * 0.30;
-  const gapHalf = s * 0.10;
-  const shear = isLeft ? s * 0.10 : s * -0.10;
+  const totalHeight = s * 0.3;
+  const gapHalf = s * 0.1;
+  const shear = isLeft ? s * 0.1 : s * -0.1;
   const bandHeight = totalHeight / bandCount;
   const sideWidth = s * 0.28;
   const sideX = isLeft ? x - sideWidth - gapHalf : x + gapHalf;
@@ -592,8 +702,14 @@ function drawEngineerTassetSide(
     const outerBotY = innerTopY + bandHeight;
     const innerBotY = outerBotY;
 
-    const colorSet = band % 2 === 1 ? gunmetalColors : (isLeft ? oliveColors : tanColors);
-    const pg = ctx.createLinearGradient(sideX, innerTopY, sideX + sideWidth, innerBotY);
+    const colorSet =
+      band % 2 === 1 ? gunmetalColors : isLeft ? oliveColors : tanColors;
+    const pg = ctx.createLinearGradient(
+      sideX,
+      innerTopY,
+      sideX + sideWidth,
+      innerBotY
+    );
     pg.addColorStop(0, colorSet[0]);
     pg.addColorStop(1, colorSet[1]);
     ctx.fillStyle = pg;
@@ -626,11 +742,22 @@ function drawEngineerTassetSide(
     }
 
     ctx.fillStyle = `rgba(234, 179, 8, ${accentAlpha})`;
-    ctx.fillRect(sideX + sideWidth * 0.05, innerTopY + bandHeight * 0.1, sideWidth * 0.08, bandHeight * 0.15);
+    ctx.fillRect(
+      sideX + sideWidth * 0.05,
+      innerTopY + bandHeight * 0.1,
+      sideWidth * 0.08,
+      bandHeight * 0.15
+    );
 
     ctx.fillStyle = band % 2 === 0 ? "#7a7a7a" : "#5a5a5a";
     ctx.beginPath();
-    ctx.arc(sideX + sideWidth * 0.5, innerTopY + s * 0.02, s * 0.01, 0, Math.PI * 2);
+    ctx.arc(
+      sideX + sideWidth * 0.5,
+      innerTopY + s * 0.02,
+      s * 0.01,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
     ctx.strokeStyle = "#4a4a4a";
     ctx.lineWidth = 0.6;
@@ -643,16 +770,21 @@ function drawEngineerCenterBanner(
   x: number,
   y: number,
   s: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   const skirtTop = y + s * 0.28;
-  const totalHeight = s * 0.30;
+  const totalHeight = s * 0.3;
   const panelW = s * 0.18;
   const panelH = totalHeight * 0.9;
   const panelX = x - panelW / 2;
   const panelY = skirtTop;
 
-  const pg = ctx.createLinearGradient(panelX, panelY, panelX + panelW, panelY + panelH);
+  const pg = ctx.createLinearGradient(
+    panelX,
+    panelY,
+    panelX + panelW,
+    panelY + panelH
+  );
   pg.addColorStop(0, "#3a4a2e");
   pg.addColorStop(0.5, "#4a5a36");
   pg.addColorStop(1, "#2a3a22");
@@ -691,16 +823,21 @@ function drawEngineerSkirtChain(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  s: number,
+  s: number
 ) {
   const skirtTop = y + s * 0.28;
-  const totalHeight = s * 0.30;
-  const gapHalf = s * 0.10;
+  const totalHeight = s * 0.3;
+  const gapHalf = s * 0.1;
   const strapWidth = s * 0.04;
   const leftX = x - gapHalf - strapWidth / 2;
   const rightX = x + gapHalf - strapWidth / 2;
 
-  const wg = ctx.createLinearGradient(leftX, skirtTop, rightX, skirtTop + totalHeight);
+  const wg = ctx.createLinearGradient(
+    leftX,
+    skirtTop,
+    rightX,
+    skirtTop + totalHeight
+  );
   wg.addColorStop(0, "#2e3e24");
   wg.addColorStop(0.5, "#3a4a2e");
   wg.addColorStop(1, "#2e3e24");
@@ -718,13 +855,18 @@ function drawEngineerSkirtBelt(
   x: number,
   y: number,
   s: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   const skirtTop = y + s * 0.28;
   const beltWidth = s * 0.06;
   const beltSpan = s * 0.56;
 
-  const bg = ctx.createLinearGradient(x - beltSpan, skirtTop, x + beltSpan, skirtTop);
+  const bg = ctx.createLinearGradient(
+    x - beltSpan,
+    skirtTop,
+    x + beltSpan,
+    skirtTop
+  );
   bg.addColorStop(0, "#2a2a2a");
   bg.addColorStop(0.25, "#3a3a3a");
   bg.addColorStop(0.5, "#4a4a4a");
@@ -762,10 +904,15 @@ function drawBeltAndPouches(
   y: number,
   s: number,
   time: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   // Main belt
-  const bg = ctx.createLinearGradient(x - s * 0.52, y + s * 0.16, x + s * 0.52, y + s * 0.16);
+  const bg = ctx.createLinearGradient(
+    x - s * 0.52,
+    y + s * 0.16,
+    x + s * 0.52,
+    y + s * 0.16
+  );
   bg.addColorStop(0, "#2a2a2a");
   bg.addColorStop(0.5, "#484848");
   bg.addColorStop(1, "#2a2a2a");
@@ -777,12 +924,12 @@ function drawBeltAndPouches(
 
   // 6 belt pouches (MUCH BIGGER, varying sizes)
   const pouchConfigs = [
-    { xOff: -0.4, w: 0.14, h: 0.2, colorIdx: 0 },
-    { xOff: -0.22, w: 0.16, h: 0.24, colorIdx: 1 },
-    { xOff: -0.04, w: 0.12, h: 0.18, colorIdx: 0 },
-    { xOff: 0.1, w: 0.12, h: 0.18, colorIdx: 1 },
-    { xOff: 0.24, w: 0.16, h: 0.24, colorIdx: 0 },
-    { xOff: 0.42, w: 0.14, h: 0.2, colorIdx: 1 },
+    { colorIdx: 0, h: 0.2, w: 0.14, xOff: -0.4 },
+    { colorIdx: 1, h: 0.24, w: 0.16, xOff: -0.22 },
+    { colorIdx: 0, h: 0.18, w: 0.12, xOff: -0.04 },
+    { colorIdx: 1, h: 0.18, w: 0.12, xOff: 0.1 },
+    { colorIdx: 0, h: 0.24, w: 0.16, xOff: 0.24 },
+    { colorIdx: 1, h: 0.2, w: 0.14, xOff: 0.42 },
   ];
 
   for (const p of pouchConfigs) {
@@ -790,7 +937,13 @@ function drawBeltAndPouches(
     const pouchBob = Math.sin(time * 1.6 + p.xOff * 3) * s * 0.003;
     ctx.fillStyle = "#1a1a1a";
     ctx.beginPath();
-    ctx.roundRect(px - s * p.w / 2, y + s * 0.09 + pouchBob, s * p.w, s * p.h, s * 0.02);
+    ctx.roundRect(
+      px - (s * p.w) / 2,
+      y + s * 0.09 + pouchBob,
+      s * p.w,
+      s * p.h,
+      s * 0.02
+    );
     ctx.fill();
     ctx.strokeStyle = "#3a3a3a";
     ctx.lineWidth = 1.2;
@@ -798,11 +951,21 @@ function drawBeltAndPouches(
 
     // Pouch flap with stitching
     ctx.fillStyle = "#252525";
-    ctx.fillRect(px - s * p.w / 2 + s * 0.005, y + s * 0.09 + pouchBob, s * p.w - s * 0.01, s * 0.035);
+    ctx.fillRect(
+      px - (s * p.w) / 2 + s * 0.005,
+      y + s * 0.09 + pouchBob,
+      s * p.w - s * 0.01,
+      s * 0.035
+    );
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 0.6;
     ctx.setLineDash([2, 2]);
-    ctx.strokeRect(px - s * p.w / 2 + s * 0.008, y + s * 0.093 + pouchBob, s * p.w - s * 0.016, s * 0.03);
+    ctx.strokeRect(
+      px - (s * p.w) / 2 + s * 0.008,
+      y + s * 0.093 + pouchBob,
+      s * p.w - s * 0.016,
+      s * 0.03
+    );
     ctx.setLineDash([]);
 
     // Snap/buckle
@@ -812,9 +975,10 @@ function drawBeltAndPouches(
     ctx.fill();
 
     // Status LED (bigger glow)
-    const ledColor = p.colorIdx === 0
-      ? `rgba(0, 255, 130, ${0.5 + dataPulse * 0.4})`
-      : `rgba(255, 180, 40, ${0.5 + dataPulse * 0.4})`;
+    const ledColor =
+      p.colorIdx === 0
+        ? `rgba(0, 255, 130, ${0.5 + dataPulse * 0.4})`
+        : `rgba(255, 180, 40, ${0.5 + dataPulse * 0.4})`;
     ctx.fillStyle = ledColor;
     ctx.shadowColor = p.colorIdx === 0 ? "#00ff88" : "#ffaa22";
     ctx.shadowBlur = 4;
@@ -853,7 +1017,12 @@ function drawBeltAndPouches(
   ctx.lineWidth = 1;
   ctx.stroke();
   // Blade
-  const bladeG = ctx.createLinearGradient(-s * 0.015, -s * 0.04, s * 0.015, -s * 0.04);
+  const bladeG = ctx.createLinearGradient(
+    -s * 0.015,
+    -s * 0.04,
+    s * 0.015,
+    -s * 0.04
+  );
   bladeG.addColorStop(0, "#8a8a9a");
   bladeG.addColorStop(0.5, "#b0b0c0");
   bladeG.addColorStop(1, "#8a8a9a");
@@ -882,7 +1051,7 @@ function drawThighRigs(
   s: number,
   breathe: number,
   time: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   for (const side of [-1, 1]) {
     const tx = x + side * s * 0.36;
@@ -911,17 +1080,34 @@ function drawThighRigs(
     // Strap buckle
     ctx.fillStyle = "#5a5a5a";
     ctx.beginPath();
-    ctx.roundRect(tx + side * s * 0.04, ty + s * 0.085 + rigBob, s * 0.03, s * 0.03, s * 0.004);
+    ctx.roundRect(
+      tx + side * s * 0.04,
+      ty + s * 0.085 + rigBob,
+      s * 0.03,
+      s * 0.03,
+      s * 0.004
+    );
     ctx.fill();
 
     // Main thigh pouch (BIGGER)
-    const tpg = ctx.createLinearGradient(tx - s * 0.08, ty, tx + s * 0.08, ty + s * 0.16);
+    const tpg = ctx.createLinearGradient(
+      tx - s * 0.08,
+      ty,
+      tx + s * 0.08,
+      ty + s * 0.16
+    );
     tpg.addColorStop(0, "#181818");
     tpg.addColorStop(0.5, "#282828");
     tpg.addColorStop(1, "#181818");
     ctx.fillStyle = tpg;
     ctx.beginPath();
-    ctx.roundRect(tx - s * 0.08, ty - s * 0.02 + rigBob, s * 0.16, s * 0.16, s * 0.018);
+    ctx.roundRect(
+      tx - s * 0.08,
+      ty - s * 0.02 + rigBob,
+      s * 0.16,
+      s * 0.16,
+      s * 0.018
+    );
     ctx.fill();
     ctx.strokeStyle = "#3a3a3a";
     ctx.lineWidth = 1.5;
@@ -946,9 +1132,10 @@ function drawThighRigs(
     }
 
     // Status light (bigger glow)
-    ctx.fillStyle = side > 0
-      ? `rgba(0, 255, 130, ${0.45 + dataPulse * 0.35})`
-      : `rgba(255, 100, 40, ${0.45 + dataPulse * 0.35})`;
+    ctx.fillStyle =
+      side > 0
+        ? `rgba(0, 255, 130, ${0.45 + dataPulse * 0.35})`
+        : `rgba(255, 100, 40, ${0.45 + dataPulse * 0.35})`;
     ctx.shadowColor = side > 0 ? "#00ff88" : "#ff6622";
     ctx.shadowBlur = 5;
     ctx.beginPath();
@@ -972,9 +1159,11 @@ function drawArmsAndRifle(
   isAttacking: boolean,
   attackIntensity: number,
   targetPos: Position | undefined,
-  toolFidget: number,
+  toolFidget: number
 ) {
-  const recoilKick = isAttacking ? Math.sin(attackIntensity * Math.PI * 6) * s * 0.025 : 0;
+  const recoilKick = isAttacking
+    ? Math.sin(attackIntensity * Math.PI * 6) * s * 0.025
+    : 0;
 
   // Rifle pivots from character center for correct directional aiming
   const rifleX = x;
@@ -982,10 +1171,13 @@ function drawArmsAndRifle(
 
   const gunBase = -Math.PI / 2 - toolFidget * 0.2;
   const gunAngle = resolveWeaponRotation(
-    targetPos, rifleX, rifleY,
-    gunBase, Math.PI / 2,
+    targetPos,
+    rifleX,
+    rifleY,
+    gunBase,
+    Math.PI / 2,
     isAttacking ? 1.5 : 0.85,
-    WEAPON_LIMITS.rifle,
+    WEAPON_LIMITS.rifle
   );
 
   const cosA = Math.cos(gunAngle);
@@ -999,9 +1191,31 @@ function drawArmsAndRifle(
   const handguardWorldX = rifleX - sinA * handguardDist;
   const handguardWorldY = rifleY + cosA * handguardDist;
 
-  drawLeftArmDetailed(ctx, x, y, s, time, gunAngle, handguardWorldX, handguardWorldY, dataPulse);
+  drawLeftArmDetailed(
+    ctx,
+    x,
+    y,
+    s,
+    time,
+    gunAngle,
+    handguardWorldX,
+    handguardWorldY,
+    dataPulse
+  );
   drawRightArmDetailed(ctx, x, y, s, time, gunAngle, gripWorldX, gripWorldY);
-  drawRifleDetailed(ctx, rifleX, rifleY, s, gunAngle, recoilKick, dataPulse, time, zoom, isAttacking, attackIntensity);
+  drawRifleDetailed(
+    ctx,
+    rifleX,
+    rifleY,
+    s,
+    gunAngle,
+    recoilKick,
+    dataPulse,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity
+  );
 }
 
 function drawLeftArmDetailed(
@@ -1013,20 +1227,35 @@ function drawLeftArmDetailed(
   gunAngle: number,
   handguardX: number,
   handguardY: number,
-  dataPulse: number,
+  dataPulse: number
 ) {
   const bob = Math.sin(time * 1.4) * s * 0.004;
   const shoulderX = x - s * 0.44;
   const shoulderY = y - s * 0.08 + bob;
 
   // Shoulder pad (olive armor plate) - massive pauldron
-  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.08, 0, shoulderX, shoulderY - s * 0.08, s * 0.16);
+  const spG = ctx.createRadialGradient(
+    shoulderX,
+    shoulderY - s * 0.08,
+    0,
+    shoulderX,
+    shoulderY - s * 0.08,
+    s * 0.16
+  );
   spG.addColorStop(0, "#5a6a3e");
   spG.addColorStop(0.6, "#4a5a32");
   spG.addColorStop(1, "#3a4a28");
   ctx.fillStyle = spG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.08, s * 0.16, s * 0.10, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.08,
+    s * 0.16,
+    s * 0.1,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#2e3a1e";
   ctx.lineWidth = 1.8;
@@ -1035,29 +1264,66 @@ function drawLeftArmDetailed(
   ctx.strokeStyle = "rgba(120,140,90,0.5)";
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.085, s * 0.14, s * 0.075, -0.3, -0.5, 1.2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.085,
+    s * 0.14,
+    s * 0.075,
+    -0.3,
+    -0.5,
+    1.2
+  );
   ctx.stroke();
 
   // Upper arm (bicep) with muscle definition - bulkier
-  const uaG = ctx.createLinearGradient(shoulderX - s * 0.12, shoulderY, shoulderX + s * 0.12, shoulderY);
+  const uaG = ctx.createLinearGradient(
+    shoulderX - s * 0.12,
+    shoulderY,
+    shoulderX + s * 0.12,
+    shoulderY
+  );
   uaG.addColorStop(0, "#3a4a2c");
   uaG.addColorStop(0.3, "#5a6a42");
   uaG.addColorStop(0.7, "#566838");
   uaG.addColorStop(1, "#3a4a2c");
   ctx.fillStyle = uaG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.14, s * 0.22, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY + s * 0.04,
+    s * 0.14,
+    s * 0.22,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Bicep highlight (muscle bulge)
   ctx.fillStyle = "rgba(100,120,70,0.35)";
   ctx.beginPath();
-  ctx.ellipse(shoulderX + s * 0.03, shoulderY + s * 0.02, s * 0.06, s * 0.12, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX + s * 0.03,
+    shoulderY + s * 0.02,
+    s * 0.06,
+    s * 0.12,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Sleeve seam
   ctx.strokeStyle = "#3a4a28";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.13, s * 0.06, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.02,
+    s * 0.13,
+    s * 0.06,
+    -0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // Forearm connector (from elbow area toward handguard)
@@ -1065,7 +1331,14 @@ function drawLeftArmDetailed(
   const elbowY = shoulderY + s * 0.14;
 
   // Elbow pad - reinforced
-  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.09);
+  const epG = ctx.createRadialGradient(
+    elbowX,
+    elbowY,
+    0,
+    elbowX,
+    elbowY,
+    s * 0.09
+  );
   epG.addColorStop(0, "#4a4a38");
   epG.addColorStop(0.5, "#3a3a2c");
   epG.addColorStop(1, "#2e2e22");
@@ -1074,7 +1347,7 @@ function drawLeftArmDetailed(
   ctx.ellipse(elbowX, elbowY, s * 0.08, s * 0.065, -0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#2a2a1e";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.stroke();
   // Elbow pad rivet
   ctx.fillStyle = "#5a5a4a";
@@ -1096,34 +1369,59 @@ function drawLeftArmDetailed(
   const midForeX = (elbowX + handguardX) / 2;
   const midForeY = (elbowY + handguardY) / 2;
   const fpG = ctx.createLinearGradient(
-    midForeX - s * 0.09, midForeY - s * 0.06,
-    midForeX + s * 0.09, midForeY + s * 0.06,
+    midForeX - s * 0.09,
+    midForeY - s * 0.06,
+    midForeX + s * 0.09,
+    midForeY + s * 0.06
   );
   fpG.addColorStop(0, "#5a4a32");
   fpG.addColorStop(0.5, "#6a5a42");
   fpG.addColorStop(1, "#5a4a32");
   ctx.fillStyle = fpG;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.095, s * 0.06, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(
+    midForeX,
+    midForeY,
+    s * 0.095,
+    s * 0.06,
+    gunAngle,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#4a3a28";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.stroke();
   // Armor plate strap
   ctx.strokeStyle = "#3a3020";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.10, s * 0.035, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.1, s * 0.035, gunAngle, 0, Math.PI * 2);
   ctx.stroke();
 
   // Left gauntlet (at handguard) - bigger
-  const gG = ctx.createRadialGradient(handguardX, handguardY, 0, handguardX, handguardY, s * 0.12);
+  const gG = ctx.createRadialGradient(
+    handguardX,
+    handguardY,
+    0,
+    handguardX,
+    handguardY,
+    s * 0.12
+  );
   gG.addColorStop(0, "#6a5a42");
   gG.addColorStop(0.5, "#5a4a32");
   gG.addColorStop(1, "#4a3a28");
   ctx.fillStyle = gG;
   ctx.beginPath();
-  ctx.ellipse(handguardX, handguardY, s * 0.11, s * 0.08, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(
+    handguardX,
+    handguardY,
+    s * 0.11,
+    s * 0.08,
+    gunAngle,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#4a3a28";
   ctx.lineWidth = 1.2;
@@ -1164,8 +1462,18 @@ function drawLeftArmDetailed(
   ctx.stroke();
   ctx.fillStyle = `rgba(0, 200, 255, ${0.5 + dataPulse * 0.4})`;
   const dp = (time * 2) % 4;
-  ctx.fillRect(-s * 0.025, -s * 0.01, s * 0.018 + Math.sin(dp) * s * 0.012, s * 0.008);
-  ctx.fillRect(-s * 0.025, s * 0.002, s * 0.03 + Math.sin(dp + 1) * s * 0.008, s * 0.008);
+  ctx.fillRect(
+    -s * 0.025,
+    -s * 0.01,
+    s * 0.018 + Math.sin(dp) * s * 0.012,
+    s * 0.008
+  );
+  ctx.fillRect(
+    -s * 0.025,
+    s * 0.002,
+    s * 0.03 + Math.sin(dp + 1) * s * 0.008,
+    s * 0.008
+  );
   ctx.restore();
 }
 
@@ -1177,20 +1485,35 @@ function drawRightArmDetailed(
   time: number,
   gunAngle: number,
   gripX: number,
-  gripY: number,
+  gripY: number
 ) {
   const bob = Math.sin(time * 1.4 + Math.PI) * s * 0.004;
   const shoulderX = x + s * 0.44;
   const shoulderY = y - s * 0.08 + bob;
 
   // Shoulder pad (darker olive) - massive pauldron
-  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.08, 0, shoulderX, shoulderY - s * 0.08, s * 0.16);
+  const spG = ctx.createRadialGradient(
+    shoulderX,
+    shoulderY - s * 0.08,
+    0,
+    shoulderX,
+    shoulderY - s * 0.08,
+    s * 0.16
+  );
   spG.addColorStop(0, "#4e5e36");
   spG.addColorStop(0.6, "#3e4e2a");
   spG.addColorStop(1, "#2e3e20");
   ctx.fillStyle = spG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.08, s * 0.16, s * 0.10, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.08,
+    s * 0.16,
+    s * 0.1,
+    0.3,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#2a361a";
   ctx.lineWidth = 1.8;
@@ -1199,29 +1522,66 @@ function drawRightArmDetailed(
   ctx.strokeStyle = "rgba(110,130,80,0.5)";
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.085, s * 0.14, s * 0.075, 0.3, 1.9, 3.7);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.085,
+    s * 0.14,
+    s * 0.075,
+    0.3,
+    1.9,
+    3.7
+  );
   ctx.stroke();
 
   // Upper arm with muscle contour - bulkier
-  const uaG = ctx.createLinearGradient(shoulderX - s * 0.12, shoulderY, shoulderX + s * 0.12, shoulderY);
+  const uaG = ctx.createLinearGradient(
+    shoulderX - s * 0.12,
+    shoulderY,
+    shoulderX + s * 0.12,
+    shoulderY
+  );
   uaG.addColorStop(0, "#3a4a2c");
   uaG.addColorStop(0.35, "#566838");
   uaG.addColorStop(0.7, "#5a6a42");
   uaG.addColorStop(1, "#3a4a2c");
   ctx.fillStyle = uaG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.14, s * 0.22, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY + s * 0.04,
+    s * 0.14,
+    s * 0.22,
+    0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Muscle highlight
   ctx.fillStyle = "rgba(100,120,70,0.35)";
   ctx.beginPath();
-  ctx.ellipse(shoulderX - s * 0.03, shoulderY + s * 0.02, s * 0.06, s * 0.12, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX - s * 0.03,
+    shoulderY + s * 0.02,
+    s * 0.06,
+    s * 0.12,
+    0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   // Sleeve seam
   ctx.strokeStyle = "#3a4a28";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.13, s * 0.06, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    shoulderX,
+    shoulderY - s * 0.02,
+    s * 0.13,
+    s * 0.06,
+    0.15,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   // Elbow
@@ -1229,7 +1589,14 @@ function drawRightArmDetailed(
   const elbowY = shoulderY + s * 0.14;
 
   // Elbow pad (gunmetal) - reinforced
-  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.09);
+  const epG = ctx.createRadialGradient(
+    elbowX,
+    elbowY,
+    0,
+    elbowX,
+    elbowY,
+    s * 0.09
+  );
   epG.addColorStop(0, "#3e3e4a");
   epG.addColorStop(0.5, "#2e2e38");
   epG.addColorStop(1, "#22222c");
@@ -1238,7 +1605,7 @@ function drawRightArmDetailed(
   ctx.ellipse(elbowX, elbowY, s * 0.08, s * 0.065, 0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#1e1e28";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.stroke();
   // Elbow pad rivet
   ctx.fillStyle = "#4a4a58";
@@ -1260,24 +1627,34 @@ function drawRightArmDetailed(
   const midForeX = (elbowX + gripX) / 2;
   const midForeY = (elbowY + gripY) / 2;
   const fpG = ctx.createLinearGradient(
-    midForeX - s * 0.09, midForeY - s * 0.06,
-    midForeX + s * 0.09, midForeY + s * 0.06,
+    midForeX - s * 0.09,
+    midForeY - s * 0.06,
+    midForeX + s * 0.09,
+    midForeY + s * 0.06
   );
   fpG.addColorStop(0, "#2e2e3a");
   fpG.addColorStop(0.5, "#42424e");
   fpG.addColorStop(1, "#2e2e3a");
   ctx.fillStyle = fpG;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.095, s * 0.06, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(
+    midForeX,
+    midForeY,
+    s * 0.095,
+    s * 0.06,
+    gunAngle,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   ctx.strokeStyle = "#22222e";
-  ctx.lineWidth = 1.0;
+  ctx.lineWidth = 1;
   ctx.stroke();
   // Armor plate strap
   ctx.strokeStyle = "#282830";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.10, s * 0.035, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.1, s * 0.035, gunAngle, 0, Math.PI * 2);
   ctx.stroke();
 
   // Right gauntlet (gunmetal, at grip) - bigger
@@ -1324,7 +1701,7 @@ function drawRifleDetailed(
   time: number,
   zoom: number,
   isAttacking: boolean,
-  attackIntensity: number,
+  attackIntensity: number
 ) {
   ctx.save();
   ctx.translate(rifleX, rifleY);
@@ -1333,7 +1710,12 @@ function drawRifleDetailed(
   const bw = s * 0.09;
 
   // === STOCK ===
-  const stockG = ctx.createLinearGradient(-bw * 0.6, s * 0.06, bw * 0.6, s * 0.06);
+  const stockG = ctx.createLinearGradient(
+    -bw * 0.6,
+    s * 0.06,
+    bw * 0.6,
+    s * 0.06
+  );
   stockG.addColorStop(0, "#181818");
   stockG.addColorStop(0.3, "#2a2a2e");
   stockG.addColorStop(0.7, "#2a2a2e");
@@ -1374,7 +1756,12 @@ function drawRifleDetailed(
   ctx.stroke();
 
   // === RECEIVER ===
-  const recG = ctx.createLinearGradient(-bw * 0.75, -s * 0.1, bw * 0.75, -s * 0.1);
+  const recG = ctx.createLinearGradient(
+    -bw * 0.75,
+    -s * 0.1,
+    bw * 0.75,
+    -s * 0.1
+  );
   recG.addColorStop(0, "#161618");
   recG.addColorStop(0.25, "#28282e");
   recG.addColorStop(0.5, "#2e2e34");
@@ -1442,7 +1829,12 @@ function drawRifleDetailed(
   ctx.fillRect(-s * 0.004, s * 0.02, s * 0.008, s * 0.025);
 
   // Pistol grip (ergonomic, angled)
-  const pgG = ctx.createLinearGradient(-bw * 0.35, s * 0.03, bw * 0.35, s * 0.03);
+  const pgG = ctx.createLinearGradient(
+    -bw * 0.35,
+    s * 0.03,
+    bw * 0.35,
+    s * 0.03
+  );
   pgG.addColorStop(0, "#1a1a1a");
   pgG.addColorStop(0.5, "#262626");
   pgG.addColorStop(1, "#1a1a1a");
@@ -1464,7 +1856,12 @@ function drawRifleDetailed(
   }
 
   // === MAGAZINE ===
-  const magG = ctx.createLinearGradient(-bw * 0.4, -s * 0.06, -bw * 0.4, s * 0.06);
+  const magG = ctx.createLinearGradient(
+    -bw * 0.4,
+    -s * 0.06,
+    -bw * 0.4,
+    s * 0.06
+  );
   magG.addColorStop(0, "#1a1a20");
   magG.addColorStop(0.5, "#222228");
   magG.addColorStop(1, "#1a1a20");
@@ -1487,7 +1884,12 @@ function drawRifleDetailed(
   }
 
   // === BARREL ===
-  const barrelG = ctx.createLinearGradient(-bw * 0.3, -s * 0.42, bw * 0.3, -s * 0.42);
+  const barrelG = ctx.createLinearGradient(
+    -bw * 0.3,
+    -s * 0.42,
+    bw * 0.3,
+    -s * 0.42
+  );
   barrelG.addColorStop(0, "#1e1e22");
   barrelG.addColorStop(0.3, "#33333a");
   barrelG.addColorStop(0.7, "#33333a");
@@ -1503,7 +1905,13 @@ function drawRifleDetailed(
   // Muzzle brake / flash hider
   ctx.fillStyle = "#2a2a2e";
   ctx.beginPath();
-  ctx.roundRect(-bw * 0.28, -s * 0.53 + recoilKick, bw * 0.56, s * 0.04, s * 0.004);
+  ctx.roundRect(
+    -bw * 0.28,
+    -s * 0.53 + recoilKick,
+    bw * 0.56,
+    s * 0.04,
+    s * 0.004
+  );
   ctx.fill();
   ctx.strokeStyle = "#1a1a1e";
   ctx.lineWidth = 0.6;
@@ -1524,7 +1932,12 @@ function drawRifleDetailed(
   ctx.fillRect(-bw * 0.15, -s * 0.38 + recoilKick, bw * 0.3, s * 0.025);
 
   // === HANDGUARD / M-LOK RAIL ===
-  const hgG = ctx.createLinearGradient(-bw * 0.5, -s * 0.36, bw * 0.5, -s * 0.36);
+  const hgG = ctx.createLinearGradient(
+    -bw * 0.5,
+    -s * 0.36,
+    bw * 0.5,
+    -s * 0.36
+  );
   hgG.addColorStop(0, "#252528");
   hgG.addColorStop(0.3, "#32323a");
   hgG.addColorStop(0.7, "#32323a");
@@ -1569,7 +1982,12 @@ function drawRifleDetailed(
   ctx.roundRect(-bw * 0.2, -s * 0.21, bw * 0.4, s * 0.04, s * 0.003);
   ctx.fill();
   // Scope body
-  const scopeG = ctx.createLinearGradient(-bw * 0.25, -s * 0.3, bw * 0.25, -s * 0.3);
+  const scopeG = ctx.createLinearGradient(
+    -bw * 0.25,
+    -s * 0.3,
+    bw * 0.25,
+    -s * 0.3
+  );
   scopeG.addColorStop(0, "#1a1a20");
   scopeG.addColorStop(0.3, "#2e2e36");
   scopeG.addColorStop(0.7, "#2e2e36");
@@ -1656,7 +2074,12 @@ function drawRifleDetailed(
   ctx.fillRect(bw * 0.44, -s * 0.32, bw * 0.14, s * 0.015);
 
   // Foregrip (vertical, under handguard)
-  const fgG = ctx.createLinearGradient(-bw * 0.12, -s * 0.22, bw * 0.12, -s * 0.22);
+  const fgG = ctx.createLinearGradient(
+    -bw * 0.12,
+    -s * 0.22,
+    bw * 0.12,
+    -s * 0.22
+  );
   fgG.addColorStop(0, "#1a1a1a");
   fgG.addColorStop(0.5, "#282828");
   fgG.addColorStop(1, "#1a1a1a");
@@ -1713,11 +2136,11 @@ function drawRifleDetailed(
       ctx.moveTo(0, -s * 0.55 + recoilKick);
       ctx.lineTo(
         Math.cos(pa) * pd * 0.4,
-        -s * 0.55 + recoilKick + Math.sin(pa) * pd - pd * 0.5,
+        -s * 0.55 + recoilKick + Math.sin(pa) * pd - pd * 0.5
       );
       ctx.lineTo(
         Math.cos(pa + 0.3) * pd * 0.2,
-        -s * 0.55 + recoilKick + Math.sin(pa + 0.3) * pd * 0.5 - pd * 0.3,
+        -s * 0.55 + recoilKick + Math.sin(pa + 0.3) * pd * 0.5 - pd * 0.3
       );
       ctx.closePath();
       ctx.fill();
@@ -1725,7 +2148,8 @@ function drawRifleDetailed(
 
     ctx.fillStyle = `rgba(180, 180, 180, ${flashIntensity * 0.25})`;
     for (let w = 0; w < 3; w++) {
-      const wy = -s * 0.57 + recoilKick - w * s * 0.04 - (1 - attackIntensity) * s * 0.1;
+      const wy =
+        -s * 0.57 + recoilKick - w * s * 0.04 - (1 - attackIntensity) * s * 0.1;
       const wx = Math.sin(time * 8 + w * 2) * s * 0.025;
       ctx.beginPath();
       ctx.arc(wx, wy, s * 0.018 + w * s * 0.006, 0, Math.PI * 2);
@@ -1736,7 +2160,10 @@ function drawRifleDetailed(
     const casingPhase = (attackIntensity * 3) % 1;
     if (casingPhase < 0.6) {
       const cx = bw * 0.6 + casingPhase * s * 0.14;
-      const cy = -s * 0.08 - casingPhase * s * 0.06 + casingPhase * casingPhase * s * 0.15;
+      const cy =
+        -s * 0.08 -
+        casingPhase * s * 0.06 +
+        casingPhase * casingPhase * s * 0.15;
       ctx.fillStyle = "#c8a832";
       ctx.save();
       ctx.translate(cx, cy);
@@ -1760,7 +2187,7 @@ function drawHead(
   time: number,
   dataPulse: number,
   holoFlicker: number,
-  zoom: number,
+  zoom: number
 ) {
   const headY = y - s * 0.45;
 
@@ -1774,7 +2201,7 @@ function drawFace(
   ctx: CanvasRenderingContext2D,
   x: number,
   headY: number,
-  s: number,
+  s: number
 ) {
   ctx.fillStyle = "#d4a574";
   ctx.beginPath();
@@ -1789,12 +2216,16 @@ function drawTacticalHelmet(
   s: number,
   time: number,
   dataPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   // Angular tactical helmet shell
   const shellG = ctx.createRadialGradient(
-    x - s * 0.05, headY - s * 0.14, 0,
-    x, headY - s * 0.08, s * 0.35,
+    x - s * 0.05,
+    headY - s * 0.14,
+    0,
+    x,
+    headY - s * 0.08,
+    s * 0.35
   );
   shellG.addColorStop(0, "#ffcc22");
   shellG.addColorStop(0.4, "#eab308");
@@ -1831,28 +2262,39 @@ function drawTacticalHelmet(
   for (const side of [-1, 1]) {
     ctx.fillStyle = "#5a5a5a";
     ctx.fillRect(
-      x + side * s * 0.24, headY - s * 0.22,
-      side * s * 0.08, s * 0.16,
+      x + side * s * 0.24,
+      headY - s * 0.22,
+      side * s * 0.08,
+      s * 0.16
     );
     ctx.strokeStyle = "#4a4a4a";
     ctx.lineWidth = 1;
     ctx.strokeRect(
-      x + side * s * 0.24, headY - s * 0.22,
-      side * s * 0.08, s * 0.16,
+      x + side * s * 0.24,
+      headY - s * 0.22,
+      side * s * 0.08,
+      s * 0.16
     );
 
     // Rail slots (bigger)
     for (let slot = 0; slot < 3; slot++) {
       ctx.fillStyle = "#3a3a3a";
       ctx.fillRect(
-        x + side * s * 0.25, headY - s * 0.2 + slot * s * 0.05,
-        side * s * 0.06, s * 0.02,
+        x + side * s * 0.25,
+        headY - s * 0.2 + slot * s * 0.05,
+        side * s * 0.06,
+        s * 0.02
       );
     }
   }
 
   // Helmet brim/lip
-  const brimG = ctx.createLinearGradient(x - s * 0.36, headY - s * 0.02, x + s * 0.36, headY - s * 0.02);
+  const brimG = ctx.createLinearGradient(
+    x - s * 0.36,
+    headY - s * 0.02,
+    x + s * 0.36,
+    headY - s * 0.02
+  );
   brimG.addColorStop(0, "#8a6a08");
   brimG.addColorStop(0.3, "#b89008");
   brimG.addColorStop(0.7, "#b89008");
@@ -1876,7 +2318,13 @@ function drawTacticalHelmet(
     const ex = x + side * s * 0.31;
     ctx.fillStyle = "#2a2a2a";
     ctx.beginPath();
-    ctx.roundRect(ex - s * 0.055, headY - s * 0.07, s * 0.11, s * 0.13, s * 0.02);
+    ctx.roundRect(
+      ex - s * 0.055,
+      headY - s * 0.07,
+      s * 0.11,
+      s * 0.13,
+      s * 0.02
+    );
     ctx.fill();
     ctx.strokeStyle = "#3a3a3a";
     ctx.lineWidth = 1.2;
@@ -1898,7 +2346,12 @@ function drawTacticalHelmet(
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(ex + s * 0.02, headY + s * 0.06);
-      ctx.quadraticCurveTo(ex, headY + s * 0.12, x - s * 0.07, headY + s * 0.13);
+      ctx.quadraticCurveTo(
+        ex,
+        headY + s * 0.12,
+        x - s * 0.07,
+        headY + s * 0.13
+      );
       ctx.stroke();
       ctx.fillStyle = "#2a2a2a";
       ctx.beginPath();
@@ -1915,7 +2368,13 @@ function drawTacticalHelmet(
   const lampY = headY - s * 0.18;
   ctx.fillStyle = "#4a4a4a";
   ctx.beginPath();
-  ctx.roundRect(lampX - s * 0.06, lampY - s * 0.025, s * 0.12, s * 0.05, s * 0.01);
+  ctx.roundRect(
+    lampX - s * 0.06,
+    lampY - s * 0.025,
+    s * 0.12,
+    s * 0.05,
+    s * 0.01
+  );
   ctx.fill();
   ctx.strokeStyle = "#5a5a5a";
   ctx.lineWidth = 1;
@@ -1974,7 +2433,7 @@ function drawNVGArray(
   s: number,
   time: number,
   dataPulse: number,
-  zoom: number,
+  zoom: number
 ) {
   const mountY = headY - s * 0.08;
   const tubeWidth = s * 0.06;
@@ -1993,7 +2452,13 @@ function drawNVGArray(
   // Central mount plate
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
-  ctx.roundRect(x - s * 0.04, mountY - s * 0.03, s * 0.08, s * 0.025, s * 0.005);
+  ctx.roundRect(
+    x - s * 0.04,
+    mountY - s * 0.03,
+    s * 0.08,
+    s * 0.025,
+    s * 0.005
+  );
   ctx.fill();
 
   // Pivot/hinge bolts
@@ -2012,11 +2477,11 @@ function drawNVGArray(
 
   // 5 NVG tubes arranged in panoramic arc (compact, above face)
   const tubeConfigs = [
-    { xOff: 0, angle: 0 },
-    { xOff: -s * 0.085, angle: -0.15 },
-    { xOff: s * 0.085, angle: 0.15 },
-    { xOff: -s * 0.17, angle: -0.35 },
-    { xOff: s * 0.17, angle: 0.35 },
+    { angle: 0, xOff: 0 },
+    { angle: -0.15, xOff: -s * 0.085 },
+    { angle: 0.15, xOff: s * 0.085 },
+    { angle: -0.35, xOff: -s * 0.17 },
+    { angle: 0.35, xOff: s * 0.17 },
   ];
 
   for (let i = 0; i < tubeConfigs.length; i++) {
@@ -2063,7 +2528,11 @@ function drawNVGArray(
     const lensY = tl + lr * 0.4;
     const scanDist = Math.abs(i - scanPhase);
     const scanBoost = Math.max(0, 1 - scanDist * 0.7) * 0.3;
-    const nvgPulse = 0.75 + Math.sin(time * 3.5 + i * 1.1) * 0.12 + dataPulse * 0.13 + scanBoost;
+    const nvgPulse =
+      0.75 +
+      Math.sin(time * 3.5 + i * 1.1) * 0.12 +
+      dataPulse * 0.13 +
+      scanBoost;
 
     ctx.shadowColor = "#00ff44";
     ctx.shadowBlur = (12 + scanBoost * 20) * zoom * (0.5 + dataPulse * 0.5);
@@ -2107,13 +2576,24 @@ function drawNVGArray(
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(x + s * 0.2, mountY);
-  ctx.quadraticCurveTo(x + s * 0.28, mountY + s * 0.03, x + s * 0.27, mountY + s * 0.08);
+  ctx.quadraticCurveTo(
+    x + s * 0.28,
+    mountY + s * 0.03,
+    x + s * 0.27,
+    mountY + s * 0.08
+  );
   ctx.stroke();
 
   // Battery pack on cable
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
-  ctx.roundRect(x + s * 0.24, mountY + s * 0.06, s * 0.06, s * 0.035, s * 0.006);
+  ctx.roundRect(
+    x + s * 0.24,
+    mountY + s * 0.06,
+    s * 0.06,
+    s * 0.035,
+    s * 0.006
+  );
   ctx.fill();
   ctx.fillStyle = `rgba(0, 255, 68, ${0.3 + dataPulse * 0.4})`;
   ctx.beginPath();
@@ -2134,7 +2614,7 @@ function drawMouthAndChin(
   ctx: CanvasRenderingContext2D,
   x: number,
   headY: number,
-  s: number,
+  s: number
 ) {
   // Determined/dangerous mouth
   ctx.strokeStyle = "#8b5030";
@@ -2153,7 +2633,9 @@ function drawMouthAndChin(
     ctx.arc(
       x - s * 0.05 + i * s * 0.017,
       headY + s * 0.155 + Math.sin(i * 1.5) * s * 0.004,
-      s * 0.005, 0, Math.PI * 2,
+      s * 0.005,
+      0,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2177,14 +2659,18 @@ function drawHoloGears(
   s: number,
   time: number,
   zoom: number,
-  layer: "behind" | "front",
+  layer: "behind" | "front"
 ) {
   for (let g = 0; g < 6; g++) {
     const ga = time * 1.8 + g * Math.PI * 0.34;
     const depth = Math.sin(ga);
 
-    if (layer === "behind" && depth >= 0) continue;
-    if (layer === "front" && depth < 0) continue;
+    if (layer === "behind" && depth >= 0) {
+      continue;
+    }
+    if (layer === "front" && depth < 0) {
+      continue;
+    }
 
     // depth ranges -1 (far behind) to +1 (close in front)
     // scale: behind gears shrink, front gears grow
@@ -2214,7 +2700,7 @@ function drawHoloGears(
       }
       ctx.lineTo(
         gx + Math.cos(ta + Math.PI / 8) * ir,
-        gy + Math.sin(ta + Math.PI / 8) * ir * 0.5,
+        gy + Math.sin(ta + Math.PI / 8) * ir * 0.5
       );
     }
     ctx.closePath();
@@ -2238,7 +2724,7 @@ function drawAttackEffects(
   attackIntensity: number,
   holoFlicker: number,
   time: number,
-  zoom: number,
+  zoom: number
 ) {
   const holoAlpha = attackIntensity * 0.7;
 
@@ -2273,4 +2759,3 @@ function drawAttackEffects(
   ctx.textAlign = "center";
   ctx.fillText("DEPLOYING", x, y - s * 0.75);
 }
-

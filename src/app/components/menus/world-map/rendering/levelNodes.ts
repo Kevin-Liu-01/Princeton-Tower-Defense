@@ -1,13 +1,17 @@
 import type { MutableRefObject } from "react";
+
+import {
+  drawRegionIcon,
+  drawChallengeSigil,
+} from "../../../../sprites/regionIconDrawing";
+import type { RegionType } from "../../../../sprites/regionIconDrawing";
 import type { LevelStars } from "../../../../types";
 import type { LevelNode } from "../worldMapData";
 import type { NodeCache } from "./types";
 
-import { drawRegionIcon, drawChallengeSigil, type RegionType } from "../../../../sprites/regionIconDrawing";
-
 type RegionKey = RegionType;
 
-export type NodePalette = {
+export interface NodePalette {
   glowSelected: string;
   glowHover: string;
   ringLight: string;
@@ -18,7 +22,7 @@ export type NodePalette = {
   notch: string;
   innerLight: string;
   innerDark: string;
-};
+}
 
 export type ChallengePalette = NodePalette & {
   sigilGlow: string;
@@ -30,158 +34,158 @@ export type ChallengePalette = NodePalette & {
 };
 
 const campaignPalettes: Record<RegionKey, NodePalette> = {
-  grassland: {
-    glowSelected: "rgba(140,210,110,",
-    glowHover: "rgba(110,188,88,",
-    ringLight: "#8AA858",
-    ringMid: "#5A7838",
-    ringDark: "#3A5020",
-    border: "#A0B868",
-    edge: "rgba(180,220,120,0.3)",
-    notch: "#90A850",
-    innerLight: "#5A7838",
-    innerDark: "#3A5020",
-  },
-  swamp: {
-    glowSelected: "rgba(108,184,169,",
-    glowHover: "rgba(86,161,146,",
-    ringLight: "#6FAFA1",
-    ringMid: "#3D7467",
-    ringDark: "#21443D",
-    border: "#92CDBF",
-    edge: "rgba(176,236,222,0.33)",
-    notch: "#79B7AA",
-    innerLight: "#446F66",
-    innerDark: "#24443D",
-  },
   desert: {
-    glowSelected: "rgba(214,180,106,",
-    glowHover: "rgba(194,156,83,",
-    ringLight: "#BE9B5C",
-    ringMid: "#82622F",
-    ringDark: "#4D351A",
     border: "#DDBA73",
     edge: "rgba(240,218,160,0.32)",
-    notch: "#C9A666",
-    innerLight: "#876431",
+    glowHover: "rgba(194,156,83,",
+    glowSelected: "rgba(214,180,106,",
     innerDark: "#50381B",
+    innerLight: "#876431",
+    notch: "#C9A666",
+    ringDark: "#4D351A",
+    ringLight: "#BE9B5C",
+    ringMid: "#82622F",
   },
-  winter: {
-    glowSelected: "rgba(127,176,214,",
-    glowHover: "rgba(103,154,194,",
-    ringLight: "#78A4C8",
-    ringMid: "#43688A",
-    ringDark: "#233E57",
-    border: "#A2C9E8",
-    edge: "rgba(186,218,244,0.33)",
-    notch: "#88B1D3",
-    innerLight: "#486C8C",
-    innerDark: "#274158",
+  grassland: {
+    border: "#A0B868",
+    edge: "rgba(180,220,120,0.3)",
+    glowHover: "rgba(110,188,88,",
+    glowSelected: "rgba(140,210,110,",
+    innerDark: "#3A5020",
+    innerLight: "#5A7838",
+    notch: "#90A850",
+    ringDark: "#3A5020",
+    ringLight: "#8AA858",
+    ringMid: "#5A7838",
+  },
+  swamp: {
+    border: "#92CDBF",
+    edge: "rgba(176,236,222,0.33)",
+    glowHover: "rgba(86,161,146,",
+    glowSelected: "rgba(108,184,169,",
+    innerDark: "#24443D",
+    innerLight: "#446F66",
+    notch: "#79B7AA",
+    ringDark: "#21443D",
+    ringLight: "#6FAFA1",
+    ringMid: "#3D7467",
   },
   volcanic: {
-    glowSelected: "rgba(214,114,76,",
-    glowHover: "rgba(186,84,53,",
-    ringLight: "#AA5238",
-    ringMid: "#742C1C",
-    ringDark: "#401409",
     border: "#CF7658",
     edge: "rgba(233,154,126,0.3)",
-    notch: "#B85F42",
-    innerLight: "#6C2C20",
+    glowHover: "rgba(186,84,53,",
+    glowSelected: "rgba(214,114,76,",
     innerDark: "#36140C",
+    innerLight: "#6C2C20",
+    notch: "#B85F42",
+    ringDark: "#401409",
+    ringLight: "#AA5238",
+    ringMid: "#742C1C",
+  },
+  winter: {
+    border: "#A2C9E8",
+    edge: "rgba(186,218,244,0.33)",
+    glowHover: "rgba(103,154,194,",
+    glowSelected: "rgba(127,176,214,",
+    innerDark: "#274158",
+    innerLight: "#486C8C",
+    notch: "#88B1D3",
+    ringDark: "#233E57",
+    ringLight: "#78A4C8",
+    ringMid: "#43688A",
   },
 };
 
 const challengePalettes: Record<RegionKey, ChallengePalette> = {
-  grassland: {
-    glowSelected: "rgba(110,215,120,",
-    glowHover: "rgba(86,190,103,",
-    ringLight: "#63B86F",
-    ringMid: "#2E6B3A",
-    ringDark: "#193622",
-    border: "#90E3A0",
-    edge: "rgba(180,255,190,0.35)",
-    notch: "#6CC77A",
-    innerLight: "#2E6A39",
-    innerDark: "#183620",
-    sigilGlow: "rgba(108,212,118,",
-    sigilFill: "#2E7F42",
-    sigilStroke: "#D2F7B0",
-    badgeFill: "rgba(33,95,48,0.9)",
-    badgeStroke: "#A6F0AF",
-    badgeText: "#E7FFD6",
-  },
-  swamp: {
-    glowSelected: "rgba(90,196,178,",
-    glowHover: "rgba(72,170,152,",
-    ringLight: "#59AFA6",
-    ringMid: "#27635C",
-    ringDark: "#143833",
-    border: "#7FD9CC",
-    edge: "rgba(165,248,236,0.33)",
-    notch: "#5AC7B8",
-    innerLight: "#2A655D",
-    innerDark: "#163A35",
-    sigilGlow: "rgba(88,198,178,",
-    sigilFill: "#2D7268",
-    sigilStroke: "#C8FFF1",
-    badgeFill: "rgba(22,89,80,0.9)",
-    badgeStroke: "#8FE5D8",
-    badgeText: "#DBFFF8",
-  },
   desert: {
-    glowSelected: "rgba(234,193,96,",
-    glowHover: "rgba(219,172,68,",
-    ringLight: "#D9AA52",
-    ringMid: "#87622A",
-    ringDark: "#4A3316",
-    border: "#FFD07A",
-    edge: "rgba(255,228,165,0.35)",
-    notch: "#E2B35A",
-    innerLight: "#8B642D",
-    innerDark: "#4A3418",
-    sigilGlow: "rgba(229,185,86,",
-    sigilFill: "#A9782D",
-    sigilStroke: "#FFE8AE",
     badgeFill: "rgba(132,93,32,0.9)",
     badgeStroke: "#FFD27A",
     badgeText: "#FFF1CA",
+    border: "#FFD07A",
+    edge: "rgba(255,228,165,0.35)",
+    glowHover: "rgba(219,172,68,",
+    glowSelected: "rgba(234,193,96,",
+    innerDark: "#4A3418",
+    innerLight: "#8B642D",
+    notch: "#E2B35A",
+    ringDark: "#4A3316",
+    ringLight: "#D9AA52",
+    ringMid: "#87622A",
+    sigilFill: "#A9782D",
+    sigilGlow: "rgba(229,185,86,",
+    sigilStroke: "#FFE8AE",
   },
-  winter: {
-    glowSelected: "rgba(112,184,235,",
-    glowHover: "rgba(89,160,214,",
-    ringLight: "#71A8CF",
-    ringMid: "#355E86",
-    ringDark: "#1A334D",
-    border: "#A8D8FF",
-    edge: "rgba(201,231,255,0.35)",
-    notch: "#7EBBE6",
-    innerLight: "#3A6389",
-    innerDark: "#1C3850",
-    sigilGlow: "rgba(112,184,235,",
-    sigilFill: "#3A79A9",
-    sigilStroke: "#D5EEFF",
-    badgeFill: "rgba(44,85,121,0.9)",
-    badgeStroke: "#AAD9FF",
-    badgeText: "#E8F6FF",
+  grassland: {
+    badgeFill: "rgba(33,95,48,0.9)",
+    badgeStroke: "#A6F0AF",
+    badgeText: "#E7FFD6",
+    border: "#90E3A0",
+    edge: "rgba(180,255,190,0.35)",
+    glowHover: "rgba(86,190,103,",
+    glowSelected: "rgba(110,215,120,",
+    innerDark: "#183620",
+    innerLight: "#2E6A39",
+    notch: "#6CC77A",
+    ringDark: "#193622",
+    ringLight: "#63B86F",
+    ringMid: "#2E6B3A",
+    sigilFill: "#2E7F42",
+    sigilGlow: "rgba(108,212,118,",
+    sigilStroke: "#D2F7B0",
+  },
+  swamp: {
+    badgeFill: "rgba(22,89,80,0.9)",
+    badgeStroke: "#8FE5D8",
+    badgeText: "#DBFFF8",
+    border: "#7FD9CC",
+    edge: "rgba(165,248,236,0.33)",
+    glowHover: "rgba(72,170,152,",
+    glowSelected: "rgba(90,196,178,",
+    innerDark: "#163A35",
+    innerLight: "#2A655D",
+    notch: "#5AC7B8",
+    ringDark: "#143833",
+    ringLight: "#59AFA6",
+    ringMid: "#27635C",
+    sigilFill: "#2D7268",
+    sigilGlow: "rgba(88,198,178,",
+    sigilStroke: "#C8FFF1",
   },
   volcanic: {
-    glowSelected: "rgba(255,120,60,",
-    glowHover: "rgba(255,90,40,",
-    ringLight: "#B74A2E",
-    ringMid: "#7E2716",
-    ringDark: "#3D0C07",
-    border: "#E0744B",
-    edge: "rgba(255,164,124,0.3)",
-    notch: "#C8552B",
-    innerLight: "#6A251A",
-    innerDark: "#32110C",
-    sigilGlow: "rgba(255,108,48,",
-    sigilFill: "#9D2D19",
-    sigilStroke: "#FFD8A6",
     badgeFill: "rgba(120,20,10,0.9)",
     badgeStroke: "#FFB27B",
     badgeText: "#FFF3CC",
+    border: "#E0744B",
+    edge: "rgba(255,164,124,0.3)",
+    glowHover: "rgba(255,90,40,",
+    glowSelected: "rgba(255,120,60,",
+    innerDark: "#32110C",
+    innerLight: "#6A251A",
+    notch: "#C8552B",
+    ringDark: "#3D0C07",
+    ringLight: "#B74A2E",
+    ringMid: "#7E2716",
+    sigilFill: "#9D2D19",
+    sigilGlow: "rgba(255,108,48,",
+    sigilStroke: "#FFD8A6",
+  },
+  winter: {
+    badgeFill: "rgba(44,85,121,0.9)",
+    badgeStroke: "#AAD9FF",
+    badgeText: "#E8F6FF",
+    border: "#A8D8FF",
+    edge: "rgba(201,231,255,0.35)",
+    glowHover: "rgba(89,160,214,",
+    glowSelected: "rgba(112,184,235,",
+    innerDark: "#1C3850",
+    innerLight: "#3A6389",
+    notch: "#7EBBE6",
+    ringDark: "#1A334D",
+    ringLight: "#71A8CF",
+    ringMid: "#355E86",
+    sigilFill: "#3A79A9",
+    sigilGlow: "rgba(112,184,235,",
+    sigilStroke: "#D5EEFF",
   },
 };
 
@@ -251,20 +255,20 @@ export function drawLevelNodes({
       ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
       nodeCache.current = {
         canvas: nc,
-        w: displayW,
         h: displayH,
-        timeBucket: nodeTimeBucket,
         hoveredLevel,
         selectedLevel,
         starsKey: nodeStarsKey,
+        timeBucket: nodeTimeBucket,
         unlockedKey: nodeUnlockedKey,
+        w: displayW,
       };
     }
   }
 
   if (!nodeCacheValid) {
     allLevels.forEach((level) => {
-      const x = level.x;
+      const { x } = level;
       const y = getLevelY(level.y);
       const isChallenge = level.kind === "challenge";
       const isUnlocked = isLevelUnlocked(level.id);
@@ -296,7 +300,7 @@ export function drawLevelNodes({
           size * 0.5,
           x,
           y,
-          glowRadius,
+          glowRadius
         );
         glow.addColorStop(0, glowColor + "0.45)");
         glow.addColorStop(0.4, glowColor + "0.25)");
@@ -324,7 +328,7 @@ export function drawLevelNodes({
           flagPoleX - 1.5,
           0,
           flagPoleX + 2,
-          0,
+          0
         );
         poleGrad.addColorStop(0, "#5A3818");
         poleGrad.addColorStop(0.3, "#C89050");
@@ -412,7 +416,7 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + 1.5 + wave * 0.5,
           flagPoleX + bW,
-          bTop + 1 + wave2 * 0.4,
+          bTop + 1 + wave2 * 0.4
         );
         ctx.lineTo(flagPoleX + bW - 2, bTop + bH * 0.5 + wave3 * 0.3);
         ctx.lineTo(flagPoleX + bW, bTop + bH + wave2 * 0.4);
@@ -420,7 +424,7 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + bH - 1 + wave * 0.5,
           flagPoleX + 1.5,
-          bTop + bH,
+          bTop + bH
         );
         ctx.closePath();
         ctx.fill();
@@ -434,14 +438,14 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + bH * 0.35 + wave * 0.35,
           flagPoleX + bW,
-          bTop + bH * 0.35 + wave2 * 0.3,
+          bTop + bH * 0.35 + wave2 * 0.3
         );
         ctx.lineTo(flagPoleX + bW, bTop + bH * 0.65 + wave2 * 0.3);
         ctx.quadraticCurveTo(
           flagPoleX + bW * 0.4,
           bTop + bH * 0.65 + wave * 0.35,
           flagPoleX + 1.5,
-          bTop + bH * 0.65,
+          bTop + bH * 0.65
         );
         ctx.closePath();
         ctx.fill();
@@ -456,14 +460,14 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + 2.5 + wave * 0.4,
           flagPoleX + bW - 2,
-          bTop + 2 + wave2 * 0.3,
+          bTop + 2 + wave2 * 0.3
         );
         ctx.lineTo(flagPoleX + bW - 3, bTop + 5 + wave2 * 0.3);
         ctx.quadraticCurveTo(
           flagPoleX + bW * 0.3,
           bTop + 4 + wave * 0.3,
           flagPoleX + 1.5,
-          bTop + 4,
+          bTop + 4
         );
         ctx.closePath();
         ctx.fill();
@@ -478,7 +482,7 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + 1.5 + wave * 0.5,
           flagPoleX + bW,
-          bTop + 1 + wave2 * 0.4,
+          bTop + 1 + wave2 * 0.4
         );
         ctx.lineTo(flagPoleX + bW - 2, bTop + bH * 0.5 + wave3 * 0.3);
         ctx.lineTo(flagPoleX + bW, bTop + bH + wave2 * 0.4);
@@ -486,7 +490,7 @@ export function drawLevelNodes({
           flagPoleX + bW * 0.4,
           bTop + bH - 1 + wave * 0.5,
           flagPoleX + 1.5,
-          bTop + bH,
+          bTop + bH
         );
         ctx.closePath();
         ctx.stroke();
@@ -502,8 +506,11 @@ export function drawLevelNodes({
           const r = i % 2 === 0 ? 3 : 1.2;
           const px = embX + Math.cos(a) * r;
           const py = embY + Math.sin(a) * r;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (i === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.closePath();
         ctx.fill();
@@ -525,35 +532,35 @@ export function drawLevelNodes({
 
         // Region-tinted banner colors
         const bannerColors = {
+          desert: {
+            border: "#82622F",
+            bot: "#322818",
+            mid: "#2A2010",
+            top: "#3A2A18",
+          },
           grassland: {
-            top: "#2A3A1A",
-            mid: "#1E2A14",
-            bot: "#243018",
             border: "#5A7838",
+            bot: "#243018",
+            mid: "#1E2A14",
+            top: "#2A3A1A",
           },
           swamp: {
-            top: "#1A2A28",
-            mid: "#142220",
-            bot: "#182820",
             border: "#3D7467",
-          },
-          desert: {
-            top: "#3A2A18",
-            mid: "#2A2010",
-            bot: "#322818",
-            border: "#82622F",
-          },
-          winter: {
-            top: "#1A2430",
-            mid: "#141C28",
-            bot: "#182230",
-            border: "#43688A",
+            bot: "#182820",
+            mid: "#142220",
+            top: "#1A2A28",
           },
           volcanic: {
-            top: "#301A14",
-            mid: "#24120E",
-            bot: "#2A1810",
             border: "#742C1C",
+            bot: "#2A1810",
+            mid: "#24120E",
+            top: "#301A14",
+          },
+          winter: {
+            border: "#43688A",
+            bot: "#182230",
+            mid: "#141C28",
+            top: "#1A2430",
           },
         };
         const bc = bannerColors[level.region];
@@ -567,7 +574,7 @@ export function drawLevelNodes({
           bx + bannerW + 1,
           bannerTop + 1,
           bx + bannerW + 1,
-          bannerTop + 3 + 1,
+          bannerTop + 3 + 1
         );
         ctx.lineTo(bx + bannerW + 1, bannerTop + bannerH + 1);
         ctx.lineTo(x + 1, bannerTop + bannerH - notchDepth + 1);
@@ -582,7 +589,7 @@ export function drawLevelNodes({
           x,
           bannerTop,
           x,
-          bannerTop + bannerH,
+          bannerTop + bannerH
         );
         bannerGrad.addColorStop(0, bc.top);
         bannerGrad.addColorStop(0.35, bc.mid);
@@ -596,7 +603,7 @@ export function drawLevelNodes({
           bx + bannerW,
           bannerTop,
           bx + bannerW,
-          bannerTop + 3,
+          bannerTop + 3
         );
         ctx.lineTo(bx + bannerW, bannerTop + bannerH);
         ctx.lineTo(x, bannerTop + bannerH - notchDepth);
@@ -623,7 +630,7 @@ export function drawLevelNodes({
           bx + bannerW,
           bannerTop,
           bx + bannerW,
-          bannerTop + 3,
+          bannerTop + 3
         );
         ctx.lineTo(bx + bannerW, bannerTop + bannerH);
         ctx.lineTo(x, bannerTop + bannerH - notchDepth);
@@ -637,7 +644,7 @@ export function drawLevelNodes({
         // --- Difficulty diamonds (positioned in visible area below node) ---
         const diffColors =
           level.difficulty === 1
-            ? { fill: "#50E080", stroke: "#30A858", glow: "rgba(80,224,128," }
+            ? { fill: "#50E080", glow: "rgba(80,224,128,", stroke: "#30A858" }
             : level.difficulty === 2
               ? { fill: "#FFD040", stroke: "#D0A020", glow: "rgba(255,208,64," }
               : { fill: "#FF5050", stroke: "#C83030", glow: "rgba(255,80,80," };
@@ -727,8 +734,11 @@ export function drawLevelNodes({
             const r = i % 2 === 0 ? outerR : innerR;
             const px = sx + Math.cos(angle) * r;
             const py = starY + Math.sin(angle) * r;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+            if (i === 0) {
+              ctx.moveTo(px, py);
+            } else {
+              ctx.lineTo(px, py);
+            }
           }
           ctx.closePath();
 
@@ -739,7 +749,7 @@ export function drawLevelNodes({
               0,
               sx,
               starY,
-              outerR,
+              outerR
             );
             starGrad.addColorStop(0, "#FFF0A0");
             starGrad.addColorStop(0.5, "#FFD700");
@@ -772,7 +782,7 @@ export function drawLevelNodes({
         size - 6,
         x,
         y,
-        size + 2,
+        size + 2
       );
       if (isUnlocked) {
         outerRing.addColorStop(0, nodePalette.ringLight);
@@ -855,7 +865,7 @@ export function drawLevelNodes({
         0,
         x,
         y,
-        size - 5,
+        size - 5
       );
       if (isUnlocked) {
         innerGrad.addColorStop(0, nodePalette.innerLight);
@@ -890,7 +900,7 @@ export function drawLevelNodes({
 
         if (level.kind === "sandbox") {
           // Sandbox icon: sandcastle turret with flag
-          const s = 1.0;
+          const s = 1;
           // Base mound
           ctx.fillStyle = "#D4A84B";
           ctx.beginPath();
@@ -901,7 +911,7 @@ export function drawLevelNodes({
             -7 * s,
             -6 * s,
             7 * s,
-            6 * s,
+            6 * s
           );
           bodyGrad.addColorStop(0, "#E8C45A");
           bodyGrad.addColorStop(1, "#C49030");
@@ -931,7 +941,7 @@ export function drawLevelNodes({
             4 * s,
             -11 * s + wave,
             7 * s,
-            -11.5 * s + wave * 0.7,
+            -11.5 * s + wave * 0.7
           );
           ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
           ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
@@ -1038,7 +1048,7 @@ export function drawLevelNodes({
             pennantX - 0.5,
             0,
             pennantX + 2,
-            0,
+            0
           );
           ppGrad.addColorStop(0, "#5A4520");
           ppGrad.addColorStop(0.5, "#8A7040");
@@ -1065,7 +1075,7 @@ export function drawLevelNodes({
             pennantX + pennantLen * 0.6,
             pennantTop + 3 + pWave,
             pennantX + pennantLen,
-            pennantTop + 5 + pWave * 0.8,
+            pennantTop + 5 + pWave * 0.8
           );
           ctx.lineTo(pennantX + 2, pennantTop + 10);
           ctx.closePath();
@@ -1079,7 +1089,7 @@ export function drawLevelNodes({
             pennantX + pennantLen * 0.4,
             pennantTop + 3.5 + pWave * 0.7,
             pennantX + pennantLen * 0.7,
-            pennantTop + 4.5 + pWave * 0.6,
+            pennantTop + 4.5 + pWave * 0.6
           );
           ctx.lineTo(pennantX + 2, pennantTop + 5);
           ctx.closePath();
@@ -1094,7 +1104,7 @@ export function drawLevelNodes({
             pennantX + pennantLen * 0.6,
             pennantTop + 3 + pWave,
             pennantX + pennantLen,
-            pennantTop + 5 + pWave * 0.8,
+            pennantTop + 5 + pWave * 0.8
           );
           ctx.lineTo(pennantX + 2, pennantTop + 10);
           ctx.closePath();

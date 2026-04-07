@@ -20,8 +20,8 @@
 // This lets us move cases one-at-a-time without breaking anything.
 // ──────────────────────────────────────────────────────────────────────
 
-import type { DecorationType, Position } from "../../types";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
+import type { DecorationType, Position } from "../../types";
 import {
   drawIsometricPrism,
   drawIsometricPyramid,
@@ -29,15 +29,24 @@ import {
   drawBrickFace as sharedBrickFace,
   drawOrganicBlobAt,
 } from "../helpers";
-import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawIsoGothicWindow,
   drawIsoFlushDoor,
   traceIsoFlushRect,
 } from "../isoFlush";
-import { getRockConfig } from "./rockPalettes";
-import { drawBoulderRock, drawSlabRock, drawSpireRock } from "./rockShapes";
-import { drawDirectionalShadow } from "./shadowHelpers";
+import { setShadowBlur, clearShadow } from "../performance";
+import { drawBench } from "./benchShapes";
+import {
+  drawCarnegieLakeBoathouse,
+  drawCarnegieLakePavilion,
+  drawCarnegieLakeClockTower,
+  drawCarnegieLakeRowboat,
+} from "./carnegieLakeBuildings";
+import {
+  CHALLENGE_LANDMARK_TYPES,
+  renderChallengeLandmark,
+} from "./challengeLandmarks";
+import { getDecorationRenderer } from "./decorationRegistry";
 import {
   drawTree,
   drawBush,
@@ -46,16 +55,7 @@ import {
   drawCharredTree,
   drawSwampTree,
 } from "./foliageShapes";
-import { drawTentacle } from "./tentacleShapes";
-import { drawBench } from "./benchShapes";
-import { drawTent } from "./tentShapes";
 import { renderIdolStatue } from "./idolStatueRenderer";
-import { drawBrokenWallDecoration } from "./wallShapes";
-import {
-  CHALLENGE_LANDMARK_TYPES,
-  renderChallengeLandmark,
-} from "./challengeLandmarks";
-import { getDecorationRenderer } from "./decorationRegistry";
 import {
   renderFortress,
   renderSkullThrone,
@@ -83,13 +83,13 @@ import {
   renderFoulkeHall,
   renderTigerStadium,
 } from "./princetonBuildings";
+import { getRockConfig } from "./rockPalettes";
+import { drawBoulderRock, drawSlabRock, drawSpireRock } from "./rockShapes";
 import { drawRuinsRegionalOverlay } from "./ruinsRegionalOverlay";
-import {
-  drawCarnegieLakeBoathouse,
-  drawCarnegieLakePavilion,
-  drawCarnegieLakeClockTower,
-  drawCarnegieLakeRowboat,
-} from "./carnegieLakeBuildings";
+import { drawDirectionalShadow } from "./shadowHelpers";
+import { drawTentacle } from "./tentacleShapes";
+import { drawTent } from "./tentShapes";
+import { drawBrokenWallDecoration } from "./wallShapes";
 
 const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "pyramid",
@@ -160,7 +160,7 @@ function drawOrganicWaterShape(
   rx: number,
   ry: number,
   seed: number,
-  bumpiness: number = 0.12,
+  bumpiness: number = 0.12
 ): void {
   ctx.beginPath();
   const pts = 24;
@@ -172,8 +172,11 @@ function drawOrganicWaterShape(
     const variation = 1 + n1 + n2 + n3;
     const x = cx + Math.cos(ang) * rx * variation;
     const y = cy + Math.sin(ang) * ry * variation;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
   }
   ctx.closePath();
 }
@@ -210,14 +213,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
   if (CHALLENGE_LANDMARK_TYPES.has(type)) {
     renderChallengeLandmark({
       ctx,
-      screenPos,
-      scale: s,
-      type,
       decorTime,
       decorX,
       decorY,
+      scale: s,
+      screenPos,
       shadowOnly,
       skipShadow: landmarkSkipShadow,
+      type,
       zoom,
     });
     return;
@@ -262,35 +265,35 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "tiger_stadium": {
       const landmarkP = {
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       };
       const princetonRenderers: Record<string, (p: typeof landmarkP) => void> =
         {
+          alexander_hall: renderAlexanderHall,
+          blair_arch: renderBlairArch,
+          cleveland_tower: renderClevelandTower,
+          clio_hall: renderClioHall,
+          east_pyne: renderEastPyne,
+          fine_hall: renderFineHall,
+          firestone_library: renderFirestoneLibrary,
+          foulke_hall: renderFoulkeHall,
+          holder_hall: renderHolderHall,
+          mccosh_hall: renderMcCoshHall,
           nassau_hall: renderNassauHall,
           princeton_chapel: renderPrincetonChapel,
-          firestone_library: renderFirestoneLibrary,
-          blair_arch: renderBlairArch,
-          whig_hall: renderWhigHall,
-          east_pyne: renderEastPyne,
           prospect_house: renderProspectHouse,
-          clio_hall: renderClioHall,
-          mccosh_hall: renderMcCoshHall,
           robertson_hall: renderRobertsonHall,
-          holder_hall: renderHolderHall,
-          cleveland_tower: renderClevelandTower,
-          alexander_hall: renderAlexanderHall,
-          fine_hall: renderFineHall,
-          foulke_hall: renderFoulkeHall,
           tiger_stadium: renderTigerStadium,
+          whig_hall: renderWhigHall,
         };
       princetonRenderers[type]?.(landmarkP);
       break;
@@ -302,10 +305,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "grass": {
       // Enhanced 3D grass tuft with varied blade heights and colors
       const grassPalettes = [
-        { base: "#4a5d23", mid: "#5a6d33", tip: "#7a8d53", dark: "#3a4d13" },
-        { base: "#3d4f1c", mid: "#4d5f2c", tip: "#6d7f4c", dark: "#2d3f0c" },
-        { base: "#556b2f", mid: "#657b3f", tip: "#859b5f", dark: "#45511f" },
-        { base: "#6b8e23", mid: "#7b9e33", tip: "#9bbe53", dark: "#5b7e13" },
+        { base: "#4a5d23", dark: "#3a4d13", mid: "#5a6d33", tip: "#7a8d53" },
+        { base: "#3d4f1c", dark: "#2d3f0c", mid: "#4d5f2c", tip: "#6d7f4c" },
+        { base: "#556b2f", dark: "#45511f", mid: "#657b3f", tip: "#859b5f" },
+        { base: "#6b8e23", dark: "#5b7e13", mid: "#7b9e33", tip: "#9bbe53" },
       ];
       const gp = grassPalettes[variant % 4];
 
@@ -319,21 +322,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // Draw multiple grass blades with varying properties
       const blades = [
-        { x: -6, h: 16, w: 1.8, sway: 0 },
-        { x: -3, h: 20, w: 2.2, sway: 0.3 },
-        { x: 0, h: 22, w: 2.5, sway: 0.5 },
-        { x: 3, h: 18, w: 2, sway: 0.7 },
-        { x: 6, h: 14, w: 1.6, sway: 1 },
-        { x: -4, h: 12, w: 1.4, sway: 0.2 },
-        { x: 4, h: 11, w: 1.3, sway: 0.8 },
-        { x: -1, h: 15, w: 1.7, sway: 0.4 },
-        { x: 2, h: 13, w: 1.5, sway: 0.6 },
+        { h: 16, sway: 0, w: 1.8, x: -6 },
+        { h: 20, sway: 0.3, w: 2.2, x: -3 },
+        { h: 22, sway: 0.5, w: 2.5, x: 0 },
+        { h: 18, sway: 0.7, w: 2, x: 3 },
+        { h: 14, sway: 1, w: 1.6, x: 6 },
+        { h: 12, sway: 0.2, w: 1.4, x: -4 },
+        { h: 11, sway: 0.8, w: 1.3, x: 4 },
+        { h: 15, sway: 0.4, w: 1.7, x: -1 },
+        { h: 13, sway: 0.6, w: 1.5, x: 2 },
       ];
 
       blades.forEach((blade, idx) => {
@@ -349,7 +352,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           gx,
           screenPos.y,
           gx + tipSway,
-          screenPos.y - blade.h * s,
+          screenPos.y - blade.h * s
         );
         bladeGrad.addColorStop(0, gp.dark);
         bladeGrad.addColorStop(0.3, gp.base);
@@ -364,13 +367,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           gx + sway * 0.3 - blade.w * 0.3 * s,
           screenPos.y - blade.h * 0.5 * s,
           gx + tipSway,
-          screenPos.y - blade.h * s,
+          screenPos.y - blade.h * s
         );
         ctx.quadraticCurveTo(
           gx + sway * 0.3 + blade.w * 0.3 * s,
           screenPos.y - blade.h * 0.5 * s,
           gx + blade.w * 0.5 * s,
-          screenPos.y,
+          screenPos.y
         );
         ctx.closePath();
         ctx.fill();
@@ -385,7 +388,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             gx + sway * 0.3,
             screenPos.y - blade.h * 0.5 * s,
             gx + tipSway * 0.8,
-            screenPos.y - blade.h * 0.9 * s,
+            screenPos.y - blade.h * 0.9 * s
           );
           ctx.stroke();
         }
@@ -413,10 +416,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Variant-based size variations
       const craterVariants = [
-        { outerRx: 24, outerRy: 12, depth: 3, debris: 3 },
-        { outerRx: 16, outerRy: 8, depth: 4, debris: 2 },
-        { outerRx: 32, outerRy: 16, depth: 2, debris: 4 },
-        { outerRx: 28, outerRy: 10, depth: 3.5, debris: 3 },
+        { debris: 3, depth: 3, outerRx: 24, outerRy: 12 },
+        { debris: 2, depth: 4, outerRx: 16, outerRy: 8 },
+        { debris: 4, depth: 2, outerRx: 32, outerRy: 16 },
+        { debris: 3, depth: 3.5, outerRx: 28, outerRy: 10 },
       ];
       const cv = craterVariants[safeVariant];
 
@@ -430,7 +433,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cv.outerRx * 0.3 * s,
         craterX,
         craterY,
-        (cv.outerRx + 4) * s,
+        (cv.outerRx + 4) * s
       );
       outerShadow.addColorStop(0, "rgba(40,35,25,0.12)");
       outerShadow.addColorStop(0.7, "rgba(35,30,20,0.06)");
@@ -444,7 +447,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (cv.outerRy + 2) * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -455,7 +458,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cv.outerRx * 0.5 * s,
         craterX,
         craterY,
-        cv.outerRx * s,
+        cv.outerRx * s
       );
       rimGrad.addColorStop(0, "rgba(70,60,45,0.25)");
       rimGrad.addColorStop(0.6, "rgba(60,50,35,0.18)");
@@ -469,7 +472,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cv.outerRy * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -480,7 +483,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         craterX,
         craterY + cv.depth * 0.3 * s,
-        (cv.outerRx - 3) * s,
+        (cv.outerRx - 3) * s
       );
       innerGrad.addColorStop(0, "rgba(25,20,12,0.35)");
       innerGrad.addColorStop(0.5, "rgba(35,28,18,0.25)");
@@ -494,7 +497,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (cv.outerRy - 1) * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -508,7 +511,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (cv.outerRy - 2) * s,
         0,
         Math.PI * 1.1,
-        Math.PI * 1.9,
+        Math.PI * 1.9
       );
       ctx.fill();
 
@@ -529,7 +532,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.8 * s,
           debrisAngle * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -545,11 +548,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(
             craterX + Math.cos(scorchAngle) * scorchStart * s,
-            craterY + Math.sin(scorchAngle) * scorchStart * ISO_Y_RATIO * s,
+            craterY + Math.sin(scorchAngle) * scorchStart * ISO_Y_RATIO * s
           );
           ctx.lineTo(
             craterX + Math.cos(scorchAngle) * scorchEnd * s,
-            craterY + Math.sin(scorchAngle) * scorchEnd * ISO_Y_RATIO * s,
+            craterY + Math.sin(scorchAngle) * scorchEnd * ISO_Y_RATIO * s
           );
           ctx.stroke();
         }
@@ -564,7 +567,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           craterX,
           craterY + cv.depth * 0.2 * s,
-          (cv.outerRx - 4) * s,
+          (cv.outerRx - 4) * s
         );
         fireGlow.addColorStop(0, `rgba(180,80,20,${firePulse})`);
         fireGlow.addColorStop(0.5, `rgba(120,40,10,${firePulse * 0.4})`);
@@ -578,7 +581,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (cv.outerRy - 2) * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -600,7 +603,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       break;
     }
-    case "debris":
+    case "debris": {
       ctx.fillStyle = "#4a3525";
       for (let d = 0; d < 5; d++) {
         const angle = rotation + d * 1.2;
@@ -613,7 +616,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           angle,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -625,6 +628,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillRect(-8 * s, -12 * s, 4 * s, 20 * s);
       ctx.restore();
       break;
+    }
     case "cart": {
       const ctX = screenPos.x;
       const ctY = screenPos.y;
@@ -640,7 +644,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         10 * s,
         25 * s,
-        0.28,
+        0.28
       );
 
       // Isometric cart aligned to ground plane
@@ -686,7 +690,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(wx, wy);
           ctx.lineTo(
             wx + Math.cos(spAng) * (wRad - 1 * s),
-            wy + Math.sin(spAng) * (wRad - 1 * s) * 0.45,
+            wy + Math.sin(spAng) * (wRad - 1 * s) * 0.45
           );
           ctx.stroke();
         }
@@ -705,7 +709,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       };
@@ -727,7 +731,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ctX + bedL * 0.5, bedTop + bedH - bedL * 0.25);
       ctx.lineTo(
         ctX + bedL * 0.5 + bedW,
-        bedTop + bedH - bedL * 0.25 - bedW * 0.5,
+        bedTop + bedH - bedL * 0.25 - bedW * 0.5
       );
       ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop + bedH - bedW * 0.5);
       ctx.closePath();
@@ -738,7 +742,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctX - bedL * 0.5,
         bedTop,
         ctX + bedL * 0.5,
-        bedTop,
+        bedTop
       );
       bedFG.addColorStop(0, woodMid);
       bedFG.addColorStop(0.5, woodLit);
@@ -759,7 +763,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5);
       ctx.lineTo(
         ctX + bedL * 0.5 + bedW,
-        bedTop + bedH - bedL * 0.25 - bedW * 0.5,
+        bedTop + bedH - bedL * 0.25 - bedW * 0.5
       );
       ctx.lineTo(ctX + bedL * 0.5, bedTop + bedH - bedL * 0.25);
       ctx.closePath();
@@ -770,7 +774,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctX - bedL * 0.5,
         bedTop,
         ctX + bedW,
-        bedTop - bedW * 0.5,
+        bedTop - bedW * 0.5
       );
       bedTG.addColorStop(0, woodLit);
       bedTG.addColorStop(0.5, woodHi);
@@ -830,7 +834,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5 - railH);
       ctx.lineTo(
         ctX + bedL * 0.5 + bedW,
-        bedTop - bedL * 0.25 - bedW * 0.5 - railH,
+        bedTop - bedL * 0.25 - bedW * 0.5 - railH
       );
       ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5);
       ctx.closePath();
@@ -843,7 +847,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5 - railH);
       ctx.lineTo(
         ctX + bedL * 0.5 + bedW,
-        bedTop - bedL * 0.25 - bedW * 0.5 - railH,
+        bedTop - bedL * 0.25 - bedW * 0.5 - railH
       );
       ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25 - railH);
       ctx.closePath();
@@ -882,7 +886,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1 * s,
         0.4,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -902,7 +906,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(80,60,30,0.2)";
@@ -924,7 +928,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#5d4037";
@@ -950,7 +954,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#908060";
@@ -962,7 +966,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3.5 * s,
           -0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Tied tops
@@ -993,7 +997,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         28 * s,
         12 * s,
         40 * s,
-        0.35,
+        0.35
       );
 
       const hutRoof = (
@@ -1004,7 +1008,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ov: number,
         dark: string,
         mid: string,
-        lit: string,
+        lit: string
       ) => {
         const eIW = halfW + ov * ISO_COS;
         const eID = halfD + ov * ISO_SIN;
@@ -1107,7 +1111,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tr: [number, number],
         tl: [number, number],
         color: string,
-        rows: number,
+        rows: number
       ) => {
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -1218,7 +1222,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(150,145,140,0.13)";
@@ -1230,7 +1234,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(140,135,130,0.07)";
@@ -1242,7 +1246,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       };
@@ -1275,7 +1279,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           [cx, cy + iD - wH],
           [cx - iW, cy - wH],
           "#5A4A3A",
-          7,
+          7
         );
 
         // Right wall
@@ -1288,7 +1292,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           [cx + iW, cy - wH],
           [cx, cy + iD - wH],
           rwG as unknown as string,
-          0,
+          0
         );
         ctx.fillStyle = rwG;
         ctx.beginPath();
@@ -1329,7 +1333,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           7,
           14,
           "right",
-          s,
+          s
         );
 
         // Windows — isometric gothic flush with walls
@@ -1343,7 +1347,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s,
           "rgba(255, 200, 100",
           0.35,
-          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
         );
         drawIsoGothicWindow(
           ctx,
@@ -1355,7 +1359,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s,
           "rgba(255, 200, 100",
           0.3,
-          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
         );
 
         // Roof
@@ -1367,7 +1371,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5 * s,
           "#3A2A1A",
           "#5A4030",
-          "#6A5040",
+          "#6A5040"
         );
 
         // Chimney
@@ -1412,7 +1416,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           [cx, cy + tiD - tH],
           [cx - tiW, cy - tH],
           "#504840",
-          12,
+          12
         );
 
         // Right wall with gradient + stone mortar
@@ -1481,7 +1485,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5,
           11,
           "right",
-          s,
+          s
         );
 
         // Isometric arrow slits on right wall (properly skewed)
@@ -1499,7 +1503,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             s,
             "rgba(200, 150, 70",
             0.25,
-            { frame: "#2a2018", void: "#1A1008", sill: "#4a3a2a" },
+            { frame: "#2a2018", sill: "#4a3a2a", void: "#1A1008" }
           );
         }
 
@@ -1513,7 +1517,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "left",
           s,
           "rgba(255, 200, 100",
-          0.35,
+          0.35
         );
 
         // Second left wall window (lower)
@@ -1526,7 +1530,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "left",
           s,
           "rgba(255, 180, 80",
-          0.25,
+          0.25
         );
 
         // Battlements top (proper iso diamond)
@@ -1747,14 +1751,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + 5 * s + fWave,
           pk - 10 * s,
           cx + 8 * s,
-          pk - 9 * s + fWave * 0.5,
+          pk - 9 * s + fWave * 0.5
         );
         ctx.lineTo(cx + 8 * s, pk - 5 * s + fWave * 0.5);
         ctx.quadraticCurveTo(
           cx + 5 * s + fWave * 0.5,
           pk - 6 * s,
           cx + 1 * s,
-          pk - 8 * s,
+          pk - 8 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -1766,14 +1770,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + 5 * s + fWave * 0.8,
           pk - 8.5 * s,
           cx + 8 * s,
-          pk - 7.5 * s + fWave * 0.5,
+          pk - 7.5 * s + fWave * 0.5
         );
         ctx.lineTo(cx + 8 * s, pk - 6.5 * s + fWave * 0.5);
         ctx.quadraticCurveTo(
           cx + 5 * s + fWave * 0.6,
           pk - 7.5 * s,
           cx + 1 * s,
-          pk - 9 * s,
+          pk - 9 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -1806,7 +1810,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           brx,
           bry - 5 * s,
-          10 * s,
+          10 * s
         );
         fireGlowG.addColorStop(0, `rgba(255,150,50,${firePulse * 0.12})`);
         fireGlowG.addColorStop(1, "rgba(255,150,50,0)");
@@ -1843,7 +1847,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           [cx, cy + iD - stoneH],
           [cx - iW, cy - stoneH],
           "#5A4A3A",
-          5,
+          5
         );
 
         // Lower right — stone with gradient
@@ -1904,7 +1908,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx,
           cy - stoneH,
           cx + iW,
-          cy - stoneH,
+          cy - stoneH
         );
         urG.addColorStop(0, "#D8C8A8");
         urG.addColorStop(1, "#C0B090");
@@ -1960,7 +1964,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           8,
           15,
           "right",
-          s,
+          s
         );
 
         // Windows — isometric gothic flush with walls
@@ -1977,7 +1981,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             s,
             "rgba(255, 200, 100",
             0.3,
-            { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+            { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
           );
         }
         drawIsoGothicWindow(
@@ -1990,7 +1994,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s,
           "rgba(255, 200, 100",
           0.35,
-          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
         );
 
         // Roof
@@ -2002,7 +2006,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           "#3A2A1A",
           "#5A4030",
-          "#6A5040",
+          "#6A5040"
         );
 
         // Isometric dormer
@@ -2044,7 +2048,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(dwX - dW - 1 * s, dwY + 2 * s + 0.5 * s);
         ctx.lineTo(
           dwX + dD * 0.5 - dW - 1 * s,
-          dwY + 2 * s + 0.5 * s - dD * 0.3,
+          dwY + 2 * s + 0.5 * s - dD * 0.3
         );
         ctx.lineTo(dwX + dD * 0.5, dwY - 1 * s - dD * 0.3);
         ctx.closePath();
@@ -2056,7 +2060,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(dwX + dW + 1 * s, dwY + 2 * s + 0.5 * s);
         ctx.lineTo(
           dwX + dW + 1 * s + dD * 0.5,
-          dwY + 2 * s + 0.5 * s - dD * 0.3,
+          dwY + 2 * s + 0.5 * s - dD * 0.3
         );
         ctx.lineTo(dwX + dD * 0.5, dwY - 1 * s - dD * 0.3);
         ctx.closePath();
@@ -2077,7 +2081,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           dwX,
           dwY + 4.5 * s,
-          3 * s,
+          3 * s
         );
         dwGl.addColorStop(0, "rgba(255,200,100,0.4)");
         dwGl.addColorStop(1, "rgba(220,160,60,0.05)");
@@ -2147,7 +2151,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (hR + 1.5 * s) * hutRt,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#7A6A58";
@@ -2163,7 +2167,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6,
           12,
           "right",
-          s,
+          s
         );
 
         // Windows — isometric gothic flush with curved wall
@@ -2177,7 +2181,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s,
           "rgba(255, 200, 100",
           0.3,
-          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
         );
         drawIsoGothicWindow(
           ctx,
@@ -2189,7 +2193,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s,
           "rgba(255, 200, 100",
           0.25,
-          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          { frame: "#3A2518", sill: "#5A4A38", void: "#1A1008" }
         );
 
         // Thatched roof — proper iso diamond base with four faces
@@ -2285,7 +2289,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           0,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -2304,7 +2308,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(150,145,140,0.12)";
@@ -2316,13 +2320,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
       break;
     }
-    case "fire":
+    case "fire": {
       const smokeOff = Math.sin(decorTime * 3) * 3 * s;
       ctx.fillStyle = "rgba(80,80,80,0.25)";
       ctx.beginPath();
@@ -2333,7 +2337,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "rgba(100,100,100,0.15)";
@@ -2345,7 +2349,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       setShadowBlur(ctx, 15 * s, "#ff6600");
@@ -2356,7 +2360,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 5 * s,
-        flameH * s,
+        flameH * s
       );
       fireGrad.addColorStop(0, "#ffffff");
       fireGrad.addColorStop(0.2, "#ffff00");
@@ -2370,19 +2374,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 10 * s,
         screenPos.y - flameH * 0.5 * s,
         screenPos.x - 3 * s,
-        screenPos.y - flameH * s,
+        screenPos.y - flameH * s
       );
       ctx.quadraticCurveTo(
         screenPos.x,
         screenPos.y - flameH * 1.2 * s,
         screenPos.x + 3 * s,
-        screenPos.y - flameH * s,
+        screenPos.y - flameH * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 10 * s,
         screenPos.y - flameH * 0.5 * s,
         screenPos.x + 8 * s,
-        screenPos.y,
+        screenPos.y
       );
       ctx.closePath();
       ctx.fill();
@@ -2394,16 +2398,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 2 * s,
         10 * s,
         5 * s,
-        decorX * 4.7 + decorY * 8.1,
+        decorX * 4.7 + decorY * 8.1
       );
       ctx.fill();
       break;
+    }
     case "sword": {
       const swX = screenPos.x;
       const swY = screenPos.y;
       const swSeed = decorX * 73 + decorY * 137;
       const swHash = (n: number) => {
-        const h = Math.sin(swSeed * 0.1 + n * 2.654) * 43758.5453;
+        const h = Math.sin(swSeed * 0.1 + n * 2.654) * 43_758.5453;
         return h - Math.floor(h);
       };
 
@@ -2419,7 +2424,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         swX + 2 * s,
         swY + 4 * s,
-        swShadR * s,
+        swShadR * s
       );
       swShadG.addColorStop(0, "rgba(0,0,0,0.25)");
       swShadG.addColorStop(0.5, "rgba(0,0,0,0.08)");
@@ -2433,24 +2438,24 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         swShadR * 0.4 * s,
         0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // Sword style definitions
       const swStyles = [
-        { bW: 3.5, gW: 9, gripLen: 10, gemCol: "#c62828", bladeTint: 0 },
-        { bW: 4.5, gW: 10, gripLen: 9, gemCol: "#1565c0", bladeTint: 1 },
-        { bW: 2.5, gW: 7, gripLen: 12, gemCol: "#2e7d32", bladeTint: 2 },
-        { bW: 3, gW: 8, gripLen: 8, gemCol: "#ff8f00", bladeTint: 0 },
-        { bW: 5, gW: 6, gripLen: 9, gemCol: "#6a1b9a", bladeTint: 1 },
+        { bW: 3.5, bladeTint: 0, gW: 9, gemCol: "#c62828", gripLen: 10 },
+        { bW: 4.5, bladeTint: 1, gW: 10, gemCol: "#1565c0", gripLen: 9 },
+        { bW: 2.5, bladeTint: 2, gW: 7, gemCol: "#2e7d32", gripLen: 12 },
+        { bW: 3, bladeTint: 0, gW: 8, gemCol: "#ff8f00", gripLen: 8 },
+        { bW: 5, bladeTint: 1, gW: 6, gemCol: "#6a1b9a", gripLen: 9 },
       ];
 
       // Blade tint palettes
       const bladePalettes = [
-        { dark: "#707880", mid: "#b8c0c8", lit: "#e0e4e8", hi: "#f0f2f5" },
-        { dark: "#505058", mid: "#808890", lit: "#b0b8c0", hi: "#d0d4d8" },
-        { dark: "#7a6848", mid: "#b8a878", lit: "#d8c898", hi: "#e8daa8" },
+        { dark: "#707880", hi: "#f0f2f5", lit: "#e0e4e8", mid: "#b8c0c8" },
+        { dark: "#505058", hi: "#d0d4d8", lit: "#b0b8c0", mid: "#808890" },
+        { dark: "#7a6848", hi: "#e8daa8", lit: "#d8c898", mid: "#b8a878" },
       ];
 
       // Excalibur-style: blade goes INTO ground, pommel sticks UP
@@ -2460,7 +2465,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         oy: number,
         tiltAng: number,
         sc: number,
-        styleIdx: number,
+        styleIdx: number
       ) => {
         const sty = swStyles[styleIdx % swStyles.length];
         const pal = bladePalettes[sty.bladeTint];
@@ -2532,7 +2537,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           -gW * s,
           guardY,
           gW * s,
-          guardY,
+          guardY
         );
         guardGr.addColorStop(0, "#4a3a28");
         guardGr.addColorStop(0.3, "#8a7a60");
@@ -2549,14 +2554,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (gW + 1) * s,
           guardY + guardH * 0.5 * s,
           gW * s,
-          guardY + guardH * s,
+          guardY + guardH * s
         );
         ctx.lineTo(-gW * s, guardY + guardH * s);
         ctx.quadraticCurveTo(
           -(gW + 1) * s,
           guardY + guardH * 0.5 * s,
           -gW * s,
-          guardY,
+          guardY
         );
         ctx.closePath();
         ctx.fill();
@@ -2581,7 +2586,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * sc * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#7a6a50";
@@ -2593,7 +2598,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * sc * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -2605,7 +2610,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           -2 * sc * s,
           gripTop,
           2 * sc * s,
-          gripTop,
+          gripTop
         );
         grpG.addColorStop(0, "#3a2415");
         grpG.addColorStop(0.4, "#5a3d25");
@@ -2640,7 +2645,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.3 * sc * s,
           0,
           pomY,
-          3 * sc * s,
+          3 * sc * s
         );
         pmG.addColorStop(0, "#c0a878");
         pmG.addColorStop(0.5, "#8a7a55");
@@ -2657,7 +2662,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.1 * sc * s,
           0,
           pomY,
-          1.3 * sc * s,
+          1.3 * sc * s
         );
         gmG.addColorStop(0, "#ffffff");
         gmG.addColorStop(0.3, sty.gemCol);
@@ -2687,7 +2692,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (5 + swCount * 2) * s,
           (2.5 + swCount) * s,
           swSeed * 3.7,
-          0.2,
+          0.2
         );
         ctx.fill();
       }
@@ -2727,7 +2732,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * sc * s,
           tilt * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(40,32,20,0.25)";
@@ -2739,7 +2744,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * sc * s,
           tilt * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -2753,7 +2758,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(ox, oy + 1 * s);
           ctx.lineTo(
             ox + Math.cos(crAng) * crLen * s,
-            oy + 1 * s + Math.sin(crAng) * crLen * 0.4 * s,
+            oy + 1 * s + Math.sin(crAng) * crLen * 0.4 * s
           );
           ctx.stroke();
         }
@@ -2771,7 +2776,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.4 + swHash(si * 3 + dc + 66) * 0.3) * s,
             dcAng * 0.3,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -2785,7 +2790,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const arY = screenPos.y;
       const arSeed = decorX * 59 + decorY * 113;
       const arHash = (n: number) => {
-        const h = Math.sin(arSeed * 0.1 + n * 3.217) * 43758.5453;
+        const h = Math.sin(arSeed * 0.1 + n * 3.217) * 43_758.5453;
         return h - Math.floor(h);
       };
 
@@ -2801,7 +2806,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         arX + 1 * s,
         arY + 3 * s,
-        arShadR * s,
+        arShadR * s
       );
       arShadG.addColorStop(0, "rgba(0,0,0,0.2)");
       arShadG.addColorStop(0.5, "rgba(0,0,0,0.06)");
@@ -2815,7 +2820,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         arShadR * 0.4 * s,
         0.12,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -2829,7 +2834,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (4 + arCount * 1.5) * s,
           (2 + arCount * 0.6) * s,
           arSeed * 2.9,
-          0.2,
+          0.2
         );
         ctx.fill();
       }
@@ -2849,9 +2854,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Shaft wood tones
       const shaftTones = [
-        { dark: "#4a3020", mid: "#6a4a35", lit: "#8a6a50", hi: "#a08060" },
-        { dark: "#3a2818", mid: "#5a4030", lit: "#7a5a42", hi: "#9a7a5a" },
-        { dark: "#554030", mid: "#755a48", lit: "#957a60", hi: "#b09a78" },
+        { dark: "#4a3020", hi: "#a08060", lit: "#8a6a50", mid: "#6a4a35" },
+        { dark: "#3a2818", hi: "#9a7a5a", lit: "#7a5a42", mid: "#5a4030" },
+        { dark: "#554030", hi: "#b09a78", lit: "#957a60", mid: "#755a48" },
       ];
 
       const drawSingleArrow = (
@@ -2863,7 +2868,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headType: string,
         broken: boolean,
         shaftTone: (typeof shaftTones)[0],
-        fletchCol: string[],
+        fletchCol: string[]
       ) => {
         ctx.save();
         ctx.translate(ox, oy);
@@ -2967,7 +2972,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               hW * 1.2 * s,
               hY - hL * 0.3 * s,
               hW * 0.8 * s,
-              hY + 0.5 * sc * s,
+              hY + 0.5 * sc * s
             );
             ctx.lineTo(0, hY + 1 * sc * s);
             ctx.lineTo(-hW * 0.8 * s, hY + 0.5 * sc * s);
@@ -2975,7 +2980,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               -hW * 1.2 * s,
               hY - hL * 0.3 * s,
               0,
-              hY - hL * s,
+              hY - hL * s
             );
           }
           ctx.closePath();
@@ -3011,13 +3016,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               fx,
               (flBase + 1.8 * sc) * s + fy,
               fx * 0.25,
-              (flBase + 4.5 * sc) * s + fy * 0.25,
+              (flBase + 4.5 * sc) * s + fy * 0.25
             );
             ctx.quadraticCurveTo(
               0,
               (flBase + 2.5 * sc) * s,
               fx * 0.15,
-              (flBase - 0.8 * sc) * s + fy * 0.15,
+              (flBase - 0.8 * sc) * s + fy * 0.15
             );
             ctx.fill();
 
@@ -3040,7 +3045,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             0.5 * sc * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -3095,7 +3100,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           headType,
           broken,
           shaftTone,
-          fletchCol,
+          fletchCol
         );
 
         // Dirt ring at insertion
@@ -3108,7 +3113,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.2 * sc * s,
           tilt * 0.25,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(40,32,20,0.15)";
@@ -3120,7 +3125,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.7 * sc * s,
           tilt * 0.25,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3138,7 +3143,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (0.4 + arHash(cd * 3 + 52) * 0.3) * s,
           ca * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3167,7 +3172,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy + 2 * s,
-        24 * s,
+        24 * s
       );
       skelShad.addColorStop(0, "rgba(0,0,0,0.18)");
       skelShad.addColorStop(0.6, "rgba(0,0,0,0.06)");
@@ -3190,7 +3195,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         y2: number,
         w: number,
         shd: string,
-        lit: string,
+        lit: string
       ) => {
         ctx.strokeStyle = shd;
         ctx.lineWidth = w * s;
@@ -3216,7 +3221,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         y2: number,
         w: number,
         shd: string,
-        lit: string,
+        lit: string
       ) => {
         ctx.strokeStyle = shd;
         ctx.lineWidth = w * s;
@@ -3247,7 +3252,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           jr * 0.35 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       };
@@ -3314,7 +3319,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         8 * s,
         0,
-        4.5 * s,
+        4.5 * s
       );
       plG.addColorStop(0, bM);
       plG.addColorStop(0.5, bD);
@@ -3353,7 +3358,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.3 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -3372,7 +3377,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rx * s,
           -ribLen * 0.5 * s,
           (rx + 1) * s,
-          -ribLen * s,
+          -ribLen * s
         );
         ctx.stroke();
         ctx.strokeStyle = bD;
@@ -3383,7 +3388,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (rx + 0.2) * s,
           (-ribLen * 0.5 - 0.3) * s,
           (rx + 1.2) * s,
-          (-ribLen - 0.3) * s,
+          (-ribLen - 0.3) * s
         );
         ctx.stroke();
         // Bottom rib
@@ -3395,7 +3400,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rx * s,
           ribLen * 0.5 * s,
           (rx + 1) * s,
-          ribLen * s,
+          ribLen * s
         );
         ctx.stroke();
         ctx.strokeStyle = bL;
@@ -3406,7 +3411,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (rx + 0.2) * s,
           (ribLen * 0.5 + 0.3) * s,
           (rx + 1.2) * s,
-          (ribLen + 0.3) * s,
+          (ribLen + 0.3) * s
         );
         ctx.stroke();
       }
@@ -3478,7 +3483,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.5 * s,
         skx * s,
         0,
-        5.5 * s,
+        5.5 * s
       );
       skGr.addColorStop(0, bL);
       skGr.addColorStop(0.4, bM);
@@ -3499,7 +3504,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.5 * s,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3511,8 +3516,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Eye sockets
       for (const ey of [
-        { yo: -1.3, edge: bS },
-        { yo: 1.3, edge: bD },
+        { edge: bS, yo: -1.3 },
+        { edge: bD, yo: 1.3 },
       ]) {
         const eGr = ctx.createRadialGradient(
           skx * s,
@@ -3520,7 +3525,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.15 * s,
           skx * s,
           ey.yo * s,
-          1.6 * s,
+          1.6 * s
         );
         eGr.addColorStop(0, "#0d0a08");
         eGr.addColorStop(0.5, bSk);
@@ -3660,7 +3665,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -3692,7 +3697,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "rgba(40,38,30,0.35)",
           s,
           5,
-          2,
+          2
         );
 
         // Top face
@@ -3806,7 +3811,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           darkMort,
           s,
           6,
-          5,
+          5
         );
 
         // Left arm front face (faces right → lighter) with bricks
@@ -3859,7 +3864,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "rgba(40,38,30,0.35)",
           s,
           7,
-          2,
+          2
         );
 
         // Top face
@@ -3897,7 +3902,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             mort,
             s,
             2,
-            2,
+            2
           );
 
           // Merlon top
@@ -3971,7 +3976,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             litMort,
             s,
             6,
-            2,
+            2
           );
 
           // Pillar left face (dark)
@@ -3986,7 +3991,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             mort,
             s,
             6,
-            2,
+            2
           );
 
           // Pillar top
@@ -4007,12 +4012,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(px, py - pillarH + capH);
           ctx.lineTo(
             px + pw + capOff,
-            py - pw * 0.5 - capOff * 0.5 - pillarH + capH,
+            py - pw * 0.5 - capOff * 0.5 - pillarH + capH
           );
           ctx.lineTo(px, py - pw - capOff - pillarH + capH);
           ctx.lineTo(
             px - pw - capOff,
-            py - pw * 0.5 - capOff * 0.5 - pillarH + capH,
+            py - pw * 0.5 - capOff * 0.5 - pillarH + capH
           );
           ctx.closePath();
           ctx.fill();
@@ -4051,7 +4056,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         -Math.PI * 0.5,
-        true,
+        true
       );
       ctx.lineTo(gsx + gsD, gsy - 17 * s - gsD * 0.5);
       ctx.lineTo(gsx, gsy - 17 * s);
@@ -4107,7 +4112,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         decorTime,
         decorX,
-        skipShadow,
+        skipShadow
       );
       break;
     }
@@ -4115,26 +4120,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Enhanced 3D flowers with detailed petals and stems
       const flowerPalettes = [
         {
-          petals: ["#8A5040", "#9A6A5A", "#B0897A"],
           center: "#C8A860",
+          petals: ["#8A5040", "#9A6A5A", "#B0897A"],
           stem: "#2A4A20",
           stemDark: "#1A3515",
         },
         {
-          petals: ["#9A8040", "#B09A60", "#C8B880"],
           center: "#8A6030",
+          petals: ["#9A8040", "#B09A60", "#C8B880"],
           stem: "#3A5A2A",
           stemDark: "#2A4520",
         },
         {
-          petals: ["#7A4A6A", "#8A5A7A", "#A07A90"],
           center: "#B8A060",
+          petals: ["#7A4A6A", "#8A5A7A", "#A07A90"],
           stem: "#2A4A25",
           stemDark: "#1A3515",
         },
         {
-          petals: ["#5A7A8A", "#7A9AA0", "#90B0B8"],
           center: "#A09050",
+          petals: ["#5A7A8A", "#7A9AA0", "#90B0B8"],
           stem: "#354A30",
           stemDark: "#2A3A25",
         },
@@ -4151,7 +4156,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         5 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -4167,18 +4172,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           gx + sway * 0.5,
           screenPos.y - 4 * s,
           gx + sway,
-          screenPos.y - 7 * s,
+          screenPos.y - 7 * s
         );
         ctx.stroke();
       }
 
       // Draw 5 flowers with different heights and angles
       const flowerPositions = [
-        { x: -8, y: 0, height: 18, angle: -0.15 },
-        { x: 0, y: 0, height: 22, angle: 0.05 },
-        { x: 8, y: 0, height: 16, angle: 0.2 },
-        { x: -4, y: -2, height: 14, angle: -0.08 },
-        { x: 5, y: -1, height: 13, angle: 0.12 },
+        { angle: -0.15, height: 18, x: -8, y: 0 },
+        { angle: 0.05, height: 22, x: 0, y: 0 },
+        { angle: 0.2, height: 16, x: 8, y: 0 },
+        { angle: -0.08, height: 14, x: -4, y: -2 },
+        { angle: 0.12, height: 13, x: 5, y: -1 },
       ];
 
       flowerPositions.forEach((fl, idx) => {
@@ -4191,7 +4196,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx,
           fy,
           fx,
-          fy - fl.height * s,
+          fy - fl.height * s
         );
         stemGrad.addColorStop(0, fp.stemDark);
         stemGrad.addColorStop(1, fp.stem);
@@ -4203,7 +4208,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + sway * 0.3 + fl.angle * 10 * s,
           fy - fl.height * 0.5 * s,
           fx + sway + fl.angle * 8 * s,
-          fy - fl.height * s,
+          fy - fl.height * s
         );
         ctx.stroke();
 
@@ -4249,7 +4254,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           headX,
           headY - 1.5 * s,
-          2.5 * s,
+          2.5 * s
         );
         centerGrad.addColorStop(0, "#FFF8E1");
         centerGrad.addColorStop(0.5, fp.center);
@@ -4269,7 +4274,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             headY - 1.5 * s + Math.sin(da) * 0.4 * s,
             0.4 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -4328,9 +4333,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Three arrow boards at different heights/angles
         const boards = [
-          { y: sy - pH + 4 * s, dir: 1, len: 14, tilt: -0.08 },
-          { y: sy - pH + 12 * s, dir: -1, len: 12, tilt: 0.05 },
-          { y: sy - pH + 19 * s, dir: 1, len: 10, tilt: -0.12 },
+          { dir: 1, len: 14, tilt: -0.08, y: sy - pH + 4 * s },
+          { dir: -1, len: 12, tilt: 0.05, y: sy - pH + 12 * s },
+          { dir: 1, len: 10, tilt: -0.12, y: sy - pH + 19 * s },
         ];
         const boardColors = ["#8D6E63", "#A1887F", "#795548"];
 
@@ -4395,7 +4400,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -4406,7 +4411,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -4456,7 +4461,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sy - pH2 + 5 * s,
           2 * s,
           -Math.PI * 0.5,
-          Math.PI * 0.5,
+          Math.PI * 0.5
         );
         ctx.stroke();
         // Bracket support
@@ -4557,7 +4562,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             px - 1.5 * s,
             0,
             px + 1.5 * s,
-            0,
+            0
           );
           spG.addColorStop(0, "#795548");
           spG.addColorStop(0.5, "#8D6E63");
@@ -4628,10 +4633,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Pinned papers/parchments
         const papers = [
-          { x: -7, y: 2, w: 7, h: 8, rot: -0.05, color: "#FFF8E1" },
-          { x: 1, y: 1, w: 8, h: 9, rot: 0.03, color: "#EFEBE9" },
-          { x: 6, y: 3, w: 6, h: 7, rot: -0.08, color: "#FFF3E0" },
-          { x: -2, y: 6, w: 5, h: 5, rot: 0.06, color: "#FFFDE7" },
+          { color: "#FFF8E1", h: 8, rot: -0.05, w: 7, x: -7, y: 2 },
+          { color: "#EFEBE9", h: 9, rot: 0.03, w: 8, x: 1, y: 1 },
+          { color: "#FFF3E0", h: 7, rot: -0.08, w: 6, x: 6, y: 3 },
+          { color: "#FFFDE7", h: 5, rot: 0.06, w: 5, x: -2, y: 6 },
         ];
         for (const p of papers) {
           ctx.save();
@@ -4702,7 +4707,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           9 * s,
           0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -4718,7 +4723,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wsPed1H,
           "#6B7B8A",
           "#4A5A68",
-          "#5A6A78",
+          "#5A6A78"
         );
         const wsPed2W = 12 * s;
         const wsPed2H = 4 * s;
@@ -4731,7 +4736,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wsPed2H,
           "#7A8A9A",
           "#546E7A",
-          "#607D8B",
+          "#607D8B"
         );
 
         const wsBase = sy - wsPed1H - wsPed2H;
@@ -4744,7 +4749,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sx - bw86,
           wsBase,
           sx - tw86,
-          wsTop,
+          wsTop
         );
         wsLG.addColorStop(0, "#455A64");
         wsLG.addColorStop(0.5, "#4A6070");
@@ -4763,7 +4768,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sx + bw86,
           wsBase,
           sx + tw86,
-          wsTop,
+          wsTop
         );
         wsRG.addColorStop(0, "#607D8B");
         wsRG.addColorStop(0.5, "#6A8898");
@@ -4880,10 +4885,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.strokeStyle = `rgba(220,180,80,${wsRnGlow})`;
 
         const wsRuneSlots = [
-          { t: 0.15, rt: 0 },
-          { t: 0.38, rt: 1 },
-          { t: 0.58, rt: 2 },
-          { t: 0.78, rt: 3 },
+          { rt: 0, t: 0.15 },
+          { rt: 1, t: 0.38 },
+          { rt: 2, t: 0.58 },
+          { rt: 3, t: 0.78 },
         ];
 
         for (const rSlot of wsRuneSlots) {
@@ -4965,7 +4970,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -4976,7 +4981,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -4987,7 +4992,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           sx,
           wsBase - wsHeight * 0.4,
-          22 * s,
+          22 * s
         );
         wsAmbG.addColorStop(0, `rgba(220,180,80,${wsRnGlow * 0.08})`);
         wsAmbG.addColorStop(0.5, `rgba(220,180,80,${wsRnGlow * 0.03})`);
@@ -5004,7 +5009,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           sx,
           sy + 2 * s,
-          16 * s,
+          16 * s
         );
         wsGndG.addColorStop(0, `rgba(220,180,80,${wsRnGlow * 0.06})`);
         wsGndG.addColorStop(0.7, `rgba(220,180,80,${wsRnGlow * 0.02})`);
@@ -5046,7 +5051,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         9 * s,
         30 * s,
-        0.25,
+        0.25
       );
 
       // Outer basin - stone rim
@@ -5054,7 +5059,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fountainBaseX - 22 * s,
         0,
         fountainBaseX + 22 * s,
-        0,
+        0
       );
       stoneGrad.addColorStop(0, "#707880");
       stoneGrad.addColorStop(0.3, "#90A4AE");
@@ -5070,7 +5075,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         11 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5084,7 +5089,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         9 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5095,7 +5100,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fountainBaseX,
         fountainBaseY - 3 * s,
-        15 * s,
+        15 * s
       );
       waterGrad.addColorStop(0, "#81D4FA");
       waterGrad.addColorStop(0.5, "#4FC3F7");
@@ -5110,7 +5115,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7.5 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5130,7 +5135,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rippleSize * 0.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -5141,7 +5146,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fountainBaseX - 3 * s,
         fountainBaseY - 18 * s,
         6 * s,
-        15 * s,
+        15 * s
       );
 
       // Pillar highlight
@@ -5150,7 +5155,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fountainBaseX - 1 * s,
         fountainBaseY - 18 * s,
         2 * s,
-        15 * s,
+        15 * s
       );
 
       // Top bowl
@@ -5163,7 +5168,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5177,7 +5182,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5187,7 +5192,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fountainBaseY - 19 * s - sprayHeight * s,
         0,
-        fountainBaseY - 19 * s,
+        fountainBaseY - 19 * s
       );
       sprayGrad.addColorStop(0, "rgba(255,255,255,0.9)");
       sprayGrad.addColorStop(0.5, "rgba(225,245,254,0.7)");
@@ -5200,13 +5205,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fountainBaseX - 4 * s,
         fountainBaseY - 25 * s,
         fountainBaseX,
-        fountainBaseY - 19 * s - sprayHeight * s,
+        fountainBaseY - 19 * s - sprayHeight * s
       );
       ctx.quadraticCurveTo(
         fountainBaseX + 4 * s,
         fountainBaseY - 25 * s,
         fountainBaseX + 2 * s,
-        fountainBaseY - 19 * s,
+        fountainBaseY - 19 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -5244,7 +5249,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wX + waveOffset,
           fountainBaseY - 10 * s,
           fountainBaseX + Math.cos(wAngle) * 10 * s,
-          fountainBaseY - 3 * s,
+          fountainBaseY - 3 * s
         );
         ctx.stroke();
       }
@@ -5259,7 +5264,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fountainBaseY - 4 * s,
           2 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5423,7 +5428,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         lpx,
         glowCenterY,
-        25 * s,
+        25 * s
       );
       glowRad.addColorStop(0, `rgba(255, 213, 79, ${0.4 + flicker})`);
       glowRad.addColorStop(1, "rgba(255, 213, 79, 0)");
@@ -5478,7 +5483,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         cfX,
         cfY + 2 * s,
-        35 * s,
+        35 * s
       );
       const cfGlowPulse = 0.18 + Math.sin(decorTime * 3.5) * 0.06;
       cfGndGlow.addColorStop(0, `rgba(255,140,40,${cfGlowPulse})`);
@@ -5496,7 +5501,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         cfX,
         cfY + 2 * s,
-        12 * s,
+        12 * s
       );
       ashG.addColorStop(0, "#2a2220");
       ashG.addColorStop(0.3, "#3a3530");
@@ -5510,7 +5515,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         6 * s,
         cfSeed + 5,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -5523,16 +5528,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         7 * s,
         cfSeed + 8,
-        0.16,
+        0.16
       );
       ctx.fill();
 
       // Stone ring — 3D individual stones with lit/shadow faces
       const cfStoneCount = 10;
       const stonePalettes = [
-        { top: "#8a8580", front: "#6a6560", side: "#4a4540" },
-        { top: "#9a9590", front: "#7a7570", side: "#5a5550" },
-        { top: "#7a7872", front: "#5a5852", side: "#3a3832" },
+        { front: "#6a6560", side: "#4a4540", top: "#8a8580" },
+        { front: "#7a7570", side: "#5a5550", top: "#9a9590" },
+        { front: "#5a5852", side: "#3a3832", top: "#7a7872" },
       ];
       for (let st = 0; st < cfStoneCount; st++) {
         const stAng = (st / cfStoneCount) * Math.PI * 2 + cfSeed * 0.01;
@@ -5565,7 +5570,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           stH * 0.5,
           stAng * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5585,7 +5590,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         4 * s,
         cfSeed + 20,
-        0.18,
+        0.18
       );
       ctx.fill();
 
@@ -5615,7 +5620,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         radius: number,
         barkDark: string,
         barkLit: string,
-        charAmount: number,
+        charAmount: number
       ) => {
         const dx = x2 - x1;
         const dy = y2 - y1;
@@ -5628,7 +5633,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           x1 + nx,
           y1 + ny,
           x1 - nx,
-          y1 - ny,
+          y1 - ny
         );
         logG.addColorStop(0, barkDark);
         logG.addColorStop(0.35, barkLit);
@@ -5660,7 +5665,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (x1 + x2) * 0.5 - nx * 0.5,
             (y1 + y2) * 0.5 - ny * 0.5,
             (x1 + x2) * 0.5 + nx * 0.5,
-            (y1 + y2) * 0.5 + ny * 0.5,
+            (y1 + y2) * 0.5 + ny * 0.5
           );
           charG.addColorStop(0, `rgba(20,10,5,${charAmount})`);
           charG.addColorStop(0.5, `rgba(40,15,5,${charAmount * 0.5})`);
@@ -5681,11 +5686,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(
             x1 * 0.7 + x2 * 0.3 + nx * 0.3,
-            y1 * 0.7 + y2 * 0.3 + ny * 0.3,
+            y1 * 0.7 + y2 * 0.3 + ny * 0.3
           );
           ctx.lineTo(
             x1 * 0.3 + x2 * 0.7 + nx * 0.3,
-            y1 * 0.3 + y2 * 0.7 + ny * 0.3,
+            y1 * 0.3 + y2 * 0.7 + ny * 0.3
           );
           ctx.stroke();
         }
@@ -5698,7 +5703,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             0,
             ex,
             ey,
-            radius * s,
+            radius * s
           );
           capG.addColorStop(0, "#c8a878");
           capG.addColorStop(0.3, "#a08060");
@@ -5713,7 +5718,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             radius * 0.6 * s,
             ang,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           // Tree rings
@@ -5729,7 +5734,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               radius * rt * 0.6 * s,
               ang,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.stroke();
           }
@@ -5747,7 +5752,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8,
         "#4a3020",
         "#7a5a42",
-        0.6,
+        0.6
       );
       drawCfLog(
         cfX + 7 * s,
@@ -5757,7 +5762,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.6,
         "#3e2723",
         "#6d4c41",
-        0.5,
+        0.5
       );
       drawCfLog(
         cfX - 3 * s,
@@ -5767,7 +5772,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.4,
         "#5d4037",
         "#8d6e63",
-        0.4,
+        0.4
       );
 
       // Multi-layered animated fire
@@ -5785,13 +5790,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX - 4 * s + cfFlk2,
         cfFlameBase - 20 * s,
         cfX + cfFlk1 * 0.4,
-        cfFlameBase - 28 * s,
+        cfFlameBase - 28 * s
       );
       ctx.quadraticCurveTo(
         cfX + 4 * s - cfFlk2,
         cfFlameBase - 20 * s,
         cfX + 7 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5804,13 +5809,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX - 3 * s - cfFlk1,
         cfFlameBase - 17 * s,
         cfX + cfFlk3,
-        cfFlameBase - 24 * s,
+        cfFlameBase - 24 * s
       );
       ctx.quadraticCurveTo(
         cfX + 3 * s + cfFlk1,
         cfFlameBase - 17 * s,
         cfX + 5.5 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5823,13 +5828,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX + cfFlk1 * 0.5,
         cfFlameBase - 14 * s,
         cfX - cfFlk3 * 0.4,
-        cfFlameBase - 20 * s,
+        cfFlameBase - 20 * s
       );
       ctx.quadraticCurveTo(
         cfX - cfFlk1 * 0.5,
         cfFlameBase - 14 * s,
         cfX + 4 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5842,13 +5847,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX - cfFlk2 * 0.3,
         cfFlameBase - 10 * s,
         cfX + cfFlk1 * 0.3,
-        cfFlameBase - 15 * s,
+        cfFlameBase - 15 * s
       );
       ctx.quadraticCurveTo(
         cfX + cfFlk2 * 0.3,
         cfFlameBase - 10 * s,
         cfX + 2.5 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5860,7 +5865,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.5 * s,
         cfX,
         cfFlameBase - 4 * s,
-        5 * s,
+        5 * s
       );
       cfCoreG.addColorStop(0, "rgba(255,255,230,0.85)");
       cfCoreG.addColorStop(0.4, "rgba(255,230,150,0.5)");
@@ -5873,7 +5878,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX,
         cfFlameBase - 7 * s,
         cfX + 1.5 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5887,13 +5892,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cfX + 7 * s + sideFl,
         cfFlameBase - 8 * s,
         cfX + 5 * s + sideFl,
-        cfFlameBase - 12 * s,
+        cfFlameBase - 12 * s
       );
       ctx.quadraticCurveTo(
         cfX + 6 * s,
         cfFlameBase - 5 * s,
         cfX + 5 * s,
-        cfFlameBase,
+        cfFlameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -5905,7 +5910,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         cfX,
         cfFlameBase - 10 * s,
-        22 * s,
+        22 * s
       );
       const cfHaloPulse = 0.2 + Math.sin(decorTime * 4.5) * 0.06;
       cfHaloG.addColorStop(0, `rgba(255,160,40,${cfHaloPulse})`);
@@ -5964,7 +5969,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         dx + 8 * s,
         dy + 5 * s,
-        22 * s,
+        22 * s
       );
       dkWaterG.addColorStop(0, "rgba(20,65,115,0.72)");
       dkWaterG.addColorStop(0.35, "rgba(40,100,155,0.6)");
@@ -5978,7 +5983,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         10 * s,
         dkSeed,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -5991,7 +5996,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         5 * s,
         dkSeed + 30,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -6004,7 +6009,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         6 * s,
         dkSeed + 55,
-        0.09,
+        0.09
       );
       ctx.fill();
 
@@ -6022,7 +6027,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bR * wobble,
           bR * 0.45 * wobble,
           dkSeed + band * 23,
-          0.08,
+          0.08
         );
         ctx.stroke();
       }
@@ -6052,7 +6057,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (postW + 1 * s) * 0.4,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -6073,7 +6078,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s - postH);
         ctx.lineTo(
           ppx + postW * 0.5 + postD,
-          ppy + 4 * s - postH - postD * 0.5,
+          ppy + 4 * s - postH - postD * 0.5
         );
         ctx.lineTo(ppx + postW * 0.5 + postD, ppy + 4 * s - postD * 0.5);
         ctx.closePath();
@@ -6086,11 +6091,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s - postH);
         ctx.lineTo(
           ppx + postW * 0.5 + postD,
-          ppy + 4 * s - postH - postD * 0.5,
+          ppy + 4 * s - postH - postD * 0.5
         );
         ctx.lineTo(
           ppx - postW * 0.5 + postD,
-          ppy + 4 * s - postH - postD * 0.5,
+          ppy + 4 * s - postH - postD * 0.5
         );
         ctx.closePath();
         ctx.fill();
@@ -6155,7 +6160,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         dx - 5 * s,
         dy - 10 * s,
         dx + 10 * s,
-        dy + 2 * s,
+        dy + 2 * s
       );
       deckTopG.addColorStop(0, "#8d6e63");
       deckTopG.addColorStop(0.5, "#7b5b4f");
@@ -6227,7 +6232,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.9 * s,
           0,
           0.3,
-          Math.PI * 1.7,
+          Math.PI * 1.7
         );
         ctx.stroke();
       }
@@ -6250,7 +6255,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         10 * s,
         dkSeed,
-        0.14,
+        0.14
       );
       ctx.stroke();
       break;
@@ -6292,7 +6297,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           litMort,
           s,
           10,
-          2,
+          2
         );
 
         // Pillar left face (dark)
@@ -6307,7 +6312,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           darkMort,
           s,
           10,
-          2,
+          2
         );
 
         // Pillar top diamond
@@ -6357,7 +6362,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (archL + archR) * 0.5,
         archPeak + 6 * s,
         archL + 2 * s,
-        archBase + 4 * s,
+        archBase + 4 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -6372,7 +6377,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (archL + archR) * 0.5 - gD,
         archPeak - gD * 0.5,
         archL - gD,
-        archBase - gD * 0.5,
+        archBase - gD * 0.5
       );
       ctx.closePath();
       ctx.fill();
@@ -6461,7 +6466,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         8 * s,
         rdSeed + 5,
-        0.18,
+        0.18
       );
       ctx.fill();
 
@@ -6472,7 +6477,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1 * s,
         rx0,
         ry0 + 3 * s,
-        14 * s,
+        14 * s
       );
       rdWaterG.addColorStop(0, "rgba(25,70,120,0.6)");
       rdWaterG.addColorStop(0.35, "rgba(45,105,155,0.5)");
@@ -6491,7 +6496,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         3 * s,
         rdSeed + 20,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -6504,13 +6509,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         3.5 * s,
         rdSeed + 40,
-        0.08,
+        0.08
       );
       ctx.fill();
 
       // Animated ripple bands
       for (let rb = 0; rb < 2; rb++) {
-        const rbPhase = decorTime * 1.0 + rb * 1.3;
+        const rbPhase = decorTime * 1 + rb * 1.3;
         const wobble = 1 + Math.sin(rbPhase) * 0.04;
         const rbR = (5 + rb * 4) * s;
         ctx.strokeStyle = `rgba(150,210,250,${0.1 - rb * 0.03})`;
@@ -6522,7 +6527,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rbR * wobble,
           rbR * 0.45 * wobble,
           rdSeed + rb * 17,
-          0.07,
+          0.07
         );
         ctx.stroke();
       }
@@ -6542,7 +6547,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           2 * s,
           rdSeed + mi * 31,
-          0.2,
+          0.2
         );
         ctx.fill();
       });
@@ -6571,7 +6576,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rx + sway * 0.4,
           rBase - rh * 0.5,
           rx + sway,
-          rBase - rh,
+          rBase - rh
         );
         ctx.stroke();
 
@@ -6584,7 +6589,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rx + sway * 0.9,
           rBase - rh * 0.85,
           rx + sway,
-          rBase - rh,
+          rBase - rh
         );
         ctx.stroke();
 
@@ -6601,7 +6606,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             ctX - ctW,
             ctY - ctH * 0.5,
             ctX + ctW,
-            ctY + ctH * 0.3,
+            ctY + ctH * 0.3
           );
           ctG.addColorStop(0, "#5d4037");
           ctG.addColorStop(0.4, "#795548");
@@ -6616,7 +6621,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             ctH * 0.5,
             ctTilt,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
 
@@ -6657,7 +6662,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lfX + lfDir * 5 * s + lfSway,
             lfY + 2 * s,
             lfX + lfDir * 8 * s + lfSway * 1.3,
-            lfY + 5 * s,
+            lfY + 5 * s
           );
           ctx.stroke();
 
@@ -6669,13 +6674,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lfX + lfDir * 5 * s + lfSway,
             lfY + 1 * s,
             lfX + lfDir * 8 * s + lfSway * 1.3,
-            lfY + 5 * s,
+            lfY + 5 * s
           );
           ctx.quadraticCurveTo(
             lfX + lfDir * 5 * s + lfSway,
             lfY + 3 * s,
             lfX,
-            lfY + 0.5 * s,
+            lfY + 0.5 * s
           );
           ctx.fill();
         }
@@ -6702,7 +6707,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         fx,
         fy + 5 * s,
-        20 * s,
+        20 * s
       );
       waterG.addColorStop(0, "rgba(30,80,130,0.65)");
       waterG.addColorStop(0.4, "rgba(50,110,160,0.55)");
@@ -6721,7 +6726,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         5 * s,
         fishSeed + 15,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -6778,7 +6783,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rx + rSway * 0.3,
           rBase - 12 * s,
           rx + rSway,
-          rBase - 22 * s,
+          rBase - 22 * s
         );
         ctx.stroke();
         if (r % 2 === 0) {
@@ -6791,7 +6796,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             3 * s,
             rSway * 0.05,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -6804,7 +6809,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5 * s,
           rSway * 0.03,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -6873,7 +6878,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         dkx + 14 * s,
         dky - 28 * s,
         dkx + 20 * s,
-        dky - 22 * s,
+        dky - 22 * s
       );
       ctx.stroke();
       // Rod handle
@@ -6903,7 +6908,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         dkx + 18 * s + bobSway * 0.5,
         dky - 5 * s,
         dkx + 14 * s + bobSway,
-        fy + 3 * s,
+        fy + 3 * s
       );
       ctx.stroke();
 
@@ -6974,7 +6979,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             1.2 * s * ripPhase + 0.8 * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
         }
@@ -7080,50 +7085,50 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const _FP = [
         {
           back: [
-            { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
-            { rib: "#226422", lit: "#306e30", dark: "#104e10" },
-            { rib: "#1a5218", lit: "#266226", dark: "#0a3e0a" },
-            { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
+            { dark: "#0c460c", lit: "#2a6a2a", rib: "#1e5a1e" },
+            { dark: "#104e10", lit: "#306e30", rib: "#226422" },
+            { dark: "#0a3e0a", lit: "#266226", rib: "#1a5218" },
+            { dark: "#0c460c", lit: "#2a6a2a", rib: "#1e5a1e" },
           ],
           front: [
-            { rib: "#2e972e", lit: "#38a138", dark: "#228b22" },
-            { rib: "#3a9763", lit: "#44a16d", dark: "#2e8b57" },
-            { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
-            { rib: "#3aa753", lit: "#44b15d", dark: "#2e9b47" },
-            { rib: "#2e972e", lit: "#38a138", dark: "#228b22" },
-            { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
+            { dark: "#228b22", lit: "#38a138", rib: "#2e972e" },
+            { dark: "#2e8b57", lit: "#44a16d", rib: "#3a9763" },
+            { dark: "#32a852", lit: "#48be68", rib: "#3eb45e" },
+            { dark: "#2e9b47", lit: "#44b15d", rib: "#3aa753" },
+            { dark: "#228b22", lit: "#38a138", rib: "#2e972e" },
+            { dark: "#32a852", lit: "#48be68", rib: "#3eb45e" },
           ],
         },
         {
           back: [
-            { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
-            { rib: "#206434", lit: "#2a6e36", dark: "#0e4e1e" },
-            { rib: "#1e5c30", lit: "#28663a", dark: "#0c4c1c" },
-            { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
+            { dark: "#105626", lit: "#2c763e", rib: "#226c3c" },
+            { dark: "#0e4e1e", lit: "#2a6e36", rib: "#206434" },
+            { dark: "#0c4c1c", lit: "#28663a", rib: "#1e5c30" },
+            { dark: "#105626", lit: "#2c763e", rib: "#226c3c" },
           ],
           front: [
-            { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" },
-            { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
-            { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
-            { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
-            { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" },
-            { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
+            { dark: "#2a9040", lit: "#40a656", rib: "#369c4c" },
+            { dark: "#30985a", lit: "#46ae70", rib: "#3ca466" },
+            { dark: "#36a858", lit: "#4cbe6e", rib: "#42b464" },
+            { dark: "#30985a", lit: "#46ae70", rib: "#3ca466" },
+            { dark: "#2a9040", lit: "#40a656", rib: "#369c4c" },
+            { dark: "#36a858", lit: "#4cbe6e", rib: "#42b464" },
           ],
         },
         {
           back: [
-            { rib: "#16562c", lit: "#20602e", dark: "#004016" },
-            { rib: "#1a5e34", lit: "#246836", dark: "#04481e" },
-            { rib: "#145028", lit: "#1e5a2c", dark: "#003a12" },
-            { rib: "#16562c", lit: "#20602e", dark: "#004016" },
+            { dark: "#004016", lit: "#20602e", rib: "#16562c" },
+            { dark: "#04481e", lit: "#246836", rib: "#1a5e34" },
+            { dark: "#003a12", lit: "#1e5a2c", rib: "#145028" },
+            { dark: "#004016", lit: "#20602e", rib: "#16562c" },
           ],
           front: [
-            { rib: "#268434", lit: "#308e3e", dark: "#1a7828" },
-            { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
-            { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
-            { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
-            { rib: "#268434", lit: "#308e3e", dark: "#1a7828" },
-            { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
+            { dark: "#1a7828", lit: "#308e3e", rib: "#268434" },
+            { dark: "#228b40", lit: "#38a156", rib: "#2e974c" },
+            { dark: "#28a04a", lit: "#3eb660", rib: "#34ac56" },
+            { dark: "#228b40", lit: "#38a156", rib: "#2e974c" },
+            { dark: "#1a7828", lit: "#308e3e", rib: "#268434" },
+            { dark: "#28a04a", lit: "#3eb660", rib: "#34ac56" },
           ],
         },
       ];
@@ -7134,7 +7139,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         { a: -2.5, l: 36, p: 0 },
         { a: -1.2, l: 33, p: 1.5 },
         { a: 0.4, l: 31, p: 3.2 },
-        { a: 1.9, l: 35, p: 5.0 },
+        { a: 1.9, l: 35, p: 5 },
       ];
       for (let fi = 0; fi < 4; fi++) {
         const f = _bkL[fi];
@@ -7146,14 +7151,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           f.l * s,
           fPal.back[fi],
           s,
-          0,
+          0
         );
       }
       // Front fronds (6, static)
       const _ftL = [
         { a: -2.3, l: 42, p: 0.5 },
         { a: -1.3, l: 40, p: 1.8 },
-        { a: -0.2, l: 44, p: 3.0 },
+        { a: -0.2, l: 44, p: 3 },
         { a: 0.7, l: 42, p: 4.2 },
         { a: 1.6, l: 39, p: 5.5 },
         { a: 2.5, l: 36, p: 0.8 },
@@ -7168,7 +7173,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           f.l * s,
           fPal.front[fi],
           s,
-          0,
+          0
         );
       }
 
@@ -7213,7 +7218,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               1.3 * s,
               pa,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -7242,7 +7247,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         6 * s,
         38 * s,
-        0.25,
+        0.25
       );
 
       // Main body gradient for 3D roundness
@@ -7250,7 +7255,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cacBaseX - 8 * s,
         0,
         cacBaseX + 8 * s,
-        0,
+        0
       );
       cacGrad.addColorStop(0, "#1a4a1a");
       cacGrad.addColorStop(0.3, "#2d6a2d");
@@ -7266,19 +7271,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cacBaseX - 8 * s,
         cacBaseY - 15 * s,
         cacBaseX - 6 * s,
-        cacBaseY - 30 * s,
+        cacBaseY - 30 * s
       );
       ctx.quadraticCurveTo(
         cacBaseX,
         cacBaseY - 38 * s,
         cacBaseX + 6 * s,
-        cacBaseY - 30 * s,
+        cacBaseY - 30 * s
       );
       ctx.quadraticCurveTo(
         cacBaseX + 8 * s,
         cacBaseY - 15 * s,
         cacBaseX + 7 * s,
-        cacBaseY + 3 * s,
+        cacBaseY + 3 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -7293,7 +7298,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cacBaseX + r * 2 * s,
           cacBaseY - 15 * s,
           cacBaseX + r * 1.5 * s,
-          cacBaseY - 32 * s,
+          cacBaseY - 32 * s
         );
         ctx.stroke();
       }
@@ -7305,7 +7310,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cacBaseX - 20 * s,
           0,
           cacBaseX - 10 * s,
-          0,
+          0
         );
         armGrad.addColorStop(0, "#1a4a1a");
         armGrad.addColorStop(0.5, "#3a8a3a");
@@ -7318,25 +7323,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cacBaseX - 18 * s,
           cacBaseY - 14 * s,
           cacBaseX - 18 * s,
-          cacBaseY - 22 * s,
+          cacBaseY - 22 * s
         );
         ctx.quadraticCurveTo(
           cacBaseX - 18 * s,
           cacBaseY - 30 * s,
           cacBaseX - 14 * s,
-          cacBaseY - 30 * s,
+          cacBaseY - 30 * s
         );
         ctx.quadraticCurveTo(
           cacBaseX - 12 * s,
           cacBaseY - 30 * s,
           cacBaseX - 12 * s,
-          cacBaseY - 22 * s,
+          cacBaseY - 22 * s
         );
         ctx.quadraticCurveTo(
           cacBaseX - 12 * s,
           cacBaseY - 16 * s,
           cacBaseX - 6 * s,
-          cacBaseY - 15 * s,
+          cacBaseY - 15 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -7350,25 +7355,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             cacBaseX + 15 * s,
             cacBaseY - 10 * s,
             cacBaseX + 15 * s,
-            cacBaseY - 18 * s,
+            cacBaseY - 18 * s
           );
           ctx.quadraticCurveTo(
             cacBaseX + 15 * s,
             cacBaseY - 26 * s,
             cacBaseX + 11 * s,
-            cacBaseY - 26 * s,
+            cacBaseY - 26 * s
           );
           ctx.quadraticCurveTo(
             cacBaseX + 9 * s,
             cacBaseY - 26 * s,
             cacBaseX + 9 * s,
-            cacBaseY - 18 * s,
+            cacBaseY - 18 * s
           );
           ctx.quadraticCurveTo(
             cacBaseX + 9 * s,
             cacBaseY - 12 * s,
             cacBaseX + 6 * s,
-            cacBaseY - 11 * s,
+            cacBaseY - 11 * s
           );
           ctx.closePath();
           ctx.fill();
@@ -7406,7 +7411,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX,
         duneBaseY + 14 * s,
-        70 * s,
+        70 * s
       );
       groundShadowGrad.addColorStop(0, "rgba(110,80,35,0.3)");
       groundShadowGrad.addColorStop(0.5, "rgba(100,75,30,0.15)");
@@ -7420,7 +7425,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         duneSeed,
         0.12,
-        32,
+        32
       );
       ctx.fill();
 
@@ -7431,7 +7436,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX,
         duneBaseY + 8 * s,
-        62 * s,
+        62 * s
       );
       baseSandGrad.addColorStop(0, "#c9a040");
       baseSandGrad.addColorStop(0.5, "#bfa040");
@@ -7446,7 +7451,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         20 * s,
         duneSeed * 1.3,
         0.15,
-        32,
+        32
       );
       ctx.fill();
 
@@ -7457,7 +7462,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX,
         duneBaseY,
-        50 * s,
+        50 * s
       );
       duneBodyGrad.addColorStop(0, "#f0d070");
       duneBodyGrad.addColorStop(0.35, "#e8c060");
@@ -7472,7 +7477,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         duneSeed * 2.1,
         0.18,
-        32,
+        32
       );
       ctx.fill();
 
@@ -7483,7 +7488,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX - 6 * s,
         duneBaseY - 8 * s,
-        30 * s,
+        30 * s
       );
       peakGrad.addColorStop(0, "#f5db78");
       peakGrad.addColorStop(0.5, "#e8c060");
@@ -7497,7 +7502,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         duneSeed * 3.7,
         0.2,
-        32,
+        32
       );
       ctx.fill();
 
@@ -7508,7 +7513,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX + 16 * s,
         duneBaseY + 2 * s,
-        26 * s,
+        26 * s
       );
       ridgeGrad.addColorStop(0, "#ddb855");
       ridgeGrad.addColorStop(0.6, "#d4a84b");
@@ -7522,7 +7527,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         duneSeed * 5.3,
         0.18,
-        28,
+        28
       );
       ctx.fill();
 
@@ -7533,7 +7538,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX - 10 * s,
         duneBaseY - 14 * s,
-        18 * s,
+        18 * s
       );
       highlightGrad.addColorStop(0, "rgba(255,235,160,0.5)");
       highlightGrad.addColorStop(0.6, "rgba(245,220,130,0.2)");
@@ -7547,7 +7552,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         duneSeed * 7.1,
         0.12,
-        28,
+        28
       );
       ctx.fill();
 
@@ -7558,7 +7563,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         duneBaseX + 18 * s,
         duneBaseY + 4 * s,
-        22 * s,
+        22 * s
       );
       shadowGrad.addColorStop(0, "rgba(140,100,40,0.35)");
       shadowGrad.addColorStop(0.7, "rgba(130,95,35,0.15)");
@@ -7572,7 +7577,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         10 * s,
         duneSeed * 9.3,
         0.14,
-        24,
+        24
       );
       ctx.fill();
 
@@ -7589,7 +7594,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         duneBaseX - 5 * s,
         duneBaseY - 22 * s,
         duneBaseX + 8 * s,
-        duneBaseY - 10 * s,
+        duneBaseY - 10 * s
       );
       ctx.stroke();
       clearShadow(ctx);
@@ -7608,7 +7613,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           duneBaseX + 2 * s + rxOff,
           ry - 1.5 * s,
           duneBaseX + 22 * s + rxOff * 0.5,
-          ry + 2 * s,
+          ry + 2 * s
         );
         ctx.stroke();
       }
@@ -7655,7 +7660,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spSize * 0.4,
           angle * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -7723,7 +7728,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           pyrX - pyrHW * 0.5,
           baseCy,
           shadowApexX,
-          shadowApexY,
+          shadowApexY
         );
         pyrShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
         pyrShadowGrad.addColorStop(0.35, "rgba(0,0,0,0.22)");
@@ -7752,7 +7757,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pyrX,
         tipY,
         rightX,
-        rightY,
+        rightY
       );
       rightFaceGrad.addColorStop(0, "#e8c860");
       rightFaceGrad.addColorStop(0.3, "#d4a84b");
@@ -7886,7 +7891,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         capLeftX,
         capLeftY,
         pyrX,
-        tipY,
+        tipY
       );
       capLeftGrad.addColorStop(0, "#b8860b");
       capLeftGrad.addColorStop(0.3, "#d4a020");
@@ -7905,7 +7910,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pyrX,
         tipY,
         capRightX,
-        capRightY,
+        capRightY
       );
       capRightGrad.addColorStop(0, "#fff8e0");
       capRightGrad.addColorStop(0.2, "#ffd700");
@@ -7936,7 +7941,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         pyrX,
         tipY + 3 * s,
-        8 * s,
+        8 * s
       );
       tipHighlightGrad.addColorStop(0, "rgba(255,255,255,0.9)");
       tipHighlightGrad.addColorStop(0.3, "rgba(255,250,200,0.7)");
@@ -7981,7 +7986,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tipY + 10 * s,
         1.8 * s * sparkle3Int,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -7997,7 +8002,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -8008,7 +8013,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -8021,7 +8026,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Regional palettes — each region has 3 sub-variants
       const obelRegionPals: Record<
         string,
-        Array<{
+        {
           left: string;
           right: string;
           front: string;
@@ -8034,226 +8039,226 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           pedTop: string;
           pedLeft: string;
           pedRight: string;
-        }>
+        }[]
       > = {
-        grassland: [
-          {
-            left: "#8a7a58",
-            right: "#a89870",
-            front: "#b0a068",
-            top: "#c8b888",
-            cap: "#d4a840",
-            capDk: "#be9428",
-            capFr: "#ca9e3b",
-            capHi: "#f0d060",
-            glyph: "#5a4a38",
-            pedTop: "#b8a878",
-            pedLeft: "#807048",
-            pedRight: "#988860",
-          },
-          {
-            left: "#58544a",
-            right: "#706c5e",
-            front: "#666258",
-            top: "#8a8678",
-            cap: "#c4c0b0",
-            capDk: "#b2aea0",
-            capFr: "#bdb9ab",
-            capHi: "#e4e0d4",
-            glyph: "#3a3830",
-            pedTop: "#7a766a",
-            pedLeft: "#4a4840",
-            pedRight: "#605e54",
-          },
-          {
-            left: "#6a6248",
-            right: "#8a8268",
-            front: "#7a7258",
-            top: "#a09878",
-            cap: "#c0a048",
-            capDk: "#a88a38",
-            capFr: "#b49840",
-            capHi: "#dcc060",
-            glyph: "#4a4230",
-            pedTop: "#9a9068",
-            pedLeft: "#605838",
-            pedRight: "#786848",
-          },
-        ],
-        swamp: [
-          {
-            left: "#3a5a38",
-            right: "#4a6a48",
-            front: "#3e5e3c",
-            top: "#5a7a58",
-            cap: "#40a848",
-            capDk: "#2a8a30",
-            capFr: "#38983c",
-            capHi: "#60d868",
-            glyph: "#1a3a18",
-            pedTop: "#4a6a48",
-            pedLeft: "#2a4a28",
-            pedRight: "#3a5a38",
-          },
-          {
-            left: "#2a3a28",
-            right: "#3a4a38",
-            front: "#2e3e2c",
-            top: "#4a5a48",
-            cap: "#58886a",
-            capDk: "#3a6a4a",
-            capFr: "#487a5a",
-            capHi: "#78b88a",
-            glyph: "#0a2a08",
-            pedTop: "#3a4a38",
-            pedLeft: "#1a2a18",
-            pedRight: "#2a3a28",
-          },
-          {
-            left: "#3a4a30",
-            right: "#4a5a40",
-            front: "#3c4c34",
-            top: "#5a6a50",
-            cap: "#4a8a3a",
-            capDk: "#2a6a22",
-            capFr: "#3a7a2e",
-            capHi: "#6ac04a",
-            glyph: "#1a2a10",
-            pedTop: "#4a5a40",
-            pedLeft: "#2a3a20",
-            pedRight: "#3a4a30",
-          },
-        ],
         desert: [
           {
-            left: "#b09a68",
-            right: "#c8b280",
-            front: "#c0aa78",
-            top: "#d8c898",
             cap: "#e8c040",
             capDk: "#d0a830",
             capFr: "#dab438",
             capHi: "#f8e060",
+            front: "#c0aa78",
             glyph: "#7a6a48",
-            pedTop: "#c8b888",
+            left: "#b09a68",
             pedLeft: "#9a8a58",
             pedRight: "#b0a068",
+            pedTop: "#c8b888",
+            right: "#c8b280",
+            top: "#d8c898",
           },
           {
-            left: "#a08858",
-            right: "#b8a070",
-            front: "#b09868",
-            top: "#c8b888",
             cap: "#dab040",
             capDk: "#c09830",
             capFr: "#cca438",
             capHi: "#f0d858",
+            front: "#b09868",
             glyph: "#6a5a38",
-            pedTop: "#b8a878",
+            left: "#a08858",
             pedLeft: "#8a7a48",
             pedRight: "#a09058",
+            pedTop: "#b8a878",
+            right: "#b8a070",
+            top: "#c8b888",
           },
           {
-            left: "#907848",
-            right: "#a89060",
-            front: "#9a8858",
-            top: "#b8a878",
             cap: "#c8a838",
             capDk: "#b09028",
             capFr: "#bc9c30",
             capHi: "#e0c850",
+            front: "#9a8858",
             glyph: "#5a4a28",
-            pedTop: "#a89868",
+            left: "#907848",
             pedLeft: "#7a6a38",
             pedRight: "#908048",
+            pedTop: "#a89868",
+            right: "#a89060",
+            top: "#b8a878",
           },
         ],
-        winter: [
+        grassland: [
           {
-            left: "#6a7888",
-            right: "#8090a0",
-            front: "#7a8898",
-            top: "#98a8b8",
-            cap: "#b0d0e8",
-            capDk: "#90b0c8",
-            capFr: "#a0c0d8",
-            capHi: "#d0e8f8",
-            glyph: "#4a5868",
-            pedTop: "#8898a8",
-            pedLeft: "#5a6878",
-            pedRight: "#6a7888",
+            cap: "#d4a840",
+            capDk: "#be9428",
+            capFr: "#ca9e3b",
+            capHi: "#f0d060",
+            front: "#b0a068",
+            glyph: "#5a4a38",
+            left: "#8a7a58",
+            pedLeft: "#807048",
+            pedRight: "#988860",
+            pedTop: "#b8a878",
+            right: "#a89870",
+            top: "#c8b888",
           },
           {
-            left: "#5a6878",
-            right: "#708090",
-            front: "#647888",
-            top: "#8898a8",
-            cap: "#a0c4d8",
-            capDk: "#80a4b8",
-            capFr: "#90b4c8",
-            capHi: "#c0dce8",
-            glyph: "#3a4858",
-            pedTop: "#788898",
-            pedLeft: "#4a5868",
-            pedRight: "#5a6878",
+            cap: "#c4c0b0",
+            capDk: "#b2aea0",
+            capFr: "#bdb9ab",
+            capHi: "#e4e0d4",
+            front: "#666258",
+            glyph: "#3a3830",
+            left: "#58544a",
+            pedLeft: "#4a4840",
+            pedRight: "#605e54",
+            pedTop: "#7a766a",
+            right: "#706c5e",
+            top: "#8a8678",
           },
           {
-            left: "#788898",
-            right: "#90a0b0",
-            front: "#8898a8",
-            top: "#a8b8c8",
-            cap: "#c0dae8",
-            capDk: "#a0bac8",
-            capFr: "#b0cad8",
-            capHi: "#e0f0f8",
-            glyph: "#5a6878",
-            pedTop: "#98a8b8",
-            pedLeft: "#687888",
-            pedRight: "#788898",
+            cap: "#c0a048",
+            capDk: "#a88a38",
+            capFr: "#b49840",
+            capHi: "#dcc060",
+            front: "#7a7258",
+            glyph: "#4a4230",
+            left: "#6a6248",
+            pedLeft: "#605838",
+            pedRight: "#786848",
+            pedTop: "#9a9068",
+            right: "#8a8268",
+            top: "#a09878",
+          },
+        ],
+        swamp: [
+          {
+            cap: "#40a848",
+            capDk: "#2a8a30",
+            capFr: "#38983c",
+            capHi: "#60d868",
+            front: "#3e5e3c",
+            glyph: "#1a3a18",
+            left: "#3a5a38",
+            pedLeft: "#2a4a28",
+            pedRight: "#3a5a38",
+            pedTop: "#4a6a48",
+            right: "#4a6a48",
+            top: "#5a7a58",
+          },
+          {
+            cap: "#58886a",
+            capDk: "#3a6a4a",
+            capFr: "#487a5a",
+            capHi: "#78b88a",
+            front: "#2e3e2c",
+            glyph: "#0a2a08",
+            left: "#2a3a28",
+            pedLeft: "#1a2a18",
+            pedRight: "#2a3a28",
+            pedTop: "#3a4a38",
+            right: "#3a4a38",
+            top: "#4a5a48",
+          },
+          {
+            cap: "#4a8a3a",
+            capDk: "#2a6a22",
+            capFr: "#3a7a2e",
+            capHi: "#6ac04a",
+            front: "#3c4c34",
+            glyph: "#1a2a10",
+            left: "#3a4a30",
+            pedLeft: "#2a3a20",
+            pedRight: "#3a4a30",
+            pedTop: "#4a5a40",
+            right: "#4a5a40",
+            top: "#5a6a50",
           },
         ],
         volcanic: [
           {
-            left: "#4a2828",
-            right: "#5a3838",
-            front: "#503030",
-            top: "#684848",
             cap: "#c84020",
             capDk: "#a03018",
             capFr: "#b4381c",
             capHi: "#f06030",
+            front: "#503030",
             glyph: "#2a1010",
-            pedTop: "#583838",
+            left: "#4a2828",
             pedLeft: "#3a2020",
             pedRight: "#4a2828",
+            pedTop: "#583838",
+            right: "#5a3838",
+            top: "#684848",
           },
           {
-            left: "#3a2020",
-            right: "#4a3030",
-            front: "#402828",
-            top: "#583838",
             cap: "#d85828",
             capDk: "#b04018",
             capFr: "#c44820",
             capHi: "#f87838",
+            front: "#402828",
             glyph: "#1a0808",
-            pedTop: "#482828",
+            left: "#3a2020",
             pedLeft: "#2a1818",
             pedRight: "#3a2020",
+            pedTop: "#482828",
+            right: "#4a3030",
+            top: "#583838",
           },
           {
-            left: "#2a1818",
-            right: "#3a2828",
-            front: "#302020",
-            top: "#483030",
             cap: "#a83820",
             capDk: "#882818",
             capFr: "#98301c",
             capHi: "#d05028",
+            front: "#302020",
             glyph: "#180808",
-            pedTop: "#382020",
+            left: "#2a1818",
             pedLeft: "#201010",
             pedRight: "#2a1818",
+            pedTop: "#382020",
+            right: "#3a2828",
+            top: "#483030",
+          },
+        ],
+        winter: [
+          {
+            cap: "#b0d0e8",
+            capDk: "#90b0c8",
+            capFr: "#a0c0d8",
+            capHi: "#d0e8f8",
+            front: "#7a8898",
+            glyph: "#4a5868",
+            left: "#6a7888",
+            pedLeft: "#5a6878",
+            pedRight: "#6a7888",
+            pedTop: "#8898a8",
+            right: "#8090a0",
+            top: "#98a8b8",
+          },
+          {
+            cap: "#a0c4d8",
+            capDk: "#80a4b8",
+            capFr: "#90b4c8",
+            capHi: "#c0dce8",
+            front: "#647888",
+            glyph: "#3a4858",
+            left: "#5a6878",
+            pedLeft: "#4a5868",
+            pedRight: "#5a6878",
+            pedTop: "#788898",
+            right: "#708090",
+            top: "#8898a8",
+          },
+          {
+            cap: "#c0dae8",
+            capDk: "#a0bac8",
+            capFr: "#b0cad8",
+            capHi: "#e0f0f8",
+            front: "#8898a8",
+            glyph: "#5a6878",
+            left: "#788898",
+            pedLeft: "#687888",
+            pedRight: "#788898",
+            pedTop: "#98a8b8",
+            right: "#90a0b0",
+            top: "#a8b8c8",
           },
         ],
       };
@@ -8273,7 +8278,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         6 * s,
         55 * s,
-        0.25,
+        0.25
       );
 
       // Single merged pedestal
@@ -8403,7 +8408,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox,
           medY,
-          medR * 1.5,
+          medR * 1.5
         );
         sunGlow.addColorStop(0, "rgba(240,210,80,0.5)");
         sunGlow.addColorStop(0.6, "rgba(220,180,40,0.2)");
@@ -8431,11 +8436,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(
             ox + Math.cos(ang) * medR * 1.1,
-            medY + Math.sin(ang) * medR * 1.1,
+            medY + Math.sin(ang) * medR * 1.1
           );
           ctx.lineTo(
             ox + Math.cos(ang) * medR * 1.7,
-            medY + Math.sin(ang) * medR * 1.7,
+            medY + Math.sin(ang) * medR * 1.7
           );
           ctx.stroke();
         }
@@ -8453,7 +8458,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox - tw86 + 2 * s,
           ivyBase1 - 20 * s,
           ox - tw86,
-          ivyBase1 - 28 * s,
+          ivyBase1 - 28 * s
         );
         ctx.stroke();
         ctx.globalAlpha = 1;
@@ -8474,7 +8479,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox,
           eyeY,
-          eyeR * 0.8,
+          eyeR * 0.8
         );
         eyeGlow.addColorStop(0, "rgba(80,220,80,0.6)");
         eyeGlow.addColorStop(0.5, "rgba(40,160,40,0.3)");
@@ -8497,8 +8502,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const vy = sBase + (sTop - sBase) * vt;
           const vw = oBaseW + (oTopW - oBaseW) * vt;
           const vx = ox + Math.sin(vt * 12) * vw * ISO_COS * 0.7;
-          if (vt === 0) ctx.moveTo(vx, vy);
-          else ctx.lineTo(vx, vy);
+          if (vt === 0) {
+            ctx.moveTo(vx, vy);
+          } else {
+            ctx.lineTo(vx, vy);
+          }
         }
         ctx.stroke();
         ctx.globalAlpha = 1;
@@ -8516,7 +8524,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -8531,7 +8539,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           discR * 0.5,
           ox,
           discY,
-          discR * 2,
+          discR * 2
         );
         discGlow.addColorStop(0, "rgba(240,200,60,0.3)");
         discGlow.addColorStop(0.7, "rgba(220,180,40,0.1)");
@@ -8547,7 +8555,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox,
           discY,
-          discR,
+          discR
         );
         discFill.addColorStop(0, "#f0d860");
         discFill.addColorStop(0.7, "#d4a840");
@@ -8578,7 +8586,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox - bandW * ISO_COS,
           bandY - 2 * s,
           bandW * ISO_COS * 2,
-          4 * s,
+          4 * s
         );
         ctx.globalAlpha = 1;
         // Sand accumulation at base
@@ -8596,7 +8604,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox - 6 * s,
           crownY - 12 * s,
           ox - 2 * s,
-          crownY,
+          crownY
         );
         lhG.addColorStop(0, "rgba(200,230,255,0.8)");
         lhG.addColorStop(0.5, "rgba(160,200,240,0.6)");
@@ -8614,7 +8622,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox + 6 * s,
           crownY - 12 * s,
           ox + 2 * s,
-          crownY,
+          crownY
         );
         rhG.addColorStop(0, "rgba(180,215,245,0.8)");
         rhG.addColorStop(0.5, "rgba(140,185,230,0.6)");
@@ -8645,7 +8653,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#e4ecf6";
         ctx.globalAlpha = 0.7;
         const obelSnowSeed = Math.abs(decorX * 41 + decorY * 67);
-        drawOrganicBlobAt(ctx, ox, oy - pedH + pedD - 1 * s, pedIso, pedD, obelSnowSeed, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          ox,
+          oy - pedH + pedD - 1 * s,
+          pedIso,
+          pedD,
+          obelSnowSeed,
+          0.2,
+          14
+        );
         ctx.fill();
         ctx.globalAlpha = 1;
         // Icicles from shaft bands
@@ -8692,7 +8709,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox - 10 * s,
           cTip - 10 * s,
           ox - 8 * s,
-          cTip - 18 * s,
+          cTip - 18 * s
         );
         ctx.lineTo(ox - 6 * s, cTip - 16 * s);
         ctx.bezierCurveTo(
@@ -8701,7 +8718,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox - 3 * s,
           cTip - 5 * s,
           ox,
-          cTip,
+          cTip
         );
         ctx.closePath();
         ctx.fill();
@@ -8714,7 +8731,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox + 10 * s,
           cTip - 10 * s,
           ox + 8 * s,
-          cTip - 18 * s,
+          cTip - 18 * s
         );
         ctx.lineTo(ox + 6 * s, cTip - 16 * s);
         ctx.bezierCurveTo(
@@ -8723,7 +8740,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox + 3 * s,
           cTip - 5 * s,
           ox,
-          cTip,
+          cTip
         );
         ctx.closePath();
         ctx.fill();
@@ -8735,7 +8752,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox - 8 * s,
           cTip - 18 * s,
-          3 * s,
+          3 * s
         );
         ltGlow.addColorStop(0, "rgba(255,100,20,0.6)");
         ltGlow.addColorStop(1, "rgba(200,50,10,0)");
@@ -8749,7 +8766,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox + 8 * s,
           cTip - 18 * s,
-          3 * s,
+          3 * s
         );
         rtGlow.addColorStop(0, "rgba(255,100,20,0.6)");
         rtGlow.addColorStop(1, "rgba(200,50,10,0)");
@@ -8766,7 +8783,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           ox,
           cTip - 2 * s,
-          5 * s,
+          5 * s
         );
         embG.addColorStop(0, `rgba(255,120,30,${embPulse})`);
         embG.addColorStop(0.5, `rgba(200,60,10,${embPulse * 0.5})`);
@@ -8835,7 +8852,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           42 * s,
           17 * s,
           60 * s,
-          0.35,
+          0.35
         );
       }
 
@@ -8846,7 +8863,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         20 * s,
         screenPos.x,
         screenPos.y + 10 * s,
-        60 * s,
+        60 * s
       );
       sandGrad.addColorStop(0, "rgba(194, 178, 128, 0.4)");
       sandGrad.addColorStop(0.5, "rgba(194, 178, 128, 0.2)");
@@ -8860,7 +8877,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         25 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -8984,7 +9001,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2.5 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
       ctx.beginPath();
@@ -8996,7 +9013,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 10 * s,
         glyphY + 6 * s,
         screenPos.x - 12 * s,
-        glyphY + 5 * s,
+        glyphY + 5 * s
       );
       ctx.stroke();
 
@@ -9009,7 +9026,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 3 * s,
         18 * s,
         8 * s,
-        3 * s,
+        3 * s
       );
       ctx.stroke();
 
@@ -9024,7 +9041,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 28 * s,
         screenPos.y + 8 * s,
         screenPos.x - 20 * s,
-        screenPos.y + 6 * s,
+        screenPos.y + 6 * s
       );
       ctx.bezierCurveTo(
         screenPos.x - 14 * s,
@@ -9032,7 +9049,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 12 * s,
         screenPos.y + 2 * s,
         screenPos.x - 16 * s,
-        screenPos.y - 3 * s,
+        screenPos.y - 3 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9047,7 +9064,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9061,7 +9078,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 21 * s,
         screenPos.y + 1 * s,
         screenPos.x - 13 * s,
-        screenPos.y - 1 * s,
+        screenPos.y - 1 * s
       );
       ctx.bezierCurveTo(
         screenPos.x - 7 * s,
@@ -9069,7 +9086,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 5 * s,
         screenPos.y - 5 * s,
         screenPos.x - 9 * s,
-        screenPos.y - 10 * s,
+        screenPos.y - 10 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9084,7 +9101,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9094,7 +9111,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 15 * s,
         screenPos.y + 3 * s,
         screenPos.x + 35 * s,
-        screenPos.y + 13 * s,
+        screenPos.y + 13 * s
       );
       pawGrad.addColorStop(0, sandBase);
       pawGrad.addColorStop(0.5, sandLight);
@@ -9142,7 +9159,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9151,7 +9168,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 25 * s,
         screenPos.y - 30 * s,
         screenPos.x + 20 * s,
-        screenPos.y,
+        screenPos.y
       );
       bodyGrad.addColorStop(0, sandLight);
       bodyGrad.addColorStop(0.3, sandBase);
@@ -9165,13 +9182,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 20 * s,
         screenPos.y - 35 * s,
         screenPos.x - 5 * s,
-        screenPos.y - 32 * s,
+        screenPos.y - 32 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 15 * s,
         screenPos.y - 28 * s,
         screenPos.x + 22 * s,
-        screenPos.y - 18 * s,
+        screenPos.y - 18 * s
       );
       ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 2 * s);
       ctx.lineTo(screenPos.x + 8 * s, screenPos.y);
@@ -9190,7 +9207,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 10 * s,
         screenPos.y - 32 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 30 * s,
+        screenPos.y - 30 * s
       );
       ctx.stroke();
       // Shoulder blade
@@ -9200,7 +9217,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 12 * s,
         screenPos.y - 25 * s,
         screenPos.x + 18 * s,
-        screenPos.y - 20 * s,
+        screenPos.y - 20 * s
       );
       ctx.stroke();
       // Upper body contour
@@ -9211,7 +9228,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 5 * s,
         screenPos.y - 20 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 22 * s,
+        screenPos.y - 22 * s
       );
       ctx.stroke();
       // Ribcage suggestion (multiple ribs)
@@ -9222,13 +9239,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           screenPos.x - 12 * s + ribOff * s,
-          screenPos.y - 18 * s + ribOff * s,
+          screenPos.y - 18 * s + ribOff * s
         );
         ctx.quadraticCurveTo(
           screenPos.x - 8 * s + ribOff * s,
           screenPos.y - 14 * s + ribOff * s,
           screenPos.x - 5 * s + ribOff * s,
-          screenPos.y - 12 * s + ribOff * s,
+          screenPos.y - 12 * s + ribOff * s
         );
         ctx.stroke();
       }
@@ -9241,7 +9258,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 18 * s,
         screenPos.y - 18 * s,
         screenPos.x - 10 * s,
-        screenPos.y - 22 * s,
+        screenPos.y - 22 * s
       );
       ctx.stroke();
       // Body highlight (top surface lit)
@@ -9252,20 +9269,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 10 * s,
         screenPos.y - 34 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 32 * s,
+        screenPos.y - 32 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 12 * s,
         screenPos.y - 30 * s,
         screenPos.x + 18 * s,
-        screenPos.y - 24 * s,
+        screenPos.y - 24 * s
       );
       ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 26 * s);
       ctx.quadraticCurveTo(
         screenPos.x - 5 * s,
         screenPos.y - 28 * s,
         screenPos.x - 18 * s,
-        screenPos.y - 30 * s,
+        screenPos.y - 30 * s
       );
       ctx.fill();
 
@@ -9275,7 +9292,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 10 * s,
         screenPos.y - 18 * s,
         screenPos.x + 22 * s,
-        screenPos.y,
+        screenPos.y
       );
       flegGrad.addColorStop(0, sandBase);
       flegGrad.addColorStop(1, sandMid);
@@ -9298,7 +9315,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9322,7 +9339,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9340,7 +9357,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 5 * s,
         screenPos.y - 35 * s,
         screenPos.x + 25 * s,
-        screenPos.y - 15 * s,
+        screenPos.y - 15 * s
       );
       chestGrad.addColorStop(0, sandLight);
       chestGrad.addColorStop(0.5, sandBase);
@@ -9353,14 +9370,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 18 * s,
         screenPos.y - 35 * s,
         screenPos.x + 25 * s,
-        screenPos.y - 25 * s,
+        screenPos.y - 25 * s
       );
       ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
       ctx.quadraticCurveTo(
         screenPos.x + 15 * s,
         screenPos.y - 25 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 28 * s,
+        screenPos.y - 28 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9411,14 +9428,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 20 * s,
         screenPos.y - 50 * s,
         screenPos.x - 22 * s,
-        screenPos.y - 25 * s,
+        screenPos.y - 25 * s
       );
       ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 20 * s);
       ctx.quadraticCurveTo(
         screenPos.x - 12 * s,
         screenPos.y - 35 * s,
         screenPos.x,
-        screenPos.y - 45 * s,
+        screenPos.y - 45 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9432,7 +9449,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 10 * s,
         headCenterY - 10 * s,
         headCenterX + 10 * s,
-        headCenterY + 15 * s,
+        headCenterY + 15 * s
       );
       faceGrad.addColorStop(0, sandLight);
       faceGrad.addColorStop(0.4, sandBase);
@@ -9448,13 +9465,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 10 * s,
         headCenterY + 12 * s,
         headCenterX,
-        headCenterY + 15 * s,
+        headCenterY + 15 * s
       );
       ctx.quadraticCurveTo(
         headCenterX + 10 * s,
         headCenterY + 12 * s,
         headCenterX + 12 * s,
-        headCenterY + 5 * s,
+        headCenterY + 5 * s
       );
       ctx.lineTo(headCenterX + 10 * s, headCenterY - 8 * s);
       ctx.closePath();
@@ -9466,7 +9483,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 18 * s,
         headCenterY - 15 * s,
         headCenterX + 18 * s,
-        headCenterY + 10 * s,
+        headCenterY + 10 * s
       );
       nemesGrad.addColorStop(0, goldAccent);
       nemesGrad.addColorStop(0.3, sandLight);
@@ -9482,7 +9499,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 18 * s,
         headCenterY - 15 * s,
         headCenterX - 20 * s,
-        headCenterY,
+        headCenterY
       );
       ctx.lineTo(headCenterX - 18 * s, headCenterY + 20 * s); // Left drape
       ctx.lineTo(headCenterX - 12 * s, headCenterY + 5 * s);
@@ -9494,7 +9511,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 18 * s,
         headCenterY - 15 * s,
         headCenterX,
-        headCenterY - 18 * s,
+        headCenterY - 18 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9509,11 +9526,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           headCenterX - 10 * s - stripeT * 8 * s,
-          headCenterY - 8 * s + stripeT * 5 * s,
+          headCenterY - 8 * s + stripeT * 5 * s
         );
         ctx.lineTo(
           headCenterX - 12 * s - stripeT * 6 * s,
-          headCenterY + 5 * s + stripeT * 15 * s,
+          headCenterY + 5 * s + stripeT * 15 * s
         );
         ctx.stroke();
       }
@@ -9524,11 +9541,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           headCenterX + 10 * s + stripeT * 8 * s,
-          headCenterY - 8 * s + stripeT * 5 * s,
+          headCenterY - 8 * s + stripeT * 5 * s
         );
         ctx.lineTo(
           headCenterX + 12 * s + stripeT * 6 * s,
-          headCenterY + 5 * s + stripeT * 15 * s,
+          headCenterY + 5 * s + stripeT * 15 * s
         );
         ctx.stroke();
       }
@@ -9542,13 +9559,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 2 * s,
         headCenterY - 22 * s,
         headCenterX,
-        headCenterY - 26 * s,
+        headCenterY - 26 * s
       );
       ctx.quadraticCurveTo(
         headCenterX - 2 * s,
         headCenterY - 22 * s,
         headCenterX,
-        headCenterY - 18 * s,
+        headCenterY - 18 * s
       );
       ctx.fill();
 
@@ -9559,13 +9576,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY - 30 * s,
         headCenterX + 4 * s,
-        headCenterY - 24 * s,
+        headCenterY - 24 * s
       );
       ctx.quadraticCurveTo(
         headCenterX,
         headCenterY - 26 * s,
         headCenterX - 4 * s,
-        headCenterY - 24 * s,
+        headCenterY - 24 * s
       );
       ctx.fill();
 
@@ -9577,14 +9594,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterY - 26 * s,
         0.8 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.arc(
         headCenterX + 1.5 * s,
         headCenterY - 26 * s,
         0.8 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9595,7 +9612,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY - 8 * s,
         headCenterX,
-        headCenterY - 2 * s,
+        headCenterY - 2 * s
       );
       foreheadGrad.addColorStop(0, "rgba(100, 80, 50, 0.15)");
       foreheadGrad.addColorStop(1, "rgba(100, 80, 50, 0)");
@@ -9612,7 +9629,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8 * s,
         -0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -9623,7 +9640,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8 * s,
         0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9637,7 +9654,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3.5 * s,
         -0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -9648,7 +9665,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3.5 * s,
         0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9657,7 +9674,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY - 4.5 * s,
         headCenterX,
-        headCenterY - 1.5 * s,
+        headCenterY - 1.5 * s
       );
       browGrad.addColorStop(0, sandMid);
       browGrad.addColorStop(1, sandDark);
@@ -9668,14 +9685,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 5 * s,
         headCenterY - 4.5 * s,
         headCenterX - 1.5 * s,
-        headCenterY - 2.5 * s,
+        headCenterY - 2.5 * s
       );
       ctx.lineTo(headCenterX - 1.5 * s, headCenterY - 1 * s);
       ctx.quadraticCurveTo(
         headCenterX - 5 * s,
         headCenterY - 3 * s,
         headCenterX - 8.5 * s,
-        headCenterY - 0.5 * s,
+        headCenterY - 0.5 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9685,14 +9702,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 5 * s,
         headCenterY - 4.5 * s,
         headCenterX + 8.5 * s,
-        headCenterY - 2 * s,
+        headCenterY - 2 * s
       );
       ctx.lineTo(headCenterX + 8.5 * s, headCenterY - 0.5 * s);
       ctx.quadraticCurveTo(
         headCenterX + 5 * s,
         headCenterY - 3 * s,
         headCenterX + 1.5 * s,
-        headCenterY - 1 * s,
+        headCenterY - 1 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -9705,13 +9722,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 5 * s,
         headCenterY - 1.5 * s,
         headCenterX - 1.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX - 5 * s,
         headCenterY + 2.2 * s,
         headCenterX - 8 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.fill();
       ctx.beginPath();
@@ -9720,13 +9737,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 5 * s,
         headCenterY - 1.5 * s,
         headCenterX + 8 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX + 5 * s,
         headCenterY + 2.2 * s,
         headCenterX + 1.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.fill();
 
@@ -9740,13 +9757,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 5 * s,
         headCenterY - 0.8 * s,
         headCenterX - 2 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX - 5 * s,
         headCenterY + 1.6 * s,
         headCenterX - 7.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.fill();
       ctx.beginPath();
@@ -9755,13 +9772,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 5 * s,
         headCenterY - 0.8 * s,
         headCenterX + 7.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX + 5 * s,
         headCenterY + 1.6 * s,
         headCenterX + 2 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.fill();
       clearShadow(ctx);
@@ -9776,13 +9793,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 5 * s,
         headCenterY - 1.5 * s,
         headCenterX - 1.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX - 5 * s,
         headCenterY + 2.2 * s,
         headCenterX - 8 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.stroke();
       ctx.lineWidth = 1 * s;
@@ -9792,7 +9809,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 9.5 * s,
         headCenterY + 1.5 * s,
         headCenterX - 10 * s,
-        headCenterY + 3 * s,
+        headCenterY + 3 * s
       );
       ctx.stroke();
       ctx.lineWidth = 1.2 * s;
@@ -9802,13 +9819,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 5 * s,
         headCenterY - 1.5 * s,
         headCenterX + 8 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX + 5 * s,
         headCenterY + 2.2 * s,
         headCenterX + 1.5 * s,
-        headCenterY + 0.5 * s,
+        headCenterY + 0.5 * s
       );
       ctx.stroke();
       ctx.lineWidth = 1 * s;
@@ -9818,7 +9835,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 9.5 * s,
         headCenterY + 1.5 * s,
         headCenterX + 10 * s,
-        headCenterY + 3 * s,
+        headCenterY + 3 * s
       );
       ctx.stroke();
       ctx.lineCap = "butt";
@@ -9858,7 +9875,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY + 8 * s,
         headCenterX + 2.8 * s,
-        headCenterY + 7 * s,
+        headCenterY + 7 * s
       );
       ctx.lineTo(headCenterX + 2 * s, headCenterY + 6.5 * s);
       ctx.lineTo(headCenterX - 2 * s, headCenterY + 6.5 * s);
@@ -9873,7 +9890,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.35 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -9884,7 +9901,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.35 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -9897,7 +9914,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 3.5 * s,
         headCenterY + 9 * s,
         headCenterX - 4 * s,
-        headCenterY + 10 * s,
+        headCenterY + 10 * s
       );
       ctx.stroke();
       ctx.beginPath();
@@ -9906,7 +9923,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX + 3.5 * s,
         headCenterY + 9 * s,
         headCenterX + 4 * s,
-        headCenterY + 10 * s,
+        headCenterY + 10 * s
       );
       ctx.stroke();
 
@@ -9919,13 +9936,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX - 1.5 * s,
         headCenterY + 11.2 * s,
         headCenterX,
-        headCenterY + 10.8 * s,
+        headCenterY + 10.8 * s
       );
       ctx.quadraticCurveTo(
         headCenterX + 1.5 * s,
         headCenterY + 11.2 * s,
         headCenterX + 4 * s,
-        headCenterY + 10.5 * s,
+        headCenterY + 10.5 * s
       );
       ctx.stroke();
       ctx.strokeStyle = "rgba(190, 170, 130, 0.15)";
@@ -9936,7 +9953,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY + 9.5 * s,
         headCenterX + 3 * s,
-        headCenterY + 10 * s,
+        headCenterY + 10 * s
       );
       ctx.stroke();
 
@@ -9948,13 +9965,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY + 16 * s,
         headCenterX + 7 * s,
-        headCenterY + 12 * s,
+        headCenterY + 12 * s
       );
       ctx.quadraticCurveTo(
         headCenterX,
         headCenterY + 14 * s,
         headCenterX - 7 * s,
-        headCenterY + 12 * s,
+        headCenterY + 12 * s
       );
       ctx.fill();
       ctx.strokeStyle = sandDark;
@@ -9965,7 +9982,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY + 15 * s,
         headCenterX + 4 * s,
-        headCenterY + 13 * s,
+        headCenterY + 13 * s
       );
       ctx.stroke();
 
@@ -9978,7 +9995,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         headCenterY + 30 * s,
         headCenterX + 3 * s,
-        headCenterY + 28 * s,
+        headCenterY + 28 * s
       );
       ctx.lineTo(headCenterX + 2 * s, headCenterY + 15 * s);
       ctx.closePath();
@@ -10005,13 +10022,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         collarY + 12 * s,
         headCenterX + 15 * s,
-        collarY + 5 * s,
+        collarY + 5 * s
       );
       ctx.quadraticCurveTo(
         headCenterX,
         collarY + 8 * s,
         headCenterX - 15 * s,
-        collarY + 5 * s,
+        collarY + 5 * s
       );
       ctx.fill();
 
@@ -10024,7 +10041,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         headCenterX,
         collarY + 10 * s,
         headCenterX + 12 * s,
-        collarY + 6 * s,
+        collarY + 6 * s
       );
       ctx.stroke();
 
@@ -10099,7 +10116,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         10 * s,
         screenPos.x + 5 * s,
         screenPos.y - 30 * s,
-        50 * s,
+        50 * s
       );
       auraGrad.addColorStop(0, `rgba(64, 208, 255, ${mysticPulse * 0.1})`);
       auraGrad.addColorStop(0.5, `rgba(64, 208, 255, ${mysticPulse * 0.05})`);
@@ -10113,7 +10130,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         35 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -10147,30 +10164,30 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Variant palettes (pre-baked, no runtime color ops)
       const spxPals = [
         {
-          lit: "#d4b584",
-          base: "#c4a574",
-          mid: "#b49564",
-          dark: "#9a7a4a",
-          shadow: "#7a5a30",
           accent: "#d4a840",
+          base: "#c4a574",
+          dark: "#9a7a4a",
+          lit: "#d4b584",
+          mid: "#b49564",
+          shadow: "#7a5a30",
           stripe: "#8a6a3a",
         },
         {
-          lit: "#d0c0a8",
-          base: "#b8a090",
-          mid: "#a89080",
-          dark: "#8a7060",
-          shadow: "#6a5040",
           accent: "#c0c8d0",
+          base: "#b8a090",
+          dark: "#8a7060",
+          lit: "#d0c0a8",
+          mid: "#a89080",
+          shadow: "#6a5040",
           stripe: "#6a5a4a",
         },
         {
-          lit: "#e0c070",
-          base: "#c8a060",
-          mid: "#b89050",
-          dark: "#9a7030",
-          shadow: "#7a5010",
           accent: "#e8c040",
+          base: "#c8a060",
+          dark: "#9a7030",
+          lit: "#e0c070",
+          mid: "#b89050",
+          shadow: "#7a5010",
           stripe: "#7a5a20",
         },
       ];
@@ -10191,7 +10208,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           28 * s,
           10 * s,
           35 * s,
-          0.25,
+          0.25
         );
       }
 
@@ -10246,7 +10263,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - hw - 12 * s,
         bt - bodyH * 1.3,
         sx - hw - 6 * s,
-        bt - bodyH * 1.5,
+        bt - bodyH * 1.5
       );
       ctx.stroke();
       ctx.fillStyle = p.dark;
@@ -10266,7 +10283,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - 4 * s,
         bt - bodyH * 1.4,
         sx,
-        bt - bodyH,
+        bt - bodyH
       );
       ctx.lineTo(sx + hw, bt - bodyH);
       ctx.lineTo(sx + hw, bt);
@@ -10287,7 +10304,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - hw + 6 * s,
         bt - bodyH * 1.4 - hd,
         sx - hw,
-        bt - bodyH * 0.8 - hd,
+        bt - bodyH * 0.8 - hd
       );
       ctx.lineTo(sx - hw, bt - hd);
       ctx.lineTo(sx, bt + hd);
@@ -10305,7 +10322,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - 4 * s,
         bt - bodyH * 1.4,
         sx,
-        bt - bodyH,
+        bt - bodyH
       );
       ctx.lineTo(sx + hw, bt - bodyH);
       ctx.lineTo(sx, bt - bodyH - hd);
@@ -10315,7 +10332,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - hw + 6 * s,
         bt - bodyH * 1.4 - hd,
         sx - hw,
-        bt - bodyH * 0.8 - hd,
+        bt - bodyH * 0.8 - hd
       );
       ctx.closePath();
       ctx.fill();
@@ -10340,7 +10357,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - 4 * s,
         bt - bodyH * 1.3,
         sx + 4 * s,
-        bt - bodyH * 1.1,
+        bt - bodyH * 1.1
       );
       ctx.stroke();
       // Haunch muscle
@@ -10350,7 +10367,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sx - hw + 8 * s,
         bt - bodyH * 0.7,
         sx - 2 * s,
-        bt - bodyH * 0.9,
+        bt - bodyH * 0.9
       );
       ctx.stroke();
 
@@ -10462,7 +10479,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx - 4 * s,
         hy - 14 * s,
         hx,
-        hy - 16 * s,
+        hy - 16 * s
       );
       ctx.bezierCurveTo(
         hx + 4 * s,
@@ -10470,7 +10487,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx + hdIso + 3 * s,
         hy - 9 * s,
         hx + hdIso + 2 * s,
-        hy,
+        hy
       );
       ctx.closePath();
       ctx.fill();
@@ -10488,7 +10505,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           hx,
           nsY - 1.5 * s,
           hx + nsSpread,
-          nsY + nsFrac * 2 * s,
+          nsY + nsFrac * 2 * s
         );
         ctx.stroke();
       }
@@ -10503,7 +10520,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx - 3.5 * s,
         hy + 2 * s,
         hx - 6.5 * s,
-        hy + 3.3 * s,
+        hy + 3.3 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -10513,7 +10530,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx + 3.5 * s,
         hy + 1 * s,
         hx + 6.5 * s,
-        hy + 2.5 * s,
+        hy + 2.5 * s
       );
       ctx.lineTo(hx + 6.5 * s, hy + 3.3 * s);
       ctx.quadraticCurveTo(hx + 3.5 * s, hy + 2 * s, hx + 1 * s, hy + 3 * s);
@@ -10541,13 +10558,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx - 3.5 * s,
         hy + 3.2 * s,
         hx - 1.5 * s,
-        hy + 4 * s,
+        hy + 4 * s
       );
       ctx.quadraticCurveTo(
         hx - 3.5 * s,
         hy + 4.6 * s,
         hx - 5.5 * s,
-        hy + 4 * s,
+        hy + 4 * s
       );
       ctx.fill();
       ctx.beginPath();
@@ -10556,13 +10573,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx + 3.5 * s,
         hy + 3.2 * s,
         hx + 5.5 * s,
-        hy + 4 * s,
+        hy + 4 * s
       );
       ctx.quadraticCurveTo(
         hx + 3.5 * s,
         hy + 4.6 * s,
         hx + 1.5 * s,
-        hy + 4 * s,
+        hy + 4 * s
       );
       ctx.fill();
 
@@ -10635,7 +10652,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx + 2 * s,
         hy - 20 * s,
         hx,
-        hy - 22 * s,
+        hy - 22 * s
       );
       ctx.bezierCurveTo(
         hx + 3 * s,
@@ -10643,7 +10660,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hx + 3 * s,
         hy - 15 * s,
         hx + 1 * s,
-        hy - 12 * s,
+        hy - 12 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -10672,7 +10689,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x + 3 * s,
         screenPos.y + 5 * s,
-        50 * s,
+        50 * s
       );
       lakeShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
       lakeShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
@@ -10685,7 +10702,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         45 * s,
         20 * s,
         oasisSeed - 10,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -10697,7 +10714,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         25 * s,
         screenPos.x,
         screenPos.y + 2 * s,
-        42 * s,
+        42 * s
       );
       sandGrad.addColorStop(0, sandWet);
       sandGrad.addColorStop(0.4, sandMid);
@@ -10713,7 +10730,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         43 * s,
         19 * s,
         oasisSeed + 3,
-        0.13,
+        0.13
       );
       ctx.fill();
 
@@ -10726,7 +10743,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         43 * s,
         19 * s,
         oasisSeed + 3,
-        0.13,
+        0.13
       );
       ctx.fill();
 
@@ -10744,7 +10761,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sandY,
           (1 + Math.abs(Math.sin(i * 3.7))) * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -10757,7 +10774,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 2 * s,
-        30 * s,
+        30 * s
       );
       waterGrad.addColorStop(0, waterDeep);
       waterGrad.addColorStop(0.3, waterMid);
@@ -10773,7 +10790,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         30 * s,
         13 * s,
         oasisSeed,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -10793,7 +10810,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           causticX,
           causticY,
-          causticSize,
+          causticSize
         );
         causticGrad.addColorStop(0, "#BBDEFB");
         causticGrad.addColorStop(0.5, "rgba(144, 202, 249, 0.5)");
@@ -10808,11 +10825,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           causticSize * 0.7,
           c * 0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
-      ctx.globalAlpha = 1.0;
+      ctx.globalAlpha = 1;
 
       // ========== WATER SURFACE EFFECTS ==========
       // Animated ripples
@@ -10832,7 +10849,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (2 + rippleSize * 0.4) * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -10856,20 +10873,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             spY,
             (0.8 + Math.sin(sparkleTime) * 0.3) * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
       }
-      ctx.globalAlpha = 1.0;
+      ctx.globalAlpha = 1;
 
       // ========== LILY PADS ==========
       const lilyPositions = [
-        { x: -15, y: 4, rot: 0.3, size: 1 },
-        { x: -10, y: -3, rot: -0.5, size: 0.8 },
-        { x: 12, y: 5, rot: 0.8, size: 0.9 },
-        { x: 18, y: -1, rot: -0.2, size: 0.7 },
-        { x: -5, y: 7, rot: 1.2, size: 0.85 },
+        { rot: 0.3, size: 1, x: -15, y: 4 },
+        { rot: -0.5, size: 0.8, x: -10, y: -3 },
+        { rot: 0.8, size: 0.9, x: 12, y: 5 },
+        { rot: -0.2, size: 0.7, x: 18, y: -1 },
+        { rot: 1.2, size: 0.85, x: -5, y: 7 },
       ];
 
       lilyPositions.forEach((lily, i) => {
@@ -10888,7 +10905,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lilySize * 0.5,
           lily.rot,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -10902,7 +10919,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lilySize * 0.45,
           lily.rot,
           0.15,
-          Math.PI * 2 - 0.15,
+          Math.PI * 2 - 0.15
         );
         ctx.lineTo(lilyX + lilySway, lilyY);
         ctx.fill();
@@ -10917,7 +10934,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lilySize * 0.2,
           lily.rot + 0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -10940,7 +10957,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               1 * s,
               petalAngle,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -10955,10 +10972,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== CATTAILS/REEDS ==========
       const reedPositions = [
-        { x: -28, y: 8, count: 3 },
-        { x: 28, y: 6, count: 2 },
-        { x: -22, y: -8, count: 2 },
-        { x: 25, y: -6, count: 2 },
+        { count: 3, x: -28, y: 8 },
+        { count: 2, x: 28, y: 6 },
+        { count: 2, x: -22, y: -8 },
+        { count: 2, x: 25, y: -6 },
       ];
 
       reedPositions.forEach((reedGroup, gi) => {
@@ -10977,7 +10994,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             reedX + reedSway * 0.3,
             reedY - reedHeight * 0.5,
             reedX + reedSway,
-            reedY - reedHeight,
+            reedY - reedHeight
           );
           ctx.stroke();
 
@@ -10991,7 +11008,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             5 * s,
             reedSway * 0.05,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
 
@@ -11004,7 +11021,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             reedX + 6 * s + reedSway * 0.5,
             reedY - 8 * s,
             reedX + 10 * s + reedSway,
-            reedY - 6 * s,
+            reedY - 6 * s
           );
           ctx.stroke();
         }
@@ -11020,7 +11037,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         29 * s,
         12.5 * s,
         oasisSeed + 5,
-        0.14,
+        0.14
       );
       ctx.stroke();
 
@@ -11041,7 +11058,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           foamAngle + 0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -11064,26 +11081,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fishAngle + Math.PI / 2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Fish tail
         ctx.beginPath();
         ctx.moveTo(
           fishX - Math.cos(fishAngle + Math.PI / 2) * 2.5 * s,
-          fishY - Math.sin(fishAngle + Math.PI / 2) * 1 * s,
+          fishY - Math.sin(fishAngle + Math.PI / 2) * 1 * s
         );
         ctx.lineTo(
           fishX -
             Math.cos(fishAngle + Math.PI / 2) * 4 * s -
             Math.sin(fishAngle) * 1.5 * s,
-          fishY - Math.sin(fishAngle + Math.PI / 2) * 1.5 * s,
+          fishY - Math.sin(fishAngle + Math.PI / 2) * 1.5 * s
         );
         ctx.lineTo(
           fishX -
             Math.cos(fishAngle + Math.PI / 2) * 4 * s +
             Math.sin(fishAngle) * 1.5 * s,
-          fishY - Math.sin(fishAngle + Math.PI / 2) * 1.5 * s,
+          fishY - Math.sin(fishAngle + Math.PI / 2) * 1.5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -11107,7 +11124,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           22 * s,
           cx,
           cy + 4 * s,
-          56 * s,
+          56 * s
         );
         outerBlend.addColorStop(0, "rgba(58,47,31,0.25)");
         outerBlend.addColorStop(0.6, "rgba(58,47,31,0.12)");
@@ -11120,7 +11137,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           56 * s,
           24 * s,
           lakeSeed - 15,
-          0.08,
+          0.08
         );
         ctx.fill();
 
@@ -11132,7 +11149,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           cx,
           cy + 2 * s,
-          40 * s,
+          40 * s
         );
         embankGrad.addColorStop(0, "#5a4a35");
         embankGrad.addColorStop(0.35, "#4f4230");
@@ -11144,7 +11161,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx,
           cy + 13 * s,
           cx,
-          cy + 20 * s,
+          cy + 20 * s
         );
         wallGrad.addColorStop(0, "#3a2f1f");
         wallGrad.addColorStop(0.5, "#352a1a");
@@ -11157,7 +11174,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           40 * s,
           17 * s,
           lakeSeed + 3,
-          0.11,
+          0.11
         );
         ctx.fill();
 
@@ -11170,7 +11187,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           40 * s,
           17 * s,
           lakeSeed + 3,
-          0.11,
+          0.11
         );
         ctx.fill();
 
@@ -11202,7 +11219,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             5 * s,
             2.5 * s,
             lakeSeed + dp * 13,
-            0.2,
+            0.2
           );
           ctx.fill();
         }
@@ -11217,7 +11234,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + 34 * s,
           cy + 7 * s,
           cx + 26 * s,
-          cy + 10 * s,
+          cy + 10 * s
         );
         ctx.bezierCurveTo(
           cx + 32 * s,
@@ -11225,7 +11242,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + 33 * s,
           cy,
           cx + 27 * s,
-          cy - 3 * s,
+          cy - 3 * s
         );
         ctx.fill();
         ctx.fillStyle = "#3f3522";
@@ -11246,7 +11263,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy + 2 * s,
-          28 * s,
+          28 * s
         );
         wGrad.addColorStop(0, "#004d6b");
         wGrad.addColorStop(0.15, "#006080");
@@ -11263,7 +11280,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           28 * s,
           12 * s,
           lakeSeed,
-          0.13,
+          0.13
         );
         ctx.fill();
 
@@ -11275,7 +11292,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy + 2 * s,
-          22 * s,
+          22 * s
         );
         wGlow.addColorStop(0, `rgba(100,255,220,${glowPulse})`);
         wGlow.addColorStop(0.5, `rgba(80,220,200,${glowPulse * 0.5})`);
@@ -11288,7 +11305,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           22 * s,
           9 * s,
           lakeSeed + 20,
-          0.13,
+          0.13
         );
         ctx.fill();
 
@@ -11325,7 +11342,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (2 + rs * 0.38) * s,
             0.06,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
         }
@@ -11349,7 +11366,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               spy2,
               (0.8 + Math.sin(st2) * 0.4) * s,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -11367,7 +11384,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           27.5 * s,
           11.5 * s,
           lakeSeed + 5,
-          0.13,
+          0.13
         );
         ctx.stroke();
         ctx.strokeStyle = "rgba(255,255,255,0.25)";
@@ -11379,46 +11396,48 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           27 * s,
           11.2 * s,
           lakeSeed + 5,
-          0.13,
+          0.13
         );
         ctx.stroke();
       } // end !skipShadow
-      if (shadowOnly) break;
+      if (shadowOnly) {
+        break;
+      }
 
       // === LAKESIDE TREES (on left and right sides of lake) ===
       {
-        const lakeTrees: Array<{
+        const lakeTrees: {
           x: number;
           y: number;
           sc: number;
           variant: number;
-        }> = [
-          { x: -34, y: -4, sc: 0.45, variant: 0 },
-          { x: -30, y: 6, sc: 0.5, variant: 2 },
-          { x: -36, y: 10, sc: 0.4, variant: 3 },
-          { x: 34, y: -2, sc: 0.48, variant: 1 },
-          { x: 32, y: 8, sc: 0.42, variant: 0 },
+        }[] = [
+          { sc: 0.45, variant: 0, x: -34, y: -4 },
+          { sc: 0.5, variant: 2, x: -30, y: 6 },
+          { sc: 0.4, variant: 3, x: -36, y: 10 },
+          { sc: 0.48, variant: 1, x: 34, y: -2 },
+          { sc: 0.42, variant: 0, x: 32, y: 8 },
         ];
         const treePalettes = [
           {
+            foliage: ["#2e7d32", "#388e3c", "#43a047", "#4caf50"],
             trunk: "#5d4037",
             trunkDark: "#3e2723",
-            foliage: ["#2e7d32", "#388e3c", "#43a047", "#4caf50"],
           },
           {
+            foliage: ["#1b5e20", "#2e7d32", "#388e3c", "#33691e"],
             trunk: "#4a3728",
             trunkDark: "#2d1f14",
-            foliage: ["#1b5e20", "#2e7d32", "#388e3c", "#33691e"],
           },
           {
+            foliage: ["#33691e", "#558b2f", "#689f38", "#7cb342"],
             trunk: "#6d4c41",
             trunkDark: "#4e342e",
-            foliage: ["#33691e", "#558b2f", "#689f38", "#7cb342"],
           },
           {
+            foliage: ["#2e7d32", "#43a047", "#66bb6a", "#81c784"],
             trunk: "#5d4037",
             trunkDark: "#3e2723",
-            foliage: ["#2e7d32", "#43a047", "#66bb6a", "#81c784"],
           },
         ];
 
@@ -11438,7 +11457,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             8 * lts,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
 
@@ -11483,7 +11502,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               0,
               ltx + fl.dx * lts,
               lty + fl.dy * lts,
-              fl.rx * lts,
+              fl.rx * lts
             );
             flG.addColorStop(0, fc);
             flG.addColorStop(0.7, fc);
@@ -11497,7 +11516,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               fl.ry * lts,
               0,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -11512,7 +11531,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             4 * lts,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -11532,11 +11551,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // === LILY PADS ===
       const clLilies = [
-        { x: -15, y: 5, rot: 0.3, sz: 0.85 },
-        { x: -10, y: -1, rot: -0.4, sz: 0.65 },
-        { x: 16, y: 6, rot: 0.7, sz: 0.7 },
-        { x: -5, y: 7, rot: 1.1, sz: 0.75 },
-        { x: 20, y: 1, rot: -0.2, sz: 0.55 },
+        { rot: 0.3, sz: 0.85, x: -15, y: 5 },
+        { rot: -0.4, sz: 0.65, x: -10, y: -1 },
+        { rot: 0.7, sz: 0.7, x: 16, y: 6 },
+        { rot: 1.1, sz: 0.75, x: -5, y: 7 },
+        { rot: -0.2, sz: 0.55, x: 20, y: 1 },
       ];
       for (let li = 0; li < clLilies.length; li++) {
         const lil = clLilies[li];
@@ -11552,7 +11571,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lsz * 0.5,
           lil.rot,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#1A3A18";
@@ -11569,7 +11588,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lsz * 0.18,
           lil.rot + 0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Flowers on every other lily pad
@@ -11588,7 +11607,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               1 * s,
               pa,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -11613,15 +11632,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           fx - Math.cos(fa + Math.PI / 2) * 2.5 * s,
-          fy - Math.sin(fa + Math.PI / 2) * 1 * s,
+          fy - Math.sin(fa + Math.PI / 2) * 1 * s
         );
         ctx.lineTo(
           fx - Math.cos(fa + Math.PI / 2) * 4 * s - Math.sin(fa) * 1.5 * s,
-          fy - Math.sin(fa + Math.PI / 2) * 1.5 * s,
+          fy - Math.sin(fa + Math.PI / 2) * 1.5 * s
         );
         ctx.lineTo(
           fx - Math.cos(fa + Math.PI / 2) * 4 * s + Math.sin(fa) * 1.5 * s,
-          fy - Math.sin(fa + Math.PI / 2) * 1.5 * s,
+          fy - Math.sin(fa + Math.PI / 2) * 1.5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -11669,7 +11688,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         7 * s,
         28 * s,
-        0.28,
+        0.28
       );
 
       // Base - isometric box
@@ -11732,7 +11751,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Eyes
@@ -11745,7 +11764,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.8 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.ellipse(
         screenPos.x + 2 * s,
@@ -11754,7 +11773,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.8 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -11764,13 +11783,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - bw * 0.7,
         screenPos.y - 18 * s,
         bw * 1.4,
-        2 * s,
+        2 * s
       );
       ctx.fillRect(
         screenPos.x - bw * 0.6,
         screenPos.y - 12 * s,
         bw * 1.2,
-        1.5 * s,
+        1.5 * s
       );
 
       // Hieroglyph details on right face
@@ -11881,7 +11900,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Top coil (smaller, offset)
@@ -11894,7 +11913,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4.5 * s,
         -0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = csMid;
@@ -11928,7 +11947,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 3 * s,
         coilBase - 35 * s,
         cx + 1 * s,
-        coilBase - 44 * s,
+        coilBase - 44 * s
       );
       ctx.lineTo(cx - 1 * s, coilBase - 44 * s);
       ctx.bezierCurveTo(
@@ -11937,7 +11956,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 4 * s,
         coilBase - 22 * s,
         cx - 4 * s,
-        coilBase - 9 * s,
+        coilBase - 9 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -11951,7 +11970,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 2 * s,
         coilBase - 35 * s,
         cx,
-        coilBase - 44 * s,
+        coilBase - 44 * s
       );
       ctx.bezierCurveTo(
         cx - 2 * s,
@@ -11959,7 +11978,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 3 * s,
         coilBase - 22 * s,
         cx - 3 * s,
-        coilBase - 9 * s,
+        coilBase - 9 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -11973,7 +11992,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 1 * s,
         coilBase - 34 * s,
         cx,
-        coilBase - 42 * s,
+        coilBase - 42 * s
       );
       ctx.bezierCurveTo(
         cx - 1 * s,
@@ -11981,7 +12000,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 1.5 * s,
         coilBase - 22 * s,
         cx - 1.5 * s,
-        coilBase - 10 * s,
+        coilBase - 10 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -12009,14 +12028,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 15 * s,
         hoodTop + 6 * s,
         cx - 13 * s,
-        hoodTop + 18 * s,
+        hoodTop + 18 * s
       );
       ctx.quadraticCurveTo(cx - 8 * s, hoodTop + 22 * s, cx, hoodTop + 16 * s);
       ctx.quadraticCurveTo(
         cx + 8 * s,
         hoodTop + 22 * s,
         cx + 13 * s,
-        hoodTop + 18 * s,
+        hoodTop + 18 * s
       );
       ctx.bezierCurveTo(
         cx + 15 * s,
@@ -12024,7 +12043,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 8 * s,
         hoodTop + 2 * s,
         cx,
-        hoodTop,
+        hoodTop
       );
       ctx.closePath();
       ctx.fill();
@@ -12038,14 +12057,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 12 * s,
         hoodTop + 7 * s,
         cx - 11 * s,
-        hoodTop + 17 * s,
+        hoodTop + 17 * s
       );
       ctx.quadraticCurveTo(cx - 6 * s, hoodTop + 20 * s, cx, hoodTop + 15 * s);
       ctx.quadraticCurveTo(
         cx + 6 * s,
         hoodTop + 20 * s,
         cx + 11 * s,
-        hoodTop + 17 * s,
+        hoodTop + 17 * s
       );
       ctx.bezierCurveTo(
         cx + 12 * s,
@@ -12053,7 +12072,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 6 * s,
         hoodTop + 3 * s,
         cx,
-        hoodTop + 1 * s,
+        hoodTop + 1 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -12097,7 +12116,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 8 * s,
         hoodTop + 2 * s,
         cx,
-        hoodTop,
+        hoodTop
       );
       ctx.stroke();
 
@@ -12117,7 +12136,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2.5 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -12165,7 +12184,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8 * s,
         -0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.ellipse(
         cx + 2.5 * s,
@@ -12174,7 +12193,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8 * s,
         0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Outer glow
@@ -12190,7 +12209,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx - 2.5 * s,
         headY2 - 0.5 * s,
-        2 * s,
+        2 * s
       );
       eyeGrad.addColorStop(0, "#ff6060");
       eyeGrad.addColorStop(0.4, "#e53935");
@@ -12204,7 +12223,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         -0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       const eyeGrad2 = ctx.createRadialGradient(
@@ -12213,7 +12232,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx + 2.5 * s,
         headY2 - 0.5 * s,
-        2 * s,
+        2 * s
       );
       eyeGrad2.addColorStop(0, "#ff6060");
       eyeGrad2.addColorStop(0.4, "#e53935");
@@ -12227,7 +12246,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Eye specular highlight
@@ -12302,7 +12321,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "rgba(80,68,40,0.35)",
         s,
         9,
-        2,
+        2
       );
 
       // Top face
@@ -12327,24 +12346,24 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "rgba(80,68,40,0.3)",
         s,
         9,
-        6,
+        6
       );
 
       // Hieroglyph overlay on front face
       ctx.fillStyle = glyphCol;
       const glyphs = [
-        { t: 0.15, row: 0.25, type: 0 },
-        { t: 0.38, row: 0.25, type: 1 },
-        { t: 0.62, row: 0.25, type: 2 },
-        { t: 0.85, row: 0.25, type: 0 },
-        { t: 0.15, row: 0.5, type: 2 },
-        { t: 0.38, row: 0.5, type: 0 },
-        { t: 0.62, row: 0.5, type: 1 },
-        { t: 0.85, row: 0.5, type: 2 },
-        { t: 0.15, row: 0.75, type: 1 },
-        { t: 0.38, row: 0.75, type: 2 },
-        { t: 0.62, row: 0.75, type: 0 },
-        { t: 0.85, row: 0.75, type: 1 },
+        { row: 0.25, t: 0.15, type: 0 },
+        { row: 0.25, t: 0.38, type: 1 },
+        { row: 0.25, t: 0.62, type: 2 },
+        { row: 0.25, t: 0.85, type: 0 },
+        { row: 0.5, t: 0.15, type: 2 },
+        { row: 0.5, t: 0.38, type: 0 },
+        { row: 0.5, t: 0.62, type: 1 },
+        { row: 0.5, t: 0.85, type: 2 },
+        { row: 0.75, t: 0.15, type: 1 },
+        { row: 0.75, t: 0.38, type: 2 },
+        { row: 0.75, t: 0.62, type: 0 },
+        { row: 0.75, t: 0.85, type: 1 },
       ];
       glyphs.forEach((g) => {
         const gx = x1 + g.t * (x2 - x1);
@@ -12386,7 +12405,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ptY = screenPos.y;
       const ptSeed = decorX * 61 + decorY * 97;
       const ptHash = (n: number) => {
-        const h = Math.sin(ptSeed * 0.1 + n * 2.891) * 43758.5453;
+        const h = Math.sin(ptSeed * 0.1 + n * 2.891) * 43_758.5453;
         return h - Math.floor(h);
       };
       const ptV = variant % 4;
@@ -12394,32 +12413,32 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Color palettes for pots
       const potPalettes = [
         {
-          dark: "#7a4828",
           base: "#b07040",
+          dark: "#7a4828",
           light: "#d09060",
-          rim: "#c8a070",
           pattern: "#5a3018",
+          rim: "#c8a070",
         },
         {
-          dark: "#6a3820",
           base: "#a06038",
+          dark: "#6a3820",
           light: "#c88050",
-          rim: "#b89060",
           pattern: "#4a2810",
+          rim: "#b89060",
         },
         {
-          dark: "#8a5a38",
           base: "#c08858",
+          dark: "#8a5a38",
           light: "#d8a878",
-          rim: "#d0b880",
           pattern: "#6a4028",
+          rim: "#d0b880",
         },
         {
-          dark: "#5a3020",
           base: "#8a5838",
+          dark: "#5a3020",
           light: "#b08050",
-          rim: "#a87848",
           pattern: "#3a1810",
+          rim: "#a87848",
         },
       ];
 
@@ -12432,7 +12451,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         15 * s,
         6 * s,
         22 * s,
-        0.22,
+        0.22
       );
 
       // Scattered sand/dirt under pots
@@ -12444,7 +12463,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         8 * s,
         ptSeed + 50,
-        0.16,
+        0.16
       );
       ctx.fill();
 
@@ -12459,7 +12478,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pal: (typeof potPalettes)[0],
         broken: boolean,
         tilt: number,
-        hasSand: boolean,
+        hasSand: boolean
       ) => {
         ctx.save();
         ctx.translate(px, py);
@@ -12491,7 +12510,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             bulgeW,
             breakH * 0.5,
             blobSeed,
-            0.08,
+            0.08
           );
           ctx.fill();
 
@@ -12504,8 +12523,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             const jt = j / jagPts;
             const jx = -bulgeW * 0.8 + jt * bulgeW * 1.6;
             const jy = -breakH + Math.sin(blobSeed + j * 2.3) * 2 * s;
-            if (j === 0) ctx.moveTo(jx, jy);
-            else ctx.lineTo(jx, jy);
+            if (j === 0) {
+              ctx.moveTo(jx, jy);
+            } else {
+              ctx.lineTo(jx, jy);
+            }
           }
           ctx.stroke();
 
@@ -12519,7 +12541,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             2 * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         } else {
@@ -12549,8 +12571,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             const baseW = 0.6 + t * 0.4;
             const slW = w * belly * neckTaper * baseW;
             const wobble = Math.sin(blobSeed + sl * 1.7) * 0.5 * s;
-            if (sl === 0) ctx.moveTo(slW + wobble, slY);
-            else ctx.lineTo(slW + wobble, slY);
+            if (sl === 0) {
+              ctx.moveTo(slW + wobble, slY);
+            } else {
+              ctx.lineTo(slW + wobble, slY);
+            }
           }
           // Left side going down
           for (let sl = slices; sl >= 0; sl--) {
@@ -12607,8 +12632,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               bandY +
               Math.cos(zAng) * bandW * 0.12 +
               (z % 2 === 0 ? -1.5 : 1.5) * s;
-            if (z === 0) ctx.moveTo(zx, zy);
-            else ctx.lineTo(zx, zy);
+            if (z === 0) {
+              ctx.moveTo(zx, zy);
+            } else {
+              ctx.lineTo(zx, zy);
+            }
           }
           ctx.stroke();
 
@@ -12624,7 +12652,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (rimW + 1 * s) * 0.3,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           // Rim inner (dark opening)
@@ -12643,7 +12671,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (rimW + 0.5 * s) * 0.3,
             0,
             Math.PI * 1.1,
-            Math.PI * 1.8,
+            Math.PI * 1.8
           );
           ctx.stroke();
 
@@ -12657,7 +12685,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             h * 0.25,
             -0.2,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -12672,7 +12700,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             4 * s,
             2 * s,
             blobSeed + 40,
-            0.2,
+            0.2
           );
           ctx.fill();
         }
@@ -12696,7 +12724,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pal1,
         ptHash(10) < 0.3,
         ptHash(11) * 0.15 - 0.07,
-        false,
+        false
       );
 
       // Third element — broken shards with organic shapes
@@ -12726,7 +12754,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           shW * 0.6,
           shH * 0.6,
           ptSeed + sh * 17 + 5,
-          0.2,
+          0.2
         );
         ctx.fill();
       }
@@ -12744,7 +12772,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           pal2,
           false,
           -0.08,
-          true,
+          true
         );
       }
 
@@ -12764,7 +12792,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 5 * s,
         22 * s,
         10 * s,
-        decorX * 4.3 + decorY * 7.7,
+        decorX * 4.3 + decorY * 7.7
       );
       ctx.fill();
 
@@ -12775,7 +12803,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        22 * s,
+        22 * s
       );
       duneGrad.addColorStop(0, sandLight);
       duneGrad.addColorStop(0.5, sandMid);
@@ -12787,19 +12815,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 15 * s,
         screenPos.y - 12 * s,
         screenPos.x - 3 * s,
-        screenPos.y - 15 * s,
+        screenPos.y - 15 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 10 * s,
         screenPos.y - 12 * s,
         screenPos.x + 18 * s,
-        screenPos.y + 3 * s,
+        screenPos.y + 3 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 5 * s,
         screenPos.y + 6 * s,
         screenPos.x - 10 * s,
-        screenPos.y + 5 * s,
+        screenPos.y + 5 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -12815,7 +12843,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 2 * s,
           ry - 2 * s,
           screenPos.x + 12 * s - r * 2 * s,
-          ry + 1 * s,
+          ry + 1 * s
         );
         ctx.stroke();
       }
@@ -12828,13 +12856,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x + 15 * s,
         screenPos.y - 4 * s,
         screenPos.x + 18 * s,
-        screenPos.y + 3 * s,
+        screenPos.y + 3 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 10 * s,
         screenPos.y + 2 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 8 * s,
+        screenPos.y - 8 * s
       );
       ctx.fill();
       break;
@@ -12856,7 +12884,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -12868,7 +12896,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 3 * s,
         12 * s,
         5 * s,
-        decorX * 9.1 + decorY * 6.3,
+        decorX * 9.1 + decorY * 6.3
       );
       ctx.fill();
 
@@ -12921,7 +12949,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 10 * s,
-        10 * s,
+        10 * s
       );
       const glowPulse = 0.4 + Math.sin(decorTime * 2) * 0.15;
       goldGlow.addColorStop(0, `rgba(255,200,50,${glowPulse})`);
@@ -12935,7 +12963,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -12948,7 +12976,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y - 9 * s,
         1.8 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.arc(screenPos.x, screenPos.y - 11 * s, 1.5 * s, 0, Math.PI * 2);
       ctx.fill();
@@ -12986,7 +13014,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         8 * s,
         35 * s,
-        0.25,
+        0.25
       );
 
       // Shared snow-ball helper with surface detail
@@ -12997,7 +13025,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           bx,
           by,
-          br,
+          br
         );
         sbGrad.addColorStop(0, snowHighlight);
         sbGrad.addColorStop(0.3, snowBase);
@@ -13054,7 +13082,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           nx,
           ny,
           nx + nLen,
-          ny + 1 * s,
+          ny + 1 * s
         );
         snNoseGrad.addColorStop(0, "#ff8c00");
         snNoseGrad.addColorStop(0.5, "#ff6b00");
@@ -13088,7 +13116,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y - 16 * s - btn * 6 * s,
             1.8 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -13130,14 +13158,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const hatG = ctx.createLinearGradient(
           screenPos.x - 6 * s,
           screenPos.y - 62 * s,
           screenPos.x + 6 * s,
-          screenPos.y - 46 * s,
+          screenPos.y - 46 * s
         );
         hatG.addColorStop(0, "#263238");
         hatG.addColorStop(0.3, "#37474f");
@@ -13155,7 +13183,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Hat highlight
@@ -13166,7 +13194,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 6 * s,
           screenPos.y - 55 * s,
           screenPos.x + 6 * s,
-          screenPos.y - 52 * s,
+          screenPos.y - 52 * s
         );
         ribbonG.addColorStop(0, "#b71c1c");
         ribbonG.addColorStop(0.5, "#e53935");
@@ -13183,7 +13211,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.2,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Face
@@ -13199,7 +13227,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y - 34 * s + Math.sin(smA) * 3 * s,
             1 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -13208,7 +13236,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 10 * s,
           screenPos.y - 30 * s,
           screenPos.x + 10 * s,
-          screenPos.y - 30 * s,
+          screenPos.y - 30 * s
         );
         sm0ScarfG.addColorStop(0, "#b71c1c");
         sm0ScarfG.addColorStop(0.4, "#e53935");
@@ -13223,7 +13251,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#c62828";
@@ -13233,14 +13261,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 12 * s,
           screenPos.y - 28 * s,
           screenPos.x + 10 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 21 * s);
         ctx.quadraticCurveTo(
           screenPos.x + 8 * s,
           screenPos.y - 27 * s,
           screenPos.x + 4 * s,
-          screenPos.y - 29 * s,
+          screenPos.y - 29 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -13272,7 +13300,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             1.5 * s,
             0.2,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -13290,7 +13318,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 39 * s,
           3.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13299,7 +13327,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 39 * s,
           3.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Fluffy trim on earmuffs
@@ -13310,7 +13338,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 39 * s,
           2 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13319,7 +13347,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 39 * s,
           2 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Face
@@ -13335,7 +13363,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y - 36 * s + Math.sin(smA) * 2.5 * s,
             1 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -13349,7 +13377,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13358,14 +13386,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 14 * s,
           screenPos.y - 28 * s,
           screenPos.x - 12 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 21 * s);
         ctx.quadraticCurveTo(
           screenPos.x - 10 * s,
           screenPos.y - 27 * s,
           screenPos.x - 3 * s,
-          screenPos.y - 30 * s,
+          screenPos.y - 30 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -13413,7 +13441,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y - 13 * s - btn * 5 * s,
             1.5 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -13427,7 +13455,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "#455A64";
@@ -13447,7 +13475,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Face
@@ -13462,7 +13490,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 30 * s,
           3.5 * s,
           0.2,
-          Math.PI - 0.2,
+          Math.PI - 0.2
         );
         ctx.stroke();
         // Blue scarf
@@ -13475,7 +13503,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13484,14 +13512,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 10 * s,
           screenPos.y - 23 * s,
           screenPos.x + 9 * s,
-          screenPos.y - 17 * s,
+          screenPos.y - 17 * s
         );
         ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 18 * s);
         ctx.quadraticCurveTo(
           screenPos.x + 7 * s,
           screenPos.y - 23 * s,
           screenPos.x + 3 * s,
-          screenPos.y - 24 * s,
+          screenPos.y - 24 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -13514,7 +13542,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 22 * s,
           3 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13523,7 +13551,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 14 * s,
           3 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Mitten thumbs
@@ -13534,7 +13562,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 20 * s,
           1.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -13543,7 +13571,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 12 * s,
           1.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -13561,7 +13589,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           snpY,
           snpSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -13582,7 +13610,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 3 * s,
-        25 * s,
+        25 * s
       );
       crystalGlowGrad.addColorStop(0, "rgba(144,202,249,0.35)");
       crystalGlowGrad.addColorStop(0.5, "rgba(144,202,249,0.15)");
@@ -13596,7 +13624,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         12 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -13610,18 +13638,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // Main crystal spires - proper isometric 4-faced crystals
       const spires = [
-        { x: 0, y: 0, h: 35, base: 8, tilt: 0 },
-        { x: -8, y: 2, h: 22, base: 5, tilt: -0.15 },
-        { x: 10, y: 1, h: 25, base: 6, tilt: 0.12 },
-        { x: -4, y: 3, h: 18, base: 4, tilt: -0.08 },
-        { x: 6, y: 3, h: 16, base: 4, tilt: 0.2 },
-        { x: -12, y: 4, h: 14, base: 3, tilt: -0.25 },
+        { base: 8, h: 35, tilt: 0, x: 0, y: 0 },
+        { base: 5, h: 22, tilt: -0.15, x: -8, y: 2 },
+        { base: 6, h: 25, tilt: 0.12, x: 10, y: 1 },
+        { base: 4, h: 18, tilt: -0.08, x: -4, y: 3 },
+        { base: 4, h: 16, tilt: 0.2, x: 6, y: 3 },
+        { base: 3, h: 14, tilt: -0.25, x: -12, y: 4 },
       ];
 
       spires.sort((a, b) => a.y - b.y);
@@ -13636,7 +13664,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           crystalLight,
           crystalMid,
           crystalDeep,
-          spire.tilt,
+          spire.tilt
         );
       }
 
@@ -13647,7 +13675,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 10 * s,
-        12 * s,
+        12 * s
       );
       centerGlow.addColorStop(0, "rgba(255,255,255,0.5)");
       centerGlow.addColorStop(0.5, "rgba(144,202,249,0.3)");
@@ -13661,7 +13689,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -13706,7 +13734,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         20 * s,
         32 * s,
         0.25,
-        "70,90,120",
+        "70,90,120"
       );
 
       // Wide snow spread on ground - soft fade into terrain
@@ -13716,7 +13744,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX,
         snowBaseY + 6 * s,
-        50 * s,
+        50 * s
       );
       groundSnowGrad.addColorStop(0, "#e8f0f5");
       groundSnowGrad.addColorStop(0.5, "#e0eaf2");
@@ -13731,7 +13759,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         17 * s,
         snowSeed,
         0.12,
-        32,
+        32
       );
       ctx.fill();
 
@@ -13742,7 +13770,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX,
         snowBaseY,
-        40 * s,
+        40 * s
       );
       mainSnowGrad.addColorStop(0, "#f0f5fa");
       mainSnowGrad.addColorStop(0.4, "#e5edf4");
@@ -13757,7 +13785,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         20 * s,
         snowSeed * 1.7,
         0.15,
-        32,
+        32
       );
       ctx.fill();
 
@@ -13768,7 +13796,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX - 3 * s,
         snowBaseY - 8 * s,
-        30 * s,
+        30 * s
       );
       moundGrad.addColorStop(0, "#ffffff");
       moundGrad.addColorStop(0.3, "#f8fbfd");
@@ -13783,7 +13811,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         snowSeed * 3.1,
         0.18,
-        32,
+        32
       );
       ctx.fill();
 
@@ -13794,7 +13822,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX - 5 * s,
         snowBaseY - 14 * s,
-        18 * s,
+        18 * s
       );
       peakSnowGrad.addColorStop(0, "#ffffff");
       peakSnowGrad.addColorStop(0.5, "rgba(255,255,255,0.8)");
@@ -13808,7 +13836,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         11 * s,
         snowSeed * 5.3,
         0.2,
-        28,
+        28
       );
       ctx.fill();
 
@@ -13819,7 +13847,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX + 14 * s,
         snowBaseY - 2 * s,
-        20 * s,
+        20 * s
       );
       mound2SnowGrad.addColorStop(0, "#ffffff");
       mound2SnowGrad.addColorStop(0.4, "#f5f9fc");
@@ -13833,7 +13861,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         13 * s,
         snowSeed * 7.7,
         0.17,
-        28,
+        28
       );
       ctx.fill();
 
@@ -13844,7 +13872,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         snowBaseX + 3 * s,
         snowBaseY - 5 * s,
-        12 * s,
+        12 * s
       );
       creviceGrad.addColorStop(0, "rgba(150,180,215,0.35)");
       creviceGrad.addColorStop(1, "transparent");
@@ -13857,7 +13885,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         snowSeed * 9.1,
         0.1,
-        24,
+        24
       );
       ctx.fill();
 
@@ -13874,7 +13902,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         snowBaseX - 2 * s,
         snowBaseY - 24 * s,
         snowBaseX + 6 * s,
-        snowBaseY - 14 * s,
+        snowBaseY - 14 * s
       );
       ctx.stroke();
       clearShadow(ctx);
@@ -13890,7 +13918,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         snowBaseX + 20 * s,
         snowBaseY - 12 * s,
         snowBaseX + 22 * s,
-        snowBaseY - 4 * s,
+        snowBaseY - 4 * s
       );
       ctx.stroke();
 
@@ -13910,7 +13938,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bumpSize * 0.7,
           bumpAngle * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -13936,7 +13964,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cHeight,
           "rgba(220, 240, 255, 0.85)",
           "rgba(180, 215, 240, 0.7)",
-          "rgba(130, 175, 210, 0.6)",
+          "rgba(130, 175, 210, 0.6)"
         );
       }
 
@@ -14005,7 +14033,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         snowBaseX + 18 * s,
         snowBaseY - 16 * s,
         snowBaseX + 24 * s,
-        snowBaseY - 6 * s,
+        snowBaseY - 6 * s
       );
       ctx.stroke();
       break;
@@ -14024,7 +14052,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           45 * s,
           0.3,
-          "0,70,100",
+          "0,70,100"
         );
       }
 
@@ -14035,7 +14063,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 2 * s,
-        35 * s,
+        35 * s
       );
       glSnowG.addColorStop(0, "#ffffff");
       glSnowG.addColorStop(0.4, "#edf4f8");
@@ -14048,7 +14076,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 2 * s,
         35 * s,
         12 * s,
-        decorX * 6.7 + decorY * 4.9,
+        decorX * 6.7 + decorY * 4.9
       );
       ctx.fill();
 
@@ -14059,7 +14087,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 20 * s,
-        40 * s,
+        40 * s
       );
       glBloom.addColorStop(0, "rgba(144,202,249,0.18)");
       glBloom.addColorStop(0.5, "rgba(144,202,249,0.06)");
@@ -14074,7 +14102,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         gy: number,
         gh: number,
         gw: number,
-        seed: number,
+        seed: number
       ) => {
         // Left face gradient
         const lG = ctx.createLinearGradient(gx - gw, gy, gx, gy - gh);
@@ -14144,7 +14172,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             gw * 0.12,
             -0.2,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -14170,14 +14198,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 5 * s,
           52 * s,
           16 * s,
-          1,
+          1
         );
         drawGlSpire(
           screenPos.x + 16 * s,
           screenPos.y - 8 * s,
           47 * s,
           13 * s,
-          2,
+          2
         );
         drawGlSpire(screenPos.x, screenPos.y, 68 * s, 21 * s, 3);
         drawGlSpire(
@@ -14185,14 +14213,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + 5 * s,
           32 * s,
           11 * s,
-          4,
+          4
         );
         drawGlSpire(
           screenPos.x + 6 * s,
           screenPos.y - 12 * s,
           25 * s,
           8 * s,
-          5,
+          5
         );
       } else if (gVar === 1) {
         drawGlSpire(
@@ -14200,35 +14228,35 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + 2 * s,
           58 * s,
           19 * s,
-          6,
+          6
         );
         drawGlSpire(
           screenPos.x + 10 * s,
           screenPos.y - 3 * s,
           50 * s,
           15 * s,
-          7,
+          7
         );
         drawGlSpire(
           screenPos.x + 24 * s,
           screenPos.y + 4 * s,
           36 * s,
           12 * s,
-          8,
+          8
         );
         drawGlSpire(
           screenPos.x - 5 * s,
           screenPos.y - 6 * s,
           63 * s,
           17 * s,
-          9,
+          9
         );
         drawGlSpire(
           screenPos.x - 24 * s,
           screenPos.y + 6 * s,
           28 * s,
           9 * s,
-          10,
+          10
         );
       } else {
         drawGlSpire(screenPos.x, screenPos.y - 2 * s, 72 * s, 23 * s, 11);
@@ -14237,35 +14265,35 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + 3 * s,
           42 * s,
           14 * s,
-          12,
+          12
         );
         drawGlSpire(
           screenPos.x + 20 * s,
           screenPos.y + 1 * s,
           44 * s,
           13 * s,
-          13,
+          13
         );
         drawGlSpire(
           screenPos.x - 8 * s,
           screenPos.y + 6 * s,
           30 * s,
           10 * s,
-          14,
+          14
         );
         drawGlSpire(
           screenPos.x + 8 * s,
           screenPos.y - 10 * s,
           40 * s,
           11 * s,
-          15,
+          15
         );
         drawGlSpire(
           screenPos.x - 16 * s,
           screenPos.y - 8 * s,
           22 * s,
           7 * s,
-          16,
+          16
         );
       }
 
@@ -14287,17 +14315,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "fortress": {
       renderFortress({
         ctx,
+        mapTheme: (mapTheme || undefined) as
+          | import("../../types").MapTheme
+          | undefined,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
-        mapTheme: (mapTheme || undefined) as import("../../types").MapTheme | undefined,
       });
       break;
     }
@@ -14323,7 +14353,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         50 * s,
         0.3,
-        "0,60,80",
+        "0,60,80"
       );
 
       // Isometric base platform using standard ISO ratios
@@ -14338,7 +14368,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           platformH,
           "#b3e5fc",
           "#4fc3f7",
-          "#0288D1",
+          "#0288D1"
         );
       };
 
@@ -14352,7 +14382,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           32 * s,
           iceLight,
           iceMid,
-          iceDark,
+          iceDark
         );
         drawIsometricCrystalSpire(
           ctx,
@@ -14362,7 +14392,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           30 * s,
           iceLight,
           iceMid,
-          iceDeep,
+          iceDeep
         );
         drawIsometricCrystalSpire(
           ctx,
@@ -14372,7 +14402,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           58 * s,
           iceLight,
           iceMid,
-          iceDark,
+          iceDark
         );
         // Rune marking on main spire
         ctx.strokeStyle = "rgba(128,222,234,0.3)";
@@ -14393,7 +14423,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           48 * s,
           iceLight,
           iceMid,
-          iceDark,
+          iceDark
         );
         drawIsometricCrystalSpire(
           ctx,
@@ -14403,7 +14433,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           48 * s,
           iceLight,
           iceMid,
-          iceDark,
+          iceDark
         );
         drawIsometricCrystalSpire(
           ctx,
@@ -14413,7 +14443,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           22 * s,
           iceMid,
           iceDark,
-          iceDeep,
+          iceDeep
         );
         drawIsometricCrystalSpire(
           ctx,
@@ -14423,14 +14453,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           20 * s,
           iceMid,
           iceDark,
-          iceDeep,
+          iceDeep
         );
         // Connecting arch with gradient
         const archG = ctx.createLinearGradient(
           cx - 10 * s,
           cy - 28 * s,
           cx + 10 * s,
-          cy - 28 * s,
+          cy - 28 * s
         );
         archG.addColorStop(0, "#b3e5fc");
         archG.addColorStop(0.5, "#e1f5fe");
@@ -14458,7 +14488,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           54 * s,
           iceLight,
           iceMid,
-          iceDark,
+          iceDark
         );
         const csAngles = [0.7, 1.9, 3.3, 4.8];
         const csHeights = [34, 28, 38, 24];
@@ -14472,7 +14502,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             csHeights[ci] * s,
             ci % 2 === 0 ? iceLight : iceMid,
             iceMid,
-            iceDeep,
+            iceDeep
           );
         });
         // Glowing core
@@ -14482,7 +14512,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy - 16 * s,
-          14 * s,
+          14 * s
         );
         isCore.addColorStop(0, "rgba(128,222,234,0.4)");
         isCore.addColorStop(0.4, "rgba(179,229,252,0.15)");
@@ -14505,7 +14535,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cy - 22 * s + Math.sin(spA) * spR * 0.35,
           spSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -14527,7 +14557,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           55 * s,
           0.35,
-          "0,50,70",
+          "0,50,70"
         );
       }
 
@@ -14538,7 +14568,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 10 * s,
-        34 * s,
+        34 * s
       );
       itSnowG.addColorStop(0, "#ffffff");
       itSnowG.addColorStop(0.4, "#eaf2f8");
@@ -14551,7 +14581,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 10 * s,
         34 * s,
         12 * s,
-        decorX * 5.7 + decorY * 9.3,
+        decorX * 5.7 + decorY * 9.3
       );
       ctx.fill();
 
@@ -14562,7 +14592,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - itD1W,
         screenPos.y,
         screenPos.x + itD1W,
-        screenPos.y + itD1D + 4 * s,
+        screenPos.y + itD1D + 4 * s
       );
       itD1G.addColorStop(0, "#81d4fa");
       itD1G.addColorStop(0.5, "#b3e5fc");
@@ -14580,7 +14610,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - itD1W,
         screenPos.y,
         screenPos.x,
-        screenPos.y + 4 * s + itD1D + 8 * s,
+        screenPos.y + 4 * s + itD1D + 8 * s
       );
       itD1L.addColorStop(0, "#29B6F6");
       itD1L.addColorStop(1, "#0277BD");
@@ -14623,7 +14653,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - itD2W,
         screenPos.y - itD2D,
         screenPos.x + itD2W,
-        screenPos.y + itD2D,
+        screenPos.y + itD2D
       );
       itD2G.addColorStop(0, "#b3e5fc");
       itD2G.addColorStop(0.5, "#e1f5fe");
@@ -14656,7 +14686,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           itSeatCY - itSeatD,
           screenPos.x,
-          itSeatCY + itSeatD,
+          itSeatCY + itSeatD
         );
         itSeatG.addColorStop(0, "#4fc3f7");
         itSeatG.addColorStop(1, "#0288D1");
@@ -14675,7 +14705,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 7 * s,
-          10 * s,
+          10 * s
         );
         itFurG.addColorStop(0, "rgba(230,240,250,0.6)");
         itFurG.addColorStop(0.6, "rgba(200,220,235,0.3)");
@@ -14689,7 +14719,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           10 * s * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Armrests - gradient pillars
@@ -14697,7 +14727,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 15 * s,
           screenPos.y - 4 * s,
           screenPos.x - 15 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         itArmLG.addColorStop(0, "#0288D1");
         itArmLG.addColorStop(0.5, "#4fc3f7");
@@ -14714,7 +14744,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 12 * s,
           screenPos.y - 4 * s,
           screenPos.x + 12 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         itArmRG.addColorStop(0, "#01579B");
         itArmRG.addColorStop(0.5, "#0288D1");
@@ -14737,7 +14767,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -14748,7 +14778,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Backrest - gradient with spiked crown
@@ -14756,7 +14786,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 10 * s,
           screenPos.x,
-          screenPos.y - 72 * s,
+          screenPos.y - 72 * s
         );
         itBackG.addColorStop(0, "#0277BD");
         itBackG.addColorStop(0.3, "#29B6F6");
@@ -14809,7 +14839,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 67 * s,
-          6 * s,
+          6 * s
         );
         itJewelG.addColorStop(0, "rgba(128,222,234,0.7)");
         itJewelG.addColorStop(0.4, "rgba(128,222,234,0.2)");
@@ -14829,7 +14859,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 68 * s,
           1.2 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       } else if (itVar === 1) {
@@ -14841,7 +14871,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 8 * s,
-          13 * s,
+          13 * s
         );
         itSeatG2.addColorStop(0, "#4fc3f7");
         itSeatG2.addColorStop(0.7, "#0288D1");
@@ -14855,7 +14885,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           13 * s * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Fur cushion
@@ -14868,7 +14898,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           9 * s * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Curved backrest with gradient
@@ -14876,7 +14906,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 8 * s,
           screenPos.x,
-          screenPos.y - 62 * s,
+          screenPos.y - 62 * s
         );
         itCurveG.addColorStop(0, "#0288D1");
         itCurveG.addColorStop(0.4, "#4fc3f7");
@@ -14889,7 +14919,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 19 * s,
           screenPos.y - 42 * s,
           screenPos.x - 7 * s,
-          screenPos.y - 62 * s,
+          screenPos.y - 62 * s
         );
         ctx.lineTo(screenPos.x, screenPos.y - 57 * s);
         ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 62 * s);
@@ -14897,7 +14927,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 19 * s,
           screenPos.y - 42 * s,
           screenPos.x + 15 * s,
-          screenPos.y - 8 * s,
+          screenPos.y - 8 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -14909,14 +14939,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 13 * s,
           screenPos.y - 37 * s,
           screenPos.x - 5 * s,
-          screenPos.y - 52 * s,
+          screenPos.y - 52 * s
         );
         ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 52 * s);
         ctx.quadraticCurveTo(
           screenPos.x + 13 * s,
           screenPos.y - 37 * s,
           screenPos.x + 11 * s,
-          screenPos.y - 10 * s,
+          screenPos.y - 10 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -14929,7 +14959,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 22 * s,
           screenPos.y - 13 * s,
           screenPos.x - 20 * s,
-          screenPos.y - 3 * s,
+          screenPos.y - 3 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -14938,7 +14968,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 22 * s,
           screenPos.y - 13 * s,
           screenPos.x + 20 * s,
-          screenPos.y - 3 * s,
+          screenPos.y - 3 * s
         );
         ctx.stroke();
         // Armrest tips
@@ -14949,7 +14979,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 3 * s,
           2.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -14958,7 +14988,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 3 * s,
           2.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Snowflake emblem
@@ -14971,7 +15001,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(screenPos.x, screenPos.y - 37 * s);
           ctx.lineTo(
             screenPos.x + Math.cos(sfAngle) * sfR,
-            screenPos.y - 37 * s + Math.sin(sfAngle) * sfR,
+            screenPos.y - 37 * s + Math.sin(sfAngle) * sfR
           );
           ctx.stroke();
           // Branch tips
@@ -14981,7 +15011,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(bx, by);
           ctx.lineTo(
             bx + Math.cos(sfAngle + 0.8) * 2 * s,
-            by + Math.sin(sfAngle + 0.8) * 2 * s,
+            by + Math.sin(sfAngle + 0.8) * 2 * s
           );
           ctx.stroke();
         }
@@ -14995,7 +15025,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - itSeat3W,
           itSeat3CY - itSeat3D,
           screenPos.x + itSeat3W,
-          itSeat3CY + itSeat3D,
+          itSeat3CY + itSeat3D
         );
         itSeatG3.addColorStop(0, "#4fc3f7");
         itSeatG3.addColorStop(0.5, "#0288D1");
@@ -15013,7 +15043,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 16 * s,
           screenPos.y - 8 * s,
           screenPos.x,
-          screenPos.y - 64 * s,
+          screenPos.y - 64 * s
         );
         itJagLG.addColorStop(0, "#29B6F6");
         itJagLG.addColorStop(0.4, "#4fc3f7");
@@ -15034,7 +15064,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 64 * s,
           screenPos.x + 15 * s,
-          screenPos.y - 8 * s,
+          screenPos.y - 8 * s
         );
         itJagRG.addColorStop(0, "#81d4fa");
         itJagRG.addColorStop(0.3, "#29B6F6");
@@ -15071,7 +15101,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 19 * s,
           screenPos.y - 15 * s,
           screenPos.x - 15 * s,
-          screenPos.y - 5 * s,
+          screenPos.y - 5 * s
         );
         itArmJG.addColorStop(0, "#e1f5fe");
         itArmJG.addColorStop(1, "#81d4fa");
@@ -15098,7 +15128,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 32 * s,
-        28 * s,
+        28 * s
       );
       itAuraG.addColorStop(0, "rgba(128,222,234,0.18)");
       itAuraG.addColorStop(0.5, "rgba(128,222,234,0.06)");
@@ -15141,7 +15171,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         10 * s,
         35 * s,
-        0.25,
+        0.25
       );
 
       // Snow mound at base
@@ -15152,7 +15182,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 4 * s,
         22 * s,
         8 * s,
-        decorX * 6.1 + decorY * 3.7,
+        decorX * 6.1 + decorY * 3.7
       );
       ctx.fill();
       ctx.fillStyle = "#ffffff";
@@ -15163,7 +15193,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         5 * s,
         decorX * 8.3 + decorY * 5.1,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -15195,13 +15225,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 5 * s,
         screenPos.y - 40 * s,
         screenPos.x + 5 * s,
-        screenPos.y - 37 * s,
+        screenPos.y - 37 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 15 * s,
         screenPos.y - 39 * s,
         screenPos.x + 22 * s,
-        screenPos.y - 34 * s,
+        screenPos.y - 34 * s
       );
       ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 28 * s);
       ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 30 * s);
@@ -15323,7 +15353,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        pondW * 1.3,
+        pondW * 1.3
       );
       pondGlow.addColorStop(0, "rgba(100,180,240,0.2)");
       pondGlow.addColorStop(0.6, "rgba(100,180,240,0.08)");
@@ -15336,7 +15366,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondW * 1.3,
         pondD * 1.3,
         pondSeed - 10,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -15349,7 +15379,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondW + 6 * s,
         pondD + 4 * s,
         pondSeed + 30,
-        0.16,
+        0.16
       );
       ctx.fill();
       ctx.fillStyle = "#ffffff";
@@ -15360,7 +15390,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondW + 4 * s,
         pondD + 2 * s,
         pondSeed + 30,
-        0.16,
+        0.16
       );
       ctx.fill();
 
@@ -15371,7 +15401,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        pondW,
+        pondW
       );
       iceGrad.addColorStop(0, pondIceLight);
       iceGrad.addColorStop(0.3, pondIceMid);
@@ -15385,7 +15415,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondW,
         pondD,
         pondSeed,
-        0.15,
+        0.15
       );
       ctx.fill();
 
@@ -15399,7 +15429,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondD * 0.5,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -15446,7 +15476,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fp.ry * s,
           crackSeed * 0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -15461,7 +15491,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3.5 * s,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.3)";
@@ -15473,7 +15503,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -15488,7 +15518,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pondD * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -15519,7 +15549,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         40 * s,
         0.3,
-        "0,60,80",
+        "0,60,80"
       );
 
       // Snow mound base
@@ -15529,7 +15559,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 3 * s,
-        20 * s,
+        20 * s
       );
       fsSnowG.addColorStop(0, "#ffffff");
       fsSnowG.addColorStop(0.4, "#eaf2f8");
@@ -15542,7 +15572,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 3 * s,
         20 * s,
         8 * s,
-        decorX * 5.3 + decorY * 7.9,
+        decorX * 5.3 + decorY * 7.9
       );
       ctx.fill();
 
@@ -15550,7 +15580,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const TRUE_ISO = 1 / Math.sqrt(3);
       const iceSeed = decorX * 13.7 + decorY * 29.3;
       const srand = (n: number) => {
-        const x = Math.sin(iceSeed * 127.1 + n * 311.7) * 43758.5453;
+        const x = Math.sin(iceSeed * 127.1 + n * 311.7) * 43_758.5453;
         return x - Math.floor(x);
       };
       const iceRough = srand(40) * 2.5 * s;
@@ -15561,7 +15591,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         hw: number,
         bh: number,
         depthR: number,
-        tiltX: number,
+        tiltX: number
       ) => {
         const hd = hw * depthR * TRUE_ISO;
 
@@ -15645,19 +15675,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           bL.x + (bF.x - bL.x) * ht0 + (tL.x - bL.x) * 0.15,
-          bL.y + (bF.y - bL.y) * ht0 - bh * 0.82,
+          bL.y + (bF.y - bL.y) * ht0 - bh * 0.82
         );
         ctx.lineTo(
           bL.x + (bF.x - bL.x) * ht1 + (tL.x - bL.x) * 0.15,
-          bL.y + (bF.y - bL.y) * ht1 - bh * 0.82,
+          bL.y + (bF.y - bL.y) * ht1 - bh * 0.82
         );
         ctx.lineTo(
           bL.x + (bF.x - bL.x) * ht1 + (tL.x - bL.x) * 0.05,
-          bL.y + (bF.y - bL.y) * ht1 - bh * 0.18,
+          bL.y + (bF.y - bL.y) * ht1 - bh * 0.18
         );
         ctx.lineTo(
           bL.x + (bF.x - bL.x) * ht0 + (tL.x - bL.x) * 0.05,
-          bL.y + (bF.y - bL.y) * ht0 - bh * 0.18,
+          bL.y + (bF.y - bL.y) * ht0 - bh * 0.18
         );
         ctx.closePath();
         ctx.fill();
@@ -15669,19 +15699,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           bF.x + (bR.x - bF.x) * rht0 + (tF.x - bF.x) * 0.2,
-          bF.y + (bR.y - bF.y) * rht0 - bh * 0.75,
+          bF.y + (bR.y - bF.y) * rht0 - bh * 0.75
         );
         ctx.lineTo(
           bF.x + (bR.x - bF.x) * rht1 + (tF.x - bF.x) * 0.2,
-          bF.y + (bR.y - bF.y) * rht1 - bh * 0.75,
+          bF.y + (bR.y - bF.y) * rht1 - bh * 0.75
         );
         ctx.lineTo(
           bF.x + (bR.x - bF.x) * rht1 + (tF.x - bF.x) * 0.08,
-          bF.y + (bR.y - bF.y) * rht1 - bh * 0.15,
+          bF.y + (bR.y - bF.y) * rht1 - bh * 0.15
         );
         ctx.lineTo(
           bF.x + (bR.x - bF.x) * rht0 + (tF.x - bF.x) * 0.08,
-          bF.y + (bR.y - bF.y) * rht0 - bh * 0.15,
+          bF.y + (bR.y - bF.y) * rht0 - bh * 0.15
         );
         ctx.closePath();
         ctx.fill();
@@ -15729,7 +15759,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           bx,
           by - bh * 0.5,
-          glowR,
+          glowR
         );
         iGlow.addColorStop(0, "rgba(144,202,249,0.12)");
         iGlow.addColorStop(1, "transparent");
@@ -15799,7 +15829,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           iceHW * 0.85,
           iceH * 1.08,
           iceDepthR * 0.8,
-          iceTilt + 2 * s,
+          iceTilt + 2 * s
         );
       } else {
         fsDrawIce(
@@ -15808,7 +15838,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           iceHW * 1.1,
           iceH * 1.05,
           iceDepthR * 1.15,
-          iceTilt - 1 * s,
+          iceTilt - 1 * s
         );
       }
 
@@ -15819,7 +15849,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 7 * s,
           screenPos.x,
-          screenPos.y - 29 * s,
+          screenPos.y - 29 * s
         );
         fsTorsoG.addColorStop(0, "rgba(55,75,95,0.55)");
         fsTorsoG.addColorStop(0.5, "rgba(75,95,115,0.5)");
@@ -15833,7 +15863,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           11.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Chainmail texture
@@ -15846,7 +15876,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y - 12 * s - cm * 3 * s,
             4.5 * s,
             0.4,
-            Math.PI - 0.4,
+            Math.PI - 0.4
           );
           ctx.stroke();
         }
@@ -15861,7 +15891,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0,
           0.2,
-          Math.PI - 0.2,
+          Math.PI - 0.2
         );
         ctx.stroke();
         // Belt buckle
@@ -15876,7 +15906,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 34 * s,
-          6 * s,
+          6 * s
         );
         fsHelmG.addColorStop(0, "rgba(120,140,160,0.45)");
         fsHelmG.addColorStop(0.6, "rgba(80,100,120,0.5)");
@@ -15895,7 +15925,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 43 * s,
           screenPos.x,
-          screenPos.y - 37 * s,
+          screenPos.y - 37 * s
         );
         fsCrestG.addColorStop(0, "rgba(100,120,140,0.5)");
         fsCrestG.addColorStop(1, "rgba(65,85,105,0.55)");
@@ -15918,7 +15948,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 10 * s,
           screenPos.y - 31 * s,
           screenPos.x + 8 * s,
-          screenPos.y - 48 * s,
+          screenPos.y - 48 * s
         );
         fsSwordG.addColorStop(0, "rgba(160,180,200,0.5)");
         fsSwordG.addColorStop(0.5, "rgba(200,215,230,0.45)");
@@ -15948,7 +15978,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 12 * s,
           screenPos.y - 28 * s,
           screenPos.x - 5 * s,
-          screenPos.y - 14 * s,
+          screenPos.y - 14 * s
         );
         fsShieldG.addColorStop(0, "rgba(100,120,140,0.45)");
         fsShieldG.addColorStop(0.5, "rgba(80,100,120,0.5)");
@@ -15985,7 +16015,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 8 * s,
           screenPos.x,
-          screenPos.y - 28 * s,
+          screenPos.y - 28 * s
         );
         fsArchTorso.addColorStop(0, "rgba(55,75,95,0.55)");
         fsArchTorso.addColorStop(0.5, "rgba(70,90,110,0.5)");
@@ -15999,7 +16029,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           10.5 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Hooded head with gradient
@@ -16009,7 +16039,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 33 * s,
-          6 * s,
+          6 * s
         );
         fsHoodG.addColorStop(0, "rgba(105,125,145,0.45)");
         fsHoodG.addColorStop(0.7, "rgba(75,95,115,0.5)");
@@ -16026,7 +16056,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 43 * s,
           screenPos.x + 3 * s,
-          screenPos.y - 36 * s,
+          screenPos.y - 36 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -16051,7 +16081,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 17 * s,
           screenPos.y - 25 * s,
           screenPos.x - 13 * s,
-          screenPos.y - 13 * s,
+          screenPos.y - 13 * s
         );
         ctx.stroke();
         // Bow highlight
@@ -16063,7 +16093,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 15 * s,
           screenPos.y - 25 * s,
           screenPos.x - 12.5 * s,
-          screenPos.y - 15 * s,
+          screenPos.y - 15 * s
         );
         ctx.stroke();
         // Bowstring
@@ -16100,7 +16130,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 3 * s,
           screenPos.y - 30 * s,
           screenPos.x + 7 * s,
-          screenPos.y - 14 * s,
+          screenPos.y - 14 * s
         );
         fsQuiverG.addColorStop(0, "rgba(90,70,50,0.4)");
         fsQuiverG.addColorStop(1, "rgba(70,50,30,0.35)");
@@ -16136,7 +16166,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x,
           screenPos.y - 7 * s,
           screenPos.x,
-          screenPos.y - 29 * s,
+          screenPos.y - 29 * s
         );
         fsSpearTorso.addColorStop(0, "rgba(55,75,95,0.55)");
         fsSpearTorso.addColorStop(0.5, "rgba(70,90,110,0.5)");
@@ -16150,7 +16180,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           11.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Shoulder pauldrons with gradient
@@ -16164,7 +16194,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -16175,7 +16205,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Pauldron rivet dots
@@ -16186,7 +16216,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 26 * s,
           0.8 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -16195,7 +16225,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 26 * s,
           0.8 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Bucket helm gradient
@@ -16203,7 +16233,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 5.5 * s,
           screenPos.y - 41 * s,
           screenPos.x + 5.5 * s,
-          screenPos.y - 28 * s,
+          screenPos.y - 28 * s
         );
         fsBucketG.addColorStop(0, "rgba(100,120,140,0.45)");
         fsBucketG.addColorStop(0.4, "rgba(80,100,120,0.5)");
@@ -16224,7 +16254,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 3.5 * s,
           screenPos.y - 36.5 * s,
           7 * s,
-          1 * s,
+          1 * s
         );
         // Helm highlight
         ctx.fillStyle = "rgba(255,255,255,0.06)";
@@ -16232,14 +16262,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 4 * s,
           screenPos.y - 40 * s,
           2.5 * s,
-          11 * s,
+          11 * s
         );
         // Spear shaft with gradient
         const fsShaftG = ctx.createLinearGradient(
           screenPos.x + 6 * s,
           screenPos.y + 2 * s,
           screenPos.x + 5 * s,
-          screenPos.y - 50 * s,
+          screenPos.y - 50 * s
         );
         fsShaftG.addColorStop(0, "rgba(100,75,50,0.45)");
         fsShaftG.addColorStop(0.5, "rgba(130,100,70,0.4)");
@@ -16255,7 +16285,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 5 * s,
           screenPos.y - 50 * s,
           screenPos.x + 5 * s,
-          screenPos.y - 44 * s,
+          screenPos.y - 44 * s
         );
         fsSpearH.addColorStop(0, "rgba(210,225,240,0.5)");
         fsSpearH.addColorStop(1, "rgba(170,190,210,0.45)");
@@ -16271,7 +16301,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 5 * s,
           screenPos.y - 45 * s,
           screenPos.x + 13 * s,
-          screenPos.y - 39 * s,
+          screenPos.y - 39 * s
         );
         fsBannerG.addColorStop(0, "rgba(100,45,45,0.38)");
         fsBannerG.addColorStop(0.5, "rgba(120,55,55,0.32)");
@@ -16290,7 +16320,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 13 * s,
           screenPos.y - 27 * s,
           screenPos.x - 4 * s,
-          screenPos.y - 12 * s,
+          screenPos.y - 12 * s
         );
         fsSpShieldG.addColorStop(0, "rgba(90,110,130,0.48)");
         fsSpShieldG.addColorStop(0.5, "rgba(75,95,115,0.5)");
@@ -16311,7 +16341,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 20 * s,
           2.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(160,180,200,0.2)";
@@ -16321,7 +16351,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 20 * s,
           1.2 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Legs
@@ -16342,7 +16372,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 25 * s,
-        20 * s,
+        20 * s
       );
       fsFrostB.addColorStop(0, "rgba(144,202,249,0.1)");
       fsFrostB.addColorStop(1, "transparent");
@@ -16363,7 +16393,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 25 * s + Math.sin(frostA) * frostRad * 0.4,
           fspSize,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -16387,7 +16417,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -16399,7 +16429,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.y + 5 * s,
         30 * s,
         10 * s,
-        decorX * 7.1 + decorY * 5.3,
+        decorX * 7.1 + decorY * 5.3
       );
       ctx.fill();
 
@@ -16419,7 +16449,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "rgba(60,70,80,0.3)",
           s,
           12,
-          2,
+          2
         );
         drawBrickFace(
           ctx,
@@ -16432,7 +16462,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           "rgba(40,50,60,0.35)",
           s,
           12,
-          2,
+          2
         );
         ctx.fillStyle = gateStone;
         ctx.beginPath();
@@ -16452,14 +16482,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x,
         screenPos.y - 70 * s,
         screenPos.x + 22 * s,
-        screenPos.y - 52 * s,
+        screenPos.y - 52 * s
       );
       ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 48 * s);
       ctx.quadraticCurveTo(
         screenPos.x,
         screenPos.y - 64 * s,
         screenPos.x - 22 * s,
-        screenPos.y - 48 * s,
+        screenPos.y - 48 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -16473,7 +16503,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x,
         screenPos.y - 66 * s,
         screenPos.x + 20 * s,
-        screenPos.y - 50 * s,
+        screenPos.y - 50 * s
       );
       ctx.stroke();
 
@@ -16488,7 +16518,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           barX - 2 * s,
           barTop,
           barX + 2 * s,
-          barBottom,
+          barBottom
         );
         barGrad.addColorStop(0, gateIce);
         barGrad.addColorStop(0.5, gateIceDark);
@@ -16516,13 +16546,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           px + side * 6 * s,
           screenPos.y - 35 * s,
           px + side * 3 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         ctx.quadraticCurveTo(
           px + side * 5 * s,
           screenPos.y - 10 * s,
           px + side * 2 * s,
-          screenPos.y,
+          screenPos.y
         );
         ctx.lineTo(px, screenPos.y);
         ctx.closePath();
@@ -16535,7 +16565,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           px + side * 3 * s,
           screenPos.y - 32 * s,
           px + side * 1 * s,
-          screenPos.y - 18 * s,
+          screenPos.y - 18 * s
         );
         ctx.lineTo(px, screenPos.y - 20 * s);
         ctx.closePath();
@@ -16552,32 +16582,32 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 10 * s,
         screenPos.y - 58 * s,
         screenPos.x,
-        screenPos.y - 68 * s,
+        screenPos.y - 68 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 5 * s,
         screenPos.y - 72 * s,
         screenPos.x,
-        screenPos.y - 73 * s,
+        screenPos.y - 73 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x - 5 * s,
         screenPos.y - 72 * s,
         screenPos.x,
-        screenPos.y - 68 * s,
+        screenPos.y - 68 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 10 * s,
         screenPos.y - 58 * s,
         screenPos.x + 20 * s,
-        screenPos.y - 52 * s,
+        screenPos.y - 52 * s
       );
       ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 52 * s);
       ctx.quadraticCurveTo(
         screenPos.x,
         screenPos.y - 74 * s,
         screenPos.x - 22 * s,
-        screenPos.y - 52 * s,
+        screenPos.y - 52 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -16592,7 +16622,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
@@ -16603,7 +16633,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -16627,7 +16657,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         decorX,
         decorY,
-        mapTheme,
+        mapTheme
       );
       break;
     }
@@ -16679,7 +16709,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy - 15 * s,
-        55 * s,
+        55 * s
       );
       const glowPulse = 0.12 + Math.sin(decorTime * 0.5) * 0.03;
       fwGlow.addColorStop(0, `rgba(100,180,240,${glowPulse})`);
@@ -16703,7 +16733,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         poolRx * 0.7,
         poolCx,
         poolCy,
-        poolRx * 1.3,
+        poolRx * 1.3
       );
       frostRingGrad.addColorStop(0, "rgba(200,230,255,0.15)");
       frostRingGrad.addColorStop(0.5, "rgba(210,235,255,0.08)");
@@ -16717,7 +16747,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         poolRy * 1.3,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -16728,7 +16758,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         poolCx,
         poolCy,
-        poolRx,
+        poolRx
       );
       poolGrad.addColorStop(0, fwIceWhite);
       poolGrad.addColorStop(0.3, fwIceLight);
@@ -16746,7 +16776,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         { a: -0.4, l: 0.8 },
         { a: 0.3, l: 0.7 },
         { a: -1.2, l: 0.6 },
-        { a: 1.0, l: 0.9 },
+        { a: 1, l: 0.9 },
         { a: 2.2, l: 0.5 },
         { a: -2.5, l: 0.65 },
         { a: 0.8, l: 0.55 },
@@ -16777,7 +16807,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         -0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -16790,7 +16820,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx,
         cliffTop,
         cx,
-        cliffBottom,
+        cliffBottom
       );
       backCliffGrad.addColorStop(0, fwRockDark);
       backCliffGrad.addColorStop(0.4, fwRockMid);
@@ -16813,7 +16843,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 28 * s,
         cliffTop,
         cx - 20 * s,
-        cliffBottom,
+        cliffBottom
       );
       leftCliffGrad.addColorStop(0, fwRockMid);
       leftCliffGrad.addColorStop(0.5, fwRock);
@@ -16832,7 +16862,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 20 * s,
         cliffTop,
         cx + 28 * s,
-        cliffBottom,
+        cliffBottom
       );
       rightCliffGrad.addColorStop(0, fwRockDark);
       rightCliffGrad.addColorStop(1, "#3a4a5a");
@@ -16849,12 +16879,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "rgba(0,0,0,0.15)";
       ctx.lineWidth = 0.7 * s;
       const crevices = [
-        { x1: -16, y1: -20, x2: -14, y2: -8 },
-        { x1: -10, y1: -45, x2: -12, y2: -30 },
-        { x1: 8, y1: -55, x2: 6, y2: -38 },
-        { x1: 15, y1: -35, x2: 17, y2: -18 },
-        { x1: -6, y1: -15, x2: -3, y2: -5 },
-        { x1: 12, y1: -12, x2: 10, y2: -3 },
+        { x1: -16, x2: -14, y1: -20, y2: -8 },
+        { x1: -10, x2: -12, y1: -45, y2: -30 },
+        { x1: 8, x2: 6, y1: -55, y2: -38 },
+        { x1: 15, x2: 17, y1: -35, y2: -18 },
+        { x1: -6, x2: -3, y1: -15, y2: -5 },
+        { x1: 12, x2: 10, y1: -12, y2: -3 },
       ];
       crevices.forEach((cr) => {
         ctx.beginPath();
@@ -16865,17 +16895,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Ice patches on cliff (frozen seepage)
       const icePatches = [
-        { x: -15, y: -50, rx: 4, ry: 8 },
-        { x: 12, y: -40, rx: 3, ry: 10 },
-        { x: -8, y: -25, rx: 3, ry: 6 },
-        { x: 18, y: -22, rx: 2.5, ry: 7 },
+        { rx: 4, ry: 8, x: -15, y: -50 },
+        { rx: 3, ry: 10, x: 12, y: -40 },
+        { rx: 3, ry: 6, x: -8, y: -25 },
+        { rx: 2.5, ry: 7, x: 18, y: -22 },
       ];
       icePatches.forEach((ip) => {
         const ipGrad = ctx.createLinearGradient(
           cx + ip.x * s,
           cy + (ip.y - ip.ry) * s,
           cx + ip.x * s,
-          cy + (ip.y + ip.ry) * s,
+          cy + (ip.y + ip.ry) * s
         );
         ipGrad.addColorStop(0, "rgba(180,220,248,0.3)");
         ipGrad.addColorStop(0.5, "rgba(200,235,255,0.2)");
@@ -16889,7 +16919,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ip.ry * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -16902,20 +16932,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 22 * s,
         cliffTop - 6 * s,
         cx - 12 * s,
-        cliffTop - 3 * s,
+        cliffTop - 3 * s
       );
       ctx.quadraticCurveTo(cx - 5 * s, cliffTop - 8 * s, cx, cliffTop - 5 * s);
       ctx.quadraticCurveTo(
         cx + 8 * s,
         cliffTop - 9 * s,
         cx + 16 * s,
-        cliffTop - 4 * s,
+        cliffTop - 4 * s
       );
       ctx.quadraticCurveTo(
         cx + 24 * s,
         cliffTop - 2 * s,
         cx + 28 * s,
-        cliffTop + 7 * s,
+        cliffTop + 7 * s
       );
       ctx.lineTo(cx + 24 * s, cliffTop + 10 * s);
       ctx.lineTo(cx + 20 * s, cliffTop + 5 * s);
@@ -16933,13 +16963,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 10 * s,
         cliffTop + 3 * s,
         cx + 5 * s,
-        cliffTop + 4 * s,
+        cliffTop + 4 * s
       );
       ctx.quadraticCurveTo(
         cx + 18 * s,
         cliffTop + 6 * s,
         cx + 24 * s,
-        cliffTop + 10 * s,
+        cliffTop + 10 * s
       );
       ctx.lineTo(cx + 20 * s, cliffTop + 5 * s);
       ctx.lineTo(cx - 5 * s, cliffTop);
@@ -16965,10 +16995,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.bezierCurveTo(
         cx - cascW * 0.8,
         cascTop + cascH * 0.2,
-        cx - cascW * 1.0,
+        cx - cascW * 1,
         cascTop + cascH * 0.4,
         cx - cascW * 0.85,
-        cascTop + cascH * 0.55,
+        cascTop + cascH * 0.55
       );
       ctx.bezierCurveTo(
         cx - cascW * 1.1,
@@ -16976,7 +17006,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - cascW * 0.9,
         cascTop + cascH * 0.9,
         cx - cascW * 0.7,
-        cascBot,
+        cascBot
       );
       ctx.lineTo(cx + cascW * 0.7, cascBot);
       ctx.bezierCurveTo(
@@ -16985,15 +17015,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + cascW * 1.1,
         cascTop + cascH * 0.7,
         cx + cascW * 0.85,
-        cascTop + cascH * 0.55,
+        cascTop + cascH * 0.55
       );
       ctx.bezierCurveTo(
-        cx + cascW * 1.0,
+        cx + cascW * 1,
         cascTop + cascH * 0.4,
         cx + cascW * 0.8,
         cascTop + cascH * 0.2,
         cx + cascW * 0.6,
-        cascTop + 4 * s,
+        cascTop + 4 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -17013,13 +17043,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx,
         shelfY + 3 * s,
         cx + cascW * 0.9,
-        shelfY + 1 * s,
+        shelfY + 1 * s
       );
       ctx.quadraticCurveTo(
         cx,
         shelfY + 5 * s,
         cx - cascW * 0.9,
-        shelfY + 1 * s,
+        shelfY + 1 * s
       );
       ctx.fill();
 
@@ -17040,7 +17070,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - cascW * 0.75,
         cascTop + cascH * 0.35,
         cx - cascW * 0.65,
-        shelfY,
+        shelfY
       );
       ctx.bezierCurveTo(
         cx - cascW * 0.8,
@@ -17048,7 +17078,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - cascW * 0.7,
         cascBot - 8 * s,
         cx - cascW * 0.55,
-        cascBot,
+        cascBot
       );
       ctx.lineTo(cx + cascW * 0.55, cascBot);
       ctx.bezierCurveTo(
@@ -17057,7 +17087,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + cascW * 0.8,
         shelfY + cascH * 0.15,
         cx + cascW * 0.65,
-        shelfY,
+        shelfY
       );
       ctx.bezierCurveTo(
         cx + cascW * 0.75,
@@ -17065,7 +17095,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + cascW * 0.65,
         cascTop + cascH * 0.15,
         cx + cascW * 0.5,
-        cascTop + 5 * s,
+        cascTop + 5 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -17083,8 +17113,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const frac = seg / segments;
           const rx = cx - rw + frac * rw * 2;
           const ryOff = Math.sin(frac * Math.PI * 2 + ridge * 0.9) * 2 * s;
-          if (seg === 0) ctx.moveTo(rx, ry + ryOff);
-          else ctx.lineTo(rx, ry + ryOff);
+          if (seg === 0) {
+            ctx.moveTo(rx, ry + ryOff);
+          } else {
+            ctx.lineTo(rx, ry + ryOff);
+          }
         }
         ctx.stroke();
       }
@@ -17092,11 +17125,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Ice veins (internal frozen cracks in the cascade)
       ctx.lineWidth = 0.6 * s;
       const veins = [
-        { x1: -4, y1: -55, x2: -6, y2: -30, x3: -3, y3: -10 },
-        { x1: 3, y1: -58, x2: 5, y2: -35, x3: 2, y3: -15 },
-        { x1: -8, y1: -40, x2: -10, y2: -20, x3: -7, y3: -5 },
-        { x1: 8, y1: -45, x2: 10, y2: -25, x3: 7, y3: -8 },
-        { x1: 0, y1: -50, x2: -2, y2: -28, x3: 1, y3: -6 },
+        { x1: -4, x2: -6, x3: -3, y1: -55, y2: -30, y3: -10 },
+        { x1: 3, x2: 5, x3: 2, y1: -58, y2: -35, y3: -15 },
+        { x1: -8, x2: -10, x3: -7, y1: -40, y2: -20, y3: -5 },
+        { x1: 8, x2: 10, x3: 7, y1: -45, y2: -25, y3: -8 },
+        { x1: 0, x2: -2, x3: 1, y1: -50, y2: -28, y3: -6 },
       ];
       veins.forEach((v) => {
         ctx.strokeStyle = "rgba(200,235,255,0.18)";
@@ -17106,7 +17139,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + v.x2 * s,
           cy + v.y2 * s,
           cx + v.x3 * s,
-          cy + v.y3 * s,
+          cy + v.y3 * s
         );
         ctx.stroke();
       });
@@ -17116,7 +17149,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 2 * s,
         cascTop,
         cx + 2 * s,
-        cascBot,
+        cascBot
       );
       highlightGrad.addColorStop(0, "rgba(255,255,255,0.1)");
       highlightGrad.addColorStop(0.2, "rgba(255,255,255,0.4)");
@@ -17133,7 +17166,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 5 * s,
         shelfY,
         cx - 3 * s,
-        shelfY + 4 * s,
+        shelfY + 4 * s
       );
       ctx.bezierCurveTo(
         cx - 4 * s,
@@ -17141,7 +17174,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx - 3 * s,
         cascBot - 5 * s,
         cx - 1 * s,
-        cascBot,
+        cascBot
       );
       ctx.lineTo(cx + 2 * s, cascBot);
       ctx.bezierCurveTo(
@@ -17150,7 +17183,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 3 * s,
         cascBot - 15 * s,
         cx + 2 * s,
-        shelfY + 4 * s,
+        shelfY + 4 * s
       );
       ctx.bezierCurveTo(
         cx + 3 * s,
@@ -17158,7 +17191,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 2 * s,
         cascTop + cascH * 0.3,
         cx + 1 * s,
-        cascTop + 8 * s,
+        cascTop + 8 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -17217,13 +17250,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             ix - ic.w * 0.3 * s,
             gy + ic.h * 0.7 * s,
             ix,
-            gy + ic.h * s,
+            gy + ic.h * s
           );
           ctx.quadraticCurveTo(
             ix + ic.w * 0.3 * s,
             gy + ic.h * 0.7 * s,
             ix + ic.w * s,
-            gy,
+            gy
           );
           ctx.closePath();
           ctx.fill();
@@ -17236,7 +17269,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             ix - ic.w * 0.1 * s,
             gy + ic.h * 0.5 * s,
             ix,
-            gy + ic.h * 0.7 * s,
+            gy + ic.h * 0.7 * s
           );
           ctx.lineTo(ix + ic.w * 0.15 * s, gy + 1 * s);
           ctx.closePath();
@@ -17246,12 +17279,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // --- Snow accumulation on ledges ---
       const snowDrifts = [
-        { x: -22, y: -20, rx: 6, ry: 2 },
-        { x: 20, y: -25, rx: 5, ry: 1.8 },
-        { x: -18, y: -48, rx: 4, ry: 1.5 },
-        { x: 18, y: -50, rx: 4.5, ry: 1.5 },
-        { x: -24, y: -10, rx: 5, ry: 2 },
-        { x: 22, y: -12, rx: 4, ry: 1.8 },
+        { rx: 6, ry: 2, x: -22, y: -20 },
+        { rx: 5, ry: 1.8, x: 20, y: -25 },
+        { rx: 4, ry: 1.5, x: -18, y: -48 },
+        { rx: 4.5, ry: 1.5, x: 18, y: -50 },
+        { rx: 5, ry: 2, x: -24, y: -10 },
+        { rx: 4, ry: 1.8, x: 22, y: -12 },
       ];
       snowDrifts.forEach((sd) => {
         ctx.fillStyle = fwSnow;
@@ -17263,7 +17296,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sd.ry * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = "rgba(200,215,230,0.3)";
@@ -17275,7 +17308,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sd.ry * 0.4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -17283,14 +17316,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // --- Animated shimmer sparkles (light catching ice facets) ---
       const sparkleTime = decorTime * 1.5;
       for (let sp = 0; sp < 14; sp++) {
-        const spPhase = (sparkleTime + sp * 0.55 + decorX * 0.3) % 3.0;
+        const spPhase = (sparkleTime + sp * 0.55 + decorX * 0.3) % 3;
         if (spPhase < 0.6) {
           const spAlpha = Math.sin((spPhase / 0.6) * Math.PI) * 0.85;
           const spSeed = decorX * 7.3 + sp * 13.7;
           const spx = cx + (Math.sin(spSeed) * 20 - 10) * s;
           const spy =
             cascTop + (((sp * 37 + Math.floor(decorX * 11)) % 60) + 2) * s;
-          const spSize = (1.0 + Math.sin(spSeed * 2.3) * 0.5) * s;
+          const spSize = (1 + Math.sin(spSeed * 2.3) * 0.5) * s;
 
           // Star-shaped sparkle
           ctx.fillStyle = `rgba(255,255,255,${spAlpha})`;
@@ -17310,7 +17343,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Prismatic light refraction dots on the cascade
       for (let pr = 0; pr < 6; pr++) {
-        const prPhase = (decorTime * 0.8 + pr * 1.1) % 4.0;
+        const prPhase = (decorTime * 0.8 + pr * 1.1) % 4;
         if (prPhase < 0.4) {
           const prAlpha = Math.sin((prPhase / 0.4) * Math.PI) * 0.6;
           const hue = (pr * 60 + decorTime * 25) % 360;
@@ -17364,13 +17397,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         auroraBase + 3 * s,
-        35 * s,
+        35 * s
       );
       const auroraHue = (decorTime * 20) % 360;
       auroraGlowGrad.addColorStop(0, `hsla(${auroraHue}, 60%, 60%, 0.3)`);
       auroraGlowGrad.addColorStop(
         0.5,
-        `hsla(${(auroraHue + 60) % 360}, 50%, 50%, 0.12)`,
+        `hsla(${(auroraHue + 60) % 360}, 50%, 50%, 0.12)`
       );
       auroraGlowGrad.addColorStop(1, "transparent");
       ctx.fillStyle = auroraGlowGrad;
@@ -17382,7 +17415,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -17394,17 +17427,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         auroraBase + 2 * s,
         14 * s,
         5 * s,
-        decorX * 8.7 + decorY * 3.1,
+        decorX * 8.7 + decorY * 3.1
       );
       ctx.fill();
 
       // Crystal formation - main spire and satellites
       const auroraCrystals = [
-        { dx: 0, dy: 0, h: 45, w: 8, angle: 0 },
-        { dx: -10, dy: 2, h: 28, w: 5, angle: -0.12 },
-        { dx: 8, dy: 1, h: 32, w: 6, angle: 0.1 },
-        { dx: -5, dy: 3, h: 20, w: 4, angle: -0.2 },
-        { dx: 12, dy: 3, h: 18, w: 3.5, angle: 0.18 },
+        { angle: 0, dx: 0, dy: 0, h: 45, w: 8 },
+        { angle: -0.12, dx: -10, dy: 2, h: 28, w: 5 },
+        { angle: 0.1, dx: 8, dy: 1, h: 32, w: 6 },
+        { angle: -0.2, dx: -5, dy: 3, h: 20, w: 4 },
+        { angle: 0.18, dx: 12, dy: 3, h: 18, w: 3.5 },
       ];
 
       auroraCrystals.forEach((crystal, idx) => {
@@ -17529,7 +17562,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s,
         7 * s,
         30 * s,
-        0.25,
+        0.25
       );
 
       // Snow around base
@@ -17540,7 +17573,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         sly + 4 * s,
         14 * s,
         6 * s,
-        decorX * 3.3 + decorY * 10.7,
+        decorX * 3.3 + decorY * 10.7
       );
       ctx.fill();
 
@@ -17617,7 +17650,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         slx,
         glowMidY,
-        18 * s,
+        18 * s
       );
       warmGlow.addColorStop(0, `rgba(255,200,100,${glowPulse * 0.5})`);
       warmGlow.addColorStop(0.3, `rgba(255,180,80,${glowPulse * 0.25})`);
@@ -17718,14 +17751,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         slx + 2 * s,
         roofPeak - 2 * s,
         slx,
-        roofPeak - 3 * s,
+        roofPeak - 3 * s
       );
       ctx.quadraticCurveTo(slx - 2 * s, roofPeak - 2 * s, slx, roofPeak);
       ctx.quadraticCurveTo(
         slx + 4 * s,
         hTop - 5 * s,
         slx + roofHW,
-        hTop + 1 * s,
+        hTop + 1 * s
       );
       ctx.lineTo(slx + roofHW, hTop);
       ctx.lineTo(slx, roofPeak);
@@ -17777,7 +17810,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        45 * s,
+        45 * s
       );
       const heatPulse = 0.25 + Math.sin(decorTime * 2) * 0.1;
       heatGlow.addColorStop(0, `rgba(255,100,0,${heatPulse})`);
@@ -17791,7 +17824,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         45 * s,
         25 * s,
         lavaSeed - 10,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -17805,7 +17838,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         32 * s,
         16 * s,
         lavaSeed + 50,
-        0.18,
+        0.18
       );
       ctx.fill();
 
@@ -17818,7 +17851,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         32 * s,
         16 * s,
         lavaSeed + 50,
-        0.18,
+        0.18
       );
       ctx.fill();
 
@@ -17831,7 +17864,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         26 * s,
         13 * s,
         lavaSeed + 70,
-        0.15,
+        0.15
       );
       ctx.fill();
 
@@ -17842,7 +17875,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        24 * s,
+        24 * s
       );
       lavaGrad.addColorStop(0, lavaYellow);
       lavaGrad.addColorStop(0.2, lavaOrange);
@@ -17857,7 +17890,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         12 * s,
         lavaSeed,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -17873,17 +17906,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + Math.sin(crustAngle + 1) * 2.5 * s,
           crustR * s,
           crustAngle,
-          crustAngle + 0.8,
+          crustAngle + 0.8
         );
         ctx.stroke();
       }
 
       // Hot spots / bright vents
       const hotSpots = [
-        { x: 0, y: 0, r: 8 },
-        { x: -8, y: -2, r: 5 },
-        { x: 10, y: 1, r: 4 },
-        { x: -4, y: 3, r: 3 },
+        { r: 8, x: 0, y: 0 },
+        { r: 5, x: -8, y: -2 },
+        { r: 4, x: 10, y: 1 },
+        { r: 3, x: -4, y: 3 },
       ];
       hotSpots.forEach((hs, idx) => {
         const hotPulse = 0.6 + Math.sin(decorTime * 3 + idx) * 0.3;
@@ -17893,7 +17926,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x + hs.x * s,
           screenPos.y + hs.y * s - 1 * s,
-          hs.r * s,
+          hs.r * s
         );
         hotGrad.addColorStop(0, `rgba(255,255,200,${hotPulse})`);
         hotGrad.addColorStop(0.3, `rgba(255,200,50,${hotPulse * 0.8})`);
@@ -17908,17 +17941,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           hs.r * 0.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
 
       // Animated bubbles
       const bubbles = [
-        { x: 5, y: -1, r: 3, speed: 2, phase: 0 },
-        { x: -8, y: 1, r: 2.5, speed: 2.5, phase: 1.5 },
-        { x: 12, y: 2, r: 2, speed: 1.8, phase: 3 },
-        { x: -3, y: -2, r: 2, speed: 2.2, phase: 2 },
+        { phase: 0, r: 3, speed: 2, x: 5, y: -1 },
+        { phase: 1.5, r: 2.5, speed: 2.5, x: -8, y: 1 },
+        { phase: 3, r: 2, speed: 1.8, x: 12, y: 2 },
+        { phase: 2, r: 2, speed: 2.2, x: -3, y: -2 },
       ];
       bubbles.forEach((bub) => {
         const bubTime = (decorTime * bub.speed + bub.phase) % 2;
@@ -17933,7 +17966,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y + bubY * s,
             bub.r * bubScale * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
           // Bubble highlight
@@ -17944,7 +17977,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.y + bubY * s - bub.r * 0.3 * s,
             bub.r * bubScale * 0.4 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -17972,7 +18005,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         15 * s,
         0,
         Math.PI * 0.1,
-        Math.PI * 0.4,
+        Math.PI * 0.4
       );
       ctx.stroke();
       ctx.beginPath();
@@ -17983,7 +18016,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         15 * s,
         0,
         Math.PI * 0.7,
-        Math.PI * 0.9,
+        Math.PI * 0.9
       );
       ctx.stroke();
       break;
@@ -18000,7 +18033,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         spikeBaseX,
         spikeBaseY + 3 * s,
-        15 * s,
+        15 * s
       );
       lavaGlow.addColorStop(0, "rgba(255,80,0,0.4)");
       lavaGlow.addColorStop(0.5, "rgba(255,40,0,0.2)");
@@ -18014,7 +18047,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -18028,7 +18061,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -18106,7 +18139,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         decorX,
         decorY,
-        decorTime,
+        decorTime
       );
       break;
     }
@@ -18124,7 +18157,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         emberBaseX,
         emberBaseY + emberFloat,
-        12 * s,
+        12 * s
       );
       emberGlow.addColorStop(0, `rgba(255,150,0,${0.4 * emberPulse})`);
       emberGlow.addColorStop(0.5, `rgba(255,80,0,${0.2 * emberPulse})`);
@@ -18190,7 +18223,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         ox,
         fY + 2 * s,
-        28 * s,
+        28 * s
       );
       gGrad.addColorStop(0, "rgba(255,61,0,0.22)");
       gGrad.addColorStop(0.6, "rgba(255,61,0,0.06)");
@@ -18209,7 +18242,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         cMid,
         cBlack,
-        cDark,
+        cDark
       );
       const fI = 28 * s * ISO_COS;
       const fD = 28 * s * ISO_SIN;
@@ -18296,7 +18329,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2.4,
         7,
         "left",
-        s,
+        s
       );
       ctx.fill();
       traceIsoFlushRect(
@@ -18306,7 +18339,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2,
         7,
         "right",
-        s,
+        s
       );
       ctx.fill();
       const mWinY2 = mBase - mH * 0.6;
@@ -18317,7 +18350,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2,
         6,
         "left",
-        s,
+        s
       );
       ctx.fill();
       traceIsoFlushRect(
@@ -18327,7 +18360,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2,
         6,
         "right",
-        s,
+        s
       );
       ctx.fill();
       clearShadow(ctx);
@@ -18341,7 +18374,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         cHi,
         cMid,
-        cLight,
+        cLight
       );
       const parI = (mW + 4 * s) * ISO_COS;
       const parD = (mW + 4 * s) * 0.5;
@@ -18361,7 +18394,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           merlH,
           cEdge,
           cHi,
-          cLight,
+          cLight
         );
       }
       for (let i = 0; i < 3; i++) {
@@ -18377,7 +18410,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           merlH,
           cEdge,
           cHi,
-          cLight,
+          cLight
         );
       }
 
@@ -18420,7 +18453,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           cHi,
           cMid,
-          cLight,
+          cLight
         );
         const tSpBase = ttTop - 3 * s;
         drawIsometricPyramid(
@@ -18431,7 +18464,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           cHi,
           cBlack,
-          cMid,
+          cMid
         );
 
         setShadowBlur(ctx, 7 * s, lGlow);
@@ -18529,7 +18562,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           cHi,
           cMid,
-          cLight,
+          cLight
         );
         const mrl = 2.2 * s;
         for (let i = 0; i < 2; i++) {
@@ -18546,7 +18579,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             3 * s,
             cEdge,
             cHi,
-            cLight,
+            cLight
           );
         }
         ctx.strokeStyle = "rgba(0,0,0,0.15)";
@@ -18569,7 +18602,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.4,
           4,
           wFace,
-          s,
+          s
         );
         ctx.fill();
         clearShadow(ctx);
@@ -18710,7 +18743,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(ox + fI * 0.3, fY + fD * 0.5);
-      ctx.lineTo(ox + fI * 0.5, fY + fD * 1.0);
+      ctx.lineTo(ox + fI * 0.5, fY + fD * 1);
       ctx.lineTo(ox + fI * 0.7, fY + fD * 0.8);
       ctx.stroke();
       ctx.beginPath();
@@ -18722,14 +18755,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // === RUBBLE & DEBRIS at base ===
       [
-        { x: -22, y: 10, sz: 3 },
-        { x: -14, y: 12, sz: 2.5 },
-        { x: 16, y: 12, sz: 3 },
-        { x: 22, y: 10, sz: 2.5 },
-        { x: -8, y: 13, sz: 2 },
-        { x: 10, y: 14, sz: 2 },
-        { x: -18, y: 14, sz: 2 },
-        { x: 18, y: 14, sz: 2.5 },
+        { sz: 3, x: -22, y: 10 },
+        { sz: 2.5, x: -14, y: 12 },
+        { sz: 3, x: 16, y: 12 },
+        { sz: 2.5, x: 22, y: 10 },
+        { sz: 2, x: -8, y: 13 },
+        { sz: 2, x: 10, y: 14 },
+        { sz: 2, x: -18, y: 14 },
+        { sz: 2.5, x: 18, y: 14 },
       ].forEach((rb, idx) => {
         const rx = ox + rb.x * s;
         const ry = fY + rb.y * s;
@@ -18764,7 +18797,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         bannerX - 3 * s + banWave,
         bannerTopY + 7 * s,
         bannerX - 4 * s,
-        bannerTopY + 14 * s,
+        bannerTopY + 14 * s
       );
       ctx.lineTo(bannerX, bannerTopY + 12 * s);
       ctx.lineTo(bannerX + 4 * s, bannerTopY + 14 * s);
@@ -18772,7 +18805,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         bannerX + 3 * s - banWave,
         bannerTopY + 7 * s,
         bannerX + 3 * s,
-        bannerTopY,
+        bannerTopY
       );
       ctx.closePath();
       ctx.fill();
@@ -18833,7 +18866,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (2 + swTime * 2) * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -18867,7 +18900,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         28 * s,
         12 * s,
         50 * s,
-        0.4,
+        0.4
       );
 
       drawIsometricPrism(
@@ -18879,7 +18912,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         obsMid,
         obsBlack,
-        obsDark,
+        obsDark
       );
 
       drawIsometricPrism(
@@ -18891,7 +18924,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         kH,
         obsLight,
         obsBlack,
-        obsDark,
+        obsDark
       );
 
       const kI = kW * ISO_COS;
@@ -18904,7 +18937,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const nRows = Math.floor(kH / (7 * s));
       for (let row = 1; row < nRows; row++) {
         const ry = kBase - row * 7 * s;
-        if (ry < kTop) break;
+        if (ry < kTop) {
+          break;
+        }
         ctx.beginPath();
         ctx.moveTo(bx - kI, ry + kD);
         ctx.lineTo(bx, ry + kD * 2);
@@ -18936,7 +18971,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2,
         6,
         "left",
-        s,
+        s
       );
       ctx.fill();
       traceIsoFlushRect(
@@ -18946,7 +18981,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.6,
         6,
         "right",
-        s,
+        s
       );
       ctx.fill();
       clearShadow(ctx);
@@ -18962,7 +18997,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         bx,
         gateY - gH2 - 2 * s,
         bx + gW2 * 0.5,
-        gateY - gH2 + 6 * s,
+        gateY - gH2 + 6 * s
       );
       ctx.lineTo(bx + gW2 * 0.5, gateY);
       ctx.closePath();
@@ -18978,7 +19013,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         bx,
         gateY - gH2 + 1 * s,
         bx + gW2 * 0.35,
-        gateY - gH2 + 8 * s,
+        gateY - gH2 + 8 * s
       );
       ctx.lineTo(bx + gW2 * 0.35, gateY - 1 * s);
       ctx.closePath();
@@ -19006,7 +19041,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           obsHi,
           obsMid,
-          obsLight,
+          obsLight
         );
         const parI2 = (kW + 3 * s) * ISO_COS;
         const parD2 = (kW + 3 * s) * 0.5;
@@ -19026,7 +19061,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             merlH2,
             obsHi,
             obsLight,
-            obsMid,
+            obsMid
           );
         }
         for (let i = 0; i < 3; i++) {
@@ -19042,7 +19077,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             merlH2,
             obsHi,
             obsLight,
-            obsMid,
+            obsMid
           );
         }
       } else {
@@ -19055,7 +19090,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           obsLight,
           obsMid,
-          obsMid,
+          obsMid
         );
         const roofW = kW + 3 * s;
         const roofI = roofW * ISO_COS;
@@ -19153,7 +19188,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           obsLight,
           obsBlack,
-          obsMid,
+          obsMid
         );
 
         ctx.strokeStyle = obsHi;
@@ -19208,7 +19243,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(bx, fpT);
         ctx.lineTo(
           bx + 10 * s,
-          fpT + 3 * s + Math.sin(decorTime * 3) * 1.5 * s,
+          fpT + 3 * s + Math.sin(decorTime * 3) * 1.5 * s
         );
         ctx.lineTo(bx + 8 * s, fpT + 8 * s + Math.sin(decorTime * 3 + 0.5) * s);
         ctx.lineTo(bx, fpT + 6 * s);
@@ -19264,7 +19299,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         12 * s,
         45 * s,
-        0.38,
+        0.38
       );
 
       drawIsometricPrism(
@@ -19276,7 +19311,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         obsMid,
         obsBlack,
-        obsDark,
+        obsDark
       );
       drawIsometricPrism(
         ctx,
@@ -19287,7 +19322,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         5 * s,
         obsLight,
         obsDark,
-        obsMid,
+        obsMid
       );
       ctx.strokeStyle = brass;
       ctx.lineWidth = 0.8 * s;
@@ -19428,7 +19463,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tx,
         bkTop + 14 * s,
         tx,
-        bkBase - 8 * s,
+        bkBase - 8 * s
       );
       bnG.addColorStop(0, velvetDk);
       bnG.addColorStop(0.4, velvetMd);
@@ -19469,7 +19504,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spkH,
           brassHi,
           obsBlack,
-          obsLight,
+          obsLight
         );
       });
 
@@ -19526,8 +19561,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const dsHi = "#505078";
       const dsRune = "#cc3030";
       const dsPulse = 0.5 + Math.sin(decorTime * 2.8 + variant * 1.1) * 0.25;
-      const dsHM = [1.0, 0.85, 1.15][variant % 3];
-      const dsWM = [1.0, 1.1, 0.9][variant % 3];
+      const dsHM = [1, 0.85, 1.15][variant % 3];
+      const dsWM = [1, 1.1, 0.9][variant % 3];
 
       drawDirectionalShadow(
         ctx,
@@ -19537,7 +19572,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         14 * s * dsWM,
         6 * s,
         55 * s * dsHM,
-        0.35,
+        0.35
       );
 
       drawIsometricPrism(
@@ -19549,7 +19584,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         dsMid,
         dsBlack,
-        dsDark,
+        dsDark
       );
 
       const spH = 55 * s * dsHM;
@@ -19642,7 +19677,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s * dsHM,
         dsHi,
         dsBlack,
-        dsMid,
+        dsMid
       );
 
       setShadowBlur(ctx, 8 * s, dsRune);
@@ -19745,7 +19780,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         10 * s,
         52 * s,
-        0.32,
+        0.32
       );
 
       const debrisData: number[][] = wide
@@ -19774,7 +19809,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rSz * 0.7 * s,
           rkLight,
           rkBlack,
-          rkDark,
+          rkDark
         );
       });
 
@@ -19787,7 +19822,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         poolRy + 3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -19797,7 +19832,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         lx,
         ly + 3 * s,
-        poolRx,
+        poolRx
       );
       pG.addColorStop(0, magYel);
       pG.addColorStop(0.3, magOrg);
@@ -19817,7 +19852,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         poolRy * 0.3,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -19864,7 +19899,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           lx - cI * (0.9 + (1 - 0.9) * (1 - rt)),
-          ry + cD * (1 - rt * 0.6) + rj,
+          ry + cD * (1 - rt * 0.6) + rj
         );
         ctx.lineTo(lx, ry + cD * (2 - rt) + rj * 0.5);
         ctx.stroke();
@@ -19872,7 +19907,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(lx, ry + cD * (2 - rt) + rj * 0.5);
         ctx.lineTo(
           lx + cI * (0.95 + (1 - 0.95) * (1 - rt)),
-          ry + cD * (1 - rt * 0.7) - rj * 0.3,
+          ry + cD * (1 - rt * 0.7) - rj * 0.3
         );
         ctx.stroke();
       }
@@ -19920,7 +19955,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sz * 0.5 * s,
           rkHi,
           rkBlack,
-          rkDark,
+          rkDark
         );
       });
 
@@ -19961,7 +19996,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         lx,
         srcY,
-        cascHalf * 2.5,
+        cascHalf * 2.5
       );
       srcGrad.addColorStop(0, magYel);
       srcGrad.addColorStop(0.5, magOrg);
@@ -19986,14 +20021,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         lx - cascHalf - 1 * s + wob1,
         clBase * 0.5 + srcY * 0.5,
         lx - cascHalf * 0.8 - 0.5 * s,
-        ly + 1 * s,
+        ly + 1 * s
       );
       ctx.lineTo(lx + cascHalf * 0.8 + 0.5 * s, ly + 1 * s);
       ctx.quadraticCurveTo(
         lx + cascHalf + 1 * s + wob2,
         clBase * 0.5 + srcY * 0.5,
         lx + cascHalf,
-        srcY,
+        srcY
       );
       ctx.closePath();
       ctx.fill();
@@ -20006,14 +20041,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         lx - hlW - 0.5 * s,
         (srcY + ly) * 0.5,
         lx - hlW * 0.6,
-        ly,
+        ly
       );
       ctx.lineTo(lx + hlW * 0.6, ly);
       ctx.quadraticCurveTo(
         lx + hlW + 0.5 * s,
         (srcY + ly) * 0.5,
         lx + hlW,
-        srcY + 2 * s,
+        srcY + 2 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -20046,14 +20081,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           s2x - s2w - 0.5 * s,
           (s2y + ly) * 0.5,
           s2x - s2w * 0.7,
-          ly,
+          ly
         );
         ctx.lineTo(s2x + s2w * 0.7, ly);
         ctx.quadraticCurveTo(
           s2x + s2w + 0.5 * s,
           (s2y + ly) * 0.5,
           s2x + s2w,
-          s2y,
+          s2y
         );
         ctx.closePath();
         ctx.fill();
@@ -20069,7 +20104,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cascHalf * 0.5,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       clearShadow(ctx);
@@ -20099,7 +20134,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (2 + mPh) * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -20117,8 +20152,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const obsHi = "#5a5a90";
       const runeCol = "#ff6a3a";
       const pulse = 0.45 + Math.sin(decorTime * 2.6 + variant * 0.9) * 0.22;
-      const hM = variant === 0 ? 1.0 : 0.82;
-      const wM = variant === 0 ? 1.0 : 1.18;
+      const hM = variant === 0 ? 1 : 0.82;
+      const wM = variant === 0 ? 1 : 1.18;
 
       drawDirectionalShadow(
         ctx,
@@ -20128,7 +20163,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s * wM,
         7 * s,
         50 * s * hM,
-        0.35,
+        0.35
       );
 
       drawIsometricPrism(
@@ -20140,7 +20175,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         5 * s,
         obsMid,
         obsBlack,
-        obsDark,
+        obsDark
       );
       drawIsometricPrism(
         ctx,
@@ -20151,7 +20186,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         obsLight,
         obsDark,
-        obsMid,
+        obsMid
       );
 
       const shH = 60 * s * hM;
@@ -20327,7 +20362,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           px - (bI + tI) * 0.2,
           shBase + (shTop - shBase) * 0.4,
           px - tI * 0.4,
-          shTop + tD * 1.2,
+          shTop + tD * 1.2
         );
         ctx.stroke();
       }
@@ -20359,7 +20394,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 10 * s,
-        30 * s,
+        30 * s
       );
       const fcPulse = 0.25 + Math.sin(decorTime * 3) * 0.1;
       fcGlow.addColorStop(0, `rgba(255,150,0,${fcPulse})`);
@@ -20373,7 +20408,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -20443,15 +20478,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "skull_throne": {
       renderSkullThrone({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow,
         shadowOnly,
+        skipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -20471,7 +20506,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -20557,7 +20592,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         28 * s,
         14 * s,
         rimSeed,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -20574,7 +20609,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         12 * s,
         rimSeed + 1,
-        0.1,
+        0.1
       );
       ctx.fill();
       ctx.restore();
@@ -20588,7 +20623,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         12 * s,
         rimSeed + 2,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -20599,7 +20634,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        16 * s,
+        16 * s
       );
       const lavaPulse = 0.6 + Math.sin(decorTime * 2) * 0.2;
       innerGrad.addColorStop(0, `rgba(255,235,59,${lavaPulse})`);
@@ -20614,22 +20649,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         8 * s,
         rimSeed + 3,
-        0.08,
+        0.08
       );
       ctx.fill();
 
       // Rim texture - jagged rocks
       ctx.fillStyle = rimLight;
       const rimRocks = [
-        { a: 0, r: 22, h: 8 },
-        { a: 0.7, r: 23, h: 6 },
-        { a: 1.4, r: 22, h: 9 },
-        { a: 2.1, r: 24, h: 5 },
-        { a: 2.8, r: 22, h: 7 },
-        { a: 3.5, r: 23, h: 6 },
-        { a: 4.2, r: 22, h: 8 },
-        { a: 4.9, r: 24, h: 5 },
-        { a: 5.6, r: 22, h: 7 },
+        { a: 0, h: 8, r: 22 },
+        { a: 0.7, h: 6, r: 23 },
+        { a: 1.4, h: 9, r: 22 },
+        { a: 2.1, h: 5, r: 24 },
+        { a: 2.8, h: 7, r: 22 },
+        { a: 3.5, h: 6, r: 23 },
+        { a: 4.2, h: 8, r: 22 },
+        { a: 4.9, h: 5, r: 24 },
+        { a: 5.6, h: 7, r: 22 },
       ];
       rimRocks.forEach((rr) => {
         const rx = screenPos.x + Math.cos(rr.a) * rr.r * s;
@@ -20658,7 +20693,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (2 + smokePhase) * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -20675,7 +20710,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         decorX,
         decorY,
-        decorTime,
+        decorTime
       );
       break;
     }
@@ -20684,39 +20719,39 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const mushroomPalettes = [
         {
           cap: "#b71c1c",
-          capLight: "#e53935",
           capDark: "#7f0000",
+          capLight: "#e53935",
+          glow: null,
           spots: "#ffebee",
           stem: "#efebe9",
           stemDark: "#d7ccc8",
-          glow: null,
         },
         {
           cap: "#6a1b9a",
-          capLight: "#9c27b0",
           capDark: "#4a148c",
+          capLight: "#9c27b0",
+          glow: "rgba(156,39,176,0.4)",
           spots: "#f3e5f5",
           stem: "#ede7f6",
           stemDark: "#d1c4e9",
-          glow: "rgba(156,39,176,0.4)",
         },
         {
           cap: "#1b5e20",
-          capLight: "#2e7d32",
           capDark: "#0d3d11",
+          capLight: "#2e7d32",
+          glow: "rgba(76,175,80,0.3)",
           spots: "#e8f5e9",
           stem: "#e8f5e9",
           stemDark: "#c8e6c9",
-          glow: "rgba(76,175,80,0.3)",
         },
         {
           cap: "#bf360c",
-          capLight: "#e64a19",
           capDark: "#8d2804",
+          capLight: "#e64a19",
+          glow: null,
           spots: "#fff3e0",
           stem: "#efebe9",
           stemDark: "#d7ccc8",
-          glow: null,
         },
       ];
       const mp = mushroomPalettes[variant % 4];
@@ -20730,15 +20765,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y - 8 * s,
-          22 * s,
+          22 * s
         );
         mushroomGlow.addColorStop(
           0,
-          mp.glow.replace("0.4", String(glowPulse * 0.5)),
+          mp.glow.replace("0.4", String(glowPulse * 0.5))
         );
         mushroomGlow.addColorStop(
           0.5,
-          mp.glow.replace("0.4", String(glowPulse * 0.2)),
+          mp.glow.replace("0.4", String(glowPulse * 0.2))
         );
         mushroomGlow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = mushroomGlow;
@@ -20750,7 +20785,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -20765,7 +20800,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -20774,7 +20809,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 5 * s,
         screenPos.y,
         screenPos.x + 5 * s,
-        screenPos.y,
+        screenPos.y
       );
       stemGrad.addColorStop(0, mp.stemDark);
       stemGrad.addColorStop(0.3, mp.stem);
@@ -20789,14 +20824,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 5 * s,
         screenPos.y - 4 * s,
         screenPos.x - 3.5 * s,
-        screenPos.y - 10 * s,
+        screenPos.y - 10 * s
       );
       ctx.lineTo(screenPos.x + 3.5 * s, screenPos.y - 10 * s);
       ctx.quadraticCurveTo(
         screenPos.x + 5 * s,
         screenPos.y - 4 * s,
         screenPos.x + 4 * s,
-        screenPos.y + 2 * s,
+        screenPos.y + 2 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -20812,7 +20847,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.5 * s,
         0,
         0,
-        Math.PI,
+        Math.PI
       );
       ctx.stroke();
 
@@ -20826,7 +20861,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Gill lines
@@ -20838,7 +20873,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(screenPos.x, screenPos.y - 10 * s);
         ctx.lineTo(
           screenPos.x + Math.cos(gillAngle) * 9 * s,
-          screenPos.y - 10 * s + Math.sin(gillAngle) * 2.5 * s,
+          screenPos.y - 10 * s + Math.sin(gillAngle) * 2.5 * s
         );
         ctx.stroke();
       }
@@ -20850,7 +20885,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y - 12 * s,
-        14 * s,
+        14 * s
       );
       capGrad.addColorStop(0, mp.capLight);
       capGrad.addColorStop(0.4, mp.cap);
@@ -20865,31 +20900,31 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         screenPos.x - 14 * s,
         screenPos.y - 18 * s,
         screenPos.x - 8 * s,
-        screenPos.y - 22 * s,
+        screenPos.y - 22 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x,
         screenPos.y - 26 * s,
         screenPos.x + 8 * s,
-        screenPos.y - 22 * s,
+        screenPos.y - 22 * s
       );
       ctx.quadraticCurveTo(
         screenPos.x + 14 * s,
         screenPos.y - 18 * s,
         screenPos.x + 13 * s,
-        screenPos.y - 10 * s,
+        screenPos.y - 10 * s
       );
       ctx.closePath();
       ctx.fill();
 
       // Spots on cap with 3D appearance
       const spots = [
-        { x: -6, y: -18, r: 2.5 },
-        { x: 3, y: -20, r: 2 },
-        { x: -2, y: -14, r: 1.8 },
-        { x: 7, y: -16, r: 1.5 },
-        { x: -8, y: -14, r: 1.3 },
-        { x: 1, y: -22, r: 1.2 },
+        { r: 2.5, x: -6, y: -18 },
+        { r: 2, x: 3, y: -20 },
+        { r: 1.8, x: -2, y: -14 },
+        { r: 1.5, x: 7, y: -16 },
+        { r: 1.3, x: -8, y: -14 },
+        { r: 1.2, x: 1, y: -22 },
       ];
 
       spots.forEach((spot) => {
@@ -20903,7 +20938,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spot.r * 0.7 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Spot
@@ -20913,7 +20948,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x + spot.x * s,
           screenPos.y + spot.y * s,
-          spot.r * s,
+          spot.r * s
         );
         spotGrad.addColorStop(0, "#ffffff");
         spotGrad.addColorStop(0.5, mp.spots);
@@ -20927,7 +20962,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spot.r * 0.7 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -20942,7 +20977,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -20979,7 +21014,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         rippleSize * 0.4 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -20993,7 +21028,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -21007,7 +21042,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0.15,
-        Math.PI * 2 - 0.15,
+        Math.PI * 2 - 0.15
       );
       ctx.lineTo(lilyBaseX, lilyBaseY + lilyBob);
       ctx.closePath();
@@ -21020,7 +21055,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         lilyBaseX,
         lilyBaseY + lilyBob,
-        12 * s,
+        12 * s
       );
       padGrad.addColorStop(0, "#4a9a4a");
       padGrad.addColorStop(0.5, "#3a7a3a");
@@ -21034,7 +21069,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0.2,
-        Math.PI * 2 - 0.2,
+        Math.PI * 2 - 0.2
       );
       ctx.lineTo(lilyBaseX, lilyBaseY + lilyBob);
       ctx.closePath();
@@ -21050,7 +21085,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(lilyBaseX, lilyBaseY + lilyBob);
           ctx.lineTo(
             lilyBaseX + Math.cos(vAngle) * 10 * s,
-            lilyBaseY + lilyBob + Math.sin(vAngle) * 5 * s,
+            lilyBaseY + lilyBob + Math.sin(vAngle) * 5 * s
           );
           ctx.stroke();
         }
@@ -21066,7 +21101,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1 * s,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -21108,7 +21143,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             flowerY + Math.sin(da) * 0.8 * s,
             0.5 * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -21132,7 +21167,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fogBaseX + driftX * 0.5,
         fogBaseY + driftY * 0.5,
-        45 * s * breathe,
+        45 * s * breathe
       );
       fogGrad1.addColorStop(0, `rgba(80,130,80,${0.12 * breathe})`);
       fogGrad1.addColorStop(0.6, `rgba(100,150,100,${0.08 * breathe})`);
@@ -21146,7 +21181,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s * breathe,
         driftX * 0.01,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -21157,7 +21192,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fogBaseX + driftX,
         fogBaseY + driftY,
-        32 * s * breathe,
+        32 * s * breathe
       );
       fogGrad2.addColorStop(0, `rgba(120,180,120,${0.15 * breathe})`);
       fogGrad2.addColorStop(0.5, `rgba(100,160,100,${0.1 * breathe})`);
@@ -21171,7 +21206,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s * breathe,
         -driftX * 0.02,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -21182,7 +21217,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fogBaseX + driftX * 1.3,
         fogBaseY + driftY * 0.8,
-        20 * s * breathe,
+        20 * s * breathe
       );
       fogGrad3.addColorStop(0, `rgba(150,200,150,${0.18 * breathe})`);
       fogGrad3.addColorStop(0.7, `rgba(130,180,130,${0.1 * breathe})`);
@@ -21196,7 +21231,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         10 * s * breathe,
         driftX * 0.015,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -21216,7 +21251,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (4 - wispPhase) * s,
           wispDrift * 0.05,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -21241,7 +21276,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           40 * s,
           20 * s,
           55 * s,
-          0.5,
+          0.5
         );
       }
 
@@ -21252,7 +21287,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         ox,
         oy + 6 * s,
-        58 * s,
+        58 * s
       );
       wcGroundG.addColorStop(0, "rgba(15, 8, 25, 0.8)");
       wcGroundG.addColorStop(0.2, "rgba(10, 20, 10, 0.5)");
@@ -21279,7 +21314,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           spx,
           spy,
-          sp.rx * s,
+          sp.rx * s
         );
         const pulse = 0.5 + Math.sin(wt * 1.5 + i * 1.3) * 0.15;
         sludgeG.addColorStop(0, `rgba(40, 120, 30, ${pulse * 0.6})`);
@@ -21300,7 +21335,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           sp.ry * 0.3 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -21326,18 +21361,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const wcDebrisColor = (i: number) =>
         i % 3 === 0 ? "#2a1c10" : i % 3 === 1 ? "#3a2818" : "#1e1408";
       [
-        { x: -32, y: 14, l: 12, a: 0.4 },
-        { x: 28, y: 16, l: 9, a: -0.6 },
-        { x: -20, y: 22, l: 7, a: 1.1 },
-        { x: 14, y: 20, l: 10, a: -0.2 },
-        { x: 34, y: 6, l: 8, a: 0.7 },
-        { x: -36, y: 8, l: 6, a: -0.9 },
-        { x: 6, y: 24, l: 11, a: 0.15 },
-        { x: -8, y: -6, l: 8, a: -0.45 },
-        { x: -42, y: 6, l: 5, a: 0.2 },
-        { x: 40, y: 10, l: 7, a: -1.1 },
-        { x: -16, y: 26, l: 6, a: 0.85 },
-        { x: 18, y: 24, l: 8, a: -0.35 },
+        { a: 0.4, l: 12, x: -32, y: 14 },
+        { a: -0.6, l: 9, x: 28, y: 16 },
+        { a: 1.1, l: 7, x: -20, y: 22 },
+        { a: -0.2, l: 10, x: 14, y: 20 },
+        { a: 0.7, l: 8, x: 34, y: 6 },
+        { a: -0.9, l: 6, x: -36, y: 8 },
+        { a: 0.15, l: 11, x: 6, y: 24 },
+        { a: -0.45, l: 8, x: -8, y: -6 },
+        { a: 0.2, l: 5, x: -42, y: 6 },
+        { a: -1.1, l: 7, x: 40, y: 10 },
+        { a: 0.85, l: 6, x: -16, y: 26 },
+        { a: -0.35, l: 8, x: 18, y: 24 },
       ].forEach((d, i) => {
         ctx.strokeStyle = wcDebrisColor(i);
         ctx.lineWidth = (1.5 + (i % 3) * 0.5) * s;
@@ -21347,7 +21382,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(dx, dy);
         ctx.lineTo(
           dx + Math.cos(d.a) * d.l * s,
-          dy + Math.sin(d.a) * d.l * 0.5 * s,
+          dy + Math.sin(d.a) * d.l * 0.5 * s
         );
         ctx.stroke();
         if (i % 3 === 0) {
@@ -21355,11 +21390,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(
             dx + Math.cos(d.a) * d.l * s,
-            dy + Math.sin(d.a) * d.l * 0.5 * s,
+            dy + Math.sin(d.a) * d.l * 0.5 * s
           );
           ctx.lineTo(
             dx + Math.cos(d.a + 0.3) * (d.l + 3) * s,
-            dy + Math.sin(d.a + 0.3) * (d.l + 3) * 0.5 * s,
+            dy + Math.sin(d.a + 0.3) * (d.l + 3) * 0.5 * s
           );
           ctx.stroke();
         }
@@ -21368,12 +21403,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Scattered stone rubble chunks
       ctx.fillStyle = "#3a3530";
       [
-        { x: -24, y: 16, r: 2.5 },
-        { x: 26, y: 12, r: 2 },
-        { x: -30, y: 4, r: 1.8 },
-        { x: 38, y: 14, r: 2.2 },
-        { x: -4, y: 22, r: 1.5 },
-        { x: 30, y: 20, r: 1.6 },
+        { r: 2.5, x: -24, y: 16 },
+        { r: 2, x: 26, y: 12 },
+        { r: 1.8, x: -30, y: 4 },
+        { r: 2.2, x: 38, y: 14 },
+        { r: 1.5, x: -4, y: 22 },
+        { r: 1.6, x: 30, y: 20 },
       ].forEach((rb) => {
         ctx.fillStyle = "#3a3530";
         ctx.beginPath();
@@ -21382,11 +21417,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(ox + rb.x * s + rb.r * s, oy + rb.y * s - rb.r * 0.3 * s);
         ctx.lineTo(
           ox + rb.x * s + rb.r * 0.6 * s,
-          oy + rb.y * s + rb.r * 0.5 * s,
+          oy + rb.y * s + rb.r * 0.5 * s
         );
         ctx.lineTo(
           ox + rb.x * s - rb.r * 0.5 * s,
-          oy + rb.y * s + rb.r * 0.4 * s,
+          oy + rb.y * s + rb.r * 0.4 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -21396,10 +21431,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const wcBackBaseY = oy + 2 * s;
       const wcBackH = 30 * s;
       const wcBackPlanks = [
-        { x: -14, w: 10, h: 1.0, lean: 0.04, color: "#2a1c10" },
-        { x: -4, w: 9, h: 0.85, lean: -0.06, color: "#3a2818" },
-        { x: 5, w: 11, h: 0.7, lean: 0.08, color: "#221610" },
-        { x: 13, w: 8, h: 0.55, lean: 0.1, color: "#2e1c0e" },
+        { color: "#2a1c10", h: 1, lean: 0.04, w: 10, x: -14 },
+        { color: "#3a2818", h: 0.85, lean: -0.06, w: 9, x: -4 },
+        { color: "#221610", h: 0.7, lean: 0.08, w: 11, x: 5 },
+        { color: "#2e1c0e", h: 0.55, lean: 0.1, w: 8, x: 13 },
       ];
       wcBackPlanks.forEach((p, pi) => {
         const px = ox + p.x * s;
@@ -21411,7 +21446,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (-p.w / 2) * s,
           0,
           (p.w / 2) * s,
-          0,
+          0
         );
         plG.addColorStop(0, p.color);
         plG.addColorStop(0.5, "#4a3820");
@@ -21438,7 +21473,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             gx + Math.sin(g) * 2 * s,
             -pH * 0.5,
             gx - 1 * s,
-            -pH + 4 * s,
+            -pH + 4 * s
           );
           ctx.stroke();
         }
@@ -21461,7 +21496,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             2.5 * s,
             0.3,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -21483,11 +21518,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== LEFT WALL — tall warped planks ==========
       const wcLeftX = ox - 16 * s;
       const wcLeftPlanks = [
-        { dy: -4, w: 3, h: 34, lean: 0.05, color: "#2e1e12" },
-        { dy: -2, w: 3.5, h: 30, lean: 0.03, color: "#3a2818" },
-        { dy: 0, w: 3, h: 26, lean: 0.07, color: "#221408" },
-        { dy: 2, w: 3.5, h: 22, lean: 0.04, color: "#2a1c10" },
-        { dy: 4, w: 3, h: 18, lean: 0.06, color: "#321e10" },
+        { color: "#2e1e12", dy: -4, h: 34, lean: 0.05, w: 3 },
+        { color: "#3a2818", dy: -2, h: 30, lean: 0.03, w: 3.5 },
+        { color: "#221408", dy: 0, h: 26, lean: 0.07, w: 3 },
+        { color: "#2a1c10", dy: 2, h: 22, lean: 0.04, w: 3.5 },
+        { color: "#321e10", dy: 4, h: 18, lean: 0.06, w: 3 },
       ];
       wcLeftPlanks.forEach((p, i) => {
         const py = wcBackBaseY + p.dy * s;
@@ -21542,10 +21577,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== RIGHT WALL — collapsed shorter ==========
       const wcRightX = ox + 16 * s;
       const wcRightPlanks = [
-        { dy: 0, w: 3.5, h: 16, lean: -0.08, color: "#2a1c10" },
-        { dy: 2, w: 3, h: 12, lean: -0.12, color: "#3a2818" },
-        { dy: -2, w: 3.5, h: 20, lean: -0.05, color: "#1e1408" },
-        { dy: -4, w: 3, h: 14, lean: -0.09, color: "#2e1c0e" },
+        { color: "#2a1c10", dy: 0, h: 16, lean: -0.08, w: 3.5 },
+        { color: "#3a2818", dy: 2, h: 12, lean: -0.12, w: 3 },
+        { color: "#1e1408", dy: -2, h: 20, lean: -0.05, w: 3.5 },
+        { color: "#2e1c0e", dy: -4, h: 14, lean: -0.09, w: 3 },
       ];
       wcRightPlanks.forEach((p, i) => {
         const py = wcBackBaseY + p.dy * s;
@@ -21654,12 +21689,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== SCATTERED SHINGLES ==========
       [
-        { x: -28, y: 8, a: 0.8 },
-        { x: -22, y: 14, a: -0.3 },
-        { x: 20, y: 14, a: 1.2 },
-        { x: 32, y: 2, a: -0.5 },
-        { x: -10, y: 18, a: 0.4 },
-        { x: 8, y: 16, a: -0.7 },
+        { a: 0.8, x: -28, y: 8 },
+        { a: -0.3, x: -22, y: 14 },
+        { a: 1.2, x: 20, y: 14 },
+        { a: -0.5, x: 32, y: 2 },
+        { a: 0.4, x: -10, y: 18 },
+        { a: -0.7, x: 8, y: 16 },
       ].forEach((sh) => {
         ctx.fillStyle = "#1e1610";
         ctx.save();
@@ -21671,13 +21706,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== GREEN SLUDGE DRIPPING DOWN WALLS ==========
       const wcDrips = [
-        { x: ox - 15 * s, y: oy - 20 * s, len: 18, w: 2 },
-        { x: ox - 12 * s, y: oy - 14 * s, len: 12, w: 1.5 },
-        { x: ox - 6 * s, y: oy - 22 * s, len: 20, w: 2.5 },
-        { x: ox + 2 * s, y: oy - 18 * s, len: 16, w: 2 },
-        { x: ox + 14 * s, y: oy - 10 * s, len: 10, w: 1.8 },
-        { x: ox + 17 * s, y: oy - 16 * s, len: 14, w: 2.2 },
-        { x: ox - 2 * s, y: oy - 10 * s, len: 8, w: 1.5 },
+        { len: 18, w: 2, x: ox - 15 * s, y: oy - 20 * s },
+        { len: 12, w: 1.5, x: ox - 12 * s, y: oy - 14 * s },
+        { len: 20, w: 2.5, x: ox - 6 * s, y: oy - 22 * s },
+        { len: 16, w: 2, x: ox + 2 * s, y: oy - 18 * s },
+        { len: 10, w: 1.8, x: ox + 14 * s, y: oy - 10 * s },
+        { len: 14, w: 2.2, x: ox + 17 * s, y: oy - 16 * s },
+        { len: 8, w: 1.5, x: ox - 2 * s, y: oy - 10 * s },
       ];
       wcDrips.forEach((d, i) => {
         const dripPulse = 0.5 + Math.sin(wt * 1.2 + i * 1.8) * 0.2;
@@ -21693,20 +21728,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           d.x - d.w * 0.5 * s + wobble,
           d.y + d.len * 0.5 * s,
           d.x - d.w * 0.3 * s,
-          d.y + d.len * s,
+          d.y + d.len * s
         );
         // Drip blob at bottom
         ctx.quadraticCurveTo(
           d.x,
           d.y + (d.len + 2) * s,
           d.x + d.w * 0.3 * s,
-          d.y + d.len * s,
+          d.y + d.len * s
         );
         ctx.quadraticCurveTo(
           d.x + d.w * 0.5 * s - wobble,
           d.y + d.len * 0.5 * s,
           d.x + d.w * 0.5 * s,
-          d.y,
+          d.y
         );
         ctx.closePath();
         ctx.fill();
@@ -21744,11 +21779,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Rafter beams (leaning from ridge down)
       const wcRafters = [
-        { sx: -18, sy: -27, ex: -28, ey: -6, w: 3 },
-        { sx: -12, sy: -26, ex: -24, ey: 4, w: 2.5 },
-        { sx: -6, sy: -25, ex: 10, ey: 6, w: 2.5 },
-        { sx: 0, sy: -23, ex: 22, ey: -2, w: 2.8 },
-        { sx: 5, sy: -20, ex: 24, ey: 8, w: 2 },
+        { ex: -28, ey: -6, sx: -18, sy: -27, w: 3 },
+        { ex: -24, ey: 4, sx: -12, sy: -26, w: 2.5 },
+        { ex: 10, ey: 6, sx: -6, sy: -25, w: 2.5 },
+        { ex: 22, ey: -2, sx: 0, sy: -23, w: 2.8 },
+        { ex: 24, ey: 8, sx: 5, sy: -20, w: 2 },
       ];
       wcRafters.forEach((r, i) => {
         ctx.strokeStyle = i % 2 === 0 ? wcBeamColor : "#321e0e";
@@ -21760,7 +21795,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox + ((r.sx + r.ex) / 2) * s,
           oy + ((r.sy + r.ey) / 2) * s + sag,
           ox + r.ex * s,
-          oy + r.ey * s,
+          oy + r.ey * s
         );
         ctx.stroke();
         // Highlight edge
@@ -21772,16 +21807,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ox + ((r.sx + r.ex) / 2) * s,
           oy + ((r.sy + r.ey) / 2) * s + sag - 1 * s,
           ox + r.ex * s,
-          oy + (r.ey - 1) * s,
+          oy + (r.ey - 1) * s
         );
         ctx.stroke();
       });
 
       // Collapsed roof panels (thatch fragments on beams)
       [
-        { x: -20, y: -24, w: 16, h: 10, a: 0.15, color: "#1e1610" },
-        { x: -8, y: -20, w: 14, h: 8, a: -0.1, color: "#2a1e12" },
-        { x: 4, y: -16, w: 10, h: 7, a: 0.2, color: "#1a1208" },
+        { a: 0.15, color: "#1e1610", h: 10, w: 16, x: -20, y: -24 },
+        { a: -0.1, color: "#2a1e12", h: 8, w: 14, x: -8, y: -20 },
+        { a: 0.2, color: "#1a1208", h: 7, w: 10, x: 4, y: -16 },
       ].forEach((panel) => {
         ctx.save();
         ctx.translate(ox + panel.x * s, oy + panel.y * s);
@@ -21794,7 +21829,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           panel.w * 0.8 * s,
           panel.h * 0.7 * s,
           panel.w * 0.6 * s,
-          panel.h * s,
+          panel.h * s
         );
         ctx.lineTo(-2 * s, panel.h * 0.8 * s);
         ctx.closePath();
@@ -21814,10 +21849,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Green sludge dripping off beams
       [
-        { x: -22, y: -18, len: 8 },
-        { x: -10, y: -20, len: 10 },
-        { x: 4, y: -14, len: 6 },
-        { x: 16, y: -8, len: 5 },
+        { len: 8, x: -22, y: -18 },
+        { len: 10, x: -10, y: -20 },
+        { len: 6, x: 4, y: -14 },
+        { len: 5, x: 16, y: -8 },
       ].forEach((bd, i) => {
         const bdp = 0.4 + Math.sin(wt * 1.5 + i * 2.2) * 0.2;
         ctx.fillStyle = `rgba(50, 150, 30, ${bdp * 0.6})`;
@@ -21829,7 +21864,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Drip strand
@@ -21839,7 +21874,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(ox + bd.x * s, oy + bd.y * s);
         ctx.lineTo(
           ox + bd.x * s + Math.sin(wt + i) * 1 * s,
-          oy + (bd.y + bd.len) * s,
+          oy + (bd.y + bd.len) * s
         );
         ctx.stroke();
         // Blob at tip
@@ -21850,7 +21885,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           oy + (bd.y + bd.len) * s,
           1.5 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -21873,7 +21908,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         ox,
         oy + 1 * s,
-        18 * s,
+        18 * s
       );
       wcIntG.addColorStop(0, `rgba(80, 255, 96, ${wcPulse * 0.12})`);
       wcIntG.addColorStop(0.5, `rgba(50, 150, 40, ${wcPulse * 0.05})`);
@@ -21954,7 +21989,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         wcSpillX,
         wcSpillY + 6 * s,
-        22 * s,
+        22 * s
       );
       const wcSpillPulse = 0.6 + Math.sin(wt * 2.5) * 0.15;
       wcSpillG.addColorStop(0, `rgba(60, 200, 50, ${wcSpillPulse * 0.65})`);
@@ -21968,19 +22003,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         wcSpillX + 8 * s,
         wcSpillY,
         wcSpillX + 16 * s,
-        wcSpillY + 8 * s,
+        wcSpillY + 8 * s
       );
       ctx.quadraticCurveTo(
         wcSpillX + 10 * s,
         wcSpillY + 14 * s,
         wcSpillX - 2 * s,
-        wcSpillY + 10 * s,
+        wcSpillY + 10 * s
       );
       ctx.quadraticCurveTo(
         wcSpillX - 8 * s,
         wcSpillY + 6 * s,
         wcSpillX - 4 * s,
-        wcSpillY - 2 * s,
+        wcSpillY - 2 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -21995,7 +22030,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       clearShadow(ctx);
@@ -22035,7 +22070,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1 * s,
         ox,
         oy + 2 * s,
-        18 * s,
+        18 * s
       );
       wcDoorGlow.addColorStop(0, `rgba(80, 255, 96, ${wcPulse * 0.2})`);
       wcDoorGlow.addColorStop(0.4, `rgba(50, 180, 40, ${wcPulse * 0.08})`);
@@ -22047,8 +22082,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== HANGING CHAINS / HOOKS ==========
       const wcHooks = [
-        { x: ox - 16 * s, y: oy - 18 * s, len: 14 },
-        { x: ox + 10 * s, y: oy - 14 * s, len: 10 },
+        { len: 14, x: ox - 16 * s, y: oy - 18 * s },
+        { len: 10, x: ox + 10 * s, y: oy - 14 * s },
       ];
       wcHooks.forEach((hk, i) => {
         const swing = Math.sin(wt * 0.7 + i * 2) * 1.5 * s;
@@ -22072,7 +22107,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           hookX + 3 * s,
           hookY + 4 * s,
           hookX,
-          hookY + 6 * s,
+          hookY + 6 * s
         );
         ctx.stroke();
       });
@@ -22093,7 +22128,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.ellipse(
         wcSkX + 1.3 * s,
@@ -22102,7 +22137,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = `rgba(80, 255, 96, ${wcPulse * 0.6})`;
@@ -22198,7 +22233,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         wcSpitX,
         wcSpitY - 15 * s,
         wcSpitX + 6 * s,
-        wcSpitY - 14 * s,
+        wcSpitY - 14 * s
       );
       ctx.stroke();
       // Broken end dangling
@@ -22222,7 +22257,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           c % 2 === 0 ? 0 : Math.PI / 4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -22236,7 +22271,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         wcHookX + 2 * s,
         wcHookY + 3 * s,
         wcHookX - 0.5 * s,
-        wcHookY + 5 * s,
+        wcHookY + 5 * s
       );
       ctx.stroke();
       // Broken chain on right side (few links then gap)
@@ -22253,7 +22288,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           c % 2 === 0 ? 0 : Math.PI / 4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -22273,7 +22308,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.8 * s,
           fl.x * 0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       });
@@ -22292,7 +22327,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2.5 * s,
         0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "#2a2420";
@@ -22304,7 +22339,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.8 * s,
         -0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Faint ember glow
@@ -22342,11 +22377,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== WOOD MOSS PATCHES ==========
       ctx.fillStyle = "rgba(30, 60, 25, 0.5)";
       [
-        { x: -16, y: -8, rx: 4, ry: 2 },
-        { x: -14, y: -20, rx: 3, ry: 1.5 },
-        { x: 16, y: -6, rx: 3.5, ry: 2 },
-        { x: -8, y: 0, rx: 5, ry: 2.5 },
-        { x: 12, y: -12, rx: 3, ry: 1.8 },
+        { rx: 4, ry: 2, x: -16, y: -8 },
+        { rx: 3, ry: 1.5, x: -14, y: -20 },
+        { rx: 3.5, ry: 2, x: 16, y: -6 },
+        { rx: 5, ry: 2.5, x: -8, y: 0 },
+        { rx: 3, ry: 1.8, x: 12, y: -12 },
       ].forEach((mp) => {
         ctx.beginPath();
         ctx.ellipse(
@@ -22356,25 +22391,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           mp.ry * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
 
       // ========== MUSHROOMS ==========
-      const wcMush: Array<{
+      const wcMush: {
         dx: number;
         dy: number;
         sz: number;
         purple?: boolean;
-      }> = [
+      }[] = [
         { dx: 30, dy: 12, sz: 1.3 },
-        { dx: -34, dy: 16, sz: 1.5, purple: true },
+        { dx: -34, dy: 16, purple: true, sz: 1.5 },
         { dx: -26, dy: 20, sz: 0.9 },
-        { dx: 22, dy: 18, sz: 1.1, purple: true },
+        { dx: 22, dy: 18, purple: true, sz: 1.1 },
         { dx: -40, dy: 10, sz: 1.4 },
-        { dx: 36, dy: 6, sz: 0.8, purple: true },
-        { dx: -8, dy: 22, sz: 1.0 },
+        { dx: 36, dy: 6, purple: true, sz: 0.8 },
+        { dx: -8, dy: 22, sz: 1 },
       ];
       wcMush.forEach((mp, i) => {
         const mx = ox + mp.dx * s;
@@ -22389,14 +22424,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           mx - 0.7 * msc * s,
           my - 3 * msc * s,
           mx - 0.5 * msc * s,
-          my - 5 * msc * s,
+          my - 5 * msc * s
         );
         ctx.lineTo(mx + 0.5 * msc * s, my - 5 * msc * s);
         ctx.quadraticCurveTo(
           mx + 0.7 * msc * s,
           my - 3 * msc * s,
           mx + 1.3 * msc * s,
-          my,
+          my
         );
         ctx.closePath();
         ctx.fill();
@@ -22419,7 +22454,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.2 * msc * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const spC = isPurple ? "180, 160, 210" : "200, 180, 140";
@@ -22434,7 +22469,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             my + sp.dy * msc * s,
             sp.r * msc * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
@@ -22443,9 +22478,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== RUNE MARKS ==========
       const wcRuneP = 0.4 + Math.sin(wt * 1.5) * 0.25;
       [
-        { x: ox - 13 * s, y: oy - 6 * s, rgb: "176, 96, 255" },
-        { x: ox + 15 * s, y: oy - 4 * s, rgb: "80, 255, 96" },
-        { x: ox - 3 * s, y: oy - 24 * s, rgb: "176, 96, 255" },
+        { rgb: "176, 96, 255", x: ox - 13 * s, y: oy - 6 * s },
+        { rgb: "80, 255, 96", x: ox + 15 * s, y: oy - 4 * s },
+        { rgb: "176, 96, 255", x: ox - 3 * s, y: oy - 24 * s },
       ].forEach((rp) => {
         ctx.strokeStyle = `rgba(${rp.rgb}, ${wcRuneP * 0.5})`;
         setShadowBlur(ctx, 6 * s, `rgba(${rp.rgb}, ${wcRuneP * 0.3})`);
@@ -22530,7 +22565,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wY + 1.5 * s,
           wSz * 0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -22546,7 +22581,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cy = screenPos.y;
       const cSeed = decorX * 17.3 + decorY * 31.7;
       const csrand = (n: number) => {
-        const v = Math.sin(cSeed * 127.1 + n * 311.7) * 43758.5453;
+        const v = Math.sin(cSeed * 127.1 + n * 311.7) * 43_758.5453;
         return v - Math.floor(v);
       };
 
@@ -22576,7 +22611,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (bulgeR + 2 * s) * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -22588,7 +22623,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy,
-          bulgeR * 1.5,
+          bulgeR * 1.5
         );
         groundGlow.addColorStop(0, `rgba(${glowColor},${glowPulse})`);
         groundGlow.addColorStop(1, "transparent");
@@ -22601,7 +22636,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bulgeR * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -22629,7 +22664,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx - bulgeR,
           rimY,
           cx + bulgeR,
-          rimY,
+          rimY
         );
         bodyGrad.addColorStop(0, "#181818");
         bodyGrad.addColorStop(0.3, ironLight);
@@ -22645,7 +22680,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx - bulgeR,
           bulgeY - (bulgeY - rimY) * 0.15,
           cx - bulgeR,
-          bulgeY,
+          bulgeY
         );
         ctx.bezierCurveTo(
           cx - bulgeR,
@@ -22653,7 +22688,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx - baseR - 2 * s,
           cy - 2 * s,
           cx - baseR,
-          cy,
+          cy
         );
         ctx.ellipse(cx, cy, baseR, baseR * TRUE_ISO, 0, Math.PI, 0, true);
         ctx.bezierCurveTo(
@@ -22662,7 +22697,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + bulgeR,
           bulgeY + (cy - bulgeY) * 0.55,
           cx + bulgeR,
-          bulgeY,
+          bulgeY
         );
         ctx.bezierCurveTo(
           cx + bulgeR,
@@ -22670,7 +22705,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx + bulgeR + 1 * s,
           rimY + (bulgeY - rimY) * 0.45,
           cx + rimR,
-          rimY,
+          rimY
         );
         ctx.closePath();
         ctx.fill();
@@ -22698,7 +22733,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bulgeR * TRUE_ISO * 0.35,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.stroke();
 
@@ -22729,7 +22764,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               chx - 1 * s,
               rimY + 8 * s,
               chx + 1 * s,
-              rimY + 12 * s,
+              rimY + 12 * s
             );
             ctx.stroke();
           }
@@ -22744,7 +22779,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rimY + 6 * s,
           5 * s,
           -Math.PI * 0.3,
-          Math.PI * 0.6,
+          Math.PI * 0.6
         );
         ctx.stroke();
         ctx.beginPath();
@@ -22753,7 +22788,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rimY + 6 * s,
           5 * s,
           Math.PI * 0.4,
-          Math.PI * 1.3,
+          Math.PI * 1.3
         );
         ctx.stroke();
 
@@ -22783,7 +22818,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           gooR * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -22820,7 +22855,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               fmY,
               fmR,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -22846,7 +22881,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5 * s,
           cx,
           cy + 3 * s,
-          22 * s,
+          22 * s
         );
         seepGrad.addColorStop(0, `rgba(100,221,23,${seepPulse})`);
         seepGrad.addColorStop(1, "transparent");
@@ -22926,7 +22961,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           crR * TRUE_ISO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -22958,7 +22993,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (startX + endX) / 2 + (csrand(220 + fl) - 0.5) * 5 * s,
             (startY + endY) / 2,
             endX,
-            endY,
+            endY
           );
           ctx.stroke();
           ctx.lineCap = "butt";
@@ -22980,7 +23015,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               fmY,
               fmR,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -22993,7 +23028,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy - vH,
-          vTopHW * 2,
+          vTopHW * 2
         );
         craterGlow.addColorStop(0, "rgba(100,221,23,0.35)");
         craterGlow.addColorStop(1, "transparent");
@@ -23020,7 +23055,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           cx,
           cy,
-          20 * s,
+          20 * s
         );
         stainGrad.addColorStop(0, "rgba(100,221,23,0.2)");
         stainGrad.addColorStop(0.5, "rgba(80,180,20,0.08)");
@@ -23075,7 +23110,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy,
-          crInnerHW,
+          crInnerHW
         );
         poolGrad.addColorStop(0, "#B2FF59");
         poolGrad.addColorStop(0.4, "#64DD17");
@@ -23090,7 +23125,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           crInnerHD * 0.9,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -23116,7 +23151,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx - crOuterHW,
           cy,
           cx,
-          cy + crOuterHD,
+          cy + crOuterHD
         );
         frG.addColorStop(0, crRockLight);
         frG.addColorStop(1, crRockMid);
@@ -23171,7 +23206,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             0,
             rbx,
             rby,
-            rbSize,
+            rbSize
           );
           rbGrad.addColorStop(0, crRockLight);
           rbGrad.addColorStop(1, crRockMid);
@@ -23185,7 +23220,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const poolGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, crOuterHW);
         poolGlow.addColorStop(
           0,
-          `rgba(100,221,23,${0.2 + Math.sin(decorTime * 2) * 0.05})`,
+          `rgba(100,221,23,${0.2 + Math.sin(decorTime * 2) * 0.05})`
         );
         poolGlow.addColorStop(1, "transparent");
         ctx.fillStyle = poolGlow;
@@ -23195,8 +23230,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Rising toxic fumes
         for (let fm = 0; fm < 3; fm++) {
-          const fmPhase =
-            (decorTime * 1.0 + fm * 1.1 + csrand(600 + fm) * 4) % 3;
+          const fmPhase = (decorTime * 1 + fm * 1.1 + csrand(600 + fm) * 4) % 3;
           if (fmPhase < 2) {
             const fmAlpha = 0.2 * (1 - fmPhase / 2);
             const fmX = cx + (csrand(610 + fm) - 0.5) * crInnerHW;
@@ -23209,7 +23243,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               fmY,
               fmR,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           }
@@ -23240,7 +23274,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         decorX,
         decorY,
         decorTime,
-        true,
+        true
       );
       break;
     }
@@ -23259,7 +23293,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         cx,
         cy + 2 * s,
-        42 * s,
+        42 * s
       );
       wetBlend.addColorStop(0, "rgba(10,25,50,0.35)");
       wetBlend.addColorStop(0.5, "rgba(15,30,55,0.18)");
@@ -23272,7 +23306,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         42 * s,
         42 * s * iso,
         waterSeed,
-        0.16,
+        0.16
       );
       ctx.fill();
 
@@ -23290,7 +23324,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         32 * s,
         32 * s * iso,
         waterSeed + 10,
-        0.15,
+        0.15
       );
       ctx.fill();
 
@@ -23315,7 +23349,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy,
-        28 * s,
+        28 * s
       );
       abyssGrad.addColorStop(0, "rgba(2,8,25,0.99)");
       abyssGrad.addColorStop(0.15, "rgba(4,12,35,0.97)");
@@ -23332,7 +23366,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         28 * s,
         28 * s * iso,
         waterSeed + 20,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -23343,7 +23377,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy + 1 * s,
-        26 * s,
+        26 * s
       );
       surfGrad.addColorStop(0, "rgba(70,140,195,0.65)");
       surfGrad.addColorStop(0.25, "rgba(55,120,180,0.5)");
@@ -23358,7 +23392,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         25 * s,
         25 * s * iso,
         waterSeed + 30,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -23388,7 +23422,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy,
-        22 * s,
+        22 * s
       );
       glowGrad.addColorStop(0, `rgba(40,130,200,${0.22 * glowPhase})`);
       glowGrad.addColorStop(0.35, `rgba(30,100,170,${0.14 * glowPhase})`);
@@ -23407,7 +23441,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy,
-        16 * s,
+        16 * s
       );
       glow2.addColorStop(0, `rgba(60,180,220,${0.1 * glowPhase2})`);
       glow2.addColorStop(0.5, `rgba(40,150,200,${0.05 * glowPhase2})`);
@@ -23432,7 +23466,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (6 + ripSize) * s * iso,
           0.04,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -23448,8 +23482,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let p = 0; p <= 20; p++) {
           const px = cx - 18 * s + (p / 20) * 36 * s;
           const py = clY + Math.sin(p * 0.6 + clOffset * 0.04) * 2.5 * s;
-          if (p === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
+          if (p === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
         }
         ctx.stroke();
       }
@@ -23473,7 +23510,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             spy,
             (0.7 + Math.sin(sparkT) * 0.35) * s,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -23497,7 +23534,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           shSize * 0.35,
           shAngle * 0.25,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -23523,7 +23560,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             bubY - bubSize * 0.3,
             bubSize * 0.3,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -23547,7 +23584,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rkSize * 0.5,
           rkAng,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Rock body
@@ -23566,7 +23603,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rkSize * 0.25,
           rkAng,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -23602,7 +23639,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         screenPos.x,
         screenPos.y,
-        36 * s,
+        36 * s
       );
       pondWetG.addColorStop(0, "transparent");
       pondWetG.addColorStop(0.5, "rgba(58,47,31,0.3)");
@@ -23615,7 +23652,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         36 * s,
         36 * s * pondIso,
         pondSeed,
-        0.16,
+        0.16
       );
       ctx.fill();
 
@@ -23626,7 +23663,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         screenPos.x,
         screenPos.y + 2 * s,
-        30 * s,
+        30 * s
       );
       pondRimG.addColorStop(0, "#5a4a35");
       pondRimG.addColorStop(0.5, "#4a3d2a");
@@ -23639,7 +23676,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         30 * s,
         30 * s * pondIso,
         pondSeed + 10,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -23650,7 +23687,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y + 2 * s,
-        26 * s,
+        26 * s
       );
       pondWaterG.addColorStop(0, "#004d6b");
       pondWaterG.addColorStop(0.2, "#006080");
@@ -23666,7 +23703,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         26 * s,
         26 * s * pondIso,
         pondSeed + 20,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -23677,7 +23714,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        22 * s,
+        22 * s
       );
       pondSurfG.addColorStop(0, "rgba(77,208,225,0.4)");
       pondSurfG.addColorStop(0.4, "rgba(38,198,218,0.25)");
@@ -23690,7 +23727,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         22 * s * pondIso,
         pondSeed + 30,
-        0.1,
+        0.1
       );
       ctx.fill();
 
@@ -23708,7 +23745,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ripR * pondIso,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
       }
@@ -23734,7 +23771,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        18 * s,
+        18 * s
       );
       pondGlow.addColorStop(0, `rgba(100,255,220,${0.12 * pondGlowPh})`);
       pondGlow.addColorStop(0.5, `rgba(80,220,200,${0.06 * pondGlowPh})`);
@@ -23772,7 +23809,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(gtX, gtY);
           ctx.lineTo(
             gtX + Math.cos(blAng) * 3 * s,
-            gtY + Math.sin(blAng) * 3 * s,
+            gtY + Math.sin(blAng) * 3 * s
           );
           ctx.stroke();
         }
@@ -23794,50 +23831,50 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bandStroke: string;
         }
       > = {
-        grassland: {
-          stone: "#5a6a5a",
-          stoneDark: "#3a4a3a",
-          brokenTop: "#7a8a7a",
-          moss: "#3a5a2a",
-          basePool: "rgba(60,90,60,0.5)",
-          ripple: "rgba(100,140,100,0.3)",
-          bandStroke: "rgba(0,0,0,0.15)",
-        },
-        swamp: {
-          stone: "#3a5a38",
-          stoneDark: "#1a3a18",
-          brokenTop: "#4a6a48",
-          moss: "#1a3a12",
-          basePool: "rgba(30,50,20,0.6)",
-          ripple: "rgba(50,80,40,0.35)",
-          bandStroke: "rgba(0,20,0,0.2)",
-        },
         desert: {
-          stone: "#8a7a58",
-          stoneDark: "#6a5a40",
+          bandStroke: "rgba(60,40,10,0.15)",
+          basePool: "rgba(160,140,100,0.35)",
           brokenTop: "#a08a68",
           moss: "#7a6a48",
-          basePool: "rgba(160,140,100,0.35)",
           ripple: "rgba(180,160,120,0.2)",
-          bandStroke: "rgba(60,40,10,0.15)",
+          stone: "#8a7a58",
+          stoneDark: "#6a5a40",
         },
-        winter: {
-          stone: "#6a7a88",
-          stoneDark: "#4a5a68",
-          brokenTop: "#8a9aa8",
-          moss: "#8aaa9a",
-          basePool: "rgba(140,180,210,0.45)",
-          ripple: "rgba(180,210,240,0.3)",
-          bandStroke: "rgba(0,10,30,0.15)",
+        grassland: {
+          bandStroke: "rgba(0,0,0,0.15)",
+          basePool: "rgba(60,90,60,0.5)",
+          brokenTop: "#7a8a7a",
+          moss: "#3a5a2a",
+          ripple: "rgba(100,140,100,0.3)",
+          stone: "#5a6a5a",
+          stoneDark: "#3a4a3a",
+        },
+        swamp: {
+          bandStroke: "rgba(0,20,0,0.2)",
+          basePool: "rgba(30,50,20,0.6)",
+          brokenTop: "#4a6a48",
+          moss: "#1a3a12",
+          ripple: "rgba(50,80,40,0.35)",
+          stone: "#3a5a38",
+          stoneDark: "#1a3a18",
         },
         volcanic: {
-          stone: "#5a3a38",
-          stoneDark: "#3a2218",
+          bandStroke: "rgba(40,10,0,0.2)",
+          basePool: "rgba(120,40,10,0.45)",
           brokenTop: "#6a4a48",
           moss: "#4a2a1a",
-          basePool: "rgba(120,40,10,0.45)",
           ripple: "rgba(200,80,20,0.25)",
-          bandStroke: "rgba(40,10,0,0.2)",
+          stone: "#5a3a38",
+          stoneDark: "#3a2218",
+        },
+        winter: {
+          bandStroke: "rgba(0,10,30,0.15)",
+          basePool: "rgba(140,180,210,0.45)",
+          brokenTop: "#8a9aa8",
+          moss: "#8aaa9a",
+          ripple: "rgba(180,210,240,0.3)",
+          stone: "#6a7a88",
+          stoneDark: "#4a5a68",
         },
       };
       const sp = spPalettes[mapTheme] ?? spPalettes.grassland;
@@ -23852,7 +23889,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       // Ripples
@@ -23867,7 +23904,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s * ripPhase,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -23882,7 +23919,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(220,235,255,0.4)";
@@ -23906,7 +23943,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -23919,7 +23956,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y + 5 * s,
-          14 * s,
+          14 * s
         );
         lavaGlow.addColorStop(0, "rgba(255,120,20,0.25)");
         lavaGlow.addColorStop(0.6, "rgba(200,60,10,0.1)");
@@ -23933,7 +23970,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -24011,7 +24048,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             vx + 1 * s,
             vy0 + 12 * s,
             vx - 1 * s,
-            vy0 + 18 * s,
+            vy0 + 18 * s
           );
           ctx.stroke();
         }
@@ -24131,11 +24168,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "idol_statue": {
       renderIdolStatue({
         ctx,
+        mapTheme,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
         time: decorTime,
-        mapTheme,
       });
       break;
     }
@@ -24164,11 +24201,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const groundGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
       groundGlow.addColorStop(
         0,
-        `hsla(${baseHue}, 80%, 55%, ${0.25 + pulse * 0.12})`,
+        `hsla(${baseHue}, 80%, 55%, ${0.25 + pulse * 0.12})`
       );
       groundGlow.addColorStop(
         0.4,
-        `hsla(${baseHue + 30}, 60%, 40%, ${0.12 + pulse * 0.06})`,
+        `hsla(${baseHue + 30}, 60%, 40%, ${0.12 + pulse * 0.06})`
       );
       groundGlow.addColorStop(1, "transparent");
       ctx.fillStyle = groundGlow;
@@ -24188,7 +24225,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         slabH,
         "#504e46",
         "#3e3c34",
-        "#45433a",
+        "#45433a"
       );
 
       // Subtle edge crack details on top face
@@ -24202,11 +24239,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(
           cx + Math.cos(ca) * cr * ISO_COS,
-          cy - slabH + Math.sin(ca) * cr * ISO_SIN,
+          cy - slabH + Math.sin(ca) * cr * ISO_SIN
         );
         ctx.lineTo(
           cx + Math.cos(ca) * (cr + cl) * ISO_COS,
-          cy - slabH + Math.sin(ca) * (cr + cl) * ISO_SIN,
+          cy - slabH + Math.sin(ca) * (cr + cl) * ISO_SIN
         );
         ctx.stroke();
       }
@@ -24227,7 +24264,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           circR * ISO_SIN,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -24242,7 +24279,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           circR * 0.7 * ISO_SIN,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -24256,11 +24293,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             rotAngle + (((pi + 2) % 5) / 5) * Math.PI * 2 - Math.PI / 2;
           ctx.moveTo(
             isoCircleX(fromAngle, circR),
-            isoCircleY(fromAngle, circR) - slabH,
+            isoCircleY(fromAngle, circR) - slabH
           );
           ctx.lineTo(
             isoCircleX(toAngle, circR),
-            isoCircleY(toAngle, circR) - slabH,
+            isoCircleY(toAngle, circR) - slabH
           );
         }
         ctx.stroke();
@@ -24322,7 +24359,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             stH,
             `hsl(220, 5%, ${38 + (shadeOff % 8)}%)`,
             `hsl(220, 5%, ${28 + (shadeOff % 6)}%)`,
-            `hsl(220, 5%, ${33 + (shadeOff % 7)}%)`,
+            `hsl(220, 5%, ${33 + (shadeOff % 7)}%)`
           );
 
           // Rune glyph etched on each stone face
@@ -24330,7 +24367,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           setShadowBlur(
             ctx,
             3 * s,
-            `hsla(${baseHue}, 80%, 60%, ${glyphA * 0.5})`,
+            `hsla(${baseHue}, 80%, 60%, ${glyphA * 0.5})`
           );
           ctx.fillStyle = `hsla(${baseHue}, 80%, 65%, ${glyphA})`;
           ctx.font = `${2.5 * s}px serif`;
@@ -24347,7 +24384,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fillText(
             stoneGlyphs[si % stoneGlyphs.length],
             sx,
-            sy - stH * 0.55,
+            sy - stH * 0.55
           );
           clearShadow(ctx);
         }
@@ -24364,7 +24401,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cpH,
           "#5a5852",
           "#424038",
-          "#4e4c44",
+          "#4e4c44"
         );
 
         // Glowing orb atop central pillar
@@ -24375,7 +24412,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         orbGrad.addColorStop(0, `hsla(${baseHue}, 90%, 90%, ${fastFlicker})`);
         orbGrad.addColorStop(
           0.5,
-          `hsla(${baseHue}, 85%, 65%, ${fastFlicker * 0.7})`,
+          `hsla(${baseHue}, 85%, 65%, ${fastFlicker * 0.7})`
         );
         orbGrad.addColorStop(1, "transparent");
         ctx.fillStyle = orbGrad;
@@ -24398,7 +24435,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (cx + sx) / 2,
             orbY + Math.sin(t * 1.5 + si) * 3 * s,
             sx,
-            sy2 - stH * 0.5,
+            sy2 - stH * 0.5
           );
           ctx.stroke();
         }
@@ -24423,7 +24460,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             rr * ISO_SIN,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.stroke();
 
@@ -24463,7 +24500,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fillText(
             wardGlyphs[gi],
             isoCircleX(ga, gr),
-            isoCircleY(ga, gr) - slabH,
+            isoCircleY(ga, gr) - slabH
           );
         }
         clearShadow(ctx);
@@ -24481,7 +24518,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           innerR * ISO_SIN,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
 
@@ -24492,7 +24529,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.moveTo(cx, cy - slabH);
           ctx.lineTo(
             isoCircleX(aa, innerR * 1.8),
-            isoCircleY(aa, innerR * 1.8) - slabH,
+            isoCircleY(aa, innerR * 1.8) - slabH
           );
           ctx.stroke();
         }
@@ -24509,8 +24546,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const ha = (hi / 6) * Math.PI * 2 - Math.PI / 2;
           const hx = isoCircleX(ha, sigR);
           const hy = isoCircleY(ha, sigR) - slabH;
-          if (hi === 0) ctx.moveTo(hx, hy);
-          else ctx.lineTo(hx, hy);
+          if (hi === 0) {
+            ctx.moveTo(hx, hy);
+          } else {
+            ctx.lineTo(hx, hy);
+          }
         }
         ctx.stroke();
 
@@ -24522,8 +24562,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const ta = rotAngle + (ti / 3) * Math.PI * 2 + Math.PI / 2;
           const tx = isoCircleX(ta, sigR * 0.7);
           const ty = isoCircleY(ta, sigR * 0.7) - slabH;
-          if (ti === 0) ctx.moveTo(tx, ty);
-          else ctx.lineTo(tx, ty);
+          if (ti === 0) {
+            ctx.moveTo(tx, ty);
+          } else {
+            ctx.lineTo(tx, ty);
+          }
         }
         ctx.closePath();
         ctx.stroke();
@@ -24534,8 +24577,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const ta = -rotAngle + (ti / 3) * Math.PI * 2 - Math.PI / 2;
           const tx = isoCircleX(ta, sigR * 0.7);
           const ty = isoCircleY(ta, sigR * 0.7) - slabH;
-          if (ti === 0) ctx.moveTo(tx, ty);
-          else ctx.lineTo(tx, ty);
+          if (ti === 0) {
+            ctx.moveTo(tx, ty);
+          } else {
+            ctx.lineTo(tx, ty);
+          }
         }
         ctx.closePath();
         ctx.stroke();
@@ -24570,7 +24616,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fillText(
             hexGlyphs[gi],
             isoCircleX(ga, sigR + 3 * s),
-            isoCircleY(ga, sigR + 3 * s) - slabH,
+            isoCircleY(ga, sigR + 3 * s) - slabH
           );
         }
         clearShadow(ctx);
@@ -24616,7 +24662,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -24672,7 +24718,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cageW * 0.4,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
 
@@ -24700,14 +24746,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         (cageTop + cageBot) / 2 + 1.5 * s,
         0.8 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.arc(
         chainX + 1 * s,
         (cageTop + cageBot) / 2 + 1.5 * s,
         0.8 * s,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -24730,7 +24776,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         12 * s,
         poolSeed - 10,
-        0.14,
+        0.14
       );
       ctx.fill();
 
@@ -24743,7 +24789,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         11 * s,
         poolSeed + 3,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -24754,7 +24800,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x,
         screenPos.y,
-        18 * s,
+        18 * s
       );
       poisonGrad.addColorStop(0, poisonBright);
       poisonGrad.addColorStop(0.4, poisonGreen);
@@ -24767,7 +24813,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         9 * s,
         poolSeed,
-        0.12,
+        0.12
       );
       ctx.fill();
 
@@ -24791,7 +24837,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             by - bSize * 0.3,
             bSize * 0.3,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         }
@@ -24812,7 +24858,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (1.5 + vPhase) * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -24826,7 +24872,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         1.5 * s,
         poolSeed + 20,
-        0.18,
+        0.18
       );
       ctx.fill();
       drawOrganicWaterShape(
@@ -24836,7 +24882,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2.5 * s,
         1.2 * s,
         poolSeed + 30,
-        0.18,
+        0.18
       );
       ctx.fill();
       break;
@@ -24857,20 +24903,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         9 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
       // Bone pile base
       const boneSeeds = [
-        { dx: -10, dy: 2, rot: 0.3, len: 6 },
-        { dx: -4, dy: 3, rot: -0.5, len: 5 },
-        { dx: 4, dy: 2, rot: 0.8, len: 7 },
-        { dx: 10, dy: 1, rot: -0.2, len: 5 },
-        { dx: -7, dy: 0, rot: 1.2, len: 4 },
-        { dx: 6, dy: 0, rot: -0.8, len: 6 },
-        { dx: -2, dy: -1, rot: 0.1, len: 8 },
-        { dx: 8, dy: -1, rot: -1.1, len: 5 },
+        { dx: -10, dy: 2, len: 6, rot: 0.3 },
+        { dx: -4, dy: 3, len: 5, rot: -0.5 },
+        { dx: 4, dy: 2, len: 7, rot: 0.8 },
+        { dx: 10, dy: 1, len: 5, rot: -0.2 },
+        { dx: -7, dy: 0, len: 4, rot: 1.2 },
+        { dx: 6, dy: 0, len: 6, rot: -0.8 },
+        { dx: -2, dy: -1, len: 8, rot: 0.1 },
+        { dx: 8, dy: -1, len: 5, rot: -1.1 },
       ];
       boneSeeds.forEach((bone, idx) => {
         ctx.save();
@@ -24899,7 +24945,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + sk.dy * s,
           sk.sz * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = pileWhite;
@@ -24909,7 +24955,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + sk.dy * s - 0.5 * s,
           sk.sz * 0.85 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Eye sockets
@@ -24920,14 +24966,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y + sk.dy * s - 0.5 * s,
           0.8 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.arc(
           screenPos.x + sk.dx * s + 1.2 * s,
           screenPos.y + sk.dy * s - 0.5 * s,
           0.8 * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -24944,7 +24990,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           Math.PI * 0.2,
-          Math.PI * 0.8,
+          Math.PI * 0.8
         );
         ctx.stroke();
       }
@@ -24969,66 +25015,66 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           accentMoss: string;
         }
       > = {
-        grassland: {
-          stoneDark: "#3a3a3a",
-          stoneLight: "#7a7a7a",
-          stoneMid: "#5a5a5a",
-          stoneShadow: "#2a2a2a",
-          mossColor: "#4a5d3a",
-          vineColor: "#2d5a2d",
-          highlightColor: "#a0a090",
-          accentMoss: "#4a6a5a",
-        },
-        swamp: {
-          stoneDark: "#2a3a28",
-          stoneLight: "#5a7a58",
-          stoneMid: "#3a5a38",
-          stoneShadow: "#1a2a18",
-          mossColor: "#2d4a2d",
-          vineColor: "#1a3a1a",
-          highlightColor: "#6a8a6a",
-          accentMoss: "#2a4a2a",
-        },
         desert: {
+          accentMoss: "#8a7a58",
+          highlightColor: "#c0aa78",
+          mossColor: "#8a7a58",
           stoneDark: "#5a4a38",
           stoneLight: "#a08a68",
           stoneMid: "#7a6a50",
           stoneShadow: "#3a3028",
-          mossColor: "#8a7a58",
           vineColor: "#7a6a48",
-          highlightColor: "#c0aa78",
-          accentMoss: "#8a7a58",
         },
-        winter: {
-          stoneDark: "#4a5058",
-          stoneLight: "#8a9098",
-          stoneMid: "#6a7078",
-          stoneShadow: "#2a3038",
-          mossColor: "#8aaa9a",
-          vineColor: "#7a9aaa",
-          highlightColor: "#b8d4e8",
-          accentMoss: "#6a8a9a",
+        grassland: {
+          accentMoss: "#4a6a5a",
+          highlightColor: "#a0a090",
+          mossColor: "#4a5d3a",
+          stoneDark: "#3a3a3a",
+          stoneLight: "#7a7a7a",
+          stoneMid: "#5a5a5a",
+          stoneShadow: "#2a2a2a",
+          vineColor: "#2d5a2d",
+        },
+        swamp: {
+          accentMoss: "#2a4a2a",
+          highlightColor: "#6a8a6a",
+          mossColor: "#2d4a2d",
+          stoneDark: "#2a3a28",
+          stoneLight: "#5a7a58",
+          stoneMid: "#3a5a38",
+          stoneShadow: "#1a2a18",
+          vineColor: "#1a3a1a",
         },
         volcanic: {
+          accentMoss: "#4a2a1a",
+          highlightColor: "#d86a30",
+          mossColor: "#5a3a2a",
           stoneDark: "#3a2828",
           stoneLight: "#6a4a4a",
           stoneMid: "#4a3838",
           stoneShadow: "#2a1818",
-          mossColor: "#5a3a2a",
           vineColor: "#5a2a1a",
-          highlightColor: "#d86a30",
-          accentMoss: "#4a2a1a",
+        },
+        winter: {
+          accentMoss: "#6a8a9a",
+          highlightColor: "#b8d4e8",
+          mossColor: "#8aaa9a",
+          stoneDark: "#4a5058",
+          stoneLight: "#8a9098",
+          stoneMid: "#6a7078",
+          stoneShadow: "#2a3038",
+          vineColor: "#7a9aaa",
         },
       };
       const rp = ruinPalettes[mapTheme] ?? ruinPalettes.grassland;
-      const stoneDark = rp.stoneDark;
-      const stoneLight = rp.stoneLight;
-      const stoneMid = rp.stoneMid;
-      const stoneShadow = rp.stoneShadow;
-      const mossColor = rp.mossColor;
-      const vineColor = rp.vineColor;
-      const highlightColor = rp.highlightColor;
-      const accentMoss = rp.accentMoss;
+      const { stoneDark } = rp;
+      const { stoneLight } = rp;
+      const { stoneMid } = rp;
+      const { stoneShadow } = rp;
+      const { mossColor } = rp;
+      const { vineColor } = rp;
+      const { highlightColor } = rp;
+      const { accentMoss } = rp;
 
       // Ground shadow for all variants
       drawDirectionalShadow(
@@ -25039,7 +25085,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         32 * s,
         16 * s,
         40 * s,
-        0.28,
+        0.28
       );
 
       if (ruinVariant === 0) {
@@ -25061,7 +25107,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - hexR,
           hexY,
           screenPos.x + hexR,
-          hexY,
+          hexY
         );
         hexTopGrad.addColorStop(0, stoneMid);
         hexTopGrad.addColorStop(0.3, stoneLight);
@@ -25070,7 +25116,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = hexTopGrad;
         ctx.beginPath();
         ctx.moveTo(hexPts[0].x, hexPts[0].y);
-        for (let i = 1; i < 6; i++) ctx.lineTo(hexPts[i].x, hexPts[i].y);
+        for (let i = 1; i < 6; i++) {
+          ctx.lineTo(hexPts[i].x, hexPts[i].y);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = stoneShadow;
@@ -25158,7 +25206,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (colR + 3 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -25170,7 +25218,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(colX + colR, screenPos.y - colH + 10 * s);
         ctx.ellipse(
@@ -25181,7 +25229,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25189,7 +25237,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colX - colR,
           screenPos.y,
           colX + colR,
-          screenPos.y,
+          screenPos.y
         );
         cGrad.addColorStop(0, stoneMid);
         cGrad.addColorStop(0.25, stoneLight);
@@ -25207,7 +25255,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25226,7 +25274,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25260,7 +25308,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (col2R + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -25272,7 +25320,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2R * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(col2X + col2R, screenPos.y - col2H + 8 * s);
         ctx.ellipse(
@@ -25283,7 +25331,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25291,7 +25339,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2X - col2R,
           0,
           col2X + col2R,
-          0,
+          0
         );
         c2G.addColorStop(0, stoneMid);
         c2G.addColorStop(0.3, stoneLight);
@@ -25305,7 +25353,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2R * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.lineTo(col2X - col2R, screenPos.y - col2H + 8 * s);
         ctx.ellipse(
@@ -25316,7 +25364,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25333,7 +25381,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25352,7 +25400,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.6,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const fcG = ctx.createLinearGradient(fcX, fcY - fcR, fcX, fcY + fcR);
@@ -25370,7 +25418,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.6,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fcX, fcY + fcR * 0.5);
         ctx.ellipse(
@@ -25381,7 +25429,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25419,18 +25467,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === 3D RUBBLE FIELD ===
         [
-          { x: -34, y: 10, sz: 5 },
-          { x: -20, y: 14, sz: 4 },
-          { x: -12, y: 15, sz: 3.5 },
-          { x: 10, y: 14, sz: 4.5 },
-          { x: 20, y: 12, sz: 3.5 },
-          { x: 32, y: 9, sz: 4 },
-          { x: -28, y: 12, sz: 3 },
-          { x: 14, y: 8, sz: 3 },
-          { x: 36, y: 5, sz: 3 },
-          { x: -4, y: 17, sz: 2.5 },
-          { x: 6, y: 18, sz: 3 },
-          { x: -38, y: 5, sz: 3.5 },
+          { sz: 5, x: -34, y: 10 },
+          { sz: 4, x: -20, y: 14 },
+          { sz: 3.5, x: -12, y: 15 },
+          { sz: 4.5, x: 10, y: 14 },
+          { sz: 3.5, x: 20, y: 12 },
+          { sz: 4, x: 32, y: 9 },
+          { sz: 3, x: -28, y: 12 },
+          { sz: 3, x: 14, y: 8 },
+          { sz: 3, x: 36, y: 5 },
+          { sz: 2.5, x: -4, y: 17 },
+          { sz: 3, x: 6, y: 18 },
+          { sz: 3.5, x: -38, y: 5 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -25472,17 +25520,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === FLOOR TILES ===
         [
-          { x: -16, y: 5, w: 7, d: 3.5 },
-          { x: 12, y: 6, w: 6, d: 3 },
-          { x: -6, y: 3, w: 5, d: 2.5 },
-          { x: 20, y: 3, w: 5, d: 2.5 },
+          { d: 3.5, w: 7, x: -16, y: 5 },
+          { d: 3, w: 6, x: 12, y: 6 },
+          { d: 2.5, w: 5, x: -6, y: 3 },
+          { d: 2.5, w: 5, x: 20, y: 3 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -25510,7 +25558,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25521,7 +25569,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25532,7 +25580,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25543,7 +25591,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -25576,7 +25624,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (lpR + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -25588,7 +25636,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lpR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(lpX + lpR, screenPos.y - lpH + 10 * s);
         ctx.ellipse(
@@ -25599,7 +25647,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25607,7 +25655,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lpX - lpR,
           screenPos.y,
           lpX + lpR,
-          screenPos.y,
+          screenPos.y
         );
         lpG.addColorStop(0, stoneMid);
         lpG.addColorStop(0.25, stoneLight);
@@ -25625,7 +25673,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25638,7 +25686,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (lpR + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.strokeStyle = stoneShadow;
@@ -25665,7 +25713,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (rpR + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -25677,7 +25725,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rpR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(rpX + rpR, screenPos.y - rpH + 8 * s);
         ctx.ellipse(
@@ -25688,7 +25736,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25696,7 +25744,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rpX - rpR,
           screenPos.y,
           rpX + rpR,
-          screenPos.y,
+          screenPos.y
         );
         rpG.addColorStop(0, stoneMid);
         rpG.addColorStop(0.25, stoneLight);
@@ -25714,7 +25762,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25732,7 +25780,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -25757,7 +25805,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 22 * s,
           20 * s,
           Math.PI * 1.05,
-          Math.PI * 1.55,
+          Math.PI * 1.55
         );
         ctx.stroke();
         ctx.strokeStyle = stoneLight;
@@ -25768,7 +25816,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 22 * s,
           20 * s,
           Math.PI * 1.05,
-          Math.PI * 1.55,
+          Math.PI * 1.55
         );
         ctx.stroke();
         ctx.strokeStyle = stoneMid;
@@ -25779,7 +25827,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.y - 22 * s,
           20 * s,
           Math.PI * 1.05,
-          Math.PI * 1.55,
+          Math.PI * 1.55
         );
         ctx.stroke();
 
@@ -25823,16 +25871,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === 3D RUBBLE FIELD ===
         [
-          { x: -32, y: 10, sz: 4.5 },
-          { x: -10, y: 14, sz: 3.5 },
-          { x: 6, y: 15, sz: 4 },
-          { x: 26, y: 12, sz: 3.5 },
-          { x: -24, y: 13, sz: 3 },
-          { x: 14, y: 16, sz: 3 },
-          { x: 30, y: 8, sz: 4 },
-          { x: -16, y: 16, sz: 2.5 },
-          { x: 34, y: 4, sz: 3 },
-          { x: -36, y: 6, sz: 3 },
+          { sz: 4.5, x: -32, y: 10 },
+          { sz: 3.5, x: -10, y: 14 },
+          { sz: 4, x: 6, y: 15 },
+          { sz: 3.5, x: 26, y: 12 },
+          { sz: 3, x: -24, y: 13 },
+          { sz: 3, x: 14, y: 16 },
+          { sz: 4, x: 30, y: 8 },
+          { sz: 2.5, x: -16, y: 16 },
+          { sz: 3, x: 34, y: 4 },
+          { sz: 3, x: -36, y: 6 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -25874,16 +25922,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === FLOOR TILES ===
         [
-          { x: -8, y: 4, w: 6, d: 3 },
-          { x: 10, y: 3, w: 5, d: 2.5 },
-          { x: -20, y: 6, w: 7, d: 3.5 },
+          { d: 3, w: 6, x: -8, y: 4 },
+          { d: 2.5, w: 5, x: 10, y: 3 },
+          { d: 3.5, w: 7, x: -20, y: 6 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -25911,7 +25959,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25922,7 +25970,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25933,7 +25981,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -25944,7 +25992,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -25969,7 +26017,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           w1X,
           w1TopY,
           w1X + w1W,
-          screenPos.y,
+          screenPos.y
         );
         w1G.addColorStop(0, stoneMid);
         w1G.addColorStop(0.4, stoneLight);
@@ -26054,7 +26102,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (csR + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -26066,7 +26114,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           csR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(csX + csR, screenPos.y - csH + 6 * s);
         ctx.ellipse(
@@ -26077,7 +26125,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26097,7 +26145,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26114,7 +26162,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26127,13 +26175,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 15 * s,
           screenPos.y - 32 * s,
           screenPos.x - 8 * s,
-          screenPos.y - 30 * s,
+          screenPos.y - 30 * s
         );
         ctx.quadraticCurveTo(
           screenPos.x - 5 * s,
           screenPos.y - 22 * s,
           screenPos.x - 10 * s,
-          screenPos.y - 16 * s,
+          screenPos.y - 16 * s
         );
         ctx.fill();
         ctx.fillStyle = "#4a7a35";
@@ -26143,13 +26191,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 1 * s,
           screenPos.y - 34 * s,
           screenPos.x + 4 * s,
-          screenPos.y - 27 * s,
+          screenPos.y - 27 * s
         );
         ctx.quadraticCurveTo(
           screenPos.x + 1 * s,
           screenPos.y - 22 * s,
           screenPos.x - 4 * s,
-          screenPos.y - 20 * s,
+          screenPos.y - 20 * s
         );
         ctx.fill();
         ctx.fillStyle = "#5a8a42";
@@ -26159,13 +26207,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x + 6 * s,
           screenPos.y - 28 * s,
           screenPos.x + 8 * s,
-          screenPos.y - 22 * s,
+          screenPos.y - 22 * s
         );
         ctx.quadraticCurveTo(
           screenPos.x + 5 * s,
           screenPos.y - 19 * s,
           screenPos.x + 2 * s,
-          screenPos.y - 18 * s,
+          screenPos.y - 18 * s
         );
         ctx.fill();
 
@@ -26179,7 +26227,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           w1X + 6 * s,
           screenPos.y - 14 * s,
           w1X + 12 * s,
-          screenPos.y - 4 * s,
+          screenPos.y - 4 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -26188,7 +26236,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           w1X + 32 * s,
           screenPos.y - 10 * s,
           w1X + 26 * s,
-          screenPos.y - 2 * s,
+          screenPos.y - 2 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -26197,7 +26245,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           w2X + 12 * s,
           screenPos.y - 8 * s,
           w2X + 6 * s,
-          screenPos.y,
+          screenPos.y
         );
         ctx.stroke();
         ctx.fillStyle = mossColor;
@@ -26216,16 +26264,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === 3D RUBBLE FIELD ===
         [
-          { x: -34, y: 10, sz: 5 },
-          { x: -18, y: 14, sz: 4 },
-          { x: 4, y: 15, sz: 3.5 },
-          { x: 18, y: 12, sz: 4 },
-          { x: 30, y: 10, sz: 3.5 },
-          { x: -24, y: 12, sz: 3 },
-          { x: 10, y: 16, sz: 3 },
-          { x: 34, y: 7, sz: 3 },
-          { x: -10, y: 16, sz: 2.5 },
-          { x: 24, y: 14, sz: 4 },
+          { sz: 5, x: -34, y: 10 },
+          { sz: 4, x: -18, y: 14 },
+          { sz: 3.5, x: 4, y: 15 },
+          { sz: 4, x: 18, y: 12 },
+          { sz: 3.5, x: 30, y: 10 },
+          { sz: 3, x: -24, y: 12 },
+          { sz: 3, x: 10, y: 16 },
+          { sz: 3, x: 34, y: 7 },
+          { sz: 2.5, x: -10, y: 16 },
+          { sz: 4, x: 24, y: 14 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -26267,16 +26315,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === FLOOR TILES ===
         [
-          { x: -14, y: 5, w: 6, d: 3 },
-          { x: 6, y: 4, w: 5, d: 2.5 },
-          { x: -24, y: 6, w: 5, d: 2.5 },
+          { d: 3, w: 6, x: -14, y: 5 },
+          { d: 2.5, w: 5, x: 6, y: 4 },
+          { d: 2.5, w: 5, x: -24, y: 6 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -26317,7 +26365,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -26328,7 +26376,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -26339,7 +26387,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -26359,7 +26407,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bRy,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneShadow;
@@ -26374,7 +26422,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           0,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26384,7 +26432,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - bRx,
           screenPos.y,
           screenPos.x + bRx,
-          screenPos.y,
+          screenPos.y
         );
         wallG.addColorStop(0, stoneMid);
         wallG.addColorStop(0.3, stoneLight);
@@ -26398,7 +26446,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 5 * s,
           screenPos.y - 42 * s,
           screenPos.x + 12 * s,
-          screenPos.y - 28 * s,
+          screenPos.y - 28 * s
         );
         ctx.lineTo(screenPos.x + 14 * s, screenPos.y + 1 * s);
         ctx.closePath();
@@ -26434,7 +26482,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               screenPos.x - 4 * s,
               rowY - 3 * s,
               screenPos.x + 12 * s,
-              rowY + 2 * s,
+              rowY + 2 * s
             );
             ctx.stroke();
           }
@@ -26452,7 +26500,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           holeX - holeRx,
           holeY,
           holeX + holeRx,
-          holeY,
+          holeY
         );
         innerWallG.addColorStop(0, "#2e2e26");
         innerWallG.addColorStop(0.4, "#1e1e18");
@@ -26469,7 +26517,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26481,7 +26529,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           holeX,
           holeY + holeDepth,
-          holeRx * 0.85,
+          holeRx * 0.85
         );
         floorG.addColorStop(0, "#22221c");
         floorG.addColorStop(0.7, "#1a1a15");
@@ -26495,7 +26543,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           holeRy * 0.85,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -26544,7 +26592,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             holeRy * (0.92 - iw * 0.02),
             0,
             Math.PI + 0.2,
-            Math.PI * 2 - 0.2,
+            Math.PI * 2 - 0.2
           );
           ctx.stroke();
         }
@@ -26560,7 +26608,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           holeRy,
           0,
           Math.PI + 0.3,
-          Math.PI * 2 - 0.3,
+          Math.PI * 2 - 0.3
         );
         ctx.stroke();
 
@@ -26649,7 +26697,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (crR + 1.5 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -26661,7 +26709,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           crR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(crX + crR, screenPos.y - crH + 6 * s);
         ctx.ellipse(
@@ -26672,7 +26720,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -26692,25 +26740,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
 
         // === 3D RUBBLE RING ===
         [
-          { x: -30, y: 8, sz: 4.5 },
-          { x: -20, y: 13, sz: 4 },
-          { x: -8, y: 15, sz: 3.5 },
-          { x: 8, y: 14, sz: 4 },
-          { x: 20, y: 11, sz: 3.5 },
-          { x: 28, y: 7, sz: 4 },
-          { x: -26, y: 11, sz: 3 },
-          { x: 14, y: 13, sz: 3 },
-          { x: 32, y: 4, sz: 3 },
-          { x: -34, y: 4, sz: 3 },
-          { x: -14, y: 14, sz: 2.5 },
-          { x: 24, y: 10, sz: 2.5 },
+          { sz: 4.5, x: -30, y: 8 },
+          { sz: 4, x: -20, y: 13 },
+          { sz: 3.5, x: -8, y: 15 },
+          { sz: 4, x: 8, y: 14 },
+          { sz: 3.5, x: 20, y: 11 },
+          { sz: 4, x: 28, y: 7 },
+          { sz: 3, x: -26, y: 11 },
+          { sz: 3, x: 14, y: 13 },
+          { sz: 3, x: 32, y: 4 },
+          { sz: 3, x: -34, y: 4 },
+          { sz: 2.5, x: -14, y: 14 },
+          { sz: 2.5, x: 24, y: 10 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -26752,17 +26800,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === FLOOR TILES ===
         [
-          { x: -18, y: 7, w: 5, d: 2.5 },
-          { x: 16, y: 6, w: 6, d: 3 },
-          { x: 28, y: 2, w: 5, d: 2.5 },
-          { x: -30, y: 3, w: 4, d: 2 },
+          { d: 2.5, w: 5, x: -18, y: 7 },
+          { d: 3, w: 6, x: 16, y: 6 },
+          { d: 2.5, w: 5, x: 28, y: 2 },
+          { d: 2, w: 4, x: -30, y: 3 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -26790,7 +26838,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -26801,7 +26849,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -26812,7 +26860,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -26823,7 +26871,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -26852,7 +26900,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y + 8 * s,
-          44 * s,
+          44 * s
         );
         v4GroundShadow.addColorStop(0, "rgba(10, 10, 8, 0.35)");
         v4GroundShadow.addColorStop(0.6, "rgba(10, 10, 8, 0.15)");
@@ -26866,22 +26914,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           22 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
         // Broken stone slabs at varying heights and angles
         const v4SlabColors = [stoneMid, "#5a5a4a", "#4a4a3a", stoneDark];
         const v4Slabs = [
-          { x: -28, y: 4, w: 14, d: 7, h: 3.5, jOff: 0.9 },
-          { x: -8, y: 2, w: 12, d: 6, h: 2.5, jOff: 2.1 },
-          { x: 12, y: 4, w: 11, d: 5.5, h: 4, jOff: 0.4 },
-          { x: 26, y: 7, w: 10, d: 5, h: 3, jOff: 3.3 },
-          { x: -20, y: 12, w: 9, d: 4.5, h: 2, jOff: 1.6 },
-          { x: 4, y: 10, w: 10, d: 5, h: 1.5, jOff: 0.2 },
-          { x: 18, y: 12, w: 8, d: 4, h: 2.5, jOff: 2.7 },
-          { x: -34, y: 8, w: 7, d: 3.5, h: 2, jOff: 3.8 },
-          { x: 34, y: 3, w: 8, d: 4, h: 2, jOff: 1.3 },
+          { d: 7, h: 3.5, jOff: 0.9, w: 14, x: -28, y: 4 },
+          { d: 6, h: 2.5, jOff: 2.1, w: 12, x: -8, y: 2 },
+          { d: 5.5, h: 4, jOff: 0.4, w: 11, x: 12, y: 4 },
+          { d: 5, h: 3, jOff: 3.3, w: 10, x: 26, y: 7 },
+          { d: 4.5, h: 2, jOff: 1.6, w: 9, x: -20, y: 12 },
+          { d: 5, h: 1.5, jOff: 0.2, w: 10, x: 4, y: 10 },
+          { d: 4, h: 2.5, jOff: 2.7, w: 8, x: 18, y: 12 },
+          { d: 3.5, h: 2, jOff: 3.8, w: 7, x: -34, y: 8 },
+          { d: 4, h: 2, jOff: 1.3, w: 8, x: 34, y: 3 },
         ];
         v4Slabs.forEach((sl, i) => {
           const sx = screenPos.x + sl.x * s;
@@ -26927,16 +26975,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Small stone fragments between slabs
         [
-          { x: -16, y: 8, sz: 2.2 },
-          { x: 8, y: 7, sz: 1.8 },
-          { x: -4, y: 14, sz: 1.6 },
-          { x: 20, y: 10, sz: 2 },
-          { x: -26, y: 10, sz: 1.4 },
-          { x: 30, y: 9, sz: 1.6 },
-          { x: 0, y: 16, sz: 1.3 },
-          { x: -12, y: 15, sz: 1.5 },
-          { x: 14, y: 14, sz: 1.8 },
-          { x: 36, y: 6, sz: 1.4 },
+          { sz: 2.2, x: -16, y: 8 },
+          { sz: 1.8, x: 8, y: 7 },
+          { sz: 1.6, x: -4, y: 14 },
+          { sz: 2, x: 20, y: 10 },
+          { sz: 1.4, x: -26, y: 10 },
+          { sz: 1.6, x: 30, y: 9 },
+          { sz: 1.3, x: 0, y: 16 },
+          { sz: 1.5, x: -12, y: 15 },
+          { sz: 1.8, x: 14, y: 14 },
+          { sz: 1.4, x: 36, y: 6 },
         ].forEach((f, i) => {
           const fx = screenPos.x + f.x * s;
           const fy = screenPos.y + f.y * s;
@@ -26955,10 +27003,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Exposed dirt / waterlogged patches between stones
         ctx.fillStyle = "rgba(30, 45, 35, 0.25)";
         [
-          { x: -18, y: 9, rx: 5, ry: 2.5 },
-          { x: 6, y: 12, rx: 4.5, ry: 2.2 },
-          { x: -6, y: 15, rx: 6, ry: 2.8 },
-          { x: 24, y: 10, rx: 4, ry: 2 },
+          { rx: 5, ry: 2.5, x: -18, y: 9 },
+          { rx: 4.5, ry: 2.2, x: 6, y: 12 },
+          { rx: 6, ry: 2.8, x: -6, y: 15 },
+          { rx: 4, ry: 2, x: 24, y: 10 },
         ].forEach((p) => {
           ctx.beginPath();
           ctx.ellipse(
@@ -26968,7 +27016,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             p.ry * s,
             0.15,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
@@ -26984,7 +27032,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lWallX - lWallD,
           screenPos.y,
           lWallX,
-          screenPos.y,
+          screenPos.y
         );
         leftFaceGrad.addColorStop(0, stoneShadow);
         leftFaceGrad.addColorStop(1, stoneDark);
@@ -27004,7 +27052,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lWallX,
           screenPos.y - lWallH,
           lWallX + lWallW,
-          screenPos.y,
+          screenPos.y
         );
         frontFaceGrad.addColorStop(0, stoneMid);
         frontFaceGrad.addColorStop(0.5, stoneLight);
@@ -27055,14 +27103,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lWallX + 5 * s,
           screenPos.y - 5 * s,
           lWallX + 2 * s,
-          screenPos.y + 3 * s,
+          screenPos.y + 3 * s
         );
         ctx.lineTo(lWallX + 6 * s, screenPos.y + 3 * s);
         ctx.quadraticCurveTo(
           lWallX + 8 * s,
           screenPos.y - 8 * s,
           lWallX + 7 * s,
-          screenPos.y - 15 * s,
+          screenPos.y - 15 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -27088,7 +27136,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rWallX,
           screenPos.y,
           rWallX + rWallW,
-          screenPos.y - rWallH,
+          screenPos.y - rWallH
         );
         rFrontGrad.addColorStop(0, stoneMid);
         rFrontGrad.addColorStop(0.4, stoneLight);
@@ -27139,7 +27187,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.stroke();
         ctx.beginPath();
@@ -27162,7 +27210,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (colRadius + 4 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -27176,7 +27224,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (colRadius + 3 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -27188,7 +27236,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (colRadius + 3 * s) * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.fill();
 
@@ -27202,7 +27250,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colRadius * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(colX + colRadius, colY - colHeight + 15 * s);
         ctx.ellipse(
@@ -27213,7 +27261,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27223,7 +27271,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colX - colRadius,
           colY,
           colX + colRadius,
-          colY,
+          colY
         );
         colFrontGrad.addColorStop(0, stoneMid);
         colFrontGrad.addColorStop(0.3, stoneLight);
@@ -27238,7 +27286,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colRadius * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.lineTo(colX - colRadius, colY - colHeight + 15 * s);
         ctx.ellipse(
@@ -27249,7 +27297,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27271,7 +27319,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27298,14 +27346,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === RUBBLE (3D isometric rocks) ===
         const rubblePositions = [
-          { x: -20, y: 8, size: 4 },
-          { x: -12, y: 10, size: 3 },
-          { x: 5, y: 12, size: 5 },
-          { x: 15, y: 9, size: 3.5 },
-          { x: 25, y: 11, size: 4 },
-          { x: -8, y: 7, size: 2.5 },
-          { x: 32, y: 7, size: 3 },
-          { x: -32, y: 6, size: 3.5 },
+          { size: 4, x: -20, y: 8 },
+          { size: 3, x: -12, y: 10 },
+          { size: 5, x: 5, y: 12 },
+          { size: 3.5, x: 15, y: 9 },
+          { size: 4, x: 25, y: 11 },
+          { size: 2.5, x: -8, y: 7 },
+          { size: 3, x: 32, y: 7 },
+          { size: 3.5, x: -32, y: 6 },
         ];
 
         rubblePositions.forEach((rb, idx) => {
@@ -27356,7 +27404,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fallR * 0.5,
           0.8,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -27364,7 +27412,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fallX,
           fallY - fallR,
           fallX,
-          fallY + fallR,
+          fallY + fallR
         );
         fallGrad.addColorStop(0, stoneLight);
         fallGrad.addColorStop(0.5, stoneMid);
@@ -27380,7 +27428,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fallR * 0.5,
           0.8,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fallX, fallY + fallR * 0.5);
         ctx.ellipse(
@@ -27391,7 +27439,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27405,7 +27453,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fallR * ISO_Y_RATIO,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -27420,7 +27468,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -27431,7 +27479,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -27442,7 +27490,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -27456,7 +27504,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lWallX + 5 * s,
           screenPos.y - 15 * s,
           lWallX + 10 * s,
-          screenPos.y - 5 * s,
+          screenPos.y - 5 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -27465,7 +27513,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colX + 10 * s,
           colY - 25 * s,
           colX + 6 * s,
-          colY - 10 * s,
+          colY - 10 * s
         );
         ctx.stroke();
 
@@ -27523,7 +27571,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cwfX,
           cwfY - 3 * s,
           cwfX + 16 * s,
-          cwfY + 4 * s,
+          cwfY + 4 * s
         );
         cwfG.addColorStop(0, stoneLight);
         cwfG.addColorStop(0.5, stoneMid);
@@ -27555,9 +27603,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const bsX = screenPos.x - 18 * s;
         const bsY = screenPos.y + 4 * s;
         [
-          { dx: 0, dy: 0, w: 7, d: 3, h: 2 },
-          { dx: 7, dy: -1, w: 6, d: 2.5, h: 3.5 },
-          { dx: 13, dy: -2.5, w: 5, d: 2, h: 5 },
+          { d: 3, dx: 0, dy: 0, h: 2, w: 7 },
+          { d: 2.5, dx: 7, dy: -1, h: 3.5, w: 6 },
+          { d: 2, dx: 13, dy: -2.5, h: 5, w: 5 },
         ].forEach((step) => {
           const spx = bsX + step.dx * s;
           const spy = bsY + step.dy * s;
@@ -27624,7 +27672,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           v4cbX - 3 * s,
           v4cbY,
           v4cbX + 4 * s,
-          v4cbY,
+          v4cbY
         );
         v4cbG.addColorStop(0, stoneMid);
         v4cbG.addColorStop(0.4, stoneLight);
@@ -27657,10 +27705,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = 1.2 * s;
         ctx.lineCap = "round";
         [
-          { x1: -24, y1: 16, x2: -16, y2: 18 },
-          { x1: 10, y1: 18, x2: 20, y2: 17 },
-          { x1: -6, y1: 19, x2: 4, y2: 21 },
-          { x1: 26, y1: 14, x2: 34, y2: 12 },
+          { x1: -24, x2: -16, y1: 16, y2: 18 },
+          { x1: 10, x2: 20, y1: 18, y2: 17 },
+          { x1: -6, x2: 4, y1: 19, y2: 21 },
+          { x1: 26, x2: 34, y1: 14, y2: 12 },
         ].forEach((e) => {
           ctx.beginPath();
           ctx.moveTo(screenPos.x + e.x1 * s, screenPos.y + e.y1 * s);
@@ -27668,19 +27716,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             screenPos.x + ((e.x1 + e.x2) / 2) * s,
             screenPos.y + ((e.y1 + e.y2) / 2 + 1.5) * s,
             screenPos.x + e.x2 * s,
-            screenPos.y + e.y2 * s,
+            screenPos.y + e.y2 * s
           );
           ctx.stroke();
         });
 
         // === ADDITIONAL RUBBLE PILES ===
         [
-          { x: -38, y: 12, sz: 4.5, clr: stoneMid },
-          { x: -30, y: 16, sz: 3.5, clr: stoneDark },
-          { x: 36, y: 10, sz: 4, clr: stoneMid },
-          { x: 40, y: 6, sz: 3, clr: stoneLight },
-          { x: -8, y: 18, sz: 2.5, clr: stoneDark },
-          { x: 16, y: 18, sz: 3, clr: stoneMid },
+          { clr: stoneMid, sz: 4.5, x: -38, y: 12 },
+          { clr: stoneDark, sz: 3.5, x: -30, y: 16 },
+          { clr: stoneMid, sz: 4, x: 36, y: 10 },
+          { clr: stoneLight, sz: 3, x: 40, y: 6 },
+          { clr: stoneDark, sz: 2.5, x: -8, y: 18 },
+          { clr: stoneMid, sz: 3, x: 16, y: 18 },
         ].forEach((rb) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -27713,7 +27761,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           v4pdX - v4pdR,
           v4pdY,
           v4pdX + v4pdR,
-          v4pdY,
+          v4pdY
         );
         v4pdG.addColorStop(0, stoneMid);
         v4pdG.addColorStop(0.3, stoneLight);
@@ -27731,7 +27779,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27749,7 +27797,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27764,7 +27812,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rWallX + 18 * s,
           screenPos.y - 16 * s,
           rWallX + 12 * s,
-          screenPos.y - 4 * s,
+          screenPos.y - 4 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -27773,7 +27821,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           lWallX - 2 * s,
           screenPos.y - 20 * s,
           lWallX + 4 * s,
-          screenPos.y - 8 * s,
+          screenPos.y - 8 * s
         );
         ctx.stroke();
         ctx.fillStyle = mossColor;
@@ -27800,7 +27848,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -27811,7 +27859,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           -0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       } else if (ruinVariant === 5) {
@@ -27835,7 +27883,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - hexR,
           hexY,
           screenPos.x + hexR,
-          hexY,
+          hexY
         );
         hexTopGrad.addColorStop(0, stoneMid);
         hexTopGrad.addColorStop(0.3, stoneLight);
@@ -27844,7 +27892,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = hexTopGrad;
         ctx.beginPath();
         ctx.moveTo(hexPts[0].x, hexPts[0].y);
-        for (let i = 1; i < 6; i++) ctx.lineTo(hexPts[i].x, hexPts[i].y);
+        for (let i = 1; i < 6; i++) {
+          ctx.lineTo(hexPts[i].x, hexPts[i].y);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = stoneShadow;
@@ -27929,7 +27979,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -27940,7 +27990,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -27958,7 +28008,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (colR + 3 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -27970,7 +28020,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colR * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(colX + colR, screenPos.y - colH + 10 * s);
         ctx.ellipse(
@@ -27981,7 +28031,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -27989,7 +28039,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           colX - colR,
           screenPos.y,
           colX + colR,
-          screenPos.y,
+          screenPos.y
         );
         cGrad.addColorStop(0, stoneMid);
         cGrad.addColorStop(0.25, stoneLight);
@@ -28007,7 +28057,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28026,7 +28076,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28062,7 +28112,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (col2R + 2 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -28074,7 +28124,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2R * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(col2X + col2R, screenPos.y - col2H + 8 * s);
         ctx.ellipse(
@@ -28085,7 +28135,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28093,7 +28143,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2X - col2R,
           0,
           col2X + col2R,
-          0,
+          0
         );
         c2G.addColorStop(0, stoneMid);
         c2G.addColorStop(0.3, stoneLight);
@@ -28107,7 +28157,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col2R * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.lineTo(col2X - col2R, screenPos.y - col2H + 8 * s);
         ctx.ellipse(
@@ -28118,7 +28168,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28135,7 +28185,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28153,7 +28203,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           (col3R + 1.5 * s) * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = stoneDark;
@@ -28165,7 +28215,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col3R * 0.5,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.lineTo(col3X + col3R, screenPos.y - col3H + 6 * s);
         ctx.ellipse(
@@ -28176,7 +28226,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           0,
           Math.PI,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28184,7 +28234,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col3X - col3R,
           0,
           col3X + col3R,
-          0,
+          0
         );
         c3G.addColorStop(0, stoneMid);
         c3G.addColorStop(0.3, stoneLight);
@@ -28198,7 +28248,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           col3R * 0.5,
           0,
           0,
-          Math.PI,
+          Math.PI
         );
         ctx.lineTo(col3X - col3R, screenPos.y - col3H + 6 * s);
         ctx.ellipse(
@@ -28209,7 +28259,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI,
           Math.PI * 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28228,7 +28278,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.6,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const fcG = ctx.createLinearGradient(fcX, fcY - fcR, fcX, fcY + fcR);
@@ -28246,7 +28296,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.6,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fcX, fcY + fcR * 0.5);
         ctx.ellipse(
@@ -28257,7 +28307,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28280,14 +28330,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fc2R * 0.5,
           -0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const fc2G = ctx.createLinearGradient(
           fc2X,
           fc2Y - fc2R,
           fc2X,
-          fc2Y + fc2R,
+          fc2Y + fc2R
         );
         fc2G.addColorStop(0, stoneLight);
         fc2G.addColorStop(0.5, stoneMid);
@@ -28303,7 +28353,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fc2R * 0.5,
           -0.4,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fc2X, fc2Y + fc2R * 0.5);
         ctx.ellipse(
@@ -28314,7 +28364,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28361,20 +28411,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === SCATTERED 3D RUBBLE ===
         [
-          { x: -34, y: 10, sz: 5 },
-          { x: -20, y: 14, sz: 4 },
-          { x: -12, y: 16, sz: 3.5 },
-          { x: 10, y: 14, sz: 4.5 },
-          { x: 20, y: 12, sz: 3.5 },
-          { x: 32, y: 9, sz: 4 },
-          { x: -28, y: 13, sz: 3 },
-          { x: 14, y: 8, sz: 3 },
-          { x: 36, y: 5, sz: 3 },
-          { x: -4, y: 18, sz: 2.5 },
-          { x: 6, y: 18, sz: 3 },
-          { x: -38, y: 6, sz: 3.5 },
-          { x: 40, y: 2, sz: 3 },
-          { x: -16, y: 16, sz: 3 },
+          { sz: 5, x: -34, y: 10 },
+          { sz: 4, x: -20, y: 14 },
+          { sz: 3.5, x: -12, y: 16 },
+          { sz: 4.5, x: 10, y: 14 },
+          { sz: 3.5, x: 20, y: 12 },
+          { sz: 4, x: 32, y: 9 },
+          { sz: 3, x: -28, y: 13 },
+          { sz: 3, x: 14, y: 8 },
+          { sz: 3, x: 36, y: 5 },
+          { sz: 2.5, x: -4, y: 18 },
+          { sz: 3, x: 6, y: 18 },
+          { sz: 3.5, x: -38, y: 6 },
+          { sz: 3, x: 40, y: 2 },
+          { sz: 3, x: -16, y: 16 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -28420,18 +28470,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === BROKEN FLOOR TILES ===
         [
-          { x: -16, y: 5, w: 7, d: 3.5 },
-          { x: 12, y: 6, w: 6, d: 3 },
-          { x: -6, y: 3, w: 5, d: 2.5 },
-          { x: 20, y: 3, w: 5, d: 2.5 },
-          { x: -26, y: 4, w: 5, d: 2.5 },
+          { d: 3.5, w: 7, x: -16, y: 5 },
+          { d: 3, w: 6, x: 12, y: 6 },
+          { d: 2.5, w: 5, x: -6, y: 3 },
+          { d: 2.5, w: 5, x: 20, y: 3 },
+          { d: 2.5, w: 5, x: -26, y: 4 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -28459,7 +28509,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28470,7 +28520,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28481,7 +28531,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28492,7 +28542,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28503,7 +28553,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -28518,7 +28568,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28529,7 +28579,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28540,7 +28590,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -28551,7 +28601,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -28582,7 +28632,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           screenPos.x,
           screenPos.y + 8 * s,
-          50 * s,
+          50 * s
         );
         groundShadow.addColorStop(0, "rgba(10, 10, 8, 0.35)");
         groundShadow.addColorStop(0.6, "rgba(10, 10, 8, 0.15)");
@@ -28596,22 +28646,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           26 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
         // Broken stone slabs at varying heights and angles
         const slabColors = [stoneMid, "#5a5a4a", "#4a4a3a", stoneDark];
         const slabs = [
-          { x: -32, y: 4, w: 16, d: 8, h: 4, jOff: 1.2 },
-          { x: -12, y: 2, w: 14, d: 7, h: 3, jOff: 2.4 },
-          { x: 10, y: 3, w: 12, d: 6, h: 5, jOff: 0.8 },
-          { x: 28, y: 6, w: 13, d: 6.5, h: 3.5, jOff: 3.1 },
-          { x: -24, y: 12, w: 10, d: 5, h: 2.5, jOff: 1.8 },
-          { x: 2, y: 10, w: 11, d: 5.5, h: 2, jOff: 0.5 },
-          { x: 20, y: 12, w: 9, d: 4.5, h: 3, jOff: 2.9 },
-          { x: -40, y: 8, w: 8, d: 4, h: 2, jOff: 3.6 },
-          { x: 38, y: 2, w: 9, d: 4.5, h: 2.5, jOff: 1.0 },
+          { d: 8, h: 4, jOff: 1.2, w: 16, x: -32, y: 4 },
+          { d: 7, h: 3, jOff: 2.4, w: 14, x: -12, y: 2 },
+          { d: 6, h: 5, jOff: 0.8, w: 12, x: 10, y: 3 },
+          { d: 6.5, h: 3.5, jOff: 3.1, w: 13, x: 28, y: 6 },
+          { d: 5, h: 2.5, jOff: 1.8, w: 10, x: -24, y: 12 },
+          { d: 5.5, h: 2, jOff: 0.5, w: 11, x: 2, y: 10 },
+          { d: 4.5, h: 3, jOff: 2.9, w: 9, x: 20, y: 12 },
+          { d: 4, h: 2, jOff: 3.6, w: 8, x: -40, y: 8 },
+          { d: 4.5, h: 2.5, jOff: 1, w: 9, x: 38, y: 2 },
         ];
         slabs.forEach((sl, i) => {
           const sx = screenPos.x + sl.x * s;
@@ -28657,18 +28707,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Small stone fragments between slabs
         [
-          { x: -18, y: 8, sz: 2.5 },
-          { x: 6, y: 7, sz: 2 },
-          { x: -6, y: 14, sz: 1.8 },
-          { x: 16, y: 9, sz: 2.2 },
-          { x: -30, y: 10, sz: 1.5 },
-          { x: 32, y: 8, sz: 1.8 },
-          { x: -2, y: 16, sz: 1.5 },
-          { x: 24, y: 14, sz: 2 },
-          { x: -14, y: 16, sz: 1.2 },
-          { x: 8, y: 15, sz: 1.6 },
-          { x: -36, y: 12, sz: 1.8 },
-          { x: 42, y: 4, sz: 1.5 },
+          { sz: 2.5, x: -18, y: 8 },
+          { sz: 2, x: 6, y: 7 },
+          { sz: 1.8, x: -6, y: 14 },
+          { sz: 2.2, x: 16, y: 9 },
+          { sz: 1.5, x: -30, y: 10 },
+          { sz: 1.8, x: 32, y: 8 },
+          { sz: 1.5, x: -2, y: 16 },
+          { sz: 2, x: 24, y: 14 },
+          { sz: 1.2, x: -14, y: 16 },
+          { sz: 1.6, x: 8, y: 15 },
+          { sz: 1.8, x: -36, y: 12 },
+          { sz: 1.5, x: 42, y: 4 },
         ].forEach((f, i) => {
           const fx = screenPos.x + f.x * s;
           const fy = screenPos.y + f.y * s;
@@ -28687,10 +28737,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Exposed dirt patches between broken stones
         ctx.fillStyle = "rgba(30, 35, 25, 0.25)";
         [
-          { x: -20, y: 8, rx: 6, ry: 3 },
-          { x: 8, y: 12, rx: 5, ry: 2.5 },
-          { x: -8, y: 14, rx: 7, ry: 3 },
-          { x: 28, y: 10, rx: 5, ry: 2.5 },
+          { rx: 6, ry: 3, x: -20, y: 8 },
+          { rx: 5, ry: 2.5, x: 8, y: 12 },
+          { rx: 7, ry: 3, x: -8, y: 14 },
+          { rx: 5, ry: 2.5, x: 28, y: 10 },
         ].forEach((p) => {
           ctx.beginPath();
           ctx.ellipse(
@@ -28700,7 +28750,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             p.ry * s,
             0.15,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
@@ -28715,7 +28765,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wallX,
           screenPos.y,
           wallX - wallThick,
-          screenPos.y,
+          screenPos.y
         );
         wallLeftGrad.addColorStop(0, stoneDark);
         wallLeftGrad.addColorStop(1, stoneShadow);
@@ -28734,7 +28784,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wallX,
           wallTopY,
           wallX + wallW,
-          screenPos.y,
+          screenPos.y
         );
         wallFrontGrad.addColorStop(0, stoneMid);
         wallFrontGrad.addColorStop(0.3, stoneLight);
@@ -28800,11 +28850,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // Columns at varying heights
         const columns = [
-          { cx: -28, h: 34, r: 5, broken: false },
-          { cx: -14, h: 46, r: 5.5, broken: false },
-          { cx: 0, h: 40, r: 6, broken: false },
-          { cx: 14, h: 24, r: 5.5, broken: true },
-          { cx: 28, h: 11, r: 5, broken: true },
+          { broken: false, cx: -28, h: 34, r: 5 },
+          { broken: false, cx: -14, h: 46, r: 5.5 },
+          { broken: false, cx: 0, h: 40, r: 6 },
+          { broken: true, cx: 14, h: 24, r: 5.5 },
+          { broken: true, cx: 28, h: 11, r: 5 },
         ];
         columns.forEach((col) => {
           const cx = screenPos.x + col.cx * s;
@@ -28821,7 +28871,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (cr + 3 * s) * 0.5,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
 
@@ -28850,7 +28900,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             0,
             Math.PI,
             Math.PI * 2,
-            true,
+            true
           );
           ctx.closePath();
           ctx.fill();
@@ -28876,7 +28926,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               (cr + 2 * s) * 0.5,
               0,
               0,
-              Math.PI * 2,
+              Math.PI * 2
             );
             ctx.fill();
           } else {
@@ -28894,7 +28944,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
               0,
               0,
               Math.PI,
-              true,
+              true
             );
             ctx.closePath();
             ctx.fill();
@@ -28915,7 +28965,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.5,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const fcG = ctx.createLinearGradient(fcX, fcY - fcR, fcX, fcY + fcR);
@@ -28933,7 +28983,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcR * 0.5,
           0.5,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fcX, fcY + fcR * 0.5);
         ctx.ellipse(
@@ -28944,7 +28994,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -28967,14 +29017,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fc2R * 0.5,
           -0.4,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const fc2G = ctx.createLinearGradient(
           fc2X,
           fc2Y - fc2R,
           fc2X,
-          fc2Y + fc2R,
+          fc2Y + fc2R
         );
         fc2G.addColorStop(0, stoneLight);
         fc2G.addColorStop(0.5, stoneMid);
@@ -28990,7 +29040,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fc2R * 0.5,
           -0.4,
           -Math.PI / 2,
-          Math.PI / 2,
+          Math.PI / 2
         );
         ctx.lineTo(fc2X, fc2Y + fc2R * 0.5);
         ctx.ellipse(
@@ -29001,7 +29051,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           Math.PI / 2,
           -Math.PI / 2,
-          true,
+          true
         );
         ctx.closePath();
         ctx.fill();
@@ -29039,20 +29089,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === 3D RUBBLE FIELD ===
         [
-          { x: -40, y: 12, sz: 5 },
-          { x: -24, y: 15, sz: 4 },
-          { x: -12, y: 16, sz: 3.5 },
-          { x: 8, y: 16, sz: 4.5 },
-          { x: 22, y: 14, sz: 3.5 },
-          { x: 36, y: 10, sz: 4 },
-          { x: -32, y: 14, sz: 3 },
-          { x: 16, y: 10, sz: 3 },
-          { x: 40, y: 6, sz: 3 },
-          { x: -6, y: 18, sz: 2.5 },
-          { x: 4, y: 19, sz: 3 },
-          { x: -38, y: 8, sz: 3.5 },
-          { x: 44, y: 3, sz: 3 },
-          { x: -18, y: 8, sz: 4 },
+          { sz: 5, x: -40, y: 12 },
+          { sz: 4, x: -24, y: 15 },
+          { sz: 3.5, x: -12, y: 16 },
+          { sz: 4.5, x: 8, y: 16 },
+          { sz: 3.5, x: 22, y: 14 },
+          { sz: 4, x: 36, y: 10 },
+          { sz: 3, x: -32, y: 14 },
+          { sz: 3, x: 16, y: 10 },
+          { sz: 3, x: 40, y: 6 },
+          { sz: 2.5, x: -6, y: 18 },
+          { sz: 3, x: 4, y: 19 },
+          { sz: 3.5, x: -38, y: 8 },
+          { sz: 3, x: 44, y: 3 },
+          { sz: 4, x: -18, y: 8 },
         ].forEach((rb, idx) => {
           const rx = screenPos.x + rb.x * s;
           const ry = screenPos.y + rb.y * s;
@@ -29096,18 +29146,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             (0.8 + (i % 2) * 0.3) * s,
             i * 0.6,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         });
 
         // === FLOOR TILES ===
         [
-          { x: -20, y: 6, w: 7, d: 3.5 },
-          { x: 10, y: 7, w: 6, d: 3 },
-          { x: -4, y: 4, w: 5, d: 2.5 },
-          { x: 26, y: 4, w: 5, d: 2.5 },
-          { x: -34, y: 4, w: 5, d: 2.5 },
+          { d: 3.5, w: 7, x: -20, y: 6 },
+          { d: 3, w: 6, x: 10, y: 7 },
+          { d: 2.5, w: 5, x: -4, y: 4 },
+          { d: 2.5, w: 5, x: 26, y: 4 },
+          { d: 2.5, w: 5, x: -34, y: 4 },
         ].forEach((t) => {
           const tx = screenPos.x + t.x * s;
           const ty = screenPos.y + t.y * s;
@@ -29135,7 +29185,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -29146,7 +29196,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -29157,7 +29207,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -29168,7 +29218,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -29183,7 +29233,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wallX + 8 * s,
           screenPos.y - 18 * s,
           wallX + 14 * s,
-          screenPos.y - 6 * s,
+          screenPos.y - 6 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -29192,7 +29242,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           screenPos.x - 6 * s,
           screenPos.y - 24 * s,
           screenPos.x - 10 * s,
-          screenPos.y - 10 * s,
+          screenPos.y - 10 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -29201,7 +29251,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wallX + 46 * s,
           screenPos.y - 22 * s,
           wallX + 40 * s,
-          screenPos.y - 8 * s,
+          screenPos.y - 8 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -29210,7 +29260,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           wallX + 52 * s,
           screenPos.y - 16 * s,
           wallX + 58 * s,
-          screenPos.y - 4 * s,
+          screenPos.y - 4 * s
         );
         ctx.stroke();
 
@@ -29241,7 +29291,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -29252,7 +29302,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -29285,7 +29335,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         mapTheme,
         vineColor,
         decorX,
-        decorY,
+        decorY
       );
 
       break;
@@ -29304,7 +29354,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         screenPos.x + 1 * s,
         screenPos.y + 3 * s,
-        14 * s,
+        14 * s
       );
       bonesShadow.addColorStop(0, "rgba(0,0,0,0.2)");
       bonesShadow.addColorStop(0.7, "rgba(0,0,0,0.06)");
@@ -29318,7 +29368,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         7 * s,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -29424,7 +29474,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.5 * s,
         bSkX,
         bSkY,
-        6 * s,
+        6 * s
       );
       bSkGrad.addColorStop(0, bnLit);
       bSkGrad.addColorStop(0.4, bnMid);
@@ -29445,7 +29495,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.5 * s,
         0.2,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -29462,7 +29512,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.2 * s,
         bSkX - 2 * s,
         bSkY + 0.5 * s,
-        1.8 * s,
+        1.8 * s
       );
       bLEye.addColorStop(0, "#0d0a08");
       bLEye.addColorStop(0.5, "#2d2420");
@@ -29476,7 +29526,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         0.06,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -29486,7 +29536,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.2 * s,
         bSkX + 2 * s,
         bSkY + 0.5 * s,
-        1.8 * s,
+        1.8 * s
       );
       bREye.addColorStop(0, "#0d0a08");
       bREye.addColorStop(0.5, "#3d3430");
@@ -29500,7 +29550,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.3 * s,
         -0.06,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -29545,7 +29595,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         tcX,
         tcY + 2 * s,
-        28 * s,
+        28 * s
       );
       const tcPulse = 0.12 + Math.sin(decorTime * 4) * 0.04;
       tcGndGlow.addColorStop(0, `rgba(255,140,40,${tcPulse})`);
@@ -29565,7 +29615,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         8 * s,
         3 * s,
         30 * s,
-        0.22,
+        0.22
       );
 
       // Stone base — isometric slab
@@ -29573,7 +29623,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - 6 * s,
         tcY,
         tcX + 6 * s,
-        tcY,
+        tcY
       );
       baseG.addColorStop(0, "#5a5550");
       baseG.addColorStop(0.4, "#807870");
@@ -29615,7 +29665,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - 2.5 * s,
         0,
         tcX + 2.5 * s,
-        0,
+        0
       );
       poleG.addColorStop(0, "#3a2818");
       poleG.addColorStop(0.3, "#5a4030");
@@ -29684,7 +29734,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - 5.5 * s,
         brY - 3 * s,
         tcX - 3.5 * s,
-        brY - 5 * s,
+        brY - 5 * s
       );
       ctx.stroke();
 
@@ -29702,13 +29752,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - 3 * s + tcFlicker2,
         flameBase - 16 * s,
         tcX + tcFlicker * 0.5,
-        flameBase - 20 * s,
+        flameBase - 20 * s
       );
       ctx.quadraticCurveTo(
         tcX + 3 * s - tcFlicker2,
         flameBase - 16 * s,
         tcX + 6 * s,
-        flameBase,
+        flameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -29721,13 +29771,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - 2 * s - tcFlicker,
         flameBase - 13 * s,
         tcX + tcFlicker3,
-        flameBase - 17 * s,
+        flameBase - 17 * s
       );
       ctx.quadraticCurveTo(
         tcX + 2 * s + tcFlicker,
         flameBase - 13 * s,
         tcX + 4.5 * s,
-        flameBase,
+        flameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -29740,13 +29790,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX + tcFlicker * 0.6,
         flameBase - 10 * s,
         tcX - tcFlicker3 * 0.5,
-        flameBase - 14 * s,
+        flameBase - 14 * s
       );
       ctx.quadraticCurveTo(
         tcX - tcFlicker * 0.6,
         flameBase - 10 * s,
         tcX + 3 * s,
-        flameBase,
+        flameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -29758,7 +29808,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0.5 * s,
         tcX,
         flameBase - 5 * s,
-        4 * s,
+        4 * s
       );
       coreG.addColorStop(0, "rgba(255,255,220,0.9)");
       coreG.addColorStop(0.4, "rgba(255,220,100,0.6)");
@@ -29770,13 +29820,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         tcX - tcFlicker2 * 0.3,
         flameBase - 8 * s,
         tcX,
-        flameBase - 11 * s,
+        flameBase - 11 * s
       );
       ctx.quadraticCurveTo(
         tcX + tcFlicker2 * 0.3,
         flameBase - 8 * s,
         tcX + 2 * s,
-        flameBase,
+        flameBase
       );
       ctx.closePath();
       ctx.fill();
@@ -29804,7 +29854,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         tcX,
         flameBase - 8 * s,
-        18 * s,
+        18 * s
       );
       const haloPulse = 0.2 + Math.sin(decorTime * 5) * 0.06;
       tcHaloG.addColorStop(0, `rgba(255,160,40,${haloPulse})`);
@@ -29836,90 +29886,90 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           steelDark: string;
         }
       > = {
-        grassland: {
-          stoneLight: "#b5b0a5",
-          stoneMid: "#928d82",
-          stoneDark: "#706b62",
-          stoneShadow: "#504b42",
-          stoneDeep: "#3a3530",
-          figureHighlight: "#c0bbb0",
-          figureLight: "#a09a90",
-          figureMid: "#807a70",
-          figureDark: "#605a50",
-          figureShadow: "#403a30",
-          steelLight: "#d0ccc5",
-          steelDark: "#6a6560",
-        },
-        swamp: {
-          stoneLight: "#8a9a80",
-          stoneMid: "#708068",
-          stoneDark: "#566652",
-          stoneShadow: "#3e4e38",
-          stoneDeep: "#2a3a24",
-          figureHighlight: "#96a68a",
-          figureLight: "#7a8a6e",
-          figureMid: "#607058",
-          figureDark: "#485842",
-          figureShadow: "#30402a",
-          steelLight: "#a0aa98",
-          steelDark: "#506048",
-        },
         desert: {
-          stoneLight: "#c8b898",
-          stoneMid: "#a89878",
-          stoneDark: "#887860",
-          stoneShadow: "#685848",
-          stoneDeep: "#4a3e30",
+          figureDark: "#786858",
           figureHighlight: "#d4c4a4",
           figureLight: "#b8a888",
           figureMid: "#988870",
-          figureDark: "#786858",
           figureShadow: "#584838",
-          steelLight: "#d8c8b0",
           steelDark: "#887868",
+          steelLight: "#d8c8b0",
+          stoneDark: "#887860",
+          stoneDeep: "#4a3e30",
+          stoneLight: "#c8b898",
+          stoneMid: "#a89878",
+          stoneShadow: "#685848",
         },
-        winter: {
-          stoneLight: "#c0c5cc",
-          stoneMid: "#98a0aa",
-          stoneDark: "#78808a",
-          stoneShadow: "#586068",
-          stoneDeep: "#3a4248",
-          figureHighlight: "#d0d4da",
-          figureLight: "#aab0b8",
-          figureMid: "#8a9098",
-          figureDark: "#687078",
-          figureShadow: "#485058",
-          steelLight: "#dce0e4",
-          steelDark: "#7a8088",
+        grassland: {
+          figureDark: "#605a50",
+          figureHighlight: "#c0bbb0",
+          figureLight: "#a09a90",
+          figureMid: "#807a70",
+          figureShadow: "#403a30",
+          steelDark: "#6a6560",
+          steelLight: "#d0ccc5",
+          stoneDark: "#706b62",
+          stoneDeep: "#3a3530",
+          stoneLight: "#b5b0a5",
+          stoneMid: "#928d82",
+          stoneShadow: "#504b42",
+        },
+        swamp: {
+          figureDark: "#485842",
+          figureHighlight: "#96a68a",
+          figureLight: "#7a8a6e",
+          figureMid: "#607058",
+          figureShadow: "#30402a",
+          steelDark: "#506048",
+          steelLight: "#a0aa98",
+          stoneDark: "#566652",
+          stoneDeep: "#2a3a24",
+          stoneLight: "#8a9a80",
+          stoneMid: "#708068",
+          stoneShadow: "#3e4e38",
         },
         volcanic: {
-          stoneLight: "#a08070",
-          stoneMid: "#806050",
-          stoneDark: "#604840",
-          stoneShadow: "#483430",
-          stoneDeep: "#302020",
+          figureDark: "#504038",
           figureHighlight: "#b09080",
           figureLight: "#907060",
           figureMid: "#705848",
-          figureDark: "#504038",
           figureShadow: "#382828",
-          steelLight: "#b09888",
           steelDark: "#605048",
+          steelLight: "#b09888",
+          stoneDark: "#604840",
+          stoneDeep: "#302020",
+          stoneLight: "#a08070",
+          stoneMid: "#806050",
+          stoneShadow: "#483430",
+        },
+        winter: {
+          figureDark: "#687078",
+          figureHighlight: "#d0d4da",
+          figureLight: "#aab0b8",
+          figureMid: "#8a9098",
+          figureShadow: "#485058",
+          steelDark: "#7a8088",
+          steelLight: "#dce0e4",
+          stoneDark: "#78808a",
+          stoneDeep: "#3a4248",
+          stoneLight: "#c0c5cc",
+          stoneMid: "#98a0aa",
+          stoneShadow: "#586068",
         },
       };
       const sp = statuePalettes[mapTheme] ?? statuePalettes.grassland;
-      const stoneLight = sp.stoneLight;
-      const stoneMid = sp.stoneMid;
-      const stoneDark = sp.stoneDark;
-      const stoneShadow = sp.stoneShadow;
-      const stoneDeep = sp.stoneDeep;
-      const figureHighlight = sp.figureHighlight;
-      const figureLight = sp.figureLight;
-      const figureMid = sp.figureMid;
-      const figureDark = sp.figureDark;
-      const figureShadow = sp.figureShadow;
-      const steelLight = sp.steelLight;
-      const steelDark = sp.steelDark;
+      const { stoneLight } = sp;
+      const { stoneMid } = sp;
+      const { stoneDark } = sp;
+      const { stoneShadow } = sp;
+      const { stoneDeep } = sp;
+      const { figureHighlight } = sp;
+      const { figureLight } = sp;
+      const { figureMid } = sp;
+      const { figureDark } = sp;
+      const { figureShadow } = sp;
+      const { steelLight } = sp;
+      const { steelDark } = sp;
       const px = screenPos.x;
       const py = screenPos.y;
 
@@ -29932,7 +29982,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         9 * s,
         45 * s,
-        0.35,
+        0.35
       );
 
       // Helper: draw a gradient-lit isometric tier
@@ -29945,14 +29995,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         leftCol: string,
         rightCol: string,
         topHi: string,
-        leftHi: string,
+        leftHi: string
       ) => {
         // Top surface with gradient
         const tg = ctx.createLinearGradient(
           cx2 - tw,
           ty - th,
           cx2 + tw,
-          ty - th,
+          ty - th
         );
         tg.addColorStop(0, topHi);
         tg.addColorStop(0.5, topCol);
@@ -29970,7 +30020,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cx2 - tw,
           ty - th,
           cx2,
-          ty + tw * 0.5,
+          ty + tw * 0.5
         );
         lg.addColorStop(0, leftHi);
         lg.addColorStop(0.3, leftCol);
@@ -30007,7 +30057,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx2: number,
         cy2: number,
         cw: number,
-        ch: number,
+        ch: number
       ) => {
         // Lit chamfer strip on left
         ctx.fillStyle = stoneLight;
@@ -30051,15 +30101,33 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         stoneMid,
         stoneDark,
         "#c5c0b5",
-        "#a5a095",
+        "#a5a095"
       );
       const pedSeed = Math.abs(decorX * 37 + decorY * 53);
 
       // Weathered stone patches on bottom tier
       ctx.fillStyle = "rgba(90,85,75,0.15)";
-      drawOrganicBlobAt(ctx, px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, pedSeed + 1.1, 0.18, 14);
+      drawOrganicBlobAt(
+        ctx,
+        px - 8 * s,
+        baseY - 2 * s,
+        4 * s,
+        2 * s,
+        pedSeed + 1.1,
+        0.18,
+        14
+      );
       ctx.fill();
-      drawOrganicBlobAt(ctx, px + 5 * s, baseY - 3 * s, 3 * s, 1.5 * s, pedSeed + 2.3, 0.18, 14);
+      drawOrganicBlobAt(
+        ctx,
+        px + 5 * s,
+        baseY - 3 * s,
+        3 * s,
+        1.5 * s,
+        pedSeed + 2.3,
+        0.18,
+        14
+      );
       ctx.fill();
       // Chiseled edge bevel on bottom plinth (top-left lit edge)
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -30092,7 +30160,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         stoneMid,
         stoneDark,
         "#c0bbb0",
-        "#a09a90",
+        "#a09a90"
       );
 
       // Fluting grooves on middle column left face
@@ -30135,7 +30203,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spy,
           (0.4 + ((pedSeed + sp2 * 17) % 3) * 0.2) * s,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -30206,7 +30274,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         px - 6 * s,
         plaqueY - 3 * s,
         px + 6 * s,
-        plaqueY + 3 * s,
+        plaqueY + 3 * s
       );
       plqG.addColorStop(0, stoneMid);
       plqG.addColorStop(0.5, stoneShadow);
@@ -30263,38 +30331,110 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         stoneLight,
         stoneMid,
         "#ccc7bc",
-        "#b0aba0",
+        "#b0aba0"
       );
 
       // Regional pedestal weathering
       if (mapTheme === "swamp") {
         ctx.fillStyle = "rgba(50,80,30,0.35)";
-        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 4 * s, 2 * s, pedSeed + 10.1, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          4 * s,
+          2 * s,
+          pedSeed + 10.1,
+          0.2,
+          14
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(40,70,25,0.3)";
-        drawOrganicBlobAt(ctx, px + 6 * s, t2Y + 1 * s, 3 * s, 1.5 * s, pedSeed + 11.7, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          px + 6 * s,
+          t2Y + 1 * s,
+          3 * s,
+          1.5 * s,
+          pedSeed + 11.7,
+          0.2,
+          14
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(45,75,28,0.25)";
-        drawOrganicBlobAt(ctx, px - 3 * s, t2Y - t2H * 0.3, 2.5 * s, 1.2 * s, pedSeed + 12.3, 0.22, 12);
+        drawOrganicBlobAt(
+          ctx,
+          px - 3 * s,
+          t2Y - t2H * 0.3,
+          2.5 * s,
+          1.2 * s,
+          pedSeed + 12.3,
+          0.22,
+          12
+        );
         ctx.fill();
       } else if (mapTheme === "desert") {
         ctx.fillStyle = "rgba(200,180,140,0.2)";
-        drawOrganicBlobAt(ctx, px - t1W + 5 * s, baseY - 0.5 * s, 4 * s, 1.8 * s, pedSeed + 13.1, 0.18, 14);
+        drawOrganicBlobAt(
+          ctx,
+          px - t1W + 5 * s,
+          baseY - 0.5 * s,
+          4 * s,
+          1.8 * s,
+          pedSeed + 13.1,
+          0.18,
+          14
+        );
         ctx.fill();
       } else if (mapTheme === "winter") {
         ctx.fillStyle = "rgba(220,230,240,0.35)";
-        drawOrganicBlobAt(ctx, px, baseY - t1H - 0.5 * s, t1W * 0.8, 3 * s, pedSeed + 14.7, 0.2, 18);
+        drawOrganicBlobAt(
+          ctx,
+          px,
+          baseY - t1H - 0.5 * s,
+          t1W * 0.8,
+          3 * s,
+          pedSeed + 14.7,
+          0.2,
+          18
+        );
         ctx.fill();
       } else if (mapTheme === "volcanic") {
         ctx.fillStyle = "rgba(40,30,30,0.2)";
-        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, pedSeed + 15.3, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          3.5 * s,
+          1.5 * s,
+          pedSeed + 15.3,
+          0.2,
+          14
+        );
         ctx.fill();
       } else {
         ctx.fillStyle = "rgba(70,90,55,0.25)";
-        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, pedSeed + 16.1, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          3.5 * s,
+          1.5 * s,
+          pedSeed + 16.1,
+          0.2,
+          14
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(60,80,45,0.2)";
-        drawOrganicBlobAt(ctx, px + 6 * s, t2Y + 1 * s, 2.5 * s, 1.2 * s, pedSeed + 17.3, 0.2, 12);
+        drawOrganicBlobAt(
+          ctx,
+          px + 6 * s,
+          t2Y + 1 * s,
+          2.5 * s,
+          1.2 * s,
+          pedSeed + 17.3,
+          0.2,
+          12
+        );
         ctx.fill();
       }
 
@@ -30307,7 +30447,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         px + 5 * s,
         t2Y - t2H * 0.4,
         px + 4 * s,
-        t2Y - t2H + 2 * s,
+        t2Y - t2H + 2 * s
       );
       ctx.stroke();
 
@@ -30362,7 +30502,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 12 * s,
           figureBase - 25 * s,
           fx - 10 * s,
-          figureBase - 12 * s,
+          figureBase - 12 * s
         );
         ctx.lineTo(fx - 6 * s, figureBase - 18 * s);
         ctx.closePath();
@@ -30386,7 +30526,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           7 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureLight;
@@ -30398,7 +30538,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           4.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureDark;
@@ -30424,7 +30564,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.7,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Blade
@@ -30471,7 +30611,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx,
           kHeadY,
-          6 * s,
+          6 * s
         );
         kHG.addColorStop(0, figureHighlight);
         kHG.addColorStop(0.4, figureLight);
@@ -30490,7 +30630,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3.5 * s,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureShadow;
@@ -30514,7 +30654,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       } else if (sv === 1) {
@@ -30564,19 +30704,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 20 * s,
           figureBase - 45 * s,
           fx - 22 * s,
-          figureBase - 35 * s,
+          figureBase - 35 * s
         );
         ctx.quadraticCurveTo(
           fx - 18 * s,
           figureBase - 28 * s,
           fx - 15 * s,
-          figureBase - 18 * s,
+          figureBase - 18 * s
         );
         ctx.quadraticCurveTo(
           fx - 10 * s,
           figureBase - 22 * s,
           fx - 5 * s,
-          figureBase - 20 * s,
+          figureBase - 20 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30587,19 +30727,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 20 * s,
           figureBase - 45 * s,
           fx + 22 * s,
-          figureBase - 35 * s,
+          figureBase - 35 * s
         );
         ctx.quadraticCurveTo(
           fx + 18 * s,
           figureBase - 28 * s,
           fx + 15 * s,
-          figureBase - 18 * s,
+          figureBase - 18 * s
         );
         ctx.quadraticCurveTo(
           fx + 10 * s,
           figureBase - 22 * s,
           fx + 5 * s,
-          figureBase - 20 * s,
+          figureBase - 20 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30612,7 +30752,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 14 * s,
           figureBase - 40 * s,
           fx - 22 * s,
-          figureBase - 35 * s,
+          figureBase - 35 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -30621,7 +30761,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 14 * s,
           figureBase - 40 * s,
           fx + 22 * s,
-          figureBase - 35 * s,
+          figureBase - 35 * s
         );
         ctx.stroke();
 
@@ -30665,7 +30805,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx,
           dHeadY,
-          6 * s,
+          6 * s
         );
         dHG.addColorStop(0, figureHighlight);
         dHG.addColorStop(0.5, figureMid);
@@ -30683,13 +30823,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           dHeadY - 12 * s,
           fx - 8 * s,
-          dHeadY - 16 * s,
+          dHeadY - 16 * s
         );
         ctx.quadraticCurveTo(
           fx - 6 * s,
           dHeadY - 10 * s,
           fx - 3 * s,
-          dHeadY - 4 * s,
+          dHeadY - 4 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30699,13 +30839,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 10 * s,
           dHeadY - 12 * s,
           fx + 8 * s,
-          dHeadY - 16 * s,
+          dHeadY - 16 * s
         );
         ctx.quadraticCurveTo(
           fx + 6 * s,
           dHeadY - 10 * s,
           fx + 3 * s,
-          dHeadY - 4 * s,
+          dHeadY - 4 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30717,14 +30857,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 8 * s,
           dHeadY - 11 * s,
           fx - 8 * s,
-          dHeadY - 15 * s,
+          dHeadY - 15 * s
         );
         ctx.lineTo(fx - 8 * s, dHeadY - 16 * s);
         ctx.quadraticCurveTo(
           fx - 7 * s,
           dHeadY - 11 * s,
           fx - 3.5 * s,
-          dHeadY - 5 * s,
+          dHeadY - 5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30734,14 +30874,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 8 * s,
           dHeadY - 11 * s,
           fx + 8 * s,
-          dHeadY - 15 * s,
+          dHeadY - 15 * s
         );
         ctx.lineTo(fx + 8 * s, dHeadY - 16 * s);
         ctx.quadraticCurveTo(
           fx + 7 * s,
           dHeadY - 11 * s,
           fx + 3.5 * s,
-          dHeadY - 5 * s,
+          dHeadY - 5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30756,7 +30896,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.ellipse(
           fx + 2 * s,
@@ -30765,7 +30905,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         const dEyeGlow = 0.4 + Math.sin(decorTime * 2.5) * 0.3;
@@ -30876,7 +31016,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx + 8.25 * s,
           figureBase - 68 * s,
-          4 * s,
+          4 * s
         );
         orbGrad.addColorStop(0, `rgba(100,180,255,${orbGlow})`);
         orbGrad.addColorStop(0.5, `rgba(60,120,220,${orbGlow * 0.7})`);
@@ -30900,7 +31040,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 7 * s,
           mHeadY - 6 * s,
           fx + 6 * s,
-          mHeadY + 3 * s,
+          mHeadY + 3 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30913,7 +31053,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 5 * s,
           mHeadY - 3 * s,
           fx + 4 * s,
-          mHeadY + 2 * s,
+          mHeadY + 2 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -30981,7 +31121,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureDark;
@@ -30993,7 +31133,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureShadow;
@@ -31005,7 +31145,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           3 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureDark;
@@ -31017,7 +31157,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31060,7 +31200,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 18 * s,
           figureBase - 62 * s,
           fx + 16 * s,
-          figureBase - 52 * s,
+          figureBase - 52 * s
         );
         ctx.lineTo(fx + 11 * s, figureBase - 52 * s);
         ctx.closePath();
@@ -31072,7 +31212,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 14 * s,
           figureBase - 60 * s,
           fx + 13 * s,
-          figureBase - 52 * s,
+          figureBase - 52 * s
         );
         ctx.lineTo(fx + 11 * s, figureBase - 52 * s);
         ctx.closePath();
@@ -31085,14 +31225,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 17 * s,
           figureBase - 58 * s,
           fx + 16 * s,
-          figureBase - 53 * s,
+          figureBase - 53 * s
         );
         ctx.lineTo(fx + 15.5 * s, figureBase - 53 * s);
         ctx.quadraticCurveTo(
           fx + 16 * s,
           figureBase - 58 * s,
           fx + 14.5 * s,
-          figureBase - 59.5 * s,
+          figureBase - 59.5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31105,7 +31245,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx,
           wHeadY,
-          5.5 * s,
+          5.5 * s
         );
         wHG.addColorStop(0, figureHighlight);
         wHG.addColorStop(0.4, figureLight);
@@ -31155,7 +31295,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 15 * s,
           tB - 22 * s,
           fx + 10 * s,
-          tB - 28 * s,
+          tB - 28 * s
         );
         ctx.stroke();
         ctx.strokeStyle = figureLight;
@@ -31168,7 +31308,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 14 * s,
           tB - 22 * s,
           fx + 9.5 * s,
-          tB - 27 * s,
+          tB - 27 * s
         );
         ctx.stroke();
         // Tail tip dark
@@ -31180,7 +31320,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 10.5 * s,
           tB - 28 * s,
           fx + 10 * s,
-          tB - 28.5 * s,
+          tB - 28.5 * s
         );
         ctx.stroke();
 
@@ -31191,7 +31331,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx + 5 * s,
           tB - 8 * s,
-          8 * s,
+          8 * s
         );
         hindG.addColorStop(0, figureLight);
         hindG.addColorStop(0.5, figureMid);
@@ -31205,7 +31345,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           5.5 * s,
           0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Haunch muscle highlight
@@ -31220,7 +31360,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ly: number,
           kneeOff: number,
           col1: string,
-          col2: string,
+          col2: string
         ) => {
           ctx.fillStyle = col1;
           ctx.beginPath();
@@ -31229,14 +31369,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lx - 2 * s + kneeOff,
             ly + 4 * s,
             lx - 1 * s + kneeOff * 0.5,
-            ly + 7 * s,
+            ly + 7 * s
           );
           ctx.lineTo(lx + 1 * s + kneeOff * 0.5, ly + 7 * s);
           ctx.quadraticCurveTo(
             lx + 1 * s + kneeOff,
             ly + 4 * s,
             lx + 1.5 * s,
-            ly,
+            ly
           );
           ctx.closePath();
           ctx.fill();
@@ -31250,7 +31390,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             1 * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         };
@@ -31262,7 +31402,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 6 * s,
           tB - 14 * s,
           fx + 4 * s,
-          tB - 5 * s,
+          tB - 5 * s
         );
         torsoG.addColorStop(0, figureLight);
         torsoG.addColorStop(0.5, figureMid);
@@ -31276,7 +31416,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 4 * s,
           tB - 16 * s,
           fx - 7 * s,
-          tB - 13 * s,
+          tB - 13 * s
         );
         ctx.lineTo(fx - 6 * s, tB - 5 * s);
         ctx.bezierCurveTo(
@@ -31285,7 +31425,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 2 * s,
           tB - 5 * s,
           fx + 4 * s,
-          tB - 5 * s,
+          tB - 5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31300,7 +31440,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 4 * s,
           tB - 15 * s,
           fx - 7 * s,
-          tB - 14 * s,
+          tB - 14 * s
         );
         ctx.stroke();
 
@@ -31311,7 +31451,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx - 6 * s,
           tB - 13 * s,
-          7 * s,
+          7 * s
         );
         chestG.addColorStop(0, figureHighlight);
         chestG.addColorStop(0.4, figureLight);
@@ -31325,7 +31465,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Shoulder muscle
@@ -31338,7 +31478,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31360,7 +31500,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             sx2 + 0.8 * s,
             sy2 + 1 * s,
             sx2,
-            sy2 + 2.5 * s,
+            sy2 + 2.5 * s
           );
           ctx.stroke();
           ctx.strokeStyle = "rgba(200,195,185,0.08)";
@@ -31373,7 +31513,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             sx2 + 1.2 * s,
             sy2 + 0.5 * s,
             sx2 + 0.5 * s,
-            sy2 + 2 * s,
+            sy2 + 2 * s
           );
           ctx.stroke();
           ctx.lineWidth = 1.2 * s;
@@ -31388,7 +31528,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           tHX,
           tHY,
-          6 * s,
+          6 * s
         );
         headG.addColorStop(0, figureHighlight);
         headG.addColorStop(0.35, figureLight);
@@ -31406,7 +31546,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           tHX - 3 * s,
           tHY + 1.5 * s,
-          3.5 * s,
+          3.5 * s
         );
         muzG.addColorStop(0, figureHighlight);
         muzG.addColorStop(0.5, figureLight);
@@ -31420,7 +31560,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.8 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31433,7 +31573,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           tHX - 3 * s,
           tHY + 4.5 * s,
           tHX - 0.5 * s,
-          tHY + 3 * s,
+          tHY + 3 * s
         );
         ctx.stroke();
 
@@ -31445,7 +31585,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           tHX - 4.5 * s,
           tHY + 5 * s,
           tHX - 1.5 * s,
-          tHY + 3.5 * s,
+          tHY + 3.5 * s
         );
         ctx.lineTo(tHX - 1.5 * s, tHY + 1 * s);
         ctx.closePath();
@@ -31460,7 +31600,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31490,7 +31630,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.1 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.ellipse(
           tHX + 1.5 * s,
@@ -31499,7 +31639,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.1 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureShadow;
@@ -31511,7 +31651,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.6 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.ellipse(
           tHX + 1.5 * s,
@@ -31520,7 +31660,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.6 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Nose
@@ -31533,7 +31673,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.7 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31592,7 +31732,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 15 * s,
           hY - 5 * s,
           fx + 13 * s,
-          hY,
+          hY
         );
         ctx.bezierCurveTo(
           fx + 12 * s,
@@ -31600,7 +31740,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 10 * s,
           hY - 8 * s,
           fx + 8 * s,
-          hY - 12 * s,
+          hY - 12 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31614,7 +31754,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 14 * s,
           hY - 3 * s,
           fx + 12.5 * s,
-          hY - 1 * s,
+          hY - 1 * s
         );
         ctx.stroke();
 
@@ -31625,7 +31765,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx + 4 * s,
           hY - 10 * s,
-          9 * s,
+          9 * s
         );
         hqG.addColorStop(0, figureLight);
         hqG.addColorStop(0.5, figureMid);
@@ -31639,7 +31779,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           7.5 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Haunch muscle
@@ -31653,7 +31793,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 6 * s,
           hY - 17 * s,
           fx + 3 * s,
-          hY - 4 * s,
+          hY - 4 * s
         );
         barG.addColorStop(0, figureLight);
         barG.addColorStop(0.5, figureMid);
@@ -31667,7 +31807,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 5 * s,
           hY - 4 * s,
           fx - 6 * s,
-          hY - 5 * s,
+          hY - 5 * s
         );
         ctx.lineTo(fx - 6 * s, hY - 16 * s);
         ctx.closePath();
@@ -31685,7 +31825,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx - 6 * s,
           hY - 12 * s,
-          8 * s,
+          8 * s
         );
         chG.addColorStop(0, figureHighlight);
         chG.addColorStop(0.4, figureLight);
@@ -31699,7 +31839,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           7.5 * s,
           -0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -31709,13 +31849,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ly: number,
           h: number,
           knee: number,
-          col: string,
+          col: string
         ) => {
           const lg = ctx.createLinearGradient(
             lx - 1.5 * s,
             ly,
             lx + 1.5 * s,
-            ly + h * s,
+            ly + h * s
           );
           lg.addColorStop(0, col);
           lg.addColorStop(1, figureShadow);
@@ -31726,7 +31866,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lx - 2 * s + knee * s,
             ly + h * 0.45 * s,
             lx - 1.2 * s + knee * 0.5 * s,
-            ly + h * 0.7 * s,
+            ly + h * 0.7 * s
           );
           ctx.lineTo(lx - 1.5 * s + knee * 0.3 * s, ly + h * s);
           ctx.lineTo(lx + 1.5 * s + knee * 0.3 * s, ly + h * s);
@@ -31735,7 +31875,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lx + 1.5 * s + knee * s,
             ly + h * 0.45 * s,
             lx + 1.5 * s,
-            ly,
+            ly
           );
           ctx.closePath();
           ctx.fill();
@@ -31749,7 +31889,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             1 * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         };
@@ -31763,7 +31903,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           hY - 30 * s,
           fx - 4 * s,
-          hY - 15 * s,
+          hY - 15 * s
         );
         neckG.addColorStop(0, figureLight);
         neckG.addColorStop(0.6, figureMid);
@@ -31777,7 +31917,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           hY - 28 * s,
           fx - 8 * s,
-          hY - 30 * s,
+          hY - 30 * s
         );
         ctx.lineTo(fx - 5 * s, hY - 28 * s);
         ctx.bezierCurveTo(
@@ -31786,7 +31926,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 6 * s,
           hY - 20 * s,
           fx - 4 * s,
-          hY - 15 * s,
+          hY - 15 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31801,7 +31941,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 9 * s,
           hY - 26 * s,
           fx - 7 * s,
-          hY - 29 * s,
+          hY - 29 * s
         );
         ctx.stroke();
 
@@ -31815,7 +31955,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 12 * s,
           hY - 24 * s,
           fx - 10 * s,
-          hY - 20 * s,
+          hY - 20 * s
         );
         ctx.bezierCurveTo(
           fx - 11 * s,
@@ -31823,7 +31963,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           hY - 16 * s,
           fx - 8 * s,
-          hY - 16 * s,
+          hY - 16 * s
         );
         ctx.bezierCurveTo(
           fx - 9 * s,
@@ -31831,7 +31971,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           hY - 23 * s,
           fx - 9 * s,
-          hY - 27 * s,
+          hY - 27 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31848,7 +31988,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             mx2 - 2 * s,
             my2 + 1.5 * s,
             mx2 - 1 * s,
-            my2 + 3 * s,
+            my2 + 3 * s
           );
           ctx.stroke();
         }
@@ -31860,7 +32000,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx - 11 * s,
           hY - 30 * s,
-          6 * s,
+          6 * s
         );
         hhG.addColorStop(0, figureHighlight);
         hhG.addColorStop(0.4, figureLight);
@@ -31874,7 +32014,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 13 * s,
           hY - 35 * s,
           fx - 14 * s,
-          hY - 31 * s,
+          hY - 31 * s
         );
         ctx.bezierCurveTo(
           fx - 14 * s,
@@ -31882,7 +32022,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 11 * s,
           hY - 27 * s,
           fx - 8 * s,
-          hY - 28 * s,
+          hY - 28 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -31897,7 +32037,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 11 * s,
           hY - 27.5 * s,
           fx - 9 * s,
-          hY - 28 * s,
+          hY - 28 * s
         );
         ctx.stroke();
         // Nostrils
@@ -31910,7 +32050,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.4 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Eye (deep set)
@@ -31923,7 +32063,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.7 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureShadow;
@@ -31935,7 +32075,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.4 * s,
           -0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Ears
@@ -31972,7 +32112,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 2 * s,
           hY - 18 * s,
           fx + 3 * s,
-          hY - 17 * s,
+          hY - 17 * s
         );
         ctx.lineTo(fx + 2 * s, hY - 15 * s);
         ctx.bezierCurveTo(
@@ -31981,7 +32121,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 1 * s,
           hY - 15.5 * s,
           fx - 2 * s,
-          hY - 15 * s,
+          hY - 15 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32004,7 +32144,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 1.5 * s,
           rY + 3 * s,
           fx - 1.5 * s,
-          rY + 1 * s,
+          rY + 1 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32027,7 +32167,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32036,7 +32176,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 3 * s,
           rY - 14 * s,
           fx + 3 * s,
-          rY,
+          rY
         );
         rtG.addColorStop(0, figureLight);
         rtG.addColorStop(0.4, figureMid);
@@ -32050,7 +32190,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 3.5 * s,
           rY - 12 * s,
           fx - 2 * s,
-          rY - 14 * s,
+          rY - 14 * s
         );
         ctx.lineTo(fx + 2 * s, rY - 14 * s);
         ctx.bezierCurveTo(
@@ -32059,7 +32199,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 4 * s,
           rY - 5 * s,
           fx + 3.5 * s,
-          rY + 1 * s,
+          rY + 1 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32080,7 +32220,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           -0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureLight;
@@ -32092,7 +32232,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.5 * s,
           0.3,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32103,7 +32243,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx,
           rY - 16.5 * s,
-          4.5 * s,
+          4.5 * s
         );
         rhG.addColorStop(0, figureHighlight);
         rhG.addColorStop(0.4, figureLight);
@@ -32123,7 +32263,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.8 * s,
           0,
           Math.PI,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         // Helmet crest
@@ -32136,7 +32276,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 3 * s,
           rY - 19 * s,
           fx + 5 * s,
-          rY - 18 * s,
+          rY - 18 * s
         );
         ctx.lineTo(fx + 4 * s, rY - 19 * s);
         ctx.bezierCurveTo(
@@ -32145,7 +32285,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 1 * s,
           rY - 20.5 * s,
           fx,
-          rY - 21 * s,
+          rY - 21 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32218,7 +32358,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 13 * s,
           cY - 3 * s,
           fx + 11 * s,
-          cY + 1 * s,
+          cY + 1 * s
         );
         ctx.bezierCurveTo(
           fx + 10 * s,
@@ -32226,7 +32366,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 9 * s,
           cY - 6 * s,
           fx + 7 * s,
-          cY - 9 * s,
+          cY - 9 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32238,7 +32378,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx + 3 * s,
           cY - 8 * s,
-          7 * s,
+          7 * s
         );
         cHqG.addColorStop(0, figureLight);
         cHqG.addColorStop(0.5, figureMid);
@@ -32257,7 +32397,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0.2,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32266,7 +32406,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 5 * s,
           cY - 14 * s,
           fx + 2 * s,
-          cY - 3 * s,
+          cY - 3 * s
         );
         cBarG.addColorStop(0, figureLight);
         cBarG.addColorStop(0.5, figureMid);
@@ -32280,7 +32420,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 4 * s,
           cY - 3 * s,
           fx - 5 * s,
-          cY - 4 * s,
+          cY - 4 * s
         );
         ctx.lineTo(fx - 5 * s, cY - 13 * s);
         ctx.closePath();
@@ -32298,7 +32438,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           fx - 4 * s,
           cY - 10 * s,
-          7 * s,
+          7 * s
         );
         cChG.addColorStop(0, figureHighlight);
         cChG.addColorStop(0.4, figureLight);
@@ -32312,7 +32452,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           6.5 * s,
           -0.15,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32322,13 +32462,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ly: number,
           h: number,
           knee: number,
-          col: string,
+          col: string
         ) => {
           const clG = ctx.createLinearGradient(
             lx - 1.2 * s,
             ly,
             lx + 1.2 * s,
-            ly + h * s,
+            ly + h * s
           );
           clG.addColorStop(0, col);
           clG.addColorStop(1, figureShadow);
@@ -32339,7 +32479,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lx - 1.5 * s + knee * s,
             ly + h * 0.4 * s,
             lx - 1 * s + knee * 0.5 * s,
-            ly + h * 0.7 * s,
+            ly + h * 0.7 * s
           );
           ctx.lineTo(lx - 1.2 * s + knee * 0.3 * s, ly + h * s);
           ctx.lineTo(lx + 1.2 * s + knee * 0.3 * s, ly + h * s);
@@ -32348,7 +32488,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             lx + 1.5 * s + knee * s,
             ly + h * 0.4 * s,
             lx + 1.2 * s,
-            ly,
+            ly
           );
           ctx.closePath();
           ctx.fill();
@@ -32361,7 +32501,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             0.8 * s,
             0,
             0,
-            Math.PI * 2,
+            Math.PI * 2
           );
           ctx.fill();
         };
@@ -32376,7 +32516,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 5 * s,
           cTB - 18 * s,
           fx + 2 * s,
-          cTB,
+          cTB
         );
         ctG.addColorStop(0, figureLight);
         ctG.addColorStop(0.4, figureMid);
@@ -32390,7 +32530,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 5 * s,
           cTB - 14 * s,
           fx - 3 * s,
-          cTB - 18 * s,
+          cTB - 18 * s
         );
         ctx.lineTo(fx + 1 * s, cTB - 18 * s);
         ctx.bezierCurveTo(
@@ -32399,7 +32539,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 2 * s,
           cTB - 6 * s,
           fx + 1 * s,
-          cTB,
+          cTB
         );
         ctx.closePath();
         ctx.fill();
@@ -32420,7 +32560,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           2.5 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32443,7 +32583,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 4 * s,
           cTB - 15 * s,
           fx - 12 * s,
-          cTB - 15 * s,
+          cTB - 15 * s
         );
         armG.addColorStop(0, figureMid);
         armG.addColorStop(1, figureDark);
@@ -32456,7 +32596,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 10 * s,
           cTB - 17 * s,
           fx - 12 * s,
-          cTB - 16 * s,
+          cTB - 16 * s
         );
         ctx.lineTo(fx - 12 * s, cTB - 14 * s);
         ctx.bezierCurveTo(
@@ -32465,7 +32605,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 7 * s,
           cTB - 13 * s,
           fx - 4 * s,
-          cTB - 12.5 * s,
+          cTB - 12.5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32479,7 +32619,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
 
@@ -32493,7 +32633,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 4.5 * s,
           cTB - 13 * s,
           fx + 5 * s,
-          cTB - 14 * s,
+          cTB - 14 * s
         );
         ctx.lineTo(fx + 5 * s, cTB - 15.5 * s);
         ctx.bezierCurveTo(
@@ -32502,7 +32642,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 2 * s,
           cTB - 16 * s,
           fx + 1 * s,
-          cTB - 16 * s,
+          cTB - 16 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32512,7 +32652,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 13 * s,
           cTB - 22 * s,
           fx - 13 * s,
-          cTB - 8 * s,
+          cTB - 8 * s
         );
         bowG.addColorStop(0, "#7a6a5a");
         bowG.addColorStop(0.5, "#5a4a3a");
@@ -32527,7 +32667,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 17 * s,
           cTB - 18 * s,
           fx - 13 * s,
-          cTB - 23 * s,
+          cTB - 23 * s
         );
         ctx.stroke();
         // Recurve tips
@@ -32539,7 +32679,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 12 * s,
           cTB - 5 * s,
           fx - 11 * s,
-          cTB - 6 * s,
+          cTB - 6 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -32548,7 +32688,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 12 * s,
           cTB - 25 * s,
           fx - 11 * s,
-          cTB - 24 * s,
+          cTB - 24 * s
         );
         ctx.stroke();
 
@@ -32576,7 +32716,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 18 * s,
           cTB - 15 * s,
           fx - 14 * s,
-          cTB - 15 * s,
+          cTB - 15 * s
         );
         ahG.addColorStop(0, steelLight);
         ahG.addColorStop(1, figureShadow);
@@ -32627,7 +32767,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx - 1 * s,
           cHdY,
-          5 * s,
+          5 * s
         );
         cHdG.addColorStop(0, figureHighlight);
         cHdG.addColorStop(0.35, figureLight);
@@ -32648,7 +32788,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 7 * s,
           cHdY + 2 * s,
           fx + 6 * s,
-          cHdY + 8 * s,
+          cHdY + 8 * s
         );
         ctx.bezierCurveTo(
           fx + 5 * s,
@@ -32656,7 +32796,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 4 * s,
           cHdY + 2 * s,
           fx + 3 * s,
-          cHdY,
+          cHdY
         );
         ctx.closePath();
         ctx.fill();
@@ -32672,7 +32812,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             fx + (6 + hi * 0.5) * s,
             cHdY + (4 + hi) * s,
             fx + (5.5 + hi * 0.3) * s,
-            cHdY + (6 + hi) * s,
+            cHdY + (6 + hi) * s
           );
           ctx.stroke();
         }
@@ -32687,7 +32827,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.7 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.ellipse(
           fx + 0.8 * s,
@@ -32696,7 +32836,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0.7 * s,
           0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.fillStyle = figureShadow;
@@ -32723,7 +32863,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 2.5 * s,
           cHdY - 2 * s,
           fx - 1.5 * s,
-          cHdY - 1.5 * s,
+          cHdY - 1.5 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -32732,7 +32872,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 0.5 * s,
           cHdY - 2 * s,
           fx + 1.5 * s,
-          cHdY - 1.5 * s,
+          cHdY - 1.5 * s
         );
         ctx.stroke();
       } else {
@@ -32790,13 +32930,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 14 * s,
           figureBase - 28 * s,
           fx - 12 * s,
-          figureBase - 6 * s,
+          figureBase - 6 * s
         );
         ctx.quadraticCurveTo(
           fx - 10 * s,
           figureBase - 2 * s,
           fx - 8 * s,
-          figureBase,
+          figureBase
         );
         ctx.lineTo(fx - 6 * s, figureBase - 17 * s);
         ctx.closePath();
@@ -32807,13 +32947,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 14 * s,
           figureBase - 28 * s,
           fx + 12 * s,
-          figureBase - 6 * s,
+          figureBase - 6 * s
         );
         ctx.quadraticCurveTo(
           fx + 10 * s,
           figureBase - 2 * s,
           fx + 8 * s,
-          figureBase,
+          figureBase
         );
         ctx.lineTo(fx + 6 * s, figureBase - 17 * s);
         ctx.closePath();
@@ -32870,7 +33010,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 20 * s,
           figureBase - 58 * s,
           fx + 22 * s,
-          figureBase - 52 * s,
+          figureBase - 52 * s
         );
         ctx.lineTo(fx + 10.5 * s, figureBase - 55 * s);
         ctx.closePath();
@@ -32883,7 +33023,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 15 * s,
           figureBase - 61 * s,
           fx + 16 * s,
-          figureBase - 56 * s,
+          figureBase - 56 * s
         );
         ctx.lineTo(fx + 10.5 * s, figureBase - 55 * s);
         ctx.closePath();
@@ -32900,8 +33040,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const oy = bey + Math.sin(angle) * 3 * s;
           const ix2 = bex + Math.cos(innerAngle) * 1.2 * s;
           const iy2 = bey + Math.sin(innerAngle) * 1.2 * s;
-          if (sp === 0) ctx.moveTo(ox, oy);
-          else ctx.lineTo(ox, oy);
+          if (sp === 0) {
+            ctx.moveTo(ox, oy);
+          } else {
+            ctx.lineTo(ox, oy);
+          }
           ctx.lineTo(ix2, iy2);
         }
         ctx.closePath();
@@ -32924,7 +33067,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           fx,
           gHeadY,
-          5.5 * s,
+          5.5 * s
         );
         gHG.addColorStop(0, figureHighlight);
         gHG.addColorStop(0.4, figureLight);
@@ -32946,13 +33089,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 2 * s,
           gHeadY - 12 * s,
           fx - 2 * s,
-          gHeadY - 14 * s,
+          gHeadY - 14 * s
         );
         ctx.quadraticCurveTo(
           fx - 4 * s,
           gHeadY - 10 * s,
           fx - 1 * s,
-          gHeadY - 6 * s,
+          gHeadY - 6 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32963,13 +33106,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 1 * s,
           gHeadY - 10 * s,
           fx - 1 * s,
-          gHeadY - 12 * s,
+          gHeadY - 12 * s
         );
         ctx.quadraticCurveTo(
           fx - 2 * s,
           gHeadY - 9 * s,
           fx - 0.5 * s,
-          gHeadY - 6.5 * s,
+          gHeadY - 6.5 * s
         );
         ctx.closePath();
         ctx.fill();
@@ -32990,7 +33133,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fx,
         figureBase + 1 * s,
-        10 * s,
+        10 * s
       );
       aoGrad.addColorStop(0, "rgba(40,35,28,0.4)");
       aoGrad.addColorStop(0.3, "rgba(40,35,28,0.2)");
@@ -33006,7 +33149,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx - 6 * s,
         figureBase - 35 * s,
         fx - 1 * s,
-        figureBase - 20 * s,
+        figureBase - 20 * s
       );
       rimG.addColorStop(0, "rgba(240,235,225,0.2)");
       rimG.addColorStop(0.5, "rgba(230,225,215,0.12)");
@@ -33018,14 +33161,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx - 7 * s,
         figureBase - 22 * s,
         fx - 5 * s,
-        figureBase - 40 * s,
+        figureBase - 40 * s
       );
       ctx.lineTo(fx - 3 * s, figureBase - 38 * s);
       ctx.quadraticCurveTo(
         fx - 5 * s,
         figureBase - 22 * s,
         fx - 3 * s,
-        figureBase - 5 * s,
+        figureBase - 5 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -33035,7 +33178,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx + 1 * s,
         figureBase - 20 * s,
         fx + 6 * s,
-        figureBase - 20 * s,
+        figureBase - 20 * s
       );
       coreG.addColorStop(0, "rgba(30,28,22,0)");
       coreG.addColorStop(0.5, "rgba(30,28,22,0.08)");
@@ -33047,14 +33190,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx + 6 * s,
         figureBase - 22 * s,
         fx + 4 * s,
-        figureBase - 38 * s,
+        figureBase - 38 * s
       );
       ctx.lineTo(fx + 6 * s, figureBase - 36 * s);
       ctx.quadraticCurveTo(
         fx + 8 * s,
         figureBase - 22 * s,
         fx + 5 * s,
-        figureBase - 5 * s,
+        figureBase - 5 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -33066,7 +33209,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         fx - 1 * s,
         figureBase - 30 * s,
-        5 * s,
+        5 * s
       );
       specG.addColorStop(0, "rgba(255,255,250,0.18)");
       specG.addColorStop(0.4, "rgba(255,255,250,0.08)");
@@ -33080,7 +33223,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         6 * s,
         -0.1,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -33094,7 +33237,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -33125,7 +33268,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(cmx, cmy);
         ctx.lineTo(
           cmx + Math.cos(cmAng) * cmLen,
-          cmy + Math.sin(cmAng) * cmLen,
+          cmy + Math.sin(cmAng) * cmLen
         );
         ctx.stroke();
       }
@@ -33141,7 +33284,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx + 4.5 * s,
         figureBase - 12 * s,
         fx + 3 * s,
-        figureBase - 22 * s,
+        figureBase - 22 * s
       );
       ctx.stroke();
       // Secondary crack
@@ -33151,7 +33294,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx - 3 * s,
         figureBase - 14 * s,
         fx - 1 * s,
-        figureBase - 18 * s,
+        figureBase - 18 * s
       );
       ctx.stroke();
       // Branching hairline cracks
@@ -33187,13 +33330,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         fx - 6 * s,
         figureBase - 18 * s,
         fx - 4 * s,
-        figureBase - 32 * s,
+        figureBase - 32 * s
       );
       ctx.quadraticCurveTo(
         fx - 2 * s,
         figureBase - 38 * s,
         fx,
-        figureBase - 42 * s,
+        figureBase - 42 * s
       );
       ctx.stroke();
 
@@ -33201,11 +33344,38 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       if (mapTheme === "swamp") {
         // Heavy vine/moss overgrowth
         ctx.fillStyle = "rgba(50,80,30,0.25)";
-        drawOrganicBlobAt(ctx, fx - 5 * s, figureBase - 2 * s, 3 * s, 1.5 * s, pedSeed + 20.1, 0.22, 14);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 5 * s,
+          figureBase - 2 * s,
+          3 * s,
+          1.5 * s,
+          pedSeed + 20.1,
+          0.22,
+          14
+        );
         ctx.fill();
-        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 3 * s, 2.5 * s, 1.2 * s, pedSeed + 21.3, 0.22, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 4 * s,
+          figureBase - 3 * s,
+          2.5 * s,
+          1.2 * s,
+          pedSeed + 21.3,
+          0.22,
+          12
+        );
         ctx.fill();
-        drawOrganicBlobAt(ctx, fx - 2 * s, figureBase - 12 * s, 2 * s, 1 * s, pedSeed + 22.7, 0.2, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 2 * s,
+          figureBase - 12 * s,
+          2 * s,
+          1 * s,
+          pedSeed + 22.7,
+          0.2,
+          12
+        );
         ctx.fill();
         // Draping vines
         ctx.strokeStyle = "rgba(40,70,25,0.4)";
@@ -33216,7 +33386,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx - 7 * s,
           figureBase - 10 * s,
           fx - 5 * s,
-          figureBase - 4 * s,
+          figureBase - 4 * s
         );
         ctx.stroke();
         ctx.beginPath();
@@ -33225,69 +33395,204 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fx + 7 * s,
           figureBase - 14 * s,
           fx + 4 * s,
-          figureBase - 6 * s,
+          figureBase - 6 * s
         );
         ctx.stroke();
       } else if (mapTheme === "desert") {
         // Sand accumulation at base and in crevices
         ctx.fillStyle = "rgba(210,190,150,0.3)";
-        drawOrganicBlobAt(ctx, fx, figureBase + 1 * s, 6 * s, 2 * s, pedSeed + 23.1, 0.2, 16);
+        drawOrganicBlobAt(
+          ctx,
+          fx,
+          figureBase + 1 * s,
+          6 * s,
+          2 * s,
+          pedSeed + 23.1,
+          0.2,
+          16
+        );
         ctx.fill();
         // Wind-worn patches
         ctx.fillStyle = "rgba(180,160,120,0.2)";
-        drawOrganicBlobAt(ctx, fx - 3 * s, figureBase - 8 * s, 2 * s, 1 * s, pedSeed + 24.3, 0.2, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 3 * s,
+          figureBase - 8 * s,
+          2 * s,
+          1 * s,
+          pedSeed + 24.3,
+          0.2,
+          12
+        );
         ctx.fill();
-        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 5 * s, 1.5 * s, 0.8 * s, pedSeed + 25.7, 0.2, 10);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 4 * s,
+          figureBase - 5 * s,
+          1.5 * s,
+          0.8 * s,
+          pedSeed + 25.7,
+          0.2,
+          10
+        );
         ctx.fill();
       } else if (mapTheme === "winter") {
         // Snow cap on head — layered for organic look
         ctx.fillStyle = "#f0f4f8";
-        drawOrganicBlobAt(ctx, fx, figureBase - 42 * s, 5 * s, 2 * s, pedSeed + 26.1, 0.2, 16);
+        drawOrganicBlobAt(
+          ctx,
+          fx,
+          figureBase - 42 * s,
+          5 * s,
+          2 * s,
+          pedSeed + 26.1,
+          0.2,
+          16
+        );
         ctx.fill();
         ctx.save();
-        ctx.globalAlpha = ctx.globalAlpha * 0.6;
+        ctx.globalAlpha *= 0.6;
         ctx.fillStyle = "#f8fafc";
-        drawOrganicBlobAt(ctx, fx - 1 * s, figureBase - 42.5 * s, 3.5 * s, 1.4 * s, pedSeed + 26.5, 0.25, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 1 * s,
+          figureBase - 42.5 * s,
+          3.5 * s,
+          1.4 * s,
+          pedSeed + 26.5,
+          0.25,
+          12
+        );
         ctx.fill();
         ctx.restore();
         // Snow on left shoulder
         ctx.fillStyle = "#f0f4f8";
-        drawOrganicBlobAt(ctx, fx - 5 * s, figureBase - 30 * s, 3 * s, 1.2 * s, pedSeed + 27.3, 0.22, 14);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 5 * s,
+          figureBase - 30 * s,
+          3 * s,
+          1.2 * s,
+          pedSeed + 27.3,
+          0.22,
+          14
+        );
         ctx.fill();
         // Snow on right shoulder
-        drawOrganicBlobAt(ctx, fx + 5 * s, figureBase - 28 * s, 2.5 * s, 1 * s, pedSeed + 28.7, 0.22, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 5 * s,
+          figureBase - 28 * s,
+          2.5 * s,
+          1 * s,
+          pedSeed + 28.7,
+          0.22,
+          12
+        );
         ctx.fill();
         // Snow on pedestal top — large layered cap
         ctx.fillStyle = "#e8eef4";
-        drawOrganicBlobAt(ctx, fx, baseY - t1H - 1 * s, 10 * s, 4 * s, pedSeed + 29.1, 0.18, 20);
+        drawOrganicBlobAt(
+          ctx,
+          fx,
+          baseY - t1H - 1 * s,
+          10 * s,
+          4 * s,
+          pedSeed + 29.1,
+          0.18,
+          20
+        );
         ctx.fill();
         ctx.save();
-        ctx.globalAlpha = ctx.globalAlpha * 0.5;
+        ctx.globalAlpha *= 0.5;
         ctx.fillStyle = "#f2f6fa";
-        drawOrganicBlobAt(ctx, fx + 2 * s, baseY - t1H - 1.5 * s, 6 * s, 2.5 * s, pedSeed + 29.9, 0.22, 14);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 2 * s,
+          baseY - t1H - 1.5 * s,
+          6 * s,
+          2.5 * s,
+          pedSeed + 29.9,
+          0.22,
+          14
+        );
         ctx.fill();
         ctx.restore();
       } else if (mapTheme === "volcanic") {
         // Ash deposits and ember glow
         ctx.fillStyle = "rgba(50,40,40,0.25)";
-        drawOrganicBlobAt(ctx, fx, figureBase + 1 * s, 5 * s, 2 * s, pedSeed + 30.1, 0.2, 14);
+        drawOrganicBlobAt(
+          ctx,
+          fx,
+          figureBase + 1 * s,
+          5 * s,
+          2 * s,
+          pedSeed + 30.1,
+          0.2,
+          14
+        );
         ctx.fill();
         // Ember glow at base cracks
         ctx.fillStyle = "rgba(255,120,40,0.2)";
-        drawOrganicBlobAt(ctx, fx - 3 * s, figureBase - 1 * s, 1.5 * s, 0.8 * s, pedSeed + 31.3, 0.2, 10);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 3 * s,
+          figureBase - 1 * s,
+          1.5 * s,
+          0.8 * s,
+          pedSeed + 31.3,
+          0.2,
+          10
+        );
         ctx.fill();
-        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 2 * s, 1.2 * s, 0.6 * s, pedSeed + 32.7, 0.2, 10);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 4 * s,
+          figureBase - 2 * s,
+          1.2 * s,
+          0.6 * s,
+          pedSeed + 32.7,
+          0.2,
+          10
+        );
         ctx.fill();
         // Subtle red heat glow on figure
         ctx.fillStyle = "rgba(200,60,20,0.08)";
-        drawOrganicBlobAt(ctx, fx, figureBase - 20 * s, 8 * s, 15 * s, pedSeed + 33.1, 0.12, 20);
+        drawOrganicBlobAt(
+          ctx,
+          fx,
+          figureBase - 20 * s,
+          8 * s,
+          15 * s,
+          pedSeed + 33.1,
+          0.12,
+          20
+        );
         ctx.fill();
       } else {
         // Grassland default - subtle moss spots
         ctx.fillStyle = "rgba(65,85,50,0.18)";
-        drawOrganicBlobAt(ctx, fx - 4 * s, figureBase - 1 * s, 2 * s, 1 * s, pedSeed + 34.1, 0.2, 12);
+        drawOrganicBlobAt(
+          ctx,
+          fx - 4 * s,
+          figureBase - 1 * s,
+          2 * s,
+          1 * s,
+          pedSeed + 34.1,
+          0.2,
+          12
+        );
         ctx.fill();
-        drawOrganicBlobAt(ctx, fx + 3 * s, figureBase - 2 * s, 1.5 * s, 0.8 * s, pedSeed + 35.3, 0.2, 10);
+        drawOrganicBlobAt(
+          ctx,
+          fx + 3 * s,
+          figureBase - 2 * s,
+          1.5 * s,
+          0.8 * s,
+          pedSeed + 35.3,
+          0.2,
+          10
+        );
         ctx.fill();
       }
       break;
@@ -33306,10 +33611,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           14 * s,
           7 * s,
           30 * s,
-          0.32,
+          0.32
         );
       }
-      if (shadowOnly) break;
+      if (shadowOnly) {
+        break;
+      }
 
       const tilt = [0.04, -0.03, 0.06, -0.05][variant % 4];
       ctx.save();
@@ -33323,7 +33630,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         0,
         5 * s,
-        14 * s,
+        14 * s
       );
       dirtGrad.addColorStop(0, "#4a3a28");
       dirtGrad.addColorStop(0.6, "#3a2a1a");
@@ -33357,7 +33664,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         "#55555c",
         "#2a2a32",
-        "#3a3a44",
+        "#3a3a44"
       );
       // Base edge highlight
       ctx.strokeStyle = "rgba(255,255,255,0.06)";
@@ -33462,7 +33769,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           1.8 * s,
           -0.1,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
         ctx.beginPath();
@@ -33514,7 +33821,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             side * 4 * s,
             -26 * s,
             side * 14 * s,
-            -18 * s,
+            -18 * s
           );
           featherGrad.addColorStop(0, "#6e6e78");
           featherGrad.addColorStop(1, "#5a5a64");
@@ -33637,7 +33944,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           0,
           cx,
           cy + 14 * s,
-          95 * s,
+          95 * s
         );
         shGrad.addColorStop(0, "rgba(0,25,55,0.45)");
         shGrad.addColorStop(0.35, "rgba(0,18,45,0.25)");
@@ -33648,7 +33955,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(cx, cy + 14 * s, 95 * s, 42 * s, 0, 0, Math.PI * 2);
         ctx.fill();
       }
-      if (shadowOnly) break;
+      if (shadowOnly) {
+        break;
+      }
 
       const isoW = 60 * s;
       const isoD = isoW * ISO_Y_RATIO;
@@ -33660,7 +33969,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx,
         cy + 8 * s,
-        70 * s,
+        70 * s
       );
       poolGrad.addColorStop(0, "rgba(120,200,235,0.22)");
       poolGrad.addColorStop(0.3, "rgba(100,185,225,0.14)");
@@ -33681,7 +33990,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         16 * s,
         -0.15,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -33698,7 +34007,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1 * 0.44 + 6 * s);
         ctx.lineTo(
           cx + Math.cos(a) * midR + jitter,
-          cy + Math.sin(a) * midR * 0.44 + 5 * s,
+          cy + Math.sin(a) * midR * 0.44 + 5 * s
         );
         ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2 * 0.44 + 6 * s);
         ctx.stroke();
@@ -33707,11 +34016,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(
             cx + Math.cos(a) * midR + jitter,
-            cy + Math.sin(a) * midR * 0.44 + 5 * s,
+            cy + Math.sin(a) * midR * 0.44 + 5 * s
           );
           ctx.lineTo(
             cx + Math.cos(branchA) * (midR + 8 * s),
-            cy + Math.sin(branchA) * (midR + 8 * s) * 0.44 + 5 * s,
+            cy + Math.sin(branchA) * (midR + 8 * s) * 0.44 + 5 * s
           );
           ctx.stroke();
         }
@@ -33729,7 +34038,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         "#4a5868",
         "#2a3545",
-        "#384856",
+        "#384856"
       );
       drawIsometricPrism(
         ctx,
@@ -33740,7 +34049,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         24 * s,
         "#546878",
         "#2d3e50",
-        "#3a4e5e",
+        "#3a4e5e"
       );
       drawIsometricPrism(
         ctx,
@@ -33751,7 +34060,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         3 * s,
         "#647888",
         "#3d5060",
-        "#4a5e70",
+        "#4a5e70"
       );
 
       // Left archway remnant - tall broken arch pillar
@@ -33764,7 +34073,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         28 * s,
         "#5a6e80",
         "#344858",
-        "#445a6c",
+        "#445a6c"
       );
       drawIsometricPrism(
         ctx,
@@ -33775,7 +34084,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         22 * s,
         "#586c7e",
         "#324656",
-        "#42586a",
+        "#42586a"
       );
 
       // Left arch keystone fragment (the top curve piece, broken)
@@ -33786,14 +34095,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         aLx + 2 * s,
         aLy - 64 * s,
         aLx + 8 * s,
-        aLy - 51 * s,
+        aLy - 51 * s
       );
       ctx.lineTo(aLx + 5 * s, aLy - 49 * s);
       ctx.quadraticCurveTo(
         aLx + 1 * s,
         aLy - 58 * s,
         aLx - 4 * s,
-        aLy - 53 * s,
+        aLy - 53 * s
       );
       ctx.closePath();
       ctx.fill();
@@ -33829,7 +34138,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         4 * s,
         "#4a5868",
         "#2a3545",
-        "#384856",
+        "#384856"
       );
       drawIsometricPrism(
         ctx,
@@ -33840,7 +34149,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         20 * s,
         "#546878",
         "#2d3e50",
-        "#3a4e5e",
+        "#3a4e5e"
       );
       drawIsometricPrism(
         ctx,
@@ -33851,7 +34160,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         "#647888",
         "#3d5060",
-        "#4a5e70",
+        "#4a5e70"
       );
 
       // Right archway remnant - shorter, more broken
@@ -33864,7 +34173,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         18 * s,
         "#5a6e80",
         "#344858",
-        "#445a6c",
+        "#445a6c"
       );
       drawIsometricPrism(
         ctx,
@@ -33875,7 +34184,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         10 * s,
         "#546878",
         "#304454",
-        "#405664",
+        "#405664"
       );
 
       // Collapsed bridge deck - broken cleanly in the middle, sagging
@@ -33886,7 +34195,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         aLx,
         aLy - 26 * s,
         cx - 3 * s,
-        cy + midSag,
+        cy + midSag
       );
       lDeckGrad.addColorStop(0, "#82b8d2");
       lDeckGrad.addColorStop(0.2, "#98cce0");
@@ -33917,7 +34226,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         cx + 5 * s,
         cy + midSag,
         aRx,
-        aRy - 20 * s,
+        aRy - 20 * s
       );
       rDeckGrad.addColorStop(0, "#62a0ba");
       rDeckGrad.addColorStop(0.3, "#a0d4e6");
@@ -33974,14 +34283,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Fallen rubble blocks in and around the gap
       const rubble = [
-        { x: cx - 8 * s, y: cy + 5 * s, w: 7, h: 5, d: 3.5 },
-        { x: cx + 3 * s, y: cy + 10 * s, w: 6, h: 4, d: 3 },
-        { x: cx - 12 * s, y: cy + 12 * s, w: 5, h: 3.5, d: 2.5 },
-        { x: cx + 12 * s, y: cy + 3 * s, w: 6, h: 4.5, d: 3 },
-        { x: cx + 1 * s, y: cy + 16 * s, w: 4, h: 3, d: 2 },
-        { x: cx + 8 * s, y: cy + 14 * s, w: 4.5, h: 3.5, d: 2.5 },
-        { x: cx - 4 * s, y: cy + 20 * s, w: 3.5, h: 2.5, d: 2 },
-        { x: cx + 16 * s, y: cy + 8 * s, w: 4, h: 3, d: 2 },
+        { d: 3.5, h: 5, w: 7, x: cx - 8 * s, y: cy + 5 * s },
+        { d: 3, h: 4, w: 6, x: cx + 3 * s, y: cy + 10 * s },
+        { d: 2.5, h: 3.5, w: 5, x: cx - 12 * s, y: cy + 12 * s },
+        { d: 3, h: 4.5, w: 6, x: cx + 12 * s, y: cy + 3 * s },
+        { d: 2, h: 3, w: 4, x: cx + 1 * s, y: cy + 16 * s },
+        { d: 2.5, h: 3.5, w: 4.5, x: cx + 8 * s, y: cy + 14 * s },
+        { d: 2, h: 2.5, w: 3.5, x: cx - 4 * s, y: cy + 20 * s },
+        { d: 2, h: 3, w: 4, x: cx + 16 * s, y: cy + 8 * s },
       ];
       rubble.forEach((rb) => {
         drawIsometricPrism(
@@ -33993,7 +34302,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rb.d * s,
           "#6498ad",
           "#3a5868",
-          "#4a6a7c",
+          "#4a6a7c"
         );
       });
 
@@ -34007,7 +34316,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         5 * s,
         "#5a7080",
         "#344858",
-        "#445a6c",
+        "#445a6c"
       );
       // Carved detail on the keystone
       ctx.strokeStyle = "rgba(100,145,170,0.35)";
@@ -34029,7 +34338,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           rb.h * 0.35 * s,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       });
@@ -34042,7 +34351,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           waterfallX + (i - 2) * 3 * s,
           waterfallY,
           waterfallX + (i - 2) * 3 * s,
-          waterfallY + (12 + i * 3) * s,
+          waterfallY + (12 + i * 3) * s
         );
         wfGrad.addColorStop(0, `rgba(160,215,240,${0.25 - i * 0.03})`);
         wfGrad.addColorStop(0.5, `rgba(180,228,248,${0.15 - i * 0.02})`);
@@ -34059,29 +34368,29 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Massive icicles from broken deck edges and abutments
       const icicles = [
-        { x: cx - 5 * s, y: cy + midSag + 3 * s, len: 16, w: 2.2 },
-        { x: cx - 1 * s, y: cy + midSag + 5 * s, len: 22, w: 2.8 },
-        { x: cx + 3 * s, y: cy + midSag + 4 * s, len: 14, w: 1.8 },
-        { x: cx + 6 * s, y: cy + midSag + 5 * s, len: 19, w: 2.4 },
-        { x: cx + 9 * s, y: cy + midSag + 4 * s, len: 12, w: 1.6 },
-        { x: aLx - 8 * s, y: aLy - 18 * s, len: 11, w: 1.6 },
-        { x: aLx + 3 * s, y: aLy - 20 * s, len: 9, w: 1.3 },
-        { x: aLx - 3 * s, y: aLy - 19 * s, len: 13, w: 1.8 },
-        { x: aRx + 6 * s, y: aRy - 15 * s, len: 10, w: 1.4 },
-        { x: aRx - 4 * s, y: aRy - 17 * s, len: 14, w: 2.0 },
-        { x: aRx + 1 * s, y: aRy - 16 * s, len: 8, w: 1.2 },
+        { len: 16, w: 2.2, x: cx - 5 * s, y: cy + midSag + 3 * s },
+        { len: 22, w: 2.8, x: cx - 1 * s, y: cy + midSag + 5 * s },
+        { len: 14, w: 1.8, x: cx + 3 * s, y: cy + midSag + 4 * s },
+        { len: 19, w: 2.4, x: cx + 6 * s, y: cy + midSag + 5 * s },
+        { len: 12, w: 1.6, x: cx + 9 * s, y: cy + midSag + 4 * s },
+        { len: 11, w: 1.6, x: aLx - 8 * s, y: aLy - 18 * s },
+        { len: 9, w: 1.3, x: aLx + 3 * s, y: aLy - 20 * s },
+        { len: 13, w: 1.8, x: aLx - 3 * s, y: aLy - 19 * s },
+        { len: 10, w: 1.4, x: aRx + 6 * s, y: aRy - 15 * s },
+        { len: 14, w: 2, x: aRx - 4 * s, y: aRy - 17 * s },
+        { len: 8, w: 1.2, x: aRx + 1 * s, y: aRy - 16 * s },
         // From archway pillars
-        { x: aLx - 6 * s, y: aLy - 50 * s, len: 7, w: 1.0 },
-        { x: aLx + 6 * s, y: aLy - 45 * s, len: 6, w: 0.9 },
-        { x: aRx - 5 * s, y: aRy - 38 * s, len: 5, w: 0.8 },
+        { len: 7, w: 1, x: aLx - 6 * s, y: aLy - 50 * s },
+        { len: 6, w: 0.9, x: aLx + 6 * s, y: aLy - 45 * s },
+        { len: 5, w: 0.8, x: aRx - 5 * s, y: aRy - 38 * s },
       ];
       icicles.forEach((ic, i) => {
-        const shimmer = 0.5 + Math.sin(t * 2.0 + i * 0.95) * 0.3;
+        const shimmer = 0.5 + Math.sin(t * 2 + i * 0.95) * 0.3;
         const icGrad = ctx.createLinearGradient(
           ic.x,
           ic.y,
           ic.x,
-          ic.y + ic.len * s,
+          ic.y + ic.len * s
         );
         icGrad.addColorStop(0, `rgba(165,215,238,${0.78 + shimmer * 0.12})`);
         icGrad.addColorStop(0.4, `rgba(185,228,246,${0.55 + shimmer * 0.1})`);
@@ -34135,23 +34444,86 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Frost/snow caps on abutments and pillars
       const ibSnowSeed = Math.abs(decorX * 53 + decorY * 97);
       ctx.fillStyle = "rgba(218,238,250,0.5)";
-      drawOrganicBlobAt(ctx, aLx, aLy - 27 * s, 12 * s, 5.5 * s, ibSnowSeed, 0.18, 14);
+      drawOrganicBlobAt(
+        ctx,
+        aLx,
+        aLy - 27 * s,
+        12 * s,
+        5.5 * s,
+        ibSnowSeed,
+        0.18,
+        14
+      );
       ctx.fill();
-      drawOrganicBlobAt(ctx, aRx, aRy - 22 * s, 11 * s, 5 * s, ibSnowSeed + 31, 0.2, 14);
+      drawOrganicBlobAt(
+        ctx,
+        aRx,
+        aRy - 22 * s,
+        11 * s,
+        5 * s,
+        ibSnowSeed + 31,
+        0.2,
+        14
+      );
       ctx.fill();
       ctx.fillStyle = "rgba(210,232,248,0.4)";
-      drawOrganicBlobAt(ctx, aLx - 7 * s, aLy - 55 * s, 4 * s, 2 * s, ibSnowSeed + 67, 0.22, 10);
+      drawOrganicBlobAt(
+        ctx,
+        aLx - 7 * s,
+        aLy - 55 * s,
+        4 * s,
+        2 * s,
+        ibSnowSeed + 67,
+        0.22,
+        10
+      );
       ctx.fill();
-      drawOrganicBlobAt(ctx, aLx + 8 * s, aLy - 49 * s, 3.5 * s, 1.8 * s, ibSnowSeed + 89, 0.22, 10);
+      drawOrganicBlobAt(
+        ctx,
+        aLx + 8 * s,
+        aLy - 49 * s,
+        3.5 * s,
+        1.8 * s,
+        ibSnowSeed + 89,
+        0.22,
+        10
+      );
       ctx.fill();
 
       // Snow drifts around the base
       ctx.fillStyle = "rgba(208,232,246,0.3)";
-      drawOrganicBlobAt(ctx, cx - 24 * s, cy + 20 * s, 16 * s, 6 * s, ibSnowSeed + 113, 0.18, 16);
+      drawOrganicBlobAt(
+        ctx,
+        cx - 24 * s,
+        cy + 20 * s,
+        16 * s,
+        6 * s,
+        ibSnowSeed + 113,
+        0.18,
+        16
+      );
       ctx.fill();
-      drawOrganicBlobAt(ctx, cx + 22 * s, cy + 17 * s, 14 * s, 5 * s, ibSnowSeed + 137, 0.2, 14);
+      drawOrganicBlobAt(
+        ctx,
+        cx + 22 * s,
+        cy + 17 * s,
+        14 * s,
+        5 * s,
+        ibSnowSeed + 137,
+        0.2,
+        14
+      );
       ctx.fill();
-      drawOrganicBlobAt(ctx, cx - 5 * s, cy + 24 * s, 10 * s, 4 * s, ibSnowSeed + 157, 0.2, 12);
+      drawOrganicBlobAt(
+        ctx,
+        cx - 5 * s,
+        cy + 24 * s,
+        10 * s,
+        4 * s,
+        ibSnowSeed + 157,
+        0.2,
+        12
+      );
       ctx.fill();
 
       // Glowing ice runes on the abutment faces
@@ -34166,13 +34538,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fillText(
             iceRunes[i],
             aLx + (i - 1) * 7 * s,
-            aLy - (8 + i * 4) * s,
+            aLy - (8 + i * 4) * s
           );
         } else {
           ctx.fillText(
             iceRunes[i],
             aRx + (i - 4) * 7 * s,
-            aRy - (6 + (i - 3) * 4) * s,
+            aRy - (6 + (i - 3) * 4) * s
           );
         }
       }
@@ -34192,7 +34564,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const px = cx + Math.cos(phase * 0.4) * isoW * 0.9;
           const py = cy - 12 * s + Math.sin(phase * 0.75) * isoD * 0.9;
           const drift = Math.sin(phase * 1.3) * 4 * s;
-          const sparkSize = (1.0 + Math.sin(phase * 2.0) * 0.7) * s;
+          const sparkSize = (1 + Math.sin(phase * 2) * 0.7) * s;
           ctx.fillStyle = `rgba(195,232,248,${sparkAlpha})`;
           ctx.beginPath();
           ctx.arc(px + drift, py, sparkSize, 0, Math.PI * 2);
@@ -34207,15 +34579,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         0,
         cx + 2 * s,
         cy + midSag,
-        20 * s,
+        20 * s
       );
       coldGlow.addColorStop(
         0,
-        `rgba(140,210,240,${0.06 + Math.sin(t * 1.8) * 0.03})`,
+        `rgba(140,210,240,${0.06 + Math.sin(t * 1.8) * 0.03})`
       );
       coldGlow.addColorStop(
         0.5,
-        `rgba(120,195,230,${0.03 + Math.sin(t * 1.8) * 0.015})`,
+        `rgba(120,195,230,${0.03 + Math.sin(t * 1.8) * 0.015})`
       );
       coldGlow.addColorStop(1, "rgba(100,180,220,0)");
       ctx.fillStyle = coldGlow;
@@ -34229,15 +34601,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "war_monument": {
       renderWarMonument({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -34246,15 +34618,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "bone_altar": {
       renderBoneAltar({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -34263,15 +34635,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "sun_obelisk": {
       renderSunObelisk({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -34280,15 +34652,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "frost_citadel": {
       renderFrostCitadel({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -34297,15 +34669,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "infernal_gate": {
       renderInfernalGate({
         ctx,
+        s,
         screenX: screenPos.x,
         screenY: screenPos.y,
-        s,
-        time: decorTime,
         seedX: decorX,
         seedY: decorY,
-        variant,
-        skipShadow: landmarkSkipShadow,
         shadowOnly,
+        skipShadow: landmarkSkipShadow,
+        time: decorTime,
+        variant,
         zoom,
       });
       break;
@@ -34321,7 +34693,7 @@ function _drawPalmFrondItem(
   length: number,
   colors: { rib: string; lit: string; dark: string },
   scale: number,
-  sway: number,
+  sway: number
 ): void {
   const s = scale;
   const cosA = Math.cos(angle);

@@ -1,4 +1,4 @@
-import { WorldMapDrawContext } from "./drawContext";
+import type { WorldMapDrawContext } from "./drawContext";
 import {
   drawMiniKnight,
   drawMiniSoldier,
@@ -22,7 +22,7 @@ export const drawBridge = (
   bx: number,
   byPct: number,
   length: number,
-  angle: number,
+  angle: number
 ) => {
   const { ctx, getLevelY } = dc;
   const by = getLevelY(byPct);
@@ -129,7 +129,7 @@ export const drawBoulder = (
   dc: WorldMapDrawContext,
   bx: number,
   byPct: number,
-  size: number,
+  size: number
 ) => {
   const { ctx, getY } = dc;
   const by = getY(byPct);
@@ -143,7 +143,7 @@ export const drawBoulder = (
     size * 0.4,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Boulder body with 3D shading
@@ -153,7 +153,7 @@ export const drawBoulder = (
     0,
     bx,
     by,
-    size,
+    size
   );
   boulderGrad.addColorStop(0, "#6a5a4a");
   boulderGrad.addColorStop(0.6, "#4a3a2a");
@@ -172,7 +172,7 @@ export const drawBoulder = (
     size * 0.2,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 };
@@ -182,7 +182,7 @@ export const drawWagonWheel = (
   wx: number,
   wyPct: number,
   size: number,
-  rotation: number,
+  rotation: number
 ) => {
   const { ctx, getY } = dc;
   const wy = getY(wyPct);
@@ -215,7 +215,7 @@ export const drawArrow = (
   dc: WorldMapDrawContext,
   ax: number,
   ayPct: number,
-  angle: number,
+  angle: number
 ) => {
   const { ctx, getY } = dc;
   const ay = getY(ayPct);
@@ -245,7 +245,7 @@ export const drawFallenShield = (
   dc: WorldMapDrawContext,
   sx: number,
   syPct: number,
-  isEnemy: boolean,
+  isEnemy: boolean
 ) => {
   const { ctx, getY, seededRandom } = dc;
   const sy = getY(syPct);
@@ -264,7 +264,7 @@ export const drawBattleScene = (
   x: number,
   yPct: number,
   flip: boolean,
-  intensity: number,
+  intensity: number
 ) => {
   const { ctx, getY, time, seededRandom } = dc;
   const y = getY(yPct);
@@ -308,7 +308,15 @@ export const drawBattleScene = (
     } else if (enemySeed > 0.65) {
       drawMiniOrcBrute(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
     } else if (enemySeed > 0.48) {
-      drawMiniSkeletonWarrior(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+      drawMiniSkeletonWarrior(
+        ctx,
+        enemyX,
+        y,
+        t + s + 1,
+        !flip,
+        combatSway,
+        bob2
+      );
     } else if (enemySeed > 0.32) {
       drawMiniNecromancer(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
     } else if (enemySeed > 0.16) {
@@ -348,7 +356,7 @@ export const drawBattleScene = (
       1,
       seededRandom(i) * Math.PI,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -359,7 +367,7 @@ export const drawFlyingBattleScene = (
   x: number,
   yPct: number,
   flip: boolean,
-  count: number,
+  count: number
 ) => {
   const { ctx, getY, time, seededRandom } = dc;
   const y = getY(yPct);
@@ -389,7 +397,7 @@ export const drawFallenSoldier = (
   dc: WorldMapDrawContext,
   fx: number,
   fyPct: number,
-  isEnemy: boolean,
+  isEnemy: boolean
 ) => {
   const { ctx, getY, seededRandom } = dc;
   const fy = getY(fyPct);
@@ -410,7 +418,7 @@ export const drawFallenSoldier = (
 export const drawKingdomCastle = (
   dc: WorldMapDrawContext,
   x: number,
-  yPct: number,
+  yPct: number
 ) => {
   const { ctx, getLevelY, time } = dc;
   const y = getLevelY(yPct);
@@ -787,7 +795,7 @@ export const drawKingdomCastle = (
     x - kW - 6,
     y - 138,
     x + kW + 6,
-    y - 108,
+    y - 108
   );
   krG.addColorStop(0, roof2);
   krG.addColorStop(0.3, roof1);
@@ -856,7 +864,7 @@ export const drawKingdomCastle = (
     x + 22,
     y - 152 + w2 + 1,
     x + 32,
-    y - 147 + w3 + 1,
+    y - 147 + w3 + 1
   );
   ctx.bezierCurveTo(
     x + 22,
@@ -864,7 +872,7 @@ export const drawKingdomCastle = (
     x + 12,
     y - 137 + w1 + 1,
     x + 1.2,
-    y - 132 + 1,
+    y - 132 + 1
   );
   ctx.closePath();
   ctx.fill();
@@ -882,7 +890,7 @@ export const drawKingdomCastle = (
     x + 22,
     y - 152 + w2,
     x + 32,
-    y - 147 + w3,
+    y - 147 + w3
   );
   ctx.bezierCurveTo(
     x + 22,
@@ -890,7 +898,7 @@ export const drawKingdomCastle = (
     x + 12,
     y - 137 + w1,
     x + 1.2,
-    y - 132,
+    y - 132
   );
   ctx.closePath();
   ctx.fill();
@@ -904,7 +912,7 @@ export const drawKingdomCastle = (
     x + 22,
     y - 147 + w2,
     x + 30,
-    y - 147 + w3,
+    y - 147 + w3
   );
   ctx.stroke();
 
@@ -1041,7 +1049,7 @@ export const drawKingdomCastle = (
       0,
       tx2,
       ty2 - fh * 0.5,
-      10 * ts,
+      10 * ts
     );
     tGl.addColorStop(0, `rgba(255,180,50,${0.3 * fl})`);
     tGl.addColorStop(1, "rgba(255,120,20,0)");
@@ -1071,8 +1079,7 @@ export const drawKingdomCastle = (
     for (let s = 0; s < 5; s++) {
       const sAge = (time * 10 + s * 8 + ch * 20) % 35;
       const sy = y - 138 - sAge * 1.1;
-      const sx =
-        chx + Math.sin(time * 1.1 + s * 1.4 + ch) * (3 + sAge * 0.12);
+      const sx = chx + Math.sin(time * 1.1 + s * 1.4 + ch) * (3 + sAge * 0.12);
       const sAlpha = Math.max(0, 0.18 - sAge / 45);
       if (sAlpha > 0) {
         ctx.fillStyle = `rgba(100,90,80,${sAlpha})`;
@@ -1101,7 +1108,7 @@ export const drawKingdomCastle = (
 export const drawEnemyLair = (
   dc: WorldMapDrawContext,
   x: number,
-  yPct: number,
+  yPct: number
 ) => {
   const { ctx, getLevelY, time } = dc;
   const y = getLevelY(yPct);
@@ -1416,7 +1423,7 @@ export const drawEnemyLair = (
       x + tx * 0.6,
       targetY - 20 + Math.sin(time * 3 + tx) * 5,
       x + tx,
-      targetY,
+      targetY
     );
     ctx.stroke();
   }
@@ -1526,7 +1533,7 @@ export const drawEnemyLair = (
     x + 20,
     y - tH * 0.85 - 10 + w2,
     x + 28,
-    y - tH * 0.85 - 6 + w3,
+    y - tH * 0.85 - 6 + w3
   );
   ctx.bezierCurveTo(
     x + 20,
@@ -1534,7 +1541,7 @@ export const drawEnemyLair = (
     x + 10,
     y - tH * 0.85 + 2 + w1,
     x + 1,
-    y - tH * 0.85 + 6,
+    y - tH * 0.85 + 6
   );
   ctx.closePath();
   ctx.fill();
@@ -1573,7 +1580,7 @@ export const drawCastleLabel = (
   cx: number,
   cyPct: number,
   label: string,
-  isEnemy: boolean,
+  isEnemy: boolean
 ) => {
   const { ctx, getLevelY } = dc;
   const cy = getLevelY(cyPct);
@@ -1589,9 +1596,7 @@ export const drawCastleLabel = (
   ctx.fillStyle = isEnemy ? "#cc4030" : "#d4a848";
   ctx.fillText(label, cx, labelY);
   // Underline accent
-  ctx.strokeStyle = isEnemy
-    ? "rgba(200,50,30,0.35)"
-    : "rgba(210,170,70,0.35)";
+  ctx.strokeStyle = isEnemy ? "rgba(200,50,30,0.35)" : "rgba(210,170,70,0.35)";
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.moveTo(cx - tw * 0.55, labelY + 3);

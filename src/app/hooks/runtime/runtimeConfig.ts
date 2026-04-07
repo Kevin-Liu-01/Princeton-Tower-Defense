@@ -8,20 +8,20 @@ export const DECOR_OVERSCAN = 200;
 
 export const QUALITY_DPR_CAP: Record<RenderQuality, number> = {
   high: 2,
-  medium: 1.75,
   low: 1.5,
+  medium: 1.75,
 };
 
 export const QUALITY_DECORATION_MARGIN_PX: Record<RenderQuality, number> = {
   high: 260,
-  medium: 260,
   low: 260,
+  medium: 260,
 };
 
 export const QUALITY_SHADOW_MULTIPLIER: Record<RenderQuality, number> = {
   high: 1,
-  medium: 0.6,
   low: 0.35,
+  medium: 0.6,
 };
 
 export const CAMERA_ZOOM_MIN = 0.5;
@@ -50,26 +50,26 @@ export const QUALITY_TRANSITION_MAX_COOLDOWN_MS = 15_000;
 
 export const QUALITY_DOWNGRADE_THRESHOLD: Record<RenderQuality, number> = {
   high: 18,
-  medium: 24,
   low: Infinity,
+  medium: 24,
 };
 
 export const QUALITY_UPGRADE_THRESHOLD: Record<RenderQuality, number> = {
   high: -Infinity,
-  medium: 12,
   low: 14,
+  medium: 12,
 };
 
 export const QUALITY_UPGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
   high: "high",
-  medium: "high",
   low: "medium",
+  medium: "high",
 };
 
 export const QUALITY_DOWNGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
   high: "medium",
-  medium: "low",
   low: "low",
+  medium: "low",
 };
 
 const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
@@ -85,7 +85,9 @@ export function isDefined<T>(value: T | null | undefined): value is T {
 }
 
 export function readDevModeUnlocked(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
   try {
     return window.localStorage.getItem(DEV_MODE_STORAGE_KEY) === "1";
   } catch {

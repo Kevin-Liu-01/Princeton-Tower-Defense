@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   ScrollText,
   Trash2,
@@ -16,15 +15,20 @@ import {
   Zap,
   Gauge,
 } from "lucide-react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+
 import type {
   GameEvent,
   GameEventType,
   EventStats,
 } from "../../hooks/useGameEventLog";
-import {
-  EVENT_COLORS,
-  EVENT_LABELS,
-} from "../../hooks/useGameEventLog";
+import { EVENT_COLORS, EVENT_LABELS } from "../../hooks/useGameEventLog";
 import { GOLD, panelGradient } from "./system/theme";
 
 // =============================================================================
@@ -35,25 +39,28 @@ const LOG_HEIGHT = 200;
 const LOG_WIDTH = 410;
 
 const EVENT_ICONS: Partial<Record<GameEventType, React.ReactNode>> = {
-  wave_started: <Zap size={11} />,
-  wave_completed: <Trophy size={11} />,
+  defeat: <Skull size={11} />,
   enemy_killed: <Skull size={11} />,
   enemy_leaked: <Heart size={11} />,
+  hero_action: <Swords size={11} />,
+  income_earned: <Coins size={11} />,
+  life_lost: <Heart size={11} />,
+  speed_change: <Gauge size={11} />,
+  spell_cast: <Sparkles size={11} />,
   tower_built: <Building2 size={11} />,
   tower_sold: <Coins size={11} />,
   tower_upgraded: <Sparkles size={11} />,
-  life_lost: <Heart size={11} />,
-  income_earned: <Coins size={11} />,
-  spell_cast: <Sparkles size={11} />,
-  hero_action: <Swords size={11} />,
   victory: <Trophy size={11} />,
-  defeat: <Skull size={11} />,
-  speed_change: <Gauge size={11} />,
+  wave_completed: <Trophy size={11} />,
+  wave_started: <Zap size={11} />,
 };
 
 const FILTER_GROUPS: { label: string; types: GameEventType[] }[] = [
   { label: "Combat", types: ["enemy_killed", "enemy_leaked", "life_lost"] },
-  { label: "Economy", types: ["tower_built", "tower_sold", "tower_upgraded", "income_earned"] },
+  {
+    label: "Economy",
+    types: ["tower_built", "tower_sold", "tower_upgraded", "income_earned"],
+  },
   { label: "Waves", types: ["wave_started", "wave_completed"] },
   { label: "Abilities", types: ["spell_cast", "hero_action"] },
   { label: "Game", types: ["victory", "defeat", "game_start", "speed_change"] },
@@ -86,9 +93,9 @@ const EventRow: React.FC<EventRowProps> = React.memo(({ event }) => {
       <span
         className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider shrink-0 px-1.5 py-0.5 rounded"
         style={{
-          color,
           background: `${color}15`,
           border: `1px solid ${color}25`,
+          color,
         }}
       >
         {icon}
@@ -112,8 +119,12 @@ interface StatPillProps {
 const StatPill: React.FC<StatPillProps> = ({ icon, value, label, color }) => (
   <div className="flex items-center gap-1">
     <span style={{ color }}>{icon}</span>
-    <span className="text-[11px] font-bold" style={{ color }}>{value}</span>
-    <span className="text-[9px] uppercase" style={{ color: `${color}88` }}>{label}</span>
+    <span className="text-[11px] font-bold" style={{ color }}>
+      {value}
+    </span>
+    <span className="text-[9px] uppercase" style={{ color: `${color}88` }}>
+      {label}
+    </span>
   </div>
 );
 
@@ -122,12 +133,40 @@ interface StatsBarProps {
 }
 
 const StatsBar: React.FC<StatsBarProps> = React.memo(({ stats }) => (
-  <div className="flex items-center gap-3 px-3 py-1.5 border-b shrink-0" style={{ borderColor: "rgba(180,140,60,0.15)" }}>
-    <StatPill icon={<Skull size={11} />} value={stats.enemiesKilled} label="Kills" color="#f87171" />
-    <StatPill icon={<Coins size={11} />} value={stats.totalIncomeEarned} label="Earned" color="#34d399" />
-    <StatPill icon={<Building2 size={11} />} value={stats.towersBuilt} label="Built" color="#fbbf24" />
-    <StatPill icon={<Sparkles size={11} />} value={stats.spellsCast} label="Spells" color="#c084fc" />
-    <StatPill icon={<Heart size={11} />} value={stats.livesLost} label="Lost" color="#ef4444" />
+  <div
+    className="flex items-center gap-3 px-3 py-1.5 border-b shrink-0"
+    style={{ borderColor: "rgba(180,140,60,0.15)" }}
+  >
+    <StatPill
+      icon={<Skull size={11} />}
+      value={stats.enemiesKilled}
+      label="Kills"
+      color="#f87171"
+    />
+    <StatPill
+      icon={<Coins size={11} />}
+      value={stats.totalIncomeEarned}
+      label="Earned"
+      color="#34d399"
+    />
+    <StatPill
+      icon={<Building2 size={11} />}
+      value={stats.towersBuilt}
+      label="Built"
+      color="#fbbf24"
+    />
+    <StatPill
+      icon={<Sparkles size={11} />}
+      value={stats.spellsCast}
+      label="Spells"
+      color="#c084fc"
+    />
+    <StatPill
+      icon={<Heart size={11} />}
+      value={stats.livesLost}
+      label="Lost"
+      color="#ef4444"
+    />
   </div>
 ));
 StatsBar.displayName = "StatsBar";
@@ -143,15 +182,25 @@ interface DevMenuProps {
   onClose: () => void;
 }
 
-export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClose }) => {
-  const [activeFilters, setActiveFilters] = useState<Set<GameEventType>>(new Set());
+export const DevMenu: React.FC<DevMenuProps> = ({
+  events,
+  stats,
+  onClear,
+  onClose,
+}) => {
+  const [activeFilters, setActiveFilters] = useState<Set<GameEventType>>(
+    new Set()
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const filteredEvents = useMemo(() => {
-    const source = activeFilters.size === 0 ? events : events.filter((e) => activeFilters.has(e.type));
-    return [...source].reverse();
+    const source =
+      activeFilters.size === 0
+        ? events
+        : events.filter((e) => activeFilters.has(e.type));
+    return [...source].toReversed();
   }, [events, activeFilters]);
 
   const toggleFilterGroup = useCallback((types: GameEventType[]) => {
@@ -177,12 +226,12 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
     <div
       className="flex flex-col pointer-events-auto mr-2 mb-1 rounded-lg overflow-hidden ml-auto"
       style={{
-        height: LOG_HEIGHT,
-        width: LOG_WIDTH,
-        maxWidth: "calc(100vw - 16px)",
         background: panelGradient,
         border: `1.5px solid ${GOLD.border25}`,
         boxShadow: "0 -4px 24px rgba(0,0,0,0.5)",
+        height: LOG_HEIGHT,
+        maxWidth: "calc(100vw - 16px)",
+        width: LOG_WIDTH,
       }}
     >
       {/* Header */}
@@ -196,7 +245,8 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
             Event Log
           </span>
           <span className="text-[10px] text-amber-500/60 font-mono tabular-nums">
-            ({filteredEvents.length}{activeFilters.size > 0 ? `/${events.length}` : ""})
+            ({filteredEvents.length}
+            {activeFilters.size > 0 ? `/${events.length}` : ""})
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -205,7 +255,9 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${showFilters ? "text-blue-200" : "text-amber-400/60 hover:text-amber-300"}`}
             style={{
               background: showFilters ? "rgba(60,100,200,0.2)" : "transparent",
-              border: showFilters ? "1px solid rgba(80,120,200,0.3)" : "1px solid transparent",
+              border: showFilters
+                ? "1px solid rgba(80,120,200,0.3)"
+                : "1px solid transparent",
             }}
           >
             <Filter size={10} />
@@ -261,7 +313,11 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
                   border: allActive
                     ? "1px solid rgba(80,130,220,0.4)"
                     : "1px solid rgba(255,255,255,0.08)",
-                  color: allActive ? "#93c5fd" : someActive ? "#93c5fd80" : "rgba(200,180,140,0.5)",
+                  color: allActive
+                    ? "#93c5fd"
+                    : someActive
+                      ? "#93c5fd80"
+                      : "rgba(200,180,140,0.5)",
                 }}
               >
                 {group.label}
@@ -283,10 +339,7 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
       <StatsBar stats={stats} />
 
       {/* Event list — scrolls, newest at bottom */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto min-h-0"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {filteredEvents.length === 0 ? (
           <div className="flex items-center justify-center h-full text-amber-500/40 text-xs">
             {events.length === 0

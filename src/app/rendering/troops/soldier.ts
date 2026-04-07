@@ -16,7 +16,7 @@ export function drawSoldierTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position,
+  targetPos?: Position
 ) {
   // ============================================================================
   // DINKY LEGIONNAIRE - Level 1 Princeton Recruit with Detailed Roman Style
@@ -76,7 +76,7 @@ export function drawSoldierTroop(
   const capeLX = x - size * 0.22;
   const capeRX = x + size * 0.18;
   const capeTopY = y - size * 0.1;
-  const capeBotLX = x - size * 0.30 + cw1 + cwAtk - attackLunge * 0.3;
+  const capeBotLX = x - size * 0.3 + cw1 + cwAtk - attackLunge * 0.3;
   const capeBotLY = y + size * 0.5;
   const capeBotRX = x + size * 0.14 + cw2 - attackLunge * 0.15;
   const capeBotRY = y + size * 0.47;
@@ -91,14 +91,14 @@ export function drawSoldierTroop(
     capeMidCtrlLX + size * 0.01,
     capeMidCtrlLY + size * 0.02,
     capeBotLX + size * 0.01,
-    capeBotLY + size * 0.02,
+    capeBotLY + size * 0.02
   );
   ctx.lineTo(capeBotRX + size * 0.01, capeBotRY + size * 0.02);
   ctx.quadraticCurveTo(
     capeRX + size * 0.01,
     y + size * 0.1,
     capeRX + size * 0.01,
-    capeTopY + size * 0.02,
+    capeTopY + size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -108,7 +108,7 @@ export function drawSoldierTroop(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   outerGrad.addColorStop(0, "#5a1a06");
   outerGrad.addColorStop(0.3, "#7a2808");
@@ -128,7 +128,7 @@ export function drawSoldierTroop(
     capeLX,
     capeTopY,
     capeBotLX,
-    capeBotLY,
+    capeBotLY
   );
   innerGrad.addColorStop(0, "#992a08");
   innerGrad.addColorStop(0.25, "#c04010");
@@ -142,14 +142,14 @@ export function drawSoldierTroop(
     capeMidCtrlLX + size * 0.04,
     capeMidCtrlLY + size * 0.01,
     capeBotLX + size * 0.03,
-    capeBotLY - size * 0.04,
+    capeBotLY - size * 0.04
   );
   ctx.lineTo(capeBotRX - size * 0.02, capeBotRY - size * 0.03);
   ctx.quadraticCurveTo(
     capeRX - size * 0.02,
     y + size * 0.09,
     capeRX - size * 0.01,
-    capeTopY + size * 0.01,
+    capeTopY + size * 0.01
   );
   ctx.closePath();
   ctx.fill();
@@ -167,14 +167,14 @@ export function drawSoldierTroop(
       fX + cw1 * (1 - fT),
       y + size * 0.2,
       fBX,
-      capeBotLY - size * 0.05,
+      capeBotLY - size * 0.05
     );
     ctx.stroke();
   }
 
   // Left edge highlight
   ctx.strokeStyle = `rgba(255, 130, 60, ${0.25 + shimmer * 0.15})`;
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(capeLX, capeTopY);
   ctx.quadraticCurveTo(capeMidCtrlLX, capeMidCtrlLY, capeBotLX, capeBotLY);
@@ -208,11 +208,11 @@ export function drawSoldierTroop(
       isLeft
         ? x - stanceSpread + weightShift * 0.5
         : x + stanceSpread - weightShift * 0.5,
-      y + size * 0.32,
+      y + size * 0.32
     );
     ctx.rotate(
       side * (-0.08 + footTap * 0.03) +
-        (isLeft ? -(isAttacking ? 0.18 : 0) : (isAttacking ? 0.18 : 0)),
+        (isLeft ? -(isAttacking ? 0.18 : 0) : isAttacking ? 0.18 : 0)
     );
 
     const lw = size * 0.13;
@@ -220,14 +220,19 @@ export function drawSoldierTroop(
 
     // --- Pteruges (leather skirt strips) ---
     ctx.fillStyle = "#8b4513";
-    ctx.fillRect(-hlw - size * 0.02, -size * 0.04, lw + size * 0.04, size * 0.05);
+    ctx.fillRect(
+      -hlw - size * 0.02,
+      -size * 0.04,
+      lw + size * 0.04,
+      size * 0.05
+    );
     ctx.fillStyle = "#704010";
     for (let strip = 0; strip < 3; strip++) {
       ctx.fillRect(
         -hlw + strip * size * 0.04,
         -size * 0.04,
         size * 0.035,
-        size * 0.07,
+        size * 0.07
       );
     }
 
@@ -269,7 +274,12 @@ export function drawSoldierTroop(
     // --- Knee cop (poleyn) ---
     const kneeY = thighH + size * 0.005;
     const kneeCopGrad = ctx.createRadialGradient(
-      0, kneeY, 0, 0, kneeY, size * 0.055,
+      0,
+      kneeY,
+      0,
+      0,
+      kneeY,
+      size * 0.055
     );
     kneeCopGrad.addColorStop(0, "#b0b0c4");
     kneeCopGrad.addColorStop(0.5, "#8a8a9e");
@@ -294,7 +304,12 @@ export function drawSoldierTroop(
     // --- Greave (shin guard) ---
     const greaveTop = kneeY + size * 0.035;
     const greaveH = size * 0.11;
-    const greaveGrad = ctx.createLinearGradient(-hlw, greaveTop, hlw, greaveTop);
+    const greaveGrad = ctx.createLinearGradient(
+      -hlw,
+      greaveTop,
+      hlw,
+      greaveTop
+    );
     greaveGrad.addColorStop(0, "#5a5a6a");
     greaveGrad.addColorStop(0.15, "#7a7a90");
     greaveGrad.addColorStop(0.45, "#9a9ab0");
@@ -349,9 +364,11 @@ export function drawSoldierTroop(
     ctx.fillStyle = "#4a2a10";
     ctx.beginPath();
     ctx.roundRect(
-      -hlw - size * 0.01, bootTop + size * 0.015,
-      lw + size * 0.02, bootH,
-      [0, 0, size * 0.02, size * 0.02],
+      -hlw - size * 0.01,
+      bootTop + size * 0.015,
+      lw + size * 0.02,
+      bootH,
+      [0, 0, size * 0.02, size * 0.02]
     );
     ctx.fill();
 
@@ -374,7 +391,7 @@ export function drawSoldierTroop(
         bootTop + bootH + size * 0.01,
         size * 0.006,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -404,7 +421,7 @@ export function drawSoldierTroop(
     x - size * 0.25,
     y - size * 0.12,
     x + size * 0.25,
-    y + size * 0.32,
+    y + size * 0.32
   );
   chestGrad.addColorStop(0, "#6a2800");
   chestGrad.addColorStop(0.1, "#8a3800");
@@ -423,7 +440,7 @@ export function drawSoldierTroop(
     x,
     y - size * 0.22 + breathe * 0.3,
     x + size * 0.25,
-    y - size * 0.1 + breathe * 0.5,
+    y - size * 0.1 + breathe * 0.5
   );
   ctx.lineTo(x + size * 0.22, y + size * 0.32 + breathe);
   ctx.closePath();
@@ -439,7 +456,7 @@ export function drawSoldierTroop(
       x + side * size * 0.06,
       y + size * 0.09 + breathe * 0.5,
       x,
-      y + size * 0.04 + breathe * 0.45,
+      y + size * 0.04 + breathe * 0.45
     );
     ctx.stroke();
   }
@@ -461,7 +478,7 @@ export function drawSoldierTroop(
       x - bandW * 0.5,
       bandY,
       x + bandW * 0.5,
-      bandY,
+      bandY
     );
     bandGrad.addColorStop(0, "#7a3000");
     bandGrad.addColorStop(0.2, "#c05000");
@@ -475,7 +492,7 @@ export function drawSoldierTroop(
     ctx.fill();
     // Band bottom groove
     ctx.strokeStyle = "rgba(0,0,0,0.28)";
-    ctx.lineWidth = 1.0 * zoom;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - bandW * 0.48, bandY + bandH);
     ctx.lineTo(x + bandW * 0.48, bandY + bandH);
@@ -499,7 +516,7 @@ export function drawSoldierTroop(
     size * 0.06,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Secondary smaller highlight
@@ -512,7 +529,7 @@ export function drawSoldierTroop(
     size * 0.025,
     0.15,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -532,7 +549,7 @@ export function drawSoldierTroop(
       size * 0.068,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -541,7 +558,7 @@ export function drawSoldierTroop(
       pX - side * size * 0.1,
       pY + size * 0.02,
       pX + side * size * 0.1,
-      pY + size * 0.06,
+      pY + size * 0.06
     );
     lowerGrad.addColorStop(0, steelDark);
     lowerGrad.addColorStop(0.5, steelMid);
@@ -555,7 +572,7 @@ export function drawSoldierTroop(
       size * 0.055,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -564,7 +581,7 @@ export function drawSoldierTroop(
       pX - side * size * 0.08,
       pY - size * 0.04,
       pX + side * size * 0.08,
-      pY + size * 0.04,
+      pY + size * 0.04
     );
     upperGrad.addColorStop(0, steelDark);
     upperGrad.addColorStop(0.25, steelMid);
@@ -580,7 +597,7 @@ export function drawSoldierTroop(
       size * 0.05,
       pAngle,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -595,7 +612,7 @@ export function drawSoldierTroop(
       size * 0.05,
       pAngle,
       Math.PI * 1.1,
-      Math.PI * 1.8,
+      Math.PI * 1.8
     );
     ctx.stroke();
 
@@ -614,7 +631,7 @@ export function drawSoldierTroop(
         ry - size * 0.003,
         size * 0.005,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -626,7 +643,7 @@ export function drawSoldierTroop(
     x - size * 0.22,
     y + size * 0.24 + breathe,
     size * 0.44,
-    size * 0.07,
+    size * 0.07
   );
   // Belt buckle
   ctx.fillStyle = "#c9a227";
@@ -634,14 +651,14 @@ export function drawSoldierTroop(
     x - size * 0.05,
     y + size * 0.25 + breathe,
     size * 0.1,
-    size * 0.05,
+    size * 0.05
   );
   ctx.fillStyle = `rgba(255, 220, 130, ${0.4 + shimmer * 0.3})`;
   ctx.fillRect(
     x - size * 0.04,
     y + size * 0.255 + breathe,
     size * 0.03,
-    size * 0.035,
+    size * 0.035
   );
   // Belt studs
   ctx.fillStyle = "#8a7020";
@@ -652,14 +669,14 @@ export function drawSoldierTroop(
       y + size * 0.275 + breathe,
       size * 0.012,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.arc(
       x + size * 0.08 + stud * size * 0.04,
       y + size * 0.275 + breathe,
       size * 0.012,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -669,14 +686,14 @@ export function drawSoldierTroop(
     x + size * 0.12,
     y + size * 0.26 + breathe,
     size * 0.06,
-    size * 0.08,
+    size * 0.08
   );
   ctx.fillStyle = "#4a3020";
   ctx.fillRect(
     x + size * 0.12,
     y + size * 0.26 + breathe,
     size * 0.06,
-    size * 0.02,
+    size * 0.02
   );
 
   // === ARMORED SKIRT (pteruges plates) ===
@@ -689,13 +706,13 @@ export function drawSoldierTroop(
     stance,
     breathe,
     {
-      armorPeak: "#ff6a05",
+      armorDark: "#8a3800",
       armorHigh: "#e86000",
       armorMid: "#c05000",
-      armorDark: "#8a3800",
+      armorPeak: "#ff6a05",
       trimColor: "#c9a227",
     },
-    { plateCount: 5, widthFactor: 0.44, depthFactor: 0.14, topOffset: 0.28 },
+    { depthFactor: 0.14, plateCount: 5, topOffset: 0.28, widthFactor: 0.44 }
   );
 
   // === SHIELD ARM + SCUTUM SHIELD ===
@@ -707,21 +724,21 @@ export function drawSoldierTroop(
     : -0.25 + ambientSway * 0.1;
 
   const shieldShoulderX = x - size * 0.24;
-  const shieldShoulderY = y + size * 0.0 + breathe * 0.3;
+  const shieldShoulderY = y + 0 + breathe * 0.3;
   const shieldArmLen = size * 0.22;
   const armToShieldAngle = Math.atan2(
     shieldY - shieldShoulderY,
-    shieldX - shieldShoulderX,
+    shieldX - shieldShoulderX
   );
   const soldierShieldArmColors: ArmColors = {
-    upper: "#c08a5a",
-    upperLight: "#dbb896",
-    upperDark: "#8a6030",
-    vambrace: "#5a3a1a",
-    vambraceLight: "#7a5a3a",
     elbow: "#b09060",
     hand: "#d0a87a",
     trim: "#7a5a3a",
+    upper: "#c08a5a",
+    upperDark: "#8a6030",
+    upperLight: "#dbb896",
+    vambrace: "#5a3a1a",
+    vambraceLight: "#7a5a3a",
   };
 
   ctx.save();
@@ -750,7 +767,7 @@ export function drawSoldierTroop(
     -bodyW * 0.5,
     -bodyH * 0.5,
     bodyW * 0.5,
-    bodyH * 0.5,
+    bodyH * 0.5
   );
   shieldBodyGrad.addColorStop(0, "#8b1a1a");
   shieldBodyGrad.addColorStop(0.3, "#b32222");
@@ -849,7 +866,7 @@ export function drawSoldierTroop(
 
   const soldierArmSwing = isAttacking
     ? -0.4 + (1 - attackPhase) * 0.8
-    : 0.0 + stance * 0.03;
+    : 0 + stance * 0.03;
 
   const swordBaseAngle = isAttacking
     ? 1.02 - attackPhase * 2.04
@@ -865,21 +882,21 @@ export function drawSoldierTroop(
     targetPos,
     Math.PI / 2,
     isAttacking ? 1.45 : 0.7,
-    WEAPON_LIMITS.rightMelee,
+    WEAPON_LIMITS.rightMelee
   );
   const swordX = soldierSword.weaponX;
   const swordY = soldierSword.weaponY;
   const swordAngle = soldierSword.weaponAngle;
 
   const soldierSwordArmColors: ArmColors = {
-    upper: "#c08a5a",
-    upperLight: "#dbb896",
-    upperDark: "#8a6030",
-    vambrace: "#5a3a1a",
-    vambraceLight: "#7a5a3a",
     elbow: "#b09060",
     hand: "#d0a87a",
     trim: "#7a5a3a",
+    upper: "#c08a5a",
+    upperDark: "#8a6030",
+    upperLight: "#dbb896",
+    vambrace: "#5a3a1a",
+    vambraceLight: "#7a5a3a",
   };
 
   ctx.save();
@@ -902,7 +919,7 @@ export function drawSoldierTroop(
     -size * 0.022,
     size * 0.035,
     size * 0.022,
-    size * 0.18,
+    size * 0.18
   );
   gripGrad.addColorStop(0, "#2d1f14");
   gripGrad.addColorStop(0.5, "#4d3728");
@@ -926,7 +943,7 @@ export function drawSoldierTroop(
     size * 0.003,
     0,
     size * 0.19,
-    size * 0.032,
+    size * 0.032
   );
   pommelGrad.addColorStop(0, "#ffe4a6");
   pommelGrad.addColorStop(0.5, "#d5a240");
@@ -940,7 +957,7 @@ export function drawSoldierTroop(
     -size * 0.055,
     size * 0.03,
     size * 0.055,
-    size * 0.06,
+    size * 0.06
   );
   guardGrad.addColorStop(0, "#8d5f1a");
   guardGrad.addColorStop(0.5, "#d6a847");
@@ -952,7 +969,7 @@ export function drawSoldierTroop(
     size * 0.028,
     size * 0.11,
     size * 0.03,
-    size * 0.01,
+    size * 0.01
   );
   ctx.fill();
   ctx.fillStyle = "#e3bf65";
@@ -968,7 +985,7 @@ export function drawSoldierTroop(
     -bladeWidth,
     -bladeLength,
     bladeWidth,
-    -bladeLength,
+    -bladeLength
   );
   bladeGrad.addColorStop(0, "#8f97a5");
   bladeGrad.addColorStop(0.22, "#dbe4ef");
@@ -1026,7 +1043,7 @@ export function drawSoldierTroop(
     size * 0.05,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1041,7 +1058,7 @@ export function drawSoldierTroop(
         -size * (0.1 + trail * 0.03),
         -size * 0.2,
         -size * (0.02 + trail * 0.05),
-        size * 0.02,
+        size * 0.02
       );
       ctx.stroke();
     }
@@ -1063,7 +1080,7 @@ export function drawSoldierTroop(
     x - size * 0.18,
     y - size * 0.32,
     x + size * 0.18,
-    y - size * 0.15,
+    y - size * 0.15
   );
   neckGuardGrad.addColorStop(0, "#4a4a5a");
   neckGuardGrad.addColorStop(0.4, "#6a6a7e");
@@ -1075,14 +1092,14 @@ export function drawSoldierTroop(
     x - size * 0.19,
     y - size * 0.25,
     x - size * 0.13,
-    y - size * 0.14,
+    y - size * 0.14
   );
   ctx.lineTo(x + size * 0.13, y - size * 0.14);
   ctx.quadraticCurveTo(
     x + size * 0.19,
     y - size * 0.25,
     x + size * 0.14,
-    y - size * 0.32,
+    y - size * 0.32
   );
   ctx.closePath();
   ctx.fill();
@@ -1101,7 +1118,7 @@ export function drawSoldierTroop(
     x - size * 0.05,
     y - size * 0.18,
     x + size * 0.05,
-    y - size * 0.18,
+    y - size * 0.18
   );
   neckGrad.addColorStop(0, "#c09070");
   neckGrad.addColorStop(0.3, "#dbb896");
@@ -1120,7 +1137,7 @@ export function drawSoldierTroop(
     size * 0.02,
     x,
     y - size * 0.31,
-    size * 0.16,
+    size * 0.16
   );
   faceGrad.addColorStop(0, "#ecc8a0");
   faceGrad.addColorStop(0.4, "#dbb896");
@@ -1135,7 +1152,7 @@ export function drawSoldierTroop(
     x + size * 0.16,
     y - size * 0.44,
     x + size * 0.13,
-    y - size * 0.36,
+    y - size * 0.36
   );
   ctx.lineTo(x + size * 0.12, y - size * 0.24);
   ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.18, x, y - size * 0.17);
@@ -1143,7 +1160,7 @@ export function drawSoldierTroop(
     x - size * 0.08,
     y - size * 0.18,
     x - size * 0.12,
-    y - size * 0.24,
+    y - size * 0.24
   );
   ctx.closePath();
   ctx.fill();
@@ -1158,7 +1175,7 @@ export function drawSoldierTroop(
     size * 0.025,
     -0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.beginPath();
@@ -1169,7 +1186,7 @@ export function drawSoldierTroop(
     size * 0.025,
     0.2,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1181,7 +1198,7 @@ export function drawSoldierTroop(
 
   // === ROMAN HORSEHAIR CRISTA (rendered behind helmet) ===
   const crestWind =
-    Math.sin(time * 4.2) * 1.5 + (isAttacking ? attackSwing * 2.0 : 0);
+    Math.sin(time * 4.2) * 1.5 + (isAttacking ? attackSwing * 2 : 0);
   const crestWhip = Math.sin(time * 5.3 + 0.8) * 0.8;
   const crestGusts = Math.sin(time * 3.1) * 0.4;
 
@@ -1197,13 +1214,13 @@ export function drawSoldierTroop(
     x + crestSpreadFB * 0.6 + crestWind * 0.6,
     crestMountY + size * 0.04,
     x + crestSpreadFB * 0.5 + crestWind * 1.2 + crestGusts,
-    crestMountY + size * 0.2,
+    crestMountY + size * 0.2
   );
   ctx.quadraticCurveTo(
     x + crestSpreadFB * 0.2 + crestWind * 0.4,
     crestMountY + size * 0.12,
     x - crestSpreadFB * 0.1,
-    crestMountY + size * 0.02,
+    crestMountY + size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -1216,13 +1233,13 @@ export function drawSoldierTroop(
     x - crestSpreadFB * 0.2 + crestWind * 0.3,
     crestMountY - crestPeakH * 0.85 + size * 0.02,
     x + crestWind * 0.5 + crestWhip * 0.3,
-    crestMountY - crestPeakH + size * 0.02,
+    crestMountY - crestPeakH + size * 0.02
   );
   ctx.quadraticCurveTo(
     x + crestSpreadFB * 0.3 + crestWind * 0.8,
     crestMountY - crestPeakH * 0.7 + size * 0.02,
-    x + crestSpreadFB * 0.55 + crestWind * 1.0,
-    crestMountY + size * 0.02,
+    x + crestSpreadFB * 0.55 + crestWind * 1,
+    crestMountY + size * 0.02
   );
   ctx.closePath();
   ctx.fill();
@@ -1232,7 +1249,7 @@ export function drawSoldierTroop(
     x,
     crestMountY,
     x,
-    crestMountY - crestPeakH,
+    crestMountY - crestPeakH
   );
   crestBaseGrad.addColorStop(0, "#6a1800");
   crestBaseGrad.addColorStop(0.25, "#8a2200");
@@ -1246,13 +1263,13 @@ export function drawSoldierTroop(
     x - crestSpreadFB * 0.18 + crestWind * 0.3,
     crestMountY - crestPeakH * 0.88,
     x + crestWind * 0.5 + crestWhip * 0.3,
-    crestMountY - crestPeakH,
+    crestMountY - crestPeakH
   );
   ctx.quadraticCurveTo(
     x + crestSpreadFB * 0.28 + crestWind * 0.8,
     crestMountY - crestPeakH * 0.72,
-    x + crestSpreadFB * 0.52 + crestWind * 1.0,
-    crestMountY,
+    x + crestSpreadFB * 0.52 + crestWind * 1,
+    crestMountY
   );
   ctx.closePath();
   ctx.fill();
@@ -1262,7 +1279,7 @@ export function drawSoldierTroop(
     x,
     crestMountY,
     x + crestWind * 0.3,
-    crestMountY - crestPeakH,
+    crestMountY - crestPeakH
   );
   crestMainGrad.addColorStop(0, "#992800");
   crestMainGrad.addColorStop(0.2, "#cc4400");
@@ -1276,13 +1293,13 @@ export function drawSoldierTroop(
     x - crestSpreadFB * 0.12 + crestWind * 0.35,
     crestMountY - crestPeakH * 0.92,
     x + crestWind * 0.55 + crestWhip * 0.25,
-    crestMountY - crestPeakH * 0.96,
+    crestMountY - crestPeakH * 0.96
   );
   ctx.quadraticCurveTo(
     x + crestSpreadFB * 0.22 + crestWind * 0.75,
     crestMountY - crestPeakH * 0.68,
     x + crestSpreadFB * 0.44 + crestWind * 0.9,
-    crestMountY,
+    crestMountY
   );
   ctx.closePath();
   ctx.fill();
@@ -1292,7 +1309,7 @@ export function drawSoldierTroop(
     x,
     crestMountY - crestPeakH * 0.3,
     x,
-    crestMountY - crestPeakH * 0.95,
+    crestMountY - crestPeakH * 0.95
   );
   crestHiGrad.addColorStop(0, "rgba(255,136,68,0.0)");
   crestHiGrad.addColorStop(0.3, "rgba(255,153,68,0.6)");
@@ -1305,13 +1322,13 @@ export function drawSoldierTroop(
     x - crestSpreadFB * 0.05 + crestWind * 0.4,
     crestMountY - crestPeakH * 0.9,
     x + crestWind * 0.5 + crestWhip * 0.2,
-    crestMountY - crestPeakH * 0.88,
+    crestMountY - crestPeakH * 0.88
   );
   ctx.quadraticCurveTo(
     x + crestSpreadFB * 0.15 + crestWind * 0.65,
     crestMountY - crestPeakH * 0.6,
     x + crestSpreadFB * 0.3 + crestWind * 0.7,
-    crestMountY - crestPeakH * 0.1,
+    crestMountY - crestPeakH * 0.1
   );
   ctx.closePath();
   ctx.fill();
@@ -1319,8 +1336,8 @@ export function drawSoldierTroop(
   // Individual horsehair strands (flowing curves for texture)
   for (let strand = 0; strand < 7; strand++) {
     const strandT = strand / 6;
-    const strandPhase = time * (4.0 + strand * 0.4) + strand * 1.1;
-    const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 2.0);
+    const strandPhase = time * (4 + strand * 0.4) + strand * 1.1;
+    const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 2);
     const strandAlpha = 0.2 + Math.sin(time * 2.5 + strand * 0.9) * 0.1;
     const startX = x - crestSpreadFB * 0.3 + strandT * crestSpreadFB * 0.6;
     const startY = crestMountY;
@@ -1340,7 +1357,7 @@ export function drawSoldierTroop(
         crestSpreadFB * (0.1 + strandT * 0.2) +
         crestWind * (0.6 + strandT * 0.4) +
         strandBend * 1.3,
-      crestMountY - crestPeakH * peakScale * 0.2,
+      crestMountY - crestPeakH * peakScale * 0.2
     );
     ctx.stroke();
   }
@@ -1365,7 +1382,7 @@ export function drawSoldierTroop(
       wispX + crestWind * 0.8 + wispPhase * size * 0.04,
       wispY - size * 0.04,
       wispX + crestWind * 1.2 + wispPhase * size * 0.06,
-      wispY + size * 0.02,
+      wispY + size * 0.02
     );
     ctx.stroke();
   }
@@ -1375,7 +1392,7 @@ export function drawSoldierTroop(
     x - crestSpreadFB * 0.35,
     crestMountY,
     x + crestSpreadFB * 0.35,
-    crestMountY,
+    crestMountY
   );
   clampGrad.addColorStop(0, "#8a6a20");
   clampGrad.addColorStop(0.3, "#c9a237");
@@ -1389,7 +1406,7 @@ export function drawSoldierTroop(
     crestMountY - size * 0.012,
     crestSpreadFB * 0.7,
     size * 0.035,
-    size * 0.008,
+    size * 0.008
   );
   ctx.fill();
   ctx.strokeStyle = `rgba(255, 230, 160, ${0.25 + shimmer * 0.2})`;
@@ -1400,7 +1417,7 @@ export function drawSoldierTroop(
     crestMountY - size * 0.012,
     crestSpreadFB * 0.7,
     size * 0.035,
-    size * 0.008,
+    size * 0.008
   );
   ctx.stroke();
 
@@ -1410,7 +1427,7 @@ export function drawSoldierTroop(
     x - size * 0.19,
     y - size * 0.54,
     x + size * 0.19,
-    helmBowlY + size * 0.04,
+    helmBowlY + size * 0.04
   );
   helmGrad.addColorStop(0, steelDeep);
   helmGrad.addColorStop(0.1, steelDark);
@@ -1434,7 +1451,7 @@ export function drawSoldierTroop(
     x + size * 0.2,
     y - size * 0.51,
     x + size * 0.18,
-    helmBowlY,
+    helmBowlY
   );
   ctx.closePath();
   ctx.fill();
@@ -1466,7 +1483,7 @@ export function drawSoldierTroop(
     x,
     helmBowlY - size * 0.02,
     x + size * 0.16,
-    helmBowlY + size * 0.01,
+    helmBowlY + size * 0.01
   );
   ctx.stroke();
 
@@ -1480,7 +1497,7 @@ export function drawSoldierTroop(
     size * 0.028,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   // Secondary specular (pinpoint)
@@ -1493,7 +1510,7 @@ export function drawSoldierTroop(
     size * 0.01,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1502,7 +1519,7 @@ export function drawSoldierTroop(
     x - size * 0.03,
     y - size * 0.55,
     x + size * 0.03,
-    y - size * 0.55,
+    y - size * 0.55
   );
   bracketGrad.addColorStop(0, steelDark);
   bracketGrad.addColorStop(0.4, steelHigh);
@@ -1531,7 +1548,7 @@ export function drawSoldierTroop(
     x - size * 0.19,
     browY,
     x + size * 0.19,
-    browY,
+    browY
   );
   browGrad.addColorStop(0, steelDark);
   browGrad.addColorStop(0.25, steelMid);
@@ -1546,14 +1563,14 @@ export function drawSoldierTroop(
     x,
     browY - size * 0.04,
     x + size * 0.185,
-    browY - size * 0.01,
+    browY - size * 0.01
   );
   ctx.lineTo(x + size * 0.18, browY + size * 0.025);
   ctx.quadraticCurveTo(
     x,
     browY + size * 0.005,
     x - size * 0.18,
-    browY + size * 0.025,
+    browY + size * 0.025
   );
   ctx.closePath();
   ctx.fill();
@@ -1566,7 +1583,7 @@ export function drawSoldierTroop(
     x,
     browY - size * 0.038,
     x + size * 0.18,
-    browY - size * 0.008,
+    browY - size * 0.008
   );
   ctx.stroke();
   // Brow lower shadow edge
@@ -1578,7 +1595,7 @@ export function drawSoldierTroop(
     x,
     browY + size * 0.006,
     x + size * 0.175,
-    browY + size * 0.024,
+    browY + size * 0.024
   );
   ctx.stroke();
 
@@ -1588,7 +1605,7 @@ export function drawSoldierTroop(
       x + side * size * 0.22,
       helmBowlY,
       x + side * size * 0.06,
-      y - size * 0.18,
+      y - size * 0.18
     );
     cgGrad.addColorStop(0, steelDeep);
     cgGrad.addColorStop(0.25, steelDark);
@@ -1603,7 +1620,7 @@ export function drawSoldierTroop(
       x + side * size * 0.18,
       y - size * 0.16,
       x + side * size * 0.06,
-      y - size * 0.19,
+      y - size * 0.19
     );
     ctx.lineTo(x + side * size * 0.08, y - size * 0.36);
     ctx.closePath();
@@ -1625,7 +1642,7 @@ export function drawSoldierTroop(
       helmBowlY + size * 0.005,
       size * 0.009,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Lower jaw rivet
@@ -1635,7 +1652,7 @@ export function drawSoldierTroop(
       y - size * 0.22,
       size * 0.007,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1648,7 +1665,7 @@ export function drawSoldierTroop(
       x + side * size * 0.16,
       y - size * 0.28,
       x + side * size * 0.09,
-      y - size * 0.22,
+      y - size * 0.22
     );
     ctx.stroke();
   }
@@ -1658,7 +1675,7 @@ export function drawSoldierTroop(
     x - size * 0.015,
     browY,
     x + size * 0.015,
-    browY,
+    browY
   );
   nasalGrad.addColorStop(0, steelDark);
   nasalGrad.addColorStop(0.35, steelHigh);
@@ -1692,7 +1709,7 @@ export function drawSoldierTroop(
     size * (isAttacking ? 0.012 : 0.022),
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.ellipse(
     x + size * 0.055,
@@ -1701,7 +1718,7 @@ export function drawSoldierTroop(
     size * (isAttacking ? 0.012 : 0.022),
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#fff";
@@ -1725,7 +1742,7 @@ export function drawSoldierTroop(
     x - size * 0.055,
     y - size * (0.36 + browAnger),
     x - size * 0.025,
-    y - size * 0.35,
+    y - size * 0.35
   );
   ctx.stroke();
   ctx.beginPath();
@@ -1734,7 +1751,7 @@ export function drawSoldierTroop(
     x + size * 0.055,
     y - size * (0.36 + browAnger),
     x + size * 0.025,
-    y - size * 0.35,
+    y - size * 0.35
   );
   ctx.stroke();
 
@@ -1758,7 +1775,7 @@ export function drawSoldierTroop(
       size * 0.035 * (1 + attackPhase * 0.6),
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.fillStyle = "#f0f0f0";
@@ -1780,7 +1797,7 @@ export function drawSoldierTroop(
 
   // Chin strap shadow under jaw
   ctx.strokeStyle = "rgba(60, 50, 40, 0.25)";
-  ctx.lineWidth = 1.0 * zoom;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.04, y - size * 0.18);
   ctx.quadraticCurveTo(x, y - size * 0.16, x + size * 0.04, y - size * 0.18);
@@ -1797,7 +1814,7 @@ export function drawSoldierTroop(
     size * 0.01,
     x,
     y + size * 0.08 + breathe * 0.5,
-    size * 0.08,
+    size * 0.08
   );
   emblemGrad.addColorStop(0, "#ff8822");
   emblemGrad.addColorStop(0.6, "#ff6600");
@@ -1820,7 +1837,7 @@ export function drawSoldierTroop(
     size * 0.014,
     -0.5,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#1a1a1a";

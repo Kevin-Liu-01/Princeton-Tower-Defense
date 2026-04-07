@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useCallback } from "react";
 import {
   ArrowUp,
   ArrowDown,
@@ -13,9 +12,11 @@ import {
   Camera,
   X as XIcon,
 } from "lucide-react";
+import React, { useState, useCallback } from "react";
+
+import { useSettings } from "../../hooks/useSettings";
 import type { Position } from "../../types";
 import { PANEL, GOLD, panelGradient } from "./system/theme";
-import { useSettings } from "../../hooks/useSettings";
 
 // =============================================================================
 // CAMERA CONTROLS — Compact, unified floating HUD
@@ -39,21 +40,28 @@ interface DpadButtonProps {
   className?: string;
 }
 
-function DpadButton({ onClick, icon, keyHint, className = "" }: DpadButtonProps) {
+function DpadButton({
+  onClick,
+  icon,
+  keyHint,
+  className = "",
+}: DpadButtonProps) {
   return (
     <button
       onClick={onClick}
       className={`group flex flex-col items-center justify-center gap-px rounded-lg transition-all
         hover:brightness-150 hover:scale-110 active:scale-90 ${className}`}
       style={{
-        width: 32,
-        height: 34,
         background: PANEL.bgDeep,
         border: `1px solid ${GOLD.border25}`,
         boxShadow: `inset 0 0 4px ${GOLD.glow04}`,
+        height: 34,
+        width: 32,
       }}
     >
-      <span className="text-amber-400 group-hover:text-amber-300 mt-0.5">{icon}</span>
+      <span className="text-amber-400 group-hover:text-amber-300 mt-0.5">
+        {icon}
+      </span>
       <span className="text-[7px] font-mono font-bold text-amber-500/40 group-hover:text-amber-400/60 leading-none -mt-px">
         {keyHint}
       </span>
@@ -104,15 +112,38 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   const showControls = settings.ui.showControlsReference;
   const [expanded, setExpanded] = useState(false);
 
-  const moveUp = useCallback(() => setCameraOffset((p) => ({ ...p, y: p.y + MOVE_STEP })), [setCameraOffset]);
-  const moveDown = useCallback(() => setCameraOffset((p) => ({ ...p, y: p.y - MOVE_STEP })), [setCameraOffset]);
-  const moveLeft = useCallback(() => setCameraOffset((p) => ({ ...p, x: p.x + MOVE_STEP })), [setCameraOffset]);
-  const moveRight = useCallback(() => setCameraOffset((p) => ({ ...p, x: p.x - MOVE_STEP })), [setCameraOffset]);
-  const resetCamera = useCallback(() => setCameraOffset(defaultOffset), [setCameraOffset, defaultOffset]);
-  const zoomIn = useCallback(() => setCameraZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX)), [setCameraZoom]);
-  const zoomOut = useCallback(() => setCameraZoom((z) => Math.max(z - ZOOM_STEP, ZOOM_MIN)), [setCameraZoom]);
+  const moveUp = useCallback(
+    () => setCameraOffset((p) => ({ ...p, y: p.y + MOVE_STEP })),
+    [setCameraOffset]
+  );
+  const moveDown = useCallback(
+    () => setCameraOffset((p) => ({ ...p, y: p.y - MOVE_STEP })),
+    [setCameraOffset]
+  );
+  const moveLeft = useCallback(
+    () => setCameraOffset((p) => ({ ...p, x: p.x + MOVE_STEP })),
+    [setCameraOffset]
+  );
+  const moveRight = useCallback(
+    () => setCameraOffset((p) => ({ ...p, x: p.x - MOVE_STEP })),
+    [setCameraOffset]
+  );
+  const resetCamera = useCallback(
+    () => setCameraOffset(defaultOffset),
+    [setCameraOffset, defaultOffset]
+  );
+  const zoomIn = useCallback(
+    () => setCameraZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX)),
+    [setCameraZoom]
+  );
+  const zoomOut = useCallback(
+    () => setCameraZoom((z) => Math.max(z - ZOOM_STEP, ZOOM_MIN)),
+    [setCameraZoom]
+  );
 
-  if (!showDpad && !showControls) return null;
+  if (!showDpad && !showControls) {
+    return null;
+  }
 
   if (!expanded) {
     return (
@@ -145,7 +176,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           minWidth: 160,
         }}
       >
-        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+        <div
+          className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+          style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+        />
 
         {/* Header */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1 relative z-10">
@@ -163,7 +197,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             className="p-0.5 rounded-md transition-all hover:bg-amber-800/30"
             title="Collapse"
           >
-            <XIcon size={10} className="text-amber-500/60 hover:text-amber-300" />
+            <XIcon
+              size={10}
+              className="text-amber-500/60 hover:text-amber-300"
+            />
           </button>
         </div>
 
@@ -180,42 +217,69 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             >
               {/* Cross-shaped D-pad */}
               <div className="flex flex-col items-center gap-0.5">
-                <DpadButton onClick={moveUp} icon={<ArrowUp size={12} />} keyHint="W" />
+                <DpadButton
+                  onClick={moveUp}
+                  icon={<ArrowUp size={12} />}
+                  keyHint="W"
+                />
                 <div className="flex items-center gap-0.5">
-                  <DpadButton onClick={moveLeft} icon={<ArrowLeft size={12} />} keyHint="A" />
+                  <DpadButton
+                    onClick={moveLeft}
+                    icon={<ArrowLeft size={12} />}
+                    keyHint="A"
+                  />
                   <button
                     onClick={resetCamera}
                     className="flex items-center justify-center rounded-lg transition-all hover:brightness-150 hover:scale-110 active:scale-90"
                     style={{
-                      width: 32,
-                      height: 34,
                       background: "rgba(180,140,60,0.08)",
                       border: `1px solid ${GOLD.border25}`,
+                      height: 34,
+                      width: 32,
                     }}
                     title="Reset camera"
                   >
                     <RotateCcw size={10} className="text-amber-500/50" />
                   </button>
-                  <DpadButton onClick={moveRight} icon={<ArrowRight size={12} />} keyHint="D" />
+                  <DpadButton
+                    onClick={moveRight}
+                    icon={<ArrowRight size={12} />}
+                    keyHint="D"
+                  />
                 </div>
-                <DpadButton onClick={moveDown} icon={<ArrowDown size={12} />} keyHint="S" />
+                <DpadButton
+                  onClick={moveDown}
+                  icon={<ArrowDown size={12} />}
+                  keyHint="S"
+                />
               </div>
 
               {/* Zoom row */}
-              <div className="flex items-center gap-1 mt-1.5 pt-1.5" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+              <div
+                className="flex items-center gap-1 mt-1.5 pt-1.5"
+                style={{ borderTop: `1px solid ${GOLD.border25}` }}
+              >
                 <button
                   onClick={zoomOut}
                   className="flex-1 flex items-center justify-center py-1 rounded-md transition-all hover:brightness-150 active:scale-95"
-                  style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
+                  style={{
+                    background: PANEL.bgDeep,
+                    border: `1px solid ${GOLD.border25}`,
+                  }}
                   title="Zoom out (−)"
                 >
                   <ZoomOut size={12} className="text-amber-400" />
                 </button>
-                <span className="text-[7px] font-mono text-amber-500/40 px-0.5">scroll</span>
+                <span className="text-[7px] font-mono text-amber-500/40 px-0.5">
+                  scroll
+                </span>
                 <button
                   onClick={zoomIn}
                   className="flex-1 flex items-center justify-center py-1 rounded-md transition-all hover:brightness-150 active:scale-95"
-                  style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
+                  style={{
+                    background: PANEL.bgDeep,
+                    border: `1px solid ${GOLD.border25}`,
+                  }}
                   title="Zoom in (+)"
                 >
                   <ZoomIn size={12} className="text-amber-400" />
@@ -232,7 +296,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             style={showDpad ? { paddingTop: 2 } : { paddingTop: 0 }}
           >
             {showDpad && (
-              <div className="mb-1.5" style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }} />
+              <div
+                className="mb-1.5"
+                style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }}
+              />
             )}
             <div className="flex flex-col gap-1">
               <ShortcutRow keyLabel="ESC" description="Deselect" />

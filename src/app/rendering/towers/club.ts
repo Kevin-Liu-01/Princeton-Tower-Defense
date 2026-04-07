@@ -1,15 +1,13 @@
+import { ISO_PRISM_D_FACTOR } from "../../constants";
 import type { Tower, Position } from "../../types";
-import {
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
+import { traceIsoFlushRect, getIsoSlope } from "../isoFlush";
+import type { IsoFace } from "../isoFlush";
 import {
   drawIsometricPrism,
   drawIsoOctPrism,
   drawGear,
   drawIsometricRailing,
 } from "./towerHelpers";
-import { traceIsoFlushRect, getIsoSlope } from "../isoFlush";
-import type { IsoFace } from "../isoFlush";
 
 export function renderClubTower(
   ctx: CanvasRenderingContext2D,
@@ -17,7 +15,7 @@ export function renderClubTower(
   tower: Tower,
   zoom: number,
   time: number,
-  colors: { base: string; dark: string; light: string; accent: string },
+  colors: { base: string; dark: string; light: string; accent: string }
 ) {
   void colors;
 
@@ -27,107 +25,172 @@ export function renderClubTower(
 
   // Structural colors: green/gold (default), blue/purple (4A), red/orange (4B)
   const st = {
-    vdark: uc("#1a1a3a", "#3a1a1a", "#1a2a1a"),
     dark: uc("#2a2a4a", "#4a2a2a", "#2a3a2a"),
-    mid: uc("#3a3a5a", "#5a3a3a", "#3a4a3a"),
-    light: uc("#4a4a6a", "#6a4a4a", "#4a5a4a"),
-    mid2: uc("#3a4060", "#603a30", "#3a5a3a"),
     dark2: uc("#2a3050", "#502a20", "#2a4a2a"),
-    vdark2: uc("#1a2040", "#401a10", "#1a3a1a"),
+    light: uc("#4a4a6a", "#6a4a4a", "#4a5a4a"),
     light2: uc("#4a5070", "#704a40", "#4a6a4a"),
+    mid: uc("#3a3a5a", "#5a3a3a", "#3a4a3a"),
+    mid2: uc("#3a4060", "#603a30", "#3a5a3a"),
     up: uc("#2a3a6a", "#6a2a1a", "#2a5a3a"),
     upL: uc("#1a2a5a", "#5a1a0a", "#1a4a2a"),
-    upR: uc("#0a1a4a", "#4a0a00", "#0a3a1a"),
     upLB: uc("#3a4a7a", "#7a3a2a", "#3a6a4a"),
+    upR: uc("#0a1a4a", "#4a0a00", "#0a3a1a"),
+    vdark: uc("#1a1a3a", "#3a1a1a", "#1a2a1a"),
+    vdark2: uc("#1a2040", "#401a10", "#1a3a1a"),
   };
   const bd = {
-    top: uc("#3a4a80", "#803a30", "#3a6a4a"),
     left: uc("#2a3a70", "#702a20", "#2a5a3a"),
-    right: uc("#1a2a60", "#601a10", "#1a4a2a"),
     leftBack: uc("#4a5a90", "#904a40", "#4a7a5a"),
+    right: uc("#1a2a60", "#601a10", "#1a4a2a"),
     rightBack: uc("#3a4a80", "#803a30", "#3a6a4a"),
+    top: uc("#3a4a80", "#803a30", "#3a6a4a"),
   };
   const bm = {
     bd: uc("#1a1a4a", "#4a1a1a", "#1a3a1a"),
-    bm: uc("#2a3a6a", "#6a2a2a", "#2a5a3a"),
     bl: uc("#3a5080", "#804030", "#3a7a4a"),
+    bm: uc("#2a3a6a", "#6a2a2a", "#2a5a3a"),
     fd: uc("#1a2a5a", "#5a1a1a", "#1a4a2a"),
-    fm: uc("#3a4a7a", "#7a3a2a", "#3a6a4a"),
     fl: uc("#5a6a9a", "#9a5a3a", "#5a8a6a"),
+    fm: uc("#3a4a7a", "#7a3a2a", "#3a6a4a"),
   };
   const ac = {
+    b: uc(204, 39, 39),
+    bandDentil: uc("#6a5aaa", "#c07020", "#b89020"),
+    bandHiB: uc(255, 100, 138),
+    bandHiG: uc(130, 180, 232),
+    bandHiR: uc(150, 255, 255),
+    bandShadowB: uc(100, 20, 20),
+    bandShadowG: uc(40, 60, 80),
+    bandShadowR: uc(60, 100, 100),
     dim: uc("#5a4aaa", "#aa5820", "#a08020"),
+    g: uc(106, 122, 162),
+    hi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
     main: uc("#7a6acc", "#cc7a27", "#c9a227"),
     mid: uc("#8a7acc", "#daa040", "#dab540"),
-    hi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
     r: uc(122, 204, 201),
-    g: uc(106, 122, 162),
-    b: uc(204, 39, 39),
-    bandShadowR: uc(60, 100, 100),
-    bandShadowG: uc(40, 60, 80),
-    bandShadowB: uc(100, 20, 20),
-    bandHiR: uc(150, 255, 255),
-    bandHiG: uc(130, 180, 232),
-    bandHiB: uc(255, 100, 138),
-    bandDentil: uc("#6a5aaa", "#c07020", "#b89020"),
   };
   const rf = {
-    ll: uc(["#2a2a60", "#1e1e48", "#151538"] as const, ["#602a2a", "#481e1e", "#381515"] as const, ["#2a5040", "#1e3e30", "#152e24"] as const),
-    rl: uc(["#303070", "#2a2a5a", "#1e1e48"] as const, ["#703030", "#5a2a2a", "#481e1e"] as const, ["#366050", "#2a4a3a", "#1e3e2e"] as const),
     depth: uc("#1a1a40", "#401a1a", "#1a3828"),
-    ridge: uc("#3a4a80", "#804040", "#3a6a50"),
-    ridgeHi: uc("rgba(80, 100, 180, 0.4)", "rgba(180, 100, 80, 0.4)", "rgba(80, 140, 100, 0.4)"),
     front: uc("#2a3a70", "#703030", "#2a5a40"),
-    tileStroke: uc("rgba(10, 10, 40, ", "rgba(40, 10, 10, ", "rgba(10, 30, 18, "),
+    ll: uc(
+      ["#2a2a60", "#1e1e48", "#151538"] as const,
+      ["#602a2a", "#481e1e", "#381515"] as const,
+      ["#2a5040", "#1e3e30", "#152e24"] as const
+    ),
+    ridge: uc("#3a4a80", "#804040", "#3a6a50"),
+    ridgeHi: uc(
+      "rgba(80, 100, 180, 0.4)",
+      "rgba(180, 100, 80, 0.4)",
+      "rgba(80, 140, 100, 0.4)"
+    ),
+    rl: uc(
+      ["#303070", "#2a2a5a", "#1e1e48"] as const,
+      ["#703030", "#5a2a2a", "#481e1e"] as const,
+      ["#366050", "#2a4a3a", "#1e3e2e"] as const
+    ),
+    tileStroke: uc(
+      "rgba(10, 10, 40, ",
+      "rgba(40, 10, 10, ",
+      "rgba(10, 30, 18, "
+    ),
   };
   const dm = {
-    stops: uc(
-      ["#dcdcff", "#aab8ff", "#8a7acc", "#7a6acc", "#5a4aaa", "#3a2a8a"] as const,
-      ["#ffddcc", "#ffb86a", "#daa040", "#cc7a27", "#aa5820", "#7a3008"] as const,
-      ["#fffadc", "#ffe44d", "#dab540", "#c9a227", "#a8860b", "#7a5a08"] as const,
-    ),
+    finBase: uc("#5a4aaa", "#aa5820", "#b89020"),
+    finGlowHex: uc("#8866ff", "#ff8822", "#ffd700"),
+    finGlowRGB: uc("150, 120, 255", "255, 150, 50", "255, 215, 0"),
+    finKnob: uc("#8a7acc", "#daa040", "#dab540"),
+    finKnobHi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
+    finShaft: uc("#7a6acc", "#cc7a27", "#c9a227"),
     flash: uc(
       ["#eeeeff", "#ccccff"] as const,
       ["#ffeeee", "#ffccaa"] as const,
-      ["#ffffee", "#fff066"] as const,
+      ["#ffffee", "#fff066"] as const
     ),
     rim: uc("#3a2a8a", "#8a3a0a", "#8b6914"),
-    finBase: uc("#5a4aaa", "#aa5820", "#b89020"),
-    finShaft: uc("#7a6acc", "#cc7a27", "#c9a227"),
-    finKnob: uc("#8a7acc", "#daa040", "#dab540"),
-    finKnobHi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
-    finGlowRGB: uc("150, 120, 255", "255, 150, 50", "255, 215, 0"),
-    finGlowHex: uc("#8866ff", "#ff8822", "#ffd700"),
+    stops: uc(
+      [
+        "#dcdcff",
+        "#aab8ff",
+        "#8a7acc",
+        "#7a6acc",
+        "#5a4aaa",
+        "#3a2a8a",
+      ] as const,
+      [
+        "#ffddcc",
+        "#ffb86a",
+        "#daa040",
+        "#cc7a27",
+        "#aa5820",
+        "#7a3008",
+      ] as const,
+      [
+        "#fffadc",
+        "#ffe44d",
+        "#dab540",
+        "#c9a227",
+        "#a8860b",
+        "#7a5a08",
+      ] as const
+    ),
   };
   const xb = {
-    back: uc("rgba(42, 42, 100, 0.4)", "rgba(100, 42, 42, 0.4)", "rgba(42, 90, 58, 0.4)"),
-    front: uc("rgba(58, 58, 120, 0.5)", "rgba(120, 58, 58, 0.5)", "rgba(58, 106, 74, 0.5)"),
+    back: uc(
+      "rgba(42, 42, 100, 0.4)",
+      "rgba(100, 42, 42, 0.4)",
+      "rgba(42, 90, 58, 0.4)"
+    ),
+    front: uc(
+      "rgba(58, 58, 120, 0.5)",
+      "rgba(120, 58, 58, 0.5)",
+      "rgba(58, 106, 74, 0.5)"
+    ),
   };
   const pn = {
-    back: uc("rgba(42, 42, 100, 0.35)", "rgba(100, 42, 42, 0.35)", "rgba(42, 90, 58, 0.35)"),
-    front: uc("rgba(42, 42, 100, 0.25)", "rgba(100, 42, 42, 0.25)", "rgba(42, 90, 58, 0.25)"),
+    back: uc(
+      "rgba(42, 42, 100, 0.35)",
+      "rgba(100, 42, 42, 0.35)",
+      "rgba(42, 90, 58, 0.35)"
+    ),
+    front: uc(
+      "rgba(42, 42, 100, 0.25)",
+      "rgba(100, 42, 42, 0.25)",
+      "rgba(42, 90, 58, 0.25)"
+    ),
   };
   const fl = {
     body: uc("#2a2a6a", "#6a2a2a", "#2a5a3a"),
-    stripe: uc("rgba(26, 26, 80, 0.6)", "rgba(80, 26, 26, 0.6)", "rgba(26, 58, 38, 0.6)"),
+    stripe: uc(
+      "rgba(26, 26, 80, 0.6)",
+      "rgba(80, 26, 26, 0.6)",
+      "rgba(26, 58, 38, 0.6)"
+    ),
   };
   const orb = {
-    outer: uc("rgba(100, 120, 255,", "rgba(255, 120, 50,", "rgba(0, 255, 180,"),
     inner: uc("rgba(80, 100, 230,", "rgba(230, 100, 30,", "rgba(0, 230, 160,"),
+    outer: uc("rgba(100, 120, 255,", "rgba(255, 120, 50,", "rgba(0, 255, 180,"),
   };
   const eg = {
     field: uc(
       `rgba(100, 150, 255, ${0.3 + Math.sin(time * 2) * 0.15})`,
       `rgba(255, 150, 50, ${0.3 + Math.sin(time * 2) * 0.15})`,
-      `rgba(0, 255, 200, ${0.3 + Math.sin(time * 2) * 0.15})`,
+      `rgba(0, 255, 200, ${0.3 + Math.sin(time * 2) * 0.15})`
     ),
-    upgradeAStroke: uc("#4488ff", "#ff6622", "#00ff66"),
-    upgradeAFill: uc("rgba(100, 150, 255, 0.9)", "rgba(255, 150, 100, 0.9)", "rgba(0, 255, 100, 0.9)"),
+    upgradeAFill: uc(
+      "rgba(100, 150, 255, 0.9)",
+      "rgba(255, 150, 100, 0.9)",
+      "rgba(0, 255, 100, 0.9)"
+    ),
     upgradeAShadow: uc("#4488ff", "#ff6622", "#00ff66"),
-    upgradeBBg: uc("#0a0a2a", "#2a0a0a", "#0a2a1a"),
-    upgradeBStroke: uc("#2a2a6a", "#6a2a2a", "#2a4a3a"),
-    upgradeBFill: uc("rgba(100, 150, 255,", "rgba(255, 150, 100,", "rgba(0, 255, 100,"),
+    upgradeAStroke: uc("#4488ff", "#ff6622", "#00ff66"),
     upgradeBBar: uc("#4488ff", "#ff6622", "#00ff66"),
+    upgradeBBg: uc("#0a0a2a", "#2a0a0a", "#0a2a1a"),
+    upgradeBFill: uc(
+      "rgba(100, 150, 255,",
+      "rgba(255, 150, 100,",
+      "rgba(0, 255, 100,"
+    ),
+    upgradeBStroke: uc("#2a2a6a", "#6a2a2a", "#2a4a3a"),
   };
 
   ctx.save();
@@ -158,7 +221,7 @@ export function renderClubTower(
     st.mid,
     st.dark,
     st.vdark,
-    zoom,
+    zoom
   );
 
   // Middle step
@@ -172,7 +235,7 @@ export function renderClubTower(
     st.mid2,
     st.dark2,
     st.vdark2,
-    zoom,
+    zoom
   );
 
   // Upper step with accent bevel
@@ -186,7 +249,7 @@ export function renderClubTower(
     st.up,
     st.upL,
     st.upR,
-    zoom,
+    zoom
   );
 
   // Accent trim along the front visible edge of upper step
@@ -229,7 +292,7 @@ export function renderClubTower(
     baseWidth,
     baseHeight,
     bd,
-    zoom,
+    zoom
   );
 
   // ========== BASE RAILING (3D isometric ring wrapping the base) ==========
@@ -247,12 +310,12 @@ export function renderClubTower(
     32,
     16,
     {
-      rail: ac.dim,
-      topRail: ac.main,
       backPanel: pn.back,
       frontPanel: pn.front,
+      rail: ac.dim,
+      topRail: ac.main,
     },
-    zoom,
+    zoom
   );
 
   // ========== ENTRANCE PORTICO WITH GREEK REVIVAL COLUMNS ==========
@@ -279,7 +342,7 @@ export function renderClubTower(
       colX - 2.5 * zoom,
       colBase,
       colX + 2.5 * zoom,
-      colBase,
+      colBase
     );
     colGrad.addColorStop(0, "#b8a888");
     colGrad.addColorStop(0.25, "#d4c9a8");
@@ -321,7 +384,7 @@ export function renderClubTower(
         colTopY - 0.5 * zoom,
         1.2 * zoom,
         0,
-        Math.PI * 1.5,
+        Math.PI * 1.5
       );
       ctx.stroke();
     }
@@ -340,7 +403,7 @@ export function renderClubTower(
     screenPos.x - w * 0.38,
     entabY,
     screenPos.x - w * 0.38,
-    entabY + 4 * zoom,
+    entabY + 4 * zoom
   );
   entabGrad.addColorStop(0, bd.leftBack);
   entabGrad.addColorStop(1, bd.left);
@@ -371,7 +434,7 @@ export function renderClubTower(
     screenPos.x,
     entabY - 9 * zoom,
     screenPos.x,
-    entabY,
+    entabY
   );
   pedGrad.addColorStop(0, bd.top);
   pedGrad.addColorStop(1, bd.left);
@@ -406,20 +469,20 @@ export function renderClubTower(
   ctx.moveTo(crestX + 0.5 * zoom, crestY - crestR + 0.5 * zoom);
   ctx.lineTo(
     crestX + crestR * 0.85 + 0.5 * zoom,
-    crestY - crestR * 0.35 + 0.5 * zoom,
+    crestY - crestR * 0.35 + 0.5 * zoom
   );
   ctx.lineTo(
     crestX + crestR * 0.85 + 0.5 * zoom,
-    crestY + crestR * 0.35 + 0.5 * zoom,
+    crestY + crestR * 0.35 + 0.5 * zoom
   );
   ctx.lineTo(crestX + 0.5 * zoom, crestY + crestR * 1.05 + 0.5 * zoom);
   ctx.lineTo(
     crestX - crestR * 0.85 + 0.5 * zoom,
-    crestY + crestR * 0.35 + 0.5 * zoom,
+    crestY + crestR * 0.35 + 0.5 * zoom
   );
   ctx.lineTo(
     crestX - crestR * 0.85 + 0.5 * zoom,
-    crestY - crestR * 0.35 + 0.5 * zoom,
+    crestY - crestR * 0.35 + 0.5 * zoom
   );
   ctx.closePath();
   ctx.fill();
@@ -429,7 +492,7 @@ export function renderClubTower(
     crestX - crestR,
     crestY - crestR,
     crestX + crestR,
-    crestY + crestR,
+    crestY + crestR
   );
   crestGrad.addColorStop(0, st.upL);
   crestGrad.addColorStop(0.5, st.upR);
@@ -513,10 +576,21 @@ export function renderClubTower(
     const treasGlow =
       0.25 + Math.sin(time * 2.5 + wi) * 0.15 + flashIntensity * 0.5;
     const winGrad = ctx.createRadialGradient(
-      winX, winCY, 0, winX, winCY, wW * zoom,
+      winX,
+      winCY,
+      0,
+      winX,
+      winCY,
+      wW * zoom
     );
-    winGrad.addColorStop(0, `rgba(${ac.bandHiR}, ${ac.bandHiG}, ${Math.min(ac.bandHiB, 100)}, ${treasGlow})`);
-    winGrad.addColorStop(1, `rgba(${ac.bandShadowR}, ${ac.bandShadowG}, ${ac.bandShadowB}, ${treasGlow * 0.2})`);
+    winGrad.addColorStop(
+      0,
+      `rgba(${ac.bandHiR}, ${ac.bandHiG}, ${Math.min(ac.bandHiB, 100)}, ${treasGlow})`
+    );
+    winGrad.addColorStop(
+      1,
+      `rgba(${ac.bandShadowR}, ${ac.bandShadowG}, ${ac.bandShadowB}, ${treasGlow * 0.2})`
+    );
     traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
     ctx.fillStyle = winGrad;
     ctx.fill();
@@ -570,7 +644,7 @@ export function renderClubTower(
         boxY - 3 * zoom,
         0.9 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -599,7 +673,7 @@ export function renderClubTower(
     thick: number,
     dark: string,
     main: string,
-    light: string,
+    light: string
   ) => {
     ctx.strokeStyle = dark;
     ctx.lineWidth = (thick + 1.2) * zoom;
@@ -636,26 +710,8 @@ export function renderClubTower(
   };
 
   // Back vertical posts
-  drawClubBeam(
-    buttB.x,
-    buttB.y,
-    buttBT.x,
-    buttBT.y,
-    2.2,
-    bm.bd,
-    bm.bm,
-    bm.bl,
-  );
-  drawClubBeam(
-    buttL.x,
-    buttL.y,
-    buttLT.x,
-    buttLT.y,
-    2.2,
-    bm.bd,
-    bm.bm,
-    bm.bl,
-  );
+  drawClubBeam(buttB.x, buttB.y, buttBT.x, buttBT.y, 2.2, bm.bd, bm.bm, bm.bl);
+  drawClubBeam(buttL.x, buttL.y, buttLT.x, buttLT.y, 2.2, bm.bd, bm.bm, bm.bl);
 
   // Back horizontal frames
   const frameLevels = Math.min(tower.level + 2, 4);
@@ -698,26 +754,8 @@ export function renderClubTower(
   }
 
   // Front vertical posts
-  drawClubBeam(
-    buttR.x,
-    buttR.y,
-    buttRT.x,
-    buttRT.y,
-    2.5,
-    bm.fd,
-    bm.fm,
-    bm.fl,
-  );
-  drawClubBeam(
-    buttF.x,
-    buttF.y,
-    buttFT.x,
-    buttFT.y,
-    2.5,
-    bm.fd,
-    bm.fm,
-    bm.fl,
-  );
+  drawClubBeam(buttR.x, buttR.y, buttRT.x, buttRT.y, 2.5, bm.fd, bm.fm, bm.fl);
+  drawClubBeam(buttF.x, buttF.y, buttFT.x, buttFT.y, 2.5, bm.fd, bm.fm, bm.fl);
 
   // Front horizontal frames + gold trim
   for (let fl = 0; fl < frameLevels; fl++) {
@@ -763,7 +801,11 @@ export function renderClubTower(
 
   // ========== FACE DETAILS (stone blocks, weathering, gold inlays) ==========
   // Left face (visible) — stone block seams
-  ctx.strokeStyle = uc("rgba(20, 20, 60, 0.35)", "rgba(60, 20, 20, 0.35)", "rgba(20, 60, 30, 0.35)");
+  ctx.strokeStyle = uc(
+    "rgba(20, 20, 60, 0.35)",
+    "rgba(60, 20, 20, 0.35)",
+    "rgba(20, 60, 30, 0.35)"
+  );
   ctx.lineWidth = 0.6 * zoom;
   const leftFaceSeams = 5;
   for (let s = 1; s < leftFaceSeams; s++) {
@@ -797,7 +839,11 @@ export function renderClubTower(
     const mortarT = r / mortarRows;
     const mortarY = screenPos.y - h * mortarT;
     // Left face mortar
-    ctx.strokeStyle = uc("rgba(20, 20, 60, 0.25)", "rgba(60, 20, 20, 0.25)", "rgba(20, 60, 30, 0.25)");
+    ctx.strokeStyle = uc(
+      "rgba(20, 20, 60, 0.25)",
+      "rgba(60, 20, 20, 0.25)",
+      "rgba(20, 60, 30, 0.25)"
+    );
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.95, mortarY + d * 0.45);
@@ -815,7 +861,7 @@ export function renderClubTower(
     screenPos.x - w * 0.5,
     screenPos.y,
     screenPos.x - w * 0.5,
-    screenPos.y - h,
+    screenPos.y - h
   );
   leftWeather.addColorStop(0, "rgba(0, 0, 0, 0.12)");
   leftWeather.addColorStop(0.4, "rgba(0, 0, 0, 0.02)");
@@ -875,7 +921,7 @@ export function renderClubTower(
       lanternX - 1.5 * zoom,
       lanternY - 3.5 * zoom,
       3 * zoom,
-      4 * zoom,
+      4 * zoom
     );
     ctx.shadowBlur = 0;
     // Lantern cap
@@ -929,7 +975,7 @@ export function renderClubTower(
       1.2 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     // Base (bottom ornament)
@@ -941,7 +987,7 @@ export function renderClubTower(
       1 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1007,16 +1053,16 @@ export function renderClubTower(
   const gearCY = screenPos.y - h * 0.48;
   const meshDist = (mainR + smallR - 1.5) * zoom;
   const gearColorsMain = {
-    outer: uc("#5a4a8a", "#8b5530", "#8b7355"),
-    inner: uc("#3a2a6a", "#6b3510", "#6b5335"),
-    teeth: uc("#7a6aaa", "#a07050", "#a08060"),
     highlight: ac.main,
+    inner: uc("#3a2a6a", "#6b3510", "#6b5335"),
+    outer: uc("#5a4a8a", "#8b5530", "#8b7355"),
+    teeth: uc("#7a6aaa", "#a07050", "#a08060"),
   };
   const gearColorsSmall = {
-    outer: uc("#4a3a7a", "#7a4520", "#7a6245"),
-    inner: uc("#2a1a5a", "#5a2500", "#5a4225"),
-    teeth: uc("#6a5a9a", "#9a6040", "#9a8260"),
     highlight: ac.dim,
+    inner: uc("#2a1a5a", "#5a2500", "#5a4225"),
+    outer: uc("#4a3a7a", "#7a4520", "#7a6245"),
+    teeth: uc("#6a5a9a", "#9a6040", "#9a8260"),
   };
 
   // Central main gear
@@ -1029,7 +1075,7 @@ export function renderClubTower(
     mainTeeth,
     gearSpeed,
     gearColorsMain,
-    zoom,
+    zoom
   );
 
   // Left meshing gear (counter-rotates)
@@ -1043,7 +1089,7 @@ export function renderClubTower(
     smallTeeth,
     -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
     gearColorsSmall,
-    zoom,
+    zoom
   );
 
   // Right meshing gear (counter-rotates)
@@ -1057,7 +1103,7 @@ export function renderClubTower(
     smallTeeth,
     -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
     gearColorsSmall,
-    zoom,
+    zoom
   );
 
   // Level 2+: tiny idler gears on top
@@ -1076,7 +1122,7 @@ export function renderClubTower(
       idlerTeeth,
       -gearSpeed * (mainTeeth / idlerTeeth),
       gearColorsSmall,
-      zoom,
+      zoom
     );
   }
 
@@ -1100,11 +1146,11 @@ export function renderClubTower(
     ledgerX + 1.5 * zoom,
     ledgerY + 1.5 * zoom,
     ledgerW - 3 * zoom,
-    ledgerH - 3 * zoom,
+    ledgerH - 3 * zoom
   );
 
   // Ledger content with flash effect
-  const screenFlash = flashIntensity > 0 ? flashIntensity : 0;
+  const screenFlash = Math.max(flashIntensity, 0);
   const screenBaseGlow = 0.5 + Math.sin(time * 3) * 0.2;
 
   // Gold text heading
@@ -1168,7 +1214,7 @@ export function renderClubTower(
         rBoardY + 3 * zoom,
         1.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1188,7 +1234,7 @@ export function renderClubTower(
       portraitCX - pFrameW * 0.5,
       portraitCY - pFrameH * 0.5,
       pFrameW,
-      pFrameH,
+      pFrameH
     );
     ctx.strokeStyle = ac.main;
     ctx.lineWidth = 1.5 * zoom;
@@ -1196,7 +1242,7 @@ export function renderClubTower(
       portraitCX - pFrameW * 0.5,
       portraitCY - pFrameH * 0.5,
       pFrameW,
-      pFrameH,
+      pFrameH
     );
 
     // Silhouette figure inside
@@ -1219,7 +1265,7 @@ export function renderClubTower(
       portraitCX - 4 * zoom,
       portraitCY + pFrameH * 0.35 + zoom,
       8 * zoom,
-      2 * zoom,
+      2 * zoom
     );
   }
 
@@ -1240,13 +1286,13 @@ export function renderClubTower(
       chestD,
       chestH,
       {
-        top: "#5a3a1a",
         left: "#4a2a0a",
-        right: "#3a1a00",
         leftBack: "#6a4a2a",
+        right: "#3a1a00",
         rightBack: "#5a3a1a",
+        top: "#5a3a1a",
       },
-      zoom,
+      zoom
     );
 
     // Gold banding on chest
@@ -1271,7 +1317,7 @@ export function renderClubTower(
       chestY - chestH * zoom * 0.5 + chestDO * 0.5,
       2 * zoom,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1290,7 +1336,7 @@ export function renderClubTower(
         1.2 * zoom,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -1321,7 +1367,7 @@ export function renderClubTower(
     0,
     vaultCX,
     vaultCY,
-    9 * zoom,
+    9 * zoom
   );
   vaultGrad.addColorStop(0, "#6a6a72");
   vaultGrad.addColorStop(0.5, "#4a4a52");
@@ -1367,7 +1413,7 @@ export function renderClubTower(
     ctx.moveTo(vaultCX, vaultCY);
     ctx.lineTo(
       vaultCX + Math.cos(spokeAngle) * 4 * zoom,
-      vaultCY + Math.sin(spokeAngle) * 4 * zoom,
+      vaultCY + Math.sin(spokeAngle) * 4 * zoom
     );
     ctx.stroke();
   }
@@ -1392,7 +1438,7 @@ export function renderClubTower(
     2 * zoom,
     -0.4,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1410,7 +1456,7 @@ export function renderClubTower(
       screenPos.x - w * 0.5,
       lineY + d * 0.1 - 2 * zoom,
       screenPos.x - w * 0.82,
-      lineY - d * 0.15,
+      lineY - d * 0.15
     );
     ctx.stroke();
     // Right face scroll
@@ -1420,7 +1466,7 @@ export function renderClubTower(
       screenPos.x + w * 0.5,
       lineY + d * 0.1 - 2 * zoom,
       screenPos.x + w * 0.82,
-      lineY - d * 0.15,
+      lineY - d * 0.15
     );
     ctx.stroke();
   }
@@ -1440,7 +1486,7 @@ export function renderClubTower(
       spoutX,
       spoutBotY,
       spoutX + side * 4 * zoom,
-      spoutBotY + 2 * zoom,
+      spoutBotY + 2 * zoom
     );
     ctx.stroke();
 
@@ -1472,7 +1518,7 @@ export function renderClubTower(
       1.5 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1483,10 +1529,10 @@ export function renderClubTower(
   const topRailRY = d * 0.88;
   const topRailH = 5 * zoom;
   const clubTopRailColors = {
-    rail: ac.dim,
-    topRail: ac.main,
     backPanel: pn.back,
     frontPanel: pn.front,
+    rail: ac.dim,
+    topRail: ac.main,
   };
   drawIsometricRailing(
     ctx,
@@ -1499,7 +1545,7 @@ export function renderClubTower(
     16,
     clubTopRailColors,
     zoom,
-    "back",
+    "back"
   );
 
   // ========== WAVING CLUB BANNER (behind roof, on right side) ==========
@@ -1540,7 +1586,7 @@ export function renderClubTower(
     flagPoleTopY - 0.5 * zoom,
     0.8 * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1648,13 +1694,13 @@ export function renderClubTower(
     chimneyD,
     chimneyH / zoom,
     {
-      top: "#6a4a3a",
       left: "#5a3a2a",
-      right: "#4a2a1a",
       leftBack: "#6a4a3a",
+      right: "#4a2a1a",
       rightBack: "#5a3a2a",
+      top: "#6a4a3a",
     },
-    zoom,
+    zoom
   );
 
   // Brick mortar lines with staggered pattern
@@ -1705,13 +1751,13 @@ export function renderClubTower(
     chimneyD + 1.5,
     1.5,
     {
-      top: "#7a5a4a",
       left: "#6a4a3a",
-      right: "#5a3a2a",
       leftBack: "#7a5a4a",
+      right: "#5a3a2a",
       rightBack: "#6a4a3a",
+      top: "#7a5a4a",
     },
-    zoom,
+    zoom
   );
   drawIsometricPrism(
     ctx,
@@ -1721,13 +1767,13 @@ export function renderClubTower(
     chimneyD + 3,
     2,
     {
-      top: "#8a6a5a",
       left: "#7a5a4a",
-      right: "#6a4a3a",
       leftBack: "#8a6a5a",
+      right: "#6a4a3a",
       rightBack: "#7a5a4a",
+      top: "#8a6a5a",
     },
-    zoom,
+    zoom
   );
 
   // Gold trim ring around chimney crown
@@ -1752,7 +1798,7 @@ export function renderClubTower(
     crownD * 0.55,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1767,7 +1813,7 @@ export function renderClubTower(
     crownD * 0.35,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -1789,7 +1835,7 @@ export function renderClubTower(
       smokeSize * 0.65,
       drift * 0.02,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -1814,7 +1860,7 @@ export function renderClubTower(
         topY - 26 * zoom,
         1.5 * zoom,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -1836,7 +1882,7 @@ export function renderClubTower(
     roofPeakX,
     roofPeakY,
     roofLeftX,
-    roofFrontY,
+    roofFrontY
   );
   leftRoofGrad.addColorStop(0, rf.ll[0]);
   leftRoofGrad.addColorStop(0.5, rf.ll[1]);
@@ -1854,7 +1900,7 @@ export function renderClubTower(
     roofPeakX,
     roofPeakY,
     roofRightX,
-    roofFrontY,
+    roofFrontY
   );
   rightRoofGrad.addColorStop(0, rf.rl[0]);
   rightRoofGrad.addColorStop(0.5, rf.rl[1]);
@@ -1919,7 +1965,9 @@ export function renderClubTower(
     ctx.lineWidth = 0.4 * zoom;
     for (let col = 1; col < tileCols; col++) {
       const ct = col / tileCols + staggerOff;
-      if (ct >= 1) break;
+      if (ct >= 1) {
+        break;
+      }
       const sx = l0x + (r0x - l0x) * ct;
       const sy = l0y + (r0y - l0y) * ct;
       const ex = l1x + (r1x - l1x) * ct;
@@ -1968,7 +2016,9 @@ export function renderClubTower(
     ctx.lineWidth = 0.4 * zoom;
     for (let col = 1; col < tileCols; col++) {
       const ct = col / tileCols + staggerOff;
-      if (ct >= 1) break;
+      if (ct >= 1) {
+        break;
+      }
       const sx = l0x + (r0x - l0x) * ct;
       const sy = l0y + (r0y - l0y) * ct;
       const ex = l1x + (r1x - l1x) * ct;
@@ -2043,7 +2093,7 @@ export function renderClubTower(
     domeRY + zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2054,7 +2104,7 @@ export function renderClubTower(
     0,
     domeX,
     domeY,
-    domeRX,
+    domeRX
   );
   domeGrad.addColorStop(0, flashIntensity > 0 ? dm.flash[0] : dm.stops[0]);
   domeGrad.addColorStop(0.15, flashIntensity > 0 ? dm.flash[1] : dm.stops[1]);
@@ -2083,7 +2133,7 @@ export function renderClubTower(
     domeRY * 0.35,
     0,
     0,
-    Math.PI,
+    Math.PI
   );
   ctx.stroke();
 
@@ -2098,7 +2148,7 @@ export function renderClubTower(
     domeRY * 0.65,
     0,
     Math.PI * 1.15,
-    Math.PI * 1.75,
+    Math.PI * 1.75
   );
   ctx.stroke();
 
@@ -2112,8 +2162,8 @@ export function renderClubTower(
     domeRX * 0.5,
     domeRY * 0.4,
     0,
-    Math.PI * 1.0,
-    Math.PI * 1.9,
+    Math.PI * 1,
+    Math.PI * 1.9
   );
   ctx.stroke();
 
@@ -2125,13 +2175,13 @@ export function renderClubTower(
     ctx.beginPath();
     ctx.moveTo(
       domeX + Math.cos(mAngle) * domeRX * 0.95,
-      domeY + Math.sin(mAngle) * domeRY * 0.7,
+      domeY + Math.sin(mAngle) * domeRY * 0.7
     );
     ctx.quadraticCurveTo(
       domeX + Math.cos(mAngle) * domeRX * 0.3,
       domeY - domeRY * 0.9,
       domeX - Math.cos(mAngle) * domeRX * 0.95,
-      domeY + Math.sin(Math.PI - mAngle) * domeRY * 0.7,
+      domeY + Math.sin(Math.PI - mAngle) * domeRY * 0.7
     );
     ctx.stroke();
   }
@@ -2149,7 +2199,7 @@ export function renderClubTower(
     1.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2187,7 +2237,7 @@ export function renderClubTower(
     finialBaseY - 5.5 * zoom,
     0.6 * zoom,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2233,21 +2283,21 @@ export function renderClubTower(
 
   // ========== EXTERIOR GAS LANTERNS ==========
   const lanternPositions = [
-    { x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1, phase: 0 },
-    { x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.15, phase: 0.5 },
+    { phase: 0, x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1 },
+    { phase: 0.5, x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.15 },
   ];
   if (tower.level >= 2) {
     lanternPositions.push(
       {
+        phase: 0.25,
         x: screenPos.x - buttHalf * 0.9,
         y: screenPos.y - h * 0.5,
-        phase: 0.25,
       },
       {
+        phase: 0.75,
         x: screenPos.x + buttHalf * 0.9,
         y: screenPos.y - h * 0.4,
-        phase: 0.75,
-      },
+      }
     );
   }
   for (const lp of lanternPositions) {
@@ -2285,9 +2335,9 @@ export function renderClubTower(
 
   // Ring orbit parameters
   const orbitRings = [
-    { size: 14, tilt: 0.35, speed: 1.8, phase: 0 },
-    { size: 17, tilt: -0.25, speed: -1.3, phase: Math.PI * 0.6 },
-    { size: 20, tilt: 0.15, speed: 1.0, phase: Math.PI * 1.2 },
+    { phase: 0, size: 14, speed: 1.8, tilt: 0.35 },
+    { phase: Math.PI * 0.6, size: 17, speed: -1.3, tilt: -0.25 },
+    { phase: Math.PI * 1.2, size: 20, speed: 1, tilt: 0.15 },
   ];
 
   // --- BACK halves of orbiting rings (drawn behind coin/dome) ---
@@ -2312,7 +2362,7 @@ export function renderClubTower(
       orbRY + 0.5 * zoom,
       0,
       Math.PI,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
     // Main ring (back half — upper arc is behind)
@@ -2354,7 +2404,7 @@ export function renderClubTower(
       coinR,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2380,7 +2430,7 @@ export function renderClubTower(
     0,
     0,
     0,
-    coinR,
+    coinR
   );
   creditGrad.addColorStop(0, flashIntensity > 0 ? "#ffffe8" : ac.hi);
   creditGrad.addColorStop(0.3, ac.mid);
@@ -2429,7 +2479,7 @@ export function renderClubTower(
     coinR * 0.3,
     -0.5,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2483,7 +2533,7 @@ export function renderClubTower(
     2.5 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
   ctx.fillStyle = "#4a3a2a";
@@ -2491,7 +2541,7 @@ export function renderClubTower(
     diningX - 0.8 * zoom,
     diningBaseY - 4 * zoom,
     1.6 * zoom,
-    6 * zoom,
+    6 * zoom
   );
   for (const cSide of [-1, 1]) {
     const chairX = diningX + cSide * 6 * zoom;
@@ -2500,13 +2550,13 @@ export function renderClubTower(
       chairX - 1.5 * zoom,
       diningBaseY - 2 * zoom,
       3 * zoom,
-      4 * zoom,
+      4 * zoom
     );
     ctx.fillRect(
       chairX - 1.5 * zoom,
       diningBaseY - 5 * zoom,
       3 * zoom,
-      1.5 * zoom,
+      1.5 * zoom
     );
   }
   const plateGlow = 0.4 + Math.sin(time * 2) * 0.15;
@@ -2519,7 +2569,7 @@ export function renderClubTower(
     1 * zoom,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -2624,7 +2674,7 @@ export function renderClubTower(
       h * 0.4,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2641,7 +2691,7 @@ export function renderClubTower(
     16,
     clubTopRailColors,
     zoom,
-    "front",
+    "front"
   );
 
   // ========== LEVEL 2 UNIQUE FEATURES ==========
@@ -2663,8 +2713,16 @@ export function renderClubTower(
         const lightY = bankY - 10 * zoom + light * 3 * zoom;
         const lightOn = Math.sin(time * 8 + light * 1.5 + side * 3) > 0;
         ctx.fillStyle = lightOn
-          ? uc(`rgba(100, 150, 255, 0.8)`, `rgba(255, 150, 50, 0.8)`, `rgba(0, 255, 100, 0.8)`)
-          : uc(`rgba(20, 20, 50, 0.5)`, `rgba(50, 20, 10, 0.5)`, `rgba(0, 50, 20, 0.5)`);
+          ? uc(
+              `rgba(100, 150, 255, 0.8)`,
+              `rgba(255, 150, 50, 0.8)`,
+              `rgba(0, 255, 100, 0.8)`
+            )
+          : uc(
+              `rgba(20, 20, 50, 0.5)`,
+              `rgba(50, 20, 10, 0.5)`,
+              `rgba(0, 50, 20, 0.5)`
+            );
         ctx.beginPath();
         ctx.arc(bankX, lightY, 1.5 * zoom, 0, Math.PI * 2);
         ctx.fill();
@@ -2681,7 +2739,7 @@ export function renderClubTower(
       3 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     const quantumGlow = 0.5 + Math.sin(time * 6) * 0.3;
@@ -2694,7 +2752,7 @@ export function renderClubTower(
       2 * zoom,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2714,7 +2772,7 @@ export function renderClubTower(
         (9 + ring * 2.5) * zoom,
         fieldRotation + ring * 0.5,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.stroke();
     }
@@ -2758,7 +2816,7 @@ export function renderClubTower(
           topY + pt.y * zoom,
           3 * zoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -2770,14 +2828,14 @@ export function renderClubTower(
         screenPos.x - 24 * zoom,
         topY - 52 * zoom,
         18 * zoom,
-        18 * zoom,
+        18 * zoom
       );
       ctx.strokeStyle = eg.upgradeBStroke;
       ctx.strokeRect(
         screenPos.x - 24 * zoom,
         topY - 52 * zoom,
         18 * zoom,
-        18 * zoom,
+        18 * zoom
       );
 
       // Multiple personnel icons
@@ -2797,14 +2855,14 @@ export function renderClubTower(
         screenPos.x + 6 * zoom,
         topY - 54 * zoom,
         18 * zoom,
-        20 * zoom,
+        20 * zoom
       );
       ctx.strokeStyle = eg.upgradeBStroke;
       ctx.strokeRect(
         screenPos.x + 6 * zoom,
         topY - 54 * zoom,
         18 * zoom,
-        20 * zoom,
+        20 * zoom
       );
 
       const bars = [
@@ -2819,7 +2877,7 @@ export function renderClubTower(
           screenPos.x + 8 * zoom,
           barY,
           14 * zoom * bars[i].value,
-          4 * zoom,
+          4 * zoom
         );
       }
     }

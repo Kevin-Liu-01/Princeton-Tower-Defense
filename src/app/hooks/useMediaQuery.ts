@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 
 function getInitialMatch(query: string): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
   return window.matchMedia(query).matches;
 }
 

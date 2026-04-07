@@ -1,9 +1,9 @@
 // Princeton Tower Defense - Hazards Rendering Module
 // Renders map hazards like poison fog, lava geysers, ice sheets, quicksand
 
+import { TILE_SIZE, ISO_Y_RATIO } from "../../constants";
 import type { Position, MapHazard } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
-import { TILE_SIZE, ISO_Y_RATIO } from "../../constants";
 import { drawOrganicBlobAt } from "../helpers";
 
 // ============================================================================
@@ -16,13 +16,13 @@ function drawOrganicBlob(
   radiusX: number,
   radiusY: number,
   seed: number,
-  bumpiness: number = 0.15,
+  bumpiness: number = 0.15
 ): void {
   drawOrganicBlobAt(ctx, 0, 0, radiusX, radiusY, seed, bumpiness);
 }
 
 function seededNoise(seed: number): number {
-  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453123;
+  const value = Math.sin(seed * 127.1 + 311.7) * 43_758.545_312_3;
   return value - Math.floor(value);
 }
 
@@ -59,7 +59,9 @@ const iceSpikesLayoutCache = new Map<string, IceSpikesLayout>();
 function getIceSpikesLayout(pos: Position): IceSpikesLayout {
   const cacheKey = `${(pos.x || 0).toFixed(2)}:${(pos.y || 0).toFixed(2)}`;
   const cached = iceSpikesLayoutCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const seed = (pos.x || 0) * 47.3 + (pos.y || 0) * 21.9;
 
@@ -69,10 +71,10 @@ function getIceSpikesLayout(pos: Position): IceSpikesLayout {
     spikes.push({
       angle: seededNoise(seed + i * 4.13) * Math.PI * 2,
       dist: 0.08 + seededNoise(seed + i * 7.41 + 1.4) * 0.78,
-      width: seededNoise(seed + i * 9.87 + 2.9),
       height: seededNoise(seed + i * 12.31 + 0.7),
       lean: seededNoise(seed + i * 15.73 + 3.6),
       phase: seededNoise(seed + i * 5.21 + 0.4),
+      width: seededNoise(seed + i * 9.87 + 2.9),
     });
   }
 
@@ -82,25 +84,27 @@ function getIceSpikesLayout(pos: Position): IceSpikesLayout {
       angle:
         (i / 22) * Math.PI * 2 + (seededNoise(seed + i * 17.3) - 0.5) * 0.45,
       dist: 0.78 + seededNoise(seed + i * 6.6) * 0.32,
-      width: seededNoise(seed + i * 2.7),
       height: seededNoise(seed + i * 3.9),
+      width: seededNoise(seed + i * 2.7),
     });
   }
 
   const crackAngles: number[] = [];
   for (let i = 0; i < 12; i++) {
     crackAngles.push(
-      (i / 12) * Math.PI * 2 + (seededNoise(seed + i * 4.2) - 0.5) * 0.45,
+      (i / 12) * Math.PI * 2 + (seededNoise(seed + i * 4.2) - 0.5) * 0.45
     );
   }
 
-  const layout: IceSpikesLayout = { spikes, rimShards, crackAngles };
+  const layout: IceSpikesLayout = { crackAngles, rimShards, spikes };
   iceSpikesLayoutCache.set(cacheKey, layout);
 
   // Keep cache bounded for long sessions with many custom levels.
   if (iceSpikesLayoutCache.size > 160) {
     const oldestKey = iceSpikesLayoutCache.keys().next().value;
-    if (oldestKey) iceSpikesLayoutCache.delete(oldestKey);
+    if (oldestKey) {
+      iceSpikesLayoutCache.delete(oldestKey);
+    }
   }
 
   return layout;
@@ -108,7 +112,7 @@ function getIceSpikesLayout(pos: Position): IceSpikesLayout {
 
 function getIceSpikesCycleState(
   seed: number,
-  timeSeconds: number,
+  timeSeconds: number
 ): IceSpikesCycleState {
   const cycleDuration = 2.6;
   const phaseOffset =
@@ -118,25 +122,25 @@ function getIceSpikesCycleState(
   // Telegraph -> shoot-up -> active -> retract -> dormant
   if (phase < 0.45) {
     const wobble = 0.08 + Math.sin((phase / 0.45) * Math.PI * 2) * 0.03;
-    return { extend: Math.max(0.04, wobble), active: false, burst: false };
+    return { active: false, burst: false, extend: Math.max(0.04, wobble) };
   }
   if (phase < 0.68) {
     const p = (phase - 0.45) / 0.23;
-    return { extend: 0.14 + p * 0.86, active: true, burst: true };
+    return { active: true, burst: true, extend: 0.14 + p * 0.86 };
   }
   if (phase < 1.25) {
     const p = (phase - 0.68) / 0.57;
     return {
-      extend: 0.94 + Math.sin(p * Math.PI * 2) * 0.06,
       active: true,
       burst: false,
+      extend: 0.94 + Math.sin(p * Math.PI * 2) * 0.06,
     };
   }
   if (phase < 1.55) {
     const p = (phase - 1.25) / 0.3;
-    return { extend: 1 - p * 0.92, active: true, burst: false };
+    return { active: true, burst: false, extend: 1 - p * 0.92 };
   }
-  return { extend: 0.05, active: false, burst: false };
+  return { active: false, burst: false, extend: 0.05 };
 }
 
 // ============================================================================
@@ -150,62 +154,79 @@ function dispatchHazardDraw(
   time: number,
   pos: Position,
   isoRatio: number,
-  zoom: number,
+  zoom: number
 ): void {
   switch (type) {
-    case "poison_fog":
+    case "poison_fog": {
       drawPoisonFogHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
+    }
     case "lava_geyser":
-    case "eruption_zone":
+    case "eruption_zone": {
       drawLavaGeyserHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
+    }
     case "ice_sheet":
-    case "slippery_ice":
+    case "slippery_ice": {
       drawIceSheetHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "quicksand":
+    }
+    case "quicksand": {
       drawQuicksandHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "deep_water":
+    }
+    case "deep_water": {
       drawDeepWaterHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "maelstrom":
+    }
+    case "maelstrom": {
       drawMaelstromHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "storm_field":
+    }
+    case "storm_field": {
       drawStormFieldHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "volcano":
+    }
+    case "volcano": {
       drawVolcanoHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "lava":
+    }
+    case "lava": {
       drawLavaPoolHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "swamp":
+    }
+    case "swamp": {
       drawSwampHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "ice":
+    }
+    case "ice": {
       drawIceHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "poison":
+    }
+    case "poison": {
       drawPoisonPoolHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "fire":
+    }
+    case "fire": {
       drawHellfireHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "lightning":
+    }
+    case "lightning": {
       drawLightningFieldHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    case "void":
+    }
+    case "void": {
       drawVoidRiftHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
+    }
     case "ice_spikes":
-    case "spikes":
+    case "spikes": {
       drawIceSpikesHazard(ctx, sRad, time, pos, isoRatio, zoom);
       break;
-    default:
+    }
+    default: {
       drawGenericHazard(ctx, sRad, time, zoom);
+    }
   }
 }
 
@@ -215,7 +236,7 @@ export function drawHazardSprite(
   y: number,
   size: number,
   type: string,
-  time: number,
+  time: number
 ): void {
   const sRad = size * 0.42;
   const isoRatio = ISO_Y_RATIO;
@@ -233,9 +254,11 @@ export function renderHazard(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number,
+  cameraZoom?: number
 ): void {
-  if (!hazard.pos) return;
+  if (!hazard.pos) {
+    return;
+  }
 
   const zoom = cameraZoom || 1;
   const screenPos = worldToScreen(
@@ -244,7 +267,7 @@ export function renderHazard(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom,
+    cameraZoom
   );
   const sRad = (hazard.radius || 2) * TILE_SIZE * zoom;
   const time = Date.now() / 1000;
@@ -266,7 +289,7 @@ function drawPoisonFogHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 17.3 + (pos.y || 0) * 31.7;
 
@@ -295,7 +318,7 @@ function drawPoisonFogHazard(
       midX + Math.sin(i * 2 + hazSeed) * 12 * cameraZoom,
       midY + Math.cos(i * 2 + hazSeed) * 6 * cameraZoom,
       Math.cos(angle) * len,
-      Math.sin(angle) * len * isoRatio,
+      Math.sin(angle) * len * isoRatio
     );
     ctx.stroke();
   }
@@ -357,7 +380,7 @@ function drawPoisonFogHazard(
       sRad * layerScale,
       sRad * layerScale * isoRatio * 0.8,
       hazSeed + layer * 7,
-      0.18,
+      0.18
     );
     ctx.fill();
     ctx.restore();
@@ -422,7 +445,9 @@ const lavaGeyserLayoutCache = new Map<string, LavaGeyserLayout>();
 function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
   const cacheKey = `lg:${(pos.x || 0).toFixed(2)}:${(pos.y || 0).toFixed(2)}`;
   const cached = lavaGeyserLayoutCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const seed = (pos.x || 0) * 13.7 + (pos.y || 0) * 29.3;
 
@@ -431,7 +456,7 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
   const crackJitter: number[] = [];
   for (let i = 0; i < 16; i++) {
     crackAngles.push(
-      (i / 16) * Math.PI * 2 + (seededNoise(seed + i * 3.7) - 0.5) * 0.35,
+      (i / 16) * Math.PI * 2 + (seededNoise(seed + i * 3.7) - 0.5) * 0.35
     );
     crackLengths.push(0.35 + seededNoise(seed + i * 5.1) * 0.55);
     crackJitter.push(seededNoise(seed + i * 8.3) - 0.5);
@@ -442,10 +467,10 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
     backRocks.push({
       angle:
         Math.PI + (r / 7) * Math.PI + (seededNoise(seed + r * 4.1) - 0.5) * 0.2,
-      offset: seededNoise(seed + r * 3.0) * 0.18,
       h: 14 + seededNoise(seed + r * 6.2) * 18,
-      w: 5 + seededNoise(seed + r * 2.1) * 5,
+      offset: seededNoise(seed + r * 3) * 0.18,
       taper: 0.55 + seededNoise(seed + r * 9.3) * 0.2,
+      w: 5 + seededNoise(seed + r * 2.1) * 5,
     });
   }
 
@@ -453,10 +478,10 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
   for (let r = 0; r < 7; r++) {
     frontRocks.push({
       angle: (r / 7) * Math.PI + (seededNoise(seed + r * 5.5) - 0.5) * 0.15,
-      offset: seededNoise(seed + r * 7.1) * 0.18,
       h: 10 + seededNoise(seed + r * 4.7) * 14,
-      w: 4 + seededNoise(seed + r * 3.3) * 4,
+      offset: seededNoise(seed + r * 7.1) * 0.18,
       taper: 0.5 + seededNoise(seed + r * 11.1) * 0.25,
+      w: 4 + seededNoise(seed + r * 3.3) * 4,
     });
   }
 
@@ -464,9 +489,9 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
   for (let f = 0; f < 4; f++) {
     lavaFlows.push({
       angle: (f / 4) * Math.PI * 2 + seededNoise(seed + f * 12.7) * 0.6,
+      curvature: (seededNoise(seed + f * 19.1) - 0.5) * 0.4,
       length: 0.4 + seededNoise(seed + f * 7.9) * 0.5,
       width: 0.03 + seededNoise(seed + f * 14.3) * 0.04,
-      curvature: (seededNoise(seed + f * 19.1) - 0.5) * 0.4,
     });
   }
 
@@ -480,10 +505,10 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
   }
 
   const layout: LavaGeyserLayout = {
-    crackAngles,
-    crackLengths,
-    crackJitter,
     backRocks,
+    crackAngles,
+    crackJitter,
+    crackLengths,
     frontRocks,
     lavaFlows,
     secondaryPools,
@@ -492,7 +517,9 @@ function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
 
   if (lavaGeyserLayoutCache.size > 120) {
     const oldestKey = lavaGeyserLayoutCache.keys().next().value;
-    if (oldestKey) lavaGeyserLayoutCache.delete(oldestKey);
+    if (oldestKey) {
+      lavaGeyserLayoutCache.delete(oldestKey);
+    }
   }
 
   return layout;
@@ -508,7 +535,7 @@ interface LavaGeyserCycleState {
 
 function getLavaGeyserCycleState(
   seed: number,
-  time: number,
+  time: number
 ): LavaGeyserCycleState {
   const cycleDuration = 5;
   const phaseOffset =
@@ -521,7 +548,7 @@ function getLavaGeyserCycleState(
     : 0;
   const dormantGlow =
     !isErupting && !buildUp ? 0.3 + Math.sin(time * 1.5 + seed * 0.1) * 0.1 : 0;
-  return { cycleTime, isErupting, buildUp, eruptionIntensity, dormantGlow };
+  return { buildUp, cycleTime, dormantGlow, eruptionIntensity, isErupting };
 }
 
 function drawLavaGeyserHazard(
@@ -530,7 +557,7 @@ function drawLavaGeyserHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 13.7 + (pos.y || 0) * 29.3;
   const layout = getLavaGeyserLayout(pos);
@@ -548,7 +575,7 @@ function drawLavaGeyserHazard(
     layout,
     time,
     cycle,
-    cameraZoom,
+    cameraZoom
   );
   drawLavaGeyserVentRim(ctx, ventWidth, lavaIso, hazSeed, cycle, cameraZoom);
   drawLavaGeyserBackRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
@@ -559,7 +586,7 @@ function drawLavaGeyserHazard(
     hazSeed,
     time,
     cycle,
-    cameraZoom,
+    cameraZoom
   );
   drawLavaGeyserFrontRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
   drawLavaGeyserEruption(
@@ -569,7 +596,7 @@ function drawLavaGeyserHazard(
     lavaIso,
     time,
     cycle,
-    cameraZoom,
+    cameraZoom
   );
   drawLavaGeyserSmoke(ctx, sRad, lavaIso, hazSeed, time, cycle, cameraZoom);
   drawLavaGeyserEmbers(ctx, sRad, hazSeed, time, cycle, cameraZoom);
@@ -582,7 +609,7 @@ function drawLavaGeyserScorchedEarth(
   lavaIso: number,
   hazSeed: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const glowBoost = cycle.buildUp ? 0.12 : cycle.eruptionIntensity * 0.15;
 
@@ -593,7 +620,7 @@ function drawLavaGeyserScorchedEarth(
     sRad * 0.6,
     0,
     0,
-    sRad * 1.6,
+    sRad * 1.6
   );
   heatStain.addColorStop(0, `rgba(80, 30, 10, ${0.35 + glowBoost})`);
   heatStain.addColorStop(0.5, `rgba(50, 18, 6, ${0.22 + glowBoost * 0.5})`);
@@ -609,7 +636,7 @@ function drawLavaGeyserScorchedEarth(
     sRad * 0.2,
     0,
     0,
-    sRad * 1.3,
+    sRad * 1.3
   );
   scorchGrad.addColorStop(0, `rgba(70, 32, 12, ${0.95 + glowBoost})`);
   scorchGrad.addColorStop(0.3, "rgba(55, 25, 10, 0.88)");
@@ -636,7 +663,7 @@ function drawLavaGeyserScorchedEarth(
       spotR,
       spotR * lavaIso,
       hazSeed + i * 17,
-      0.2,
+      0.2
     );
     ctx.fill();
   }
@@ -687,7 +714,7 @@ function drawLavaGeyserCracks(
   layout: LavaGeyserLayout,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const glowPulse =
     0.35 +
@@ -707,14 +734,14 @@ function drawLavaGeyserCracks(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(angle) * sRad * 0.3,
-      Math.sin(angle) * sRad * 0.3 * lavaIso,
+      Math.sin(angle) * sRad * 0.3 * lavaIso
     );
     const midAngle = angle + jitter * 0.2;
     ctx.quadraticCurveTo(
       Math.cos(midAngle) * len * 0.55,
       Math.sin(midAngle) * len * 0.55 * lavaIso,
       Math.cos(angle + jitter * 0.08) * len,
-      Math.sin(angle + jitter * 0.08) * len * lavaIso,
+      Math.sin(angle + jitter * 0.08) * len * lavaIso
     );
     ctx.stroke();
 
@@ -732,29 +759,27 @@ function drawLavaGeyserFlows(
   layout: LavaGeyserLayout,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const flowPulse =
     0.6 + Math.sin(time * 1.8) * 0.15 + cycle.eruptionIntensity * 0.25;
   const bankH = 3.5 * cameraZoom;
   const N = 10;
 
-  const sortedFlows = [...layout.lavaFlows].sort((a, b) => {
-    return (
+  const sortedFlows = [...layout.lavaFlows].toSorted(
+    (a, b) =>
       Math.sin(a.angle + a.curvature * 0.25) -
       Math.sin(b.angle + b.curvature * 0.25)
-    );
-  });
+  );
 
   for (const flow of sortedFlows) {
     const startR = sRad * 0.32;
     const endR = sRad * flow.length;
-    const angle = flow.angle;
+    const { angle } = flow;
     const midAngle = angle + flow.curvature;
     const endAngle = angle + flow.curvature * 0.5;
     const halfW = sRad * flow.width * 2;
-    const animShift =
-      Math.sin(time * 1.2 + flow.angle * 3) * 1.5 * cameraZoom;
+    const animShift = Math.sin(time * 1.2 + flow.angle * 3) * 1.5 * cameraZoom;
 
     const p0x = Math.cos(angle) * startR;
     const p0y = Math.sin(angle) * startR * lavaIso;
@@ -810,8 +835,12 @@ function drawLavaGeyserFlows(
     ctx.fillStyle = "rgba(20, 8, 3, 0.5)";
     ctx.beginPath();
     ctx.moveTo(oL[0].x, oL[0].y);
-    for (let i = 1; i <= N; i++) ctx.lineTo(oL[i].x, oL[i].y);
-    for (let i = N; i >= 0; i--) ctx.lineTo(oR[i].x, oR[i].y);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(oL[i].x, oL[i].y);
+    }
+    for (let i = N; i >= 0; i--) {
+      ctx.lineTo(oR[i].x, oR[i].y);
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -846,16 +875,24 @@ function drawLavaGeyserFlows(
     ctx.fillStyle = "rgb(60, 33, 16)";
     ctx.beginPath();
     ctx.moveTo(oL[0].x, oL[0].y - bankH);
-    for (let i = 1; i <= N; i++) ctx.lineTo(oL[i].x, oL[i].y - bankH);
-    for (let i = N; i >= 0; i--) ctx.lineTo(iL[i].x, iL[i].y - bankH);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(oL[i].x, oL[i].y - bankH);
+    }
+    for (let i = N; i >= 0; i--) {
+      ctx.lineTo(iL[i].x, iL[i].y - bankH);
+    }
     ctx.closePath();
     ctx.fill();
 
     ctx.fillStyle = "rgb(48, 25, 12)";
     ctx.beginPath();
     ctx.moveTo(iR[0].x, iR[0].y - bankH);
-    for (let i = 1; i <= N; i++) ctx.lineTo(iR[i].x, iR[i].y - bankH);
-    for (let i = N; i >= 0; i--) ctx.lineTo(oR[i].x, oR[i].y - bankH);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(iR[i].x, iR[i].y - bankH);
+    }
+    for (let i = N; i >= 0; i--) {
+      ctx.lineTo(oR[i].x, oR[i].y - bankH);
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -889,7 +926,7 @@ function drawLavaGeyserFlows(
       pts[0].x,
       pts[0].y,
       pts[N].x,
-      pts[N].y,
+      pts[N].y
     );
     lavaGrad.addColorStop(0, `rgba(255, 210, 70, ${flowPulse})`);
     lavaGrad.addColorStop(0.3, `rgba(255, 150, 30, ${flowPulse * 0.95})`);
@@ -898,8 +935,12 @@ function drawLavaGeyserFlows(
     ctx.fillStyle = lavaGrad;
     ctx.beginPath();
     ctx.moveTo(iL[0].x, iL[0].y);
-    for (let i = 1; i <= N; i++) ctx.lineTo(iL[i].x, iL[i].y);
-    for (let i = N; i >= 0; i--) ctx.lineTo(iR[i].x, iR[i].y);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(iL[i].x, iL[i].y);
+    }
+    for (let i = N; i >= 0; i--) {
+      ctx.lineTo(iR[i].x, iR[i].y);
+    }
     ctx.closePath();
     ctx.fill();
 
@@ -908,20 +949,21 @@ function drawLavaGeyserFlows(
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i <= N; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(pts[i].x, pts[i].y);
+    }
     ctx.stroke();
     ctx.lineCap = "butt";
 
     for (let c = 0; c < 5; c++) {
       const speed = 0.3 + Math.abs(flow.curvature) * 0.15;
-      const crustT = ((time * speed + c * 0.19 + flow.angle * 2) % 1);
+      const crustT = (time * speed + c * 0.19 + flow.angle * 2) % 1;
       const ci = Math.min(Math.floor(crustT * N), N - 1);
       const cf = crustT * N - ci;
       const next = Math.min(ci + 1, N);
       const cx = pts[ci].x * (1 - cf) + pts[next].x * cf;
       const cy = pts[ci].y * (1 - cf) + pts[next].y * cf;
-      const cw =
-        (2 + seededNoise(flow.angle * 100 + c * 7) * 2) * cameraZoom;
+      const cw = (2 + seededNoise(flow.angle * 100 + c * 7) * 2) * cameraZoom;
       ctx.fillStyle = `rgba(55, 22, 8, ${0.35 + Math.sin(time * 2.5 + c * 1.1) * 0.1})`;
       ctx.beginPath();
       ctx.ellipse(cx, cy, cw, cw * lavaIso, 0, 0, Math.PI * 2);
@@ -932,11 +974,15 @@ function drawLavaGeyserFlows(
     ctx.lineWidth = 1.5 * cameraZoom;
     ctx.beginPath();
     ctx.moveTo(iL[0].x, iL[0].y);
-    for (let i = 1; i <= N; i++) ctx.lineTo(iL[i].x, iL[i].y);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(iL[i].x, iL[i].y);
+    }
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(iR[0].x, iR[0].y);
-    for (let i = 1; i <= N; i++) ctx.lineTo(iR[i].x, iR[i].y);
+    for (let i = 1; i <= N; i++) {
+      ctx.lineTo(iR[i].x, iR[i].y);
+    }
     ctx.stroke();
 
     const epR = halfW * 1.6;
@@ -944,15 +990,7 @@ function drawLavaGeyserFlows(
     const epy = pts[N].y;
     ctx.fillStyle = "rgba(35, 14, 5, 0.55)";
     ctx.beginPath();
-    ctx.ellipse(
-      epx,
-      epy,
-      epR * 1.3,
-      epR * 1.3 * lavaIso,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(epx, epy, epR * 1.3, epR * 1.3 * lavaIso, 0, 0, Math.PI * 2);
     ctx.fill();
     const epGrad = ctx.createRadialGradient(epx, epy, 0, epx, epy, epR);
     epGrad.addColorStop(0, `rgba(255, 170, 40, ${flowPulse * 0.7})`);
@@ -972,7 +1010,7 @@ function drawLavaGeyserSecondaryPools(
   layout: LavaGeyserLayout,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const poolGlow =
     0.7 + Math.sin(time * 1.4) * 0.1 + cycle.eruptionIntensity * 0.2;
@@ -998,7 +1036,7 @@ function drawLavaGeyserSecondaryPools(
       outerR * 1.15 * lavaIso,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1073,7 +1111,7 @@ function drawLavaGeyserSecondaryPools(
       0,
       0,
       poolSurfaceY,
-      innerR,
+      innerR
     );
     poolGrad.addColorStop(0, `rgba(255, 210, 70, ${poolGlow})`);
     poolGrad.addColorStop(0.4, `rgba(255, 130, 25, ${poolGlow * 0.85})`);
@@ -1088,7 +1126,7 @@ function drawLavaGeyserSecondaryPools(
       innerR * 0.9 * lavaIso,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -1100,15 +1138,7 @@ function drawLavaGeyserSecondaryPools(
       const crustSize = pr * 0.12 + c * pr * 0.04;
       ctx.fillStyle = `rgba(50, 20, 8, ${0.3 + Math.sin(time + c) * 0.1})`;
       ctx.beginPath();
-      ctx.ellipse(
-        cx,
-        cy,
-        crustSize,
-        crustSize * lavaIso,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(cx, cy, crustSize, crustSize * lavaIso, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1118,13 +1148,7 @@ function drawLavaGeyserSecondaryPools(
       const bAlpha = 0.6 * (1 - bubblePhase / 0.4);
       ctx.fillStyle = `rgba(255, 245, 160, ${bAlpha})`;
       ctx.beginPath();
-      ctx.arc(
-        pr * 0.15,
-        poolSurfaceY - pr * 0.05,
-        bSize,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(pr * 0.15, poolSurfaceY - pr * 0.05, bSize, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1140,7 +1164,7 @@ function drawLavaGeyserSecondaryPools(
         innerR * 0.92 * lavaIso,
         0,
         Math.PI * 0.15,
-        Math.PI * 0.85,
+        Math.PI * 0.85
       );
       ctx.stroke();
     }
@@ -1158,7 +1182,7 @@ function drawLavaGeyserVentRock(
   taper: number,
   glowAlpha: number,
   cameraZoom: number,
-  isFront: boolean,
+  isFront: boolean
 ): void {
   const iso = ISO_Y_RATIO;
   const hw = rockW;
@@ -1226,7 +1250,7 @@ function drawLavaGeyserVentRim(
   lavaIso: number,
   hazSeed: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const outerRx = ventWidth * 0.56;
   const outerRy = outerRx * lavaIso;
@@ -1310,7 +1334,7 @@ function drawLavaGeyserBackRocks(
   lavaIso: number,
   layout: LavaGeyserLayout,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const glowAlpha =
     0.25 +
@@ -1331,7 +1355,7 @@ function drawLavaGeyserBackRocks(
       rock.taper,
       glowAlpha,
       cameraZoom,
-      false,
+      false
     );
   }
 }
@@ -1343,7 +1367,7 @@ function drawLavaGeyserMagmaPool(
   hazSeed: number,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const poolY = -6 * cameraZoom;
   const poolRx = ventWidth * 0.48;
@@ -1386,7 +1410,7 @@ function drawLavaGeyserMagmaPool(
       crustSize,
       crustSize * lavaIso,
       hazSeed + crust * 19,
-      0.25,
+      0.25
     );
     ctx.fill();
   }
@@ -1404,14 +1428,14 @@ function drawLavaGeyserMagmaPool(
       Math.sin(convAngle) * convR * 0.18 * lavaIso,
       convR * 0.28,
       0,
-      Math.PI * 1.4,
+      Math.PI * 1.4
     );
     ctx.stroke();
   }
 
   // Magma bubbles
   for (let b = 0; b < 4; b++) {
-    const bPhase = (time * 2.0 + b * 0.55 + hazSeed * 0.01) % 1.2;
+    const bPhase = (time * 2 + b * 0.55 + hazSeed * 0.01) % 1.2;
     if (bPhase < 0.5) {
       const bProgress = bPhase / 0.5;
       const bAngle = b * 1.6 + hazSeed * 0.05;
@@ -1434,7 +1458,7 @@ function drawLavaGeyserFrontRocks(
   lavaIso: number,
   layout: LavaGeyserLayout,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const glowAlpha =
     0.3 +
@@ -1455,7 +1479,7 @@ function drawLavaGeyserFrontRocks(
       rock.taper,
       glowAlpha,
       cameraZoom,
-      true,
+      true
     );
   }
 }
@@ -1467,7 +1491,7 @@ function drawLavaGeyserEruption(
   lavaIso: number,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   // Build-up ground pulse
   if (cycle.buildUp) {
@@ -1479,7 +1503,9 @@ function drawLavaGeyserEruption(
     ctx.fill();
   }
 
-  if (!cycle.isErupting) return;
+  if (!cycle.isErupting) {
+    return;
+  }
 
   const ei = cycle.eruptionIntensity;
   const columnHeight = ei * 140 * cameraZoom;
@@ -1498,7 +1524,7 @@ function drawLavaGeyserEruption(
     0,
     -8 * cameraZoom,
     0,
-    -columnHeight,
+    -columnHeight
   );
   columnGrad.addColorStop(0, "rgba(255, 240, 120, 1)");
   columnGrad.addColorStop(0.12, "#ffaa00");
@@ -1520,7 +1546,7 @@ function drawLavaGeyserEruption(
     -columnBaseWidth * 0.3 + wobble3,
     -columnHeight * 0.65,
     wobble1 * 0.3,
-    -columnHeight,
+    -columnHeight
   );
   ctx.bezierCurveTo(
     columnBaseWidth * 0.3 + wobble2,
@@ -1528,7 +1554,7 @@ function drawLavaGeyserEruption(
     columnBaseWidth * 0.8 + wobble2,
     -columnHeight * 0.3,
     columnBaseWidth,
-    -8 * cameraZoom,
+    -8 * cameraZoom
   );
   ctx.closePath();
   ctx.fill();
@@ -1539,7 +1565,7 @@ function drawLavaGeyserEruption(
     0,
     -8 * cameraZoom,
     0,
-    -columnHeight * 0.7,
+    -columnHeight * 0.7
   );
   coreGrad.addColorStop(0, "rgba(255, 255, 200, 0.8)");
   coreGrad.addColorStop(0.3, "rgba(255, 220, 100, 0.5)");
@@ -1551,13 +1577,13 @@ function drawLavaGeyserEruption(
     wobble3 * 0.3,
     -columnHeight * 0.4,
     wobble1 * 0.15,
-    -columnHeight * 0.7,
+    -columnHeight * 0.7
   );
   ctx.quadraticCurveTo(
     wobble2 * 0.3,
     -columnHeight * 0.4,
     columnBaseWidth * 0.35,
-    -8 * cameraZoom,
+    -8 * cameraZoom
   );
   ctx.closePath();
   ctx.fill();
@@ -1566,7 +1592,9 @@ function drawLavaGeyserEruption(
   // Lava bombs with trails
   for (let bomb = 0; bomb < 12; bomb++) {
     const bombPhase = (cycle.cycleTime + bomb * 0.09) % 1.4;
-    if (bombPhase >= 1.2) continue;
+    if (bombPhase >= 1.2) {
+      continue;
+    }
     const bombAngle = (bomb / 12) * Math.PI * 2 + time * 0.5 + bomb * 0.37;
     const bombDist = bombPhase * sRad * 1.6;
     const bombGravity = bombPhase * bombPhase * 50 * cameraZoom;
@@ -1589,7 +1617,7 @@ function drawLavaGeyserEruption(
       prevPhase * prevPhase * 50 * cameraZoom * 0.3;
     ctx.moveTo(
       Math.cos(bombAngle) * prevDist,
-      Math.sin(bombAngle) * prevDist * lavaIso - prevHeight,
+      Math.sin(bombAngle) * prevDist * lavaIso - prevHeight
     );
     ctx.lineTo(bombX, bombY);
     ctx.stroke();
@@ -1604,7 +1632,7 @@ function drawLavaGeyserEruption(
       0,
       bombX,
       bombY,
-      bombSize,
+      bombSize
     );
     bGrad.addColorStop(0, `rgba(255, 240, 120, ${bombAlpha})`);
     bGrad.addColorStop(0.4, `rgba(255, 140, 20, ${bombAlpha * 0.9})`);
@@ -1644,7 +1672,7 @@ function drawLavaGeyserSmoke(
   hazSeed: number,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const smokeCount = cycle.isErupting ? 8 : 4;
   for (let s = 0; s < smokeCount; s++) {
@@ -1664,7 +1692,7 @@ function drawLavaGeyserSmoke(
       0,
       smokeX,
       smokeY,
-      smokeSize,
+      smokeSize
     );
     smokeGrad.addColorStop(0, `rgba(60, 48, 38, ${smokeAlpha})`);
     smokeGrad.addColorStop(0.6, `rgba(45, 35, 28, ${smokeAlpha * 0.6})`);
@@ -1677,7 +1705,7 @@ function drawLavaGeyserSmoke(
       smokeSize,
       smokeSize * lavaIso,
       hazSeed + s * 31.7,
-      0.18,
+      0.18
     );
     ctx.fill();
   }
@@ -1689,7 +1717,7 @@ function drawLavaGeyserEmbers(
   hazSeed: number,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const emberCount = cycle.isErupting ? 14 : 8;
   for (let ember = 0; ember < emberCount; ember++) {
@@ -1725,7 +1753,7 @@ function drawLavaGeyserHeatShimmer(
   lavaIso: number,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const shimmerAlpha =
     0.06 +
@@ -1756,17 +1784,15 @@ function drawVolcanoHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 23.7;
   const iso = ISO_Y_RATIO;
 
   const cycleTime = (time + seededNoise(hazSeed) * 7) % 7;
-  const isSummoning = cycleTime < 2.0;
+  const isSummoning = cycleTime < 2;
   const buildUp = cycleTime > 5.5;
-  const summonIntensity = isSummoning
-    ? Math.sin((cycleTime / 2.0) * Math.PI)
-    : 0;
+  const summonIntensity = isSummoning ? Math.sin((cycleTime / 2) * Math.PI) : 0;
 
   const baseRx = sRad * 0.72;
   const baseRy = baseRx * iso;
@@ -1783,7 +1809,7 @@ function drawVolcanoHazard(
     hazSeed,
     time,
     buildUp,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoLavaVeins(
     ctx,
@@ -1793,7 +1819,7 @@ function drawVolcanoHazard(
     time,
     buildUp,
     summonIntensity,
-    cameraZoom,
+    cameraZoom
   );
   drawVolcanoRubble(ctx, baseRx, baseY, iso, hazSeed, cameraZoom);
   drawVolcanoConeBody(
@@ -1807,7 +1833,7 @@ function drawVolcanoHazard(
     cameraZoom,
     buildUp,
     isSummoning,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoGlowingFissures(
     ctx,
@@ -1820,7 +1846,7 @@ function drawVolcanoHazard(
     time,
     cameraZoom,
     buildUp,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoStrata(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, cameraZoom);
   drawVolcanoLavaFlows(
@@ -1834,7 +1860,7 @@ function drawVolcanoHazard(
     time,
     cameraZoom,
     buildUp,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoRockOutcrops(
     ctx,
@@ -1844,7 +1870,7 @@ function drawVolcanoHazard(
     rimY,
     iso,
     hazSeed,
-    cameraZoom,
+    cameraZoom
   );
   drawVolcanoCrater(
     ctx,
@@ -1857,7 +1883,7 @@ function drawVolcanoHazard(
     hazSeed,
     buildUp,
     isSummoning,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoFireball(
     ctx,
@@ -1867,7 +1893,7 @@ function drawVolcanoHazard(
     cycleTime,
     cameraZoom,
     isSummoning,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoEmbers(
     ctx,
@@ -1877,7 +1903,7 @@ function drawVolcanoHazard(
     time,
     cameraZoom,
     isSummoning,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoAshCloud(
     ctx,
@@ -1887,7 +1913,7 @@ function drawVolcanoHazard(
     time,
     cameraZoom,
     isSummoning,
-    summonIntensity,
+    summonIntensity
   );
   drawVolcanoHeatShimmer(
     ctx,
@@ -1898,7 +1924,7 @@ function drawVolcanoHazard(
     buildUp,
     isSummoning,
     summonIntensity,
-    cameraZoom,
+    cameraZoom
   );
 }
 
@@ -1909,13 +1935,13 @@ function drawVolcanoScorchedBase(
   hazSeed: number,
   time: number,
   buildUp: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const heatBoost = buildUp ? 0.08 : summonIntensity * 0.1;
   const baseGrad = ctx.createRadialGradient(0, 0, sRad * 0.1, 0, 0, sRad * 1.4);
   baseGrad.addColorStop(
     0,
-    `rgba(${90 + Math.floor(heatBoost * 100)}, 38, 12, 0.96)`,
+    `rgba(${90 + Math.floor(heatBoost * 100)}, 38, 12, 0.96)`
   );
   baseGrad.addColorStop(0.25, "rgba(65, 28, 10, 0.92)");
   baseGrad.addColorStop(0.5, "rgba(45, 20, 7, 0.75)");
@@ -1946,7 +1972,7 @@ function drawVolcanoLavaVeins(
   time: number,
   buildUp: boolean,
   summonIntensity: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   for (let vein = 0; vein < 10; vein++) {
     const vSeed = hazSeed + vein * 7;
@@ -1992,7 +2018,7 @@ function drawVolcanoRubble(
   baseY: number,
   iso: number,
   hazSeed: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   for (let rub = 0; rub < 14; rub++) {
     const rubAngle =
@@ -2034,7 +2060,7 @@ function drawVolcanoConeBody(
   cameraZoom: number,
   buildUp: boolean,
   isSummoning: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const CONE_SEGS = 24;
 
@@ -2065,10 +2091,10 @@ function drawVolcanoConeBody(
       const cg = Math.floor(34 * lightness + 10);
       const cb = Math.floor(20 * lightness + 5);
       const heatR = Math.floor(
-        buildUp ? 30 : isSummoning ? 40 * summonIntensity : 0,
+        buildUp ? 30 : isSummoning ? 40 * summonIntensity : 0
       );
       const heatG = Math.floor(
-        buildUp ? 8 : isSummoning ? 12 * summonIntensity : 0,
+        buildUp ? 8 : isSummoning ? 12 * summonIntensity : 0
       );
 
       ctx.fillStyle = `rgb(${Math.min(255, cr + heatR)}, ${cg + heatG}, ${cb})`;
@@ -2098,7 +2124,7 @@ function drawVolcanoGlowingFissures(
   time: number,
   cameraZoom: number,
   buildUp: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const fissureGlow = 0.3 + (buildUp ? 0.3 : summonIntensity * 0.4);
 
@@ -2129,8 +2155,11 @@ function drawVolcanoGlowingFissures(
         const jit = (seededNoise(fSeed + seg * 7) - 0.5) * 3 * cameraZoom;
         const x = Math.cos(fAngle) * interpRx * 1.01 + jit;
         const y = interpY + Math.sin(fAngle) * interpRx * iso * 1.01;
-        if (seg === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (seg === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
       }
       ctx.stroke();
     }
@@ -2146,7 +2175,7 @@ function drawVolcanoStrata(
   rimY: number,
   iso: number,
   hazSeed: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   for (let stratum = 0; stratum < 5; stratum++) {
     const t = 0.15 + stratum * 0.17;
@@ -2163,8 +2192,11 @@ function drawVolcanoStrata(
       const a = (j / 12) * Math.PI;
       const sx = Math.cos(a) * stratRx;
       const sy = stratY + Math.sin(a) * stratRy + jitter;
-      if (j === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+      if (j === 0) {
+        ctx.moveTo(sx, sy);
+      } else {
+        ctx.lineTo(sx, sy);
+      }
     }
     ctx.stroke();
   }
@@ -2181,7 +2213,7 @@ function drawVolcanoLavaFlows(
   time: number,
   cameraZoom: number,
   buildUp: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const flowIntensity = 0.4 + (buildUp ? 0.3 : summonIntensity * 0.5);
 
@@ -2247,7 +2279,7 @@ function drawVolcanoRockOutcrops(
   rimY: number,
   iso: number,
   hazSeed: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   for (let rock = 0; rock < 10; rock++) {
     const rockAngle =
@@ -2275,8 +2307,11 @@ function drawVolcanoRockOutcrops(
         rockSize * (0.7 + seededNoise(hazSeed + rock * 7 + seg * 3) * 0.3);
       const px = rcx + Math.cos(a) * r;
       const py = rcy + Math.sin(a) * r * iso;
-      if (seg === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      if (seg === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        ctx.lineTo(px, py);
+      }
     }
     ctx.closePath();
     ctx.fill();
@@ -2298,7 +2333,7 @@ function drawVolcanoCrater(
   hazSeed: number,
   buildUp: boolean,
   isSummoning: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const craterDepth = 6 * cameraZoom;
 
@@ -2306,7 +2341,7 @@ function drawVolcanoCrater(
     0,
     rimY - 2 * cameraZoom,
     0,
-    rimY + craterDepth,
+    rimY + craterDepth
   );
   innerGrad.addColorStop(0, "rgba(45, 20, 7, 0.92)");
   innerGrad.addColorStop(0.4, "rgba(90, 32, 10, 0.88)");
@@ -2332,11 +2367,11 @@ function drawVolcanoCrater(
     0,
     0,
     rimY + craterDepth * 0.3,
-    magmaRx,
+    magmaRx
   );
   craterGrad.addColorStop(
     0,
-    `rgba(255, 230, ${buildUp ? 120 : 70}, ${glowIntensity})`,
+    `rgba(255, 230, ${buildUp ? 120 : 70}, ${glowIntensity})`
   );
   craterGrad.addColorStop(0.3, "rgba(255, 150, 10, 0.92)");
   craterGrad.addColorStop(0.55, "rgba(230, 80, 0, 0.8)");
@@ -2351,7 +2386,9 @@ function drawVolcanoCrater(
   for (let bubble = 0; bubble < 5; bubble++) {
     const bSeed = hazSeed + bubble * 7.3;
     const bPhase = (time * 0.8 + seededNoise(bSeed) * 2) % 2;
-    if (bPhase > 0.6) continue;
+    if (bPhase > 0.6) {
+      continue;
+    }
     const bAngle = seededNoise(bSeed + 1) * Math.PI * 2;
     const bDist = magmaRx * 0.4 * seededNoise(bSeed + 2);
     const bx = Math.cos(bAngle) * bDist;
@@ -2380,11 +2417,13 @@ function drawVolcanoFireball(
   cycleTime: number,
   cameraZoom: number,
   isSummoning: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
-  if (!isSummoning) return;
+  if (!isSummoning) {
+    return;
+  }
 
-  const fireballPhase = cycleTime / 2.0;
+  const fireballPhase = cycleTime / 2;
   const risePhase = Math.min(1, fireballPhase * 2);
   const arcHeight = 95 * cameraZoom * Math.sin(risePhase * Math.PI);
   const fireballY = rimY - arcHeight;
@@ -2415,7 +2454,7 @@ function drawVolcanoFireball(
     0,
     driftX,
     fireballY,
-    fireballSize,
+    fireballSize
   );
   fbGrad.addColorStop(0, "rgba(255, 255, 210, 1)");
   fbGrad.addColorStop(0.2, "rgba(255, 220, 80, 0.96)");
@@ -2444,7 +2483,7 @@ function drawVolcanoFireball(
       smokeSize * 0.8,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2458,7 +2497,7 @@ function drawVolcanoEmbers(
   time: number,
   cameraZoom: number,
   isSummoning: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
   const emberCount = isSummoning ? 18 : 12;
   for (let ember = 0; ember < emberCount; ember++) {
@@ -2504,9 +2543,11 @@ function drawVolcanoAshCloud(
   time: number,
   cameraZoom: number,
   isSummoning: boolean,
-  summonIntensity: number,
+  summonIntensity: number
 ): void {
-  if (!isSummoning || summonIntensity < 0.3) return;
+  if (!isSummoning || summonIntensity < 0.3) {
+    return;
+  }
 
   const cloudAlpha = (summonIntensity - 0.3) * 0.5;
   for (let puff = 0; puff < 5; puff++) {
@@ -2535,7 +2576,7 @@ function drawVolcanoHeatShimmer(
   buildUp: boolean,
   isSummoning: boolean,
   summonIntensity: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const baseAlpha =
     0.04 + (buildUp ? 0.1 : isSummoning ? summonIntensity * 0.12 : 0);
@@ -2560,7 +2601,7 @@ function drawVolcanoHeatShimmer(
       0,
       0,
       -10 * cameraZoom,
-      sRad * 0.7,
+      sRad * 0.7
     );
     glowGrad.addColorStop(0, `rgba(255, 120, 30, ${glowAlpha})`);
     glowGrad.addColorStop(0.5, `rgba(255, 80, 10, ${glowAlpha * 0.4})`);
@@ -2574,7 +2615,7 @@ function drawVolcanoHeatShimmer(
       sRad * 0.5 * iso,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2590,7 +2631,7 @@ function drawIceSheetHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 19.3 + (pos.y || 0) * 37.1;
 
@@ -2601,7 +2642,7 @@ function drawIceSheetHazard(
     sRad * 0.7,
     0,
     0,
-    sRad * 1.2,
+    sRad * 1.2
   );
   frostGrad.addColorStop(0, "transparent");
   frostGrad.addColorStop(0.5, "rgba(240, 248, 255, 0.4)");
@@ -2628,7 +2669,7 @@ function drawIceSheetHazard(
       moundSize * 0.4,
       moundAngle + Math.sin(hazSeed + mound) * 0.5,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -2640,7 +2681,7 @@ function drawIceSheetHazard(
     0,
     0,
     5 * cameraZoom,
-    sRad,
+    sRad
   );
   iceDeepGrad.addColorStop(0, "rgba(100, 150, 180, 0.9)");
   iceDeepGrad.addColorStop(0.5, "rgba(80, 130, 170, 0.8)");
@@ -2659,7 +2700,7 @@ function drawIceSheetHazard(
     0,
     0,
     0,
-    sRad,
+    sRad
   );
   iceSurfGrad.addColorStop(0, "rgba(220, 240, 255, 0.9)");
   iceSurfGrad.addColorStop(0.3, "rgba(180, 210, 240, 0.7)");
@@ -2687,7 +2728,7 @@ function drawIceSheetHazard(
       const jitter = Math.sin(crack * 5 + s * 3 + hazSeed) * 8 * cameraZoom;
       ctx.lineTo(
         baseX + Math.cos(crackAngle + Math.PI / 2) * jitter,
-        baseY + Math.sin(crackAngle + Math.PI / 2) * jitter * isoRatio,
+        baseY + Math.sin(crackAngle + Math.PI / 2) * jitter * isoRatio
       );
     }
     ctx.stroke();
@@ -2762,11 +2803,11 @@ function drawIceSheetHazard(
       0,
       mistX,
       mistY,
-      mistSize,
+      mistSize
     );
     mistGrad.addColorStop(
       0,
-      `rgba(200, 230, 255, ${0.15 * (1 - mistPhase / 2)})`,
+      `rgba(200, 230, 255, ${0.15 * (1 - mistPhase / 2)})`
     );
     mistGrad.addColorStop(1, "transparent");
     ctx.fillStyle = mistGrad;
@@ -2786,7 +2827,7 @@ function drawIceSpikesHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 47.3 + (pos.y || 0) * 21.9;
   const cycle = getIceSpikesCycleState(hazSeed, time);
@@ -2800,17 +2841,17 @@ function drawIceSpikesHazard(
     sRad * 0.35,
     0,
     0,
-    sRad * 1.5,
+    sRad * 1.5
   );
   const burstBoost = cycle.burst ? 0.16 : cycle.active ? 0.08 : 0;
   frostHalo.addColorStop(0, `rgba(185, 225, 255, ${0.28 + burstBoost})`);
   frostHalo.addColorStop(
     0.5,
-    `rgba(145, 195, 255, ${0.24 + burstBoost * 0.8})`,
+    `rgba(145, 195, 255, ${0.24 + burstBoost * 0.8})`
   );
   frostHalo.addColorStop(
     0.85,
-    `rgba(215, 240, 255, ${0.12 + burstBoost * 0.5})`,
+    `rgba(215, 240, 255, ${0.12 + burstBoost * 0.5})`
   );
   frostHalo.addColorStop(1, "transparent");
   ctx.fillStyle = frostHalo;
@@ -2824,7 +2865,7 @@ function drawIceSpikesHazard(
     0,
     0,
     8 * cameraZoom,
-    sRad * 1.05,
+    sRad * 1.05
   );
   plateShadow.addColorStop(0, "rgba(45, 82, 124, 0.65)");
   plateShadow.addColorStop(0.5, "rgba(35, 64, 102, 0.55)");
@@ -2842,12 +2883,12 @@ function drawIceSpikesHazard(
     0,
     0,
     0,
-    sRad * 1.05,
+    sRad * 1.05
   );
   plateTop.addColorStop(0, `rgba(230, 248, 255, ${0.9 + cycle.extend * 0.08})`);
   plateTop.addColorStop(
     0.35,
-    `rgba(170, 214, 248, ${0.76 + cycle.extend * 0.1})`,
+    `rgba(170, 214, 248, ${0.76 + cycle.extend * 0.1})`
   );
   plateTop.addColorStop(0.7, "rgba(110, 170, 230, 0.68)");
   plateTop.addColorStop(1, "rgba(75, 130, 195, 0.46)");
@@ -2857,7 +2898,7 @@ function drawIceSpikesHazard(
     sRad * 0.92,
     sRad * 0.68 * spikeIsoRatio,
     hazSeed + 31,
-    0.16,
+    0.16
   );
   ctx.fill();
 
@@ -2879,7 +2920,7 @@ function drawIceSpikesHazard(
         cameraZoom;
       ctx.lineTo(
         baseX + Math.cos(crackAngle + Math.PI / 2) * jag,
-        baseY + Math.sin(crackAngle + Math.PI / 2) * jag * spikeIsoRatio,
+        baseY + Math.sin(crackAngle + Math.PI / 2) * jag * spikeIsoRatio
       );
     }
     ctx.stroke();
@@ -2890,11 +2931,11 @@ function drawIceSpikesHazard(
   const detailScalar = cameraZoom >= 0.95 ? 1 : cameraZoom >= 0.7 ? 0.8 : 0.62;
   const spikeCount = Math.max(
     10,
-    Math.floor(layout.spikes.length * detailScalar),
+    Math.floor(layout.spikes.length * detailScalar)
   );
   const spikes = layout.spikes.slice(0, spikeCount);
   spikes.sort(
-    (a, b) => Math.sin(a.angle) * a.dist - Math.sin(b.angle) * b.dist,
+    (a, b) => Math.sin(a.angle) * a.dist - Math.sin(b.angle) * b.dist
   );
   const extensionMultiplier = 0.14 + cycle.extend * 0.86;
   const drawFacetLines = cameraZoom > 0.72 && cycle.extend > 0.2;
@@ -2956,7 +2997,7 @@ function drawIceSpikesHazard(
       width * 0.34,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -2981,7 +3022,7 @@ function drawIceSpikesHazard(
   // 3. Jagged perimeter shards (lower profile, chaotic rim)
   const shardCount = Math.max(
     10,
-    Math.floor(layout.rimShards.length * detailScalar),
+    Math.floor(layout.rimShards.length * detailScalar)
   );
   for (let i = 0; i < shardCount; i++) {
     const shard = layout.rimShards[i];
@@ -3038,7 +3079,7 @@ function drawQuicksandHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 23.1 + (pos.y || 0) * 41.9;
 
@@ -3049,7 +3090,7 @@ function drawQuicksandHazard(
     sRad * 0.5,
     0,
     0,
-    sRad * 1.3,
+    sRad * 1.3
   );
   disturbedGrad.addColorStop(0, "transparent");
   disturbedGrad.addColorStop(0.5, "rgba(139, 119, 101, 0.5)");
@@ -3070,11 +3111,11 @@ function drawQuicksandHazard(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(crackAngle) * crackStart,
-      Math.sin(crackAngle) * crackStart * isoRatio,
+      Math.sin(crackAngle) * crackStart * isoRatio
     );
     ctx.lineTo(
       Math.cos(crackAngle + 0.1) * crackEnd,
-      Math.sin(crackAngle + 0.1) * crackEnd * isoRatio,
+      Math.sin(crackAngle + 0.1) * crackEnd * isoRatio
     );
     ctx.stroke();
   }
@@ -3123,8 +3164,11 @@ function drawQuicksandHazard(
       const spiralAngle = t * 4.5 + spiralSpeed + arm * ((Math.PI * 2) / 5);
       const sx = Math.cos(spiralAngle) * (spiralR + wobble);
       const sy = Math.sin(spiralAngle) * (spiralR + wobble) * isoRatio;
-      if (t === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+      if (t === 0) {
+        ctx.moveTo(sx, sy);
+      } else {
+        ctx.lineTo(sx, sy);
+      }
     }
     ctx.stroke();
 
@@ -3138,8 +3182,11 @@ function drawQuicksandHazard(
       const spiralAngle = t * 4.5 + spiralSpeed + arm * ((Math.PI * 2) / 5);
       const sx = Math.cos(spiralAngle) * (spiralR + wobble);
       const sy = Math.sin(spiralAngle) * (spiralR + wobble) * isoRatio;
-      if (t === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+      if (t === 0) {
+        ctx.moveTo(sx, sy);
+      } else {
+        ctx.lineTo(sx, sy);
+      }
     }
     ctx.stroke();
   }
@@ -3176,17 +3223,17 @@ function drawQuicksandHazard(
       rippleR,
       rippleR * isoRatio,
       hazSeed + ripple * 20,
-      0.1,
+      0.1
     );
     ctx.stroke();
   }
 
   // 5. Debris being pulled in
   const debrisItems = [
-    { type: "bone", angle: 0.5 + hazSeed * 0.01, dist: 0.6 },
-    { type: "stick", angle: 2.1 + hazSeed * 0.01, dist: 0.7 },
-    { type: "rock", angle: 3.8 + hazSeed * 0.01, dist: 0.5 },
-    { type: "skull", angle: 5.2 + hazSeed * 0.01, dist: 0.4 },
+    { angle: 0.5 + hazSeed * 0.01, dist: 0.6, type: "bone" },
+    { angle: 2.1 + hazSeed * 0.01, dist: 0.7, type: "stick" },
+    { angle: 3.8 + hazSeed * 0.01, dist: 0.5, type: "rock" },
+    { angle: 5.2 + hazSeed * 0.01, dist: 0.4, type: "skull" },
   ];
 
   for (const debris of debrisItems) {
@@ -3254,7 +3301,7 @@ function drawQuicksandHazard(
   const signAngle = hazSeed * 0.1;
   ctx.translate(
     Math.cos(signAngle) * sRad * 0.9,
-    Math.sin(signAngle) * sRad * 0.4 * isoRatio - sRad * 0.3 * isoRatio,
+    Math.sin(signAngle) * sRad * 0.4 * isoRatio - sRad * 0.3 * isoRatio
   );
 
   ctx.fillStyle = "#5d4e37";
@@ -3262,7 +3309,7 @@ function drawQuicksandHazard(
     -3 * cameraZoom,
     -25 * cameraZoom,
     6 * cameraZoom,
-    30 * cameraZoom,
+    30 * cameraZoom
   );
 
   ctx.fillStyle = "#c4a35a";
@@ -3290,7 +3337,7 @@ function drawDeepWaterHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 31.7 + (pos.y || 0) * 43.1;
   const tide = Math.sin(time * 0.85 + hazSeed * 0.03) * 0.5 + 0.5;
@@ -3302,7 +3349,7 @@ function drawDeepWaterHazard(
     sRad * 0.45,
     0,
     0,
-    sRad * 1.35,
+    sRad * 1.35
   );
   wetGrad.addColorStop(0, "rgba(10, 40, 70, 0.25)");
   wetGrad.addColorStop(0.55, "rgba(25, 60, 85, 0.2)");
@@ -3318,7 +3365,7 @@ function drawDeepWaterHazard(
     0,
     0,
     0,
-    sRad,
+    sRad
   );
   waterGrad.addColorStop(0, "rgba(82, 164, 202, 0.92)");
   waterGrad.addColorStop(0.33, "rgba(44, 116, 162, 0.9)");
@@ -3335,7 +3382,7 @@ function drawDeepWaterHazard(
     0,
     0,
     3 * cameraZoom,
-    sRad * 0.52,
+    sRad * 0.52
   );
   depthGrad.addColorStop(0, "rgba(4, 18, 48, 0.95)");
   depthGrad.addColorStop(1, "rgba(8, 34, 64, 0.15)");
@@ -3364,7 +3411,7 @@ function drawDeepWaterHazard(
       shelfSize * isoRatio * 0.9,
       seededNoise(sSeed + 3) * 0.4,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3381,7 +3428,7 @@ function drawDeepWaterHazard(
       r * wobble,
       r * isoRatio * wobble,
       hazSeed + band * 31,
-      0.09,
+      0.09
     );
     ctx.stroke();
   }
@@ -3420,7 +3467,7 @@ function drawDeepWaterHazard(
       rx + sway * 0.4,
       ry - height * 0.45,
       rx + sway,
-      ry - height,
+      ry - height
     );
     ctx.stroke();
   }
@@ -3430,7 +3477,8 @@ function drawDeepWaterHazard(
     const dSeed = hazSeed + drift * 13.1;
     const angle = seededNoise(dSeed) * Math.PI * 2 + time * 0.08;
     const dist = sRad * (0.12 + seededNoise(dSeed + 1) * 0.5);
-    const dx = Math.cos(angle) * dist + Math.sin(time * 0.35 + drift) * 5 * cameraZoom;
+    const dx =
+      Math.cos(angle) * dist + Math.sin(time * 0.35 + drift) * 5 * cameraZoom;
     const dy = Math.sin(angle) * dist * isoRatio;
     const size = sRad * (0.03 + seededNoise(dSeed + 2) * 0.04);
 
@@ -3443,7 +3491,7 @@ function drawDeepWaterHazard(
       size * isoRatio * 0.75,
       seededNoise(dSeed + 4) * Math.PI,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3455,7 +3503,7 @@ function drawDeepWaterHazard(
     0,
     -sRad * 0.32,
     -sRad * 0.2 * isoRatio,
-    sRad * 0.42,
+    sRad * 0.42
   );
   glintGrad.addColorStop(0, `rgba(230, 248, 255, ${0.25 + tide * 0.18})`);
   glintGrad.addColorStop(0.5, "rgba(190, 235, 255, 0.08)");
@@ -3469,7 +3517,7 @@ function drawDeepWaterHazard(
     sRad * 0.23 * isoRatio,
     -0.35,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -3484,7 +3532,7 @@ function drawMaelstromHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 59.9 + (pos.y || 0) * 19.7;
   const spin = time * 1.8;
@@ -3496,7 +3544,7 @@ function drawMaelstromHazard(
     sRad * 0.2,
     0,
     0,
-    sRad * 1.2,
+    sRad * 1.2
   );
   basinGrad.addColorStop(0, "rgba(12, 32, 58, 0.95)");
   basinGrad.addColorStop(0.5, "rgba(18, 64, 98, 0.82)");
@@ -3515,8 +3563,11 @@ function drawMaelstromHazard(
       const theta = spin + arm * 0.9 + t * 8.8 + Math.sin(hazSeed + arm) * 0.2;
       const x = Math.cos(theta) * radius;
       const y = Math.sin(theta) * radius * isoRatio;
-      if (t === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (t === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
     ctx.stroke();
   }
@@ -3562,7 +3613,7 @@ function drawMaelstromLightning(
   time: number,
   hazSeed: number,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   // Two independent lightning slots, each with its own cycle
   for (let slot = 0; slot < 2; slot++) {
@@ -3572,7 +3623,9 @@ function drawMaelstromLightning(
       (time + seededNoise(slotSeed) * cyclePeriod) % cyclePeriod;
     const flashDuration = 0.18;
 
-    if (cyclePhase > flashDuration) continue;
+    if (cyclePhase > flashDuration) {
+      continue;
+    }
 
     const flashAlpha = 1 - cyclePhase / flashDuration;
     const boltAngle =
@@ -3631,7 +3684,7 @@ function drawMaelstromLightning(
       0,
       endX,
       endY,
-      8 * cameraZoom,
+      8 * cameraZoom
     );
     impactGrad.addColorStop(0, `rgba(200, 240, 255, ${flashAlpha * 0.8})`);
     impactGrad.addColorStop(1, "transparent");
@@ -3654,7 +3707,7 @@ function drawStormFieldHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 27.1 + (pos.y || 0) * 61.3;
   const pulse = Math.sin(time * 3.4 + hazSeed * 0.03) * 0.5 + 0.5;
@@ -3669,7 +3722,7 @@ function drawStormFieldHazard(
     0,
     0,
     4 * cameraZoom,
-    sRad * 1.2,
+    sRad * 1.2
   );
   wetGrad.addColorStop(0, "rgba(18, 24, 42, 0.82)");
   wetGrad.addColorStop(0.4, "rgba(22, 30, 52, 0.7)");
@@ -3711,8 +3764,11 @@ function drawStormFieldHazard(
       const wobble = 1 + Math.sin(angle * 3 + hazSeed) * 0.08;
       const x = Math.cos(angle) * ringR * wobble;
       const y = Math.sin(angle) * ringR * isoRatio * wobble + 2 * cameraZoom;
-      if (seg === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (seg === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
     ctx.closePath();
     ctx.stroke();
@@ -3722,11 +3778,11 @@ function drawStormFieldHazard(
 
   // 3. Towering cloud columns — stacked ellipses rising high
   const cloudCols = [
-    { angle: 0.3, dist: 0.15, width: 0.55, layers: 7, height: 85 },
-    { angle: 2.3, dist: 0.25, width: 0.4, layers: 6, height: 70 },
-    { angle: 4.1, dist: 0.2, width: 0.45, layers: 6, height: 75 },
-    { angle: 1.2, dist: 0.35, width: 0.3, layers: 5, height: 55 },
-    { angle: 3.7, dist: 0.32, width: 0.32, layers: 5, height: 60 },
+    { angle: 0.3, dist: 0.15, height: 85, layers: 7, width: 0.55 },
+    { angle: 2.3, dist: 0.25, height: 70, layers: 6, width: 0.4 },
+    { angle: 4.1, dist: 0.2, height: 75, layers: 6, width: 0.45 },
+    { angle: 1.2, dist: 0.35, height: 55, layers: 5, width: 0.3 },
+    { angle: 3.7, dist: 0.32, height: 60, layers: 5, width: 0.32 },
   ];
   for (let col = 0; col < cloudCols.length; col++) {
     const c = cloudCols[col];
@@ -3752,7 +3808,7 @@ function drawStormFieldHazard(
       cGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
       cGrad.addColorStop(
         0.6,
-        `rgba(${r - 15}, ${g - 15}, ${b - 10}, ${alpha * 0.6})`,
+        `rgba(${r - 15}, ${g - 15}, ${b - 10}, ${alpha * 0.6})`
       );
       cGrad.addColorStop(1, "transparent");
       ctx.fillStyle = cGrad;
@@ -3772,7 +3828,7 @@ function drawStormFieldHazard(
     anvilGrad.addColorStop(0, `rgba(50, 55, 85, ${0.2 + flashAlpha * 0.12})`);
     anvilGrad.addColorStop(
       0.5,
-      `rgba(40, 45, 72, ${0.12 + flashAlpha * 0.08})`,
+      `rgba(40, 45, 72, ${0.12 + flashAlpha * 0.08})`
     );
     anvilGrad.addColorStop(1, "transparent");
     ctx.fillStyle = anvilGrad;
@@ -3787,7 +3843,9 @@ function drawStormFieldHazard(
   for (let bolt = 0; bolt < boltCount; bolt++) {
     const bSeed = hazSeed + bolt * 37.1;
     const boltPhase = (time * 0.7 + seededNoise(bSeed) * 5) % 5;
-    if (boltPhase > 0.25) continue;
+    if (boltPhase > 0.25) {
+      continue;
+    }
     const boltLife = boltPhase / 0.25;
     const boltAlpha = (1 - boltLife) * 0.95;
 
@@ -3801,9 +3859,9 @@ function drawStormFieldHazard(
 
     // Multi-pass glow bolt
     const passes = [
-      { width: 8, color: `rgba(80, 120, 220, ${boltAlpha * 0.2})` },
-      { width: 4, color: `rgba(150, 190, 255, ${boltAlpha * 0.5})` },
-      { width: 1.5, color: `rgba(230, 240, 255, ${boltAlpha})` },
+      { color: `rgba(80, 120, 220, ${boltAlpha * 0.2})`, width: 8 },
+      { color: `rgba(150, 190, 255, ${boltAlpha * 0.5})`, width: 4 },
+      { color: `rgba(230, 240, 255, ${boltAlpha})`, width: 1.5 },
     ];
     for (const pass of passes) {
       ctx.save();
@@ -3840,7 +3898,7 @@ function drawStormFieldHazard(
       0,
       endX,
       endY,
-      sRad * 0.2,
+      sRad * 0.2
     );
     impactGrad.addColorStop(0, `rgba(200, 230, 255, ${boltAlpha * 0.6})`);
     impactGrad.addColorStop(0.5, `rgba(100, 150, 255, ${boltAlpha * 0.2})`);
@@ -3854,7 +3912,7 @@ function drawStormFieldHazard(
       sRad * 0.2 * isoRatio,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
     ctx.restore();
@@ -3886,7 +3944,9 @@ function drawStormFieldHazard(
   ctx.lineWidth = 1.5 * cameraZoom;
   for (let arc = 0; arc < 4; arc++) {
     const arcPhase = (time * 1.5 + arc * 1.3 + hazSeed * 0.02) % 3;
-    if (arcPhase > 0.4) continue;
+    if (arcPhase > 0.4) {
+      continue;
+    }
     const arcAlpha = (1 - arcPhase / 0.4) * 0.6;
     const a1 = arc * 1.57 + hazSeed * 0.01;
     const a2 = a1 + 1.2 + Math.sin(hazSeed + arc) * 0.5;
@@ -3946,7 +4006,7 @@ function drawStormFieldHazard(
       0,
       0,
       -30 * cameraZoom,
-      sRad * 1.5,
+      sRad * 1.5
     );
     flashGrad.addColorStop(0, `rgba(200, 220, 255, ${flashAlpha * 0.15})`);
     flashGrad.addColorStop(0.5, `rgba(150, 180, 240, ${flashAlpha * 0.06})`);
@@ -3960,7 +4020,7 @@ function drawStormFieldHazard(
       sRad * 1.2 * isoRatio,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -3976,7 +4036,7 @@ function drawLavaPoolHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 37.3 + (pos.y || 0) * 53.7;
   const pulse = Math.sin(time * 2.2 + hazSeed) * 0.5 + 0.5;
@@ -3988,7 +4048,7 @@ function drawLavaPoolHazard(
     sRad * 0.55,
     0,
     0,
-    sRad * 1.35,
+    sRad * 1.35
   );
   scorchGrad.addColorStop(0, "rgba(50, 22, 8, 0.55)");
   scorchGrad.addColorStop(0.4, "rgba(60, 30, 10, 0.4)");
@@ -4007,13 +4067,13 @@ function drawLavaPoolHazard(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(angle) * sRad * 0.6,
-      Math.sin(angle) * sRad * 0.6 * isoRatio,
+      Math.sin(angle) * sRad * 0.6 * isoRatio
     );
     ctx.quadraticCurveTo(
       Math.cos(angle + 0.1) * len * 0.8,
       Math.sin(angle + 0.1) * len * 0.8 * isoRatio,
       Math.cos(angle - 0.05) * len,
-      Math.sin(angle - 0.05) * len * isoRatio,
+      Math.sin(angle - 0.05) * len * isoRatio
     );
     ctx.stroke();
   }
@@ -4025,7 +4085,7 @@ function drawLavaPoolHazard(
     0,
     0,
     0,
-    sRad,
+    sRad
   );
   lavaGrad.addColorStop(0, "rgba(255, 210, 60, 0.96)");
   lavaGrad.addColorStop(0.2, "rgba(255, 140, 25, 0.94)");
@@ -4052,7 +4112,7 @@ function drawLavaPoolHazard(
       cSize,
       cSize * isoRatio,
       crustSeed + 10,
-      0.3,
+      0.3
     );
     ctx.fill();
   }
@@ -4073,7 +4133,7 @@ function drawLavaPoolHazard(
       Math.cos(midAngle) * (vR + vEndR) * 0.55,
       Math.sin(midAngle) * (vR + vEndR) * 0.55 * isoRatio,
       Math.cos(vAngle + 0.4) * vEndR,
-      Math.sin(vAngle + 0.4) * vEndR * isoRatio,
+      Math.sin(vAngle + 0.4) * vEndR * isoRatio
     );
     ctx.stroke();
   }
@@ -4082,7 +4142,9 @@ function drawLavaPoolHazard(
   for (let bubble = 0; bubble < 6; bubble++) {
     const bSeed = hazSeed + bubble * 7.3;
     const bPhase = (time * 0.8 + seededNoise(bSeed) * 3) % 3;
-    if (bPhase > 1.8) continue;
+    if (bPhase > 1.8) {
+      continue;
+    }
     const bAngle = seededNoise(bSeed + 1) * Math.PI * 2;
     const bDist = sRad * (0.1 + seededNoise(bSeed + 2) * 0.5);
     const bx = Math.cos(bAngle) * bDist;
@@ -4124,7 +4186,7 @@ function drawLavaPoolHazard(
     shimmerR * 0.5 * isoRatio,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4135,7 +4197,7 @@ function drawLavaPoolHazard(
     0,
     -sRad * 0.12,
     -sRad * 0.08 * isoRatio,
-    sRad * 0.38,
+    sRad * 0.38
   );
   glowGrad.addColorStop(0, `rgba(255, 245, 200, ${0.32 + pulse * 0.22})`);
   glowGrad.addColorStop(0.5, "rgba(255, 200, 100, 0.08)");
@@ -4149,7 +4211,7 @@ function drawLavaPoolHazard(
     sRad * 0.22 * isoRatio,
     -0.25,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -4160,7 +4222,7 @@ function drawSwampHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 29.3 + (pos.y || 0) * 47.1;
 
@@ -4180,7 +4242,7 @@ function drawSwampHazard(
     const cSeed = hazSeed + i * 3.1;
     const angle = (i / 10) * Math.PI * 2 + seededNoise(cSeed) * 0.35;
     const start = sRad * (0.7 + seededNoise(cSeed + 1) * 0.2);
-    const end = sRad * (1.0 + seededNoise(cSeed + 2) * 0.3);
+    const end = sRad * (1 + seededNoise(cSeed + 2) * 0.3);
     ctx.strokeStyle = `rgba(55, 75, 28, ${0.25 + seededNoise(cSeed + 3) * 0.12})`;
     ctx.lineWidth = (0.8 + seededNoise(cSeed + 4) * 0.5) * cameraZoom;
     ctx.beginPath();
@@ -4191,7 +4253,7 @@ function drawSwampHazard(
       Math.cos(midAngle) * midR,
       Math.sin(midAngle) * midR * isoRatio,
       Math.cos(angle + 0.06) * end,
-      Math.sin(angle + 0.06) * end * isoRatio,
+      Math.sin(angle + 0.06) * end * isoRatio
     );
     ctx.stroke();
   }
@@ -4203,7 +4265,7 @@ function drawSwampHazard(
     0,
     0,
     0,
-    sRad * 1.05,
+    sRad * 1.05
   );
   swampGrad.addColorStop(0, "rgba(48, 68, 25, 0.95)");
   swampGrad.addColorStop(0.2, "rgba(40, 58, 20, 0.94)");
@@ -4221,7 +4283,7 @@ function drawSwampHazard(
     0,
     0,
     2 * cameraZoom,
-    sRad * 0.42,
+    sRad * 0.42
   );
   depthGrad.addColorStop(0, "rgba(8, 15, 3, 0.92)");
   depthGrad.addColorStop(0.6, "rgba(15, 25, 8, 0.5)");
@@ -4274,7 +4336,7 @@ function drawSwampHazard(
       filmSize,
       filmSize * isoRatio * 0.7,
       fSeed + 10,
-      0.2,
+      0.2
     );
     ctx.fill();
   }
@@ -4315,7 +4377,7 @@ function drawSwampHazard(
       ctx.moveTo(0, 0);
       ctx.lineTo(
         Math.cos(vAngle) * padSize * 0.85,
-        Math.sin(vAngle) * padSize * 0.85,
+        Math.sin(vAngle) * padSize * 0.85
       );
       ctx.stroke();
     }
@@ -4339,7 +4401,7 @@ function drawSwampHazard(
       aSize,
       aSize * isoRatio * 0.75,
       aSeed + 10,
-      0.3,
+      0.3
     );
     ctx.fill();
   }
@@ -4364,7 +4426,7 @@ function drawSwampHazard(
       tx + lean * 0.5 + sway,
       ty - tHeight * 0.5,
       tx + lean + sway,
-      ty - tHeight,
+      ty - tHeight
     );
     ctx.stroke();
 
@@ -4379,7 +4441,7 @@ function drawSwampHazard(
       ctx.moveTo(branchX, branchY);
       ctx.lineTo(
         branchX + branchDir * 5 * cameraZoom,
-        branchY - 4 * cameraZoom,
+        branchY - 4 * cameraZoom
       );
       ctx.stroke();
     }
@@ -4411,7 +4473,8 @@ function drawSwampHazard(
       const height = (16 + seededNoise(cSeed + stalk * 3.3) * 18) * cameraZoom;
       const lean = (seededNoise(cSeed + stalk * 5.1) - 0.5) * 8 * cameraZoom;
       ctx.strokeStyle = `rgba(58, 92, 24, ${0.45 + seededNoise(cSeed + stalk * 7.7) * 0.2})`;
-      ctx.lineWidth = (1.1 + seededNoise(cSeed + stalk * 9.1) * 0.9) * cameraZoom;
+      ctx.lineWidth =
+        (1.1 + seededNoise(cSeed + stalk * 9.1) * 0.9) * cameraZoom;
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(cx + offset, cy + 1 * cameraZoom);
@@ -4419,7 +4482,7 @@ function drawSwampHazard(
         cx + offset + lean * 0.4,
         cy - height * 0.45,
         cx + offset + lean,
-        cy - height,
+        cy - height
       );
       ctx.stroke();
 
@@ -4433,7 +4496,7 @@ function drawSwampHazard(
           4.2 * cameraZoom,
           0,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -4448,7 +4511,7 @@ function drawSwampHazard(
       bulbSize * 1.4,
       bulbSize * isoRatio,
       cSeed + 42,
-      0.25,
+      0.25
     );
     ctx.fill();
   }
@@ -4457,7 +4520,9 @@ function drawSwampHazard(
   for (let bubble = 0; bubble < 12; bubble++) {
     const bSeed = hazSeed + bubble * 2.1;
     const bPhase = (time * 0.7 + seededNoise(bSeed) * 3) % 3;
-    if (bPhase > 1.6) continue;
+    if (bPhase > 1.6) {
+      continue;
+    }
     const bAngle = seededNoise(bSeed + 1) * Math.PI * 2;
     const bDist = sRad * (0.08 + seededNoise(bSeed + 2) * 0.55);
     const bx = Math.cos(bAngle) * bDist;
@@ -4475,7 +4540,7 @@ function drawSwampHazard(
       0,
       bx,
       by,
-      bSize,
+      bSize
     );
     bubbleGrad.addColorStop(0, `rgba(120, 200, 80, ${0.15 * bLife})`);
     bubbleGrad.addColorStop(0.5, `rgba(80, 150, 45, ${0.4 * bLife})`);
@@ -4528,7 +4593,7 @@ function drawSwampHazard(
       fogSize * 0.5 * isoRatio,
       fogDrift * 0.01,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -4537,7 +4602,9 @@ function drawSwampHazard(
   for (let wisp = 0; wisp < 7; wisp++) {
     const wSeed = hazSeed + wisp * 4.1;
     const wPhase = (time * 0.35 + seededNoise(wSeed) * 4) % 4;
-    if (wPhase > 3) continue;
+    if (wPhase > 3) {
+      continue;
+    }
     const wAngle = seededNoise(wSeed + 1) * Math.PI * 2;
     const wDist = sRad * (0.12 + seededNoise(wSeed + 2) * 0.4);
     const wAlpha = 0.12 * (1 - wPhase / 3);
@@ -4553,8 +4620,11 @@ function drawSwampHazard(
         Math.sin(t * Math.PI * 2 + time * 1.5 + wisp) * 5 * cameraZoom * t;
       const x = Math.cos(wAngle) * wDist + sCurve;
       const y = Math.sin(wAngle) * wDist * isoRatio - rise;
-      if (seg === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (seg === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
     ctx.stroke();
   }
@@ -4571,7 +4641,7 @@ function drawSwampHazard(
       bR * wobble,
       bR * isoRatio * wobble,
       hazSeed + band * 25,
-      0.1,
+      0.1
     );
     ctx.stroke();
   }
@@ -4583,14 +4653,14 @@ function drawSwampHazard(
     0,
     -sRad * 0.25,
     -sRad * 0.14 * isoRatio,
-    sRad * 0.45,
+    sRad * 0.45
   );
   const sheenAlpha = 0.16 + Math.sin(time * 1.5 + hazSeed) * 0.08;
   const sheenHue = (time * 15 + hazSeed * 3) % 60;
   sheenGrad.addColorStop(0, `hsla(${90 + sheenHue}, 60%, 55%, ${sheenAlpha})`);
   sheenGrad.addColorStop(
     0.4,
-    `hsla(${120 + sheenHue}, 50%, 45%, ${sheenAlpha * 0.4})`,
+    `hsla(${120 + sheenHue}, 50%, 45%, ${sheenAlpha * 0.4})`
   );
   sheenGrad.addColorStop(1, "transparent");
   ctx.fillStyle = sheenGrad;
@@ -4602,7 +4672,7 @@ function drawSwampHazard(
     sRad * 0.24 * isoRatio,
     -0.3,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -4631,7 +4701,7 @@ function drawIceHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 33.7 + (pos.y || 0) * 51.3;
 
@@ -4642,7 +4712,7 @@ function drawIceHazard(
     sRad * 0.5,
     0,
     0,
-    sRad * 1.35,
+    sRad * 1.35
   );
   frostGrad.addColorStop(0, "rgba(210, 235, 255, 0.35)");
   frostGrad.addColorStop(0.35, "rgba(190, 222, 250, 0.25)");
@@ -4669,7 +4739,7 @@ function drawIceHazard(
       ctx.moveTo(cx, cy);
       ctx.lineTo(
         cx + Math.cos(bAngle) * cLen,
-        cy + Math.sin(bAngle) * cLen * isoRatio,
+        cy + Math.sin(bAngle) * cLen * isoRatio
       );
     }
     ctx.stroke();
@@ -4682,7 +4752,7 @@ function drawIceHazard(
     0,
     0,
     0,
-    sRad,
+    sRad
   );
   iceGrad.addColorStop(0, "rgba(235, 248, 255, 0.95)");
   iceGrad.addColorStop(0.25, "rgba(195, 228, 255, 0.92)");
@@ -4700,7 +4770,7 @@ function drawIceHazard(
     0,
     0,
     2 * cameraZoom,
-    sRad * 0.35,
+    sRad * 0.35
   );
   depthGrad.addColorStop(0, "rgba(40, 80, 140, 0.45)");
   depthGrad.addColorStop(1, "rgba(60, 110, 170, 0.05)");
@@ -4737,7 +4807,7 @@ function drawIceHazard(
       ctx.moveTo(seg2X, seg2Y);
       ctx.lineTo(
         seg2X + Math.cos(branchAngle) * branchLen,
-        seg2Y + Math.sin(branchAngle) * branchLen * isoRatio,
+        seg2Y + Math.sin(branchAngle) * branchLen * isoRatio
       );
       ctx.stroke();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
@@ -4753,7 +4823,7 @@ function drawIceHazard(
       ctx.moveTo(seg1X, seg1Y);
       ctx.lineTo(
         seg1X + Math.cos(b2Angle) * b2Len,
-        seg1Y + Math.sin(b2Angle) * b2Len * isoRatio,
+        seg1Y + Math.sin(b2Angle) * b2Len * isoRatio
       );
       ctx.stroke();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
@@ -4778,7 +4848,7 @@ function drawIceHazard(
       tSize * 0.7,
       seededNoise(tSeed + 4) * Math.PI,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -4813,7 +4883,7 @@ function drawIceHazard(
     0,
     -sRad * 0.3,
     -sRad * 0.18 * isoRatio,
-    sRad * 0.42,
+    sRad * 0.42
   );
   specGrad.addColorStop(0, `rgba(255, 255, 255, ${0.25 + shimmer * 0.2})`);
   specGrad.addColorStop(0.45, "rgba(235, 248, 255, 0.06)");
@@ -4827,7 +4897,7 @@ function drawIceHazard(
     sRad * 0.22 * isoRatio,
     -0.35,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -4838,7 +4908,7 @@ function drawPoisonPoolHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 29.7;
   const bubbleCycle = Math.sin(time * 2.5 + hazSeed) * 0.5 + 0.5;
@@ -4850,7 +4920,7 @@ function drawPoisonPoolHazard(
     sRad * 0.4,
     0,
     3 * cameraZoom,
-    sRad * 1.35,
+    sRad * 1.35
   );
   deadGrad.addColorStop(0, "rgba(35, 42, 12, 0.65)");
   deadGrad.addColorStop(0.3, "rgba(45, 50, 15, 0.45)");
@@ -4871,14 +4941,14 @@ function drawPoisonPoolHazard(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(rAngle) * sRad * 0.5,
-      Math.sin(rAngle) * sRad * 0.5 * isoRatio,
+      Math.sin(rAngle) * sRad * 0.5 * isoRatio
     );
     for (let seg = 1; seg <= 5; seg++) {
       const t = seg / 5;
       const jag = (seededNoise(rSeed + seg * 2.1) - 0.5) * 8 * cameraZoom;
       ctx.lineTo(
         Math.cos(rAngle + jag * 0.02) * rLen * t,
-        Math.sin(rAngle + jag * 0.02) * rLen * t * isoRatio,
+        Math.sin(rAngle + jag * 0.02) * rLen * t * isoRatio
       );
     }
     ctx.stroke();
@@ -4892,7 +4962,7 @@ function drawPoisonPoolHazard(
     0,
     0,
     0,
-    sRad,
+    sRad
   );
   poolGrad.addColorStop(0, "rgba(110, 240, 70, 0.92)");
   poolGrad.addColorStop(0.2, "rgba(80, 200, 45, 0.9)");
@@ -4915,7 +4985,7 @@ function drawPoisonPoolHazard(
       rr * wobble,
       rr * isoRatio * wobble * 0.9,
       hazSeed + ripple * 22,
-      0.12,
+      0.12
     );
     ctx.stroke();
   }
@@ -4931,14 +5001,14 @@ function drawPoisonPoolHazard(
     ctx.beginPath();
     ctx.moveTo(
       Math.cos(vAngle) * vStartR,
-      Math.sin(vAngle) * vStartR * isoRatio,
+      Math.sin(vAngle) * vStartR * isoRatio
     );
     const midAngle = vAngle + (seededNoise(vSeed + 3) - 0.5) * 0.28;
     ctx.quadraticCurveTo(
       Math.cos(midAngle) * (vStartR + vEndR) * 0.55,
       Math.sin(midAngle) * (vStartR + vEndR) * 0.55 * isoRatio,
       Math.cos(vAngle + 0.08) * vEndR,
-      Math.sin(vAngle + 0.08) * vEndR * isoRatio,
+      Math.sin(vAngle + 0.08) * vEndR * isoRatio
     );
     ctx.stroke();
   }
@@ -4957,7 +5027,15 @@ function drawPoisonPoolHazard(
     subGrad.addColorStop(0.6, "rgba(75, 195, 42, 0.52)");
     subGrad.addColorStop(1, "rgba(40, 120, 25, 0)");
     ctx.fillStyle = subGrad;
-    drawOrganicBlobAt(ctx, sx, sy, spSize, spSize * isoRatio, spSeed + 10, 0.26);
+    drawOrganicBlobAt(
+      ctx,
+      sx,
+      sy,
+      spSize,
+      spSize * isoRatio,
+      spSeed + 10,
+      0.26
+    );
     ctx.fill();
   }
 
@@ -4985,7 +5063,7 @@ function drawPoisonPoolHazard(
         0,
         0,
         0,
-        bSize,
+        bSize
       );
       memGrad.addColorStop(0, `rgba(180, 255, 140, ${grow * 0.5})`);
       memGrad.addColorStop(0.5, `rgba(100, 220, 60, ${grow * 0.35})`);
@@ -5005,7 +5083,7 @@ function drawPoisonPoolHazard(
         bSize * 0.15,
         -0.3,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.restore();
@@ -5023,7 +5101,7 @@ function drawPoisonPoolHazard(
           by + Math.sin(spAngle) * spDist * isoRatio - popAge * 6 * cameraZoom,
           (1.5 - popAge) * cameraZoom,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         ctx.fill();
       }
@@ -5032,12 +5110,12 @@ function drawPoisonPoolHazard(
 
   // 4. Tall fungal growths sprouting from the pool edges
   const fungi = [
-    { angle: 0.5, dist: 0.7, capW: 12, stemH: 32, capH: 10, lean: 2 },
-    { angle: 1.8, dist: 0.8, capW: 9, stemH: 25, capH: 8, lean: -1.5 },
-    { angle: 2.9, dist: 0.65, capW: 14, stemH: 38, capH: 12, lean: 3 },
-    { angle: 4.2, dist: 0.75, capW: 8, stemH: 20, capH: 7, lean: -2 },
-    { angle: 5.3, dist: 0.6, capW: 11, stemH: 28, capH: 9, lean: 1 },
-    { angle: 3.6, dist: 0.85, capW: 7, stemH: 18, capH: 6, lean: -1 },
+    { angle: 0.5, capH: 10, capW: 12, dist: 0.7, lean: 2, stemH: 32 },
+    { angle: 1.8, capH: 8, capW: 9, dist: 0.8, lean: -1.5, stemH: 25 },
+    { angle: 2.9, capH: 12, capW: 14, dist: 0.65, lean: 3, stemH: 38 },
+    { angle: 4.2, capH: 7, capW: 8, dist: 0.75, lean: -2, stemH: 20 },
+    { angle: 5.3, capH: 9, capW: 11, dist: 0.6, lean: 1, stemH: 28 },
+    { angle: 3.6, capH: 6, capW: 7, dist: 0.85, lean: -1, stemH: 18 },
   ];
   for (let f = 0; f < fungi.length; f++) {
     const fg = fungi[f];
@@ -5068,7 +5146,7 @@ function drawPoisonPoolHazard(
       -topW + lean * 0.3,
       -stemH * 0.5,
       -topW + lean,
-      -stemH,
+      -stemH
     );
     ctx.lineTo(topW + lean, -stemH);
     ctx.quadraticCurveTo(topW + lean * 0.3, -stemH * 0.5, baseW, 0);
@@ -5100,7 +5178,7 @@ function drawPoisonPoolHazard(
       ctx.moveTo(capX, capY + capH * 0.2);
       ctx.lineTo(
         capX + Math.cos(gAngle) * capW * 0.8,
-        capY + capH * 0.4 + Math.abs(Math.sin(gAngle)) * capH * 0.3,
+        capY + capH * 0.4 + Math.abs(Math.sin(gAngle)) * capH * 0.3
       );
       ctx.stroke();
     }
@@ -5112,7 +5190,7 @@ function drawPoisonPoolHazard(
       0,
       capX,
       capY,
-      capW,
+      capW
     );
     capGrad.addColorStop(0, "rgba(100, 180, 50, 0.92)");
     capGrad.addColorStop(0.3, "rgba(75, 150, 35, 0.88)");
@@ -5143,7 +5221,9 @@ function drawPoisonPoolHazard(
     // Spore release from cap
     for (let spore = 0; spore < 3; spore++) {
       const sPhase = (time * 0.4 + f * 0.7 + spore * 0.9) % 2.5;
-      if (sPhase > 1.8) continue;
+      if (sPhase > 1.8) {
+        continue;
+      }
       const sAlpha = (1 - sPhase / 1.8) * 0.5;
       const sDrift = Math.sin(time + f + spore) * 6 * cameraZoom;
       ctx.fillStyle = `rgba(160, 255, 80, ${sAlpha})`;
@@ -5153,7 +5233,7 @@ function drawPoisonPoolHazard(
         capY - capH * 0.3 - sPhase * 18 * cameraZoom,
         (1 + spore * 0.3) * cameraZoom * (1 - sPhase / 2.5),
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -5197,7 +5277,7 @@ function drawPoisonPoolHazard(
       0,
       pBaseX + topDrift,
       topY,
-      plumeW * 2,
+      plumeW * 2
     );
     topGrad.addColorStop(0, "rgba(100, 200, 50, 0.12)");
     topGrad.addColorStop(0.5, "rgba(70, 150, 30, 0.06)");
@@ -5211,7 +5291,7 @@ function drawPoisonPoolHazard(
       plumeW * 2 * isoRatio * 0.6,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -5220,7 +5300,9 @@ function drawPoisonPoolHazard(
   for (let tendril = 0; tendril < 7; tendril++) {
     const tSeed = hazSeed + tendril * 4.1;
     const tPhase = (time * 0.35 + seededNoise(tSeed) * 4) % 4;
-    if (tPhase > 3) continue;
+    if (tPhase > 3) {
+      continue;
+    }
     const tAngle = seededNoise(tSeed + 1) * Math.PI * 2;
     const tDist = sRad * (0.14 + seededNoise(tSeed + 2) * 0.42);
     const tAlpha = 0.12 * (1 - tPhase / 3);
@@ -5239,8 +5321,11 @@ function drawPoisonPoolHazard(
         progress;
       const x = Math.cos(tAngle) * tDist + sCurve;
       const y = Math.sin(tAngle) * tDist * isoRatio - rise;
-      if (seg === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (seg === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
     ctx.stroke();
   }
@@ -5278,7 +5363,7 @@ function drawPoisonPoolHazard(
         dBaseY - dripH,
         dropSize,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
 
@@ -5290,7 +5375,7 @@ function drawPoisonPoolHazard(
         dBaseY - dripH - dropSize * 0.3,
         dropSize * 0.35,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
       ctx.restore();
@@ -5349,7 +5434,7 @@ function drawHellfireHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 43.1 + (pos.y || 0) * 31.7;
   const emberGlow = Math.sin(time * 3 + hazSeed) * 0.5 + 0.5;
@@ -5362,7 +5447,7 @@ function drawHellfireHazard(
     sRad * 0.2,
     0,
     0,
-    sRad * 1.4,
+    sRad * 1.4
   );
   scorchGrad.addColorStop(0, `rgba(65, 30, 10, ${0.9 + infernalPulse * 0.08})`);
   scorchGrad.addColorStop(0.3, "rgba(50, 25, 8, 0.78)");
@@ -5417,7 +5502,7 @@ function drawHellfireHazard(
     poolGrad.addColorStop(0, `rgba(255, 220, 80, ${0.85 + poolPulse * 0.15})`);
     poolGrad.addColorStop(
       0.3,
-      `rgba(255, 140, 20, ${0.75 + poolPulse * 0.15})`,
+      `rgba(255, 140, 20, ${0.75 + poolPulse * 0.15})`
     );
     poolGrad.addColorStop(0.6, `rgba(220, 60, 0, ${0.6 + poolPulse * 0.1})`);
     poolGrad.addColorStop(1, "rgba(120, 25, 0, 0.2)");
@@ -5429,7 +5514,7 @@ function drawHellfireHazard(
       poolSize,
       poolSize * isoRatio * 0.8,
       pSeed + 10,
-      0.25,
+      0.25
     );
     ctx.fill();
     ctx.restore();
@@ -5558,7 +5643,7 @@ function drawHellfireHazard(
       fx - fWidth * 0.4 + sway * 0.6,
       fy - fHeight * 0.7,
       fx + sway,
-      fy - fHeight,
+      fy - fHeight
     );
     ctx.bezierCurveTo(
       fx + fWidth * 0.4 + sway * 0.6,
@@ -5566,7 +5651,7 @@ function drawHellfireHazard(
       fx + fWidth + sway * 0.3,
       fy - fHeight * 0.35,
       fx + fWidth * 1.3,
-      fy,
+      fy
     );
     ctx.fill();
 
@@ -5574,7 +5659,7 @@ function drawHellfireHazard(
       fx,
       fy,
       fx + sway * 0.8,
-      fy - fHeight * 0.75,
+      fy - fHeight * 0.75
     );
     innerGrad.addColorStop(0, "rgba(255, 200, 50, 0.7)");
     innerGrad.addColorStop(0.3, "rgba(255, 255, 120, 0.5)");
@@ -5590,7 +5675,7 @@ function drawHellfireHazard(
       fx - fWidth * 0.1 + sway * 0.7,
       fy - fHeight * 0.55,
       fx + sway * 0.8,
-      fy - fHeight * 0.75,
+      fy - fHeight * 0.75
     );
     ctx.bezierCurveTo(
       fx + fWidth * 0.1 + sway * 0.7,
@@ -5598,7 +5683,7 @@ function drawHellfireHazard(
       fx + fWidth * 0.3 + sway * 0.4,
       fy - fHeight * 0.3,
       fx + fWidth * 0.5,
-      fy,
+      fy
     );
     ctx.fill();
     ctx.restore();
@@ -5608,7 +5693,9 @@ function drawHellfireHazard(
   for (let smoke = 0; smoke < 6; smoke++) {
     const smSeed = hazSeed + smoke * 5.1;
     const smPhase = (time * 0.3 + seededNoise(smSeed) * 4) % 4;
-    if (smPhase > 3.2) continue;
+    if (smPhase > 3.2) {
+      continue;
+    }
     const smAngle = seededNoise(smSeed + 1) * Math.PI * 2;
     const smDist = sRad * (0.1 + seededNoise(smSeed + 2) * 0.35);
     const windDrift = Math.sin(time * 0.4 + smoke * 0.7) * 8 * cameraZoom;
@@ -5629,7 +5716,7 @@ function drawHellfireHazard(
       smSize,
       windDrift * 0.02,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
 
@@ -5642,7 +5729,7 @@ function drawHellfireHazard(
       smSize * 0.7,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.fill();
   }
@@ -5678,7 +5765,7 @@ function drawHellfireHazard(
 
   // 8. Heat wave distortion ripples
   for (let ripple = 0; ripple < 3; ripple++) {
-    const ripplePhase = (time * 0.5 + ripple * 1.0 + hazSeed * 0.01) % 2.5;
+    const ripplePhase = (time * 0.5 + ripple * 1 + hazSeed * 0.01) % 2.5;
     const rippleR = sRad * (0.3 + ripplePhase * 0.3);
     const rippleY = -12 * cameraZoom - ripplePhase * 10 * cameraZoom;
     const rippleAlpha = 0.08 * (1 - ripplePhase / 2.5);
@@ -5693,7 +5780,7 @@ function drawHellfireHazard(
       rippleR * 0.3 * isoRatio,
       0,
       0,
-      Math.PI * 2,
+      Math.PI * 2
     );
     ctx.stroke();
   }
@@ -5713,7 +5800,7 @@ function drawHellfireHazard(
     sRad * 0.25 * isoRatio,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -5724,7 +5811,7 @@ function drawLightningFieldHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 47.7 + (pos.y || 0) * 23.3;
   const pulse = Math.sin(time * 3.4 + hazSeed) * 0.5 + 0.5;
@@ -5737,7 +5824,7 @@ function drawLightningFieldHazard(
     sRad * 0.1,
     0,
     0,
-    sRad * 1.45,
+    sRad * 1.45
   );
   atmoGrad.addColorStop(0, `rgba(60, 100, 200, ${0.65 + stormPulse * 0.2})`);
   atmoGrad.addColorStop(0.25, `rgba(40, 70, 160, ${0.55 + stormPulse * 0.12})`);
@@ -5837,11 +5924,11 @@ function drawLightningFieldHazard(
       nodeSize * 0.5,
       nx,
       ny,
-      coronaSize,
+      coronaSize
     );
     coronaGrad.addColorStop(
       0,
-      `rgba(100, 180, 255, ${0.15 + nodePulse * 0.1})`,
+      `rgba(100, 180, 255, ${0.15 + nodePulse * 0.1})`
     );
     coronaGrad.addColorStop(1, "rgba(60, 130, 255, 0)");
     ctx.fillStyle = coronaGrad;
@@ -5856,7 +5943,9 @@ function drawLightningFieldHazard(
     const j = (i + 1) % nodeCount;
     const arcSeed = hazSeed + i * 47.1 + j * 23.3;
     const arcPhase = (time * 3.5 + seededNoise(arcSeed) * 3) % 3;
-    if (arcPhase > 0.55) continue;
+    if (arcPhase > 0.55) {
+      continue;
+    }
 
     const arcAlpha = Math.sin((arcPhase / 0.55) * Math.PI);
     const n1 = nodePositions[i];
@@ -5914,7 +6003,7 @@ function drawLightningFieldHazard(
       ringR,
       ringR * isoRatio,
       hazSeed + 40 + ring * 15,
-      0.1,
+      0.1
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -5925,7 +6014,9 @@ function drawLightningFieldHazard(
   for (let arc = 0; arc < 6; arc++) {
     const arcSeed = hazSeed + arc * 23.1;
     const arcPhase = (time * 2.5 + seededNoise(arcSeed) * 2) % 2;
-    if (arcPhase > 0.4) continue;
+    if (arcPhase > 0.4) {
+      continue;
+    }
     const arcAlpha = Math.sin((arcPhase / 0.4) * Math.PI);
     const arcAngle =
       seededNoise(arcSeed + Math.floor(time * 2.5) * 3.1) * Math.PI * 2;
@@ -5952,8 +6043,11 @@ function drawLightningFieldHazard(
           0.08;
         const x = Math.cos(theta) * r + jit;
         const y = Math.sin(theta) * r * isoRatio + jit * isoRatio;
-        if (seg === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (seg === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
       }
       ctx.stroke();
     }
@@ -5963,13 +6057,15 @@ function drawLightningFieldHazard(
   // 8. Lightning bolt flashes with multi-branch forking
   for (let slot = 0; slot < 4; slot++) {
     const slotSeed = hazSeed + slot * 97.3;
-    const cyclePeriod = 1.4 + seededNoise(slotSeed + 10) * 1.0;
+    const cyclePeriod = 1.4 + seededNoise(slotSeed + 10) * 1;
     const cyclePhase =
       (time + seededNoise(slotSeed) * cyclePeriod) % cyclePeriod;
     const flashDuration = 0.32;
-    if (cyclePhase > flashDuration) continue;
+    if (cyclePhase > flashDuration) {
+      continue;
+    }
 
-    const flashAlpha = Math.pow(1 - cyclePhase / flashDuration, 1.5);
+    const flashAlpha = (1 - cyclePhase / flashDuration) ** 1.5;
     const boltTimeSeed = slotSeed + Math.floor(time / cyclePeriod) * 7.1;
     const boltAngle = seededNoise(boltTimeSeed) * Math.PI * 2;
     const boltLen = sRad * (0.35 + seededNoise(boltTimeSeed + 1) * 0.55);
@@ -5998,10 +6094,10 @@ function drawLightningFieldHazard(
     }
 
     const layers = [
-      { width: 5, color: `rgba(60, 120, 255, ${flashAlpha * 0.3})` },
-      { width: 3, color: `rgba(140, 200, 255, ${flashAlpha * 0.6})` },
-      { width: 1.5, color: `rgba(220, 245, 255, ${flashAlpha * 0.85})` },
-      { width: 0.6, color: `rgba(255, 255, 255, ${flashAlpha * 0.7})` },
+      { color: `rgba(60, 120, 255, ${flashAlpha * 0.3})`, width: 5 },
+      { color: `rgba(140, 200, 255, ${flashAlpha * 0.6})`, width: 3 },
+      { color: `rgba(220, 245, 255, ${flashAlpha * 0.85})`, width: 1.5 },
+      { color: `rgba(255, 255, 255, ${flashAlpha * 0.7})`, width: 0.6 },
     ];
 
     for (const layer of layers) {
@@ -6059,7 +6155,7 @@ function drawLightningFieldHazard(
         0,
         endX,
         endY,
-        sRad * 0.25,
+        sRad * 0.25
       );
       impactGrad.addColorStop(0, `rgba(200, 230, 255, ${impactAlpha})`);
       impactGrad.addColorStop(0.5, `rgba(100, 170, 255, ${impactAlpha * 0.4})`);
@@ -6073,7 +6169,7 @@ function drawLightningFieldHazard(
         sRad * 0.15 * isoRatio,
         0,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       ctx.fill();
     }
@@ -6139,7 +6235,7 @@ function drawVoidRiftHazard(
   time: number,
   pos: Position,
   isoRatio: number,
-  cameraZoom: number,
+  cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 53.3 + (pos.y || 0) * 37.7;
   const voidPulse = Math.sin(time * 0.8 + hazSeed) * 0.5 + 0.5;
@@ -6152,7 +6248,7 @@ function drawVoidRiftHazard(
     sRad * 0.2,
     0,
     4 * cameraZoom,
-    sRad * 1.3,
+    sRad * 1.3
   );
   distortGrad.addColorStop(0, `rgba(45, 12, 80, ${0.6 + voidPulse * 0.1})`);
   distortGrad.addColorStop(0.3, "rgba(35, 8, 60, 0.4)");
@@ -6182,7 +6278,7 @@ function drawVoidRiftHazard(
       ctx.lineTo(
         Math.cos(cAngle) * cLen * t + Math.cos(cAngle + Math.PI / 2) * jag,
         Math.sin(cAngle) * cLen * t * isoRatio +
-          Math.sin(cAngle + Math.PI / 2) * jag * isoRatio,
+          Math.sin(cAngle + Math.PI / 2) * jag * isoRatio
       );
     }
     ctx.stroke();
@@ -6196,7 +6292,7 @@ function drawVoidRiftHazard(
     0,
     0,
     2 * cameraZoom,
-    sRad * 0.55,
+    sRad * 0.55
   );
   abyssGrad.addColorStop(0, "rgba(0, 0, 0, 0.98)");
   abyssGrad.addColorStop(0.3, "rgba(5, 0, 12, 0.95)");
@@ -6212,7 +6308,7 @@ function drawVoidRiftHazard(
     sRad * 0.55 * isoRatio,
     0,
     0,
-    Math.PI * 2,
+    Math.PI * 2
   );
   ctx.fill();
 
@@ -6300,7 +6396,7 @@ function drawVoidRiftHazard(
       (sx1 + sx2) * 0.5 + Math.sin(time * 3 + streak) * 6 * cameraZoom,
       (sy1 + sy2) * 0.5,
       sx2,
-      sy2,
+      sy2
     );
     ctx.stroke();
     ctx.restore();
@@ -6308,14 +6404,14 @@ function drawVoidRiftHazard(
 
   // 4. Floating geometric shards being pulled upward
   const shardData = [
-    { seed: 1, orbitR: 0.5, size: 6, speed: 0.7, hOff: 0.2 },
-    { seed: 2, orbitR: 0.4, size: 5, speed: 0.9, hOff: 0.35 },
-    { seed: 3, orbitR: 0.6, size: 7, speed: 0.6, hOff: 0.5 },
-    { seed: 4, orbitR: 0.35, size: 4, speed: 1.1, hOff: 0.15 },
-    { seed: 5, orbitR: 0.55, size: 5, speed: 0.8, hOff: 0.65 },
-    { seed: 6, orbitR: 0.3, size: 4, speed: 1.0, hOff: 0.4 },
-    { seed: 7, orbitR: 0.45, size: 6, speed: 0.75, hOff: 0.55 },
-    { seed: 8, orbitR: 0.5, size: 3, speed: 1.2, hOff: 0.3 },
+    { hOff: 0.2, orbitR: 0.5, seed: 1, size: 6, speed: 0.7 },
+    { hOff: 0.35, orbitR: 0.4, seed: 2, size: 5, speed: 0.9 },
+    { hOff: 0.5, orbitR: 0.6, seed: 3, size: 7, speed: 0.6 },
+    { hOff: 0.15, orbitR: 0.35, seed: 4, size: 4, speed: 1.1 },
+    { hOff: 0.65, orbitR: 0.55, seed: 5, size: 5, speed: 0.8 },
+    { hOff: 0.4, orbitR: 0.3, seed: 6, size: 4, speed: 1 },
+    { hOff: 0.55, orbitR: 0.45, seed: 7, size: 6, speed: 0.75 },
+    { hOff: 0.3, orbitR: 0.5, seed: 8, size: 3, speed: 1.2 },
   ];
   for (let s = 0; s < shardData.length; s++) {
     const sd = shardData[s];
@@ -6388,7 +6484,7 @@ function drawVoidRiftHazard(
       tearWobble + Math.sin(time * 2.5) * 4 * cameraZoom,
       tearCenterY,
       -tearWobble * 0.3,
-      tearCenterY + tearH * 0.5,
+      tearCenterY + tearH * 0.5
     );
     ctx.stroke();
     ctx.restore();
@@ -6401,7 +6497,7 @@ function drawVoidRiftHazard(
     0,
     0,
     tearCenterY,
-    tearH * 0.8,
+    tearH * 0.8
   );
   bleedGrad.addColorStop(0, `rgba(160, 80, 255, ${0.12 + voidPulse * 0.06})`);
   bleedGrad.addColorStop(0.5, "rgba(100, 40, 200, 0.04)");
@@ -6494,7 +6590,7 @@ function drawGenericHazard(
   ctx: CanvasRenderingContext2D,
   size: number,
   time: number,
-  zoom: number,
+  zoom: number
 ): void {
   const pulse = 0.7 + Math.sin(time * 3) * 0.3;
 

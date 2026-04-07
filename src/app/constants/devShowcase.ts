@@ -18,11 +18,11 @@ interface TowerVariant {
 }
 
 const UPGRADE_ROWS: TowerVariant[] = [
-  { level: 1, label: "L1" },
-  { level: 2, label: "L2" },
-  { level: 3, label: "L3" },
-  { level: 4, upgrade: "A", label: "L4A" },
-  { level: 4, upgrade: "B", label: "L4B" },
+  { label: "L1", level: 1 },
+  { label: "L2", level: 2 },
+  { label: "L3", level: 3 },
+  { label: "L4A", level: 4, upgrade: "A" },
+  { label: "L4B", level: 4, upgrade: "B" },
 ];
 
 const GRID_START_X = 3;
@@ -52,11 +52,11 @@ export function buildShowcaseTowers(): Tower[] {
       const isStation = type === "station";
       const tower: Tower = {
         id: makeShowcaseId(type, variant),
-        type,
-        pos: { x, y },
-        level: variant.level,
-        upgrade: variant.upgrade,
         lastAttack: 0,
+        level: variant.level,
+        occupiedSpawnSlots: isStation ? [false, false, false] : undefined,
+        pendingRespawns: isStation ? [] : undefined,
+        pos: { x, y },
         rotation:
           type === "cannon"
             ? Math.PI * 0.75
@@ -64,8 +64,8 @@ export function buildShowcaseTowers(): Tower[] {
               ? -Math.PI / 2
               : 0,
         spawnRange: isStation ? TOWER_DATA.station.spawnRange : undefined,
-        occupiedSpawnSlots: isStation ? [false, false, false] : undefined,
-        pendingRespawns: isStation ? [] : undefined,
+        type,
+        upgrade: variant.upgrade,
       };
 
       towers.push(tower);
