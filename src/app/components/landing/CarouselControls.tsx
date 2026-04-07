@@ -59,7 +59,7 @@ export function CarouselDots({
           <button
             key={i}
             onClick={() => onDot(i)}
-            className="relative cursor-pointer transition-all duration-300 group"
+            className="relative overflow-hidden cursor-pointer transition-all duration-300 group"
             style={{
               width: isActive ? 28 : 8,
               height: 8,

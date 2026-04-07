@@ -148,7 +148,7 @@ export function HeroRoster() {
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      <MapSectionBg tint={`${data.color}06`} gridOpacity={0.01} />
+      <MapSectionBg tint={`${data.color}06`} gridOpacity={0.03} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none" />
 
       <div className="relative z-10">
@@ -193,6 +193,7 @@ export function HeroRoster() {
                 <div
                   className="absolute top-1/2 left-1/2 w-[220px] h-[220px] rounded-full pointer-events-none"
                   style={{
+                    translate: "-50% -50%",
                     border: `1px solid ${data.color}15`,
                     animation: "landing-ring-rotate 30s linear infinite",
                   }}

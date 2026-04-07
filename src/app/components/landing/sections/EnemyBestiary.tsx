@@ -146,7 +146,7 @@ function MarqueeRow({ entries, reverse, speed }: { entries: BestiaryEntry[]; rev
 export function EnemyBestiary() {
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      <MapSectionBg tint="rgba(80,15,15,0.06)" gridOpacity={0.01} />
+      <MapSectionBg tint="rgba(80,15,15,0.06)" gridOpacity={0.03} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none opacity-50" />
 
       {/* Fog effect at edges */}

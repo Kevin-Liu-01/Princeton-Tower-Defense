@@ -15,8 +15,8 @@ const GRID_LINES_V = [18, 36, 54, 72, 88];
 const GRID_TICKS = [10, 27, 45, 63, 81, 93];
 
 export function MapGrid() {
-  const line = rgba(T.accentRgb, 0.03);
-  const tick = rgba(T.accentRgb, 0.06);
+  const line = rgba(T.accentRgb, 0.08);
+  const tick = rgba(T.accentRgb, 0.14);
 
   return (
     <svg
@@ -468,7 +468,7 @@ export function MapSectionHeader({
 
 export function MapSectionBg({
   tint,
-  gridOpacity = 0.015,
+  gridOpacity = 0.04,
 }: {
   tint?: string;
   gridOpacity?: number;

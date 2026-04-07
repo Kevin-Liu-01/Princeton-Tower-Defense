@@ -237,7 +237,7 @@ export function TowerShowcase() {
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      <MapSectionBg tint={`${accent}06`} gridOpacity={0.012} />
+      <MapSectionBg tint={`${accent}06`} gridOpacity={0.035} />
       <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none" />
 
       <div className="relative z-10">

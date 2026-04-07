@@ -23,7 +23,7 @@ export function GameplayShowcase() {
 
   return (
     <section className="relative py-12 sm:py-16">
-      <MapSectionBg gridOpacity={0.012} />
+      <MapSectionBg gridOpacity={0.035} />
 
       <div className="relative z-10">
       <SectionFlourish />

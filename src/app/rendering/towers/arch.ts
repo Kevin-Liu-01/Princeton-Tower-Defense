@@ -2200,7 +2200,7 @@ export function renderArchTower(
   // Sound/energy waves
   const waveCount = tower.level + 3;
   for (let i = 0; i < waveCount; i++) {
-    const wavePhase = (time * 2 + i * 0.25) % 1;
+    const wavePhase = ((time * 2 + i * 0.25) % 1 + 1) % 1;
     const waveRadius = 10 + wavePhase * 55;
     const waveAlpha =
       0.6 * (1 - wavePhase) * (glowIntensity + attackPulse * 0.5);

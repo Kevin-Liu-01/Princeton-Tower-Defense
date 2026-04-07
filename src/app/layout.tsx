@@ -11,7 +11,6 @@ import {
   SITE_DESCRIPTION_SHORT,
   OG_DESCRIPTION,
   KEYWORDS,
-  OG_IMAGES,
   AUTHOR_URL,
   GITHUB_URL,
 } from "./seo/constants";
@@ -53,21 +52,12 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    images: [
-      OG_IMAGES.primary,
-      OG_IMAGES.desert,
-      OG_IMAGES.swamp,
-      OG_IMAGES.winter,
-      OG_IMAGES.volcano,
-      OG_IMAGES.homepage,
-    ],
   },
 
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} | Free Browser Tower Defense Game - Play Now`,
     description: SITE_DESCRIPTION_SHORT,
-    images: [OG_IMAGES.primary],
     creator: "@kevskgs",
     site: "@kevskgs",
   },

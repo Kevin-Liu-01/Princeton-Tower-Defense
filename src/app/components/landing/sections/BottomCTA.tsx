@@ -79,7 +79,7 @@ interface BottomCTAProps {
 export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
   return (
     <section className="relative py-28 sm:py-36 px-6 flex flex-col items-center overflow-hidden">
-      <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.018} />
+      <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.045} />
 
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `radial-gradient(circle at 35% 45%, rgba(${T.princetonRgb},0.04), transparent 50%), radial-gradient(circle at 65% 55%, rgba(${T.accentRgb},0.04), transparent 50%)`,

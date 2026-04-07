@@ -58,7 +58,7 @@ export function BattlePreview() {
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      <MapSectionBg gridOpacity={0.012} />
+      <MapSectionBg gridOpacity={0.035} />
       <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none opacity-50" />
 
       <div className="relative z-10">

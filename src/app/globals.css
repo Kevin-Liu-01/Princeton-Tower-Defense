@@ -1,4 +1,74 @@
-@import url("https://use.typekit.net/vxq6req.css");
+/* ── BC Novatica Cyr (self-hosted) ── */
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-SemiBoldItalic.woff2") format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "bc-novatica-cyr";
+  src: url("/fonts/bc-novatica-cyr/BCNovaticaCyr-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -408,8 +478,8 @@ body {
 }
 
 @keyframes landing-ring-rotate {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-landing-drift { animation: landing-drift 12s ease-in-out infinite; }
@@ -419,12 +489,12 @@ body {
 /* Landing section crosshatch texture */
 .landing-texture-crosshatch {
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(180,140,60,0.02) 14px, rgba(180,140,60,0.02) 15px),
-    repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(180,140,60,0.02) 14px, rgba(180,140,60,0.02) 15px);
+    repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(180,140,60,0.055) 14px, rgba(180,140,60,0.055) 15px),
+    repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(180,140,60,0.055) 14px, rgba(180,140,60,0.055) 15px);
 }
 
 .landing-texture-dots {
-  background-image: radial-gradient(circle at 1px 1px, rgba(180,140,60,0.04) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(180,140,60,0.09) 1px, transparent 0);
   background-size: 20px 20px;
 }
 
