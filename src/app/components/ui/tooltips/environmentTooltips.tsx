@@ -255,7 +255,7 @@ const LANDMARK_INFO: Record<
     name: "McCosh Hall",
   },
   nassau_hall: {
-    desc: "The historic heart of Princeton University, est. 1756.",
+    desc: "The historic heart of Princeton University, est. 1746.",
     icon: <Home className="text-amber-400" size={16} />,
     lore: "Once served as the capitol of the United States. Now it serves as the last bastion against the dark horde.",
     name: "Nassau Hall",

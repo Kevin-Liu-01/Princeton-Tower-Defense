@@ -38,10 +38,10 @@ const PrincetonLogo: React.FC = () => (
       <span
         className="text-lg sm:text-2xl font-black tracking-wider"
         style={{
+          backgroundImage:
+            "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
-          background:
-            "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
         }}
       >
         PRINCETON

@@ -60,10 +60,10 @@ export default function NotFound() {
               <h1
                 className="text-6xl sm:text-7xl font-black tracking-wider"
                 style={{
+                  backgroundImage:
+                    "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  background:
-                    "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 100%)",
                   filter:
                     "drop-shadow(0 2px 8px rgba(245,158,11,0.4)) drop-shadow(0 0 20px rgba(251,191,36,0.2))",
                 }}

@@ -145,7 +145,7 @@ export interface ReinforcementVariation {
 // Deterministic hash from a string ID.
 // Stable across zoom levels, camera pans, and frame redraws.
 function hashString(str: string): number {
-  let h = 0x811c9dc5;
+  let h = 0x81_1C_9D_C5;
   for (let i = 0; i < str.length; i++) {
     h ^= str.codePointAt(i);
     h = Math.imul(h, 0x01_00_01_93);

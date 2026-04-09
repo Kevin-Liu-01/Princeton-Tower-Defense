@@ -2,15 +2,11 @@
 import Image from "next/image";
 import React from "react";
 
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { useCarousel } from "../CarouselControls";
 import { LANDING_THEME, BATTLE_PREVIEW_SLIDES } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
-import {
-  MapSectionHeader,
-  MapSectionBg,
-  MapContentPanel,
-  SectionBorderFrame,
-} from "./mapElements";
+import { MapSectionHeader, MapSectionBg } from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -95,8 +91,6 @@ export function BattlePreview() {
     <section className="relative py-20 sm:py-28 overflow-hidden">
       <MapSectionBg gridOpacity={0.035} />
       <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none opacity-50" />
-      <SectionBorderFrame />
-
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader
@@ -106,7 +100,11 @@ export function BattlePreview() {
 
         {/* Main preview image */}
         <div className="mx-3 sm:mx-6 lg:mx-12 mb-6">
-          <MapContentPanel>
+          <OrnateFrame
+            cornerSize={32}
+            cornerVariant="compact"
+            showBorders={false}
+          >
             <div
               className="relative aspect-[16/9] rounded-2xl overflow-hidden"
               style={{
@@ -196,7 +194,7 @@ export function BattlePreview() {
                 }}
               />
             </div>
-          </MapContentPanel>
+          </OrnateFrame>
         </div>
 
         {/* Map filmstrip */}

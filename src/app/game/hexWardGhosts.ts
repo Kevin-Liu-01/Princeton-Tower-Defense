@@ -15,7 +15,7 @@ export interface HexWardGhostProfile {
   canTargetFlying?: boolean;
 }
 
-const WEAK_ENEMY_SCORE = 520;
+const WEAK_ENEMY_SCORE = 900;
 const STRONG_ENEMY_SCORE = 2400;
 const APEX_ENEMY_SCORE = 4200;
 const WEAK_TROOP_SCORE = 700;

@@ -13,28 +13,27 @@ import {
 } from "../../../constants/towerStats";
 import { TowerSprite } from "../../../sprites/towers";
 import type { TowerType } from "../../../types";
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { CarouselDots } from "../CarouselControls";
 import { LANDING_THEME } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import {
   MapSectionHeader,
   MapSectionBg,
-  MapContentPanel,
   BattleBackdrop,
   StatBlock,
-  SectionBorderFrame,
 } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
 
 const T = LANDING_THEME;
 
 const TOWER_ORDER: TowerType[] = [
+  "station",
   "cannon",
-  "mortar",
-  "library",
   "lab",
   "arch",
-  "station",
+  "library",
+  "mortar",
   "club",
 ];
 
@@ -48,11 +47,11 @@ const TOWER_BG: Record<TowerType, string> = {
   station: "/images/new/gameplay_grounds.png",
 };
 
-const SHOWCASE_VIS = 240;
+const SHOWCASE_VIS = 320;
 const SHOWCASE_SCALE = 2.4;
 const SHOWCASE_CANVAS = Math.round(SHOWCASE_VIS * SHOWCASE_SCALE);
 
-const EVO_VIS = 48;
+const EVO_VIS = 56;
 const EVO_SCALE = 2;
 const EVO_CANVAS = Math.round(EVO_VIS * EVO_SCALE);
 
@@ -331,14 +330,18 @@ export function TowerShowcase() {
     <section className="relative py-20 sm:py-28 overflow-hidden">
       <MapSectionBg tint={`${accent}06`} gridOpacity={0.035} />
       <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none" />
-      <SectionBorderFrame accent={accent} />
-
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader subtitle="7 Tower Classes" title="The Arsenal" />
 
         <div className="mx-3 sm:mx-6 lg:mx-12">
-          <MapContentPanel accent={accent}>
+          <OrnateFrame
+            color={accent}
+            glowColor={accent}
+            cornerSize={32}
+            cornerVariant="compact"
+            showBorders={false}
+          >
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
@@ -607,7 +610,7 @@ export function TowerShowcase() {
                 </div>
               </div>
             </div>
-          </MapContentPanel>
+          </OrnateFrame>
 
           <CarouselDots
             count={TOWER_ORDER.length}

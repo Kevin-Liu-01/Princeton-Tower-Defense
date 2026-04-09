@@ -1,13 +1,15 @@
 "use client";
-import { ChevronDown, ScrollText } from "lucide-react";
+import { ChevronDown, ChevronUp, ScrollText } from "lucide-react";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import React, { useState, useEffect, useCallback } from "react";
 
+import { TOWER_DATA, TOWER_ACCENTS } from "../../../constants/towers";
+import { TowerSprite } from "../../../sprites/towers";
+import type { TowerType } from "../../../types";
 import { useCrossfade } from "../hooks/useCrossfade";
 import {
   LANDING_THEME,
-  LANDING_TAGLINE,
-  LANDING_STATS,
   HERO_SLIDESHOW_IMAGES,
   CROSSFADE_INTERVAL_MS,
   CROSSFADE_TRANSITION_MS,
@@ -16,304 +18,248 @@ import {
 } from "../landingConstants";
 import type { EmberConfig } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
-import {
-  MapGrid,
-  MapBorder,
-  MapWaves,
-  MapTrails,
-  MapLocations,
-  MapCartouche,
-  ParchmentOverlay,
-  CompassDirections,
-} from "./mapElements";
+import { MapGrid, MapWaves, MapTrails, ParchmentOverlay } from "./mapElements";
+import { SpriteDisplay } from "./SpriteDisplay";
 
 const T = LANDING_THEME;
 
-// ─── Compass ring geometry ────────────────────────────────────────────────────
+const TOWER_ORDER: TowerType[] = [
+  "cannon",
+  "library",
+  "lab",
+  "arch",
+  "club",
+  "station",
+  "mortar",
+];
 
-const COMPASS_R = 80;
+const TOWER_VIS = 120;
+const TOWER_SCALE = 2.2;
+const TOWER_CANVAS = Math.round(TOWER_VIS * TOWER_SCALE);
 
-function ringPt(deg: number, r: number) {
-  const rad = (deg * Math.PI) / 180;
-  return {
-    x: +(Math.cos(rad) * r).toFixed(2),
-    y: +(Math.sin(rad) * r).toFixed(2),
-  };
+const STATS = [
+  { value: "26", label: "Levels" },
+  { value: "100+", label: "Enemies" },
+  { value: "9", label: "Heroes" },
+  { value: "7", label: "Towers" },
+] as const;
+
+interface LevelPreview {
+  file: string;
+  id: string;
+  name: string;
 }
 
-const CARDINALS = [0, 90, 180, 270].map((d) => ({
-  d,
-  ...ringPt(d, COMPASS_R),
-}));
-const INTERCARDINALS = [45, 135, 225, 315].map((d) => ({
-  d,
-  ...ringPt(d, COMPASS_R),
-}));
-const TICKS = Array.from({ length: 36 }, (_, i) => i * 10)
-  .filter((d) => d % 45 !== 0)
-  .map((d) => {
-    const inner = ringPt(d, COMPASS_R - 2);
-    const outer = ringPt(d, COMPASS_R + 2);
-    return { d, x1: inner.x, x2: outer.x, y1: inner.y, y2: outer.y };
-  });
+const LEFT_PREVIEWS: LevelPreview[] = [
+  { file: "nassau", id: "nassau", name: "Nassau Hall" },
+  { file: "poe", id: "poe", name: "Poe Field" },
+  { file: "carnegie", id: "carnegie", name: "Carnegie Lake" },
+  { file: "glacier", id: "glacier", name: "Glacier Path" },
+  { file: "caldera", id: "crater", name: "Caldera Basin" },
+  { file: "pyramid", id: "pyramid", name: "Pyramid Pass" },
+  { file: "witch_hut", id: "witch_hut", name: "Witch's Domain" },
+  { file: "fortress", id: "fortress", name: "Frost Fortress" },
+];
 
-const STAR_RAYS = [0, 45, 90, 135, 180, 225, 270, 315].map((d) => {
-  const major = d % 90 === 0;
-  const inner = ringPt(d, 34);
-  const outer = ringPt(d, major ? 52 : 43);
-  return { d, ...inner, x2: outer.x, y2: outer.y, major };
-});
+const RIGHT_PREVIEWS: LevelPreview[] = [
+  { file: "lava_fields", id: "lava", name: "Lava Fields" },
+  { file: "oasis", id: "oasis", name: "Desert Oasis" },
+  { file: "sphinx", id: "sphinx", name: "Sphinx Gate" },
+  { file: "peak", id: "peak", name: "Summit Peak" },
+  { file: "throne", id: "throne", name: "Obsidian Throne" },
+  { file: "sandbox", id: "sandbox", name: "Sandbox Arena" },
+  { file: "sunken_temple", id: "sunken_temple", name: "Sunken Temple" },
+  { file: "murky_bog", id: "bog", name: "Murky Bog" },
+];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+interface TowerLevel {
+  level: 1 | 2 | 3 | 4;
+  upgrade?: "A" | "B";
+}
 
-function MapCompassRose() {
+const LEVEL_CYCLE: TowerLevel[] = [
+  { level: 1 },
+  { level: 2 },
+  { level: 3 },
+  { level: 4, upgrade: "A" },
+  { level: 4, upgrade: "B" },
+];
+
+function LevelCard({
+  preview,
+  side,
+}: {
+  preview: LevelPreview;
+  side: "left" | "right";
+}) {
   return (
-    <div
-      className="relative flex items-center justify-center"
-      style={{ height: 200, width: 200 }}
+    <Link
+      href={`/${preview.id}`}
+      className="relative w-full rounded-lg overflow-hidden flex-shrink-0 block group transition-all duration-300 hover:scale-[1.06] hover:z-10"
+      style={{ aspectRatio: "21/9" }}
     >
-      {/* Ambient glow */}
+      <Image
+        src={`/images/previews/${preview.file}.png`}
+        alt={preview.name}
+        fill
+        sizes="220px"
+        className="object-cover transition-all duration-300 group-hover:brightness-125"
+      />
       <div
-        className="absolute inset-[-36px] rounded-full"
+        className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-none rounded-lg"
         style={{
-          animation: "landing-pulse 4s ease-in-out infinite",
-          background: `radial-gradient(circle, rgba(${T.accentRgb},0.12) 0%, rgba(${T.accentDarkRgb},0.04) 50%, transparent 75%)`,
+          boxShadow: `inset 0 0 16px rgba(${T.accentRgb},0.2), 0 0 16px rgba(${T.accentRgb},0.25)`,
+          border: `1.5px solid rgba(${T.accentRgb},0.35)`,
         }}
       />
-
-      {/* Rotating compass ring */}
-      <svg
-        className="absolute animate-map-compass-glow"
-        viewBox="-90 -90 180 180"
-        style={{
-          animation: "landing-spin 60s linear infinite",
-          height: 200,
-          width: 200,
-        }}
-        fill="none"
-      >
-        {/* Concentric rings */}
-        <circle
-          r={COMPASS_R}
-          stroke={T.accentDark}
-          strokeWidth="1.2"
-          opacity="0.35"
-        />
-        <circle
-          r={COMPASS_R - 4}
-          stroke={T.accentDark}
-          strokeWidth="0.4"
-          opacity="0.15"
-        />
-        <circle
-          r={COMPASS_R + 4}
-          stroke={T.accentDark}
-          strokeWidth="0.3"
-          opacity="0.1"
-        />
-        <circle
-          r={56}
-          stroke={T.accentDark}
-          strokeWidth="0.5"
-          opacity="0.12"
-          strokeDasharray="3,5"
-        />
-
-        {/* Star rays from center */}
-        {STAR_RAYS.map((r) => (
-          <line
-            key={`ray-${r.d}`}
-            x1={r.x}
-            y1={r.y}
-            x2={r.x2}
-            y2={r.y2}
-            stroke={T.accentDark}
-            strokeWidth={r.major ? "1" : "0.5"}
-            opacity={r.major ? "0.22" : "0.12"}
-          />
-        ))}
-
-        {/* Cardinal diamond markers */}
-        {CARDINALS.map((m) => (
-          <g key={m.d} transform={`translate(${m.x},${m.y}) rotate(${m.d})`}>
-            <path d="M0,-7 L4,0 L0,7 L-4,0 Z" fill={T.accent} opacity="0.8" />
-            <path
-              d="M0,-4.5 L2.5,0 L0,4.5 L-2.5,0 Z"
-              fill={T.accentBright}
-              opacity="0.5"
-            />
-          </g>
-        ))}
-
-        {/* Intercardinal dots */}
-        {INTERCARDINALS.map((m) => (
-          <circle
-            key={m.d}
-            cx={m.x}
-            cy={m.y}
-            r="2.5"
-            fill={T.accent}
-            opacity="0.4"
-          />
-        ))}
-
-        {/* Fine tick marks */}
-        {TICKS.map((m) => (
-          <line
-            key={m.d}
-            x1={m.x1}
-            y1={m.y1}
-            x2={m.x2}
-            y2={m.y2}
-            stroke={T.accentDark}
-            strokeWidth="0.5"
-            opacity="0.22"
-          />
-        ))}
-      </svg>
-
-      {/* Non-rotating direction labels */}
-      <div className="absolute" style={{ height: 200, width: 200 }}>
-        <CompassDirections />
-      </div>
-
-      {/* Center logo medallion (stationary) */}
       <div
-        className="relative w-[110px] h-[110px] flex items-center justify-center rounded-full"
-        style={{
-          background: `linear-gradient(150deg, rgba(${T.accentDarkRgb},0.5) 0%, rgba(${T.bgRgb},0.92) 50%, rgba(${T.bgRgb},0.96) 100%)`,
-          border: `2.5px solid rgba(${T.accentDarkRgb},0.45)`,
-          boxShadow: `0 0 50px rgba(${T.accentRgb},0.2), 0 0 100px rgba(${T.accentRgb},0.06), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 6px rgba(0,0,0,0.3)`,
-        }}
+        className={`absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent ${side === "left" ? "text-right" : "text-left"}`}
       >
-        <div
-          className="absolute inset-[3px] rounded-full pointer-events-none"
-          style={{ border: `1px solid rgba(${T.accentDarkRgb},0.15)` }}
-        />
-        <Image
-          src="/images/logos/princeton-td-logo.svg"
-          alt="Princeton Tower Defense"
-          width={65}
-          height={65}
-          priority
-          style={{ filter: `drop-shadow(0 0 14px rgba(${T.accentRgb},0.5))` }}
-        />
+        <span className="text-[8px] sm:text-[9px] font-bold text-white/80 tracking-wider uppercase">
+          {preview.name}
+        </span>
       </div>
+    </Link>
+  );
+}
+
+function ScrollColumn({
+  levels,
+  direction,
+}: {
+  levels: LevelPreview[];
+  direction: "up" | "down";
+}) {
+  const doubled = [...levels, ...levels];
+  const side = direction === "up" ? "left" : "right";
+  return (
+    <div
+      className="hero-rail absolute top-0 bottom-0 w-[180px] lg:w-[220px] hidden md:block"
+      style={{ [side]: 0, overflowX: "visible", overflowY: "clip" }}
+    >
+      <div className="hero-rail-slide" data-side={side}>
+        <div
+          className="hero-rail-track flex flex-col gap-3 py-3"
+          style={{
+            animation: `hero-scroll-${direction} ${levels.length * 5}s linear infinite`,
+          }}
+        >
+          {doubled.map((preview, i) => (
+            <LevelCard
+              key={`${preview.file}-${i}`}
+              preview={preview}
+              side={side}
+            />
+          ))}
+        </div>
+      </div>
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: [
+            `linear-gradient(180deg, ${T.bg} 0%, transparent 10%, transparent 90%, ${T.bg} 100%)`,
+            side === "left"
+              ? `linear-gradient(270deg, transparent 60%, ${T.bg} 100%)`
+              : `linear-gradient(90deg, transparent 60%, ${T.bg} 100%)`,
+          ].join(", "),
+        }}
+      />
     </div>
   );
 }
 
-function TitleOrnament({ flip }: { flip?: boolean }) {
+function getTowerLabel(type: TowerType, tl: TowerLevel): string {
+  if (tl.level < 4) {
+    return `Lv.${tl.level}`;
+  }
+  return TOWER_DATA[type].upgrades[tl.upgrade ?? "A"].name;
+}
+
+function TowerCard({
+  type,
+  towerLevel,
+  onNext,
+  onPrev,
+}: {
+  type: TowerType;
+  towerLevel: TowerLevel;
+  onNext: () => void;
+  onPrev: () => void;
+}) {
+  const accent = TOWER_ACCENTS[type];
+  const label = getTowerLabel(type, towerLevel);
+  const glowIntensity = 8 + towerLevel.level * 6;
+
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      style={{
-        filter: `drop-shadow(0 0 5px rgba(${T.accentRgb},0.35))`,
-        height: 20,
-        transform: flip ? "scaleX(-1)" : undefined,
-        width: 20,
-      }}
-    >
-      <path
-        d="M4 12 L9 7 L12 10 L15 7 L20 12 L15 17 L12 14 L9 17 Z"
-        fill={T.accent}
-        opacity="0.7"
-      />
-      <path
-        d="M6 12 L9 9 L12 12 L15 9 L18 12 L15 15 L12 12 L9 15 Z"
-        fill={T.accentDark}
-        opacity="0.5"
-      />
-      <path
-        d="M12 8 L14 12 L12 16 L10 12 Z"
-        fill={T.accentBright}
-        opacity="0.9"
-      />
-    </svg>
+    <div className="flex flex-col items-center gap-0">
+      <button
+        onClick={onNext}
+        className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
+        aria-label="Next level"
+      >
+        <ChevronUp size={14} style={{ color: accent }} />
+      </button>
+      <div
+        className="relative flex items-center justify-center rounded-lg overflow-hidden transition-all duration-300"
+        style={{
+          background: `linear-gradient(160deg, ${accent}12, rgba(6,6,10,0.6))`,
+          border: `1.5px solid ${accent}35`,
+          boxShadow: `0 0 ${glowIntensity}px ${accent}20`,
+          height: TOWER_VIS + 16,
+          width: TOWER_VIS + 8,
+        }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 50% 60%, ${accent}10, transparent 70%)`,
+          }}
+        />
+        <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
+          <TowerSprite
+            type={type}
+            size={TOWER_CANVAS}
+            level={towerLevel.level}
+            upgrade={towerLevel.upgrade}
+          />
+        </SpriteDisplay>
+      </div>
+      <button
+        onClick={onPrev}
+        className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
+        aria-label="Previous level"
+      >
+        <ChevronDown size={14} style={{ color: accent }} />
+      </button>
+      <span
+        className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center max-w-[88px] truncate"
+        style={{ color: `${accent}80` }}
+      >
+        {label}
+      </span>
+    </div>
   );
 }
 
-function MapFlourish() {
+function StatBadge({ value, label }: { value: string; label: string }) {
   return (
-    <svg
-      viewBox="0 0 360 24"
-      fill="none"
-      className="w-full"
-      style={{ height: 24, maxWidth: 360 }}
-    >
-      {/* Left arm */}
-      <path
-        d="M0 12 L130 12"
-        stroke={T.accentDark}
-        strokeWidth="1"
-        opacity="0.5"
-      />
-      <path
-        d="M20 9 L120 9"
-        stroke={T.accentDark}
-        strokeWidth="0.4"
-        opacity="0.2"
-      />
-      <path
-        d="M10 15 L115 15"
-        stroke={T.accentDark}
-        strokeWidth="0.3"
-        opacity="0.12"
-      />
-      {/* Right arm */}
-      <path
-        d="M230 12 L360 12"
-        stroke={T.accentDark}
-        strokeWidth="1"
-        opacity="0.5"
-      />
-      <path
-        d="M240 9 L340 9"
-        stroke={T.accentDark}
-        strokeWidth="0.4"
-        opacity="0.2"
-      />
-      <path
-        d="M245 15 L350 15"
-        stroke={T.accentDark}
-        strokeWidth="0.3"
-        opacity="0.12"
-      />
-      {/* Center diamond cluster */}
-      <path
-        d="M180 2 L190 12 L180 22 L170 12 Z"
-        fill={T.accent}
-        opacity="0.2"
-        stroke={T.accent}
-        strokeWidth="0.8"
-      />
-      <path
-        d="M180 5 L186 12 L180 19 L174 12 Z"
-        fill="none"
-        stroke={T.accentBright}
-        strokeWidth="0.6"
-        opacity="0.5"
-      />
-      <circle cx="180" cy="12" r="3" fill={T.accent} opacity="0.85" />
-      <circle cx="180" cy="12" r="1.5" fill={T.accentDark} opacity="0.5" />
-      {/* Flanking diamonds */}
-      <path
-        d="M148 12 L151 9 L154 12 L151 15 Z"
-        fill={T.accent}
-        opacity="0.45"
-      />
-      <path
-        d="M206 12 L209 9 L212 12 L209 15 Z"
-        fill={T.accent}
-        opacity="0.45"
-      />
-      {/* Accent dots */}
-      <circle cx="55" cy="12" r="1.3" fill={T.accentBright} opacity="0.35" />
-      <circle cx="90" cy="12" r="0.9" fill={T.accentBright} opacity="0.25" />
-      <circle cx="270" cy="12" r="0.9" fill={T.accentBright} opacity="0.25" />
-      <circle cx="305" cy="12" r="1.3" fill={T.accentBright} opacity="0.35" />
-    </svg>
+    <div className="flex flex-col items-center gap-0.5 px-3 sm:px-5">
+      <span
+        className="text-2xl sm:text-4xl font-black tabular-nums leading-none"
+        style={{
+          color: T.princeton,
+          textShadow: `0 0 24px rgba(${T.princetonRgb},0.4)`,
+        }}
+      >
+        {value}
+      </span>
+      <span
+        className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em]"
+        style={{ color: `rgba(${T.accentRgb},0.35)` }}
+      >
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -341,13 +287,11 @@ function EmberParticle({ ember }: { ember: EmberConfig }) {
 function HeroEmbers() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
   if (!mounted) {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none" />
     );
   }
-
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {LANDING_EMBERS.map((e) => (
@@ -390,38 +334,6 @@ function CreditsButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function MapLegend() {
-  return (
-    <div
-      className="hidden md:flex gap-3 sm:gap-5 flex-wrap justify-center px-4 py-2 rounded-sm"
-      style={{
-        background: `rgba(${T.bgRgb},0.5)`,
-        border: `0.5px solid rgba(${T.accentRgb},0.08)`,
-      }}
-    >
-      {LANDING_STATS.slice(0, 4).map(({ icon: Icon, value, label }) => (
-        <div key={label} className="flex items-center gap-1.5">
-          <Icon size={12} style={{ color: `rgba(${T.accentRgb},0.3)` }} />
-          <span
-            className="text-xs font-black tabular-nums"
-            style={{ color: T.accent }}
-          >
-            {value}
-          </span>
-          <span
-            className="text-[7px] font-bold uppercase tracking-[0.12em]"
-            style={{ color: `rgba(${T.accentRgb},0.25)` }}
-          >
-            {label}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main Hero Section ────────────────────────────────────────────────────────
-
 interface HeroSectionProps {
   onPlay: () => void;
   exiting: boolean;
@@ -433,10 +345,13 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
     HERO_SLIDESHOW_IMAGES.length,
     CROSSFADE_INTERVAL_MS
   );
-  const [stages, setStages] = useState<boolean[]>(new Array(7).fill(false));
+  const [stages, setStages] = useState<boolean[]>(new Array(6).fill(false));
+  const [towerLevels, setTowerLevels] = useState<number[]>(() =>
+    new Array(TOWER_ORDER.length).fill(0)
+  );
 
   useEffect(() => {
-    const delays = [100, 300, 550, 750, 1000, 1300, 1600];
+    const delays = [100, 300, 500, 700, 900, 1200];
     const timers = delays.map((delay, i) =>
       setTimeout(() => {
         setStages((prev) => {
@@ -449,9 +364,16 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  const cycleTower = useCallback((idx: number, dir: 1 | -1) => {
+    setTowerLevels((prev) => {
+      const next = [...prev];
+      next[idx] = (next[idx] + dir + LEVEL_CYCLE.length) % LEVEL_CYCLE.length;
+      return next;
+    });
+  }, []);
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* ── Layer 1: Crossfading biome backgrounds (sepia-aged) ── */}
       {HERO_SLIDESHOW_IMAGES.map((src, i) => (
         <div
           key={src}
@@ -474,10 +396,8 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
       ))}
 
-      {/* ── Layer 2: Parchment texture ── */}
       <ParchmentOverlay />
 
-      {/* ── Layer 3: Gradient overlays ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -491,28 +411,20 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         }}
       />
 
-      {/* ── Layer 4: Cartographic grid ── */}
       <MapGrid />
-
-      {/* ── Layer 5: Terrain silhouettes ── */}
       <MapWaves />
-
-      {/* ── Layer 6: Adventure trails ── */}
       <MapTrails />
 
-      {/* ── Layer 7: Ornate border frame ── */}
-      <MapBorder />
+      {/* Scrolling level columns — z-0 behind frame */}
+      <ScrollColumn levels={LEFT_PREVIEWS} direction="up" />
+      <ScrollColumn levels={RIGHT_PREVIEWS} direction="down" />
 
-      {/* ── Layer 8: Location markers ── */}
-      <MapLocations />
-
-      {/* ── Layer 9: Ember particles ── */}
       <HeroEmbers />
 
-      {/* ── Layer 10: Content ── */}
-      <div className="relative z-10 flex flex-col items-center gap-3 sm:gap-5 px-6 w-full max-w-lg">
-        {/* Compass Rose + Logo */}
+      {/* Content — z-10 above everything */}
+      <div className="relative z-10 flex flex-col items-center gap-4 sm:gap-6 px-4 w-full max-w-4xl">
         <div
+          className="flex items-center gap-4 sm:gap-6"
           style={{
             opacity: stages[0] ? 1 : 0,
             transform: stages[0]
@@ -521,89 +433,82 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             transition: "all 800ms ease-out",
           }}
         >
-          <MapCompassRose />
+          <Image
+            src="/images/logos/princeton-td-logo.svg"
+            alt="Princeton Tower Defense"
+            width={72}
+            height={72}
+            priority
+            className="sm:w-[90px] sm:h-[90px]"
+            style={{ filter: `drop-shadow(0 0 14px rgba(${T.accentRgb},0.5))` }}
+          />
+          <div className="flex flex-col">
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-none"
+              style={{
+                color: "#fbbf24",
+                textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 2px 6px rgba(0,0,0,0.7)`,
+              }}
+            >
+              PRINCETON
+            </h1>
+            <h2
+              className="text-base sm:text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mt-1"
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+              }}
+            >
+              Tower Defense
+            </h2>
+          </div>
         </div>
 
-        {/* Title in Cartouche */}
         <div
+          className="flex items-center justify-center gap-1 sm:gap-2"
           style={{
             opacity: stages[1] ? 1 : 0,
-            transform: stages[1] ? "translateY(0)" : "translateY(18px)",
-            transition: "all 700ms ease-out",
+            transform: stages[1] ? "translateY(0)" : "translateY(20px)",
+            transition: "all 800ms ease-out",
           }}
         >
-          <MapCartouche>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <TitleOrnament />
-                <h1
-                  className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.22em] uppercase text-center"
-                  style={{
-                    color: T.accent,
-                    textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 0 80px rgba(${T.accentRgb},0.12), 0 2px 4px rgba(0,0,0,0.6)`,
-                  }}
-                >
-                  Princeton
-                </h1>
-                <TitleOrnament flip />
-              </div>
-              <h2
-                className="text-lg sm:text-2xl md:text-3xl font-bold tracking-[0.35em] uppercase"
-                style={{
-                  color: `rgba(${T.accentRgb},0.65)`,
-                  textShadow: `0 0 20px rgba(${T.accentRgb},0.18), 0 2px 4px rgba(0,0,0,0.5)`,
-                }}
-              >
-                Tower Defense
-              </h2>
-            </div>
-          </MapCartouche>
+          {TOWER_ORDER.map((type, idx) => (
+            <TowerCard
+              key={type}
+              type={type}
+              towerLevel={LEVEL_CYCLE[towerLevels[idx]]}
+              onNext={() => cycleTower(idx, 1)}
+              onPrev={() => cycleTower(idx, -1)}
+            />
+          ))}
         </div>
 
-        {/* Flourish */}
         <div
-          className="w-full flex justify-center"
+          className="flex items-center justify-center"
           style={{
             opacity: stages[2] ? 1 : 0,
-            transform: stages[2]
-              ? "translateY(0) scaleX(1)"
-              : "translateY(6px) scaleX(0.7)",
+            transform: stages[2] ? "translateY(0)" : "translateY(14px)",
             transition: "all 700ms ease-out",
           }}
         >
-          <MapFlourish />
+          {STATS.map((s, i) => (
+            <React.Fragment key={s.label}>
+              {i > 0 && (
+                <div
+                  className="w-px h-8 mx-1 sm:mx-2"
+                  style={{ background: `rgba(${T.accentRgb},0.15)` }}
+                />
+              )}
+              <StatBadge value={s.value} label={s.label} />
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* Tagline */}
-        <p
-          className="text-xs sm:text-sm font-medium tracking-wider text-center italic"
+        <div
+          className="flex flex-col items-center gap-3"
           style={{
-            color: `rgba(${T.accentRgb},0.42)`,
             opacity: stages[3] ? 1 : 0,
-            transform: stages[3] ? "translateY(0)" : "translateY(12px)",
-            transition: "all 700ms ease-out",
-          }}
-        >
-          {LANDING_TAGLINE}
-        </p>
-
-        {/* Map Legend stats */}
-        <div
-          style={{
-            opacity: stages[4] ? 1 : 0,
-            transform: stages[4] ? "translateY(0)" : "translateY(10px)",
-            transition: "all 600ms ease-out",
-          }}
-        >
-          <MapLegend />
-        </div>
-
-        {/* CTA */}
-        <div
-          className="mt-1 sm:mt-2 flex flex-col items-center gap-3"
-          style={{
-            opacity: stages[5] ? 1 : 0,
-            transform: stages[5]
+            transform: stages[3]
               ? "translateY(0) scale(1)"
               : "translateY(16px) scale(0.94)",
             transition: "all 700ms ease-out",
@@ -614,11 +519,10 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <div
         className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-landing-scroll-bounce"
         style={{
-          opacity: stages[6] ? 1 : 0,
+          opacity: stages[4] ? 1 : 0,
           transition: "opacity 1s ease-out",
         }}
       >

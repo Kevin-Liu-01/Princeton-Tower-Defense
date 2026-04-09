@@ -4,13 +4,10 @@ import React from "react";
 import { ENEMY_DATA } from "../../../constants/enemies";
 import { EnemySprite } from "../../../sprites/enemies";
 import type { EnemyType, MapTheme } from "../../../types";
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { LANDING_THEME } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
-import {
-  MapSectionHeader,
-  MapSectionBg,
-  SectionBorderFrame,
-} from "./mapElements";
+import { MapSectionHeader, MapSectionBg } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
 
 const T = LANDING_THEME;
@@ -187,7 +184,15 @@ export function EnemyBestiary() {
     <section className="relative py-20 sm:py-28 overflow-hidden">
       <MapSectionBg tint="rgba(80,15,15,0.06)" gridOpacity={0.03} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none opacity-50" />
-      <SectionBorderFrame />
+      <div className="absolute inset-x-3 inset-y-2 sm:inset-x-5 sm:inset-y-3 lg:inset-x-8 lg:inset-y-4 pointer-events-none z-[1]">
+        <OrnateFrame
+          className="w-full h-full"
+          cornerSize={40}
+          borderVariant="compact"
+        >
+          <div className="w-full h-full" />
+        </OrnateFrame>
+      </div>
 
       {/* Fog effect at edges */}
       <div

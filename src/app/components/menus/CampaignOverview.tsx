@@ -417,10 +417,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <h2
             className="text-sm font-extrabold tracking-wider uppercase"
             style={{
+              backgroundImage:
+                "linear-gradient(180deg, #f5d060 0%, #d4a84a 40%, #a07830 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
-              background:
-                "linear-gradient(180deg, #f5d060 0%, #d4a84a 40%, #a07830 100%)",
               filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
             }}
           >

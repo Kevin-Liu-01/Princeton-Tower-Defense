@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import {
   LANDING_THEME,
   LANDING_LORE,
@@ -8,7 +9,7 @@ import {
 } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
-import { MapSectionBg, MapCartouche, SectionBorderFrame } from "./mapElements";
+import { MapSectionBg, MapCartouche } from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -93,7 +94,15 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
   return (
     <section className="relative py-28 sm:py-36 px-6 flex flex-col items-center overflow-hidden">
       <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.045} />
-      <SectionBorderFrame />
+      <div className="absolute inset-x-3 inset-y-2 sm:inset-x-5 sm:inset-y-3 lg:inset-x-8 lg:inset-y-4 pointer-events-none z-[1]">
+        <OrnateFrame
+          className="w-full h-full"
+          cornerSize={40}
+          borderVariant="compact"
+        >
+          <div className="w-full h-full" />
+        </OrnateFrame>
+      </div>
 
       <div
         className="absolute inset-0 pointer-events-none"

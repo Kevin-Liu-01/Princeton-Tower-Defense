@@ -5,6 +5,8 @@ import {
   ISO_PRISM_W_FACTOR,
   ISO_PRISM_D_FACTOR,
   ISO_Y_RATIO,
+  ISO_Y_FACTOR,
+  ISO_TILE_HEIGHT_FACTOR,
 } from "../../constants";
 import { LEVEL_DATA, REGION_THEMES } from "../../constants/maps";
 import type { MapTheme } from "../../constants/maps";
@@ -2498,13 +2500,16 @@ export function drawTowerPassiveEffects(
   time: number,
   colors: { base: string; dark: string; light: string; accent: string }
 ) {
-  // Add ambient particles floating around all towers
+  const metrics = getTowerVisualMetrics(tower);
+  const yShift = getTowerYShift(tower);
+  const centerY = screenPos.y - (yShift + metrics.centerOffsetY * 0.6) * zoom;
+
   const particleCount = 3 + tower.level;
   for (let i = 0; i < particleCount; i++) {
     const angle = time * (0.5 + i * 0.1) + i * ((Math.PI * 2) / particleCount);
-    const radius = (25 + Math.sin(time * 2 + i) * 5) * zoom;
+    const radius = (20 + Math.sin(time * 2 + i) * 5) * zoom;
     const px = screenPos.x + Math.cos(angle) * radius;
-    const py = screenPos.y - 30 * zoom + Math.sin(angle * 0.5) * radius * 0.3;
+    const py = centerY + Math.sin(angle * 0.5) * radius * 0.3;
     const particleAlpha = 0.3 + Math.sin(time * 3 + i) * 0.2;
     const particleSize = (2 + Math.sin(time * 4 + i) * 1) * zoom;
 
@@ -2621,9 +2626,8 @@ export function getTowerYShift(tower: Tower): number {
     case "cannon":
     case "library":
     case "lab":
-    case "club": {
-      return 8 + tower.level * 2;
-    }
+    case "club":
+    case "mortar":
     case "station": {
       return 8 + tower.level * 2;
     }
@@ -2725,6 +2729,25 @@ export function getTowerVisualMetrics(tower: Tower): {
       return { centerOffsetY: 20, visualHeight: 60 };
     }
   }
+}
+
+/**
+ * World-space position shifted upward to the tower's visual center.
+ * Particles spawned here appear at the tower body instead of the tile base.
+ *
+ * The iso projection is:  screenY = (worldX + worldY) * ISO_Y_FACTOR * zoom
+ * Decreasing both worldX and worldY by `d` shifts screenY up by `d * 2 * ISO_Y_FACTOR * zoom`.
+ * Tower screen offsets (diamond half-height + yShift + visual center) are at zoom=1,
+ * so `d = screenOffset / (2 * ISO_Y_FACTOR)`.
+ */
+export function getTowerParticleWorldPos(tower: Tower): Position {
+  const base = gridToWorld(tower.pos);
+  const yShift = getTowerYShift(tower);
+  const metrics = getTowerVisualMetrics(tower);
+  const diamondHalfH = TILE_SIZE * ISO_TILE_HEIGHT_FACTOR * 0.25;
+  const screenOffset = diamondHalfH + yShift + metrics.centerOffsetY * 0.65;
+  const worldDelta = screenOffset / (2 * ISO_Y_FACTOR);
+  return { x: base.x - worldDelta, y: base.y - worldDelta };
 }
 
 export function drawGroundTransition(

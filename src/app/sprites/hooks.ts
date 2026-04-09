@@ -1,6 +1,23 @@
+import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect } from "react";
 
 export const SPRITE_PAD = 1.8;
+
+export function spriteContainerStyle(w: number, h: number): CSSProperties {
+  return { position: "relative", width: w, height: h };
+}
+
+export function spriteCanvasStyle(w: number, h: number): CSSProperties {
+  return {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: w,
+    height: h,
+    pointerEvents: "none",
+  };
+}
 
 export function setupSpriteCanvas(
   canvas: HTMLCanvasElement,

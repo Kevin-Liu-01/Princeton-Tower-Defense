@@ -7,6 +7,7 @@ import {
   DEFAULT_TROOP_HP,
 } from "../../constants";
 import { getUpgradeCost } from "../../constants/towerStats";
+import { getTowerParticleWorldPos } from "../../rendering";
 import type {
   Position,
   Tower,
@@ -115,7 +116,7 @@ export function upgradeTowerImpl(
   }
 
   p.removePawPoints(cost);
-  p.addParticles(gridToWorld(tower.pos), "glow", 20);
+  p.addParticles(getTowerParticleWorldPos(tower), "glow", 20);
   p.gameEventLogRef.current.log(
     "tower_upgraded",
     `Upgraded ${TOWER_DATA[tower.type].name} to Lv${newLevel}${newUpgrade ? ` (${newUpgrade})` : ""} for ${cost} PP`,
@@ -150,7 +151,7 @@ export function sellTowerImpl(towerId: string, p: SellTowerParams): void {
             ? 350 * 0.7
             : 0);
   p.addPawPoints(refund);
-  p.addParticles(gridToWorld(tower.pos), "smoke", 15);
+  p.addParticles(getTowerParticleWorldPos(tower), "smoke", 15);
   p.removeTowerEntity(towerId);
   p.removeTroopsWhere((troop) => troop.ownerId === towerId);
   p.gameEventLogRef.current.log(

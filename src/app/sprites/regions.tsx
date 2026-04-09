@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 
-import { setupSpriteCanvas, SPRITE_PAD } from "./hooks";
+import { setupSpriteCanvas } from "./hooks";
 import { drawRegionIcon, drawChallengeSigil } from "./regionIconDrawing";
 import type { RegionType } from "./regionIconDrawing";
 
@@ -234,19 +234,15 @@ export const RegionIcon: React.FC<{
   sandbox = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const canvasSize = Math.ceil(size * SPRITE_PAD);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
       return;
     }
-    const ctx = setupSpriteCanvas(canvas, canvasSize, canvasSize);
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) {
       return;
     }
-
-    const offset = (canvasSize - size) / 2;
-    ctx.translate(offset, offset);
 
     const cx = size / 2;
     const cy = size / 2;
@@ -318,8 +314,6 @@ export const RegionIcon: React.FC<{
     ctx.scale(iconScale, iconScale);
     drawRegionIcon(ctx, type);
     ctx.restore();
-  }, [type, size, canvasSize, locked, framed, challenge]);
-  return (
-    <canvas ref={canvasRef} style={{ height: canvasSize, width: canvasSize }} />
-  );
+  }, [type, size, locked, framed, challenge]);
+  return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };

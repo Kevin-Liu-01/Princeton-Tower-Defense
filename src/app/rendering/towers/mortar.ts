@@ -39,6 +39,7 @@ export function renderMortarTower(
   void colors;
   ctx.save();
   const { level } = tower;
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + level * 2) * zoom };
   const isMissile = level === 4 && tower.upgrade === "A";
   const isEmber = level === 4 && tower.upgrade === "B";
   const variantAttackSpeed = getMortarAttackSpeed(tower);
@@ -72,7 +73,7 @@ export function renderMortarTower(
   // ========== GROUND SHADOW (multi-layered, soft edge) ==========
   {
     const shX = screenPos.x + 2 * zoom;
-    const shY = screenPos.y + 12 * zoom;
+    const shY = screenPos.y + (12 + level) * zoom;
     const shW = baseW * 0.72 * zoom;
     const shH = baseW * 0.34 * zoom;
     // Outer soft penumbra
@@ -115,7 +116,7 @@ export function renderMortarTower(
   // ========== GROUND RUBBLE RING & SCORCH MARKS ==========
   {
     const rubbleR = (baseW + 16) * 0.5 * zoom;
-    const rubbleY = screenPos.y + 8 * zoom;
+    const rubbleY = screenPos.y + (8 + level) * zoom;
     // Scattered debris particles around base perimeter
     const rubbleSeed = 47;
     ctx.fillStyle = "rgba(60,55,45,0.14)";
@@ -171,7 +172,7 @@ export function renderMortarTower(
   // ========== HEX-PRISM FOUNDATION WALL (sandbag replacement) ==========
   const wallR = (baseW + 12) * 0.5 * zoom;
   const wallH = 8 * zoom;
-  const wallBaseY = screenPos.y + 6 * zoom;
+  const wallBaseY = screenPos.y + (6 + level * 2) * zoom;
   const wallVerts = generateIsoHexVertices(isoOff, wallR, hexSides);
   const wallNormals = computeHexSideNormals(0, hexSides);
   const wallSorted = sortSidesByDepth(wallNormals);

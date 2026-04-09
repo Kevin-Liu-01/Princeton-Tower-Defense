@@ -26,12 +26,12 @@ import { renderStationTower } from "./station";
 import {
   drawTowerPassiveEffects,
   getTowerFoundationSize,
-  getTowerYShift,
   getTowerVisualMetrics,
 } from "./towerHelpers";
 
 export {
   getTowerFoundationSize,
+  getTowerParticleWorldPos,
   getTowerYShift,
   getTowerVisualMetrics,
 } from "./towerHelpers";
@@ -63,7 +63,7 @@ const TOWER_SPRITE_FOOT_MULT: Partial<Record<TowerType, number>> = {
   club: 0.78,
   lab: 0.38,
   library: 0.4,
-  mortar: 0.35,
+  mortar: 0.45,
   station: 0.23,
 };
 
@@ -92,7 +92,7 @@ export function drawTowerSprite(
   const baseVisualH = metrics.visualHeight;
   const targetFit = size * 0.85;
   const typeScale = TOWER_SPRITE_SCALE[type] ?? 1;
-  const lvl4Scale = level === 4 ? 0.82 : 1;
+  const lvl4Scale = level === 4 ? 1.05 : 1;
   const zoom =
     Math.max(0.1, Math.min(targetFit / baseVisualH, size / 80)) *
     typeScale *
@@ -191,19 +191,18 @@ export function renderTower(
 
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
 
-  const towerShift = getTowerYShift(tower) * zoom;
-  const glowShadowY = screenPos.y - towerShift + 8 * zoom;
+  const glowShadowY = screenPos.y + 6 * zoom;
 
   if (isSelected || isHovered) {
     const glowFnd = getTowerFoundationSize(tower);
-    const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.7;
-    const glowRy = glowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.7;
+    const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.15;
+    const glowRy = glowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.15;
     const innerRx = glowRx * 0.9;
     const innerRy = glowRy * 0.9;
 
     ctx.save();
     ctx.shadowColor = isSelected ? "#c9a227" : "#ffffff";
-    ctx.shadowBlur = 30 * zoom;
+    ctx.shadowBlur = 16 * zoom;
 
     ctx.beginPath();
     ctx.ellipse(screenPos.x, glowShadowY, glowRx, glowRy, 0, 0, Math.PI * 2);

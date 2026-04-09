@@ -592,11 +592,6 @@ const TROOP_CATEGORY_MAP: Record<
   string,
   { label: string; color: string; types: TroopType[] }
 > = {
-  hex: {
-    color: "text-fuchsia-300",
-    label: "Hex Ward Spirits",
-    types: ["thesis", "rowing", "hexling", "hexseer"],
-  },
   station: {
     color: "text-amber-300",
     label: "Station Garrison",
@@ -606,6 +601,11 @@ const TROOP_CATEGORY_MAP: Record<
     color: "text-purple-300",
     label: "Summoned Units",
     types: ["reinforcement", "turret"],
+  },
+  hex: {
+    color: "text-fuchsia-300",
+    label: "Hex Ward Spirits",
+    types: ["thesis", "rowing", "hexling", "hexseer"],
   },
 };
 

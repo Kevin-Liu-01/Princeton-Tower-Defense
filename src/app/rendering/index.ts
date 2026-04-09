@@ -30,6 +30,7 @@ export {
   drawTowerSprite,
   renderTowerGroundTransition,
   getTowerFoundationSize,
+  getTowerParticleWorldPos,
   renderTowerRange,
   renderStationRange,
   renderTowerPreview,

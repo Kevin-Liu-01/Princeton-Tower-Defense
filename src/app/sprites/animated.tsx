@@ -1,7 +1,13 @@
 "use client";
 import React, { useRef, useCallback } from "react";
 
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -131,7 +137,12 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
   useSpriteTicker(true, 50, renderCastle);
 
   return (
-    <canvas ref={canvasRef} style={{ height: canvasSize, width: canvasSize }} />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+      />
+    </div>
   );
 };
 export const MarchingEnemies: React.FC<{ size?: number }> = ({
@@ -191,5 +202,9 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
 
   useSpriteTicker(true, 80, renderMarchingEnemies);
 
-  return <canvas ref={canvasRef} style={{ height: canvasH, width: canvasW }} />;
+  return (
+    <div style={spriteContainerStyle(size, 60)}>
+      <canvas ref={canvasRef} style={spriteCanvasStyle(canvasW, canvasH)} />
+    </div>
+  );
 };

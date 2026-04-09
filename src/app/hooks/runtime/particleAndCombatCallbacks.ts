@@ -135,6 +135,94 @@ export function addParticlesImpl(
   }
 }
 
+// ── Particle burst profiles ──────────────────────────────────────────────────
+// In iso space, decreasing both world vx/vy moves the particle UP on screen.
+// Horizontal screen movement: increase vx + decrease vy (or vice versa).
+
+function getParticleBurstProfile(
+  type: Particle["type"],
+  index: number,
+  total: number
+): { vx: number; vy: number; life: number; maxLife: number; size: number } {
+  const angle = (Math.PI * 2 * index) / total + Math.random() * 0.5;
+  const radialX = Math.cos(angle);
+  const radialY = Math.sin(angle);
+
+  switch (type) {
+    case "gold": {
+      const upSpeed = -(1.2 + Math.random() * 1.5);
+      const spread = (Math.random() - 0.5) * 1.4;
+      const life = 500 + Math.random() * 400;
+      return {
+        life,
+        maxLife: 900,
+        size: 3 + Math.random() * 2,
+        vx: upSpeed + spread,
+        vy: upSpeed - spread,
+      };
+    }
+    case "smoke": {
+      const upDrift = -(0.3 + Math.random() * 0.6);
+      const drift = (Math.random() - 0.5) * 0.8;
+      const life = 500 + Math.random() * 400;
+      return {
+        life,
+        maxLife: 900,
+        size: 6 + Math.random() * 4,
+        vx: upDrift + drift,
+        vy: upDrift - drift,
+      };
+    }
+    case "glow": {
+      const upFloat = -(0.5 + Math.random() * 0.8);
+      const spread = radialX * (0.6 + Math.random() * 0.6);
+      const life = 500 + Math.random() * 400;
+      return {
+        life,
+        maxLife: 900,
+        size: 4 + Math.random() * 2,
+        vx: upFloat + spread * 0.5,
+        vy: upFloat - spread * 0.5,
+      };
+    }
+    case "spark": {
+      const speed = 1.5 + Math.random() * 2;
+      const upBias = -(0.4 + Math.random() * 0.4);
+      const life = 300 + Math.random() * 250;
+      return {
+        life,
+        maxLife: 550,
+        size: 3 + Math.random() * 2,
+        vx: radialX * speed + upBias,
+        vy: radialY * speed + upBias,
+      };
+    }
+    case "explosion": {
+      const speed = 2 + Math.random() * 3;
+      const upBias = -(0.5 + Math.random() * 0.5);
+      const life = 350 + Math.random() * 300;
+      return {
+        life,
+        maxLife: 650,
+        size: 5 + Math.random(),
+        vx: radialX * speed + upBias,
+        vy: radialY * speed + upBias,
+      };
+    }
+    default: {
+      const speed = 1 + Math.random() * 2;
+      const life = 400 + Math.random() * 300;
+      return {
+        life,
+        maxLife: 700,
+        size: 4,
+        vx: radialX * speed,
+        vy: radialY * speed,
+      };
+    }
+  }
+}
+
 // ── flushQueuedParticles impl ────────────────────────────────────────────────
 
 export function flushQueuedParticlesImpl(
@@ -161,23 +249,29 @@ export function flushQueuedParticlesImpl(
     const spawnCount = Math.max(1, Math.min(burst.count, remaining));
     remaining -= spawnCount;
     const isExplosion = burst.type === "explosion";
-    const particleSize = burst.type === "smoke" ? 8 : isExplosion ? 6 : 4;
     const resolvedType = isExplosion ? ("spark" as const) : burst.type;
 
     for (let i = 0; i < spawnCount; i++) {
-      const angle = (Math.PI * 2 * i) / spawnCount + Math.random() * 0.5;
-      const speed = isExplosion ? 2 + Math.random() * 3 : 1 + Math.random() * 2;
       const colorIndex = Math.floor(Math.random() * colors.length);
+      const color = colors[colorIndex] ?? colors[0] ?? "#ffffff";
+      const jitterX = (Math.random() - 0.5) * 6;
+      const jitterY = (Math.random() - 0.5) * 6;
+      const px = burst.pos.x + jitterX;
+      const py = burst.pos.y + jitterY;
+
+      const { vx, vy, life, maxLife, size } = getParticleBurstProfile(
+        burst.type,
+        i,
+        spawnCount
+      );
+
       acquireParticle(
-        { x: burst.pos.x, y: burst.pos.y },
-        {
-          x: Math.cos(angle) * speed,
-          y: Math.sin(angle) * speed - (isExplosion ? 1 : 0),
-        },
-        400 + Math.random() * 300,
-        700,
-        particleSize,
-        colors[colorIndex] ?? colors[0] ?? "#ffffff",
+        { x: px, y: py },
+        { x: vx, y: vy },
+        life,
+        maxLife,
+        size,
+        color,
         resolvedType
       );
     }

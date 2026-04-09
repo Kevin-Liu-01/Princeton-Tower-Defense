@@ -536,6 +536,40 @@ body {
   }
 }
 
+@keyframes hero-scroll-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes hero-scroll-down {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.hero-rail-slide {
+  transition: transform 0.5s ease-out;
+}
+
+.hero-rail:hover .hero-rail-track {
+  animation-play-state: paused !important;
+}
+
+.hero-rail:hover .hero-rail-slide[data-side="left"] {
+  transform: translateX(16px);
+}
+
+.hero-rail:hover .hero-rail-slide[data-side="right"] {
+  transform: translateX(-16px);
+}
+
 @keyframes landing-marquee {
   from {
     transform: translateX(0);

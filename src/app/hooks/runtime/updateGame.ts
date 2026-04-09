@@ -144,7 +144,11 @@ import {
   addOrRefreshDebuff,
   getEnemyDamageTaken,
 } from "../../game/status";
-import { updateParticlePool, enforceParticleCap } from "../../rendering";
+import {
+  updateParticlePool,
+  enforceParticleCap,
+  getTowerParticleWorldPos,
+} from "../../rendering";
 import {
   getSentinelBoltColor,
   SENTINEL_CRYSTAL_Y_OFFSET,
@@ -4068,13 +4072,13 @@ export function updateGameTick(
             ...prev,
             { amount, id: `${tower.id}-${now}` },
           ]);
-          addParticles(gridToWorld(tower.pos), "gold", 20);
+          const clubParticlePos = getTowerParticleWorldPos(tower);
+          addParticles(clubParticlePos, "gold", 20);
 
-          // Level 3+ Grand Club: Create gold particle fountain effect
           if (tower.level >= 3) {
             for (let i = 0; i < 5; i++) {
               const burstTimeout = setTimeout(() => {
-                addParticles(gridToWorld(tower.pos), "gold", 3);
+                addParticles(clubParticlePos, "gold", 3);
               }, i * 100);
               activeTimeoutsRef.current.push(burstTimeout);
             }
@@ -4653,9 +4657,8 @@ export function updateGameTick(
             towerUpgrade: tower.upgrade,
             rotation,
           });
-          // Add particles at tower position
           if (!isFlamethrower) {
-            addParticles(towerWorldPos, "smoke", 2);
+            addParticles(getTowerParticleWorldPos(tower), "smoke", 2);
           }
         }
       } else if (tower.type === "lab") {
@@ -4830,7 +4833,11 @@ export function updateGameTick(
                     ? 2
                     : 3;
             if (sparkCount > 0) {
-              addParticles(towerWorldPos, "spark", sparkCount);
+              addParticles(
+                getTowerParticleWorldPos(tower),
+                "spark",
+                sparkCount
+              );
             }
           }
         }
@@ -5255,7 +5262,7 @@ export function updateGameTick(
             to: targetAimPos,
             type: tower.type,
           });
-          addParticles(towerWorldPos, "smoke", 3);
+          addParticles(getTowerParticleWorldPos(tower), "smoke", 3);
         }
       }
     });

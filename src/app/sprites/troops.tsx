@@ -5,7 +5,13 @@ import React, { useRef, useCallback } from "react";
 import { TROOP_DATA } from "../constants";
 import { drawTroopSprite } from "../rendering/troops";
 import type { TroopType, TroopOwnerType, MapTheme } from "../types";
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 export const TROOP_COLORS: Record<TroopType, string> = {
   armored: "#708090",
@@ -137,10 +143,12 @@ export const TroopSprite: React.FC<{
   useSpriteTicker(animated, 50, renderTroop);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasSize, width: canvasSize }}
-      aria-label={`${TROOP_DATA[type]?.name ?? type} sprite`}
-    />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+        aria-label={`${TROOP_DATA[type]?.name ?? type} sprite`}
+      />
+    </div>
   );
 };

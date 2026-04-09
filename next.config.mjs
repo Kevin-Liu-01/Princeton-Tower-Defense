@@ -1,6 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 const __dirname = import.meta.dirname;
 
 /** @type {import('next').NextConfig} */

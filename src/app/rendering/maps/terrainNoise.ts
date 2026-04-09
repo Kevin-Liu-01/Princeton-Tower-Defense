@@ -1,7 +1,7 @@
 function noiseHash(px: number, py: number, seed: number): number {
   let h = (px * 374_761_393 + py * 668_265_263 + seed * 1_013_904_223) | 0;
   h = ((h ^ (h >> 13)) * 1_274_126_177) | 0;
-  return ((h ^ (h >> 16)) & 0x7f_ff_ff_ff) / 0x7f_ff_ff_ff;
+  return ((h ^ (h >> 16)) & 0x7F_FF_FF_FF) / 0x7F_FF_FF_FF;
 }
 
 export function valueNoise(x: number, y: number, seed: number): number {

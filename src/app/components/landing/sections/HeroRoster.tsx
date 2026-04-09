@@ -6,16 +6,15 @@ import { SPELL_DATA } from "../../../constants/spells";
 import { HeroSprite } from "../../../sprites/heroes";
 import { SpellSprite } from "../../../sprites/spells";
 import type { HeroType, SpellType } from "../../../types";
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { useCarousel } from "../CarouselControls";
 import { LANDING_THEME } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import {
   MapSectionHeader,
   MapSectionBg,
-  MapContentPanel,
   BattleBackdrop,
   StatBlock,
-  SectionBorderFrame,
 } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
 
@@ -54,7 +53,7 @@ const HERO_BG: Record<HeroType, string> = {
   tiger: "/images/new/gameplay_grounds.png",
 };
 
-const HERO_BIG = 200;
+const HERO_BIG = 280;
 const HERO_BIG_SCALE = 2.5;
 const HERO_BIG_CANVAS = Math.round(HERO_BIG * HERO_BIG_SCALE);
 
@@ -181,8 +180,6 @@ export function HeroRoster() {
     <section className="relative py-20 sm:py-28 overflow-hidden">
       <MapSectionBg tint={`${data.color}06`} gridOpacity={0.03} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none" />
-      <SectionBorderFrame accent={data.color} />
-
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader
@@ -204,7 +201,13 @@ export function HeroRoster() {
 
         {/* Main hero showcase */}
         <div className="mx-3 sm:mx-6 lg:mx-12">
-          <MapContentPanel accent={data.color}>
+          <OrnateFrame
+            color={data.color}
+            glowColor={data.color}
+            cornerSize={32}
+            cornerVariant="compact"
+            showBorders={false}
+          >
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
@@ -439,7 +442,7 @@ export function HeroRoster() {
                 </div>
               </div>
             </div>
-          </MapContentPanel>
+          </OrnateFrame>
         </div>
 
         {/* Spellbook section */}

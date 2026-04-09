@@ -5,7 +5,7 @@
 export function createSeededRandom(seed: number): () => number {
   let state = seed;
   return () => {
-    state = (state * 1_103_515_245 + 12_345) & 0x7fffffff;
-    return state / 0x7fffffff;
+    state = (state * 1_103_515_245 + 12_345) & 0x7F_FF_FF_FF;
+    return state / 0x7F_FF_FF_FF;
   };
 }

@@ -1,8 +1,6 @@
 "use client";
 import React from "react";
 
-import { SPRITE_PAD } from "../../../sprites/hooks";
-
 interface SpriteDisplayProps {
   visualSize: number;
   canvasScale?: number;
@@ -14,7 +12,7 @@ export function SpriteDisplay({
   canvasScale = 1.6,
   children,
 }: SpriteDisplayProps) {
-  const scaleFactor = 1 / (canvasScale * SPRITE_PAD);
+  const scaleFactor = 1 / canvasScale;
 
   return (
     <div

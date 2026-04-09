@@ -15,6 +15,7 @@ import {
   getLevelSpecialTowers,
   getLevelAllowedTowers,
 } from "../../game/setup";
+import { getTowerParticleWorldPos } from "../../rendering";
 import type { RuntimeDecoration } from "../../rendering/decorations/decorationHelpers";
 import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
 import type {
@@ -512,7 +513,11 @@ export function handleCanvasClickImpl(
             t.id === p.repositioningTower ? { ...t, pos: newGridPos } : t
           )
         );
-        p.addParticles(gridToWorld(newGridPos), "spark", 8);
+        p.addParticles(
+          getTowerParticleWorldPos({ ...tower, pos: newGridPos }),
+          "spark",
+          8
+        );
       }
     }
     p.setRepositioningTower(null);
@@ -662,7 +667,7 @@ export function handleCanvasClickImpl(
         return;
       }
       p.addTowerEntity(newTower);
-      p.addParticles(gridToWorld(gridPos), "spark", 12);
+      p.addParticles(getTowerParticleWorldPos(newTower), "spark", 12);
       p.gameEventLogRef.current.log(
         "tower_built",
         `Built ${TOWER_DATA[towerToPlace.type].name} for ${towerCost} PP`,

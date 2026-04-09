@@ -4,7 +4,13 @@ import React, { useRef, useCallback } from "react";
 import { ENEMY_DATA } from "../constants";
 import { drawEnemySprite } from "../rendering/enemies";
 import type { EnemyType, MapTheme } from "../types";
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 export type { EnemyType } from "../types";
 
@@ -195,10 +201,12 @@ export const EnemySprite: React.FC<{
   useSpriteTicker(animated, 50, renderEnemy);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasSize, width: canvasSize }}
-      aria-label={`${ENEMY_DATA[type]?.name ?? type} sprite`}
-    />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+        aria-label={`${ENEMY_DATA[type]?.name ?? type} sprite`}
+      />
+    </div>
   );
 };

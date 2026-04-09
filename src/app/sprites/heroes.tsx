@@ -4,7 +4,13 @@ import React, { useRef, useCallback } from "react";
 import { HERO_DATA } from "../constants";
 import { drawHeroSprite } from "../rendering/heroes";
 import type { HeroType } from "../types";
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 export const HERO_COLORS: Record<string, string> = Object.fromEntries(
   Object.entries(HERO_DATA).map(([k, v]) => [k, v.color])
@@ -64,10 +70,12 @@ export const HeroSprite: React.FC<{
   useSpriteTicker(animated, 50, renderHero);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasH, width: canvasW }}
-      aria-label={`${HERO_DATA[type]?.name ?? type} sprite`}
-    />
+    <div style={spriteContainerStyle(baseW, baseH)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasW, canvasH)}
+        aria-label={`${HERO_DATA[type]?.name ?? type} sprite`}
+      />
+    </div>
   );
 };

@@ -13,7 +13,13 @@ import type {
   TowerType,
   SpellType,
 } from "../types";
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 // =============================================================================
 // SPRITE FRAME THEME
@@ -283,11 +289,13 @@ export const SpecialTowerSprite: React.FC<{
   useSpriteTicker(animated, 50, render);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasSize, width: canvasSize }}
-      aria-label={`${type} special tower sprite`}
-    />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+        aria-label={`${type} special tower sprite`}
+      />
+    </div>
   );
 };
 
@@ -326,10 +334,12 @@ export const HazardSprite: React.FC<{
   useSpriteTicker(animated, 50, render);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasSize, width: canvasSize }}
-      aria-label={`${type} hazard sprite`}
-    />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+        aria-label={`${type} hazard sprite`}
+      />
+    </div>
   );
 };

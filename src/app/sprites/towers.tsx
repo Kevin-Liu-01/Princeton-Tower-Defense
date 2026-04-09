@@ -3,7 +3,13 @@ import React, { useRef, useCallback } from "react";
 
 import { drawTowerSprite } from "../rendering/towers";
 import type { TowerType, TowerUpgrade } from "../types";
-import { setupSpriteCanvas, useSpriteTicker, SPRITE_PAD } from "./hooks";
+import {
+  setupSpriteCanvas,
+  useSpriteTicker,
+  SPRITE_PAD,
+  spriteContainerStyle,
+  spriteCanvasStyle,
+} from "./hooks";
 
 export const TowerSprite: React.FC<{
   type: TowerType;
@@ -52,10 +58,12 @@ export const TowerSprite: React.FC<{
   useSpriteTicker(animated, 50, render);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ height: canvasSize, width: canvasSize }}
-      aria-label={`${type} tower sprite`}
-    />
+    <div style={spriteContainerStyle(size, size)}>
+      <canvas
+        ref={canvasRef}
+        style={spriteCanvasStyle(canvasSize, canvasSize)}
+        aria-label={`${type} tower sprite`}
+      />
+    </div>
   );
 };

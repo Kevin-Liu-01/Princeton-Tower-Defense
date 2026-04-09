@@ -11,14 +11,13 @@ import { useImagePreloader } from "../../hooks/useImagePreloader";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
 import { LandingCreditsModal } from "./LandingCreditsModal";
 import { SectionReveal } from "./SectionReveal";
+import { ArsenalShowcase } from "./sections/ArsenalShowcase";
 import { BattlePreview } from "./sections/BattlePreview";
 import { BottomCTA } from "./sections/BottomCTA";
 import { EnemyBestiary } from "./sections/EnemyBestiary";
 import { GameplayShowcase } from "./sections/GameplayShowcase";
-import { HeroRoster } from "./sections/HeroRoster";
 import { HeroSection } from "./sections/HeroSection";
 import { MapSectionDivider } from "./sections/mapElements";
-import { TowerShowcase } from "./sections/TowerShowcase";
 
 const T = LANDING_THEME;
 
@@ -79,13 +78,7 @@ export function LandingPage({ onPlay }: LandingPageProps) {
       <MapSectionDivider />
 
       <SectionReveal scrollRoot={scrollRef}>
-        <TowerShowcase />
-      </SectionReveal>
-
-      <MapSectionDivider />
-
-      <SectionReveal scrollRoot={scrollRef} delay={100}>
-        <HeroRoster />
+        <ArsenalShowcase />
       </SectionReveal>
 
       <MapSectionDivider />

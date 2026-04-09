@@ -2899,8 +2899,8 @@ export function drawCannonBarrel(
     drawMuzzleSection();
   } else {
     drawMuzzleSection();
-    drawRingBands();
     drawBarrelBody();
+    drawRingBands();
   }
   drawNearCap();
 
@@ -4609,8 +4609,8 @@ export function drawHeavyCannonBarrel(
     drawMuzzleSection();
   } else {
     drawMuzzleSection();
-    drawRingBands();
     drawBarrelBody();
+    drawRingBands();
   }
   drawNearCap();
 
@@ -5934,8 +5934,8 @@ export function drawGatlingBarrels(
     drawMuzzle();
   } else {
     drawMuzzle();
-    drawRingBands();
     drawBarrels();
+    drawRingBands();
   }
 
   // Smoke wisps
@@ -6309,9 +6309,13 @@ export function drawGatlingMuzzleIso(
   // === Draw in correct depth order (back-to-front painter's algorithm) ===
   // frontOffPt/backOffPt swap based on facingCamera, so the order is always
   // back (farthest) → sides → front (closest to camera).
+  // When facing away, the near face is behind the barrel cluster and would
+  // bleed through the gaps between individual barrel tubes.
   drawBackFace();
   drawSideFaces();
-  drawFrontFace();
+  if (facingCamera) {
+    drawFrontFace();
+  }
 
   // === Muzzle flash (always visible regardless of camera angle) ===
   if (isAttacking) {
@@ -8183,239 +8187,246 @@ export function drawFlamethrowerNozzle(
     }
   }
 
-  // === HEXAGONAL BARREL BODY — depth-sorted side quads with heat gradient ===
-  const sortedSides = sortSidesByDepth(sideNormals);
+  // === Closures for depth-ordered drawing ===
+  const drawBarrelBody = () => {
+    const sortedSides = sortSidesByDepth(sideNormals);
 
-  for (const i of sortedSides) {
-    const ni = (i + 1) % hexSides;
-    const normal = sideNormals[i];
-
-    const v0 = hexVerts[i];
-    const v1 = hexVerts[ni];
-    const tv0 = taperVerts[i];
-    const tv1 = taperVerts[ni];
-
-    const lit = Math.max(0.12, 0.2 + Math.max(0, normal) * 0.6);
-
-    // Heat gradient: dark steel at base → scorched orange/red near tip
-    const sGrad = ctx.createLinearGradient(
-      hexBackPt.x + v0.x,
-      hexBackPt.y + v0.y,
-      hexFrontPt.x + tv0.x,
-      hexFrontPt.y + tv0.y
-    );
-    const baseRC = Math.floor(55 + lit * 60);
-    const baseGC = Math.floor(55 + lit * 58);
-    const baseBC = Math.floor(60 + lit * 62);
-    const tipRC = Math.floor(100 + lit * 80);
-    const tipGC = Math.floor(50 + lit * 40);
-    const tipBC = Math.floor(30 + lit * 20);
-
-    sGrad.addColorStop(0, `rgb(${baseRC}, ${baseGC}, ${baseBC})`);
-    sGrad.addColorStop(
-      0.55,
-      `rgb(${baseRC + 8}, ${baseGC - 4}, ${baseBC - 8})`
-    );
-    sGrad.addColorStop(0.8, `rgb(${tipRC}, ${tipGC}, ${tipBC})`);
-    sGrad.addColorStop(1, `rgb(${tipRC + 15}, ${tipGC - 5}, ${tipBC - 10})`);
-
-    ctx.fillStyle = sGrad;
-    ctx.beginPath();
-    ctx.moveTo(hexBackPt.x + v0.x, hexBackPt.y + v0.y);
-    ctx.lineTo(hexBackPt.x + v1.x, hexBackPt.y + v1.y);
-    ctx.lineTo(hexFrontPt.x + tv1.x, hexFrontPt.y + tv1.y);
-    ctx.lineTo(hexFrontPt.x + tv0.x, hexFrontPt.y + tv0.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = `rgba(25, 25, 35, ${0.3 + Math.max(0, normal) * 0.2})`;
-    ctx.lineWidth = 0.7 * zoom;
-    ctx.stroke();
-
-    if (normal > 0.25) {
-      ctx.strokeStyle = `rgba(180, 140, 120, ${(normal - 0.25) * 0.4})`;
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(hexFrontPt.x + tv0.x, hexFrontPt.y + tv0.y);
-      ctx.lineTo(hexFrontPt.x + tv1.x, hexFrontPt.y + tv1.y);
-      ctx.stroke();
-    }
-
-    // Heat conduit glow on visible faces
-    if (normal > -0.3) {
-      const conduitGlow = 0.4 + Math.sin(time * 5) * 0.2;
-      const midV0x = (v0.x + v1.x) * 0.5;
-      const midV0y = (v0.y + v1.y) * 0.5;
-      const midTV0x = (tv0.x + tv1.x) * 0.5;
-      const midTV0y = (tv0.y + tv1.y) * 0.5;
-      ctx.strokeStyle = `rgba(255, 80, 20, ${conduitGlow * Math.max(0.15, 0.3 + normal * 0.5)})`;
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(hexBackPt.x + midV0x, hexBackPt.y + midV0y);
-      ctx.lineTo(hexFrontPt.x + midTV0x, hexFrontPt.y + midTV0y);
-      ctx.stroke();
-    }
-  }
-
-  // === 3D HEX RING BANDS along barrel ===
-  const bandCount = 3;
-  const bandThick = 2.5 * zoom;
-  for (let b = 0; b < bandCount; b++) {
-    const t = (b + 1) / (bandCount + 1);
-    const bandFrontPt = axisPoint(startDist + hexLen * t + bandThick * 0.5);
-    const bandBackPt2 = axisPoint(startDist + hexLen * t - bandThick * 0.5);
-    const bScale = 1 + (taperScale - 1) * t;
-    const bVerts = hexVerts.map((v) => ({
-      x: v.x * bScale * 1.08,
-      y: v.y * bScale * 1.08,
-    }));
-
-    const bandSorted = Array.from({ length: hexSides }, (_, i) => i).toSorted(
-      (a, bb) => sideNormals[a] - sideNormals[bb]
-    );
-
-    for (const i of bandSorted) {
+    for (const i of sortedSides) {
       const ni = (i + 1) % hexSides;
       const normal = sideNormals[i];
-      if (normal < -0.15) {
-        continue;
-      }
 
-      const v0b = bVerts[i];
-      const v1b = bVerts[ni];
+      const v0 = hexVerts[i];
+      const v1 = hexVerts[ni];
+      const tv0 = taperVerts[i];
+      const tv1 = taperVerts[ni];
 
-      const bLit = Math.max(0.2, 0.3 + Math.max(0, normal) * 0.5);
-      const gc = Math.floor(90 + bLit * 50);
+      const lit = Math.max(0.12, 0.2 + Math.max(0, normal) * 0.6);
 
-      ctx.fillStyle = `rgb(${gc}, ${gc}, ${gc + 6})`;
+      const sGrad = ctx.createLinearGradient(
+        hexBackPt.x + v0.x,
+        hexBackPt.y + v0.y,
+        hexFrontPt.x + tv0.x,
+        hexFrontPt.y + tv0.y
+      );
+      const baseRC = Math.floor(55 + lit * 60);
+      const baseGC = Math.floor(55 + lit * 58);
+      const baseBC = Math.floor(60 + lit * 62);
+      const tipRC = Math.floor(100 + lit * 80);
+      const tipGC = Math.floor(50 + lit * 40);
+      const tipBC = Math.floor(30 + lit * 20);
+
+      sGrad.addColorStop(0, `rgb(${baseRC}, ${baseGC}, ${baseBC})`);
+      sGrad.addColorStop(
+        0.55,
+        `rgb(${baseRC + 8}, ${baseGC - 4}, ${baseBC - 8})`
+      );
+      sGrad.addColorStop(0.8, `rgb(${tipRC}, ${tipGC}, ${tipBC})`);
+      sGrad.addColorStop(1, `rgb(${tipRC + 15}, ${tipGC - 5}, ${tipBC - 10})`);
+
+      ctx.fillStyle = sGrad;
       ctx.beginPath();
-      ctx.moveTo(bandBackPt2.x + v0b.x, bandBackPt2.y + v0b.y);
-      ctx.lineTo(bandBackPt2.x + v1b.x, bandBackPt2.y + v1b.y);
-      ctx.lineTo(bandFrontPt.x + v1b.x, bandFrontPt.y + v1b.y);
-      ctx.lineTo(bandFrontPt.x + v0b.x, bandFrontPt.y + v0b.y);
+      ctx.moveTo(hexBackPt.x + v0.x, hexBackPt.y + v0.y);
+      ctx.lineTo(hexBackPt.x + v1.x, hexBackPt.y + v1.y);
+      ctx.lineTo(hexFrontPt.x + tv1.x, hexFrontPt.y + tv1.y);
+      ctx.lineTo(hexFrontPt.x + tv0.x, hexFrontPt.y + tv0.y);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = `rgba(25, 25, 35, ${0.2 + Math.max(0, normal) * 0.15})`;
-      ctx.lineWidth = 0.5 * zoom;
+      ctx.strokeStyle = `rgba(25, 25, 35, ${0.3 + Math.max(0, normal) * 0.2})`;
+      ctx.lineWidth = 0.7 * zoom;
       ctx.stroke();
-    }
 
-    // Band hex cap (visible face)
-    const capPt2 = facingFwd ? bandFrontPt : bandBackPt2;
-    ctx.strokeStyle = "rgba(140, 140, 155, 0.4)";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    for (let i = 0; i < hexSides; i++) {
-      const ni = (i + 1) % hexSides;
-      if (
-        sideNormals[i] < -0.15 &&
-        sideNormals[ni === 0 ? hexSides - 1 : ni - 1] < -0.15
-      ) {
-        continue;
+      if (normal > 0.25) {
+        ctx.strokeStyle = `rgba(180, 140, 120, ${(normal - 0.25) * 0.4})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hexFrontPt.x + tv0.x, hexFrontPt.y + tv0.y);
+        ctx.lineTo(hexFrontPt.x + tv1.x, hexFrontPt.y + tv1.y);
+        ctx.stroke();
       }
-      ctx.moveTo(capPt2.x + bVerts[i].x, capPt2.y + bVerts[i].y);
-      ctx.lineTo(capPt2.x + bVerts[ni].x, capPt2.y + bVerts[ni].y);
+
+      if (normal > -0.3) {
+        const conduitGlow = 0.4 + Math.sin(time * 5) * 0.2;
+        const midV0x = (v0.x + v1.x) * 0.5;
+        const midV0y = (v0.y + v1.y) * 0.5;
+        const midTV0x = (tv0.x + tv1.x) * 0.5;
+        const midTV0y = (tv0.y + tv1.y) * 0.5;
+        ctx.strokeStyle = `rgba(255, 80, 20, ${conduitGlow * Math.max(0.15, 0.3 + normal * 0.5)})`;
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hexBackPt.x + midV0x, hexBackPt.y + midV0y);
+        ctx.lineTo(hexFrontPt.x + midTV0x, hexFrontPt.y + midTV0y);
+        ctx.stroke();
+      }
     }
-    ctx.stroke();
-  }
+  };
 
-  // === BARREL-MUZZLE JUNCTION CAP ===
-  drawHexCap(
-    ctx,
-    facingFwd ? hexFrontPt : hexBackPt,
-    facingFwd ? taperVerts : hexVerts,
-    facingFwd ? "#505058" : "#5a5a62",
-    "#4e4e5c",
-    0.5 * zoom
-  );
+  const drawRingBands = () => {
+    const bandCount = 3;
+    const bandThick = 2.5 * zoom;
+    for (let b = 0; b < bandCount; b++) {
+      const t = (b + 1) / (bandCount + 1);
+      const bandFrontPt = axisPoint(startDist + hexLen * t + bandThick * 0.5);
+      const bandBackPt2 = axisPoint(startDist + hexLen * t - bandThick * 0.5);
+      const bScale = 1 + (taperScale - 1) * t;
+      const bVerts = hexVerts.map((v) => ({
+        x: v.x * bScale * 1.08,
+        y: v.y * bScale * 1.08,
+      }));
 
-  // === MUZZLE BACK CAP ===
-  drawHexCap(
-    ctx,
-    facingFwd ? muzzleBackPt : muzzleEndPt,
-    facingFwd ? muzzleVerts : muzzleTipVerts,
-    facingFwd ? "#484850" : "#404048"
-  );
+      const bandSorted = Array.from({ length: hexSides }, (_, i) => i).toSorted(
+        (a, bb) => sideNormals[a] - sideNormals[bb]
+      );
 
-  // === FLARED HEXAGONAL MUZZLE — depth-sorted with heat coloring ===
-  const muzzleSorted = sortSidesByDepth(sideNormals);
+      for (const i of bandSorted) {
+        const ni = (i + 1) % hexSides;
+        const normal = sideNormals[i];
+        if (normal < -0.15) {
+          continue;
+        }
 
-  for (const i of muzzleSorted) {
-    const ni = (i + 1) % hexSides;
-    const normal = sideNormals[i];
+        const v0b = bVerts[i];
+        const v1b = bVerts[ni];
 
-    const mv0 = muzzleVerts[i];
-    const mv1 = muzzleVerts[ni];
-    const mtv0 = muzzleTipVerts[i];
-    const mtv1 = muzzleTipVerts[ni];
+        const bLit = Math.max(0.2, 0.3 + Math.max(0, normal) * 0.5);
+        const gc = Math.floor(90 + bLit * 50);
 
-    const mLit = Math.max(0.1, 0.18 + Math.max(0, normal) * 0.5);
-    const mr = Math.floor(60 + mLit * 70);
-    const mg = Math.floor(35 + mLit * 30);
-    const mb = Math.floor(25 + mLit * 20);
-    ctx.fillStyle = `rgb(${mr}, ${mg}, ${mb})`;
+        ctx.fillStyle = `rgb(${gc}, ${gc}, ${gc + 6})`;
+        ctx.beginPath();
+        ctx.moveTo(bandBackPt2.x + v0b.x, bandBackPt2.y + v0b.y);
+        ctx.lineTo(bandBackPt2.x + v1b.x, bandBackPt2.y + v1b.y);
+        ctx.lineTo(bandFrontPt.x + v1b.x, bandFrontPt.y + v1b.y);
+        ctx.lineTo(bandFrontPt.x + v0b.x, bandFrontPt.y + v0b.y);
+        ctx.closePath();
+        ctx.fill();
 
-    ctx.beginPath();
-    ctx.moveTo(muzzleBackPt.x + mv0.x, muzzleBackPt.y + mv0.y);
-    ctx.lineTo(muzzleBackPt.x + mv1.x, muzzleBackPt.y + mv1.y);
-    ctx.lineTo(muzzleEndPt.x + mtv1.x, muzzleEndPt.y + mtv1.y);
-    ctx.lineTo(muzzleEndPt.x + mtv0.x, muzzleEndPt.y + mtv0.y);
-    ctx.closePath();
-    ctx.fill();
+        ctx.strokeStyle = `rgba(25, 25, 35, ${0.2 + Math.max(0, normal) * 0.15})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.stroke();
+      }
 
-    ctx.strokeStyle = `rgba(20, 20, 30, ${0.25 + Math.max(0, normal) * 0.2})`;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
-
-    // Heat glow lines on visible muzzle faces
-    if (normal > -0.1) {
-      const heatGlow = 0.15 + Math.sin(time * 4) * 0.08;
-      ctx.strokeStyle = `rgba(255, 80, 20, ${heatGlow * Math.max(0.2, 0.4 + normal * 0.4)})`;
-      ctx.lineWidth = 1.2 * zoom;
-      const midMV0x = (mv0.x + mv1.x) * 0.5;
-      const midMV0y = (mv0.y + mv1.y) * 0.5;
-      const midMTV0x = (mtv0.x + mtv1.x) * 0.5;
-      const midMTV0y = (mtv0.y + mtv1.y) * 0.5;
+      const capPt2 = facingFwd ? bandFrontPt : bandBackPt2;
+      ctx.strokeStyle = "rgba(140, 140, 155, 0.4)";
+      ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(muzzleBackPt.x + midMV0x, muzzleBackPt.y + midMV0y);
-      ctx.lineTo(muzzleEndPt.x + midMTV0x, muzzleEndPt.y + midMTV0y);
+      for (let i = 0; i < hexSides; i++) {
+        const ni = (i + 1) % hexSides;
+        if (
+          sideNormals[i] < -0.15 &&
+          sideNormals[ni === 0 ? hexSides - 1 : ni - 1] < -0.15
+        ) {
+          continue;
+        }
+        ctx.moveTo(capPt2.x + bVerts[i].x, capPt2.y + bVerts[i].y);
+        ctx.lineTo(capPt2.x + bVerts[ni].x, capPt2.y + bVerts[ni].y);
+      }
       ctx.stroke();
     }
-  }
+  };
 
-  // === MUZZLE FRONT HEX CAP with heat glow ===
-  {
-    const mCapPt = facingFwd ? muzzleEndPt : muzzleBackPt;
-    const mCapVerts = facingFwd ? muzzleTipVerts : muzzleVerts;
+  const drawMuzzleSection = () => {
     drawHexCap(
       ctx,
-      mCapPt,
-      mCapVerts,
-      facingFwd ? "#4a3a30" : "#3a3035",
-      "rgba(255, 80, 30, 0.4)",
-      0.8 * zoom
+      facingFwd ? hexFrontPt : hexBackPt,
+      facingFwd ? taperVerts : hexVerts,
+      facingFwd ? "#505058" : "#5a5a62",
+      "#4e4e5c",
+      0.5 * zoom
     );
-  }
 
-  // Orange hex rings on muzzle
-  for (let r = 0; r < 2; r++) {
-    const mt = 0.3 + r * 0.4;
-    const ringPt = axisPoint(startDist + hexLen + muzzleLen * mt);
-    const ringScale = 1 + (1.15 - 1) * mt;
-    const rVerts = muzzleVerts.map((v) => ({
-      x: v.x * ringScale,
-      y: v.y * ringScale,
-    }));
-    ctx.strokeStyle = "rgba(255, 100, 20, 0.65)";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(ringPt.x + rVerts[0].x, ringPt.y + rVerts[0].y);
-    for (let vi = 1; vi < hexSides; vi++) {
-      ctx.lineTo(ringPt.x + rVerts[vi].x, ringPt.y + rVerts[vi].y);
+    drawHexCap(
+      ctx,
+      facingFwd ? muzzleBackPt : muzzleEndPt,
+      facingFwd ? muzzleVerts : muzzleTipVerts,
+      facingFwd ? "#484850" : "#404048"
+    );
+
+    const muzzleSorted = sortSidesByDepth(sideNormals);
+
+    for (const i of muzzleSorted) {
+      const ni = (i + 1) % hexSides;
+      const normal = sideNormals[i];
+
+      const mv0 = muzzleVerts[i];
+      const mv1 = muzzleVerts[ni];
+      const mtv0 = muzzleTipVerts[i];
+      const mtv1 = muzzleTipVerts[ni];
+
+      const mLit = Math.max(0.1, 0.18 + Math.max(0, normal) * 0.5);
+      const mr = Math.floor(60 + mLit * 70);
+      const mg = Math.floor(35 + mLit * 30);
+      const mb = Math.floor(25 + mLit * 20);
+      ctx.fillStyle = `rgb(${mr}, ${mg}, ${mb})`;
+
+      ctx.beginPath();
+      ctx.moveTo(muzzleBackPt.x + mv0.x, muzzleBackPt.y + mv0.y);
+      ctx.lineTo(muzzleBackPt.x + mv1.x, muzzleBackPt.y + mv1.y);
+      ctx.lineTo(muzzleEndPt.x + mtv1.x, muzzleEndPt.y + mtv1.y);
+      ctx.lineTo(muzzleEndPt.x + mtv0.x, muzzleEndPt.y + mtv0.y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(20, 20, 30, ${0.25 + Math.max(0, normal) * 0.2})`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      if (normal > -0.1) {
+        const heatGlow = 0.15 + Math.sin(time * 4) * 0.08;
+        ctx.strokeStyle = `rgba(255, 80, 20, ${heatGlow * Math.max(0.2, 0.4 + normal * 0.4)})`;
+        ctx.lineWidth = 1.2 * zoom;
+        const midMV0x = (mv0.x + mv1.x) * 0.5;
+        const midMV0y = (mv0.y + mv1.y) * 0.5;
+        const midMTV0x = (mtv0.x + mtv1.x) * 0.5;
+        const midMTV0y = (mtv0.y + mtv1.y) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(muzzleBackPt.x + midMV0x, muzzleBackPt.y + midMV0y);
+        ctx.lineTo(muzzleEndPt.x + midMTV0x, muzzleEndPt.y + midMTV0y);
+        ctx.stroke();
+      }
     }
-    ctx.closePath();
-    ctx.stroke();
+
+    {
+      const mCapPt = facingFwd ? muzzleEndPt : muzzleBackPt;
+      const mCapVerts = facingFwd ? muzzleTipVerts : muzzleVerts;
+      drawHexCap(
+        ctx,
+        mCapPt,
+        mCapVerts,
+        facingFwd ? "#4a3a30" : "#3a3035",
+        "rgba(255, 80, 30, 0.4)",
+        0.8 * zoom
+      );
+    }
+
+    for (let r = 0; r < 2; r++) {
+      const mt = 0.3 + r * 0.4;
+      const ringPt = axisPoint(startDist + hexLen + muzzleLen * mt);
+      const ringScale = 1 + (1.15 - 1) * mt;
+      const rVerts = muzzleVerts.map((v) => ({
+        x: v.x * ringScale,
+        y: v.y * ringScale,
+      }));
+      ctx.strokeStyle = "rgba(255, 100, 20, 0.65)";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ringPt.x + rVerts[0].x, ringPt.y + rVerts[0].y);
+      for (let vi = 1; vi < hexSides; vi++) {
+        ctx.lineTo(ringPt.x + rVerts[vi].x, ringPt.y + rVerts[vi].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  };
+
+  // Draw from farthest to nearest based on barrel direction
+  if (facingFwd) {
+    drawBarrelBody();
+    drawRingBands();
+    drawMuzzleSection();
+  } else {
+    drawMuzzleSection();
+    drawBarrelBody();
+    drawRingBands();
   }
 
   // === SECONDARY INJECTOR BARREL — 3D hex prism, side by side ===

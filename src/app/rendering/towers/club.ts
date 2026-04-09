@@ -210,11 +210,12 @@ export function renderClubTower(
     : 0;
 
   // ========== STEPPED STONE FOUNDATION ==========
+  const lvl = tower.level;
   // Lowest step — wide stone plinth
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 12 * zoom,
+    screenPos.y + (12 + lvl * 2) * zoom,
     baseWidth + 38,
     baseWidth + 38,
     3,
@@ -228,7 +229,7 @@ export function renderClubTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 9 * zoom,
+    screenPos.y + (9 + lvl) * zoom,
     baseWidth + 33,
     baseWidth + 33,
     3,
@@ -242,7 +243,7 @@ export function renderClubTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 6 * zoom,
+    screenPos.y + (6 + lvl) * zoom,
     baseWidth + 28,
     baseWidth + 28,
     6,
@@ -1040,91 +1041,6 @@ export function renderClubTower(
   }
 
   const topY = screenPos.y - baseHeight * zoom;
-
-  // ========== ROTATING GOLD GEARS ==========
-  const gearSpeed = time * 0.8;
-  const mainTeeth = 12;
-  const smallTeeth = 8;
-  const mainR = 10 + tower.level * 1.5;
-  const mainIR = 6 + tower.level;
-  const smallR = 7 + tower.level;
-  const smallIR = 4 + tower.level * 0.5;
-  const gearCX = screenPos.x;
-  const gearCY = screenPos.y - h * 0.48;
-  const meshDist = (mainR + smallR - 1.5) * zoom;
-  const gearColorsMain = {
-    highlight: ac.main,
-    inner: uc("#3a2a6a", "#6b3510", "#6b5335"),
-    outer: uc("#5a4a8a", "#8b5530", "#8b7355"),
-    teeth: uc("#7a6aaa", "#a07050", "#a08060"),
-  };
-  const gearColorsSmall = {
-    highlight: ac.dim,
-    inner: uc("#2a1a5a", "#5a2500", "#5a4225"),
-    outer: uc("#4a3a7a", "#7a4520", "#7a6245"),
-    teeth: uc("#6a5a9a", "#9a6040", "#9a8260"),
-  };
-
-  // Central main gear
-  drawGear(
-    ctx,
-    gearCX,
-    gearCY,
-    mainR,
-    mainIR,
-    mainTeeth,
-    gearSpeed,
-    gearColorsMain,
-    zoom
-  );
-
-  // Left meshing gear (counter-rotates)
-  const leftGearA = Math.PI * 0.82;
-  drawGear(
-    ctx,
-    gearCX + Math.cos(leftGearA) * meshDist,
-    gearCY + Math.sin(leftGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
-    smallR,
-    smallIR,
-    smallTeeth,
-    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
-    gearColorsSmall,
-    zoom
-  );
-
-  // Right meshing gear (counter-rotates)
-  const rightGearA = Math.PI * 0.18;
-  drawGear(
-    ctx,
-    gearCX + Math.cos(rightGearA) * meshDist,
-    gearCY + Math.sin(rightGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
-    smallR,
-    smallIR,
-    smallTeeth,
-    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
-    gearColorsSmall,
-    zoom
-  );
-
-  // Level 2+: tiny idler gears on top
-  if (tower.level >= 2) {
-    const idlerR = 4 + tower.level * 0.5;
-    const idlerIR = 2.5;
-    const idlerTeeth = 6;
-    const idlerDist = (mainR + idlerR - 1) * zoom;
-    const topA = -Math.PI * 0.5;
-    drawGear(
-      ctx,
-      gearCX + Math.cos(topA) * idlerDist * 0.6,
-      gearCY + Math.sin(topA) * idlerDist * 0.6 * ISO_PRISM_D_FACTOR * 2,
-      idlerR,
-      idlerIR,
-      idlerTeeth,
-      -gearSpeed * (mainTeeth / idlerTeeth),
-      gearColorsSmall,
-      zoom
-    );
-  }
 
   // ========== LEDGER BOARD (framed notice panel, left side) ==========
   const ledgerX = screenPos.x - w * 0.85;
@@ -2076,6 +1992,87 @@ export function renderClubTower(
   ctx.moveTo(roofFrontX, roofFrontY + 1.5 * zoom);
   ctx.lineTo(roofRightX, roofRightY + 1.5 * zoom);
   ctx.stroke();
+
+  // ========== ROTATING GOLD GEARS (under dome) ==========
+  const gearSpeed = time * 0.8;
+  const mainTeeth = 12;
+  const smallTeeth = 8;
+  const mainR = 10 + tower.level * 1.5;
+  const mainIR = 6 + tower.level;
+  const smallR = 7 + tower.level;
+  const smallIR = 4 + tower.level * 0.5;
+  const gearCX = screenPos.x;
+  const gearCY = topY - 6 * zoom;
+  const meshDist = (mainR + smallR - 1.5) * zoom;
+  const gearColorsMain = {
+    highlight: ac.main,
+    inner: uc("#3a2a6a", "#6b3510", "#6b5335"),
+    outer: uc("#5a4a8a", "#8b5530", "#8b7355"),
+    teeth: uc("#7a6aaa", "#a07050", "#a08060"),
+  };
+  const gearColorsSmall = {
+    highlight: ac.dim,
+    inner: uc("#2a1a5a", "#5a2500", "#5a4225"),
+    outer: uc("#4a3a7a", "#7a4520", "#7a6245"),
+    teeth: uc("#6a5a9a", "#9a6040", "#9a8260"),
+  };
+
+  drawGear(
+    ctx,
+    gearCX,
+    gearCY,
+    mainR,
+    mainIR,
+    mainTeeth,
+    gearSpeed,
+    gearColorsMain,
+    zoom
+  );
+
+  const leftGearA = Math.PI * 0.82;
+  drawGear(
+    ctx,
+    gearCX + Math.cos(leftGearA) * meshDist,
+    gearCY + Math.sin(leftGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
+    smallR,
+    smallIR,
+    smallTeeth,
+    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
+    gearColorsSmall,
+    zoom
+  );
+
+  const rightGearA = Math.PI * 0.18;
+  drawGear(
+    ctx,
+    gearCX + Math.cos(rightGearA) * meshDist,
+    gearCY + Math.sin(rightGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
+    smallR,
+    smallIR,
+    smallTeeth,
+    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
+    gearColorsSmall,
+    zoom
+  );
+
+  if (tower.level >= 2) {
+    const idlerR = 4 + tower.level * 0.5;
+    const idlerIR = 2.5;
+    const idlerTeeth = 6;
+    const idlerDist = (mainR + idlerR - 1) * zoom;
+    const topA = -Math.PI * 0.5;
+    drawGear(
+      ctx,
+      gearCX + Math.cos(topA) * idlerDist * 0.6,
+      gearCY + Math.sin(topA) * idlerDist * 0.6 * ISO_PRISM_D_FACTOR * 2,
+      idlerR,
+      idlerIR,
+      idlerTeeth,
+      -gearSpeed * (mainTeeth / idlerTeeth),
+      gearColorsSmall,
+      zoom
+    );
+  }
 
   // Gold dome with enhanced 3D shading
   const domeX = screenPos.x;

@@ -1,226 +1,153 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 
-import { useCarousel } from "../CarouselControls";
 import { LANDING_THEME, GAMEPLAY_SHOWCASE } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
-import {
-  MapSectionHeader,
-  MapSectionBg,
-  MapContentPanel,
-  SectionBorderFrame,
-} from "./mapElements";
+import { MapSectionHeader, MapSectionBg } from "./mapElements";
 
 const T = LANDING_THEME;
 
-const REGION_PALETTES: Record<
-  string,
-  { accent: string; bg: string; mist: string }
-> = {
-  "Desert Sands": {
-    accent: "#fbbf24",
-    bg: "rgba(60,40,10,0.6)",
-    mist: "rgba(251,191,36,0.05)",
-  },
-  "Frozen Wastes": {
-    accent: "#7dd3fc",
-    bg: "rgba(14,26,50,0.6)",
-    mist: "rgba(125,211,252,0.05)",
-  },
-  Grasslands: {
-    accent: "#6ee7b7",
-    bg: "rgba(16,42,28,0.6)",
-    mist: "rgba(110,231,183,0.04)",
-  },
-  "Murky Swamp": {
-    accent: "#a3e635",
-    bg: "rgba(20,40,12,0.6)",
-    mist: "rgba(163,230,53,0.04)",
-  },
-  "Volcanic Realm": {
-    accent: "#f87171",
-    bg: "rgba(60,14,14,0.6)",
-    mist: "rgba(248,113,113,0.05)",
-  },
+const REGION_PALETTES: Record<string, { accent: string; bg: string }> = {
+  "Desert Sands": { accent: "#fbbf24", bg: "rgba(60,40,10,0.55)" },
+  "Frozen Wastes": { accent: "#7dd3fc", bg: "rgba(14,26,50,0.55)" },
+  Grasslands: { accent: "#6ee7b7", bg: "rgba(16,42,28,0.55)" },
+  "Murky Swamp": { accent: "#a3e635", bg: "rgba(20,40,12,0.55)" },
+  "Volcanic Realm": { accent: "#f87171", bg: "rgba(60,14,14,0.55)" },
 };
 
-export function GameplayShowcase() {
-  const { active, next, prev, goTo } = useCarousel(
-    GAMEPLAY_SHOWCASE.length,
-    5000
-  );
-  const current = GAMEPLAY_SHOWCASE[active];
-  const palette = REGION_PALETTES[current.label] ?? {
+function RegionTile({
+  src,
+  label,
+  featured,
+  onClick,
+}: {
+  src: string;
+  label: string;
+  featured: boolean;
+  onClick: () => void;
+}) {
+  const palette = REGION_PALETTES[label] ?? {
     accent: T.accent,
-    bg: "rgba(20,16,10,0.6)",
-    mist: "rgba(212,168,74,0.04)",
+    bg: "rgba(20,16,10,0.55)",
   };
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-500"
+      style={{
+        border: featured
+          ? `2px solid ${palette.accent}60`
+          : "1.5px solid rgba(255,255,255,0.06)",
+        boxShadow: featured
+          ? `0 0 30px ${palette.accent}20, 0 8px 32px rgba(0,0,0,0.5)`
+          : "0 4px 20px rgba(0,0,0,0.4)",
+        transform: featured ? "scale(1.02)" : "scale(1)",
+      }}
+    >
+      <div className="aspect-[16/10] relative">
+        <Image
+          src={src}
+          alt={label}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{
+            background: palette.bg,
+            mixBlendMode: "multiply",
+            opacity: featured ? 0.3 : 0.5,
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.6) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-500"
+          style={{
+            boxShadow: `inset 0 0 40px rgba(0,0,0,0.4), inset 0 0 1px ${palette.accent}15`,
+            opacity: featured ? 1 : 0.5,
+          }}
+        />
+
+        {/* Region name overlay */}
+        <div
+          className="absolute bottom-0 inset-x-0 px-3 py-2.5 sm:px-4 sm:py-3"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
+          }}
+        >
+          <h3
+            className="text-sm sm:text-base lg:text-lg font-bold font-cinzel tracking-wide transition-colors duration-500"
+            style={{
+              color: featured ? palette.accent : `${palette.accent}90`,
+              textShadow: `0 0 16px ${palette.accent}40, 0 1px 4px rgba(0,0,0,0.8)`,
+            }}
+          >
+            {label}
+          </h3>
+        </div>
+
+        {/* Hover glow ring */}
+        <div
+          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{
+            boxShadow: `inset 0 0 20px ${palette.accent}15`,
+          }}
+        />
+      </div>
+    </button>
+  );
+}
+
+export function GameplayShowcase() {
+  const [featured, setFeatured] = useState(0);
 
   return (
     <section className="relative py-12 sm:py-16">
       <MapSectionBg gridOpacity={0.035} />
-      <SectionBorderFrame />
-
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader
           subtitle="5 Regions to Explore"
-          title="The Five Kingdoms"
+          title="Fight Your Way Across New and Old Kingdoms"
         />
       </div>
 
-      {/* Cinematic carousel — full-bleed feel */}
-      <div className="relative mx-2 sm:mx-4 lg:mx-8 z-10">
-        <MapContentPanel accent={palette.accent}>
-          <div
-            className="relative aspect-[2.2/1] sm:aspect-[2.5/1] rounded-xl overflow-hidden"
-            style={{
-              border: `1px solid ${palette.accent}20`,
-              boxShadow: `0 0 80px ${palette.accent}08, 0 20px 60px rgba(0,0,0,0.6)`,
-              transition: "border-color 0.8s, box-shadow 0.8s",
-            }}
-          >
-            {/* Slides */}
-            {GAMEPLAY_SHOWCASE.map((slide, i) => {
-              const isActive = i === active;
-              return (
-                <div
-                  key={slide.src}
-                  className="absolute inset-0"
-                  style={{
-                    opacity: isActive ? 1 : 0,
-                    transform: isActive ? "scale(1.03)" : "scale(1.08)",
-                    transition:
-                      "opacity 1.4s ease-in-out, transform 12s ease-out",
-                  }}
-                >
-                  <Image
-                    src={slide.src}
-                    alt={slide.label}
-                    fill
-                    sizes="100vw"
-                    className="object-cover"
-                    priority={i === 0}
-                  />
-                </div>
-              );
-            })}
-
-            {/* Color atmosphere overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none transition-all duration-1000"
-              style={{ background: palette.bg, mixBlendMode: "multiply" }}
+      <div className="relative mx-4 sm:mx-8 lg:mx-16 z-10">
+        {/* Top row: 3 tiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          {GAMEPLAY_SHOWCASE.slice(0, 3).map((slide, i) => (
+            <RegionTile
+              key={slide.src}
+              src={slide.src}
+              label={slide.label}
+              featured={featured === i}
+              onClick={() => setFeatured(i)}
             />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 20%, rgba(0,0,0,0.65) 100%)",
-              }}
+          ))}
+        </div>
+
+        {/* Bottom row: 2 tiles, wider */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {GAMEPLAY_SHOWCASE.slice(3).map((slide, i) => (
+            <RegionTile
+              key={slide.src}
+              src={slide.src}
+              label={slide.label}
+              featured={featured === i + 3}
+              onClick={() => setFeatured(i + 3)}
             />
-
-            {/* Bottom gradient with region name */}
-            <div
-              className="absolute bottom-0 inset-x-0 p-6 sm:p-10"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, transparent 100%)",
-              }}
-            >
-              <div className="flex items-end justify-between">
-                <div>
-                  <h3
-                    className="text-2xl sm:text-4xl lg:text-5xl font-bold font-cinzel tracking-wide transition-colors duration-700"
-                    style={{
-                      color: palette.accent,
-                      textShadow: `0 0 30px ${palette.accent}50, 0 2px 8px rgba(0,0,0,0.8)`,
-                    }}
-                  >
-                    {current.label}
-                  </h3>
-                </div>
-
-                {/* Inline progress strip */}
-                <div className="flex gap-1.5 items-end">
-                  {GAMEPLAY_SHOWCASE.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goTo(i)}
-                      className="transition-all duration-500 rounded-sm cursor-pointer"
-                      style={{
-                        background:
-                          i === active ? palette.accent : `${palette.accent}30`,
-                        boxShadow:
-                          i === active
-                            ? `0 0 10px ${palette.accent}60`
-                            : "none",
-                        height: i === active ? 4 : 4,
-                        width: i === active ? 24 : 4,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation zones — large invisible click targets */}
-            <button
-              onClick={prev}
-              className="absolute left-0 top-0 bottom-0 w-1/4 cursor-pointer z-10 group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div
-                className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
-                style={{
-                  backdropFilter: "blur(8px)",
-                  background: "rgba(0,0,0,0.5)",
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M10 3L5 8L10 13"
-                    stroke={palette.accent}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-            <button
-              onClick={next}
-              className="absolute right-0 top-0 bottom-0 w-1/4 cursor-pointer z-10 group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-l from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div
-                className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
-                style={{
-                  backdropFilter: "blur(8px)",
-                  background: "rgba(0,0,0,0.5)",
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M6 3L11 8L6 13"
-                    stroke={palette.accent}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            {/* Inner frame line */}
-            <div
-              className="absolute inset-0 rounded-xl pointer-events-none"
-              style={{
-                boxShadow: `inset 0 0 80px rgba(0,0,0,0.5), inset 0 0 2px ${palette.accent}15`,
-              }}
-            />
-          </div>
-        </MapContentPanel>
+          ))}
+        </div>
       </div>
     </section>
   );

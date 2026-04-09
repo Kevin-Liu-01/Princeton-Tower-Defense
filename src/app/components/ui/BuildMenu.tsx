@@ -11,6 +11,16 @@ import {
 } from "../../constants";
 import { TowerSprite } from "../../sprites";
 import type { TowerType, DraggingTower } from "../../types";
+
+const BUILD_TOWER_ORDER: TowerType[] = [
+  "station",
+  "cannon",
+  "lab",
+  "arch",
+  "library",
+  "mortar",
+  "club",
+];
 import { OrnateFrame } from "./primitives/OrnateFrame";
 import { TagIcon } from "./primitives/TagBadge";
 import { useIsTouchDevice, useResponsiveSizes } from "./system/hooks";
@@ -100,8 +110,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                 (Select, Click, or Drag!)
               </div>
             </h3>
-            {Object.entries(TOWER_DATA).map(([type, data]) => {
-              const towerType = type as TowerType;
+            {BUILD_TOWER_ORDER.map((towerType) => {
+              const data = TOWER_DATA[towerType];
               const isRestricted =
                 !!allowedTowers && allowedTowers.length > 0
                   ? !allowedTowers.includes(towerType)
@@ -114,7 +124,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               const tags = TOWER_TAGS[towerType];
               return (
                 <div
-                  key={type}
+                  key={towerType}
                   className="relative flex-1 min-w-[2.75rem] sm:min-w-0"
                 >
                   <button

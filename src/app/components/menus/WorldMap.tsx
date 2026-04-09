@@ -1029,10 +1029,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             <h2
                               className="text-lg font-bold drop-shadow-lg leading-tight break-words min-w-0"
                               style={{
+                                backgroundImage:
+                                  "linear-gradient(180deg, #fde68a 0%, #d4a84a 60%, #92400e 100%)",
                                 WebkitBackgroundClip: "text",
                                 WebkitTextFillColor: "transparent",
-                                background:
-                                  "linear-gradient(180deg, #fde68a 0%, #d4a84a 60%, #92400e 100%)",
                               }}
                             >
                               {currentLevel.name}
