@@ -37,6 +37,19 @@ const TOWER_VIS = 120;
 const TOWER_SCALE = 2.2;
 const TOWER_CANVAS = Math.round(TOWER_VIS * TOWER_SCALE);
 
+const HERO_TOWER_SPRITE_TWEAKS: Record<
+  TowerType,
+  { spriteScale: number; x: number; y: number }
+> = {
+  arch: { spriteScale: 0.9, x: 0, y: 2 },
+  cannon: { spriteScale: 0.9, x: 1, y: -1 },
+  club: { spriteScale: 0.9, x: 0, y: -2 },
+  lab: { spriteScale: 0.95, x: 0, y: -2 },
+  library: { spriteScale: 0.9, x: 0, y: -2 },
+  mortar: { spriteScale: 0.8, x: 0, y: 4 },
+  station: { spriteScale: 0.9, x: 0, y: 2 },
+};
+
 const STATS = [
   { value: "26", label: "Levels" },
   { value: "100+", label: "Enemies" },
@@ -189,9 +202,10 @@ function TowerCard({
   const accent = TOWER_ACCENTS[type];
   const label = getTowerLabel(type, towerLevel);
   const glowIntensity = 8 + towerLevel.level * 6;
+  const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
 
   return (
-    <div className="flex flex-col items-center gap-0">
+    <div className="flex flex-col items-center gap-0.5 px-1.5 sm:px-2 py-1.5">
       <button
         onClick={onNext}
         className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
@@ -215,14 +229,21 @@ function TowerCard({
             background: `radial-gradient(circle at 50% 60%, ${accent}10, transparent 70%)`,
           }}
         />
-        <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
-          <TowerSprite
-            type={type}
-            size={TOWER_CANVAS}
-            level={towerLevel.level}
-            upgrade={towerLevel.upgrade}
-          />
-        </SpriteDisplay>
+        <div
+          style={{
+            transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
+            transformOrigin: "50% 58%",
+          }}
+        >
+          <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
+            <TowerSprite
+              type={type}
+              size={TOWER_CANVAS}
+              level={towerLevel.level}
+              upgrade={towerLevel.upgrade}
+            />
+          </SpriteDisplay>
+        </div>
       </div>
       <button
         onClick={onPrev}
@@ -232,7 +253,7 @@ function TowerCard({
         <ChevronDown size={14} style={{ color: accent }} />
       </button>
       <span
-        className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center max-w-[88px] truncate"
+        className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center w-[88px] h-4 leading-4 truncate"
         style={{ color: `${accent}80` }}
       >
         {label}
@@ -465,8 +486,10 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
 
         <div
-          className="flex items-center justify-center gap-1 sm:gap-2"
+          className="flex items-start justify-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 rounded-xl"
           style={{
+            background: "rgba(0,0,0,0.18)",
+            border: "1px solid rgba(255,255,255,0.05)",
             opacity: stages[1] ? 1 : 0,
             transform: stages[1] ? "translateY(0)" : "translateY(20px)",
             transition: "all 800ms ease-out",

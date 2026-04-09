@@ -5322,13 +5322,21 @@ export function updateGameTick(
     hero.attackAnim === 0
   ) {
     const heroData = HERO_DATA[hero.type];
+    const canHeroHitFlying =
+      (heroData.isFlying ?? false) || (heroData.isRanged ?? false);
+    const heroAirTargetPredicate = (e: Enemy) =>
+      canHeroHitFlying || !ENEMY_DATA[e.type].flying;
     const isNassauBlueInferno = hero.type === "nassau" && hero.abilityActive;
     const isIvyColossus = hero.type === "ivy" && hero.abilityActive;
     const isNassauMelee =
       hero.type === "nassau" &&
       !isNassauBlueInferno &&
-      getEnemiesInRange(hero.pos, HERO_COMBAT_STATS.nassauMeleeRange).length >
-        0;
+      getEnemiesInRange(
+        hero.pos,
+        HERO_COMBAT_STATS.nassauMeleeRange,
+        undefined,
+        heroAirTargetPredicate
+      ).length > 0;
     const heroAttackSpeed = isNassauMelee
       ? HERO_COMBAT_STATS.nassauMeleeAttackSpeed
       : isNassauBlueInferno
@@ -5343,7 +5351,12 @@ export function updateGameTick(
     const effectiveHeroAttackSpeed =
       gameSpeed > 0 ? heroAttackSpeed / gameSpeed : heroAttackSpeed;
     if (now - hero.lastAttack > effectiveHeroAttackSpeed) {
-      const validEnemies = getEnemiesInRange(hero.pos, heroRange);
+      const validEnemies = getEnemiesInRange(
+        hero.pos,
+        heroRange,
+        undefined,
+        heroAirTargetPredicate
+      );
       if (validEnemies.length > 0) {
         const target = validEnemies[0];
         const targetPos = getEnemyPosCached(target);
@@ -5428,6 +5441,10 @@ export function updateGameTick(
                 if (attackTargets.some((t) => t.id === e.id)) {
                   return e;
                 } // Already hit as primary
+
+                if (!canHeroHitFlying && ENEMY_DATA[e.type].flying) {
+                  return e;
+                }
 
                 const enemyPos = getEnemyPosCached(e);
                 const distToTarget = distance(targetPos, enemyPos);

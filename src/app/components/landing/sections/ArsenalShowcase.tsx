@@ -243,61 +243,135 @@ function EvoConnector({ accent, lit }: { accent: string; lit: boolean }) {
   );
 }
 
-function BranchFork({
+function EvolutionLevelCard({
+  type,
+  level,
   accent,
-  litA,
-  litB,
+  active,
+  onClick,
 }: {
+  type: TowerType;
+  level: 1 | 2 | 3;
   accent: string;
-  litA: boolean;
-  litB: boolean;
+  active: boolean;
+  onClick: () => void;
 }) {
-  const anyLit = litA || litB;
   return (
-    <div className="flex flex-col items-center self-center mx-1">
-      <div className="flex items-center">
+    <button
+      onClick={onClick}
+      className="relative group rounded-xl p-2 sm:p-2.5 transition-all duration-300 hover:-translate-y-0.5"
+      style={{
+        background: active
+          ? `linear-gradient(180deg, ${accent}22, ${accent}08)`
+          : "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+        border: active
+          ? `1.5px solid ${accent}`
+          : "1.5px solid rgba(255,255,255,0.08)",
+        boxShadow: active
+          ? `0 0 18px ${accent}35, inset 0 0 10px ${accent}12`
+          : "0 2px 10px rgba(0,0,0,0.35)",
+      }}
+    >
+      <div className="flex flex-col items-center gap-1.5">
         <div
-          className="w-4 sm:w-5 h-[2px] rounded-l-full"
-          style={{ background: anyLit ? `${accent}55` : `${accent}12` }}
-        />
-        <div
-          className="relative flex flex-col items-start"
-          style={{ gap: "20px" }}
+          className="text-[9px] font-bold uppercase tracking-[0.2em]"
+          style={{ color: active ? accent : "rgba(255,255,255,0.45)" }}
         >
-          <div className="flex items-center">
-            <div
-              className="w-3 sm:w-4 h-[2px] rounded-r-full"
-              style={{ background: litA ? `${accent}55` : `${accent}12` }}
-            />
-            <svg width="6" height="10" viewBox="0 0 6 10" className="-ml-px">
-              <path
-                d="M0,0 L6,5 L0,10"
-                fill={litA ? `${accent}65` : `${accent}15`}
-              />
-            </svg>
-          </div>
-          <div
-            className="absolute left-0 h-full w-[2px] rounded-full"
-            style={{
-              background: anyLit ? `${accent}30` : `${accent}0a`,
-              top: "1px",
-            }}
-          />
-          <div className="flex items-center">
-            <div
-              className="w-3 sm:w-4 h-[2px] rounded-r-full"
-              style={{ background: litB ? `${accent}55` : `${accent}12` }}
-            />
-            <svg width="6" height="10" viewBox="0 0 6 10" className="-ml-px">
-              <path
-                d="M0,0 L6,5 L0,10"
-                fill={litB ? `${accent}65` : `${accent}15`}
-              />
-            </svg>
-          </div>
+          Level {level}
+        </div>
+        <div
+          className="rounded-lg flex items-center justify-center"
+          style={{
+            width: 64,
+            height: 64,
+            background: "rgba(0,0,0,0.25)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <SpriteDisplay visualSize={EVO_VIS} canvasScale={EVO_SCALE}>
+            <TowerSprite type={type} size={EVO_CANVAS} level={level} />
+          </SpriteDisplay>
         </div>
       </div>
-    </div>
+    </button>
+  );
+}
+
+function EvolutionBranchCard({
+  type,
+  accent,
+  upgrade,
+  name,
+  active,
+  onClick,
+}: {
+  type: TowerType;
+  accent: string;
+  upgrade: "A" | "B";
+  name: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-xl p-2 sm:p-2.5 transition-all duration-300 hover:-translate-y-0.5"
+      style={{
+        background: active
+          ? `linear-gradient(180deg, ${accent}24, ${accent}08)`
+          : "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+        border: active
+          ? `1.5px solid ${accent}`
+          : "1.5px solid rgba(255,255,255,0.08)",
+        boxShadow: active
+          ? `0 0 20px ${accent}35, inset 0 0 12px ${accent}10`
+          : "0 2px 10px rgba(0,0,0,0.35)",
+      }}
+    >
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <span
+            className="text-[8px] font-black uppercase tracking-[0.18em] px-1.5 py-0.5 rounded"
+            style={{
+              color: active ? accent : "rgba(255,255,255,0.5)",
+              background: active ? `${accent}20` : "rgba(255,255,255,0.07)",
+            }}
+          >
+            Path {upgrade}
+          </span>
+          <span
+            className="text-[9px] font-bold uppercase tracking-[0.18em]"
+            style={{ color: active ? accent : "rgba(255,255,255,0.45)" }}
+          >
+            Level 4
+          </span>
+        </div>
+        <div
+          className="rounded-lg flex items-center justify-center"
+          style={{
+            width: 64,
+            height: 64,
+            background: "rgba(0,0,0,0.25)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <SpriteDisplay visualSize={EVO_VIS} canvasScale={EVO_SCALE}>
+            <TowerSprite
+              type={type}
+              size={EVO_CANVAS}
+              level={4}
+              upgrade={upgrade}
+            />
+          </SpriteDisplay>
+        </div>
+        <span
+          className="text-[9px] font-semibold tracking-wide text-center leading-tight max-w-[120px]"
+          style={{ color: active ? accent : `${accent}75` }}
+        >
+          {name}
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -364,51 +438,71 @@ function TowerSpotlight({ type }: { type: TowerType }) {
         </div>
       </div>
 
-      {/* Evolution tree */}
-      <div className="flex items-center justify-center flex-wrap mt-2">
-        {([1, 2, 3] as const).map((lv, i) => (
-          <React.Fragment key={lv}>
-            {i > 0 && <EvoConnector accent={accent} lit={selLevel >= lv} />}
-            <EvoNode
-              type={type}
-              level={lv}
-              active={selLevel === lv}
-              accent={accent}
-              label={`Lv.${lv}`}
-              onClick={() => {
-                setSelLevel(lv);
-                setSelUpgrade("A");
-              }}
-            />
-          </React.Fragment>
-        ))}
+      {/* Carded progression */}
+      <div className="w-full max-w-4xl mt-1">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+          {([1, 2, 3] as const).map((lv, i) => (
+            <React.Fragment key={lv}>
+              {i > 0 && <EvoConnector accent={accent} lit={selLevel >= lv} />}
+              <EvolutionLevelCard
+                type={type}
+                level={lv}
+                accent={accent}
+                active={selLevel === lv}
+                onClick={() => {
+                  setSelLevel(lv);
+                  setSelUpgrade("A");
+                }}
+              />
+            </React.Fragment>
+          ))}
+        </div>
 
-        <BranchFork
-          accent={accent}
-          litA={selLevel === 4 && selUpgrade === "A"}
-          litB={selLevel === 4 && selUpgrade === "B"}
-        />
+        <div className="flex justify-center mt-2.5">
+          <div
+            className="h-6 w-[2px] rounded-full"
+            style={{
+              background:
+                selLevel === 4 ? `${accent}55` : "rgba(255,255,255,0.12)",
+            }}
+          />
+        </div>
 
-        <div className="flex flex-col" style={{ gap: "6px" }}>
-          <EvoNode
+        <div className="flex justify-center -mt-0.5">
+          <div
+            className="text-[8px] font-bold uppercase tracking-[0.24em] px-2 py-1 rounded"
+            style={{
+              color: selLevel === 4 ? accent : "rgba(255,255,255,0.45)",
+              background:
+                selLevel === 4 ? `${accent}18` : "rgba(255,255,255,0.05)",
+              border:
+                selLevel === 4
+                  ? `1px solid ${accent}55`
+                  : "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            Choose Branch
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap mt-2.5">
+          <EvolutionBranchCard
             type={type}
-            level={4}
-            upgrade="A"
-            active={selLevel === 4 && selUpgrade === "A"}
             accent={accent}
-            label={data.upgrades.A.name}
+            upgrade="A"
+            name={data.upgrades.A.name}
+            active={selLevel === 4 && selUpgrade === "A"}
             onClick={() => {
               setSelLevel(4);
               setSelUpgrade("A");
             }}
           />
-          <EvoNode
+          <EvolutionBranchCard
             type={type}
-            level={4}
-            upgrade="B"
-            active={selLevel === 4 && selUpgrade === "B"}
             accent={accent}
-            label={data.upgrades.B.name}
+            upgrade="B"
+            name={data.upgrades.B.name}
+            active={selLevel === 4 && selUpgrade === "B"}
             onClick={() => {
               setSelLevel(4);
               setSelUpgrade("B");

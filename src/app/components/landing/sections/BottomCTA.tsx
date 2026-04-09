@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useState, useEffect, useMemo } from "react";
 
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
@@ -6,6 +7,7 @@ import {
   LANDING_THEME,
   LANDING_LORE,
   LANDING_STATS,
+  DEFEND_REALM_BG_IMAGE,
 } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
@@ -93,7 +95,26 @@ interface BottomCTAProps {
 export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
   return (
     <section className="relative py-28 sm:py-36 px-6 flex flex-col items-center overflow-hidden">
-      <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.045} />
+      <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.16)`} gridOpacity={0.04} />
+      <div className="absolute inset-0 pointer-events-none">
+        <Image
+          src={DEFEND_REALM_BG_IMAGE}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+          style={{
+            filter: "brightness(0.4) saturate(0.7)",
+            transform: "scale(1.04)",
+          }}
+        />
+      </div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse 65% 55% at 50% 50%, rgba(${T.princetonRgb},0.08), rgba(${T.bgRgb},0.86) 72%), linear-gradient(180deg, rgba(${T.bgRgb},0.68) 0%, rgba(${T.bgRgb},0.92) 100%)`,
+        }}
+      />
       <div className="absolute inset-x-3 inset-y-2 sm:inset-x-5 sm:inset-y-3 lg:inset-x-8 lg:inset-y-4 pointer-events-none z-[1]">
         <OrnateFrame
           className="w-full h-full"
@@ -135,21 +156,31 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
 
         {/* Epic heading in cartouche */}
         <MapCartouche>
-          <div className="text-center px-4 sm:px-8">
+          <div className="text-center px-4 sm:px-8 flex flex-col items-center">
+            <span
+              className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.32em] mb-3 px-3 py-1 rounded"
+              style={{
+                color: `rgba(${T.accentRgb},0.65)`,
+                background: `rgba(${T.bgRgb},0.52)`,
+                border: `1px solid rgba(${T.accentRgb},0.24)`,
+              }}
+            >
+              Final Muster
+            </span>
             <h2
               className="text-4xl sm:text-6xl lg:text-7xl font-black font-cinzel tracking-wider uppercase"
               style={{
                 color: T.accent,
-                textShadow: `0 0 80px rgba(${T.accentRgb},0.35), 0 0 160px rgba(${T.accentRgb},0.1), 0 4px 16px rgba(0,0,0,0.7)`,
+                textShadow: `0 0 70px rgba(${T.accentRgb},0.4), 0 0 140px rgba(${T.accentRgb},0.14), 0 4px 16px rgba(0,0,0,0.78)`,
               }}
             >
               Defend the Realm
             </h2>
             <p
-              className="text-xs sm:text-sm mt-4 tracking-wider uppercase font-medium italic"
-              style={{ color: `rgba(${T.accentRgb},0.3)` }}
+              className="text-xs sm:text-sm mt-4 tracking-[0.16em] uppercase font-semibold"
+              style={{ color: `rgba(${T.accentRgb},0.52)` }}
             >
-              Command heroes. Build towers. Master spells.
+              Command heroes. Build towers. Break the siege.
             </p>
           </div>
         </MapCartouche>
@@ -158,17 +189,30 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         <MapLegendStats />
 
         <div
-          className="w-48 h-px"
+          className="w-56 h-px"
           style={{
-            background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.15), transparent)`,
+            background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.26), transparent)`,
           }}
         />
 
         <LoreQuote />
 
         {/* CTA */}
-        <div className="mt-4">
+        <div
+          className="mt-4 px-6 py-5 rounded-xl flex flex-col items-center gap-2"
+          style={{
+            background: `linear-gradient(180deg, rgba(${T.bgRgb},0.62), rgba(${T.bgRgb},0.8))`,
+            border: `1px solid rgba(${T.accentRgb},0.16)`,
+            boxShadow: `0 14px 36px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          }}
+        >
           <LandingCTA onClick={onPlay} disabled={exiting} label="Play Now" />
+          <span
+            className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold"
+            style={{ color: `rgba(${T.accentRgb},0.38)` }}
+          >
+            Jump straight into battle
+          </span>
         </div>
 
         {/* Footer */}

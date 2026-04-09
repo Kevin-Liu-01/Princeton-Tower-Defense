@@ -19,6 +19,7 @@ export const LANDING_THEME = {
 } as const;
 
 export const LANDING_BG_IMAGE = "/images/new/gameplay_grounds.png";
+export const DEFEND_REALM_BG_IMAGE = "/images/new/gameplay_missile2.png";
 
 export const LANDING_TAGLINE =
   "Defend the campus. Command heroes. Master the arcane.";
@@ -112,14 +113,40 @@ export const HERO_SLIDESHOW_IMAGES = [
 export interface ShowcaseSlide {
   src: string;
   label: string;
+  levelId: string;
 }
 
 export const GAMEPLAY_SHOWCASE: ShowcaseSlide[] = [
-  { label: "Grasslands", src: "/images/new/gameplay_grounds_ui.png" },
-  { label: "Desert Sands", src: "/images/new/gameplay_desert_ui.png" },
-  { label: "Murky Swamp", src: "/images/new/gameplay_swamp_ui.png" },
-  { label: "Frozen Wastes", src: "/images/new/gameplay_winter_ui.png" },
-  { label: "Volcanic Realm", src: "/images/new/gameplay_volcano_ui.png" },
+  {
+    label: "Grasslands",
+    levelId: "poe",
+    src: "/images/new/gameplay_grounds_ui.png",
+  },
+  {
+    label: "Desert Sands",
+    levelId: "oasis",
+    src: "/images/new/gameplay_desert_ui.png",
+  },
+  {
+    label: "Murky Swamp",
+    levelId: "bog",
+    src: "/images/new/gameplay_swamp_ui.png",
+  },
+  {
+    label: "Frozen Wastes",
+    levelId: "glacier",
+    src: "/images/new/gameplay_winter_ui.png",
+  },
+  {
+    label: "Volcanic Realm",
+    levelId: "lava",
+    src: "/images/new/gameplay_volcano_ui.png",
+  },
+  {
+    label: "Sandbox Arena",
+    levelId: "sandbox",
+    src: "/images/new/gameplay_sandbox_ui.png",
+  },
 ];
 
 // ─── Hero & Spell gallery ─────────────────────────────────────────────────────
@@ -250,6 +277,7 @@ export const BATTLE_PREVIEW_SLIDES: BattlePreviewSlide[] = [
 export function getLandingImageUrls(): string[] {
   return [
     ...HERO_SLIDESHOW_IMAGES,
+    DEFEND_REALM_BG_IMAGE,
     ...GAMEPLAY_SHOWCASE.map((s) => s.src),
     ...HERO_GALLERY.map((h) => h.image),
     ...SPELL_GALLERY.map((s) => s.image),

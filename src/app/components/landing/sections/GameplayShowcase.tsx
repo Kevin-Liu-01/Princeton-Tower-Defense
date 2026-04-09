@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useState } from "react";
 
 import { LANDING_THEME, GAMEPLAY_SHOWCASE } from "../landingConstants";
@@ -20,12 +21,14 @@ function RegionTile({
   src,
   label,
   featured,
-  onClick,
+  href,
+  onHover,
 }: {
   src: string;
   label: string;
   featured: boolean;
-  onClick: () => void;
+  href: string;
+  onHover: () => void;
 }) {
   const palette = REGION_PALETTES[label] ?? {
     accent: T.accent,
@@ -33,8 +36,10 @@ function RegionTile({
   };
 
   return (
-    <button
-      onClick={onClick}
+    <Link
+      href={href}
+      onMouseEnter={onHover}
+      onFocus={onHover}
       className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-500"
       style={{
         border: featured
@@ -104,7 +109,7 @@ function RegionTile({
           }}
         />
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -117,7 +122,7 @@ export function GameplayShowcase() {
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader
-          subtitle="5 Regions to Explore"
+          subtitle="6 Playable Battlegrounds"
           title="Fight Your Way Across New and Old Kingdoms"
         />
       </div>
@@ -131,20 +136,22 @@ export function GameplayShowcase() {
               src={slide.src}
               label={slide.label}
               featured={featured === i}
-              onClick={() => setFeatured(i)}
+              href={`/${slide.levelId}`}
+              onHover={() => setFeatured(i)}
             />
           ))}
         </div>
 
-        {/* Bottom row: 2 tiles, wider */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {/* Bottom row: 3 tiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {GAMEPLAY_SHOWCASE.slice(3).map((slide, i) => (
             <RegionTile
               key={slide.src}
               src={slide.src}
               label={slide.label}
               featured={featured === i + 3}
-              onClick={() => setFeatured(i + 3)}
+              href={`/${slide.levelId}`}
+              onHover={() => setFeatured(i + 3)}
             />
           ))}
         </div>
