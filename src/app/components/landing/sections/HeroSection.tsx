@@ -1,8 +1,15 @@
 "use client";
-import { ChevronDown, ChevronUp, ScrollText } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ScrollText,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 import { TOWER_DATA, TOWER_ACCENTS } from "../../../constants/towers";
 import { TowerSprite } from "../../../sprites/towers";
@@ -191,11 +198,13 @@ function getTowerLabel(type: TowerType, tl: TowerLevel): string {
 function TowerCard({
   type,
   towerLevel,
+  levelIndex,
   onNext,
   onPrev,
 }: {
   type: TowerType;
   towerLevel: TowerLevel;
+  levelIndex: number;
   onNext: () => void;
   onPrev: () => void;
 }) {
@@ -203,6 +212,13 @@ function TowerCard({
   const label = getTowerLabel(type, towerLevel);
   const glowIntensity = 8 + towerLevel.level * 6;
   const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
+  const prevIdx = useRef(levelIndex);
+  const dir = levelIndex >= prevIdx.current ? 1 : -1;
+  useEffect(() => {
+    prevIdx.current = levelIndex;
+  }, [levelIndex]);
+
+  const spriteKey = `${type}-${towerLevel.level}-${towerLevel.upgrade ?? ""}`;
 
   return (
     <div className="flex flex-col items-center gap-0.5 px-1.5 sm:px-2 py-1.5">
@@ -213,12 +229,15 @@ function TowerCard({
       >
         <ChevronUp size={14} style={{ color: accent }} />
       </button>
-      <div
-        className="relative flex items-center justify-center rounded-lg overflow-hidden transition-all duration-300"
+      <motion.div
+        className="relative flex items-center justify-center rounded-lg overflow-hidden"
+        animate={{
+          boxShadow: `0 0 ${glowIntensity}px ${accent}20`,
+        }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         style={{
           background: `linear-gradient(160deg, ${accent}12, rgba(6,6,10,0.6))`,
           border: `1.5px solid ${accent}35`,
-          boxShadow: `0 0 ${glowIntensity}px ${accent}20`,
           height: TOWER_VIS + 16,
           width: TOWER_VIS + 8,
         }}
@@ -229,22 +248,29 @@ function TowerCard({
             background: `radial-gradient(circle at 50% 60%, ${accent}10, transparent 70%)`,
           }}
         />
-        <div
-          style={{
-            transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
-            transformOrigin: "50% 58%",
-          }}
-        >
-          <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
-            <TowerSprite
-              type={type}
-              size={TOWER_CANVAS}
-              level={towerLevel.level}
-              upgrade={towerLevel.upgrade}
-            />
-          </SpriteDisplay>
-        </div>
-      </div>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={spriteKey}
+            initial={{ y: dir * 24, opacity: 0, scale: 0.85 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: dir * -24, opacity: 0, scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            style={{
+              transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
+              transformOrigin: "50% 58%",
+            }}
+          >
+            <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
+              <TowerSprite
+                type={type}
+                size={TOWER_CANVAS}
+                level={towerLevel.level}
+                upgrade={towerLevel.upgrade}
+              />
+            </SpriteDisplay>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
       <button
         onClick={onPrev}
         className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
@@ -252,12 +278,19 @@ function TowerCard({
       >
         <ChevronDown size={14} style={{ color: accent }} />
       </button>
-      <span
-        className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center w-[88px] h-4 leading-4 truncate"
-        style={{ color: `${accent}80` }}
-      >
-        {label}
-      </span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={label}
+          initial={{ opacity: 0, y: dir * 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: dir * -6 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center w-[88px] h-4 leading-4 truncate"
+          style={{ color: `${accent}80` }}
+        >
+          {label}
+        </motion.span>
+      </AnimatePresence>
     </div>
   );
 }
@@ -361,6 +394,24 @@ interface HeroSectionProps {
   onCredits: () => void;
 }
 
+const VISIBLE_LG = 5;
+const VISIBLE_SM = 3;
+const CAROUSEL_INTERVAL_MS = 3500;
+const CARD_WIDTH_SM = 108;
+const CARD_WIDTH_LG = 140;
+
+function useVisibleCount() {
+  const [count, setCount] = useState(VISIBLE_LG);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setCount(mq.matches ? VISIBLE_LG : VISIBLE_SM);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return count;
+}
+
 export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
   const activeSlide = useCrossfade(
     HERO_SLIDESHOW_IMAGES.length,
@@ -370,6 +421,39 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
   const [towerLevels, setTowerLevels] = useState<number[]>(() =>
     new Array(TOWER_ORDER.length).fill(0)
   );
+
+  const visibleCount = useVisibleCount();
+  const [carouselStart, setCarouselStart] = useState(0);
+  const [carouselDir, setCarouselDir] = useState<1 | -1>(1);
+  const autoTimer = useRef(0 as unknown as ReturnType<typeof setInterval>);
+
+  const advanceCarousel = useCallback((dir: 1 | -1) => {
+    setCarouselDir(dir);
+    setCarouselStart(
+      (prev) => (prev + dir + TOWER_ORDER.length) % TOWER_ORDER.length
+    );
+  }, []);
+
+  useEffect(() => {
+    autoTimer.current = setInterval(
+      () => advanceCarousel(1),
+      CAROUSEL_INTERVAL_MS
+    );
+    return () => clearInterval(autoTimer.current);
+  }, [advanceCarousel]);
+
+  const resetAutoRotate = useCallback(() => {
+    clearInterval(autoTimer.current);
+    autoTimer.current = setInterval(
+      () => advanceCarousel(1),
+      CAROUSEL_INTERVAL_MS
+    );
+  }, [advanceCarousel]);
+
+  const visibleTowers = Array.from({ length: visibleCount }, (_, i) => {
+    const idx = (carouselStart + i) % TOWER_ORDER.length;
+    return { type: TOWER_ORDER[idx], globalIdx: idx };
+  });
 
   useEffect(() => {
     const delays = [100, 300, 500, 700, 900, 1200];
@@ -486,24 +570,98 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
 
         <div
-          className="flex items-start justify-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 rounded-xl"
+          className="flex items-center justify-center gap-1 sm:gap-2"
           style={{
-            background: "rgba(0,0,0,0.18)",
-            border: "1px solid rgba(255,255,255,0.05)",
             opacity: stages[1] ? 1 : 0,
             transform: stages[1] ? "translateY(0)" : "translateY(20px)",
             transition: "all 800ms ease-out",
           }}
         >
-          {TOWER_ORDER.map((type, idx) => (
-            <TowerCard
-              key={type}
-              type={type}
-              towerLevel={LEVEL_CYCLE[towerLevels[idx]]}
-              onNext={() => cycleTower(idx, 1)}
-              onPrev={() => cycleTower(idx, -1)}
-            />
-          ))}
+          <motion.button
+            onClick={() => {
+              advanceCarousel(-1);
+              resetAutoRotate();
+            }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-1.5 rounded-full cursor-pointer flex-shrink-0"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.35)",
+            }}
+            aria-label="Previous towers"
+          >
+            <ChevronLeft size={16} />
+          </motion.button>
+          <div
+            className="relative rounded-xl px-2 sm:px-3 py-1.5"
+            style={{
+              background: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(255,255,255,0.05)",
+              overflowX: "clip",
+              overflowY: "visible",
+            }}
+          >
+            <AnimatePresence initial={false} mode="popLayout">
+              <motion.div
+                key={carouselStart}
+                className="flex items-start justify-center"
+                initial={{ x: carouselDir * 120, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: carouselDir * -120, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
+                {visibleTowers.map(({ type, globalIdx }) => (
+                  <TowerCard
+                    key={type}
+                    type={type}
+                    towerLevel={LEVEL_CYCLE[towerLevels[globalIdx]]}
+                    levelIndex={towerLevels[globalIdx]}
+                    onNext={() => cycleTower(globalIdx, 1)}
+                    onPrev={() => cycleTower(globalIdx, -1)}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <motion.button
+            onClick={() => {
+              advanceCarousel(1);
+              resetAutoRotate();
+            }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-1.5 rounded-full cursor-pointer flex-shrink-0"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.35)",
+            }}
+            aria-label="Next towers"
+          >
+            <ChevronRight size={16} />
+          </motion.button>
+        </div>
+
+        <div className="flex justify-center gap-1.5 -mt-1">
+          {TOWER_ORDER.map((t, i) => {
+            const active = visibleTowers.some((v) => v.globalIdx === i);
+            return (
+              <motion.div
+                key={t}
+                className="rounded-full"
+                animate={{
+                  width: active ? 12 : 4,
+                  background: active
+                    ? `rgba(${T.accentRgb},0.5)`
+                    : `rgba(${T.accentRgb},0.12)`,
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                style={{ height: 4 }}
+              />
+            );
+          })}
         </div>
 
         <div

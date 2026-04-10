@@ -157,16 +157,6 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         {/* Epic heading in cartouche */}
         <MapCartouche>
           <div className="text-center px-4 sm:px-8 flex flex-col items-center">
-            <span
-              className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.32em] mb-3 px-3 py-1 rounded"
-              style={{
-                color: `rgba(${T.accentRgb},0.65)`,
-                background: `rgba(${T.bgRgb},0.52)`,
-                border: `1px solid rgba(${T.accentRgb},0.24)`,
-              }}
-            >
-              Final Muster
-            </span>
             <h2
               className="text-4xl sm:text-6xl lg:text-7xl font-black font-cinzel tracking-wider uppercase"
               style={{
@@ -186,7 +176,7 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         </MapCartouche>
 
         {/* Map legend stats */}
-        <MapLegendStats />
+        {/* <MapLegendStats /> */}
 
         <div
           className="w-56 h-px"
@@ -195,11 +185,11 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
           }}
         />
 
-        <LoreQuote />
+        {/* <LoreQuote /> */}
 
         {/* CTA */}
         <div
-          className="mt-4 px-6 py-5 rounded-xl flex flex-col items-center gap-2"
+          className=" px-6 py-5 rounded-xl flex flex-col items-center gap-2"
           style={{
             background: `linear-gradient(180deg, rgba(${T.bgRgb},0.62), rgba(${T.bgRgb},0.8))`,
             border: `1px solid rgba(${T.accentRgb},0.16)`,

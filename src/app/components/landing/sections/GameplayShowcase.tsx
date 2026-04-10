@@ -121,10 +121,7 @@ export function GameplayShowcase() {
       <MapSectionBg gridOpacity={0.035} />
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader
-          subtitle="6 Playable Battlegrounds"
-          title="Fight Your Way Across New and Old Kingdoms"
-        />
+        <MapSectionHeader title="Battle Across 6 Regions" />
       </div>
 
       <div className="relative mx-4 sm:mx-8 lg:mx-16 z-10">

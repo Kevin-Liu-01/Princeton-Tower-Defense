@@ -528,7 +528,7 @@ export function MapSectionHeader({
   description,
   subtitleColor,
 }: {
-  subtitle: string;
+  subtitle?: string;
   title: string;
   description?: string;
   subtitleColor?: string;
