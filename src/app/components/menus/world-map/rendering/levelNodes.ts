@@ -896,6 +896,8 @@ export function drawLevelNodes({
         // All icons drawn centered at origin via translate
         ctx.save();
         ctx.translate(x, y);
+        const iconScale = size / (isChallenge ? 26 : 24);
+        ctx.scale(iconScale, iconScale);
         ctx.globalAlpha = 1;
 
         if (level.kind === "sandbox") {

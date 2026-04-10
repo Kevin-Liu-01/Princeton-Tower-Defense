@@ -25,7 +25,7 @@ import {
 } from "../landingConstants";
 import type { EmberConfig } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
-import { MapGrid, MapWaves, MapTrails, ParchmentOverlay } from "./mapElements";
+import { MapWaves, MapTrails, ParchmentOverlay } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
 
 const T = LANDING_THEME;
@@ -105,6 +105,21 @@ const LEVEL_CYCLE: TowerLevel[] = [
   { level: 4, upgrade: "B" },
 ];
 
+function FrameCorner({ className }: { className: string }) {
+  return (
+    <div
+      className={`absolute w-[7px] h-[7px] rotate-45 pointer-events-none z-10 ${className}`}
+      style={{
+        background:
+          "radial-gradient(circle at 35% 35%, #ffe8a0, #d4aa50, #8b6914)",
+        border: "1px solid #6b4f12",
+        boxShadow:
+          "0 0 3px rgba(0,0,0,0.5), inset 0 0 1px rgba(255,230,150,0.4)",
+      }}
+    />
+  );
+}
+
 function LevelCard({
   preview,
   side,
@@ -115,30 +130,62 @@ function LevelCard({
   return (
     <Link
       href={`/${preview.id}`}
-      className="relative w-full rounded-lg overflow-hidden flex-shrink-0 block group transition-all duration-300 hover:scale-[1.06] hover:z-10"
-      style={{ aspectRatio: "21/9" }}
+      className="relative w-full flex-shrink-0 block group transition-all duration-300 hover:scale-[1.06] hover:z-10 p-[3px] rounded-lg"
+      style={{
+        aspectRatio: "21/9",
+        background:
+          "linear-gradient(160deg, #d4aa50 0%, #8b6914 25%, #dbb860 50%, #6b4f12 75%, #c9a048 100%)",
+        boxShadow:
+          "0 2px 8px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,220,120,0.3), 0 0 0 1px rgba(40,28,8,0.8)",
+      }}
     >
-      <Image
-        src={`/images/previews/${preview.file}.png`}
-        alt={preview.name}
-        fill
-        sizes="220px"
-        className="object-cover transition-all duration-300 group-hover:brightness-125"
-      />
       <div
-        className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-none rounded-lg"
+        className="relative w-full h-full rounded overflow-hidden"
         style={{
-          boxShadow: `inset 0 0 16px rgba(${T.accentRgb},0.2), 0 0 16px rgba(${T.accentRgb},0.25)`,
-          border: `1.5px solid rgba(${T.accentRgb},0.35)`,
+          boxShadow:
+            "inset 0 0 0 1px rgba(40,28,8,0.6), inset 0 0 4px rgba(0,0,0,0.4)",
+        }}
+      >
+        <Image
+          src={`/images/previews/${preview.file}.png`}
+          alt={preview.name}
+          fill
+          sizes="220px"
+          loading="lazy"
+          className="object-cover transition-all duration-300 group-hover:brightness-125"
+        />
+        <div
+          className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-none"
+          style={{
+            boxShadow: `inset 0 0 16px rgba(${T.accentRgb},0.3), 0 0 20px rgba(${T.accentRgb},0.3)`,
+          }}
+        />
+        <div
+          className={`absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent ${side === "left" ? "text-right" : "text-left"}`}
+        >
+          <span className="text-[8px] sm:text-[9px] font-bold text-white/80 tracking-wider uppercase">
+            {preview.name}
+          </span>
+        </div>
+      </div>
+      <FrameCorner className="top-[-2px] left-[-2px]" />
+      <FrameCorner className="top-[-2px] right-[-2px]" />
+      <FrameCorner className="bottom-[-2px] left-[-2px]" />
+      <FrameCorner className="bottom-[-2px] right-[-2px]" />
+      <div
+        className="absolute top-[2px] left-1/2 -translate-x-1/2 w-[14px] h-[3px] pointer-events-none z-10 rounded-full"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, #d4aa50, transparent)",
         }}
       />
       <div
-        className={`absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent ${side === "left" ? "text-right" : "text-left"}`}
-      >
-        <span className="text-[8px] sm:text-[9px] font-bold text-white/80 tracking-wider uppercase">
-          {preview.name}
-        </span>
-      </div>
+        className="absolute bottom-[2px] left-1/2 -translate-x-1/2 w-[14px] h-[3px] pointer-events-none z-10 rounded-full"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, #d4aa50, transparent)",
+        }}
+      />
     </Link>
   );
 }
@@ -157,7 +204,7 @@ function ScrollColumn({
       className="hero-rail absolute top-0 bottom-0 w-[180px] lg:w-[220px] hidden md:block"
       style={{ [side]: 0, overflowX: "visible", overflowY: "clip" }}
     >
-      <div className="hero-rail-slide" data-side={side}>
+      <div className="hero-rail-slide relative" data-side={side}>
         <div
           className="hero-rail-track flex flex-col gap-3 py-3"
           style={{
@@ -172,16 +219,20 @@ function ScrollColumn({
             />
           ))}
         </div>
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: `linear-gradient(180deg, ${T.bg} 0%, transparent 10%, transparent 90%, ${T.bg} 100%)`,
+          }}
+        />
       </div>
       <div
-        className="absolute inset-0 pointer-events-none z-10"
+        className="absolute inset-0 pointer-events-none z-20"
         style={{
-          background: [
-            `linear-gradient(180deg, ${T.bg} 0%, transparent 10%, transparent 90%, ${T.bg} 100%)`,
+          background:
             side === "left"
               ? `linear-gradient(270deg, transparent 60%, ${T.bg} 100%)`
               : `linear-gradient(90deg, transparent 60%, ${T.bg} 100%)`,
-          ].join(", "),
         }}
       />
     </div>
@@ -210,7 +261,7 @@ function TowerCard({
 }) {
   const accent = TOWER_ACCENTS[type];
   const label = getTowerLabel(type, towerLevel);
-  const glowIntensity = 8 + towerLevel.level * 6;
+  const glowIntensity = 10 + towerLevel.level * 8;
   const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
   const prevIdx = useRef(levelIndex);
   const dir = levelIndex >= prevIdx.current ? 1 : -1;
@@ -221,72 +272,95 @@ function TowerCard({
   const spriteKey = `${type}-${towerLevel.level}-${towerLevel.upgrade ?? ""}`;
 
   return (
-    <div className="flex flex-col items-center gap-0.5 px-1.5 sm:px-2 py-1.5">
+    <div className="flex flex-col items-center gap-0.5 px-1 sm:px-1.5 py-1.5">
       <button
         onClick={onNext}
-        className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
+        className="cursor-pointer p-1 transition-all hover:opacity-100 opacity-50 hover:scale-110"
         aria-label="Next level"
       >
         <ChevronUp size={14} style={{ color: accent }} />
       </button>
-      <motion.div
-        className="relative flex items-center justify-center rounded-lg overflow-hidden"
-        animate={{
-          boxShadow: `0 0 ${glowIntensity}px ${accent}20`,
-        }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+      <div
+        className="relative p-[3px] rounded-lg"
         style={{
-          background: `linear-gradient(160deg, ${accent}12, rgba(6,6,10,0.6))`,
-          border: `1.5px solid ${accent}35`,
-          height: TOWER_VIS + 16,
-          width: TOWER_VIS + 8,
+          background: `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`,
+          boxShadow: `0 4px 14px rgba(0,0,0,0.5), 0 0 ${glowIntensity}px ${accent}25`,
         }}
       >
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="relative flex items-center justify-center rounded overflow-hidden"
           style={{
-            background: `radial-gradient(circle at 50% 60%, ${accent}10, transparent 70%)`,
+            background: `linear-gradient(170deg, ${accent}15, rgba(6,6,10,0.88))`,
+            boxShadow: `inset 0 0 0 1px rgba(40,28,8,0.5), inset 0 0 8px rgba(0,0,0,0.5), inset 0 0 20px ${accent}08`,
+            height: TOWER_VIS + 16,
+            width: TOWER_VIS + 8,
+          }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse 80% 50% at 50% 70%, ${accent}10, transparent 70%)`,
+            }}
+          />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={spriteKey}
+              initial={{ y: dir * 16, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: dir * -16, opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              style={{
+                transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
+                transformOrigin: "50% 58%",
+              }}
+            >
+              <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
+                <TowerSprite
+                  type={type}
+                  size={TOWER_CANVAS}
+                  level={towerLevel.level}
+                  upgrade={towerLevel.upgrade}
+                />
+              </SpriteDisplay>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <FrameCorner className="top-[-2px] left-[-2px]" />
+        <FrameCorner className="top-[-2px] right-[-2px]" />
+        <FrameCorner className="bottom-[-2px] left-[-2px]" />
+        <FrameCorner className="bottom-[-2px] right-[-2px]" />
+        <div
+          className="absolute left-1/2 -translate-x-1/2 top-[1px] w-3 h-[2px] pointer-events-none z-10 rounded-full"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${accent}80, transparent)`,
           }}
         />
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={spriteKey}
-            initial={{ y: dir * 24, opacity: 0, scale: 0.85 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: dir * -24, opacity: 0, scale: 0.85 }}
-            transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            style={{
-              transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
-              transformOrigin: "50% 58%",
-            }}
-          >
-            <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
-              <TowerSprite
-                type={type}
-                size={TOWER_CANVAS}
-                level={towerLevel.level}
-                upgrade={towerLevel.upgrade}
-              />
-            </SpriteDisplay>
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
+        <div
+          className="absolute left-1/2 -translate-x-1/2 bottom-[1px] w-3 h-[2px] pointer-events-none z-10 rounded-full"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${accent}80, transparent)`,
+          }}
+        />
+      </div>
       <button
         onClick={onPrev}
-        className="cursor-pointer p-1 transition-opacity hover:opacity-100 opacity-40"
+        className="cursor-pointer p-1 transition-all hover:opacity-100 opacity-50 hover:scale-110"
         aria-label="Previous level"
       >
         <ChevronDown size={14} style={{ color: accent }} />
       </button>
-      <AnimatePresence mode="popLayout" initial={false}>
+      <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={label}
-          initial={{ opacity: 0, y: dir * 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: dir * -6 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center w-[88px] h-4 leading-4 truncate"
-          style={{ color: `${accent}80` }}
+          style={{
+            color: `${accent}c0`,
+            textShadow: `0 0 8px ${accent}40`,
+          }}
         >
           {label}
         </motion.span>
@@ -485,9 +559,10 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           className="absolute inset-[-6%]"
           style={{
             animation: "landing-ken-burns 25s ease-in-out infinite alternate",
-            filter: "sepia(0.25) saturate(0.75) brightness(0.85)",
-            opacity: i === activeSlide ? 0.28 : 0,
+            filter: "sepia(0.2) saturate(0.85) brightness(0.95)",
+            opacity: i === activeSlide ? 0.38 : 0,
             transition: `opacity ${CROSSFADE_TRANSITION_MS}ms ease-in-out`,
+            willChange: "opacity",
           }}
         >
           <Image
@@ -506,17 +581,16 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.18) 30%, rgba(${T.bgRgb},0.18) 70%, rgba(${T.bgRgb},1) 100%)`,
+          background: `linear-gradient(180deg, rgba(${T.bgRgb},0.7) 0%, rgba(${T.bgRgb},0.1) 30%, rgba(${T.bgRgb},0.1) 70%, rgba(${T.bgRgb},0.95) 100%)`,
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse 80% 60% at 50% 45%, transparent 0%, rgba(${T.bgRgb},0.5) 60%, rgba(${T.bgRgb},0.95) 100%)`,
+          background: `radial-gradient(ellipse 80% 60% at 50% 45%, transparent 0%, rgba(${T.bgRgb},0.35) 60%, rgba(${T.bgRgb},0.85) 100%)`,
         }}
       />
 
-      <MapGrid />
       <MapWaves />
       <MapTrails />
 
@@ -584,46 +658,54 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="p-1.5 rounded-full cursor-pointer flex-shrink-0"
+            className="p-2 rounded-lg cursor-pointer flex-shrink-0"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.35)",
+              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
+              border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              color: T.accent,
             }}
             aria-label="Previous towers"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={18} />
           </motion.button>
           <div
-            className="relative rounded-xl px-2 sm:px-3 py-1.5"
+            className="relative rounded-xl p-[2px]"
             style={{
-              background: "rgba(0,0,0,0.18)",
-              border: "1px solid rgba(255,255,255,0.05)",
-              overflowX: "clip",
-              overflowY: "visible",
+              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.4), rgba(${T.accentDarkRgb},0.12), rgba(${T.accentDarkRgb},0.4))`,
+              boxShadow: `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.1)`,
             }}
           >
-            <AnimatePresence initial={false} mode="popLayout">
-              <motion.div
-                key={carouselStart}
-                className="flex items-start justify-center"
-                initial={{ x: carouselDir * 120, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: carouselDir * -120, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                {visibleTowers.map(({ type, globalIdx }) => (
-                  <TowerCard
-                    key={type}
-                    type={type}
-                    towerLevel={LEVEL_CYCLE[towerLevels[globalIdx]]}
-                    levelIndex={towerLevels[globalIdx]}
-                    onNext={() => cycleTower(globalIdx, 1)}
-                    onPrev={() => cycleTower(globalIdx, -1)}
-                  />
-                ))}
-              </motion.div>
-            </AnimatePresence>
+            <div
+              className="relative rounded-[10px] px-2 sm:px-3 py-1.5"
+              style={{
+                background: "rgba(6,4,2,0.65)",
+                overflowX: "clip",
+                overflowY: "visible",
+              }}
+            >
+              <AnimatePresence initial={false} mode="wait">
+                <motion.div
+                  key={carouselStart}
+                  className="flex items-start justify-center"
+                  initial={{ x: carouselDir * 60, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: carouselDir * -60, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                >
+                  {visibleTowers.map(({ type, globalIdx }) => (
+                    <TowerCard
+                      key={type}
+                      type={type}
+                      towerLevel={LEVEL_CYCLE[towerLevels[globalIdx]]}
+                      levelIndex={towerLevels[globalIdx]}
+                      onNext={() => cycleTower(globalIdx, 1)}
+                      onPrev={() => cycleTower(globalIdx, -1)}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
           <motion.button
             onClick={() => {
@@ -632,15 +714,16 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="p-1.5 rounded-full cursor-pointer flex-shrink-0"
+            className="p-2 rounded-lg cursor-pointer flex-shrink-0"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.35)",
+              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
+              border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              color: T.accent,
             }}
             aria-label="Next towers"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </motion.button>
         </div>
 

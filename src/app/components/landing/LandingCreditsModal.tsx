@@ -184,15 +184,14 @@ export function LandingCreditsModal({ onClose }: LandingCreditsModalProps) {
                 border: `1px solid rgba(${T.accentDarkRgb},0.15)`,
               }}
             >
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0"
+              <img
+                src="/images/kevin.png"
+                alt="Kevin Liu"
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                 style={{
-                  background: `linear-gradient(135deg, ${T.accentBright}, ${T.accentDark})`,
-                  color: T.bg,
+                  border: `2px solid rgba(${T.accentDarkRgb},0.4)`,
                 }}
-              >
-                KL
-              </div>
+              />
               <div className="min-w-0">
                 <div
                   className="font-semibold text-base"

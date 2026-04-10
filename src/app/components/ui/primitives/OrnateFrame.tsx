@@ -249,116 +249,114 @@ const OrnateBorder: React.FC<OrnateBorderProps> = ({
         className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
         style={{
           filter: `drop-shadow(0 0 ${4 * scale}px ${glowColor}35)`,
-          height: 8 * scale,
+          height: 14 * scale,
           width: "calc(100% - 48px)",
         }}
       >
-        <svg
-          viewBox="0 0 400 16"
-          fill="none"
-          preserveAspectRatio="none"
-          className="w-full h-full"
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-full"
           style={{
-            transform: position === "bottom" ? "scaleY(-1)" : undefined,
+            background: `linear-gradient(90deg, transparent, ${color}b3 8%, ${color}b3 41%, transparent 46%, transparent 54%, ${color}b3 59%, ${color}b3 92%, transparent)`,
+            height: Math.max(1, 1.2 * scale),
           }}
+        />
+        <div
+          className="absolute w-full"
+          style={{
+            background: `linear-gradient(90deg, transparent 4%, ${color}59 12%, ${color}59 39%, transparent 44%, transparent 56%, ${color}59 61%, ${color}59 88%, transparent 96%)`,
+            top: 3.5 * scale,
+            height: Math.max(0.5, 0.5 * scale),
+          }}
+        />
+        <div
+          className="absolute w-full"
+          style={{
+            background: `linear-gradient(90deg, transparent 8%, ${color}33 15%, ${color}33 39%, transparent 44%, transparent 56%, ${color}33 61%, ${color}33 85%, transparent 92%)`,
+            bottom: 3 * scale,
+            height: Math.max(0.5, 0.4 * scale),
+          }}
+        />
+        <svg
+          viewBox="0 0 60 16"
+          fill="none"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ width: 54 * scale, height: 14 * scale }}
         >
           <path
-            d="M0 8 L165 8"
-            fill="none"
-            stroke={color}
-            strokeWidth="1.2"
-            opacity="0.7"
-          />
-          <path
-            d="M235 8 L400 8"
-            fill="none"
-            stroke={color}
-            strokeWidth="1.2"
-            opacity="0.7"
-          />
-          <path
-            d="M15 5 L155 5"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.5"
-            opacity="0.35"
-          />
-          <path
-            d="M245 5 L385 5"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.5"
-            opacity="0.35"
-          />
-          <path
-            d="M30 11 L160 11"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.4"
-            opacity="0.2"
-          />
-          <path
-            d="M240 11 L370 11"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.4"
-            opacity="0.2"
-          />
-          <path
-            d="M185 2 L192 8 L200 0 L208 8 L215 2"
+            d="M15 2 L22 8 L30 0 L38 8 L45 2"
             fill="none"
             stroke={glowColor}
             strokeWidth="1.5"
             strokeLinejoin="round"
           />
           <path
-            d="M185 14 L192 8 L200 16 L208 8 L215 14"
+            d="M15 14 L22 8 L30 16 L38 8 L45 14"
             fill="none"
             stroke={glowColor}
             strokeWidth="1"
             opacity="0.5"
           />
-          <circle cx="200" cy="8" r="3" fill={glowColor} opacity="0.9" />
-          <circle cx="200" cy="8" r="1.5" fill={color} opacity="0.6" />
-          <path
-            d="M170 8 L175 5 L180 8 L175 11 Z"
-            fill={glowColor}
-            opacity="0.5"
-          />
-          <path
-            d="M220 8 L225 5 L230 8 L225 11 Z"
-            fill={glowColor}
-            opacity="0.5"
-          />
-          <path
-            d="M80 8 L83 6 L86 8 L83 10 Z"
-            fill={glowColor}
-            opacity="0.35"
-          />
-          <path
-            d="M314 8 L317 6 L320 8 L317 10 Z"
-            fill={glowColor}
-            opacity="0.35"
-          />
-          <circle cx="40" cy="8" r="1.2" fill={glowColor} opacity="0.6" />
-          <circle cx="60" cy="8" r="0.8" fill={glowColor} opacity="0.4" />
-          <circle cx="110" cy="8" r="1" fill={glowColor} opacity="0.5" />
-          <circle cx="140" cy="8" r="0.8" fill={glowColor} opacity="0.4" />
-          <circle cx="260" cy="8" r="0.8" fill={glowColor} opacity="0.4" />
-          <circle cx="290" cy="8" r="1" fill={glowColor} opacity="0.5" />
-          <circle cx="340" cy="8" r="0.8" fill={glowColor} opacity="0.4" />
-          <circle cx="360" cy="8" r="1.2" fill={glowColor} opacity="0.6" />
-          <path
-            d="M158 6 Q162 4 166 6 Q162 8 158 6 Z"
-            fill={glowColor}
-            opacity="0.3"
-          />
-          <path
-            d="M234 6 Q238 4 242 6 Q238 8 234 6 Z"
-            fill={glowColor}
-            opacity="0.3"
-          />
+          <circle cx="30" cy="8" r="3" fill={glowColor} opacity="0.9" />
+          <circle cx="30" cy="8" r="1.5" fill={color} opacity="0.6" />
+          <path d="M8 8 L5 5 L8 2 L11 5 Z" fill={glowColor} opacity="0.5" />
+          <path d="M52 8 L49 5 L52 2 L55 5 Z" fill={glowColor} opacity="0.5" />
         </svg>
+        <svg
+          viewBox="0 0 8 8"
+          fill="none"
+          className="absolute top-1/2 -translate-y-1/2"
+          style={{ left: "20%", height: 7 * scale, width: 7 * scale }}
+        >
+          <path d="M4 1 L2 4 L4 7 L6 4 Z" fill={glowColor} opacity="0.35" />
+        </svg>
+        <svg
+          viewBox="0 0 8 8"
+          fill="none"
+          className="absolute top-1/2 -translate-y-1/2"
+          style={{ right: "20%", height: 7 * scale, width: 7 * scale }}
+        >
+          <path d="M4 1 L2 4 L4 7 L6 4 Z" fill={glowColor} opacity="0.35" />
+        </svg>
+        <div
+          className="absolute top-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: "10%",
+            width: 2.4 * scale,
+            height: 2.4 * scale,
+            background: glowColor,
+            opacity: 0.6,
+          }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: "28%",
+            width: 2 * scale,
+            height: 2 * scale,
+            background: glowColor,
+            opacity: 0.5,
+          }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            right: "28%",
+            width: 2 * scale,
+            height: 2 * scale,
+            background: glowColor,
+            opacity: 0.5,
+          }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            right: "10%",
+            width: 2.4 * scale,
+            height: 2.4 * scale,
+            background: glowColor,
+            opacity: 0.6,
+          }}
+        />
       </div>
     );
   }
@@ -512,29 +510,22 @@ const OrnateBorderCompact: React.FC<OrnateBorderCompactProps> = ({
           width: "calc(100% - 36px)",
         }}
       >
-        <svg
-          viewBox="0 0 400 4"
-          fill="none"
-          preserveAspectRatio="none"
-          className="w-full h-full"
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-full"
           style={{
-            transform: position === "bottom" ? "scaleY(-1)" : undefined,
+            background: `linear-gradient(90deg, transparent, ${color}99 15%, ${color}99 43%, transparent 48%, transparent 52%, ${color}99 57%, ${color}99 85%, transparent)`,
+            height: Math.max(1, scale),
           }}
+        />
+        <svg
+          viewBox="0 0 24 8"
+          fill="none"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ width: 20 * scale, height: 8 * scale }}
         >
-          <path
-            d="M0 2 L400 2"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.8"
-            opacity="0.6"
-          />
-          <path
-            d="M20 0.8 L380 0.8"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.3"
-            opacity="0.2"
-          />
+          <circle cx="12" cy="4" r="1.5" fill={glowColor} opacity="0.7" />
+          <path d="M6 4 L8 2 L10 4 L8 6 Z" fill={glowColor} opacity="0.4" />
+          <path d="M14 4 L16 2 L18 4 L16 6 Z" fill={glowColor} opacity="0.4" />
         </svg>
       </div>
     );

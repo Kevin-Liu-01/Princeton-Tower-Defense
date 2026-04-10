@@ -15,6 +15,7 @@ import { ArsenalShowcase } from "./sections/ArsenalShowcase";
 import { BottomCTA } from "./sections/BottomCTA";
 import { EnemyBestiary } from "./sections/EnemyBestiary";
 import { GameplayShowcase } from "./sections/GameplayShowcase";
+import { HeroCinematic } from "./sections/HeroCinematic";
 import { HeroSection } from "./sections/HeroSection";
 import { MapSectionDivider } from "./sections/mapElements";
 
@@ -78,6 +79,12 @@ export function LandingPage({ onPlay }: LandingPageProps) {
 
       <SectionReveal scrollRoot={scrollRef}>
         <ArsenalShowcase />
+      </SectionReveal>
+
+      <MapSectionDivider />
+
+      <SectionReveal scrollRoot={scrollRef}>
+        <HeroCinematic />
       </SectionReveal>
 
       <MapSectionDivider />

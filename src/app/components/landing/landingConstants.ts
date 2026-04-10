@@ -10,8 +10,8 @@ export const LANDING_THEME = {
   accentDark: "#8a6420",
   accentDarkRgb: "138,100,32",
   accentRgb: "212,168,74",
-  bg: "rgb(12,8,4)",
-  bgRgb: "12,8,4",
+  bg: "rgb(32,24,14)",
+  bgRgb: "32,24,14",
   frameColor: "#b48c3c",
   frameGlow: "#d4a84a",
   princeton: "#F58025",
@@ -19,7 +19,6 @@ export const LANDING_THEME = {
 } as const;
 
 export const LANDING_BG_IMAGE = "/images/new/gameplay_grounds.png";
-export const DEFEND_REALM_BG_IMAGE = "/images/new/gameplay_missile2.png";
 
 export const LANDING_TAGLINE =
   "Defend the campus. Command heroes. Master the arcane.";
@@ -275,12 +274,5 @@ export const BATTLE_PREVIEW_SLIDES: BattlePreviewSlide[] = [
 // ─── All landing image URLs (for preloading) ─────────────────────────────────
 
 export function getLandingImageUrls(): string[] {
-  return [
-    ...HERO_SLIDESHOW_IMAGES,
-    DEFEND_REALM_BG_IMAGE,
-    ...GAMEPLAY_SHOWCASE.map((s) => s.src),
-    ...HERO_GALLERY.map((h) => h.image),
-    ...SPELL_GALLERY.map((s) => s.image),
-    ...BATTLE_PREVIEW_SLIDES.map((b) => b.src),
-  ];
+  return [...HERO_SLIDESHOW_IMAGES];
 }

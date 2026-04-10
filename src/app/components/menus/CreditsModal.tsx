@@ -281,14 +281,14 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => (
           <div className="space-y-3">
             <SectionLabel text="Developer" />
             <div className="flex items-center gap-4 p-4 rounded-xl bg-amber-950/30 border border-amber-800/30">
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-amber-900 flex-shrink-0"
+              <img
+                src="/images/kevin.png"
+                alt="Kevin Liu"
+                className="w-14 h-14 rounded-full object-cover flex-shrink-0"
                 style={{
-                  background: "linear-gradient(135deg, #fbbf24, #d97706)",
+                  border: "2px solid rgba(251,191,36,0.4)",
                 }}
-              >
-                KL
-              </div>
+              />
               <div className="min-w-0">
                 <div className="font-semibold text-amber-200 text-lg">
                   Kevin Liu

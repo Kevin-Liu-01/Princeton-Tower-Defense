@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React from "react";
 
 import { ENEMY_DATA } from "../../../constants/enemies";
@@ -7,7 +8,7 @@ import type { EnemyType, MapTheme } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { LANDING_THEME } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
-import { MapSectionHeader, MapSectionBg } from "./mapElements";
+import { MapSectionHeader } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
 
 const T = LANDING_THEME;
@@ -72,7 +73,7 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
     <div
       className="relative flex flex-col items-center gap-2 p-3 sm:p-4 flex-shrink-0 rounded-xl group transition-transform duration-300 hover:scale-[1.06]"
       style={{
-        background: `linear-gradient(170deg, ${data.color}10, rgba(8,6,4,0.95) 60%, ${isBoss ? "rgba(60,10,10,0.3)" : "rgba(8,6,4,0.95)"})`,
+        background: `linear-gradient(170deg, ${data.color}10, rgba(38,28,16,0.92) 60%, ${isBoss ? "rgba(60,18,18,0.4)" : "rgba(38,28,16,0.92)"})`,
         border: `1px solid ${data.color}${isBoss ? "35" : "18"}`,
         boxShadow: isBoss
           ? `0 0 20px ${data.color}12, inset 0 0 30px rgba(0,0,0,0.5)`
@@ -182,9 +183,31 @@ function MarqueeRow({
 export function EnemyBestiary() {
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      <MapSectionBg tint="rgba(80,15,15,0.06)" gridOpacity={0.03} />
-      <div className="absolute inset-0 landing-texture-dots pointer-events-none opacity-50" />
-      <div className="absolute inset-x-3 inset-y-2 sm:inset-x-5 sm:inset-y-3 lg:inset-x-8 lg:inset-y-4 pointer-events-none z-[1]">
+      <div className="absolute inset-0 pointer-events-none">
+        <Image
+          src="/images/new/gameplay_volcano.png"
+          alt=""
+          fill
+          sizes="100vw"
+          loading="lazy"
+          className="object-cover"
+          style={{
+            filter: "brightness(0.25) saturate(0.5) blur(1.5px)",
+            transform: "scale(1.05)",
+          }}
+        />
+      </div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            linear-gradient(180deg, rgba(${T.bgRgb},0.88) 0%, rgba(${T.bgRgb},0.3) 20%, rgba(${T.bgRgb},0.2) 50%, rgba(${T.bgRgb},0.3) 80%, rgba(${T.bgRgb},0.88) 100%),
+            radial-gradient(ellipse 80% 60% at 50% 50%, transparent 20%, rgba(${T.bgRgb},0.5) 100%)
+          `,
+        }}
+      />
+      <div className="absolute inset-0 landing-texture-dots pointer-events-none opacity-40" />
+      <div className="absolute inset-0 pointer-events-none z-[1]">
         <OrnateFrame
           className="w-full h-full"
           cornerSize={40}

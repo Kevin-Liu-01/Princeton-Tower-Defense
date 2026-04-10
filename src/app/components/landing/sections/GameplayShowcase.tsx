@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 
+import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { LANDING_THEME, GAMEPLAY_SHOWCASE } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader, MapSectionBg } from "./mapElements";
@@ -57,6 +58,7 @@ function RegionTile({
           alt={label}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          loading="lazy"
           className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div
@@ -71,7 +73,7 @@ function RegionTile({
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.6) 100%)",
+              "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.45) 100%)",
           }}
         />
         <div
@@ -87,7 +89,7 @@ function RegionTile({
           className="absolute bottom-0 inset-x-0 px-3 py-2.5 sm:px-4 sm:py-3"
           style={{
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
+              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
           }}
         >
           <h3
@@ -118,7 +120,17 @@ export function GameplayShowcase() {
 
   return (
     <section className="relative py-12 sm:py-16">
-      <MapSectionBg gridOpacity={0.035} />
+      <MapSectionBg />
+      <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none opacity-40" />
+      <div className="absolute inset-0 pointer-events-none z-[1]">
+        <OrnateFrame
+          className="w-full h-full"
+          cornerSize={40}
+          borderVariant="compact"
+        >
+          <div className="w-full h-full" />
+        </OrnateFrame>
+      </div>
       <div className="relative z-10">
         <SectionFlourish />
         <MapSectionHeader title="Battle Across 6 Regions" />

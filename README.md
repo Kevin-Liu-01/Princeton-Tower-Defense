@@ -245,6 +245,12 @@ A fully interactive world map with region nodes, star-gated progression, and a c
 
 A built-in map editor for designing and playing custom levels. Define paths, place tower slots, set wave compositions, and share creations.
 
+### Sandbox Mode
+
+An endless, procedurally themed wave arena for testing builds and experimenting with tower compositions. Sandbox starts with 10,000 paw points and generates waves infinitely, cycling through themed enemy packs (Dark Fantasy, Bug Swarm, Beast Horde, and more) with boss waves every 5 rounds and chaos waves every 10.
+
+<video src="public/videos/sandbox-console.mp4" autoplay loop muted playsinline></video>
+
 ---
 
 ## Scalability Risks and Known Limitations

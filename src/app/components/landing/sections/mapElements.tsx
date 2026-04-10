@@ -412,7 +412,7 @@ export function MapCartouche({ children }: { children: React.ReactNode }) {
   const borderInner = rgba(T.accentRgb, 0.06);
   const ornament = rgba(T.accentRgb, 0.28);
   const ornamentLine = rgba(T.accentRgb, 0.22);
-  const bg = rgba(T.accentDarkRgb, 0.05);
+  const bg = rgba(T.accentDarkRgb, 0.08);
 
   return (
     <div className="relative">
@@ -599,7 +599,6 @@ export function MapSectionHeader({
 
 export function MapSectionBg({
   tint,
-  gridOpacity = 0.04,
 }: {
   tint?: string;
   gridOpacity?: number;
@@ -609,11 +608,18 @@ export function MapSectionBg({
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `
-            linear-gradient(${rgba(T.accentRgb, gridOpacity)} 1px, transparent 1px),
-            linear-gradient(90deg, ${rgba(T.accentRgb, gridOpacity)} 1px, transparent 1px)
+          background: `
+            radial-gradient(ellipse 45% 40% at 20% 30%, ${rgba(T.accentDarkRgb, 0.1)}, transparent),
+            radial-gradient(ellipse 40% 50% at 80% 70%, ${rgba(T.accentDarkRgb, 0.08)}, transparent),
+            radial-gradient(ellipse 55% 35% at 50% 50%, ${rgba(T.accentDarkRgb, 0.05)}, transparent)
           `,
-          backgroundSize: "60px 60px",
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-60"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, ${rgba(T.accentRgb, 0.02)} 1px, transparent 0)`,
+          backgroundSize: "16px 16px",
         }}
       />
       {tint && (
@@ -890,7 +896,7 @@ export function BattleBackdrop({
       <div
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(ellipse 55% 45% at 50% 50%, transparent, rgba(12,8,4,0.92))`,
+          background: `radial-gradient(ellipse 55% 45% at 50% 50%, transparent, rgba(${T.bgRgb},0.92))`,
         }}
       />
     </div>

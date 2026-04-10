@@ -2767,7 +2767,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                 );
                               })}
 
-                              {/* Lvl 4 branch: Path A on top, Path B below */}
+                              {/* Lvl 4 branches */}
                               <div className="flex-1 min-w-0 flex flex-col gap-2.5">
                                 {(["A", "B"] as const).map((path) => {
                                   const pathDps = calculateDPS(
@@ -2818,7 +2818,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                               <span
                                                 className={`text-xs uppercase tracking-wider font-medium ${path === "A" ? "text-red-400" : "text-blue-400"}`}
                                               >
-                                                Path {path}
+                                                Lvl 4
                                               </span>
                                             </div>
                                             <div
@@ -2918,7 +2918,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                     <div
                                       className={`text-xs uppercase tracking-wider font-medium ${path === "A" ? "text-red-400" : "text-blue-400"}`}
                                     >
-                                      Path {path} • {pathLabel}
+                                      Lvl 4 • {pathLabel}
                                     </div>
                                     <h5
                                       className={`text-xl font-bold ${path === "A" ? "text-red-200" : "text-blue-200"}`}
