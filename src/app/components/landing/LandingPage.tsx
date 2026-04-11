@@ -17,7 +17,6 @@ import { EnemyBestiary } from "./sections/EnemyBestiary";
 import { GameplayShowcase } from "./sections/GameplayShowcase";
 import { HeroCinematic } from "./sections/HeroCinematic";
 import { HeroSection } from "./sections/HeroSection";
-import { MapSectionDivider } from "./sections/mapElements";
 
 const T = LANDING_THEME;
 
@@ -75,25 +74,17 @@ export function LandingPage({ onPlay }: LandingPageProps) {
         <GameplayShowcase />
       </SectionReveal>
 
-      <MapSectionDivider />
-
       <SectionReveal scrollRoot={scrollRef}>
         <ArsenalShowcase />
       </SectionReveal>
-
-      <MapSectionDivider />
 
       <SectionReveal scrollRoot={scrollRef}>
         <HeroCinematic />
       </SectionReveal>
 
-      <MapSectionDivider />
-
       <SectionReveal scrollRoot={scrollRef}>
         <EnemyBestiary />
       </SectionReveal>
-
-      <MapSectionDivider />
 
       <SectionReveal scrollRoot={scrollRef}>
         <BottomCTA onPlay={handlePlay} exiting={exiting} />

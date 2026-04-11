@@ -233,12 +233,7 @@ export function EnemyBestiary() {
 
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader
-          subtitle="100+ Creatures of Darkness"
-          title="The Bestiary"
-          subtitleColor="rgba(239,68,68,0.35)"
-          description="Undead horrors, elemental titans, and dark sorcerers — every region harbors creatures that grow more deadly as you advance"
-        />
+        <MapSectionHeader title="The Bestiary" />
 
         {/* Marquee rows */}
         <div className="relative space-y-5 sm:space-y-6 py-3">

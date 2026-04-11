@@ -16,27 +16,25 @@ interface BottomCTAProps {
 
 export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
   return (
-    <section className="relative flex flex-col items-center overflow-hidden">
-      {/* Video background — visible, not buried */}
-      <div className="absolute inset-0">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "brightness(0.85) saturate(1.05)" }}
-          src="/videos/sandbox.mp4"
-        />
-      </div>
+    <section className="relative overflow-hidden">
+      {/* Video — in flow, determines section height */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+        className="w-full block"
+        style={{ filter: "brightness(0.85) saturate(1.05)" }}
+        src="/videos/sandbox.mp4"
+      />
 
-      {/* Light vignette — just enough to ground text, not hide video */}
+      {/* Light vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.15) 22%, transparent 40%, transparent 65%, rgba(${T.bgRgb},0.2) 80%, rgba(${T.bgRgb},0.9) 100%),
+            linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.15) 18%, transparent 35%, transparent 70%, rgba(${T.bgRgb},0.2) 82%, rgba(${T.bgRgb},0.9) 100%),
             radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, rgba(${T.bgRgb},0.35) 100%)
           `,
         }}
@@ -53,10 +51,10 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         </OrnateFrame>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full">
+      {/* Overlaid content */}
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-between">
         {/* Top: Defend the Realm */}
-        <div className="pt-14 sm:pt-20 pb-6 flex flex-col items-center gap-4">
+        <div className="pt-10 sm:pt-16 flex flex-col items-center gap-4">
           <SectionFlourish />
           <MapCartouche>
             <div className="text-center px-4 sm:px-8 flex flex-col items-center">
@@ -69,21 +67,12 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
               >
                 Defend the Realm
               </h2>
-              {/* <p
-                className="text-xs sm:text-sm mt-3 tracking-[0.16em] uppercase font-semibold"
-                style={{ color: `rgba(${T.accentRgb},0.6)` }}
-              >
-                Command heroes. Build towers. Break the siege.
-              </p> */}
             </div>
           </MapCartouche>
         </div>
 
-        {/* Spacer so the video shows through the middle */}
-        <div className="h-48 sm:h-64 lg:h-80" />
-
         {/* Bottom: CTA + footer */}
-        <div className="pb-14 sm:pb-20 pt-6 flex flex-col items-center gap-6">
+        <div className="pb-10 sm:pb-16 pt-4 flex flex-col items-center gap-5">
           <div
             className="px-6 py-5 rounded-xl flex flex-col items-center gap-2"
             style={{

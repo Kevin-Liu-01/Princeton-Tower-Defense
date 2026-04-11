@@ -1,5 +1,4 @@
 "use client";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronLeft,
@@ -43,6 +42,45 @@ const TOWER_ORDER: TowerType[] = [
 const TOWER_VIS = 120;
 const TOWER_SCALE = 2.2;
 const TOWER_CANVAS = Math.round(TOWER_VIS * TOWER_SCALE);
+
+const T_CARD_W = 142;
+const T_VISIBLE_HALF = 2;
+const T_PAD = 20;
+const T_VP_W = (T_VISIBLE_HALF * 2 + 1) * T_CARD_W + T_PAD * 2;
+const T_VP_CX = T_VP_W / 2;
+const T_ITEM_W = TOWER_VIS + 14;
+const T_ITEM_H = TOWER_VIS + 90;
+const T_EASING = "cubic-bezier(0.4, 0, 0.15, 1)";
+
+function circularDiff(index: number, center: number, length: number): number {
+  const raw = (((index - center) % length) + length) % length;
+  return raw > length / 2 ? raw - length : raw;
+}
+
+function getTowerLabel(
+  type: TowerType,
+  tl: { level: number; upgrade?: "A" | "B" }
+): string {
+  const name =
+    tl.level < 4
+      ? TOWER_DATA[type].name
+      : TOWER_DATA[type].upgrades[tl.upgrade ?? "A"].name;
+  return `${name} · Lv.${tl.level}`;
+}
+
+const TOWER_BG_GRADIENT: Record<TowerType, string> = {
+  arch: "linear-gradient(170deg in oklch, oklch(0.35 0.08 250) 0%, oklch(0.14 0.02 250) 100%)",
+  cannon:
+    "linear-gradient(170deg in oklch, oklch(0.35 0.08 25) 0%, oklch(0.14 0.02 25) 100%)",
+  club: "linear-gradient(170deg in oklch, oklch(0.35 0.08 80) 0%, oklch(0.14 0.02 80) 100%)",
+  lab: "linear-gradient(170deg in oklch, oklch(0.35 0.08 95) 0%, oklch(0.14 0.02 95) 100%)",
+  library:
+    "linear-gradient(170deg in oklch, oklch(0.35 0.08 200) 0%, oklch(0.14 0.02 200) 100%)",
+  mortar:
+    "linear-gradient(170deg in oklch, oklch(0.35 0.08 55) 0%, oklch(0.14 0.02 55) 100%)",
+  station:
+    "linear-gradient(170deg in oklch, oklch(0.35 0.08 300) 0%, oklch(0.14 0.02 300) 100%)",
+};
 
 const HERO_TOWER_SPRITE_TWEAKS: Record<
   TowerType,
@@ -239,136 +277,6 @@ function ScrollColumn({
   );
 }
 
-function getTowerLabel(type: TowerType, tl: TowerLevel): string {
-  if (tl.level < 4) {
-    return `Lv.${tl.level}`;
-  }
-  return TOWER_DATA[type].upgrades[tl.upgrade ?? "A"].name;
-}
-
-function TowerCard({
-  type,
-  towerLevel,
-  levelIndex,
-  onNext,
-  onPrev,
-}: {
-  type: TowerType;
-  towerLevel: TowerLevel;
-  levelIndex: number;
-  onNext: () => void;
-  onPrev: () => void;
-}) {
-  const accent = TOWER_ACCENTS[type];
-  const label = getTowerLabel(type, towerLevel);
-  const glowIntensity = 10 + towerLevel.level * 8;
-  const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
-  const prevIdx = useRef(levelIndex);
-  const dir = levelIndex >= prevIdx.current ? 1 : -1;
-  useEffect(() => {
-    prevIdx.current = levelIndex;
-  }, [levelIndex]);
-
-  const spriteKey = `${type}-${towerLevel.level}-${towerLevel.upgrade ?? ""}`;
-
-  return (
-    <div className="flex flex-col items-center gap-0.5 px-1 sm:px-1.5 py-1.5">
-      <button
-        onClick={onNext}
-        className="cursor-pointer p-1 transition-all hover:opacity-100 opacity-50 hover:scale-110"
-        aria-label="Next level"
-      >
-        <ChevronUp size={14} style={{ color: accent }} />
-      </button>
-      <div
-        className="relative p-[3px] rounded-lg"
-        style={{
-          background: `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`,
-          boxShadow: `0 4px 14px rgba(0,0,0,0.5), 0 0 ${glowIntensity}px ${accent}25`,
-        }}
-      >
-        <div
-          className="relative flex items-center justify-center rounded overflow-hidden"
-          style={{
-            background: `linear-gradient(170deg, ${accent}15, rgba(6,6,10,0.88))`,
-            boxShadow: `inset 0 0 0 1px rgba(40,28,8,0.5), inset 0 0 8px rgba(0,0,0,0.5), inset 0 0 20px ${accent}08`,
-            height: TOWER_VIS + 16,
-            width: TOWER_VIS + 8,
-          }}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(ellipse 80% 50% at 50% 70%, ${accent}10, transparent 70%)`,
-            }}
-          />
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={spriteKey}
-              initial={{ y: dir * 16, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: dir * -16, opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              style={{
-                transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
-                transformOrigin: "50% 58%",
-              }}
-            >
-              <SpriteDisplay visualSize={TOWER_VIS} canvasScale={TOWER_SCALE}>
-                <TowerSprite
-                  type={type}
-                  size={TOWER_CANVAS}
-                  level={towerLevel.level}
-                  upgrade={towerLevel.upgrade}
-                />
-              </SpriteDisplay>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <FrameCorner className="top-[-2px] left-[-2px]" />
-        <FrameCorner className="top-[-2px] right-[-2px]" />
-        <FrameCorner className="bottom-[-2px] left-[-2px]" />
-        <FrameCorner className="bottom-[-2px] right-[-2px]" />
-        <div
-          className="absolute left-1/2 -translate-x-1/2 top-[1px] w-3 h-[2px] pointer-events-none z-10 rounded-full"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${accent}80, transparent)`,
-          }}
-        />
-        <div
-          className="absolute left-1/2 -translate-x-1/2 bottom-[1px] w-3 h-[2px] pointer-events-none z-10 rounded-full"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${accent}80, transparent)`,
-          }}
-        />
-      </div>
-      <button
-        onClick={onPrev}
-        className="cursor-pointer p-1 transition-all hover:opacity-100 opacity-50 hover:scale-110"
-        aria-label="Previous level"
-      >
-        <ChevronDown size={14} style={{ color: accent }} />
-      </button>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span
-          key={label}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center w-[88px] h-4 leading-4 truncate"
-          style={{
-            color: `${accent}c0`,
-            textShadow: `0 0 8px ${accent}40`,
-          }}
-        >
-          {label}
-        </motion.span>
-      </AnimatePresence>
-    </div>
-  );
-}
-
 function StatBadge({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 px-3 sm:px-5">
@@ -468,23 +376,7 @@ interface HeroSectionProps {
   onCredits: () => void;
 }
 
-const VISIBLE_LG = 5;
-const VISIBLE_SM = 3;
 const CAROUSEL_INTERVAL_MS = 3500;
-const CARD_WIDTH_SM = 108;
-const CARD_WIDTH_LG = 140;
-
-function useVisibleCount() {
-  const [count, setCount] = useState(VISIBLE_LG);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const update = () => setCount(mq.matches ? VISIBLE_LG : VISIBLE_SM);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return count;
-}
 
 export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
   const activeSlide = useCrossfade(
@@ -496,13 +388,10 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
     new Array(TOWER_ORDER.length).fill(0)
   );
 
-  const visibleCount = useVisibleCount();
   const [carouselStart, setCarouselStart] = useState(0);
-  const [carouselDir, setCarouselDir] = useState<1 | -1>(1);
   const autoTimer = useRef(0 as unknown as ReturnType<typeof setInterval>);
 
   const advanceCarousel = useCallback((dir: 1 | -1) => {
-    setCarouselDir(dir);
     setCarouselStart(
       (prev) => (prev + dir + TOWER_ORDER.length) % TOWER_ORDER.length
     );
@@ -523,11 +412,6 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       CAROUSEL_INTERVAL_MS
     );
   }, [advanceCarousel]);
-
-  const visibleTowers = Array.from({ length: visibleCount }, (_, i) => {
-    const idx = (carouselStart + i) % TOWER_ORDER.length;
-    return { type: TOWER_ORDER[idx], globalIdx: idx };
-  });
 
   useEffect(() => {
     const delays = [100, 300, 500, 700, 900, 1200];
@@ -651,14 +535,12 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             transition: "all 800ms ease-out",
           }}
         >
-          <motion.button
+          <button
             onClick={() => {
               advanceCarousel(-1);
               resetAutoRotate();
             }}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg cursor-pointer flex-shrink-0"
+            className="p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
             style={{
               background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
               border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
@@ -668,7 +550,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             aria-label="Previous towers"
           >
             <ChevronLeft size={18} />
-          </motion.button>
+          </button>
           <div
             className="relative rounded-xl p-[2px]"
             style={{
@@ -677,44 +559,138 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             }}
           >
             <div
-              className="relative rounded-[10px] px-2 sm:px-3 py-1.5"
+              className="relative rounded-[10px] overflow-hidden"
               style={{
                 background: "rgba(6,4,2,0.65)",
-                overflowX: "clip",
-                overflowY: "visible",
+                width: T_VP_W,
+                maxWidth: "80vw",
+                height: T_ITEM_H,
               }}
             >
-              <AnimatePresence initial={false} mode="wait">
-                <motion.div
-                  key={carouselStart}
-                  className="flex items-start justify-center"
-                  initial={{ x: carouselDir * 60, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: carouselDir * -60, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-                >
-                  {visibleTowers.map(({ type, globalIdx }) => (
-                    <TowerCard
-                      key={type}
-                      type={type}
-                      towerLevel={LEVEL_CYCLE[towerLevels[globalIdx]]}
-                      levelIndex={towerLevels[globalIdx]}
-                      onNext={() => cycleTower(globalIdx, 1)}
-                      onPrev={() => cycleTower(globalIdx, -1)}
-                    />
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+              {TOWER_ORDER.map((type, idx) => {
+                const diff = circularDiff(
+                  idx,
+                  carouselStart,
+                  TOWER_ORDER.length
+                );
+                const absDiff = Math.abs(diff);
+                const isCenter = diff === 0;
+                const isVisible = absDiff <= T_VISIBLE_HALF;
+                const accent = TOWER_ACCENTS[type];
+                const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
+                const tl = LEVEL_CYCLE[towerLevels[idx]];
+                const label = getTowerLabel(type, tl);
+                const x = T_VP_CX + diff * T_CARD_W - T_ITEM_W / 2;
+
+                return (
+                  <div
+                    key={type}
+                    className="absolute flex flex-col items-center"
+                    style={{
+                      left: 0,
+                      opacity: isVisible ? 1 : 0,
+                      pointerEvents: isVisible ? "auto" : "none",
+                      top: 6,
+                      transform: `translateX(${x}px)`,
+                      transition: `transform 0.4s ${T_EASING}, opacity 0.35s ease`,
+                      width: T_ITEM_W,
+                      zIndex: isCenter ? 2 : 1,
+                    }}
+                  >
+                    {/* Level up arrow */}
+                    <button
+                      onClick={() => cycleTower(idx, 1)}
+                      className="cursor-pointer p-0.5 transition-all hover:opacity-100 opacity-50 hover:scale-110"
+                      aria-label="Next level"
+                    >
+                      <ChevronUp size={14} style={{ color: accent }} />
+                    </button>
+
+                    {/* Tower card — click to navigate */}
+                    <button
+                      onClick={() => {
+                        if (!isCenter) {
+                          setCarouselStart(idx);
+                          resetAutoRotate();
+                        }
+                      }}
+                      className="cursor-pointer"
+                      style={{ cursor: isCenter ? "default" : "pointer" }}
+                    >
+                      <div
+                        className="relative p-[3px] rounded-lg"
+                        style={{
+                          background: `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`,
+                          boxShadow: isCenter
+                            ? `0 4px 14px rgba(0,0,0,0.5), 0 0 ${10 + tl.level * 8}px ${accent}25`
+                            : `0 2px 8px rgba(0,0,0,0.4)`,
+                        }}
+                      >
+                        <div
+                          className="relative flex items-center justify-center rounded overflow-hidden"
+                          style={{
+                            background: TOWER_BG_GRADIENT[type],
+                            boxShadow: `inset 0 0 0 1px ${accent}20, inset 0 0 12px rgba(0,0,0,0.4)`,
+                            height: TOWER_VIS + 16,
+                            width: TOWER_VIS + 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              transform: `translate(${tweak.x}px, ${tweak.y}px) scale(${tweak.spriteScale})`,
+                              transformOrigin: "50% 58%",
+                            }}
+                          >
+                            <SpriteDisplay
+                              visualSize={TOWER_VIS}
+                              canvasScale={TOWER_SCALE}
+                            >
+                              <TowerSprite
+                                type={type}
+                                size={TOWER_CANVAS}
+                                level={tl.level}
+                                upgrade={tl.upgrade}
+                              />
+                            </SpriteDisplay>
+                          </div>
+                        </div>
+                        <FrameCorner className="top-[-2px] left-[-2px]" />
+                        <FrameCorner className="top-[-2px] right-[-2px]" />
+                        <FrameCorner className="bottom-[-2px] left-[-2px]" />
+                        <FrameCorner className="bottom-[-2px] right-[-2px]" />
+                      </div>
+                    </button>
+
+                    {/* Level down arrow */}
+                    <button
+                      onClick={() => cycleTower(idx, -1)}
+                      className="cursor-pointer p-0.5 transition-all hover:opacity-100 opacity-50 hover:scale-110"
+                      aria-label="Previous level"
+                    >
+                      <ChevronDown size={14} style={{ color: accent }} />
+                    </button>
+
+                    {/* Level label */}
+                    <span
+                      className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center truncate max-w-[100px]"
+                      style={{
+                        color: `${accent}c0`,
+                        textShadow: `0 0 8px ${accent}40`,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <motion.button
+          <button
             onClick={() => {
               advanceCarousel(1);
               resetAutoRotate();
             }}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg cursor-pointer flex-shrink-0"
+            className="p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
             style={{
               background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
               border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
@@ -724,24 +700,23 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             aria-label="Next towers"
           >
             <ChevronRight size={18} />
-          </motion.button>
+          </button>
         </div>
 
         <div className="flex justify-center gap-1.5 -mt-1">
           {TOWER_ORDER.map((t, i) => {
-            const active = visibleTowers.some((v) => v.globalIdx === i);
+            const active = i === carouselStart;
             return (
-              <motion.div
+              <div
                 key={t}
-                className="rounded-full"
-                animate={{
-                  width: active ? 12 : 4,
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: active ? 14 : 4,
+                  height: 4,
                   background: active
                     ? `rgba(${T.accentRgb},0.5)`
                     : `rgba(${T.accentRgb},0.12)`,
                 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                style={{ height: 4 }}
               />
             );
           })}

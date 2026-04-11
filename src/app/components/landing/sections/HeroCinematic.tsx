@@ -26,26 +26,30 @@ const HERO_ORDER: HeroType[] = [
   "ivy",
 ];
 
-const CENTER_VIS = 200;
-const CENTER_SCALE = 2.4;
-const CENTER_CANVAS = Math.round(CENTER_VIS * CENTER_SCALE);
+const SPRITE_VIS = 160;
+const SPRITE_SCALE = 2.4;
+const SPRITE_CANVAS = Math.round(SPRITE_VIS * SPRITE_SCALE);
 
-const FLANK_VIS = 120;
-const FLANK_SCALE = 2.2;
-const FLANK_CANVAS = Math.round(FLANK_VIS * FLANK_SCALE);
-
-const FAR_VIS = Math.round(FLANK_VIS * 0.65);
-const FAR_CANVAS = Math.round(FAR_VIS * FLANK_SCALE);
-
-const SLOT_WIDTH = 180;
+const SLOT_W = 200;
+const VISIBLE_HALF = 2;
+const VP_W = (VISIBLE_HALF * 2 + 1) * SLOT_W;
+const VP_CX = VP_W / 2;
+const VP_H = 320;
 const AUTO_INTERVAL_MS = 4500;
+
+const EASING = "cubic-bezier(0.4, 0, 0.15, 1)";
+
+function circularDiff(index: number, center: number, length: number): number {
+  const raw = (((index - center) % length) + length) % length;
+  return raw > length / 2 ? raw - length : raw;
+}
 
 function OrganicBlob({ color, size }: { color: string; size: number }) {
   return (
     <svg
       viewBox="0 0 200 70"
       className="pointer-events-none"
-      style={{ width: size, height: size * 0.35, marginTop: -12 }}
+      style={{ width: size, height: size * 0.35, marginTop: -8 }}
       fill="none"
     >
       <ellipse
@@ -63,48 +67,6 @@ function OrganicBlob({ color, size }: { color: string; size: number }) {
   );
 }
 
-function HeroSlot({ type, offset }: { type: HeroType; offset: number }) {
-  const data = HERO_DATA[type];
-  const absOff = Math.abs(offset);
-  const isCenter = absOff < 0.5;
-  const isNear = absOff >= 0.5 && absOff < 1.5;
-
-  const vis = isCenter ? CENTER_VIS : isNear ? FLANK_VIS : FAR_VIS;
-  const canvas = isCenter ? CENTER_CANVAS : isNear ? FLANK_CANVAS : FAR_CANVAS;
-  const scale = isCenter ? CENTER_SCALE : FLANK_SCALE;
-  const opacity = isCenter ? 1 : isNear ? 0.55 : 0.3;
-
-  return (
-    <div
-      className="flex flex-col items-center flex-shrink-0 transition-opacity duration-500"
-      style={{ width: SLOT_WIDTH, opacity }}
-    >
-      <div className="relative">
-        {isCenter && (
-          <div
-            className="absolute inset-0 blur-3xl pointer-events-none scale-150"
-            style={{
-              background: `radial-gradient(circle, ${data.color}30, transparent 60%)`,
-            }}
-          />
-        )}
-        <SpriteDisplay visualSize={vis} canvasScale={scale}>
-          <HeroSprite type={type} size={canvas} animated={isCenter} />
-        </SpriteDisplay>
-      </div>
-      <OrganicBlob color={data.color} size={vis * 1.4} />
-      {!isCenter && (
-        <span
-          className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider -mt-1"
-          style={{ color: `${data.color}60` }}
-        >
-          {data.name}
-        </span>
-      )}
-    </div>
-  );
-}
-
 function useAutoRotate(cb: () => void, intervalMs: number, paused: boolean) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
@@ -112,7 +74,11 @@ function useAutoRotate(cb: () => void, intervalMs: number, paused: boolean) {
       return;
     }
     timer.current = setInterval(cb, intervalMs);
-    return () => clearInterval(timer.current);
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current);
+      }
+    };
   }, [cb, intervalMs, paused]);
 }
 
@@ -124,7 +90,9 @@ export function HeroCinematic() {
   const navigate = useCallback((d: 1 | -1) => {
     setActiveIdx((prev) => (prev + d + HERO_ORDER.length) % HERO_ORDER.length);
     setUserInteracted(true);
-    clearTimeout(pauseTimer.current);
+    if (pauseTimer.current) {
+      clearTimeout(pauseTimer.current);
+    }
     pauseTimer.current = setTimeout(() => setUserInteracted(false), 8000);
   }, []);
 
@@ -137,17 +105,11 @@ export function HeroCinematic() {
   const goTo = useCallback((idx: number) => {
     setActiveIdx(idx);
     setUserInteracted(true);
-    clearTimeout(pauseTimer.current);
+    if (pauseTimer.current) {
+      clearTimeout(pauseTimer.current);
+    }
     pauseTimer.current = setTimeout(() => setUserInteracted(false), 8000);
   }, []);
-
-  const len = HERO_ORDER.length;
-  const visibleSlots = 5;
-  const slots = Array.from({ length: visibleSlots }, (_, i) => {
-    const offset = i - Math.floor(visibleSlots / 2);
-    const heroIdx = (((activeIdx + offset) % len) + len) % len;
-    return { type: HERO_ORDER[heroIdx], offset };
-  });
 
   const centerData = HERO_DATA[HERO_ORDER[activeIdx]];
   const centerRole = HERO_ROLES[HERO_ORDER[activeIdx]];
@@ -193,45 +155,99 @@ export function HeroCinematic() {
 
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader
-          subtitle="9 Champions of the Realm"
-          title="The Heroes"
-        />
+        <MapSectionHeader title="The Heroes" />
 
-        {/* Carousel strip */}
-        <div className="relative mt-4">
+        {/* Carousel — absolute-positioned items, world-map style */}
+        <div className="relative mt-4 flex justify-center">
           {/* Edge fades */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+            className="absolute left-0 top-0 bottom-0 w-20 sm:w-40 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to right, rgba(${T.bgRgb},0.8), transparent)`,
+              background: `linear-gradient(to right, rgba(${T.bgRgb},0.9), transparent)`,
             }}
           />
           <div
-            className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+            className="absolute right-0 top-0 bottom-0 w-20 sm:w-40 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to left, rgba(${T.bgRgb},0.8), transparent)`,
+              background: `linear-gradient(to left, rgba(${T.bgRgb},0.9), transparent)`,
             }}
           />
 
           <div
-            className="flex items-end justify-center"
-            style={{
-              minHeight: 340,
-              transition: "none",
-            }}
+            className="relative overflow-hidden"
+            style={{ width: VP_W, maxWidth: "100%", height: VP_H }}
           >
-            {slots.map(({ type, offset }) => (
-              <div
-                key={`${activeIdx}-${offset}`}
-                className="transition-all duration-500 ease-out"
-                style={{
-                  transform: `scale(${Math.abs(offset) === 0 ? 1 : Math.abs(offset) === 1 ? 0.85 : 0.7})`,
-                }}
-              >
-                <HeroSlot type={type} offset={offset} />
-              </div>
-            ))}
+            {HERO_ORDER.map((heroType, idx) => {
+              const diff = circularDiff(idx, activeIdx, HERO_ORDER.length);
+              const absDiff = Math.abs(diff);
+              const isCenter = diff === 0;
+              const isVisible = absDiff <= VISIBLE_HALF;
+
+              const scale = isCenter ? 1.15 : absDiff === 1 ? 0.8 : 0.6;
+              const x = VP_CX + diff * SLOT_W - SPRITE_VIS / 2;
+              const y = isCenter
+                ? VP_H - SPRITE_VIS - 90
+                : VP_H - SPRITE_VIS * scale - 50;
+              const opacity = isCenter
+                ? 1
+                : absDiff === 1
+                  ? 0.55
+                  : isVisible
+                    ? 0.3
+                    : 0;
+              const heroData = HERO_DATA[heroType];
+
+              return (
+                <button
+                  key={heroType}
+                  onClick={() => {
+                    if (!isCenter) {
+                      goTo(idx);
+                    }
+                  }}
+                  className="absolute flex flex-col items-center"
+                  style={{
+                    cursor: isCenter ? "default" : "pointer",
+                    left: 0,
+                    opacity,
+                    pointerEvents: isVisible ? "auto" : "none",
+                    top: 0,
+                    transform: `translate(${x}px, ${y}px) scale(${scale})`,
+                    transition: `transform 0.4s ${EASING}, opacity 0.35s ease`,
+                    width: SPRITE_VIS,
+                    zIndex: isCenter ? 3 : absDiff === 1 ? 2 : 1,
+                  }}
+                >
+                  {isCenter && (
+                    <div
+                      className="absolute inset-0 blur-3xl pointer-events-none scale-150"
+                      style={{
+                        background: `radial-gradient(circle, ${heroData.color}30, transparent 60%)`,
+                      }}
+                    />
+                  )}
+                  <SpriteDisplay
+                    visualSize={SPRITE_VIS}
+                    canvasScale={SPRITE_SCALE}
+                  >
+                    <HeroSprite
+                      type={heroType}
+                      size={SPRITE_CANVAS}
+                      animated={isCenter}
+                    />
+                  </SpriteDisplay>
+                  <OrganicBlob color={heroData.color} size={SPRITE_VIS * 1.3} />
+                  {!isCenter && isVisible && (
+                    <span
+                      className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider -mt-1"
+                      style={{ color: `${heroData.color}60` }}
+                    >
+                      {heroData.name}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Arrows */}

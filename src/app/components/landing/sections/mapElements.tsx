@@ -522,40 +522,9 @@ export function ParchmentOverlay() {
 
 // ─── Shared Section Header (cartographic style) ──────────────────────────────
 
-export function MapSectionHeader({
-  subtitle,
-  title,
-  description,
-  subtitleColor,
-}: {
-  subtitle?: string;
-  title: string;
-  description?: string;
-  subtitleColor?: string;
-}) {
-  const sc = subtitleColor ?? rgba(T.accentRgb, 0.35);
+export function MapSectionHeader({ title }: { title: string }) {
   return (
     <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
-      <div className="flex items-center justify-center gap-3 mb-3">
-        <div
-          className="w-6 sm:w-10 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${rgba(T.accentRgb, 0.2)})`,
-          }}
-        />
-        <p
-          className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase"
-          style={{ color: sc }}
-        >
-          {subtitle}
-        </p>
-        <div
-          className="w-6 sm:w-10 h-px"
-          style={{
-            background: `linear-gradient(90deg, ${rgba(T.accentRgb, 0.2)}, transparent)`,
-          }}
-        />
-      </div>
       <h2
         className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
         style={{
@@ -583,14 +552,6 @@ export function MapSectionHeader({
           }}
         />
       </div>
-      {description && (
-        <p
-          className="text-[10px] sm:text-xs mt-4 max-w-lg mx-auto leading-relaxed italic"
-          style={{ color: rgba(T.accentRgb, 0.22) }}
-        >
-          {description}
-        </p>
-      )}
     </div>
   );
 }
