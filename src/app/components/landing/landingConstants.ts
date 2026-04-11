@@ -11,12 +11,17 @@ export const LANDING_THEME = {
   accentDarkRgb: "138,100,32",
   accentRgb: "212,168,74",
   bg: "rgb(32,24,14)",
+  bgOklch: "oklch(0.18 0.02 70)",
   bgRgb: "32,24,14",
   frameColor: "#b48c3c",
   frameGlow: "#d4a84a",
   princeton: "#F58025",
   princetonRgb: "245,128,37",
 } as const;
+
+export function oklchBg(alpha: number): string {
+  return `oklch(0.18 0.02 70 / ${alpha})`;
+}
 
 export const LANDING_BG_IMAGE = "/images/new/gameplay_grounds.png";
 

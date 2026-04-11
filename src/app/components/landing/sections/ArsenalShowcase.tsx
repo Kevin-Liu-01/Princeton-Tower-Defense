@@ -10,7 +10,7 @@ import {
 import { TowerSprite } from "../../../sprites/towers";
 import type { TowerType } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
-import { LANDING_THEME } from "../landingConstants";
+import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
@@ -447,8 +447,8 @@ export function ArsenalShowcase() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.35) 20%, rgba(${T.bgRgb},0.25) 50%, rgba(${T.bgRgb},0.35) 80%, rgba(${T.bgRgb},0.85) 100%),
-            radial-gradient(ellipse 80% 60% at 50% 50%, transparent 20%, rgba(${T.bgRgb},0.5) 100%)
+            linear-gradient(180deg in oklch, ${oklchBg(0.85)} 0%, ${oklchBg(0.35)} 20%, ${oklchBg(0.25)} 50%, ${oklchBg(0.35)} 80%, ${oklchBg(0.85)} 100%),
+            radial-gradient(in oklch, transparent 20%, ${oklchBg(0.5)} 100%)
           `,
         }}
       />

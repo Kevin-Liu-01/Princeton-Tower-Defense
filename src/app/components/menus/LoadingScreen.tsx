@@ -731,7 +731,7 @@ export function LoadingScreen({
   ]);
 
   useEffect(() => {
-    const delays = [80, 320, 560, 820, 1100];
+    const delays = [40, 150, 280, 420, 560];
     const timers = delays.map((delay, i) =>
       setTimeout(() => {
         setStageVisible((prev) => {

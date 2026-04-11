@@ -21,6 +21,7 @@ import {
   CROSSFADE_TRANSITION_MS,
   LANDING_EMBERS,
   LANDING_EMBER_COLORS,
+  oklchBg,
 } from "../landingConstants";
 import type { EmberConfig } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
@@ -172,7 +173,7 @@ function LevelCard({
       style={{
         aspectRatio: "21/9",
         background:
-          "linear-gradient(160deg, #d4aa50 0%, #8b6914 25%, #dbb860 50%, #6b4f12 75%, #c9a048 100%)",
+          "linear-gradient(160deg in oklch, oklch(0.76 0.12 85) 0%, oklch(0.48 0.1 80) 25%, oklch(0.8 0.13 88) 50%, oklch(0.4 0.08 78) 75%, oklch(0.73 0.11 83) 100%)",
         boxShadow:
           "0 2px 8px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,220,120,0.3), 0 0 0 1px rgba(40,28,8,0.8)",
       }}
@@ -465,13 +466,13 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `linear-gradient(180deg, rgba(${T.bgRgb},0.7) 0%, rgba(${T.bgRgb},0.1) 30%, rgba(${T.bgRgb},0.1) 70%, rgba(${T.bgRgb},0.95) 100%)`,
+          background: `linear-gradient(180deg in oklch, ${oklchBg(0.7)} 0%, ${oklchBg(0.1)} 30%, ${oklchBg(0.1)} 70%, ${oklchBg(0.95)} 100%)`,
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse 80% 60% at 50% 45%, transparent 0%, rgba(${T.bgRgb},0.35) 60%, rgba(${T.bgRgb},0.85) 100%)`,
+          background: `radial-gradient(ellipse 80% 60% at 50% 45% in oklch, transparent 0%, ${oklchBg(0.35)} 60%, ${oklchBg(0.85)} 100%)`,
         }}
       />
 
@@ -554,7 +555,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           <div
             className="relative rounded-xl p-[2px]"
             style={{
-              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.4), rgba(${T.accentDarkRgb},0.12), rgba(${T.accentDarkRgb},0.4))`,
+              background: `linear-gradient(160deg in oklch, oklch(0.45 0.08 75 / 0.4), oklch(0.45 0.08 75 / 0.12), oklch(0.45 0.08 75 / 0.4))`,
               boxShadow: `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.1)`,
             }}
           >
@@ -620,7 +621,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                       <div
                         className="relative p-[3px] rounded-lg"
                         style={{
-                          background: `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`,
+                          background: `linear-gradient(160deg in oklch, oklch(0.76 0.12 85), color-mix(in oklch, ${accent} 38%, transparent), oklch(0.48 0.1 80), color-mix(in oklch, ${accent} 32%, transparent), oklch(0.76 0.12 85))`,
                           boxShadow: isCenter
                             ? `0 4px 14px rgba(0,0,0,0.5), 0 0 ${10 + tl.level * 8}px ${accent}25`
                             : `0 2px 8px rgba(0,0,0,0.4)`,

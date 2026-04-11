@@ -6,7 +6,7 @@ import { ENEMY_DATA } from "../../../constants/enemies";
 import { EnemySprite } from "../../../sprites/enemies";
 import type { EnemyType, MapTheme } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
-import { LANDING_THEME } from "../landingConstants";
+import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
@@ -201,8 +201,8 @@ export function EnemyBestiary() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(180deg, rgba(${T.bgRgb},0.88) 0%, rgba(${T.bgRgb},0.3) 20%, rgba(${T.bgRgb},0.2) 50%, rgba(${T.bgRgb},0.3) 80%, rgba(${T.bgRgb},0.88) 100%),
-            radial-gradient(ellipse 80% 60% at 50% 50%, transparent 20%, rgba(${T.bgRgb},0.5) 100%)
+            linear-gradient(180deg in oklch, ${oklchBg(0.88)} 0%, ${oklchBg(0.3)} 20%, ${oklchBg(0.2)} 50%, ${oklchBg(0.3)} 80%, ${oklchBg(0.88)} 100%),
+            radial-gradient(in oklch, transparent 20%, ${oklchBg(0.5)} 100%)
           `,
         }}
       />
@@ -221,13 +221,13 @@ export function EnemyBestiary() {
       <div
         className="absolute top-0 inset-x-0 h-32 pointer-events-none"
         style={{
-          background: `linear-gradient(to bottom, ${T.bg}, transparent)`,
+          background: `linear-gradient(to bottom in oklch, ${T.bgOklch}, transparent)`,
         }}
       />
       <div
         className="absolute bottom-0 inset-x-0 h-32 pointer-events-none"
         style={{
-          background: `linear-gradient(to top, ${T.bg}, transparent)`,
+          background: `linear-gradient(to top in oklch, ${T.bgOklch}, transparent)`,
         }}
       />
 
@@ -241,13 +241,13 @@ export function EnemyBestiary() {
           <div
             className="absolute left-0 top-0 bottom-0 w-28 sm:w-44 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to right, ${T.bg}, transparent)`,
+              background: `linear-gradient(to right in oklch, ${T.bgOklch}, transparent)`,
             }}
           />
           <div
             className="absolute right-0 top-0 bottom-0 w-28 sm:w-44 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to left, ${T.bg}, transparent)`,
+              background: `linear-gradient(to left in oklch, ${T.bgOklch}, transparent)`,
             }}
           />
 

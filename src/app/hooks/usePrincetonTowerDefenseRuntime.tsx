@@ -205,7 +205,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // ── Loading screens ──
   const worldMapAssetUrls = useMemo(() => getWorldMapAssets(), []);
-  const worldMapPreload = usePreloadGate(worldMapAssetUrls, 2400);
+  const worldMapPreload = usePreloadGate(worldMapAssetUrls, 1400);
 
   const getBattleUrlsForMap = useCallback(
     () => getBattleAssets(selectedMap),
@@ -214,7 +214,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const [sceneTransitioning, setSceneTransitioning] = useState(false);
   const battleLoading = useBattleLoadingGate(
     getBattleUrlsForMap,
-    2600,
+    1400,
     useCallback(() => {
       setGameState("playing");
     }, [setGameState])
@@ -2228,7 +2228,7 @@ export function usePrincetonTowerDefenseRuntime() {
         handleTutorialHeroChange={handleTutorialHeroChange}
         handleTutorialSpellToggle={handleTutorialSpellToggle}
       />
-      <LoadingOverlay visible={battleLoading.active} fadeDurationMs={600}>
+      <LoadingOverlay visible={battleLoading.active} fadeDurationMs={350}>
         <LoadingScreen
           progress={battleLoading.progress}
           loaded={battleLoading.loaded}

@@ -226,7 +226,7 @@ export function useBattleLoadingGate(
 
   const visualProgress = useSyntheticProgress(active, minDisplayMs);
 
-  const UI_GRACE_MS = 900;
+  const UI_GRACE_MS = 400;
 
   const trigger = useCallback(() => {
     const session = ++sessionRef.current;

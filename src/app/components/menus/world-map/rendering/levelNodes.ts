@@ -901,59 +901,347 @@ export function drawLevelNodes({
         ctx.globalAlpha = 1;
 
         if (level.kind === "sandbox") {
-          // Sandbox icon: sandcastle turret with flag
-          const s = 1;
-          // Base mound
-          ctx.fillStyle = "#D4A84B";
+          // Sandbox icon: ornate sandcastle with turrets, gate, and flag
+          // Sand base mound — organic shape with gradient
+          const baseGrad = ctx.createRadialGradient(0, 8, 1, 0, 9, 12);
+          baseGrad.addColorStop(0, "#DCBA60");
+          baseGrad.addColorStop(0.6, "#C89840");
+          baseGrad.addColorStop(1, "#A07028");
+          ctx.fillStyle = baseGrad;
           ctx.beginPath();
-          ctx.ellipse(0, 7 * s, 11 * s, 4 * s, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 8, 12, 4.5, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Castle body
-          const bodyGrad = ctx.createLinearGradient(
-            -7 * s,
-            -6 * s,
-            7 * s,
-            6 * s
-          );
-          bodyGrad.addColorStop(0, "#E8C45A");
-          bodyGrad.addColorStop(1, "#C49030");
-          ctx.fillStyle = bodyGrad;
-          ctx.fillRect(-7 * s, -4 * s, 14 * s, 10 * s);
-          // Crenellations
-          ctx.fillStyle = "#D4A84B";
-          for (let i = -3; i <= 3; i++) {
-            ctx.fillRect(i * 3.2 * s - 1.2 * s, -7 * s, 2.4 * s, 3 * s);
+          // Base shadow
+          ctx.fillStyle = "rgba(80,50,15,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(0, 9.5, 10, 2.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Left side turret
+          const ltGrad = ctx.createLinearGradient(-10, -3, -5, 5);
+          ltGrad.addColorStop(0, "#E8C85A");
+          ltGrad.addColorStop(0.5, "#D4AA40");
+          ltGrad.addColorStop(1, "#B88828");
+          ctx.fillStyle = ltGrad;
+          ctx.beginPath();
+          ctx.moveTo(-10, 5);
+          ctx.lineTo(-10, -2);
+          ctx.lineTo(-5, -2);
+          ctx.lineTo(-5, 5);
+          ctx.closePath();
+          ctx.fill();
+          // Left turret shadow side
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.fillRect(-10, -2, 2.5, 7);
+          // Left turret crenellations
+          ctx.fillStyle = "#D4AA40";
+          ctx.fillRect(-10.5, -4.5, 2, 2.5);
+          ctx.fillRect(-7.5, -4.5, 2, 2.5);
+          ctx.fillStyle = "#C89838";
+          ctx.fillRect(-10.5, -4.5, 2, 1);
+          ctx.fillRect(-7.5, -4.5, 2, 1);
+          // Left turret window
+          const lwGrad = ctx.createRadialGradient(-7.5, 1, 0, -7.5, 1, 1.5);
+          lwGrad.addColorStop(0, "#FFE870");
+          lwGrad.addColorStop(0.5, "#C88020");
+          lwGrad.addColorStop(1, "#6B4010");
+          ctx.fillStyle = lwGrad;
+          ctx.beginPath();
+          ctx.arc(-7.5, 0.5, 1.2, Math.PI, 0);
+          ctx.lineTo(-6.3, 2.5);
+          ctx.lineTo(-8.7, 2.5);
+          ctx.closePath();
+          ctx.fill();
+
+          // Right side turret
+          const rtGrad = ctx.createLinearGradient(5, -3, 10, 5);
+          rtGrad.addColorStop(0, "#ECD060");
+          rtGrad.addColorStop(0.5, "#D8B048");
+          rtGrad.addColorStop(1, "#BC8C2C");
+          ctx.fillStyle = rtGrad;
+          ctx.beginPath();
+          ctx.moveTo(5, 5);
+          ctx.lineTo(5, -2);
+          ctx.lineTo(10, -2);
+          ctx.lineTo(10, 5);
+          ctx.closePath();
+          ctx.fill();
+          // Right turret highlight
+          ctx.fillStyle = "rgba(255,240,180,0.2)";
+          ctx.fillRect(7.5, -2, 2.5, 7);
+          // Right turret crenellations
+          ctx.fillStyle = "#D8B048";
+          ctx.fillRect(5.5, -4.5, 2, 2.5);
+          ctx.fillRect(8.5, -4.5, 2, 2.5);
+          ctx.fillStyle = "#CCA040";
+          ctx.fillRect(5.5, -4.5, 2, 1);
+          ctx.fillRect(8.5, -4.5, 2, 1);
+          // Right turret window
+          const rwGrad = ctx.createRadialGradient(7.5, 1, 0, 7.5, 1, 1.5);
+          rwGrad.addColorStop(0, "#FFE870");
+          rwGrad.addColorStop(0.5, "#C88020");
+          rwGrad.addColorStop(1, "#6B4010");
+          ctx.fillStyle = rwGrad;
+          ctx.beginPath();
+          ctx.arc(7.5, 0.5, 1.2, Math.PI, 0);
+          ctx.lineTo(8.7, 2.5);
+          ctx.lineTo(6.3, 2.5);
+          ctx.closePath();
+          ctx.fill();
+
+          // Central keep — main tower body
+          const keepGrad = ctx.createLinearGradient(-5, -6, 5, 6);
+          keepGrad.addColorStop(0, "#F0D468");
+          keepGrad.addColorStop(0.3, "#E4C050");
+          keepGrad.addColorStop(0.7, "#D0A438");
+          keepGrad.addColorStop(1, "#B88828");
+          ctx.fillStyle = keepGrad;
+          ctx.beginPath();
+          ctx.moveTo(-5, 6);
+          ctx.lineTo(-5, -5);
+          ctx.lineTo(5, -5);
+          ctx.lineTo(5, 6);
+          ctx.closePath();
+          ctx.fill();
+          // Keep shadow side (left)
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          ctx.fillRect(-5, -5, 3, 11);
+          // Keep highlight side (right)
+          ctx.fillStyle = "rgba(255,240,190,0.15)";
+          ctx.fillRect(2, -5, 3, 11);
+
+          // Brick/stone texture lines on keep
+          ctx.strokeStyle = "rgba(120,80,30,0.2)";
+          ctx.lineWidth = 0.4;
+          for (let row = 0; row < 5; row++) {
+            const ry = -4 + row * 2.2;
+            ctx.beginPath();
+            ctx.moveTo(-4.5, ry);
+            ctx.lineTo(4.5, ry);
+            ctx.stroke();
+            const off = row % 2 === 0 ? 0 : 2.2;
+            for (let col = 0; col < 4; col++) {
+              const cx = -4.5 + off + col * 3;
+              if (cx > -5 && cx < 5) {
+                ctx.beginPath();
+                ctx.moveTo(cx, ry);
+                ctx.lineTo(cx, ry + 2.2);
+                ctx.stroke();
+              }
+            }
           }
-          // Door arch
-          ctx.fillStyle = "#6B4020";
+
+          // Central crenellations (battlements) — 5 merlons with depth
+          const merlonPositions = [-4.2, -2.1, 0, 2.1, 4.2];
+          for (const mx of merlonPositions) {
+            // Merlon shadow
+            ctx.fillStyle = "#B08830";
+            ctx.fillRect(mx - 1.3, -8, 2.6, 3);
+            // Merlon body
+            const mGrad = ctx.createLinearGradient(mx - 1.3, -8, mx + 1.3, -5);
+            mGrad.addColorStop(0, "#E8C858");
+            mGrad.addColorStop(1, "#D0A840");
+            ctx.fillStyle = mGrad;
+            ctx.fillRect(mx - 1.2, -8, 2.4, 3);
+            // Merlon top highlight
+            ctx.fillStyle = "rgba(255,240,180,0.4)";
+            ctx.fillRect(mx - 1.2, -8, 2.4, 0.6);
+          }
+
+          // Gate — arched doorway with portcullis
+          ctx.fillStyle = "#5A3018";
           ctx.beginPath();
-          ctx.arc(0, 4 * s, 2.5 * s, Math.PI, 0);
-          ctx.lineTo(2.5 * s, 6 * s);
-          ctx.lineTo(-2.5 * s, 6 * s);
+          ctx.arc(0, 3, 2.8, Math.PI, 0);
+          ctx.lineTo(2.8, 6);
+          ctx.lineTo(-2.8, 6);
           ctx.closePath();
           ctx.fill();
-          // Flag
+          // Gate interior glow
+          const gateGlow = ctx.createRadialGradient(0, 3, 0, 0, 4, 3);
+          gateGlow.addColorStop(0, "rgba(255,200,80,0.35)");
+          gateGlow.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = gateGlow;
+          ctx.beginPath();
+          ctx.arc(0, 3, 2.5, Math.PI, 0);
+          ctx.lineTo(2.5, 6);
+          ctx.lineTo(-2.5, 6);
+          ctx.closePath();
+          ctx.fill();
+          // Portcullis bars
+          ctx.strokeStyle = "rgba(90,50,20,0.6)";
+          ctx.lineWidth = 0.4;
+          for (let px = -2; px <= 2; px += 1) {
+            ctx.beginPath();
+            ctx.moveTo(px, 0.8);
+            ctx.lineTo(px, 6);
+            ctx.stroke();
+          }
+          ctx.beginPath();
+          ctx.moveTo(-2.5, 2.5);
+          ctx.lineTo(2.5, 2.5);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-2.5, 4.5);
+          ctx.lineTo(2.5, 4.5);
+          ctx.stroke();
+          // Gate arch outline
+          ctx.strokeStyle = "#8A6030";
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.arc(0, 3, 2.8, Math.PI, 0);
+          ctx.stroke();
+          // Keystone at top of arch
+          ctx.fillStyle = "#DCC060";
+          ctx.beginPath();
+          ctx.moveTo(-1, 0.2);
+          ctx.lineTo(0, -0.4);
+          ctx.lineTo(1, 0.2);
+          ctx.lineTo(0.6, 1);
+          ctx.lineTo(-0.6, 1);
+          ctx.closePath();
+          ctx.fill();
+
+          // Wall connecting turrets to keep
+          ctx.fillStyle = "rgba(200,160,60,0.3)";
+          ctx.fillRect(-10, 2, 5, 3);
+          ctx.fillRect(5, 2, 5, 3);
+
+          // Sand grain particles scattered around base
+          const grains = [
+            [-8, 10, 0.6],
+            [-5, 11, 0.5],
+            [6, 10.5, 0.55],
+            [9, 9, 0.45],
+            [-11, 8, 0.4],
+            [3, 11, 0.5],
+            [-3, 11.5, 0.4],
+            [11, 7, 0.35],
+            [-9, 11, 0.35],
+            [7, 11, 0.4],
+            [-1, 12, 0.35],
+            [5, 12, 0.3],
+          ] as const;
+          for (const [gx, gy, gr] of grains) {
+            ctx.fillStyle = "rgba(200,160,60,0.5)";
+            ctx.beginPath();
+            ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Overall shadow at keep base
+          const baseShadow = ctx.createLinearGradient(0, 4, 0, 7);
+          baseShadow.addColorStop(0, "rgba(0,0,0,0)");
+          baseShadow.addColorStop(1, "rgba(0,0,0,0.15)");
+          ctx.fillStyle = baseShadow;
+          ctx.fillRect(-5, 4, 10, 3);
+
+          // Outer edge outlines for keep and turrets
+          ctx.strokeStyle = "rgba(140,90,30,0.35)";
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(-5, -5, 10, 11);
+          ctx.strokeRect(-10, -2, 5, 7);
+          ctx.strokeRect(5, -2, 5, 7);
+
+          // Flag on central tower
           const wave = Math.sin(time * 3.5) * 1.5;
-          ctx.fillStyle = "#8B5020";
-          ctx.fillRect(-0.5 * s, -12 * s, 1 * s, 6 * s);
-          ctx.fillStyle = "#FF6830";
+          const wave2 = Math.sin(time * 3.5 + 1) * 1;
+          // Flag pole
+          const fpGrad = ctx.createLinearGradient(-0.8, 0, 1.2, 0);
+          fpGrad.addColorStop(0, "#6A4018");
+          fpGrad.addColorStop(0.4, "#A87840");
+          fpGrad.addColorStop(0.6, "#C08850");
+          fpGrad.addColorStop(1, "#6A4018");
+          ctx.fillStyle = fpGrad;
+          ctx.fillRect(-0.5, -14, 1.5, 6.5);
+          // Flag pole finial — golden orb
+          ctx.fillStyle = "#FFD700";
           ctx.beginPath();
-          ctx.moveTo(0.5 * s, -12 * s);
-          ctx.quadraticCurveTo(
-            4 * s,
-            -11 * s + wave,
-            7 * s,
-            -11.5 * s + wave * 0.7
-          );
-          ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
-          ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
+          ctx.arc(0.25, -14.5, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FFF0A0";
+          ctx.beginPath();
+          ctx.arc(-0.1, -15, 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#B89010";
+          ctx.lineWidth = 0.4;
+          ctx.beginPath();
+          ctx.arc(0.25, -14.5, 1.4, 0, Math.PI * 2);
+          ctx.stroke();
+          // Flag banner — swallowtail
+          ctx.fillStyle = "#E04820";
+          ctx.beginPath();
+          ctx.moveTo(1, -14);
+          ctx.quadraticCurveTo(4, -13.5 + wave * 0.4, 8, -13.5 + wave2 * 0.6);
+          ctx.lineTo(7, -11.5 + wave2 * 0.5);
+          ctx.lineTo(8, -9.5 + wave2 * 0.6);
+          ctx.quadraticCurveTo(4, -10 + wave * 0.4, 1, -10);
           ctx.closePath();
           ctx.fill();
-          // Star on flag
-          ctx.fillStyle = "#FFE870";
+          // Flag highlight stripe
+          ctx.fillStyle = "rgba(255,180,80,0.35)";
           ctx.beginPath();
-          ctx.arc(3.5 * s, -10 * s + wave * 0.5, 1.2 * s, 0, Math.PI * 2);
+          ctx.moveTo(1, -13.8);
+          ctx.quadraticCurveTo(4, -13.3 + wave * 0.3, 7, -13.2 + wave2 * 0.4);
+          ctx.lineTo(7, -12.5 + wave2 * 0.4);
+          ctx.quadraticCurveTo(4, -12.6 + wave * 0.3, 1, -12.8);
+          ctx.closePath();
           ctx.fill();
+          // Flag dark stripe
+          ctx.fillStyle = "rgba(120,20,0,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(1, -11);
+          ctx.quadraticCurveTo(4, -10.8 + wave * 0.3, 7.5, -10.5 + wave2 * 0.4);
+          ctx.lineTo(7.8, -9.8 + wave2 * 0.5);
+          ctx.quadraticCurveTo(4, -10.2 + wave * 0.3, 1, -10.2);
+          ctx.closePath();
+          ctx.fill();
+          // Flag outline
+          ctx.strokeStyle = "rgba(0,0,0,0.3)";
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(1, -14);
+          ctx.quadraticCurveTo(4, -13.5 + wave * 0.4, 8, -13.5 + wave2 * 0.6);
+          ctx.lineTo(7, -11.5 + wave2 * 0.5);
+          ctx.lineTo(8, -9.5 + wave2 * 0.6);
+          ctx.quadraticCurveTo(4, -10 + wave * 0.4, 1, -10);
+          ctx.closePath();
+          ctx.stroke();
+          // Star emblem on flag
+          ctx.fillStyle = "#FFE060";
+          ctx.globalAlpha = 0.9;
+          const sx = 4.5;
+          const sy = -12 + wave * 0.3;
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const a = (i * Math.PI) / 5 - Math.PI / 2;
+            const r = i % 2 === 0 ? 1.5 : 0.6;
+            const spx = sx + Math.cos(a) * r;
+            const spy = sy + Math.sin(a) * r;
+            if (i === 0) {
+              ctx.moveTo(spx, spy);
+            } else {
+              ctx.lineTo(spx, spy);
+            }
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Sunlit rim highlight on turret tops
+          ctx.strokeStyle = "rgba(255,240,180,0.3)";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(-10, -2);
+          ctx.lineTo(-5, -2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(5, -2);
+          ctx.lineTo(10, -2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-5, -5);
+          ctx.lineTo(5, -5);
+          ctx.stroke();
         } else if (isChallenge) {
           // Animated glow behind sigil
           const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;

@@ -133,7 +133,7 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
   },
   grassland: {
     farRidge: "#7F9E72",
-    haze: "rgba(212, 184, 122, 0.28)",
+    haze: "rgba(180, 195, 160, 0.22)",
     landHighlight: "#6CB040",
     midRidge: "#4E7840",
     mountainFacetA: "#2E4A1A",
@@ -143,11 +143,11 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     mountainShadow: "#0C1808",
     mountainTop: "#4A7A3E",
     nearRidge: "#1C3E1A",
-    skyAccent: "rgba(255,240,210,0.45)",
-    skyBottom: "#D4B87A",
-    skyDecor: "rgba(90,140,80,0.40)",
-    skyMid: "#87713D",
-    skyTop: "#1E3A5F",
+    skyAccent: "rgba(255,248,230,0.5)",
+    skyBottom: "#8AACB8",
+    skyDecor: "rgba(90,140,100,0.40)",
+    skyMid: "#5A8CAA",
+    skyTop: "#2A4E72",
   },
   swamp: {
     farRidge: "#3A5A44",
@@ -898,28 +898,58 @@ function drawSoftCloud(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  width: number,
-  height: number,
+  w: number,
+  h: number,
   color: string
 ): void {
-  ctx.fillStyle = color;
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = "rgba(0,0,0,1)";
   ctx.beginPath();
-  ctx.ellipse(x, y, width * 0.42, height * 0.36, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 2, y + 2, w * 0.44, h * 0.38, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - w * 0.24 + 2, y + 3, w * 0.3, h * 0.3, -0.08, 0, Math.PI * 2);
+  ctx.ellipse(x + w * 0.22 + 2, y + 3, w * 0.28, h * 0.27, 0.1, 0, Math.PI * 2);
   ctx.ellipse(
-    x - width * 0.24,
-    y + 1,
-    width * 0.26,
-    height * 0.26,
-    -0.08,
+    x - w * 0.1 + 2,
+    y - h * 0.06 + 2,
+    w * 0.22,
+    h * 0.24,
+    -0.04,
     0,
     Math.PI * 2
   );
   ctx.ellipse(
-    x + width * 0.22,
-    y + 1,
-    width * 0.24,
-    height * 0.23,
-    0.12,
+    x + w * 0.1 + 2,
+    y - h * 0.04 + 2,
+    w * 0.2,
+    h * 0.22,
+    0.05,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x, y, w * 0.44, h * 0.38, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - w * 0.24, y + 1, w * 0.3, h * 0.3, -0.08, 0, Math.PI * 2);
+  ctx.ellipse(x + w * 0.22, y + 1, w * 0.28, h * 0.27, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - w * 0.1,
+    y - h * 0.06,
+    w * 0.22,
+    h * 0.24,
+    -0.04,
+    0,
+    Math.PI * 2
+  );
+  ctx.ellipse(
+    x + w * 0.1,
+    y - h * 0.04,
+    w * 0.2,
+    h * 0.22,
+    0.05,
     0,
     Math.PI * 2
   );
@@ -937,151 +967,244 @@ function renderChallengeSkyDecorations(
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
   if (themeKey === "grassland") {
-    // warm horizon glow band
+    // sun position
+    const sunX = width * (0.74 + skyRandom() * 0.16);
+    const sunY = height * 0.14;
+
+    // wide atmospheric halo
+    ctx.save();
+    const haloR = width * 0.35;
+    const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, haloR);
+    halo.addColorStop(0, "rgba(255,248,220,0.18)");
+    halo.addColorStop(0.15, "rgba(255,244,200,0.1)");
+    halo.addColorStop(0.35, "rgba(255,238,185,0.05)");
+    halo.addColorStop(0.6, "rgba(255,230,170,0.02)");
+    halo.addColorStop(1, "rgba(255,225,150,0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, haloR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // warm horizon glow
     ctx.save();
     const horizonGlow = ctx.createLinearGradient(
       0,
-      height * 0.12,
+      height * 0.06,
       0,
       height * 0.35
     );
-    horizonGlow.addColorStop(0, "rgba(255,245,200,0)");
-    horizonGlow.addColorStop(0.4, "rgba(255,240,190,0.06)");
-    horizonGlow.addColorStop(0.7, "rgba(255,235,170,0.04)");
+    horizonGlow.addColorStop(0, "rgba(255,248,215,0)");
+    horizonGlow.addColorStop(0.25, "rgba(255,244,200,0.06)");
+    horizonGlow.addColorStop(0.5, "rgba(255,240,190,0.08)");
+    horizonGlow.addColorStop(0.75, "rgba(255,235,175,0.04)");
     horizonGlow.addColorStop(1, "rgba(255,230,160,0)");
     ctx.fillStyle = horizonGlow;
-    ctx.fillRect(0, height * 0.12, width, height * 0.23);
+    ctx.fillRect(0, height * 0.06, width, height * 0.29);
     ctx.restore();
 
-    // layered cumulus clouds — bright fluffy shapes with varied opacity
-    for (let i = 0; i < 14; i++) {
-      const cx = width * (-0.05 + (i / 13) * 1.1) + (skyRandom() - 0.5) * 50;
-      const cy = height * (0.03 + skyRandom() * 0.13);
-      const cw = width * (0.07 + skyRandom() * 0.09);
-      const ch = height * (0.025 + skyRandom() * 0.025);
-      const puffs = 5 + Math.floor(skyRandom() * 5);
-      const cloudAlpha = 0.7 + skyRandom() * 0.3;
+    // sun disc — bright core
+    ctx.save();
+    const sunCoreR = width * 0.028;
+    const sunDisc = ctx.createRadialGradient(
+      sunX,
+      sunY,
+      0,
+      sunX,
+      sunY,
+      sunCoreR
+    );
+    sunDisc.addColorStop(0, "rgba(255,255,245,0.95)");
+    sunDisc.addColorStop(0.3, "rgba(255,252,230,0.9)");
+    sunDisc.addColorStop(0.6, "rgba(255,245,200,0.7)");
+    sunDisc.addColorStop(0.85, "rgba(255,238,170,0.3)");
+    sunDisc.addColorStop(1, "rgba(255,230,150,0)");
+    ctx.fillStyle = sunDisc;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunCoreR, 0, Math.PI * 2);
+    ctx.fill();
 
-      // cloud shadow pass
-      ctx.save();
-      ctx.globalAlpha = 0.04;
-      ctx.fillStyle = palette.skyDecor;
+    // sun corona ring
+    const coronaR = width * 0.065;
+    const corona = ctx.createRadialGradient(
+      sunX,
+      sunY,
+      sunCoreR * 0.5,
+      sunX,
+      sunY,
+      coronaR
+    );
+    corona.addColorStop(0, "rgba(255,250,220,0.35)");
+    corona.addColorStop(0.3, "rgba(255,245,200,0.15)");
+    corona.addColorStop(0.6, "rgba(255,240,180,0.06)");
+    corona.addColorStop(1, "rgba(255,235,160,0)");
+    ctx.fillStyle = corona;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, coronaR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // cirrus wisps
+    ctx.save();
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < 8; i++) {
+      const sx = width * (-0.05 + skyRandom() * 1.1);
+      const sy = height * (0.02 + skyRandom() * 0.06);
+      const len = width * (0.1 + skyRandom() * 0.15);
+      ctx.strokeStyle = `rgba(255,250,240,${(0.06 + skyRandom() * 0.06).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(
+        sx + len * 0.3,
+        sy + (skyRandom() - 0.5) * 4,
+        sx + len * 0.65,
+        sy + (skyRandom() - 0.5) * 5,
+        sx + len,
+        sy + (skyRandom() - 0.5) * 3
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // cumulus clouds — single-path per cloud for solid shapes
+    for (let i = 0; i < 12; i++) {
+      const cx = width * (-0.05 + (i / 11) * 1.1) + (skyRandom() - 0.5) * 60;
+      const cy = height * (0.03 + skyRandom() * 0.12);
+      const cw = width * (0.07 + skyRandom() * 0.1);
+      const ch = height * (0.028 + skyRandom() * 0.028);
+      const puffs = 7 + Math.floor(skyRandom() * 6);
+      const cloudAlpha = 0.75 + skyRandom() * 0.25;
+
+      // precompute puff positions so shadow and body share the same shape
+      const puffData: {
+        ox: number;
+        oy: number;
+        rx: number;
+        ry: number;
+        rot: number;
+      }[] = [];
       for (let p = 0; p < puffs; p++) {
-        const offX = (skyRandom() - 0.5) * cw * 0.8;
-        const offY = (skyRandom() - 0.5) * ch * 0.5;
-        const pr = cw * (0.2 + skyRandom() * 0.25);
-        const ph = ch * (0.4 + skyRandom() * 0.4);
-        ctx.beginPath();
+        puffData.push({
+          ox: (skyRandom() - 0.5) * cw * 0.85,
+          oy: (skyRandom() - 0.5) * ch * 0.55,
+          rx: cw * (0.18 + skyRandom() * 0.28),
+          ry: ch * (0.35 + skyRandom() * 0.45),
+          rot: (skyRandom() - 0.5) * 0.3,
+        });
+      }
+
+      // shadow — single batched path
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = palette.skyDecor;
+      ctx.beginPath();
+      for (const pf of puffData) {
         ctx.ellipse(
-          cx + offX + 2,
-          cy + offY + 2,
-          pr,
-          ph,
-          skyRandom() * 0.3,
+          cx + pf.ox + 2,
+          cy + pf.oy + 2,
+          pf.rx,
+          pf.ry,
+          pf.rot,
           0,
           Math.PI * 2
         );
-        ctx.fill();
       }
+      ctx.fill();
       ctx.restore();
 
-      // cloud body pass
+      // body — single batched path so overlapping puffs merge into one solid shape
       ctx.save();
       ctx.globalAlpha = cloudAlpha;
       ctx.fillStyle = palette.skyAccent;
-      for (let p = 0; p < puffs; p++) {
-        const offX = (skyRandom() - 0.5) * cw * 0.8;
-        const offY = (skyRandom() - 0.5) * ch * 0.5;
-        const pr = cw * (0.2 + skyRandom() * 0.25);
-        const ph = ch * (0.4 + skyRandom() * 0.4);
-        ctx.beginPath();
+      ctx.beginPath();
+      for (const pf of puffData) {
         ctx.ellipse(
-          cx + offX,
-          cy + offY,
-          pr,
-          ph,
-          skyRandom() * 0.3,
+          cx + pf.ox,
+          cy + pf.oy,
+          pf.rx,
+          pf.ry,
+          pf.rot,
           0,
           Math.PI * 2
         );
-        ctx.fill();
       }
+      ctx.fill();
+      ctx.restore();
+
+      // highlight on upper portion
+      ctx.save();
+      ctx.globalAlpha = cloudAlpha * 0.25;
+      ctx.fillStyle = "rgba(255,255,250,0.7)";
+      ctx.beginPath();
+      for (const pf of puffData) {
+        if (pf.oy < ch * 0.1) {
+          ctx.ellipse(
+            cx + pf.ox,
+            cy + pf.oy - ch * 0.08,
+            pf.rx * 0.7,
+            pf.ry * 0.5,
+            pf.rot,
+            0,
+            Math.PI * 2
+          );
+        }
+      }
+      ctx.fill();
       ctx.restore();
     }
-
-    // golden sunlight glow near horizon — larger and warmer
-    ctx.save();
-    const sunGlowX = width * (0.72 + skyRandom() * 0.18);
-    const sunGlowY = height * 0.16;
-    const sunGlowR = width * 0.24;
-    const sunGlow = ctx.createRadialGradient(
-      sunGlowX,
-      sunGlowY,
-      0,
-      sunGlowX,
-      sunGlowY,
-      sunGlowR
-    );
-    sunGlow.addColorStop(0, "rgba(255,248,210,0.14)");
-    sunGlow.addColorStop(0.25, "rgba(255,242,185,0.09)");
-    sunGlow.addColorStop(0.5, "rgba(255,235,165,0.05)");
-    sunGlow.addColorStop(1, "rgba(255,230,150,0)");
-    ctx.fillStyle = sunGlow;
-    ctx.beginPath();
-    ctx.arc(sunGlowX, sunGlowY, sunGlowR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
     return;
   }
 
   if (themeKey === "swamp") {
-    for (let i = 0; i < 7; i++) {
-      const fogY = height * (0.18 + i * 0.07);
-      const fogThickness = 24 + i * 6;
+    for (let i = 0; i < 8; i++) {
+      const fogY = height * (0.14 + i * 0.06);
+      const fogThickness = 20 + i * 7;
       const fog = ctx.createLinearGradient(
         0,
         fogY - fogThickness,
         0,
         fogY + fogThickness
       );
+      const fogAlpha = 0.1 + i * 0.015;
       fog.addColorStop(0, "rgba(216,240,220,0)");
-      fog.addColorStop(0.35, `rgba(176,214,185,${0.12 + i * 0.02})`);
-      fog.addColorStop(0.55, `rgba(150,200,165,${0.18 + i * 0.02})`);
-      fog.addColorStop(0.75, `rgba(176,214,185,${0.12 + i * 0.02})`);
+      fog.addColorStop(0.25, `rgba(185,220,195,${fogAlpha * 0.5})`);
+      fog.addColorStop(0.45, `rgba(165,210,178,${fogAlpha})`);
+      fog.addColorStop(0.55, `rgba(150,200,165,${fogAlpha * 1.1})`);
+      fog.addColorStop(0.75, `rgba(165,210,178,${fogAlpha * 0.5})`);
       fog.addColorStop(1, "rgba(216,240,220,0)");
       ctx.fillStyle = fog;
       ctx.fillRect(-30, fogY - fogThickness, width + 60, fogThickness * 2);
     }
 
     ctx.save();
-    ctx.globalAlpha = 0.06;
-    ctx.fillStyle = "rgba(120,180,130,1)";
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
       const cx = skyRandom() * width;
-      const cy = height * (0.15 + skyRandom() * 0.3);
+      const cy = height * (0.12 + skyRandom() * 0.35);
+      const pw = 25 + skyRandom() * 50;
+      const ph = 8 + skyRandom() * 18;
+      const pAlpha = 0.04 + skyRandom() * 0.04;
+      const pGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pw);
+      pGrad.addColorStop(0, `rgba(130,190,140,${pAlpha})`);
+      pGrad.addColorStop(0.6, `rgba(120,180,130,${pAlpha * 0.3})`);
+      pGrad.addColorStop(1, "rgba(120,180,130,0)");
+      ctx.fillStyle = pGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        cx,
-        cy,
-        20 + skyRandom() * 40,
-        8 + skyRandom() * 15,
-        skyRandom() * 0.5,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(cx, cy, pw, ph, skyRandom() * 0.5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
 
     ctx.fillStyle = palette.skyDecor;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 30; i++) {
       const x = skyRandom() * width;
-      const y = skyRandom() * height * 0.42;
-      const s = 0.5 + skyRandom() * 1.2;
+      const y = skyRandom() * height * 0.45;
+      const s = 0.4 + skyRandom() * 1.3;
+      ctx.globalAlpha = 0.3 + skyRandom() * 0.4;
       ctx.beginPath();
       ctx.arc(x, y, s, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.globalAlpha = 1;
     return;
   }
 
@@ -1092,17 +1215,18 @@ function renderChallengeSkyDecorations(
     const outerGlow = ctx.createRadialGradient(
       sunX,
       sunY,
-      width * 0.04,
+      width * 0.03,
       sunX,
       sunY,
-      width * 0.22
+      width * 0.28
     );
-    outerGlow.addColorStop(0, "rgba(255,240,190,0.1)");
-    outerGlow.addColorStop(0.5, "rgba(255,225,160,0.04)");
+    outerGlow.addColorStop(0, "rgba(255,242,200,0.12)");
+    outerGlow.addColorStop(0.3, "rgba(255,230,170,0.06)");
+    outerGlow.addColorStop(0.6, "rgba(255,220,150,0.02)");
     outerGlow.addColorStop(1, "rgba(255,220,150,0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.arc(sunX, sunY, width * 0.22, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, width * 0.28, 0, Math.PI * 2);
     ctx.fill();
 
     const sunGrad = ctx.createRadialGradient(
@@ -1114,151 +1238,158 @@ function renderChallengeSkyDecorations(
       width * 0.1
     );
     sunGrad.addColorStop(0, "rgba(255,252,230,0.95)");
-    sunGrad.addColorStop(0.2, "rgba(255,245,200,0.85)");
-    sunGrad.addColorStop(0.45, "rgba(255,212,138,0.45)");
+    sunGrad.addColorStop(0.15, "rgba(255,248,215,0.9)");
+    sunGrad.addColorStop(0.35, "rgba(255,235,180,0.6)");
+    sunGrad.addColorStop(0.6, "rgba(255,220,150,0.2)");
     sunGrad.addColorStop(1, "rgba(255,212,138,0)");
     ctx.fillStyle = sunGrad;
     ctx.beginPath();
     ctx.arc(sunX, sunY, width * 0.1, 0, Math.PI * 2);
     ctx.fill();
 
-    for (let i = 0; i < 3; i++) {
-      const hx = width * (0.1 + i * 0.3) + (skyRandom() - 0.5) * 40;
-      const hy = height * (0.06 + skyRandom() * 0.1);
+    for (let i = 0; i < 4; i++) {
+      const hx = width * (0.08 + i * 0.25) + (skyRandom() - 0.5) * 40;
+      const hy = height * (0.05 + skyRandom() * 0.1);
       drawSoftCloud(
         ctx,
         hx,
         hy,
-        width * (0.06 + skyRandom() * 0.04),
+        width * (0.06 + skyRandom() * 0.05),
         height * 0.035,
-        "rgba(255,235,190,0.12)"
+        `rgba(255,235,190,${(0.08 + skyRandom() * 0.06).toFixed(3)})`
       );
     }
 
-    ctx.strokeStyle = "rgba(215,175,115,0.12)";
-    ctx.lineWidth = 0.8;
-    for (let i = 0; i < 16; i++) {
-      const sy = height * (0.14 + skyRandom() * 0.34);
+    // thin wispy heat-distorted streaks across the sky
+    ctx.save();
+    for (let i = 0; i < 20; i++) {
+      const sy = height * (0.1 + skyRandom() * 0.38);
       const sx = width * (-0.05 + skyRandom() * 1.1);
-      const len = width * (0.03 + skyRandom() * 0.08);
+      const len = width * (0.04 + skyRandom() * 0.1);
+      const streakAlpha = 0.06 + skyRandom() * 0.08;
+      ctx.strokeStyle = `rgba(215,180,125,${streakAlpha.toFixed(3)})`;
+      ctx.lineWidth = 0.6 + skyRandom() * 0.6;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
       ctx.bezierCurveTo(
         sx + len * 0.33,
-        sy + (skyRandom() - 0.5) * 2,
+        sy + (skyRandom() - 0.5) * 3,
         sx + len * 0.66,
-        sy + (skyRandom() - 0.5) * 2,
+        sy + (skyRandom() - 0.5) * 3,
         sx + len,
-        sy + (skyRandom() - 0.5) * 3
+        sy + (skyRandom() - 0.5) * 4
       );
       ctx.stroke();
     }
+    ctx.restore();
     return;
   }
 
   if (themeKey === "winter") {
-    const auroraGreen = ctx.createLinearGradient(
-      0,
-      height * 0.02,
-      width,
-      height * 0.35
-    );
-    auroraGreen.addColorStop(0, "rgba(100, 240, 180, 0)");
-    auroraGreen.addColorStop(0.15, "rgba(100, 240, 180, 0.08)");
-    auroraGreen.addColorStop(0.45, "rgba(130, 255, 200, 0.12)");
-    auroraGreen.addColorStop(1, "rgba(100, 240, 180, 0)");
-    ctx.strokeStyle = auroraGreen;
-    ctx.lineWidth = height * 0.03;
-    ctx.beginPath();
-    ctx.moveTo(width * 0.1, height * 0.14);
-    ctx.bezierCurveTo(
-      width * 0.32,
-      height * 0.06,
-      width * 0.6,
-      height * 0.22,
-      width * 0.88,
-      height * 0.1
-    );
-    ctx.stroke();
+    // multi-band aurora with vertical fade
+    const auroraBands = [
+      {
+        y: 0.13,
+        cp1: 0.06,
+        cp2: 0.2,
+        color: [100, 240, 180],
+        w: 0.035,
+        alpha: 0.1,
+      },
+      {
+        y: 0.18,
+        cp1: 0.08,
+        cp2: 0.27,
+        color: [128, 215, 255],
+        w: 0.05,
+        alpha: 0.14,
+      },
+      {
+        y: 0.22,
+        cp1: 0.14,
+        cp2: 0.25,
+        color: [180, 140, 255],
+        w: 0.028,
+        alpha: 0.07,
+      },
+      {
+        y: 0.1,
+        cp1: 0.04,
+        cp2: 0.16,
+        color: [100, 255, 200],
+        w: 0.02,
+        alpha: 0.06,
+      },
+    ];
 
-    const aurora = ctx.createLinearGradient(
-      0,
-      height * 0.03,
-      width,
-      height * 0.42
-    );
-    aurora.addColorStop(0, "rgba(128, 215, 255, 0)");
-    aurora.addColorStop(0.2, "rgba(128, 215, 255, 0.16)");
-    aurora.addColorStop(0.55, "rgba(170, 244, 232, 0.2)");
-    aurora.addColorStop(1, "rgba(128, 215, 255, 0)");
-    ctx.strokeStyle = aurora;
-    ctx.lineWidth = height * 0.045;
-    ctx.beginPath();
-    ctx.moveTo(width * 0.05, height * 0.19);
-    ctx.bezierCurveTo(
-      width * 0.26,
-      height * 0.09,
-      width * 0.54,
-      height * 0.28,
-      width * 0.92,
-      height * 0.15
-    );
-    ctx.stroke();
+    for (const band of auroraBands) {
+      const [r, g, b] = band.color;
+      const grad = ctx.createLinearGradient(0, 0, width, height * 0.4);
+      grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+      grad.addColorStop(0.15, `rgba(${r},${g},${b},${band.alpha})`);
+      grad.addColorStop(0.5, `rgba(${r},${g},${b},${band.alpha * 1.2})`);
+      grad.addColorStop(0.85, `rgba(${r},${g},${b},${band.alpha})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = height * band.w;
+      ctx.beginPath();
+      ctx.moveTo(width * 0.05, height * band.y);
+      ctx.bezierCurveTo(
+        width * 0.3,
+        height * band.cp1,
+        width * 0.6,
+        height * band.cp2,
+        width * 0.92,
+        height * (band.y - 0.02)
+      );
+      ctx.stroke();
+    }
 
-    const auroraPurple = ctx.createLinearGradient(
-      width * 0.3,
-      height * 0.05,
-      width * 0.8,
-      height * 0.3
-    );
-    auroraPurple.addColorStop(0, "rgba(180, 130, 255, 0)");
-    auroraPurple.addColorStop(0.3, "rgba(180, 130, 255, 0.06)");
-    auroraPurple.addColorStop(0.6, "rgba(200, 160, 255, 0.08)");
-    auroraPurple.addColorStop(1, "rgba(180, 130, 255, 0)");
-    ctx.strokeStyle = auroraPurple;
-    ctx.lineWidth = height * 0.025;
-    ctx.beginPath();
-    ctx.moveTo(width * 0.2, height * 0.22);
-    ctx.bezierCurveTo(
-      width * 0.4,
-      height * 0.15,
-      width * 0.65,
-      height * 0.26,
-      width * 0.85,
-      height * 0.18
-    );
-    ctx.stroke();
+    // vertical aurora shimmer columns
+    ctx.save();
+    for (let i = 0; i < 6; i++) {
+      const colX = width * (0.1 + skyRandom() * 0.8);
+      const colW = 3 + skyRandom() * 8;
+      const colAlpha = 0.03 + skyRandom() * 0.04;
+      const colGrad = ctx.createLinearGradient(0, 0, 0, height * 0.25);
+      colGrad.addColorStop(0, `rgba(100,240,200,${colAlpha})`);
+      colGrad.addColorStop(0.5, `rgba(120,230,220,${colAlpha * 0.5})`);
+      colGrad.addColorStop(1, "rgba(100,220,200,0)");
+      ctx.fillStyle = colGrad;
+      ctx.fillRect(colX - colW / 2, 0, colW, height * 0.25);
+    }
+    ctx.restore();
 
-    for (let i = 0; i < 2; i++) {
-      const cx = width * (0.15 + i * 0.45) + (skyRandom() - 0.5) * 60;
-      const cy = height * (0.08 + skyRandom() * 0.08);
+    for (let i = 0; i < 3; i++) {
+      const cx = width * (0.1 + i * 0.35) + (skyRandom() - 0.5) * 60;
+      const cy = height * (0.06 + skyRandom() * 0.08);
       drawSoftCloud(
         ctx,
         cx,
         cy,
         width * (0.07 + skyRandom() * 0.04),
         height * 0.04,
-        "rgba(200,225,255,0.1)"
+        `rgba(200,225,255,${(0.06 + skyRandom() * 0.06).toFixed(3)})`
       );
     }
 
     ctx.fillStyle = "rgba(226,243,255,0.62)";
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 100; i++) {
       const x = skyRandom() * width;
       const y = skyRandom() * height * 0.55;
-      const size = 0.35 + skyRandom() * 1.4;
+      const size = 0.3 + skyRandom() * 1.4;
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.fillStyle = "rgba(255,255,255,0.3)";
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 30; i++) {
       const x = skyRandom() * width;
       const y = skyRandom() * height * 0.45;
       const size = 0.2 + skyRandom() * 0.5;
       ctx.save();
-      ctx.globalAlpha = 0.4 + skyRandom() * 0.4;
+      ctx.globalAlpha = 0.4 + skyRandom() * 0.45;
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();

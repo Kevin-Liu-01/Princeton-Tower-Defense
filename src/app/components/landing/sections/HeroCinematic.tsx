@@ -7,7 +7,7 @@ import { HERO_DATA, HERO_ROLES } from "../../../constants/heroes";
 import { HeroSprite } from "../../../sprites/heroes";
 import type { HeroType } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
-import { LANDING_THEME } from "../landingConstants";
+import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader } from "./mapElements";
 import { SpriteDisplay } from "./SpriteDisplay";
@@ -135,8 +135,8 @@ export function HeroCinematic() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(180deg, rgba(${T.bgRgb},0.88) 0%, rgba(${T.bgRgb},0.3) 25%, rgba(${T.bgRgb},0.2) 60%, rgba(${T.bgRgb},0.85) 100%),
-            radial-gradient(ellipse 80% 60% at 50% 55%, transparent 20%, rgba(${T.bgRgb},0.5) 100%)
+            linear-gradient(180deg in oklch, ${oklchBg(0.88)} 0%, ${oklchBg(0.3)} 25%, ${oklchBg(0.2)} 60%, ${oklchBg(0.85)} 100%),
+            radial-gradient(in oklch, transparent 20%, ${oklchBg(0.5)} 100%)
           `,
         }}
       />
@@ -163,13 +163,13 @@ export function HeroCinematic() {
           <div
             className="absolute left-0 top-0 bottom-0 w-20 sm:w-40 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to right, rgba(${T.bgRgb},0.9), transparent)`,
+              background: `linear-gradient(to right in oklch, ${oklchBg(0.9)}, transparent)`,
             }}
           />
           <div
             className="absolute right-0 top-0 bottom-0 w-20 sm:w-40 z-10 pointer-events-none"
             style={{
-              background: `linear-gradient(to left, rgba(${T.bgRgb},0.9), transparent)`,
+              background: `linear-gradient(to left in oklch, ${oklchBg(0.9)}, transparent)`,
             }}
           />
 
@@ -222,7 +222,7 @@ export function HeroCinematic() {
                     <div
                       className="absolute inset-0 blur-3xl pointer-events-none scale-150"
                       style={{
-                        background: `radial-gradient(circle, ${heroData.color}30, transparent 60%)`,
+                        background: `radial-gradient(in oklch, color-mix(in oklch, ${heroData.color} 20%, transparent), transparent 60%)`,
                       }}
                     />
                   )}

@@ -89,7 +89,11 @@ import { drawRuinsRegionalOverlay } from "./ruinsRegionalOverlay";
 import { drawDirectionalShadow } from "./shadowHelpers";
 import { drawTentacle } from "./tentacleShapes";
 import { drawTent } from "./tentShapes";
-import { drawBrokenWallDecoration } from "./wallShapes";
+import {
+  drawBrokenWallDecoration,
+  drawIsoJaggedWall,
+  drawRubblePile,
+} from "./wallShapes";
 
 const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "pyramid",
@@ -12291,112 +12295,280 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "hieroglyph_wall": {
-      const glyphCol = "#6a5838";
       const hx = screenPos.x;
       const hy = screenPos.y;
-      const wallLen = 34 * s;
-      const wallH = 36 * s;
-      const d = 5 * s;
-
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(hx, hy + 6 * s, 22 * s, 8 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      const wallLen = 38 * s;
+      const depth = 5 * s;
+      const hwSeed = decorX * 61 + decorY * 97;
+      const hwHash = (n: number) => {
+        const v = Math.sin(hwSeed * 0.1 + n * 2.891) * 43_758.5453;
+        return v - Math.floor(v);
+      };
 
       const x1 = hx - wallLen * 0.5;
       const y1 = hy + wallLen * 0.25;
       const x2 = hx + wallLen * 0.5;
       const y2 = hy - wallLen * 0.25;
 
-      // Left end cap
-      drawBrickFace(
-        ctx,
-        x1 - d,
-        y1 - d * 0.5,
-        x1,
-        y1,
-        wallH,
-        "#b0a070",
-        "rgba(80,68,40,0.35)",
-        s,
-        9,
-        2
-      );
+      // Jagged broken-top profile (tall left, crumbles toward right)
+      const hwProfile = [34, 38, 36, 34, 30, 24, 16, 8, 4, 0].map((h) => h * s);
 
-      // Top face
-      ctx.fillStyle = "#d0c098";
+      // Ground shadow
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.beginPath();
-      ctx.moveTo(x1, y1 - wallH);
-      ctx.lineTo(x2, y2 - wallH);
-      ctx.lineTo(x2 - d, y2 - d * 0.5 - wallH);
-      ctx.lineTo(x1 - d, y1 - d * 0.5 - wallH);
-      ctx.closePath();
+      ctx.ellipse(hx, hy + 4 * s, 24 * s, 8 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Front face with sandstone bricks
-      drawBrickFace(
+      const sandColors = {
+        front: "#c8b888",
+        side: "#b0a070",
+        top: "#d0c098",
+        mortar: "rgba(80,68,40,0.25)",
+        inner: "#a89868",
+      };
+
+      drawIsoJaggedWall(
         ctx,
         x1,
         y1,
         x2,
         y2,
-        wallH,
-        "#c8b888",
-        "rgba(80,68,40,0.3)",
+        -depth,
+        -depth * 0.5,
+        hwProfile,
+        sandColors,
         s,
         9,
-        6
+        7
       );
 
-      // Hieroglyph overlay on front face
-      ctx.fillStyle = glyphCol;
-      const glyphs = [
-        { row: 0.25, t: 0.15, type: 0 },
-        { row: 0.25, t: 0.38, type: 1 },
-        { row: 0.25, t: 0.62, type: 2 },
-        { row: 0.25, t: 0.85, type: 0 },
-        { row: 0.5, t: 0.15, type: 2 },
-        { row: 0.5, t: 0.38, type: 0 },
-        { row: 0.5, t: 0.62, type: 1 },
-        { row: 0.5, t: 0.85, type: 2 },
-        { row: 0.75, t: 0.15, type: 1 },
-        { row: 0.75, t: 0.38, type: 2 },
-        { row: 0.75, t: 0.62, type: 0 },
-        { row: 0.75, t: 0.85, type: 1 },
+      // Carved hieroglyph symbols on front face (clipped to profile)
+      const maxH = Math.max(...hwProfile);
+      const drawHieroglyph = (
+        gx: number,
+        gy: number,
+        type: number,
+        sz: number
+      ) => {
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const drawSymbol = (ox: number, oy: number) => {
+          const sx = gx + ox;
+          const sy = gy + oy;
+          if (type === 0) {
+            ctx.beginPath();
+            ctx.ellipse(sx, sy - 2.2 * sz, 1.6 * sz, 2 * sz, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 0.2 * sz);
+            ctx.lineTo(sx, sy + 3.5 * sz);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 2 * sz, sy + 1 * sz);
+            ctx.lineTo(sx + 2 * sz, sy + 1 * sz);
+            ctx.stroke();
+          } else if (type === 1) {
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, 2.8 * sz, 1.6 * sz, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(sx, sy, 0.9 * sz, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx + 2.8 * sz, sy);
+            ctx.quadraticCurveTo(
+              sx + 3.5 * sz,
+              sy + 0.5 * sz,
+              sx + 3 * sz,
+              sy + 2.5 * sz
+            );
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 0.5 * sz, sy + 1.6 * sz);
+            ctx.quadraticCurveTo(
+              sx - 1.5 * sz,
+              sy + 3 * sz,
+              sx - 2.5 * sz,
+              sy + 2.5 * sz
+            );
+            ctx.stroke();
+          } else if (type === 2) {
+            ctx.beginPath();
+            ctx.arc(sx, sy - 2 * sz, 1.3 * sz, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx + 1.3 * sz, sy - 2 * sz);
+            ctx.lineTo(sx + 3 * sz, sy - 1.5 * sz);
+            ctx.lineTo(sx + 1.3 * sz, sy - 1.5 * sz);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 0.5 * sz, sy - 0.7 * sz);
+            ctx.quadraticCurveTo(sx + 1 * sz, sy + 1 * sz, sx, sy + 3 * sz);
+            ctx.moveTo(sx + 0.5 * sz, sy - 0.7 * sz);
+            ctx.quadraticCurveTo(
+              sx + 2.2 * sz,
+              sy + 0.5 * sz,
+              sx + 1 * sz,
+              sy + 3 * sz
+            );
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + 3 * sz);
+            ctx.lineTo(sx - 0.5 * sz, sy + 4.5 * sz);
+            ctx.moveTo(sx + 1 * sz, sy + 3 * sz);
+            ctx.lineTo(sx + 1.5 * sz, sy + 4.5 * sz);
+            ctx.stroke();
+          } else if (type === 3) {
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, 2 * sz, 2.8 * sz, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 2 * sz, sy);
+            ctx.lineTo(sx + 2 * sz, sy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 2.8 * sz);
+            ctx.lineTo(sx, sy + 0.5 * sz);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 1 * sz, sy - 2.8 * sz);
+            ctx.quadraticCurveTo(
+              sx - 2.5 * sz,
+              sy - 4 * sz,
+              sx - 0.5 * sz,
+              sy - 4.2 * sz
+            );
+            ctx.moveTo(sx + 1 * sz, sy - 2.8 * sz);
+            ctx.quadraticCurveTo(
+              sx + 2.5 * sz,
+              sy - 4 * sz,
+              sx + 0.5 * sz,
+              sy - 4.2 * sz
+            );
+            ctx.stroke();
+          } else if (type === 4) {
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + 3.5 * sz);
+            ctx.lineTo(sx, sy - 3.5 * sz);
+            ctx.stroke();
+            for (let ri = 0; ri < 4; ri++) {
+              const ry = sy - 3 * sz + ri * 1.8 * sz;
+              ctx.beginPath();
+              ctx.moveTo(sx, ry);
+              ctx.quadraticCurveTo(
+                sx - 1.8 * sz,
+                ry + 0.3 * sz,
+                sx - 2 * sz,
+                ry + 1 * sz
+              );
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(sx, ry);
+              ctx.quadraticCurveTo(
+                sx + 1.8 * sz,
+                ry + 0.3 * sz,
+                sx + 2 * sz,
+                ry + 1 * sz
+              );
+              ctx.stroke();
+            }
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + 3 * sz);
+            ctx.quadraticCurveTo(sx - 1 * sz, sy + 1 * sz, sx, sy - 1 * sz);
+            ctx.quadraticCurveTo(sx + 0.5 * sz, sy - 2.5 * sz, sx, sy - 3 * sz);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sx - 2 * sz, sy - 2 * sz);
+            ctx.quadraticCurveTo(sx, sy - 4 * sz, sx + 2 * sz, sy - 2 * sz);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(sx, sy - 2.8 * sz, 0.6 * sz, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        };
+
+        ctx.strokeStyle = "rgba(220,210,180,0.3)";
+        ctx.lineWidth = 0.8 * s;
+        drawSymbol(-0.3 * s, -0.3 * s);
+
+        ctx.strokeStyle = "rgba(85,68,35,0.55)";
+        ctx.lineWidth = 1 * s;
+        drawSymbol(0, 0);
+
+        ctx.strokeStyle = "rgba(50,40,20,0.2)";
+        ctx.lineWidth = 0.6 * s;
+        drawSymbol(0.4 * s, 0.4 * s);
+      };
+
+      // Clip glyphs + register lines to the front face jagged profile
+      const hwN = hwProfile.length;
+      const hwDx = x2 - x1;
+      const hwDy = y2 - y1;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      for (let pi = hwN - 1; pi >= 0; pi--) {
+        const pt = pi / (hwN - 1);
+        ctx.lineTo(x1 + pt * hwDx, y1 + pt * hwDy - hwProfile[pi]);
+      }
+      ctx.closePath();
+      ctx.clip();
+
+      const glyphDefs = [
+        { row: 0.25, t: 0.12, type: 0 },
+        { row: 0.25, t: 0.32, type: 1 },
+        { row: 0.25, t: 0.52, type: 2 },
+        { row: 0.55, t: 0.12, type: 3 },
+        { row: 0.55, t: 0.32, type: 5 },
+        { row: 0.55, t: 0.52, type: 4 },
+        { row: 0.8, t: 0.12, type: 4 },
+        { row: 0.8, t: 0.32, type: 0 },
       ];
-      glyphs.forEach((g) => {
-        const gx = x1 + g.t * (x2 - x1);
-        const gy = y1 + g.t * (y2 - y1) - g.row * wallH;
-        if (g.type === 0) {
-          ctx.beginPath();
-          ctx.ellipse(gx, gy, 2.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(gx, gy, 0.8 * s, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (g.type === 1) {
-          ctx.beginPath();
-          ctx.ellipse(gx, gy - 1 * s, 1.5 * s, 1 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillRect(gx - 0.5 * s, gy, 1 * s, 3 * s);
-          ctx.fillRect(gx - 1.5 * s, gy + 1 * s, 3 * s, 0.8 * s);
-        } else {
-          ctx.beginPath();
-          ctx.moveTo(gx - 2 * s, gy + 2 * s);
-          ctx.lineTo(gx, gy - 1 * s);
-          ctx.lineTo(gx + 2 * s, gy);
-          ctx.lineTo(gx + 1 * s, gy + 2 * s);
-          ctx.closePath();
-          ctx.fill();
-        }
+
+      // Register lines
+      ctx.strokeStyle = "rgba(80,65,35,0.12)";
+      ctx.lineWidth = 0.5 * s;
+      for (const rowY of [0.35, 0.65]) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1 - rowY * maxH);
+        ctx.lineTo(x2, y2 - rowY * maxH);
+        ctx.stroke();
+      }
+
+      glyphDefs.forEach((g, gi) => {
+        const gx = x1 + g.t * hwDx;
+        const gy = y1 + g.t * hwDy - g.row * maxH;
+        const gType = (g.type + Math.floor(hwHash(gi + 30) * 2)) % 6;
+        drawHieroglyph(gx, gy, gType, 1.1 * s);
       });
 
-      // Sand accumulation at base
-      ctx.fillStyle = "#d8c498";
-      ctx.beginPath();
-      ctx.ellipse(hx, hy + 3 * s, 18 * s, 4 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.restore();
+
+      // Rubble pile at the crumbled right side
+      const rubblePalette = [
+        { left: "#8a7a60", right: "#a09070", top: "#c0b090" },
+        { left: "#7a6a50", right: "#908060", top: "#b0a080" },
+        { left: "#9a8a68", right: "#b8a878", top: "#d0c098" },
+      ];
+      drawRubblePile(
+        ctx,
+        hx + 12 * s,
+        hy + 1 * s,
+        [
+          { dx: 4, dy: 2, w: 3.5, h: 3 },
+          { dx: 10, dy: 0, w: 2.5, h: 2.5 },
+          { dx: -2, dy: 4, w: 2, h: 2 },
+          { dx: 7, dy: 3, w: 2, h: 1.5 },
+          { dx: 14, dy: -1, w: 1.8, h: 2 },
+          { dx: 1, dy: 1, w: 1.5, h: 1.2 },
+          { dx: 12, dy: 2, w: 1.5, h: 1.8 },
+        ],
+        s,
+        rubblePalette
+      );
       break;
     }
 

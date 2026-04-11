@@ -2,7 +2,7 @@
 import React from "react";
 
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
-import { LANDING_THEME } from "../landingConstants";
+import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapCartouche } from "./mapElements";
@@ -34,8 +34,8 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.15) 18%, transparent 35%, transparent 70%, rgba(${T.bgRgb},0.2) 82%, rgba(${T.bgRgb},0.9) 100%),
-            radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, rgba(${T.bgRgb},0.35) 100%)
+            linear-gradient(180deg in oklch, ${oklchBg(0.85)} 0%, ${oklchBg(0.15)} 18%, transparent 35%, transparent 70%, ${oklchBg(0.2)} 82%, ${oklchBg(0.9)} 100%),
+            radial-gradient(in oklch, transparent 30%, ${oklchBg(0.35)} 100%)
           `,
         }}
       />
@@ -76,7 +76,7 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
           <div
             className="px-6 py-5 rounded-xl flex flex-col items-center gap-2"
             style={{
-              background: `linear-gradient(180deg, rgba(${T.bgRgb},0.8), rgba(${T.bgRgb},0.92))`,
+              background: `linear-gradient(180deg in oklch, ${oklchBg(0.8)}, ${oklchBg(0.92)})`,
               border: `1px solid rgba(${T.accentRgb},0.22)`,
               boxShadow: `0 14px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.08)`,
               backdropFilter: "blur(8px)",
