@@ -72,9 +72,9 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   knight: {
     attackSpeed: 850,
     color: "#c0c0c0",
-    damage: 52,
+    damage: 38,
     desc: "Champion in full plate, each bearing uniquely forged armor and weaponry. The garrison's finest and most fearsome.",
-    hp: 1800,
+    hp: 1000,
     name: "Knight",
   },
   reinforcement: {

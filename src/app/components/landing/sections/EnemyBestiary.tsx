@@ -6,6 +6,7 @@ import { ENEMY_DATA } from "../../../constants/enemies";
 import { EnemySprite } from "../../../sprites/enemies";
 import type { EnemyType, MapTheme } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { CardFrame } from "../CardFrame";
 import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader } from "./mapElements";
@@ -55,6 +56,8 @@ const THREAT = {
   minion: { color: "#6b7280", icon: "", label: "" },
 } as const;
 
+const CARD_W = 130;
+const CARD_H = 158;
 const SPRITE_VIS = 80;
 const SPRITE_SCALE = 2.2;
 const SPRITE_CANVAS = Math.round(SPRITE_VIS * SPRITE_SCALE);
@@ -67,82 +70,94 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
 
   const threat = THREAT[entry.threat];
   const isBoss = entry.threat === "boss";
-  const isElite = entry.threat === "elite";
+  const hasBadge = entry.threat !== "minion";
 
   return (
-    <div
-      className="relative flex flex-col items-center gap-2 p-3 sm:p-4 flex-shrink-0 rounded-xl group transition-transform duration-300 hover:scale-[1.06]"
-      style={{
-        background: `linear-gradient(170deg, ${data.color}10, rgba(38,28,16,0.92) 60%, ${isBoss ? "rgba(60,18,18,0.4)" : "rgba(38,28,16,0.92)"})`,
-        border: `1px solid ${data.color}${isBoss ? "35" : "18"}`,
-        boxShadow: isBoss
-          ? `0 0 20px ${data.color}12, inset 0 0 30px rgba(0,0,0,0.5)`
-          : `inset 0 0 20px rgba(0,0,0,0.4)`,
-        width: isBoss ? 140 : 120,
-      }}
+    <CardFrame
+      accent={data.color}
+      glow={isBoss ? `${data.color}15` : undefined}
+      className="flex-shrink-0 group transition-transform duration-300 hover:scale-[1.06]"
     >
-      {/* Hover glow */}
       <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        className="relative flex flex-col rounded overflow-hidden"
         style={{
-          border: `1px solid ${data.color}35`,
-          borderRadius: 12,
-          boxShadow: `0 0 30px ${data.color}18`,
+          width: CARD_W,
+          height: CARD_H,
+          background: `linear-gradient(170deg, ${data.color}08, rgba(16,12,8,0.95) 50%)`,
+          boxShadow: `inset 0 0 ${isBoss ? 24 : 16}px rgba(0,0,0,0.5)`,
         }}
-      />
-
-      {/* Threat badge */}
-      {(isBoss || isElite) && (
+      >
         <div
-          className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[6px] sm:text-[7px] font-black uppercase tracking-wider z-10 animate-landing-threat-pulse"
-          style={
-            {
-              "--threat-color": `${threat.color}35`,
-              background: `${threat.color}20`,
-              border: `1px solid ${threat.color}40`,
-              color: threat.color,
-            } as React.CSSProperties
-          }
-        >
-          {threat.icon} {threat.label}
-        </div>
-      )}
-
-      {/* Sprite with glow */}
-      <div className="relative mt-1">
-        <div
-          className="absolute -inset-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle, ${data.color}15, transparent 70%)`,
-          }}
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ boxShadow: `inset 0 0 24px ${data.color}12` }}
         />
-        <SpriteDisplay visualSize={SPRITE_VIS} canvasScale={SPRITE_SCALE}>
-          <EnemySprite
-            type={entry.type}
-            size={SPRITE_CANVAS}
-            region={entry.region}
-          />
-        </SpriteDisplay>
-      </div>
 
-      {/* Name */}
-      <div className="flex flex-col items-center gap-0.5">
-        <span
-          className="text-[7px] sm:text-[8px] font-bold text-center uppercase tracking-wider max-w-[110px] truncate"
-          style={{ color: `${data.color}aa` }}
+        <div
+          className="w-full flex justify-center items-center flex-shrink-0"
+          style={{
+            height: 20,
+            background: hasBadge
+              ? `linear-gradient(180deg, ${threat.color}18, ${threat.color}06)`
+              : "transparent",
+            borderBottom: hasBadge
+              ? `1px solid ${threat.color}25`
+              : "1px solid transparent",
+          }}
         >
-          {data.name}
-        </span>
-        {isBoss && (
+          {hasBadge && (
+            <span
+              className="text-[7px] font-black uppercase tracking-[0.18em]"
+              style={{
+                color: threat.color,
+                textShadow: `0 0 8px ${threat.color}40`,
+              }}
+            >
+              {threat.icon} {threat.label}
+            </span>
+          )}
+        </div>
+
+        <div className="relative flex-1 flex items-center justify-center">
+          <div
+            className="absolute -inset-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{
+              background: `radial-gradient(circle, ${data.color}18, transparent 70%)`,
+            }}
+          />
+          <SpriteDisplay visualSize={SPRITE_VIS} canvasScale={SPRITE_SCALE}>
+            <EnemySprite
+              type={entry.type}
+              size={SPRITE_CANVAS}
+              region={entry.region}
+            />
+          </SpriteDisplay>
+        </div>
+
+        <div
+          className="w-full px-2 py-1.5 flex flex-col items-center gap-0.5 flex-shrink-0"
+          style={{
+            background: `linear-gradient(to top, ${data.color}14, transparent)`,
+            borderTop: `1px solid ${data.color}12`,
+          }}
+        >
           <div
             className="w-8 h-px"
             style={{
               background: `linear-gradient(90deg, transparent, ${data.color}40, transparent)`,
             }}
           />
-        )}
+          <span
+            className="text-[9px] sm:text-[10px] font-bold text-center uppercase tracking-wide leading-tight w-full line-clamp-2"
+            style={{
+              color: "rgba(255,255,255,0.88)",
+              textShadow: `0 0 10px ${data.color}50, 0 1px 3px rgba(0,0,0,0.8)`,
+            }}
+          >
+            {data.name}
+          </span>
+        </div>
       </div>
-    </div>
+    </CardFrame>
   );
 }
 
@@ -167,7 +182,7 @@ function MarqueeRow({
         style={{
           animationDuration: speed ? `${speed}s` : undefined,
           display: "flex",
-          gap: "1rem",
+          gap: "0.75rem",
           width: "max-content",
           willChange: "transform",
         }}

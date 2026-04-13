@@ -10,6 +10,7 @@ import {
 import { TowerSprite } from "../../../sprites/towers";
 import type { TowerType } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { FrameCorner } from "../CardFrame";
 import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader } from "./mapElements";
@@ -31,38 +32,13 @@ const CARD_VIS = 64;
 const CARD_SCALE = 2;
 const CARD_CANVAS = Math.round(CARD_VIS * CARD_SCALE);
 
-const EVO_VIS = 56;
-const EVO_SCALE = 2;
-const EVO_CANVAS = Math.round(EVO_VIS * EVO_SCALE);
-
-const SPOTLIGHT_VIS = 140;
+const SPOTLIGHT_VIS = 200;
 const SPOTLIGHT_SCALE = 2.4;
 const SPOTLIGHT_CANVAS = Math.round(SPOTLIGHT_VIS * SPOTLIGHT_SCALE);
 
-function RowLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 mb-6">
-      <div
-        className="flex-1 h-px"
-        style={{
-          background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.15))`,
-        }}
-      />
-      <p
-        className="text-[10px] font-bold uppercase tracking-[0.35em]"
-        style={{ color: `rgba(${T.accentRgb},0.35)` }}
-      >
-        {children}
-      </p>
-      <div
-        className="flex-1 h-px"
-        style={{
-          background: `linear-gradient(90deg, rgba(${T.accentRgb},0.15), transparent)`,
-        }}
-      />
-    </div>
-  );
-}
+const NODE_VIS = 52;
+const NODE_SCALE = 2;
+const NODE_CANVAS = Math.round(NODE_VIS * NODE_SCALE);
 
 // ---------------------------------------------------------------------------
 // Tower strip thumbnail
@@ -87,39 +63,60 @@ function TowerThumb({
       }}
     >
       <div
-        className="relative rounded-xl flex items-center justify-center transition-all duration-300"
+        className="relative p-[3px] rounded-xl transition-all duration-300"
         style={{
           background: active
-            ? `linear-gradient(180deg, ${accent}30, ${accent}08)`
-            : "rgba(255,255,255,0.03)",
-          border: active
-            ? `2px solid ${accent}`
-            : "1.5px solid rgba(255,255,255,0.06)",
+            ? `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`
+            : "transparent",
           boxShadow: active
-            ? `0 0 24px ${accent}35, 0 4px 16px rgba(0,0,0,0.5)`
-            : "0 2px 8px rgba(0,0,0,0.3)",
-          height: CARD_VIS + 16,
-          width: CARD_VIS + 8,
+            ? `0 0 24px ${accent}30, 0 4px 16px rgba(0,0,0,0.5)`
+            : "none",
         }}
       >
+        <div
+          className="relative rounded-lg flex items-center justify-center transition-all duration-300 overflow-hidden"
+          style={{
+            background: active
+              ? `linear-gradient(180deg, ${accent}20, ${accent}08)`
+              : "rgba(255,255,255,0.03)",
+            border: active ? "none" : "1.5px solid rgba(255,255,255,0.06)",
+            boxShadow: active
+              ? `inset 0 0 0 1px rgba(40,28,8,0.5), inset 0 0 8px rgba(0,0,0,0.4)`
+              : "0 2px 8px rgba(0,0,0,0.3)",
+            height: CARD_VIS + 16,
+            width: CARD_VIS + 8,
+          }}
+        >
+          {active && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at 50% 40%, ${accent}20, transparent 70%)`,
+              }}
+            />
+          )}
+          <SpriteDisplay visualSize={CARD_VIS} canvasScale={CARD_SCALE}>
+            <TowerSprite type={type} size={CARD_CANVAS} level={1} />
+          </SpriteDisplay>
+          {!active && (
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-200" />
+          )}
+        </div>
         {active && (
-          <div
-            className="absolute inset-0 rounded-xl pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 40%, ${accent}20, transparent 70%)`,
-            }}
-          />
-        )}
-        <SpriteDisplay visualSize={CARD_VIS} canvasScale={CARD_SCALE}>
-          <TowerSprite type={type} size={CARD_CANVAS} level={1} />
-        </SpriteDisplay>
-        {!active && (
-          <div className="absolute inset-0 rounded-xl bg-black/30 group-hover:bg-black/10 transition-colors duration-200" />
+          <>
+            <FrameCorner className="top-[-2px] left-[-2px]" />
+            <FrameCorner className="top-[-2px] right-[-2px]" />
+            <FrameCorner className="bottom-[-2px] left-[-2px]" />
+            <FrameCorner className="bottom-[-2px] right-[-2px]" />
+          </>
         )}
       </div>
       <span
         className="text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors duration-200"
-        style={{ color: active ? accent : `rgba(255,255,255,0.25)` }}
+        style={{
+          color: active ? accent : "rgba(255,255,255,0.25)",
+          textShadow: active ? `0 0 8px ${accent}40` : "none",
+        }}
       >
         {TOWER_DATA[type].name.split(" ").pop()}
       </span>
@@ -133,285 +130,316 @@ function TowerThumb({
   );
 }
 
-function EvoConnector({ accent, lit }: { accent: string; lit: boolean }) {
+// ---------------------------------------------------------------------------
+// Shared tree node button
+// ---------------------------------------------------------------------------
+
+function TreeNode({
+  active,
+  accent,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  accent: string;
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center self-center mx-1">
+    <button
+      onClick={onClick}
+      className="relative flex flex-col items-center gap-1 p-[2px] rounded-lg cursor-pointer transition-all duration-300 flex-shrink-0"
+      style={{
+        background: active
+          ? `linear-gradient(160deg, #d4aa50, ${accent}60, #8b6914, ${accent}50, #d4aa50)`
+          : "transparent",
+        boxShadow: active ? `0 0 14px ${accent}25` : "none",
+      }}
+    >
       <div
-        className="w-5 sm:w-7 h-[2px] rounded-full"
-        style={{ background: lit ? `${accent}55` : `${accent}12` }}
-      />
-      <svg width="6" height="10" viewBox="0 0 6 10" className="-ml-px">
-        <path d="M0,0 L6,5 L0,10" fill={lit ? `${accent}65` : `${accent}15`} />
-      </svg>
-    </div>
-  );
-}
-
-function EvolutionLevelCard({
-  type,
-  level,
-  accent,
-  active,
-  onClick,
-}: {
-  type: TowerType;
-  level: 1 | 2 | 3;
-  accent: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="relative group rounded-xl p-2 sm:p-2.5 transition-all duration-300 hover:-translate-y-0.5"
-      style={{
-        background: active
-          ? `linear-gradient(180deg, ${accent}22, ${accent}08)`
-          : "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
-        border: active
-          ? `1.5px solid ${accent}`
-          : "1.5px solid rgba(255,255,255,0.08)",
-        boxShadow: active
-          ? `0 0 18px ${accent}35, inset 0 0 10px ${accent}12`
-          : "0 2px 10px rgba(0,0,0,0.35)",
-      }}
-    >
-      <div className="flex flex-col items-center gap-1.5">
-        <div
-          className="text-[9px] font-bold uppercase tracking-[0.2em]"
-          style={{ color: active ? accent : "rgba(255,255,255,0.45)" }}
-        >
-          Level {level}
-        </div>
-        <div
-          className="rounded-lg flex items-center justify-center"
-          style={{
-            width: 64,
-            height: 64,
-            background: "rgba(0,0,0,0.25)",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <SpriteDisplay visualSize={EVO_VIS} canvasScale={EVO_SCALE}>
-            <TowerSprite type={type} size={EVO_CANVAS} level={level} />
-          </SpriteDisplay>
-        </div>
+        className="relative rounded flex items-center justify-center overflow-hidden"
+        style={{
+          width: NODE_VIS + 8,
+          height: NODE_VIS + 8,
+          background: active
+            ? `linear-gradient(180deg, ${accent}18, ${accent}06)`
+            : "rgba(255,255,255,0.03)",
+          border: active ? "none" : "1.5px solid rgba(255,255,255,0.06)",
+          boxShadow: active
+            ? `inset 0 0 0 1px rgba(40,28,8,0.4)`
+            : "0 1px 4px rgba(0,0,0,0.3)",
+        }}
+      >
+        {children}
+        {!active && <div className="absolute inset-0 bg-black/25" />}
       </div>
-    </button>
-  );
-}
-
-function EvolutionBranchCard({
-  type,
-  accent,
-  upgrade,
-  name,
-  active,
-  onClick,
-}: {
-  type: TowerType;
-  accent: string;
-  upgrade: "A" | "B";
-  name: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-xl p-2 sm:p-2.5 transition-all duration-300 hover:-translate-y-0.5"
-      style={{
-        background: active
-          ? `linear-gradient(180deg, ${accent}24, ${accent}08)`
-          : "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
-        border: active
-          ? `1.5px solid ${accent}`
-          : "1.5px solid rgba(255,255,255,0.08)",
-        boxShadow: active
-          ? `0 0 20px ${accent}35, inset 0 0 12px ${accent}10`
-          : "0 2px 10px rgba(0,0,0,0.35)",
-      }}
-    >
-      <div className="flex flex-col items-center gap-1.5">
-        <div className="flex items-center gap-1.5">
-          <span
-            className="text-[8px] font-black uppercase tracking-[0.18em] px-1.5 py-0.5 rounded"
-            style={{
-              color: active ? accent : "rgba(255,255,255,0.5)",
-              background: active ? `${accent}20` : "rgba(255,255,255,0.07)",
-            }}
-          >
-            Path {upgrade}
-          </span>
-          <span
-            className="text-[9px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: active ? accent : "rgba(255,255,255,0.45)" }}
-          >
-            Level 4
-          </span>
-        </div>
-        <div
-          className="rounded-lg flex items-center justify-center"
-          style={{
-            width: 64,
-            height: 64,
-            background: "rgba(0,0,0,0.25)",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <SpriteDisplay visualSize={EVO_VIS} canvasScale={EVO_SCALE}>
-            <TowerSprite
-              type={type}
-              size={EVO_CANVAS}
-              level={4}
-              upgrade={upgrade}
-            />
-          </SpriteDisplay>
-        </div>
-        <span
-          className="text-[9px] font-semibold tracking-wide text-center leading-tight max-w-[120px]"
-          style={{ color: active ? accent : `${accent}75` }}
-        >
-          {name}
-        </span>
-      </div>
+      <span
+        className="text-[7px] font-bold uppercase tracking-wider whitespace-nowrap"
+        style={{ color: active ? accent : "rgba(255,255,255,0.3)" }}
+      >
+        {label}
+      </span>
+      {active && (
+        <>
+          <FrameCorner className="top-[-1px] left-[-1px]" />
+          <FrameCorner className="top-[-1px] right-[-1px]" />
+          <FrameCorner className="bottom-[-1px] left-[-1px]" />
+          <FrameCorner className="bottom-[-1px] right-[-1px]" />
+        </>
+      )}
     </button>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Tower spotlight + evolution tree
+// Tower profile — full evolution tree with large preview
 // ---------------------------------------------------------------------------
 
-function TowerSpotlight({ type }: { type: TowerType }) {
+type Selection =
+  | { level: 1 | 2 | 3; upgrade?: undefined }
+  | { level: 4; upgrade: "A" | "B" };
+
+function TowerProfile({ type }: { type: TowerType }) {
   const data = TOWER_DATA[type];
   const accent = TOWER_ACCENTS[type];
   const cat = TOWER_CATEGORIES[type];
-  const [selLevel, setSelLevel] = useState(1);
-  const [selUpgrade, setSelUpgrade] = useState<"A" | "B">("A");
+  const [sel, setSel] = useState<Selection>({ level: 1 });
+
+  const selDesc =
+    sel.level === 4
+      ? data.upgrades[sel.upgrade].effect
+      : data.levelDesc[sel.level];
+
+  const lineColor = `${accent}40`;
+  const litLine = `${accent}70`;
+
+  const nodeH = NODE_VIS + 8 + 4 + 12;
+  const stackH = nodeH * 2 + 8;
+  const pathACenter = nodeH / 2;
+  const pathBCenter = nodeH + 8 + nodeH / 2;
 
   return (
     <div
-      className="flex flex-col items-center gap-6 pt-6"
+      className="mt-8"
       style={{ animation: "landing-tower-enter 0.4s ease-out" }}
     >
-      {/* Large sprite */}
-      <div className="relative">
-        <div
-          className="absolute inset-0 rounded-full blur-3xl opacity-30 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle, ${accent}40, transparent 70%)`,
-          }}
-        />
-        <SpriteDisplay visualSize={SPOTLIGHT_VIS} canvasScale={SPOTLIGHT_SCALE}>
-          <TowerSprite
-            type={type}
-            size={SPOTLIGHT_CANVAS}
-            level={selLevel as 1 | 2 | 3 | 4}
-            upgrade={selLevel === 4 ? selUpgrade : undefined}
-            animated
-          />
-        </SpriteDisplay>
-      </div>
-
-      {/* Name + category */}
-      <div className="flex flex-col items-center gap-2">
-        <h3
-          className="text-2xl sm:text-3xl font-black font-cinzel tracking-wide"
-          style={{ color: accent, textShadow: `0 0 24px ${accent}25` }}
-        >
-          {data.name}
-        </h3>
-        <div className="flex items-center gap-3">
-          <span
-            className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-md"
-            style={{
-              background: `${accent}12`,
-              border: `1px solid ${accent}25`,
-              color: accent,
-            }}
-          >
-            {cat.label}
-          </span>
-          <span
-            className="text-[9px] font-semibold tabular-nums"
-            style={{ color: `${accent}60` }}
-          >
-            {data.cost} PP
-          </span>
-        </div>
-      </div>
-
-      {/* Carded progression */}
-      <div className="w-full max-w-4xl mt-1">
-        <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-          {([1, 2, 3] as const).map((lv, i) => (
-            <React.Fragment key={lv}>
-              {i > 0 && <EvoConnector accent={accent} lit={selLevel >= lv} />}
-              <EvolutionLevelCard
-                type={type}
-                level={lv}
-                accent={accent}
-                active={selLevel === lv}
-                onClick={() => {
-                  setSelLevel(lv);
-                  setSelUpgrade("A");
+      <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-8 max-w-3xl mx-auto">
+        {/* Info + tech tree panel */}
+        <div className="flex flex-col gap-4 flex-1 min-w-0 text-center sm:text-left order-2 sm:order-1">
+          <div className="flex flex-col gap-2">
+            <h3
+              className="text-2xl sm:text-3xl font-black font-cinzel tracking-wide"
+              style={{ color: accent, textShadow: `0 0 24px ${accent}25` }}
+            >
+              {data.name}
+            </h3>
+            <div className="flex items-center gap-3 justify-center sm:justify-start">
+              <span
+                className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-md"
+                style={{
+                  background: `${accent}12`,
+                  border: `1px solid ${accent}25`,
+                  color: accent,
                 }}
-              />
-            </React.Fragment>
-          ))}
-        </div>
+              >
+                {cat.label}
+              </span>
+              <span
+                className="text-[9px] font-semibold tabular-nums"
+                style={{ color: `${accent}60` }}
+              >
+                {data.cost} PP
+              </span>
+            </div>
+            <p
+              className="text-xs sm:text-sm leading-relaxed max-w-md"
+              style={{ color: "rgba(255,255,255,0.55)" }}
+            >
+              {data.desc}
+            </p>
+          </div>
 
-        <div className="flex justify-center mt-2.5">
           <div
-            className="h-6 w-[2px] rounded-full"
+            className="h-px w-full max-w-xs mx-auto sm:mx-0"
             style={{
-              background:
-                selLevel === 4 ? `${accent}55` : "rgba(255,255,255,0.12)",
+              background: `linear-gradient(90deg, transparent, ${accent}25, transparent)`,
             }}
           />
+
+          {/* Tech tree */}
+          <div className="flex flex-col gap-0 items-center sm:items-start">
+            <span
+              className="text-[8px] font-bold uppercase tracking-[0.3em] mb-2"
+              style={{ color: `rgba(${T.accentRgb},0.35)` }}
+            >
+              Evolution Tree
+            </span>
+
+            <div className="flex items-center justify-center sm:justify-start">
+              {/* Lv1 → Lv2 → Lv3 */}
+              {([1, 2, 3] as const).map((lv, i) => (
+                <React.Fragment key={lv}>
+                  {i > 0 && (
+                    <div
+                      className="h-[2px] rounded-full flex-shrink-0"
+                      style={{
+                        width: 20,
+                        background: sel.level >= lv ? litLine : lineColor,
+                        boxShadow:
+                          sel.level >= lv ? `0 0 6px ${accent}30` : "none",
+                      }}
+                    />
+                  )}
+                  <TreeNode
+                    active={sel.level === lv}
+                    accent={accent}
+                    label={`Lv ${lv}`}
+                    onClick={() => setSel({ level: lv })}
+                  >
+                    <SpriteDisplay
+                      visualSize={NODE_VIS}
+                      canvasScale={NODE_SCALE}
+                    >
+                      <TowerSprite type={type} size={NODE_CANVAS} level={lv} />
+                    </SpriteDisplay>
+                  </TreeNode>
+                </React.Fragment>
+              ))}
+
+              {/* Bracket + stacked paths — uses items-center so
+                  the SVG midpoint aligns with Lv1-3 centers */}
+              <div
+                className="flex items-center flex-shrink-0"
+                style={{ height: stackH }}
+              >
+                <svg width="24" height={stackH} className="flex-shrink-0">
+                  <line
+                    x1="0"
+                    y1={stackH / 2}
+                    x2="10"
+                    y2={stackH / 2}
+                    stroke={sel.level === 4 ? litLine : lineColor}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="10"
+                    y1={pathACenter}
+                    x2="10"
+                    y2={pathBCenter}
+                    stroke={sel.level === 4 ? litLine : lineColor}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="10"
+                    y1={pathACenter}
+                    x2="24"
+                    y2={pathACenter}
+                    stroke={
+                      sel.level === 4 && sel.upgrade === "A"
+                        ? litLine
+                        : lineColor
+                    }
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="10"
+                    y1={pathBCenter}
+                    x2="24"
+                    y2={pathBCenter}
+                    stroke={
+                      sel.level === 4 && sel.upgrade === "B"
+                        ? litLine
+                        : lineColor
+                    }
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {(["A", "B"] as const).map((path) => (
+                    <TreeNode
+                      key={path}
+                      active={sel.level === 4 && sel.upgrade === path}
+                      accent={accent}
+                      label={data.upgrades[path].name}
+                      onClick={() => setSel({ level: 4, upgrade: path })}
+                    >
+                      <SpriteDisplay
+                        visualSize={NODE_VIS}
+                        canvasScale={NODE_SCALE}
+                      >
+                        <TowerSprite
+                          type={type}
+                          size={NODE_CANVAS}
+                          level={4}
+                          upgrade={path}
+                        />
+                      </SpriteDisplay>
+                    </TreeNode>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p
+            className="text-[10px] sm:text-xs leading-relaxed max-w-sm text-center sm:text-left"
+            style={{ color: `${accent}90` }}
+          >
+            {selDesc}
+          </p>
         </div>
 
-        <div className="flex justify-center -mt-0.5">
+        {/* Large animated sprite — stretches to match left panel */}
+        <div className="relative flex-1 order-1 sm:order-2 flex flex-col items-center min-w-0">
           <div
-            className="text-[8px] font-bold uppercase tracking-[0.24em] px-2 py-1 rounded"
+            className="absolute inset-0 rounded-full blur-3xl opacity-20 pointer-events-none"
             style={{
-              color: selLevel === 4 ? accent : "rgba(255,255,255,0.45)",
-              background:
-                selLevel === 4 ? `${accent}18` : "rgba(255,255,255,0.05)",
-              border:
-                selLevel === 4
-                  ? `1px solid ${accent}55`
-                  : "1px solid rgba(255,255,255,0.09)",
+              background: `radial-gradient(circle, ${accent}30, transparent 70%)`,
+            }}
+          />
+          <div
+            className="relative rounded-lg flex items-center justify-center flex-1 w-full"
+            style={{
+              minHeight: SPOTLIGHT_VIS + 40,
+              background: `linear-gradient(170deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2))`,
+              border: `1.5px solid rgba(255,255,255,0.08)`,
+              boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 0 30px rgba(0,0,0,0.15)`,
             }}
           >
-            Choose Branch
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse 80% 60% at 50% 60%, ${accent}08, transparent 70%)`,
+              }}
+            />
+            <SpriteDisplay
+              visualSize={SPOTLIGHT_VIS}
+              canvasScale={SPOTLIGHT_SCALE}
+            >
+              <TowerSprite
+                type={type}
+                size={SPOTLIGHT_CANVAS}
+                level={sel.level}
+                upgrade={sel.level === 4 ? sel.upgrade : undefined}
+                animated
+              />
+            </SpriteDisplay>
           </div>
-        </div>
-
-        <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap mt-2.5">
-          <EvolutionBranchCard
-            type={type}
-            accent={accent}
-            upgrade="A"
-            name={data.upgrades.A.name}
-            active={selLevel === 4 && selUpgrade === "A"}
-            onClick={() => {
-              setSelLevel(4);
-              setSelUpgrade("A");
-            }}
-          />
-          <EvolutionBranchCard
-            type={type}
-            accent={accent}
-            upgrade="B"
-            name={data.upgrades.B.name}
-            active={selLevel === 4 && selUpgrade === "B"}
-            onClick={() => {
-              setSelLevel(4);
-              setSelUpgrade("B");
-            }}
-          />
+          <div
+            className="mt-2 text-center text-[9px] font-bold uppercase tracking-[0.2em]"
+            style={{ color: accent }}
+          >
+            {sel.level === 4
+              ? data.upgrades[sel.upgrade].name
+              : `Level ${sel.level}`}
+          </div>
         </div>
       </div>
     </div>
@@ -425,7 +453,6 @@ function TowerSpotlight({ type }: { type: TowerType }) {
 export function ArsenalShowcase() {
   const [selTower, setSelTower] = useState(0);
   const handleTower = useCallback((i: number) => setSelTower(i), []);
-  const activeAccent = TOWER_ACCENTS[TOWER_ORDER[selTower]];
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
@@ -477,7 +504,7 @@ export function ArsenalShowcase() {
               />
             ))}
           </div>
-          <TowerSpotlight
+          <TowerProfile
             key={TOWER_ORDER[selTower]}
             type={TOWER_ORDER[selTower]}
           />

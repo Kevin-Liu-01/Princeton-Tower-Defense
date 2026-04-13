@@ -26,7 +26,13 @@ import {
 import React from "react";
 
 import type { Position } from "../../../types";
-import { GOLD, PANEL, RED_CARD, panelGradient } from "../system/theme";
+import {
+  GOLD,
+  PANEL,
+  RED_CARD,
+  dividerGradient,
+  panelGradient,
+} from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
 
 interface LandmarkTooltipProps {
@@ -401,7 +407,7 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
       .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   };
 
-  const coords = getTooltipPosition(position, { height: 140, width: 240 });
+  const coords = getTooltipPosition(position, { height: 180, width: 280 });
 
   return (
     <div
@@ -409,10 +415,10 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
       style={{
         background: panelGradient,
         border: `1.5px solid ${GOLD.border30}`,
-        boxShadow: `0 0 20px ${GOLD.glow07}`,
+        boxShadow: `0 0 24px ${GOLD.glow07}, inset 0 1px 0 ${GOLD.innerBorder08}`,
         left: coords.left,
         top: coords.top,
-        width: 240,
+        width: 280,
         zIndex: 250,
       }}
     >
@@ -420,32 +426,52 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
         className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
         style={{ border: `1px solid ${GOLD.innerBorder08}` }}
       />
+
       <div
-        className="px-3 py-1.5 relative z-10"
+        className="px-3.5 py-2 relative z-10"
         style={{
           background: PANEL.bgWarmMid,
           borderBottom: `1px solid ${GOLD.border25}`,
         }}
       >
-        <div className="flex items-center gap-2">
-          {info.icon}
-          <span className="font-bold text-amber-200 text-sm">{info.name}</span>
-        </div>
-        <div className="text-[9px] text-amber-500/70 uppercase tracking-wider mt-0.5 flex items-center gap-1">
-          <Landmark size={8} />
-          Landmark
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+            style={{
+              background: `linear-gradient(135deg, rgba(80,60,20,0.6), rgba(45,32,12,0.8))`,
+              border: `1px solid ${GOLD.innerBorder12}`,
+              boxShadow: `0 0 8px ${GOLD.glow07}`,
+            }}
+          >
+            {info.icon}
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-amber-200 text-sm leading-tight truncate">
+              {info.name}
+            </div>
+            <div className="text-[8px] text-amber-500/60 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1 font-semibold">
+              <Landmark size={7} />
+              Landmark
+            </div>
+          </div>
         </div>
       </div>
-      <div className="px-3 py-2">
+
+      <div className="px-3.5 py-2.5 relative z-10">
         <p className="text-[11px] text-amber-100/80 leading-relaxed">
           {info.desc}
         </p>
-        <p
-          className="text-[10px] text-amber-400/60 leading-relaxed mt-1.5 italic pt-1.5"
-          style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }}
+
+        <div className="my-2.5 h-px" style={{ background: dividerGradient }} />
+
+        <div
+          className="pl-2.5 relative"
+          style={{ borderLeft: `2px solid ${GOLD.innerBorder12}` }}
         >
-          &quot;{info.lore}&quot;
-        </p>
+          <p className="text-[10px] text-amber-400/55 leading-relaxed italic">
+            &quot;{info.lore}&quot;
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -601,6 +627,35 @@ const HAZARD_INFO: Record<
   },
 };
 
+const HAZARD_EFFECT_RGB: Record<string, [number, number, number]> = {
+  "text-blue-300": [147, 197, 253],
+  "text-blue-400": [96, 165, 250],
+  "text-cyan-300": [103, 232, 249],
+  "text-cyan-400": [34, 211, 238],
+  "text-green-400": [74, 222, 128],
+  "text-lime-400": [163, 230, 53],
+  "text-orange-400": [251, 146, 60],
+  "text-purple-400": [192, 132, 252],
+  "text-red-300": [252, 165, 165],
+  "text-red-400": [248, 113, 113],
+  "text-sky-300": [125, 211, 252],
+  "text-yellow-300": [253, 224, 71],
+  "text-yellow-400": [250, 204, 21],
+};
+
+function getHazardAccent(effectColor: string) {
+  const rgb = HAZARD_EFFECT_RGB[effectColor] || [180, 60, 60];
+  const [r, g, b] = rgb;
+  return {
+    accentLine: `rgba(${r},${g},${b},0.7)`,
+    border: `rgba(${r},${g},${b},0.45)`,
+    glow: `rgba(${r},${g},${b},0.12)`,
+    headerBg: `rgba(${r},${g},${b},0.06)`,
+    innerBorder: `rgba(${r},${g},${b},0.12)`,
+    subtleBorder: `rgba(${r},${g},${b},0.2)`,
+  };
+}
+
 export const HazardTooltip: React.FC<HazardTooltipProps> = ({
   hazardType,
   position,
@@ -615,54 +670,81 @@ export const HazardTooltip: React.FC<HazardTooltipProps> = ({
       .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   };
 
-  const coords = getTooltipPosition(position, { height: 150, width: 250 });
+  const accent = getHazardAccent(info.effectColor);
+  const coords = getTooltipPosition(position, { height: 190, width: 280 });
 
   return (
     <div
       className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
       style={{
         background: panelGradient,
-        border: `1.5px solid ${RED_CARD.border}`,
-        boxShadow: `0 0 20px ${RED_CARD.glow06}`,
+        border: `1.5px solid ${accent.border}`,
+        boxShadow: `0 0 24px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,0.03)`,
         left: coords.left,
         top: coords.top,
-        width: 250,
+        width: 280,
         zIndex: 250,
       }}
     >
       <div
-        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
-        style={{ border: `1px solid ${RED_CARD.innerBorder12}` }}
-      />
-      <div
-        className="px-3 py-1.5 relative z-10"
+        className="h-[3px] w-full"
         style={{
-          background: RED_CARD.bgLight,
-          borderBottom: `1px solid ${RED_CARD.border25}`,
+          background: `linear-gradient(90deg, transparent, ${accent.accentLine}, transparent)`,
+        }}
+      />
+
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: `1px solid ${accent.innerBorder}` }}
+      />
+
+      <div
+        className="px-3.5 py-2 relative z-10"
+        style={{
+          background: accent.headerBg,
+          borderBottom: `1px solid ${accent.subtleBorder}`,
         }}
       >
-        <div className="flex items-center gap-2">
-          {info.icon}
-          <span className="font-bold text-red-200 text-sm">{info.name}</span>
-        </div>
-        <div className="text-[9px] text-red-400/70 uppercase tracking-wider mt-0.5 flex items-center gap-1">
-          <AlertTriangle size={9} />
-          Environmental Hazard
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${accent.innerBorder}, ${accent.glow})`,
+              border: `1px solid ${accent.subtleBorder}`,
+            }}
+          >
+            {info.icon}
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-amber-200 text-sm leading-tight truncate">
+              {info.name}
+            </div>
+            <div className="text-[8px] text-red-400/60 uppercase tracking-[0.2em] mt-0.5 flex items-center gap-1 font-semibold">
+              <AlertTriangle size={8} />
+              Environmental Hazard
+            </div>
+          </div>
         </div>
       </div>
-      <div className="px-3 py-2">
+
+      <div className="px-3.5 py-2.5 relative z-10">
         <p className="text-[11px] text-stone-300/80 leading-relaxed">
           {info.desc}
         </p>
+
         <div
-          className="mt-2 rounded-lg px-2.5 py-1.5"
+          className="mt-2.5 rounded-lg px-3 py-2"
           style={{
             background: PANEL.bgDeep,
-            border: `1px solid ${RED_CARD.border25}`,
+            border: `1px solid ${accent.subtleBorder}`,
+            boxShadow: `inset 0 0 12px ${accent.glow}`,
           }}
         >
-          <div className="text-[9px] text-red-400/60 uppercase tracking-wider mb-0.5 font-semibold">
-            Effect
+          <div className="flex items-center gap-1.5 mb-1">
+            <Zap size={10} className={info.effectColor} />
+            <span className="text-[9px] text-red-400/50 uppercase tracking-[0.15em] font-bold">
+              Effect
+            </span>
           </div>
           <p
             className={`text-[11px] font-medium leading-snug ${info.effectColor}`}

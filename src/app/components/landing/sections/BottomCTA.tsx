@@ -2,6 +2,7 @@
 import React from "react";
 
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { CardFrame } from "../CardFrame";
 import { LANDING_THEME, oklchBg } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
@@ -73,23 +74,28 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
 
         {/* Bottom: CTA + footer */}
         <div className="pb-10 sm:pb-16 pt-4 flex flex-col items-center gap-5">
-          <div
-            className="px-6 py-5 rounded-xl flex flex-col items-center gap-2"
-            style={{
-              background: `linear-gradient(180deg in oklch, ${oklchBg(0.8)}, ${oklchBg(0.92)})`,
-              border: `1px solid rgba(${T.accentRgb},0.22)`,
-              boxShadow: `0 14px 36px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.08)`,
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <LandingCTA onClick={onPlay} disabled={exiting} label="Play Now" />
-            <span
-              className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold"
-              style={{ color: `rgba(${T.accentRgb},0.45)` }}
+          <CardFrame accent={T.accent} glow={`rgba(${T.accentRgb},0.15)`}>
+            <div
+              className="px-6 py-5 rounded flex flex-col items-center gap-2"
+              style={{
+                background: `linear-gradient(180deg in oklch, ${oklchBg(0.8)}, ${oklchBg(0.92)})`,
+                boxShadow: `inset 0 1px 0 rgba(${T.accentRgb},0.08), inset 0 0 0 1px rgba(40,28,8,0.4)`,
+                backdropFilter: "blur(8px)",
+              }}
             >
-              Command heroes. Build towers. Jump straight into battle!
-            </span>
-          </div>
+              <LandingCTA
+                onClick={onPlay}
+                disabled={exiting}
+                label="Play Now"
+              />
+              <span
+                className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold"
+                style={{ color: `rgba(${T.accentRgb},0.45)` }}
+              >
+                Jump straight into battle!
+              </span>
+            </div>
+          </CardFrame>
 
           <div
             className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-[10px] sm:text-[11px]"

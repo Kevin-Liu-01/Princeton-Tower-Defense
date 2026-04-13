@@ -72,6 +72,71 @@ const TOWERS = [
   "mortar",
 ] as const;
 
+const TOWER_CARD_INFO: Record<
+  string,
+  {
+    name: string;
+    bgTop: string;
+    bgBottom: string;
+    accent: string;
+    imgSize?: number;
+    offsetY?: number;
+  }
+> = {
+  arch: {
+    accent: "#60a5fa",
+    bgBottom: "#12122a",
+    bgTop: "#2e2e5c",
+    name: "Blair Arch",
+    offsetY: 14,
+  },
+  cannon: {
+    accent: "#f87171",
+    bgBottom: "#1e120e",
+    bgTop: "#5c2e1c",
+    name: "Nassau Cannon",
+    offsetY: 7,
+  },
+  club: {
+    accent: "#f59e0b",
+    bgBottom: "#1e1a0e",
+    bgTop: "#504418",
+    imgSize: 150,
+    name: "Eating Club",
+  },
+  lab: {
+    accent: "#facc15",
+    bgBottom: "#141c0e",
+    bgTop: "#304c1c",
+    name: "E-Quad Lab",
+    offsetY: 7,
+  },
+  library: {
+    accent: "#67e8f9",
+    bgBottom: "#0e1822",
+    bgTop: "#1c3a5a",
+    imgSize: 170,
+    offsetY: 4,
+    name: "Firestone Library",
+  },
+  mortar: {
+    accent: "#fb923c",
+    bgBottom: "#1e160e",
+    bgTop: "#503818",
+    imgSize: 150,
+    name: "Palmer Mortar",
+    offsetY: 14,
+  },
+  station: {
+    accent: "#a78bfa",
+    bgBottom: "#1c0e1c",
+    bgTop: "#4c1c4c",
+    name: "Dinky Station",
+    imgSize: 150,
+    offsetY: 24,
+  },
+};
+
 const CORNER_SVG = (
   <svg viewBox="0 0 70 70" width={CS} height={CS}>
     <path
@@ -255,6 +320,115 @@ function renderFrame(): React.ReactElement {
   );
 }
 
+const BG = "rgb(32,24,14)";
+const BG_RGBA = "32,24,14";
+
+const LEFT_MAPS = [
+  "nassau",
+  "poe",
+  "carnegie",
+  "murky_bog",
+  "sunken_temple",
+  "glacier",
+  "fortress",
+  "lava_fields",
+] as const;
+const RIGHT_MAPS = [
+  "oasis",
+  "sphinx",
+  "pyramid",
+  "peak",
+  "caldera",
+  "throne",
+  "witch_hut",
+  "sandbox",
+] as const;
+const MAP_STRIP_W = 160;
+const MAP_IMG_H = 72;
+const MAP_GAP = 8;
+
+function renderMapStrip(
+  baseUrl: string,
+  maps: readonly string[],
+  side: "left" | "right"
+): React.ReactElement {
+  const fadeDir = side === "left" ? "270deg" : "90deg";
+  const totalH = maps.length * MAP_IMG_H + (maps.length - 1) * MAP_GAP;
+  const topOffset = Math.round((H - totalH) / 2);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        height: H,
+        left: side === "left" ? 0 : W - MAP_STRIP_W,
+        position: "absolute",
+        top: 0,
+        width: MAP_STRIP_W,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: MAP_GAP,
+          left: 8,
+          position: "absolute",
+          top: topOffset,
+          width: MAP_STRIP_W - 16,
+        }}
+      >
+        {maps.map((map) => (
+          <div
+            key={map}
+            style={{
+              borderRadius: 6,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              display: "flex",
+              height: MAP_IMG_H,
+              overflow: "hidden",
+              width: MAP_STRIP_W - 16,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${baseUrl}/images/previews/${map}.png`}
+              width={MAP_STRIP_W - 16}
+              height={MAP_IMG_H}
+              alt=""
+              style={{ display: "flex", objectFit: "cover" }}
+            />
+          </div>
+        ))}
+      </div>
+      {/* Top/bottom fade */}
+      <div
+        style={{
+          background: `linear-gradient(180deg, ${BG} 0%, transparent 20%, transparent 80%, ${BG} 100%)`,
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: MAP_STRIP_W,
+        }}
+      />
+      {/* Inner-edge fade */}
+      <div
+        style={{
+          background: `linear-gradient(${fadeDir}, transparent 40%, ${BG} 100%)`,
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: MAP_STRIP_W,
+        }}
+      />
+    </div>
+  );
+}
+
 export function renderOGImage(baseUrl: string): React.ReactElement {
   const bgUrl = `${baseUrl}/images/new/gameplay_grounds.png`;
   const logoUrl = `${baseUrl}/images/og-thumbs/logo.png`;
@@ -269,7 +443,7 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
   return (
     <div
       style={{
-        background: "#06060a",
+        background: BG,
         display: "flex",
         fontFamily: FONT,
         height: H,
@@ -285,14 +459,13 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         width={W}
         height={H}
         alt=""
-        style={{ left: 0, opacity: 0.95, position: "absolute", top: 0 }}
+        style={{ left: 0, opacity: 0.35, position: "absolute", top: 0 }}
       />
 
       {/* Vignette overlay */}
       <div
         style={{
-          background:
-            "radial-gradient(ellipse 100% 90% at 50% 45%, rgba(6,6,10,0.1) 0%, rgba(6,6,10,0.65) 80%)",
+          background: `radial-gradient(ellipse 100% 90% at 50% 45%, rgba(${BG_RGBA},0.1) 0%, rgba(${BG_RGBA},0.7) 80%)`,
           display: "flex",
           height: H,
           left: 0,
@@ -302,11 +475,10 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         }}
       />
 
-      {/* Dark band behind content for readability */}
+      {/* Vertical gradient for readability */}
       <div
         style={{
-          background:
-            "linear-gradient(180deg, rgba(6,6,10,0.5) 0%, rgba(6,6,10,0.35) 30%, rgba(6,6,10,0.2) 50%, rgba(6,6,10,0.4) 70%, rgba(6,6,10,0.7) 100%)",
+          background: `linear-gradient(180deg, rgba(${BG_RGBA},0.6) 0%, rgba(${BG_RGBA},0.3) 30%, rgba(${BG_RGBA},0.15) 50%, rgba(${BG_RGBA},0.4) 70%, rgba(${BG_RGBA},0.8) 100%)`,
           display: "flex",
           height: H,
           left: 0,
@@ -315,6 +487,10 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           width: W,
         }}
       />
+
+      {/* Map preview strips */}
+      {renderMapStrip(baseUrl, LEFT_MAPS, "left")}
+      {renderMapStrip(baseUrl, RIGHT_MAPS, "right")}
 
       {/* Ornate frame */}
       {renderFrame()}
@@ -325,7 +501,7 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           alignItems: "center",
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: 22,
           height: "100%",
           justifyContent: "center",
           padding: "36px 40px",
@@ -368,39 +544,59 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           </div>
         </div>
 
-        {/* Tower sprites row */}
+        {/* Tower carousel panel */}
         <div
           style={{
-            alignItems: "flex-end",
+            background: `rgba(${BG_RGBA},0.7)`,
+            border: "1.5px solid rgba(180,140,60,0.25)",
+            borderRadius: 12,
             display: "flex",
-            gap: 10,
             justifyContent: "center",
+            padding: "14px 20px",
           }}
         >
-          {TOWERS.map((tower) => (
-            <div
-              key={tower}
-              style={{
-                alignItems: "center",
-                background: "rgba(6,6,10,0.5)",
-                border: "1.5px solid rgba(180,140,60,0.3)",
-                borderRadius: 8,
-                display: "flex",
-                height: 180,
-                justifyContent: "center",
-                width: 120,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`${baseUrl}/images/og-thumbs/towers/${tower}.png`}
-                width={200}
-                height={200}
-                alt=""
-                style={{ display: "flex" }}
-              />
-            </div>
-          ))}
+          <div
+            style={{
+              alignItems: "flex-end",
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+            }}
+          >
+            {TOWERS.map((tower) => {
+              const info = TOWER_CARD_INFO[tower];
+              const sz = info.imgSize ?? 180;
+              return (
+                <div
+                  key={tower}
+                  style={{
+                    alignItems: "center",
+                    background: `linear-gradient(170deg, ${info.bgTop}, ${info.bgBottom})`,
+                    border: `1.5px solid ${info.accent}30`,
+                    borderRadius: 8,
+                    boxShadow: `0 2px 10px rgba(0,0,0,0.4), inset 0 0 12px rgba(0,0,0,0.3)`,
+                    display: "flex",
+                    height: 148,
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    width: 112,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`${baseUrl}/images/og-thumbs/towers/${tower}.png`}
+                    width={sz}
+                    height={sz}
+                    alt=""
+                    style={{
+                      display: "flex",
+                      marginTop: info.offsetY ?? 0,
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Stats row */}
@@ -408,7 +604,7 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           style={{
             alignItems: "center",
             display: "flex",
-            gap: 8,
+            gap: 4,
           }}
         >
           {stats.map((s, i) => (
@@ -416,10 +612,10 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
               {i > 0 && (
                 <div
                   style={{
-                    background: `${FC}60`,
+                    background: "rgba(212,168,74,0.15)",
                     display: "flex",
-                    height: 28,
-                    marginRight: 8,
+                    height: 32,
+                    marginRight: 4,
                     width: 1,
                   }}
                 />
@@ -427,12 +623,10 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
               <div
                 style={{
                   alignItems: "center",
-                  background: "rgba(6,6,10,0.5)",
-                  border: "1px solid rgba(180,140,60,0.25)",
-                  borderRadius: 6,
                   display: "flex",
-                  gap: 6,
-                  padding: "6px 14px",
+                  flexDirection: "column",
+                  gap: 2,
+                  padding: "0 20px",
                 }}
               >
                 <div
@@ -440,7 +634,7 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
                     color: "#F58025",
                     display: "flex",
                     fontFamily: FONT,
-                    fontSize: 32,
+                    fontSize: 36,
                     fontWeight: 700,
                     lineHeight: 1,
                   }}
@@ -449,15 +643,15 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
                 </div>
                 <div
                   style={{
-                    color: "#a1a1aa",
+                    color: "rgba(212,168,74,0.35)",
                     display: "flex",
                     fontFamily: FONT,
-                    fontSize: 16,
+                    fontSize: 11,
                     fontWeight: 700,
-                    letterSpacing: "0.06em",
+                    letterSpacing: "0.2em",
                   }}
                 >
-                  {s.l}
+                  {s.l.toUpperCase()}
                 </div>
               </div>
             </div>
@@ -467,15 +661,24 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
         {/* CTA */}
         <div
           style={{
-            color: "#fbbf24",
+            alignItems: "center",
+            background:
+              "linear-gradient(180deg, rgba(190,138,30,0.95) 0%, rgba(120,78,15,0.98) 100%)",
+            border: "2px solid rgba(212,168,74,0.6)",
+            borderRadius: 12,
+            boxShadow:
+              "0 0 40px rgba(212,168,74,0.15), 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18)",
+            color: "rgba(255,240,200,0.95)",
             display: "flex",
             fontFamily: FONT,
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: 700,
-            letterSpacing: "0.3em",
+            justifyContent: "center",
+            letterSpacing: "0.2em",
+            padding: "14px 44px",
           }}
         >
-          FREE BROWSER GAME · PLAY NOW
+          ENTER THE REALM
         </div>
       </div>
     </div>

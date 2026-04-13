@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
+import { CardFrame } from "../CardFrame";
 import { LANDING_THEME, GAMEPLAY_SHOWCASE } from "../landingConstants";
 import { SectionFlourish } from "./LoadoutUI";
 import { MapSectionHeader, MapSectionBg } from "./mapElements";
@@ -37,81 +38,76 @@ function RegionTile({
   };
 
   return (
-    <Link
-      href={href}
-      onMouseEnter={onHover}
-      onFocus={onHover}
-      className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-500"
-      style={{
-        border: featured
-          ? `2px solid ${palette.accent}60`
-          : "1.5px solid rgba(255,255,255,0.06)",
-        boxShadow: featured
-          ? `0 0 30px ${palette.accent}20, 0 8px 32px rgba(0,0,0,0.5)`
-          : "0 4px 20px rgba(0,0,0,0.4)",
-        transform: featured ? "scale(1.02)" : "scale(1)",
-      }}
+    <CardFrame
+      accent={palette.accent}
+      glow={featured ? `${palette.accent}20` : undefined}
+      className={`transition-all duration-500 ${featured ? "scale-[1.02]" : ""}`}
     >
-      <div className="aspect-[16/10] relative">
-        <Image
-          src={src}
-          alt={label}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          loading="lazy"
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div
-          className="absolute inset-0 transition-opacity duration-500"
-          style={{
-            background: palette.bg,
-            mixBlendMode: "multiply",
-            opacity: featured ? 0.3 : 0.5,
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.45) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-500"
-          style={{
-            boxShadow: `inset 0 0 40px rgba(0,0,0,0.4), inset 0 0 1px ${palette.accent}15`,
-            opacity: featured ? 1 : 0.5,
-          }}
-        />
-
-        {/* Region name overlay */}
-        <div
-          className="absolute bottom-0 inset-x-0 px-3 py-2.5 sm:px-4 sm:py-3"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
-          }}
-        >
-          <h3
-            className="text-sm sm:text-base lg:text-lg font-bold font-cinzel tracking-wide transition-colors duration-500"
+      <Link
+        href={href}
+        onMouseEnter={onHover}
+        onFocus={onHover}
+        className="relative rounded overflow-hidden cursor-pointer group block"
+      >
+        <div className="aspect-[16/10] relative">
+          <Image
+            src={src}
+            alt={label}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading="lazy"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div
+            className="absolute inset-0 transition-opacity duration-500"
             style={{
-              color: featured ? palette.accent : `${palette.accent}90`,
-              textShadow: `0 0 16px ${palette.accent}40, 0 1px 4px rgba(0,0,0,0.8)`,
+              background: palette.bg,
+              mixBlendMode: "multiply",
+              opacity: featured ? 0.3 : 0.5,
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.45) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+            style={{
+              boxShadow: `inset 0 0 30px rgba(0,0,0,0.4), inset 0 0 1px ${palette.accent}15`,
+              opacity: featured ? 1 : 0.5,
+            }}
+          />
+
+          <div
+            className="absolute bottom-0 inset-x-0 px-3 py-2.5 sm:px-4 sm:py-3"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
             }}
           >
-            {label}
-          </h3>
-        </div>
+            <h3
+              className="text-sm sm:text-base lg:text-lg font-bold font-cinzel tracking-wide transition-colors duration-500"
+              style={{
+                color: featured ? palette.accent : `${palette.accent}90`,
+                textShadow: `0 0 16px ${palette.accent}40, 0 1px 4px rgba(0,0,0,0.8)`,
+              }}
+            >
+              {label}
+            </h3>
+          </div>
 
-        {/* Hover glow ring */}
-        <div
-          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{
-            boxShadow: `inset 0 0 20px ${palette.accent}15`,
-          }}
-        />
-      </div>
-    </Link>
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{
+              boxShadow: `inset 0 0 20px ${palette.accent}15`,
+            }}
+          />
+        </div>
+      </Link>
+    </CardFrame>
   );
 }
 

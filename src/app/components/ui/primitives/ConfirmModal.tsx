@@ -74,7 +74,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      zClass="z-[200]"
+      zClass="z-[1500]"
       usePortal
       backdropBg="rgba(0,0,0,0.65)"
       blurClass="backdrop-blur-sm"

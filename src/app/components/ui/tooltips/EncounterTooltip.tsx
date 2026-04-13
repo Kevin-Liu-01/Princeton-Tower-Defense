@@ -30,9 +30,11 @@ import { OrnateFrame } from "../primitives/OrnateFrame";
 import {
   GOLD,
   OVERLAY,
+  PANEL,
   PURPLE_CARD,
   RED_CARD,
   AMBER_CARD,
+  dividerGradient,
   panelGradient,
 } from "../system/theme";
 
@@ -93,21 +95,32 @@ const TRAIT_LABELS: Record<string, { label: string; color: string }> =
   );
 
 function NonEnemySpriteRow({ encounter }: { encounter: EncounterQueueItem }) {
-  if (encounter.category === "special_tower" && encounter.entityType) {
-    return (
-      <div className="flex justify-center py-2">
-        <SpecialTowerSprite
-          type={encounter.entityType as SpecialTowerType}
-          size={64}
-        />
-      </div>
-    );
-  }
+  const style = getCategoryStyle(encounter.category);
 
-  if (encounter.category === "hazard" && encounter.entityType) {
+  if (
+    (encounter.category === "special_tower" ||
+      encounter.category === "hazard") &&
+    encounter.entityType
+  ) {
     return (
-      <div className="flex justify-center py-2">
-        <HazardSprite type={encounter.entityType as HazardType} size={64} />
+      <div className="flex justify-center py-3 sm:py-4">
+        <div
+          className="flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-2xl"
+          style={{
+            background: `radial-gradient(circle, ${style.borderColor.replace("0.5)", "0.08)")}, transparent 70%)`,
+            border: `1px solid ${style.borderColor.replace("0.5)", "0.15)")}`,
+            boxShadow: `0 0 20px ${style.borderColor.replace("0.5)", "0.08)")}, inset 0 0 15px ${style.borderColor.replace("0.5)", "0.05)")}`,
+          }}
+        >
+          {encounter.category === "special_tower" ? (
+            <SpecialTowerSprite
+              type={encounter.entityType as SpecialTowerType}
+              size={56}
+            />
+          ) : (
+            <HazardSprite type={encounter.entityType as HazardType} size={56} />
+          )}
+        </div>
       </div>
     );
   }
@@ -302,18 +315,27 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
             <>
               <NonEnemySpriteRow encounter={encounter} />
               <div className="px-3 sm:px-5 py-2.5 sm:py-3 max-h-[35dvh] sm:max-h-[40dvh] overflow-y-auto">
-                {encounter.description
-                  .split("\n")
-                  .filter(Boolean)
-                  .map((line, index) => (
-                    <p
-                      key={index}
-                      className="text-xs sm:text-sm text-amber-100/80 leading-relaxed"
-                      style={{ marginTop: index > 0 ? 6 : 0 }}
-                    >
-                      {line}
-                    </p>
-                  ))}
+                <div
+                  className="rounded-xl px-3.5 sm:px-4 py-3 sm:py-3.5"
+                  style={{
+                    background: PANEL.bgDeep,
+                    border: `1px solid ${style.borderColor.replace("0.5)", "0.15)")}`,
+                    boxShadow: `inset 0 0 12px ${style.borderColor.replace("0.5)", "0.04)")}`,
+                  }}
+                >
+                  {encounter.description
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((line, index) => (
+                      <p
+                        key={index}
+                        className="text-xs sm:text-sm text-amber-100/80 leading-relaxed"
+                        style={{ marginTop: index > 0 ? 8 : 0 }}
+                      >
+                        {line}
+                      </p>
+                    ))}
+                </div>
               </div>
             </>
           )}
@@ -525,16 +547,22 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
         ) : (
           <div className="flex items-start gap-3 px-3 py-2.5">
             {encounter.entityType && (
-              <div className="flex-shrink-0 mt-0.5">
+              <div
+                className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-lg"
+                style={{
+                  background: `radial-gradient(circle, ${style.borderColor.replace("0.5)", "0.08)")}, transparent 70%)`,
+                  border: `1px solid ${style.borderColor.replace("0.5)", "0.15)")}`,
+                }}
+              >
                 {encounter.category === "special_tower" ? (
                   <SpecialTowerSprite
                     type={encounter.entityType as SpecialTowerType}
-                    size={48}
+                    size={40}
                   />
                 ) : encounter.category === "hazard" ? (
                   <HazardSprite
                     type={encounter.entityType as HazardType}
-                    size={48}
+                    size={40}
                   />
                 ) : null}
               </div>

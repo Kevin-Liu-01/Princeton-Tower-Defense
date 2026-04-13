@@ -44,29 +44,6 @@ function circularDiff(index: number, center: number, length: number): number {
   return raw > length / 2 ? raw - length : raw;
 }
 
-function OrganicBlob({ color, size }: { color: string; size: number }) {
-  return (
-    <svg
-      viewBox="0 0 200 70"
-      className="pointer-events-none"
-      style={{ width: size, height: size * 0.35, marginTop: -8 }}
-      fill="none"
-    >
-      <ellipse
-        cx="100"
-        cy="45"
-        rx="95"
-        ry="22"
-        fill={`${color}15`}
-        stroke={`${color}25`}
-        strokeWidth="0.8"
-      />
-      <ellipse cx="100" cy="42" rx="80" ry="16" fill={`${color}0a`} />
-      <ellipse cx="100" cy="50" rx="70" ry="8" fill={`${color}08`} />
-    </svg>
-  );
-}
-
 function useAutoRotate(cb: () => void, intervalMs: number, paused: boolean) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
@@ -236,7 +213,6 @@ export function HeroCinematic() {
                       animated={isCenter}
                     />
                   </SpriteDisplay>
-                  <OrganicBlob color={heroData.color} size={SPRITE_VIS * 1.3} />
                   {!isCenter && isVisible && (
                     <span
                       className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider -mt-1"

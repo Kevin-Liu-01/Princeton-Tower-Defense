@@ -13,6 +13,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TOWER_DATA, TOWER_ACCENTS } from "../../../constants/towers";
 import { TowerSprite } from "../../../sprites/towers";
 import type { TowerType } from "../../../types";
+import { FrameCorner } from "../CardFrame";
 import { useCrossfade } from "../hooks/useCrossfade";
 import {
   LANDING_THEME,
@@ -143,21 +144,6 @@ const LEVEL_CYCLE: TowerLevel[] = [
   { level: 4, upgrade: "A" },
   { level: 4, upgrade: "B" },
 ];
-
-function FrameCorner({ className }: { className: string }) {
-  return (
-    <div
-      className={`absolute w-[7px] h-[7px] rotate-45 pointer-events-none z-10 ${className}`}
-      style={{
-        background:
-          "radial-gradient(circle at 35% 35%, #ffe8a0, #d4aa50, #8b6914)",
-        border: "1px solid #6b4f12",
-        boxShadow:
-          "0 0 3px rgba(0,0,0,0.5), inset 0 0 1px rgba(255,230,150,0.4)",
-      }}
-    />
-  );
-}
 
 function LevelCard({
   preview,

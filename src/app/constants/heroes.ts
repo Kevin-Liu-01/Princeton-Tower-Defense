@@ -136,7 +136,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
 
 // Hero-specific combat stats used by the runtime
 export const HERO_COMBAT_STATS = {
-  captainKnightHp: 350,
+  captainKnightHp: 750,
   captainKnightMoveRadius: 180,
   engineerTurretHp: 400,
   heroAoeDamageMult: 0.5,
