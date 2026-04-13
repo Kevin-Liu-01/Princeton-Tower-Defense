@@ -71,8 +71,6 @@ import {
   WAVE_TIMER_BASE,
   SENTINEL_NEXUS_STATS,
   SUNFORGE_ORRERY_STATS,
-  ARMORED_THRESHOLD,
-  FAST_SPEED_THRESHOLD,
   DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
   DEFAULT_ENEMY_TROOP_DAMAGE,
   HERO_ROLES,
@@ -89,6 +87,7 @@ import {
   TOWER_CATEGORIES,
   TOWER_TAGS,
   TOWER_QUICK_SUMMARY,
+  deriveEnemyTags,
 } from "../../constants";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
@@ -4534,46 +4533,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                 );
                                 const threatCC = getColorClasses(threat.color);
 
-                                const getEnemyTypeClassification = () => {
-                                  if (enemy.flying) {
-                                    return {
-                                      color: "cyan",
-                                      icon: <Wind size={12} />,
-                                      type: "Flying",
-                                    };
-                                  }
-                                  if (enemy.isRanged) {
-                                    return {
-                                      color: "purple",
-                                      icon: <Crosshair size={12} />,
-                                      type: "Ranged",
-                                    };
-                                  }
-                                  if (enemy.armor > ARMORED_THRESHOLD) {
-                                    return {
-                                      color: "stone",
-                                      icon: <Shield size={12} />,
-                                      type: "Armored",
-                                    };
-                                  }
-                                  if (enemy.speed > FAST_SPEED_THRESHOLD) {
-                                    return {
-                                      color: "green",
-                                      icon: <Gauge size={12} />,
-                                      type: "Fast",
-                                    };
-                                  }
-                                  return {
-                                    color: "red",
-                                    icon: <Flag size={12} />,
-                                    type: "Ground",
-                                  };
-                                };
-                                const enemyTypeClass =
-                                  getEnemyTypeClassification();
-                                const typeCC = getColorClasses(
-                                  enemyTypeClass.color
-                                );
+                                const enemyTags = deriveEnemyTags(type);
 
                                 return (
                                   <div
@@ -4610,25 +4570,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                           {threat.level}
                                         </span>
                                       </div>
-                                      <div className="flex items-center gap-3">
-                                        <div
-                                          className={`flex items-center gap-1.5 text-xs ${typeCC.text}`}
-                                        >
-                                          {enemyTypeClass.icon}
-                                          <span>{enemyTypeClass.type}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded-lg border border-rose-800/50 flex-shrink-0">
-                                          <Heart
-                                            size={10}
-                                            className="text-rose-400"
-                                          />
-                                          <span className="text-rose-300 font-bold text-[10px]">
-                                            {enemy.liveCost || 1}{" "}
-                                            {(enemy.liveCost || 1) > 1
-                                              ? "lives"
-                                              : "life"}
-                                          </span>
-                                        </div>
+                                      <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded-lg border border-rose-800/50 flex-shrink-0">
+                                        <Heart
+                                          size={10}
+                                          className="text-rose-400"
+                                        />
+                                        <span className="text-rose-300 font-bold text-[10px]">
+                                          {enemy.liveCost || 1}{" "}
+                                          {(enemy.liveCost || 1) > 1
+                                            ? "lives"
+                                            : "life"}
+                                        </span>
                                       </div>
                                     </div>
 
@@ -4771,6 +4723,24 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                           </div>
                                         );
                                       })()}
+
+                                      {enemyTags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mb-3">
+                                          {enemyTags.slice(0, 4).map((tag) => (
+                                            <span
+                                              key={tag.id}
+                                              className="text-[10px] font-bold uppercase tracking-wide px-2 py-[3px] rounded-md leading-none"
+                                              style={{
+                                                color: tag.color,
+                                                background: `${tag.color}12`,
+                                                border: `1px solid ${tag.color}25`,
+                                              }}
+                                            >
+                                              {tag.label}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
 
                                       <div className="mb-3">
                                         <HPBar

@@ -37,6 +37,7 @@ import {
   TROOP_DATA,
   ENEMY_TRAIT_META,
   ENEMY_ABILITY_META,
+  deriveEnemyTags,
 } from "../../constants";
 import { EnemySprite, HeroSprite, TroopSprite } from "../../sprites";
 import type { Enemy, Troop, Hero, Position, EnemyTrait } from "../../types";
@@ -46,7 +47,13 @@ import {
   TROOP_INSPECT_THEME,
   HERO_INSPECT_THEME,
 } from "./InspectOverlay";
-import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./system/theme";
+import {
+  PANEL,
+  GOLD,
+  PURPLE_CARD,
+  dividerGradient,
+  panelGradient,
+} from "./system/theme";
 
 // =============================================================================
 // ENEMY INSPECTOR COMPONENT (toggle button + status)
@@ -238,21 +245,31 @@ function getAbilityInfo(abilityType: string, iconSize = 12) {
 
 function CompactHpBar({ current, max }: { current: number; max: number }) {
   const pct = (current / max) * 100;
-  const color =
-    pct > 50 ? "bg-green-500" : pct > 25 ? "bg-yellow-500" : "bg-red-500";
+  const barClass =
+    pct > 66
+      ? "from-emerald-600 to-emerald-400"
+      : pct > 33
+        ? "from-amber-600 to-amber-400"
+        : "from-red-600 to-red-400";
   return (
-    <div className="mb-1.5">
-      <div className="flex justify-between text-[9px] mb-0.5">
-        <span className="text-red-400 font-bold flex items-center gap-0.5">
+    <div className="mb-2">
+      <div className="flex justify-between text-[9px] mb-1">
+        <span className="text-red-400/80 font-bold flex items-center gap-0.5 uppercase tracking-wider text-[8px]">
           <Heart size={9} /> HP
         </span>
-        <span className="text-white font-mono text-[8px]">
+        <span className="text-white/90 font-mono text-[8px]">
           {Math.ceil(current)} / {max}
         </span>
       </div>
-      <div className="w-full bg-black/40 h-2 rounded-full border border-white/10 overflow-hidden">
+      <div
+        className="w-full h-2.5 rounded-full overflow-hidden"
+        style={{
+          background: PANEL.bgDeep,
+          border: `1px solid ${GOLD.innerBorder08}`,
+        }}
+      >
         <div
-          className={`h-full ${color} transition-all duration-300`}
+          className={`h-full bg-gradient-to-r ${barClass} transition-all duration-300 rounded-full`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -384,11 +401,11 @@ function StatusBadges({
     return null;
   }
   return (
-    <div
-      className="mt-1.5 pt-1.5"
-      style={{ borderTop: `1px solid ${GOLD.border25}` }}
-    >
-      <div className="text-[8px] text-purple-400 font-bold mb-1">STATUS</div>
+    <div className="mt-2">
+      <div className="mb-1.5 h-px" style={{ background: dividerGradient }} />
+      <div className="text-[8px] text-purple-400/70 font-bold mb-1 uppercase tracking-[0.15em]">
+        Status
+      </div>
       <div className="flex flex-wrap gap-1">{badges}</div>
     </div>
   );
@@ -424,10 +441,12 @@ function StatTile({
   className: string;
 }) {
   return (
-    <div className={`p-1 rounded-md border text-center ${className}`}>
-      <div className="flex items-center justify-center gap-0.5">
+    <div className={`p-1.5 rounded-lg border text-center ${className}`}>
+      <div className="flex items-center justify-center gap-0.5 mb-0.5">
         {icon}
-        <span className="text-[7px] opacity-80">{label}</span>
+        <span className="text-[7px] opacity-70 uppercase tracking-wider font-medium">
+          {label}
+        </span>
       </div>
       <div className="font-bold text-[11px] leading-tight">{value}</div>
     </div>
@@ -489,22 +508,21 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1 mt-0.5">
-          {eData.isBoss && (
-            <span className="text-[8px] px-1 py-0.5 bg-red-900/60 rounded text-red-300 font-bold">
-              BOSS
-            </span>
-          )}
-          {eData.flying && (
-            <span className="text-[8px] px-1 py-0.5 bg-cyan-900/60 rounded text-cyan-300">
-              FLYING
-            </span>
-          )}
-          {eData.isRanged && (
-            <span className="text-[8px] px-1 py-0.5 bg-green-900/60 rounded text-green-300">
-              RANGED
-            </span>
-          )}
+        <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+          {deriveEnemyTags(enemy.type)
+            .slice(0, 4)
+            .map((tag) => (
+              <span
+                key={tag.id}
+                className="text-[8px] font-bold uppercase tracking-wide px-1 py-0.5 rounded leading-none"
+                style={{
+                  color: tag.color,
+                  background: `${tag.color}15`,
+                }}
+              >
+                {tag.label}
+              </span>
+            ))}
         </div>
       </div>
     </div>
@@ -637,9 +655,13 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
       )}
 
       {traits.length > 0 && (
-        <div className="mb-1.5">
-          <div className="text-[8px] text-purple-400 font-bold mb-1 flex items-center gap-0.5">
-            <Info size={8} /> TRAITS
+        <div className="mb-2">
+          <div
+            className="mb-1.5 h-px"
+            style={{ background: dividerGradient }}
+          />
+          <div className="text-[8px] text-purple-400/70 font-bold mb-1 flex items-center gap-0.5 uppercase tracking-[0.15em]">
+            <Info size={8} /> Traits
           </div>
           <div className="flex flex-wrap gap-1">
             {traits.map((trait, i) => {
@@ -660,9 +682,13 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
       )}
 
       {abilities.length > 0 && (
-        <div className="mb-1">
-          <div className="text-[8px] text-purple-400 font-bold mb-1 flex items-center gap-0.5">
-            <Zap size={8} /> ABILITIES
+        <div className="mb-1.5">
+          <div
+            className="mb-1.5 h-px"
+            style={{ background: dividerGradient }}
+          />
+          <div className="text-[8px] text-purple-400/70 font-bold mb-1 flex items-center gap-0.5 uppercase tracking-[0.15em]">
+            <Zap size={8} /> Abilities
           </div>
           <div className="space-y-1 max-h-28 overflow-y-auto">
             {abilities.map((ability, i) => {
@@ -823,7 +849,8 @@ export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
         />
       </div>
 
-      <div className="text-[8px] text-stone-400 italic text-center mb-1">
+      <div className="mb-1.5 h-px" style={{ background: dividerGradient }} />
+      <div className="text-[9px] text-stone-400/80 italic text-center mb-1.5 leading-relaxed">
         {tData.desc}
       </div>
 
@@ -855,13 +882,22 @@ export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
   const header = (
     <div className="flex items-center gap-2">
       <div
-        className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden"
+        className="w-14 h-14 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden relative"
         style={{
-          background: "rgba(245, 158, 11, 0.1)",
-          border: "1.5px solid rgba(245, 158, 11, 0.5)",
+          background: "rgba(245, 158, 11, 0.12)",
+          border: "1.5px solid rgba(245, 158, 11, 0.4)",
         }}
       >
-        <HeroSprite type={hero.type} size={34} animated />
+        <div
+          className="absolute inset-0 rounded-md blur-[6px] opacity-60 z-0"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(245, 158, 11, 0.6), transparent 70%)",
+          }}
+        />
+        <div className="relative z-10">
+          <HeroSprite type={hero.type} size={48} animated />
+        </div>
       </div>
       <div className="flex-1 min-w-0 pr-5">
         <span className="text-xs font-bold text-amber-100 truncate block">
@@ -910,17 +946,21 @@ export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
         />
       </div>
 
+      <div className="mb-1.5 h-px" style={{ background: dividerGradient }} />
       <div
-        className="p-1.5 rounded-md border mb-1"
+        className="p-2 rounded-lg border mb-1.5"
         style={{
-          background: "rgba(139, 92, 246, 0.1)",
-          borderColor: "rgba(139, 92, 246, 0.3)",
+          background: "rgba(139, 92, 246, 0.08)",
+          borderColor: "rgba(139, 92, 246, 0.25)",
+          boxShadow: "inset 0 0 10px rgba(139, 92, 246, 0.05)",
         }}
       >
-        <div className="text-[8px] text-purple-400 font-bold mb-0.5 flex items-center gap-0.5">
-          <Sparkles size={8} /> ABILITY
+        <div className="text-[8px] text-purple-400/70 font-bold mb-1 flex items-center gap-0.5 uppercase tracking-[0.15em]">
+          <Sparkles size={8} /> Ability
         </div>
-        <div className="text-[9px] text-purple-200">{hData.ability}</div>
+        <div className="text-[9px] text-purple-200 leading-relaxed">
+          {hData.ability}
+        </div>
       </div>
 
       <StatusBadges unit={hero} />

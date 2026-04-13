@@ -2,10 +2,14 @@ import {
   TILE_SIZE,
   TOWER_DATA,
   TOWER_COLORS,
+  ISO_PRISM_W_FACTOR,
+  ISO_PRISM_D_FACTOR,
   LEVEL_2_RANGE_MULT,
   LEVEL_3_RANGE_MULT,
   LEVEL_4_RANGE_MULT,
 } from "../../constants";
+import type { MapTheme } from "../../constants/maps";
+import { LEVEL_DATA } from "../../constants/maps";
 import { TOWER_STATS } from "../../constants/towerStats";
 import { getGameSettings } from "../../hooks/useSettings";
 import type { Tower, DraggingTower, Position, TowerType } from "../../types";
@@ -16,6 +20,9 @@ import {
   isValidBuildPosition,
   isoTileDiamondHalfH,
 } from "../../utils";
+import { drawTransitionBlob } from "../decorations/landmarkTransition";
+import type { TransitionRadii } from "../decorations/landmarkTransition";
+import { isMountainTerrainKind } from "../maps/challengeTerrain";
 import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
 import { renderArchTower } from "./arch";
 import { renderCannonTower } from "./cannon";
@@ -24,7 +31,7 @@ import { renderLabTower } from "./lab";
 import { renderLibraryTower } from "./library";
 import { renderMortarTower } from "./mortar";
 import { renderStationTower } from "./station";
-import { drawGroundTransition } from "./towerHelpers";
+import { getTowerFoundationSize, getTowerYShift } from "./towerHelpers";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,
@@ -387,6 +394,21 @@ export function renderTowerPreview(
   }
 }
 
+function getTowerTransitionRadii(tower: Tower, zoom: number): TransitionRadii {
+  const baseTower = { ...tower, level: 1 as const };
+  const fnd = getTowerFoundationSize(baseTower);
+  const baseW = fnd.w * zoom;
+  const baseH = fnd.d * zoom;
+  return {
+    innerH: baseH * ISO_PRISM_D_FACTOR * 0.55,
+    innerW: baseW * ISO_PRISM_W_FACTOR * 0.55,
+    midH: baseH * ISO_PRISM_D_FACTOR * 0.8,
+    midW: baseW * ISO_PRISM_W_FACTOR * 0.8,
+    outerH: baseH * ISO_PRISM_D_FACTOR * 1.1,
+    outerW: baseW * ISO_PRISM_W_FACTOR * 1.1,
+  };
+}
+
 export function renderTowerGroundTransition(
   ctx: CanvasRenderingContext2D,
   tower: Tower,
@@ -408,5 +430,27 @@ export function renderTowerGroundTransition(
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
-  drawGroundTransition(ctx, screenPos, tower, zoom, time, selectedMap);
+
+  const levelData = LEVEL_DATA[selectedMap];
+  const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  const isChallenge = isMountainTerrainKind(levelData?.levelKind);
+  const radii = getTowerTransitionRadii(tower, zoom);
+
+  const baseTower = { ...tower, level: 1 as const };
+  const yShift = getTowerYShift(baseTower);
+  const adjustedPos = { x: screenPos.x, y: screenPos.y + (2 - yShift) * zoom };
+
+  drawTransitionBlob(
+    ctx,
+    adjustedPos,
+    zoom,
+    time,
+    mapTheme,
+    radii,
+    tower.pos.x,
+    tower.pos.y,
+    selectedMap,
+    1,
+    isChallenge
+  );
 }

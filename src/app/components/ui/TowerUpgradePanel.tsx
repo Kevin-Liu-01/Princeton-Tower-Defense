@@ -132,7 +132,7 @@ function buildActionButtons(
   // --- Upgrade buttons ---
   if (tower.level <= 2) {
     buttons.push({
-      angle: -90,
+      angle: 30,
       bgGradient: "linear-gradient(180deg, #166534 0%, #14532d 100%)",
       borderColor: "rgba(34,197,94,0.7)",
       disabled: pawPoints < upgradeCost,
@@ -211,10 +211,10 @@ function buildActionButtons(
     }
   }
 
-  // --- Station deploy/rally button (bottom-right) ---
+  // --- Station deploy/rally button (top, swapped with upgrade) ---
   if (tower.type === "station") {
     buttons.push({
-      angle: 30,
+      angle: -90,
       bgGradient: "linear-gradient(180deg, #064e3b 0%, #022c22 100%)",
       borderColor: "rgba(52,211,153,0.65)",
       glowColor: "rgba(52,211,153,0.3)",

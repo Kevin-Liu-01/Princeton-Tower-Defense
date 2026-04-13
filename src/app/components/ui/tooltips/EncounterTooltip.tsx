@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { ENEMY_DATA, ENEMY_TRAIT_META } from "../../../constants/enemies";
+import { ENEMY_DATA } from "../../../constants/enemies";
+import { deriveEnemyTags } from "../../../constants/enemyTags";
 import type { EncounterQueueItem } from "../../../hooks/useTutorial";
 import {
   EnemySprite,
@@ -86,14 +87,6 @@ function getCategoryStyle(
   }
 }
 
-const TRAIT_LABELS: Record<string, { label: string; color: string }> =
-  Object.fromEntries(
-    Object.entries(ENEMY_TRAIT_META).map(([key, value]) => [
-      key,
-      { color: value.pillColor, label: value.label },
-    ])
-  );
-
 function NonEnemySpriteRow({ encounter }: { encounter: EncounterQueueItem }) {
   const style = getCategoryStyle(encounter.category);
 
@@ -137,8 +130,7 @@ function EnemyCardList({ members }: { members: EnemyType[] }) {
           return null;
         }
         const theme = getEnemySpriteFrameTheme(type);
-        const traits =
-          enemyData.traits?.filter((trait) => TRAIT_LABELS[trait]) || [];
+        const tags = deriveEnemyTags(type);
         const abilities = enemyData.abilities || [];
 
         return (
@@ -170,12 +162,16 @@ function EnemyCardList({ members }: { members: EnemyType[] }) {
                 {enemyData.isBoss && (
                   <Crown size={12} className="text-red-400" />
                 )}
-                {traits.map((trait) => (
+                {tags.slice(0, 3).map((tag) => (
                   <span
-                    key={trait}
-                    className={`text-[8px] sm:text-[10px] font-medium px-1.5 sm:px-2 py-[2px] rounded-full border ${TRAIT_LABELS[trait].color}`}
+                    key={tag.id}
+                    className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wide px-1.5 sm:px-2 py-[2px] rounded-md leading-none"
+                    style={{
+                      color: tag.color,
+                      background: `${tag.color}15`,
+                    }}
                   >
-                    {TRAIT_LABELS[trait].label}
+                    {tag.label}
                   </span>
                 ))}
               </div>

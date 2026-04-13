@@ -228,7 +228,7 @@ const CHALLENGE_GROUND_TRANSITION_PALETTES: Record<
   },
 };
 
-interface TransitionRadii {
+export interface TransitionRadii {
   outerW: number;
   outerH: number;
   midW: number;
@@ -289,7 +289,7 @@ function getSpecialTowerTransitionRadii(
   };
 }
 
-function drawTransitionBlob(
+export function drawTransitionBlob(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,
   zoom: number,

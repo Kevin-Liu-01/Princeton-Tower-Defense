@@ -31,9 +31,9 @@ const SPRITE_SCALE = 2.4;
 const SPRITE_CANVAS = Math.round(SPRITE_VIS * SPRITE_SCALE);
 
 const SLOT_W = 200;
+const SLOT_W_MOBILE = 120;
 const VISIBLE_HALF = 2;
 const VP_W = (VISIBLE_HALF * 2 + 1) * SLOT_W;
-const VP_CX = VP_W / 2;
 const VP_H = 320;
 const AUTO_INTERVAL_MS = 4500;
 
@@ -62,7 +62,15 @@ function useAutoRotate(cb: () => void, intervalMs: number, paused: boolean) {
 export function HeroCinematic() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [userInteracted, setUserInteracted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const navigate = useCallback((d: 1 | -1) => {
     setActiveIdx((prev) => (prev + d + HERO_ORDER.length) % HERO_ORDER.length);
@@ -132,7 +140,7 @@ export function HeroCinematic() {
 
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader title="The Heroes" />
+        <MapSectionHeader title="9 Legendary Heroes" />
 
         {/* Carousel — absolute-positioned items, world-map style */}
         <div className="relative mt-4 flex justify-center">
@@ -151,8 +159,8 @@ export function HeroCinematic() {
           />
 
           <div
-            className="relative overflow-hidden"
-            style={{ width: VP_W, maxWidth: "100%", height: VP_H }}
+            className="relative overflow-hidden w-full"
+            style={{ maxWidth: VP_W, height: VP_H, margin: "0 auto" }}
           >
             {HERO_ORDER.map((heroType, idx) => {
               const diff = circularDiff(idx, activeIdx, HERO_ORDER.length);
@@ -160,8 +168,8 @@ export function HeroCinematic() {
               const isCenter = diff === 0;
               const isVisible = absDiff <= VISIBLE_HALF;
 
+              const slotW = isMobile ? SLOT_W_MOBILE : SLOT_W;
               const scale = isCenter ? 1.15 : absDiff === 1 ? 0.8 : 0.6;
-              const x = VP_CX + diff * SLOT_W - SPRITE_VIS / 2;
               const y = isCenter
                 ? VP_H - SPRITE_VIS - 90
                 : VP_H - SPRITE_VIS * scale - 50;
@@ -185,11 +193,11 @@ export function HeroCinematic() {
                   className="absolute flex flex-col items-center"
                   style={{
                     cursor: isCenter ? "default" : "pointer",
-                    left: 0,
+                    left: "50%",
                     opacity,
                     pointerEvents: isVisible ? "auto" : "none",
                     top: 0,
-                    transform: `translate(${x}px, ${y}px) scale(${scale})`,
+                    transform: `translate(${diff * slotW - SPRITE_VIS / 2}px, ${y}px) scale(${scale})`,
                     transition: `transform 0.4s ${EASING}, opacity 0.35s ease`,
                     width: SPRITE_VIS,
                     zIndex: isCenter ? 3 : absDiff === 1 ? 2 : 1,
@@ -213,14 +221,6 @@ export function HeroCinematic() {
                       animated={isCenter}
                     />
                   </SpriteDisplay>
-                  {!isCenter && isVisible && (
-                    <span
-                      className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider -mt-1"
-                      style={{ color: `${heroData.color}60` }}
-                    >
-                      {heroData.name}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -254,7 +254,7 @@ export function HeroCinematic() {
         {/* Center hero info — below the carousel */}
         <div
           key={HERO_ORDER[activeIdx]}
-          className="flex flex-col items-center gap-2 mt-2 px-4"
+          className="flex flex-col items-center gap-2 mt-2 px-6 text-center"
           style={{ animation: "landing-tower-enter 0.35s ease-out" }}
         >
           <h3

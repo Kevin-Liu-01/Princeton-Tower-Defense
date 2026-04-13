@@ -49,7 +49,6 @@ const T_CARD_W = 142;
 const T_VISIBLE_HALF = 2;
 const T_PAD = 20;
 const T_VP_W = (T_VISIBLE_HALF * 2 + 1) * T_CARD_W + T_PAD * 2;
-const T_VP_CX = T_VP_W / 2;
 const T_ITEM_W = TOWER_VIS + 14;
 const T_ITEM_H = TOWER_VIS + 90;
 const T_EASING = "cubic-bezier(0.4, 0, 0.15, 1)";
@@ -474,7 +473,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       {/* Content — z-10 above everything */}
       <div className="relative z-10 flex flex-col items-center gap-4 sm:gap-6 px-4 w-full max-w-4xl">
         <div
-          className="flex items-center gap-4 sm:gap-6"
+          className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6"
           style={{
             opacity: stages[0] ? 1 : 0,
             transform: stages[0]
@@ -486,15 +485,15 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           <Image
             src="/images/logos/princeton-td-logo.svg"
             alt="Princeton Tower Defense"
-            width={72}
-            height={72}
+            width={56}
+            height={56}
             priority
             className="sm:w-[90px] sm:h-[90px]"
             style={{ filter: `drop-shadow(0 0 14px rgba(${T.accentRgb},0.5))` }}
           />
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center sm:items-start">
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-none"
+              className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-none"
               style={{
                 color: "#fbbf24",
                 textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 2px 6px rgba(0,0,0,0.7)`,
@@ -503,7 +502,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
               PRINCETON
             </h1>
             <h2
-              className="text-base sm:text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mt-1"
+              className="text-sm sm:text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mt-1"
               style={{
                 color: "rgba(255,255,255,0.7)",
                 textShadow: "0 2px 4px rgba(0,0,0,0.5)",
@@ -515,7 +514,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
 
         <div
-          className="flex items-center justify-center gap-1 sm:gap-2"
+          className="relative flex items-center justify-center w-full px-2 sm:px-4"
           style={{
             opacity: stages[1] ? 1 : 0,
             transform: stages[1] ? "translateY(0)" : "translateY(20px)",
@@ -527,9 +526,9 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
               advanceCarousel(-1);
               resetAutoRotate();
             }}
-            className="p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
+            className="absolute left-2 sm:left-4 z-20 p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
             style={{
-              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
+              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.3), rgba(0,0,0,0.5))`,
               border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
               color: T.accent,
@@ -539,18 +538,17 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             <ChevronLeft size={18} />
           </button>
           <div
-            className="relative rounded-xl p-[2px]"
+            className="relative rounded-xl p-[2px] w-full"
             style={{
               background: `linear-gradient(160deg in oklch, oklch(0.45 0.08 75 / 0.4), oklch(0.45 0.08 75 / 0.12), oklch(0.45 0.08 75 / 0.4))`,
               boxShadow: `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.1)`,
+              maxWidth: T_VP_W + 4,
             }}
           >
             <div
-              className="relative rounded-[10px] overflow-hidden"
+              className="relative rounded-[10px] overflow-hidden w-full"
               style={{
                 background: "rgba(6,4,2,0.65)",
-                width: T_VP_W,
-                maxWidth: "80vw",
                 height: T_ITEM_H,
               }}
             >
@@ -567,18 +565,17 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                 const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
                 const tl = LEVEL_CYCLE[towerLevels[idx]];
                 const label = getTowerLabel(type, tl);
-                const x = T_VP_CX + diff * T_CARD_W - T_ITEM_W / 2;
 
                 return (
                   <div
                     key={type}
                     className="absolute flex flex-col items-center"
                     style={{
-                      left: 0,
+                      left: "50%",
                       opacity: isVisible ? 1 : 0,
                       pointerEvents: isVisible ? "auto" : "none",
                       top: 6,
-                      transform: `translateX(${x}px)`,
+                      transform: `translateX(${diff * T_CARD_W - T_ITEM_W / 2}px)`,
                       transition: `transform 0.4s ${T_EASING}, opacity 0.35s ease`,
                       width: T_ITEM_W,
                       zIndex: isCenter ? 2 : 1,
@@ -677,9 +674,9 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
               advanceCarousel(1);
               resetAutoRotate();
             }}
-            className="p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
+            className="absolute right-2 sm:right-4 z-20 p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
             style={{
-              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.2), rgba(0,0,0,0.3))`,
+              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.3), rgba(0,0,0,0.5))`,
               border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
               color: T.accent,

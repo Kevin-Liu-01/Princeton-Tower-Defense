@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import React from "react";
 
 import type { Position } from "../../types";
-import { PANEL, GOLD, panelGradient } from "./system/theme";
+import { PANEL, GOLD, dividerGradient, panelGradient } from "./system/theme";
 
 export interface InspectTheme {
   ringColor: string;
@@ -240,7 +240,7 @@ export function InspectPanel({
     return () => ro.disconnect();
   }, []);
 
-  const panelWidth = 260;
+  const panelWidth = 280;
   const panelGap = 10;
   const cx = unitScreenPos.x;
   const cy = unitScreenPos.y;
@@ -250,7 +250,7 @@ export function InspectPanel({
 
   const aboveY = cy - RING_RADIUS - panelGap - 24;
   const belowY = cy + RING_RADIUS + panelGap + 24;
-  const estimatedH = measuredHeight || 260;
+  const estimatedH = measuredHeight || 280;
   const fitsAbove = aboveY - estimatedH >= 10;
   const flipBelow = !fitsAbove;
   const panelY = flipBelow ? belowY : aboveY;
@@ -275,43 +275,50 @@ export function InspectPanel({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="pointer-events-auto rounded-lg backdrop-blur-sm relative"
+          className="pointer-events-auto rounded-xl backdrop-blur-md relative overflow-hidden"
           style={{
             background: panelGradient,
             border: `2px solid ${theme.panelBorder}`,
-            boxShadow: theme.panelShadow,
+            boxShadow: `${theme.panelShadow}, 0 8px 32px rgba(0,0,0,0.4)`,
             maxHeight: maxH,
             overflowY: "auto",
           }}
         >
           <div
-            className="absolute inset-[2px] rounded-[7px] pointer-events-none"
+            className="h-[3px] w-full"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${theme.panelBorder.replace(/[\d.]+\)$/, "0.7)")}, transparent)`,
+            }}
+          />
+
+          <div
+            className="absolute inset-[2px] rounded-[10px] pointer-events-none"
             style={{ border: `1px solid ${theme.panelInner}` }}
           />
 
           <button
             onClick={onClose}
-            className="absolute top-1.5 right-1.5 p-0.5 rounded-md transition-all hover:scale-110 z-20"
+            className="absolute top-2.5 right-2 p-1 rounded-lg transition-all hover:scale-110 hover:brightness-125 z-20"
             style={{
-              background: PANEL.bgWarmMid,
+              background: PANEL.bgDeep,
               border: `1px solid ${theme.panelBorder}`,
+              boxShadow: `0 0 8px rgba(0,0,0,0.3)`,
             }}
           >
             <X size={12} className="text-white/70" />
           </button>
 
           <div
-            className="px-2 pt-2 pb-1"
+            className="px-3 pt-2.5 pb-1.5"
             style={{
               background: theme.headerBg,
               borderBottom: `1px solid ${theme.headerBorder}`,
-              borderRadius: "6px 6px 0 0",
             }}
           >
             {header}
           </div>
 
-          <div className="px-2 py-1.5">{children}</div>
+          <div className="px-3 py-2">{children}</div>
 
           {!flipBelow ? (
             <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">

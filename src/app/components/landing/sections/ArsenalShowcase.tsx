@@ -491,7 +491,7 @@ export function ArsenalShowcase() {
       </div>
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader title="The Arsenal" />
+        <MapSectionHeader title="Build Epic Towers" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-8">
           <div className="flex justify-center gap-2.5 sm:gap-3 flex-wrap">

@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 
 import { ENEMY_DATA } from "../../../constants/enemies";
+import { ENEMY_TAG_DEFS, deriveEnemyTags } from "../../../constants/enemyTags";
 import { EnemySprite } from "../../../sprites/enemies";
 import type { EnemyType, MapTheme } from "../../../types";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
@@ -51,13 +52,30 @@ const ROW_B: BestiaryEntry[] = [
 ];
 
 const THREAT = {
-  boss: { color: "#ef4444", icon: "\u2620", label: "BOSS" },
-  elite: { color: "#f59e0b", icon: "\u2666", label: "ELITE" },
-  minion: { color: "#6b7280", icon: "", label: "" },
+  boss: {
+    color: "#ef4444",
+    icon: "\u2620",
+    label: "BOSS",
+    nameColor: "#fca5a5",
+  },
+  elite: {
+    color: "#a855f7",
+    icon: "\u2666",
+    label: "ELITE",
+    nameColor: "#d8b4fe",
+  },
+  minion: {
+    color: "#6b7280",
+    icon: "",
+    label: "",
+    nameColor: "rgba(255,255,255,0.65)",
+  },
 } as const;
 
+const MAX_CARD_TAGS = 3;
+
 const CARD_W = 130;
-const CARD_H = 158;
+const CARD_H = 172;
 const SPRITE_VIS = 80;
 const SPRITE_SCALE = 2.2;
 const SPRITE_CANVAS = Math.round(SPRITE_VIS * SPRITE_SCALE);
@@ -70,12 +88,16 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
 
   const threat = THREAT[entry.threat];
   const isBoss = entry.threat === "boss";
+  const isElite = entry.threat === "elite";
   const hasBadge = entry.threat !== "minion";
+  const tags = deriveEnemyTags(entry.type);
 
   return (
     <CardFrame
-      accent={data.color}
-      glow={isBoss ? `${data.color}15` : undefined}
+      accent={threat.color}
+      glow={
+        isBoss ? `${threat.color}25` : isElite ? `${threat.color}15` : undefined
+      }
       className="flex-shrink-0 group transition-transform duration-300 hover:scale-[1.06]"
     >
       <div
@@ -83,13 +105,13 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
         style={{
           width: CARD_W,
           height: CARD_H,
-          background: `linear-gradient(170deg, ${data.color}08, rgba(16,12,8,0.95) 50%)`,
+          background: `linear-gradient(170deg, ${threat.color}10, rgba(16,12,8,0.95) 50%)`,
           boxShadow: `inset 0 0 ${isBoss ? 24 : 16}px rgba(0,0,0,0.5)`,
         }}
       >
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{ boxShadow: `inset 0 0 24px ${data.color}12` }}
+          style={{ boxShadow: `inset 0 0 24px ${threat.color}15` }}
         />
 
         <div
@@ -136,25 +158,42 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
         <div
           className="w-full px-2 py-1.5 flex flex-col items-center gap-0.5 flex-shrink-0"
           style={{
-            background: `linear-gradient(to top, ${data.color}14, transparent)`,
-            borderTop: `1px solid ${data.color}12`,
+            background: `linear-gradient(to top, ${threat.color}14, transparent)`,
+            borderTop: `1px solid ${threat.color}15`,
           }}
         >
           <div
             className="w-8 h-px"
             style={{
-              background: `linear-gradient(90deg, transparent, ${data.color}40, transparent)`,
+              background: `linear-gradient(90deg, transparent, ${threat.color}40, transparent)`,
             }}
           />
           <span
             className="text-[9px] sm:text-[10px] font-bold text-center uppercase tracking-wide leading-tight w-full line-clamp-2"
             style={{
-              color: "rgba(255,255,255,0.88)",
-              textShadow: `0 0 10px ${data.color}50, 0 1px 3px rgba(0,0,0,0.8)`,
+              color: threat.nameColor,
+              textShadow: `0 0 10px ${threat.color}50, 0 1px 3px rgba(0,0,0,0.8)`,
             }}
           >
             {data.name}
           </span>
+          {tags.length > 0 && (
+            <div className="flex items-center justify-center gap-0.5 flex-wrap">
+              {tags.slice(0, MAX_CARD_TAGS).map((tag) => (
+                <span
+                  key={tag.id}
+                  className="text-[5.5px] font-bold uppercase tracking-[0.06em] px-[3px] py-px rounded-sm leading-none"
+                  style={{
+                    color: tag.color,
+                    background: `${tag.color}15`,
+                    textShadow: `0 0 4px ${tag.color}30`,
+                  }}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </CardFrame>
@@ -248,7 +287,7 @@ export function EnemyBestiary() {
 
       <div className="relative z-10">
         <SectionFlourish />
-        <MapSectionHeader title="The Bestiary" />
+        <MapSectionHeader title="100+ Enemies to Defeat" />
 
         {/* Marquee rows */}
         <div className="relative space-y-5 sm:space-y-6 py-3">
@@ -271,27 +310,48 @@ export function EnemyBestiary() {
         </div>
 
         {/* Threat legend */}
-        <div className="flex justify-center gap-8 mt-10 sm:mt-12">
-          {(["boss", "elite", "minion"] as const).map((t) => {
-            const info = THREAT[t];
-            return (
-              <div key={t} className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-3 mt-10 sm:mt-12">
+          <div className="flex justify-center gap-8">
+            {(["boss", "elite", "minion"] as const).map((t) => {
+              const info = THREAT[t];
+              return (
+                <div key={t} className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{
+                      background: info.color,
+                      boxShadow: `0 0 8px ${info.color}40`,
+                    }}
+                  />
+                  <span
+                    className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: `${info.color}88` }}
+                  >
+                    {t === "minion" ? "Common" : info.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-center gap-x-4 gap-y-1.5 flex-wrap max-w-lg mx-auto">
+            {ENEMY_TAG_DEFS.map((tag) => (
+              <div key={tag.id} className="flex items-center gap-1">
                 <div
-                  className="w-2.5 h-2.5 rounded-full"
+                  className="w-1.5 h-1.5 rounded-sm"
                   style={{
-                    background: info.color,
-                    boxShadow: `0 0 8px ${info.color}40`,
+                    background: tag.color,
+                    boxShadow: `0 0 4px ${tag.color}40`,
                   }}
                 />
                 <span
-                  className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]"
-                  style={{ color: `${info.color}88` }}
+                  className="text-[7px] sm:text-[8px] font-semibold uppercase tracking-[0.12em]"
+                  style={{ color: `${tag.color}70` }}
                 >
-                  {t === "minion" ? "Common" : info.label}
+                  {tag.label}
                 </span>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
     </section>

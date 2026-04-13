@@ -2,6 +2,7 @@ export * from "./gameplay";
 export * from "./isometric";
 export * from "./towers";
 export * from "./enemies";
+export * from "./enemyTags";
 export * from "./heroes";
 export * from "./spells";
 export * from "./troops";
