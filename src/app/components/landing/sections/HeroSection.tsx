@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   ScrollText,
 } from "lucide-react";
 import Image from "next/image";
@@ -41,14 +40,13 @@ const TOWER_ORDER: TowerType[] = [
   "mortar",
 ];
 
-const TOWER_VIS = 120;
-const TOWER_SCALE = 2.2;
+const TOWER_VIS = 158;
+const TOWER_SCALE = 2;
 const TOWER_CANVAS = Math.round(TOWER_VIS * TOWER_SCALE);
 
-const T_CARD_W = 142;
+const T_CARD_W = 122;
 const T_VISIBLE_HALF = 2;
-const T_PAD = 20;
-const T_VP_W = (T_VISIBLE_HALF * 2 + 1) * T_CARD_W + T_PAD * 2;
+const T_VP_W = 720;
 const T_ITEM_W = TOWER_VIS + 14;
 const T_ITEM_H = TOWER_VIS + 90;
 const T_EASING = "cubic-bezier(0.4, 0, 0.15, 1)";
@@ -56,17 +54,6 @@ const T_EASING = "cubic-bezier(0.4, 0, 0.15, 1)";
 function circularDiff(index: number, center: number, length: number): number {
   const raw = (((index - center) % length) + length) % length;
   return raw > length / 2 ? raw - length : raw;
-}
-
-function getTowerLabel(
-  type: TowerType,
-  tl: { level: number; upgrade?: "A" | "B" }
-): string {
-  const name =
-    tl.level < 4
-      ? TOWER_DATA[type].name
-      : TOWER_DATA[type].upgrades[tl.upgrade ?? "A"].name;
-  return `${name} · Lv.${tl.level}`;
 }
 
 const TOWER_BG_GRADIENT: Record<TowerType, string> = {
@@ -96,11 +83,12 @@ const HERO_TOWER_SPRITE_TWEAKS: Record<
   station: { spriteScale: 0.9, x: 0, y: 2 },
 };
 
-const STATS = [
-  { value: "26", label: "Levels" },
-  { value: "100+", label: "Enemies" },
-  { value: "9", label: "Heroes" },
+const HERO_COUNTS = [
+  { value: "26", label: "Maps" },
   { value: "7", label: "Towers" },
+  { value: "9", label: "Heroes" },
+  { value: "6", label: "Spells" },
+  { value: "100+", label: "Enemies" },
 ] as const;
 
 interface LevelPreview {
@@ -246,7 +234,7 @@ function ScrollColumn({
         <div
           className="absolute inset-0 pointer-events-none z-10"
           style={{
-            background: `linear-gradient(180deg, ${T.bg} 0%, transparent 10%, transparent 90%, ${T.bg} 100%)`,
+            background: `linear-gradient(180deg, ${T.bg} 0%, transparent 22%, transparent 78%, ${T.bg} 100%)`,
           }}
         />
       </div>
@@ -263,24 +251,44 @@ function ScrollColumn({
   );
 }
 
-function StatBadge({ value, label }: { value: string; label: string }) {
+function HeroTagline({ show }: { show: boolean }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 px-3 sm:px-5">
-      <span
-        className="text-2xl sm:text-4xl font-black tabular-nums leading-none"
-        style={{
-          color: T.princeton,
-          textShadow: `0 0 24px rgba(${T.princetonRgb},0.4)`,
-        }}
-      >
-        {value}
-      </span>
-      <span
-        className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em]"
-        style={{ color: `rgba(${T.accentRgb},0.35)` }}
-      >
-        {label}
-      </span>
+    <div
+      className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 px-3 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] tabular-nums"
+      aria-label="Game contents"
+      style={{
+        opacity: show ? 1 : 0,
+        transform: show ? "translateY(0)" : "translateY(12px)",
+        transition: "all 700ms ease-out",
+      }}
+    >
+      {HERO_COUNTS.map((s, i) => (
+        <React.Fragment key={s.label}>
+          {i > 0 && (
+            <span
+              aria-hidden
+              className="select-none"
+              style={{ color: `rgba(${T.accentRgb},0.22)` }}
+            >
+              ·
+            </span>
+          )}
+          <span className="inline-flex items-baseline gap-1.5">
+            <span
+              className="text-[14px] sm:text-[16px] font-black"
+              style={{
+                color: T.princeton,
+                textShadow: `0 0 14px rgba(${T.princetonRgb},0.35)`,
+              }}
+            >
+              {s.value}
+            </span>
+            <span style={{ color: `rgba(${T.accentRgb},0.55)` }}>
+              {s.label}
+            </span>
+          </span>
+        </React.Fragment>
+      ))}
     </div>
   );
 }
@@ -327,30 +335,26 @@ function CreditsButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group flex items-center gap-1.5 px-4 py-1.5 rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-95"
-      style={{
-        background: `rgba(${T.accentDarkRgb},0.12)`,
-        border: `1px solid rgba(${T.accentDarkRgb},0.2)`,
-      }}
+      className="group inline-flex items-center gap-2 px-2 py-1 cursor-pointer bg-transparent border-0 transition-all duration-200"
+      style={{ color: `rgba(${T.accentRgb},0.42)` }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = `rgba(${T.accentDarkRgb},0.22)`;
-        e.currentTarget.style.borderColor = `rgba(${T.accentDarkRgb},0.35)`;
+        e.currentTarget.style.color = `rgba(${T.accentRgb},0.9)`;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = `rgba(${T.accentDarkRgb},0.12)`;
-        e.currentTarget.style.borderColor = `rgba(${T.accentDarkRgb},0.2)`;
+        e.currentTarget.style.color = `rgba(${T.accentRgb},0.42)`;
       }}
     >
       <ScrollText
-        size={13}
-        style={{ color: `rgba(${T.accentRgb},0.35)` }}
-        className="group-hover:text-amber-400/60 transition-colors"
+        size={12}
+        strokeWidth={2}
+        className="transition-transform duration-200 group-hover:-translate-y-0.5"
       />
-      <span
-        className="text-[10px] sm:text-[11px] font-medium tracking-[0.15em] uppercase"
-        style={{ color: `rgba(${T.accentRgb},0.35)` }}
-      >
+      <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.28em] uppercase relative">
         Credits
+        <span
+          className="absolute left-0 right-0 -bottom-0.5 h-px origin-center scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+          style={{ background: "currentColor" }}
+        />
       </span>
     </button>
   );
@@ -429,8 +433,8 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           className="absolute inset-[-6%]"
           style={{
             animation: "landing-ken-burns 25s ease-in-out infinite alternate",
-            filter: "sepia(0.2) saturate(0.85) brightness(0.95)",
-            opacity: i === activeSlide ? 0.38 : 0,
+            filter: "saturate(0.78) brightness(0.88) contrast(1.06)",
+            opacity: i === activeSlide ? 0.4 : 0,
             transition: `opacity ${CROSSFADE_TRANSITION_MS}ms ease-in-out`,
             willChange: "opacity",
           }}
@@ -473,7 +477,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       {/* Content — z-10 above everything */}
       <div className="relative z-10 flex flex-col items-center gap-4 sm:gap-6 px-4 w-full max-w-4xl">
         <div
-          className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6"
+          className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3"
           style={{
             opacity: stages[0] ? 1 : 0,
             transform: stages[0]
@@ -485,73 +489,101 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           <Image
             src="/images/logos/princeton-td-logo.svg"
             alt="Princeton Tower Defense"
-            width={56}
-            height={56}
+            width={64}
+            height={64}
             priority
-            className="sm:w-[90px] sm:h-[90px]"
-            style={{ filter: `drop-shadow(0 0 14px rgba(${T.accentRgb},0.5))` }}
+            className="sm:w-[104px] sm:h-[104px] "
+            style={{
+              filter: `drop-shadow(0 0 18px rgba(${T.accentRgb},0.55)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))`,
+            }}
           />
           <div className="flex flex-col items-center sm:items-start">
             <h1
-              className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-none"
+              className="text-4xl sm:text-6xl md:text-7xl font-black leading-[0.85]"
               style={{
-                color: "#fbbf24",
-                textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 2px 6px rgba(0,0,0,0.7)`,
+                backgroundImage:
+                  "linear-gradient(180deg, #fef3c7 0%, #fcd34d 38%, #d97706 78%, #92400e 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent",
+                filter: `drop-shadow(0 2px 0 rgba(0,0,0,0.45)) drop-shadow(0 0 28px rgba(${T.accentRgb},0.4))`,
+                letterSpacing: "-0.01em",
               }}
             >
               PRINCETON
             </h1>
             <h2
-              className="text-sm sm:text-xl md:text-2xl font-bold tracking-[0.25em] uppercase mt-1"
+              className="self-stretch flex items-center justify-between gap-[0.06em] text-[0.88rem] sm:text-[1.42rem] md:text-[1.72rem] font-bold uppercase -mt-1 sm:-mt-2 w-full"
               style={{
-                color: "rgba(255,255,255,0.7)",
-                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                color: `rgba(${T.accentRgb},0.78)`,
+                textShadow: `0 1px 3px rgba(0,0,0,0.6), 0 0 18px rgba(${T.accentRgb},0.22)`,
               }}
+              aria-label="Tower Defense"
             >
-              Tower Defense
+              {[..."TOWER DEFENSE"].map((ch, i) =>
+                ch === " " ? (
+                  <span
+                    key={i}
+                    aria-hidden
+                    className="inline-block w-[0.25em]"
+                  />
+                ) : (
+                  <span key={i} aria-hidden>
+                    {ch}
+                  </span>
+                )
+              )}
             </h2>
           </div>
         </div>
 
+        <HeroTagline show={stages[1]} />
+
         <div
-          className="relative flex items-center justify-center w-full px-2 sm:px-4"
+          className="flex items-center justify-center w-full"
           style={{
-            opacity: stages[1] ? 1 : 0,
-            transform: stages[1] ? "translateY(0)" : "translateY(20px)",
+            opacity: stages[2] ? 1 : 0,
+            transform: stages[2] ? "translateY(0)" : "translateY(20px)",
             transition: "all 800ms ease-out",
           }}
         >
-          <button
-            onClick={() => {
-              advanceCarousel(-1);
-              resetAutoRotate();
-            }}
-            className="absolute left-2 sm:left-4 z-20 p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
-            style={{
-              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.3), rgba(0,0,0,0.5))`,
-              border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              color: T.accent,
-            }}
-            aria-label="Previous towers"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <div
-            className="relative rounded-xl p-[2px] w-full"
-            style={{
-              background: `linear-gradient(160deg in oklch, oklch(0.45 0.08 75 / 0.4), oklch(0.45 0.08 75 / 0.12), oklch(0.45 0.08 75 / 0.4))`,
-              boxShadow: `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(${T.accentRgb},0.1)`,
-              maxWidth: T_VP_W + 4,
-            }}
-          >
-            <div
-              className="relative rounded-[10px] overflow-hidden w-full"
+          <div className="relative w-full" style={{ maxWidth: T_VP_W + 4 }}>
+            <button
+              onClick={() => {
+                advanceCarousel(-1);
+                resetAutoRotate();
+              }}
+              className="group/arrow absolute top-1/2 -translate-y-1/2 left-2 sm:left-4 z-30 p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
               style={{
-                background: "rgba(6,4,2,0.65)",
+                color: `rgba(${T.accentRgb},0.55)`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = T.accentBright;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = `rgba(${T.accentRgb},0.55)`;
+              }}
+              aria-label="Previous towers"
+            >
+              <ChevronLeft size={28} strokeWidth={2.2} />
+            </button>
+            <div
+              className="relative w-full"
+              style={{
                 height: T_ITEM_H,
+                perspective: "1400px",
+                perspectiveOrigin: "50% 55%",
               }}
             >
+              {/* Center spotlight (radial bloom behind the focused card) */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse 26% 65% at 50% 50%, rgba(${T.accentBrightRgb},0.12) 0%, rgba(${T.princetonRgb},0.05) 40%, transparent 75%)`,
+                }}
+              />
+
               {TOWER_ORDER.map((type, idx) => {
                 const diff = circularDiff(
                   idx,
@@ -564,7 +596,14 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                 const accent = TOWER_ACCENTS[type];
                 const tweak = HERO_TOWER_SPRITE_TWEAKS[type];
                 const tl = LEVEL_CYCLE[towerLevels[idx]];
-                const label = getTowerLabel(type, tl);
+                const towerName =
+                  tl.level < 4
+                    ? TOWER_DATA[type].name
+                    : TOWER_DATA[type].upgrades[tl.upgrade ?? "A"].name;
+
+                const rotY = diff * -18;
+                const scale = isCenter ? 1.08 : absDiff === 1 ? 0.88 : 0.74;
+                const cardOpacity = isCenter ? 1 : absDiff === 1 ? 0.88 : 0.55;
 
                 return (
                   <div
@@ -572,49 +611,49 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                     className="absolute flex flex-col items-center"
                     style={{
                       left: "50%",
-                      opacity: isVisible ? 1 : 0,
+                      opacity: isVisible ? cardOpacity : 0,
                       pointerEvents: isVisible ? "auto" : "none",
-                      top: 6,
-                      transform: `translateX(${diff * T_CARD_W - T_ITEM_W / 2}px)`,
-                      transition: `transform 0.4s ${T_EASING}, opacity 0.35s ease`,
+                      top: 16,
+                      transform: `translateX(${diff * T_CARD_W - T_ITEM_W / 2}px) perspective(900px) rotateY(${rotY}deg) scale(${scale})`,
+                      transformOrigin: "50% 50%",
+                      transition: `transform 0.45s ${T_EASING}, opacity 0.4s ease`,
                       width: T_ITEM_W,
-                      zIndex: isCenter ? 2 : 1,
+                      zIndex: isCenter ? 3 : 2 - absDiff,
                     }}
                   >
-                    {/* Level up arrow */}
-                    <button
-                      onClick={() => cycleTower(idx, 1)}
-                      className="cursor-pointer p-0.5 transition-all hover:opacity-100 opacity-50 hover:scale-110"
-                      aria-label="Next level"
-                    >
-                      <ChevronUp size={14} style={{ color: accent }} />
-                    </button>
-
-                    {/* Tower card — click to navigate */}
+                    {/* Tower card — click center to cycle level, click side to focus */}
                     <button
                       onClick={() => {
-                        if (!isCenter) {
+                        if (isCenter) {
+                          cycleTower(idx, 1);
+                        } else {
                           setCarouselStart(idx);
                           resetAutoRotate();
                         }
                       }}
                       className="cursor-pointer"
-                      style={{ cursor: isCenter ? "default" : "pointer" }}
+                      aria-label={
+                        isCenter
+                          ? `Cycle ${TOWER_DATA[type].name} level`
+                          : `Focus ${TOWER_DATA[type].name}`
+                      }
                     >
                       <div
-                        className="relative p-[3px] rounded-lg"
+                        className="relative p-[3px] rounded-lg transition-all duration-300"
                         style={{
-                          background: `linear-gradient(160deg in oklch, oklch(0.76 0.12 85), color-mix(in oklch, ${accent} 38%, transparent), oklch(0.48 0.1 80), color-mix(in oklch, ${accent} 32%, transparent), oklch(0.76 0.12 85))`,
+                          background: isCenter
+                            ? `linear-gradient(160deg in oklch, oklch(0.82 0.14 85), color-mix(in oklch, ${accent} 60%, transparent), oklch(0.52 0.11 80), color-mix(in oklch, ${accent} 52%, transparent), oklch(0.82 0.14 85))`
+                            : `linear-gradient(160deg in oklch, oklch(0.7 0.09 85), color-mix(in oklch, ${accent} 28%, transparent), oklch(0.42 0.07 80), color-mix(in oklch, ${accent} 22%, transparent), oklch(0.7 0.09 85))`,
                           boxShadow: isCenter
-                            ? `0 4px 14px rgba(0,0,0,0.5), 0 0 ${10 + tl.level * 8}px ${accent}25`
-                            : `0 2px 8px rgba(0,0,0,0.4)`,
+                            ? `0 10px 28px rgba(0,0,0,0.65), 0 0 ${18 + tl.level * 10}px ${accent}55, 0 0 80px ${accent}22`
+                            : `0 4px 12px rgba(0,0,0,0.5)`,
                         }}
                       >
                         <div
                           className="relative flex items-center justify-center rounded overflow-hidden"
                           style={{
                             background: TOWER_BG_GRADIENT[type],
-                            boxShadow: `inset 0 0 0 1px ${accent}20, inset 0 0 12px rgba(0,0,0,0.4)`,
+                            boxShadow: `inset 0 0 0 1px ${accent}24, inset 0 0 14px rgba(0,0,0,0.45)`,
                             height: TOWER_VIS + 16,
                             width: TOWER_VIS + 8,
                           }}
@@ -637,6 +676,32 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                               />
                             </SpriteDisplay>
                           </div>
+                          {/* Level pip row — only on center card */}
+                          {isCenter && (
+                            <div
+                              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 pointer-events-none"
+                              aria-hidden
+                            >
+                              {[1, 2, 3, 4].map((n) => (
+                                <span
+                                  key={n}
+                                  className="block rounded-full transition-all duration-300"
+                                  style={{
+                                    background:
+                                      n <= tl.level
+                                        ? accent
+                                        : `rgba(${T.accentRgb},0.18)`,
+                                    boxShadow:
+                                      n <= tl.level
+                                        ? `0 0 6px ${accent}`
+                                        : "none",
+                                    height: 4,
+                                    width: n <= tl.level ? 10 : 4,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <FrameCorner className="top-[-2px] left-[-2px]" />
                         <FrameCorner className="top-[-2px] right-[-2px]" />
@@ -645,90 +710,72 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                       </div>
                     </button>
 
-                    {/* Level down arrow */}
-                    <button
-                      onClick={() => cycleTower(idx, -1)}
-                      className="cursor-pointer p-0.5 transition-all hover:opacity-100 opacity-50 hover:scale-110"
-                      aria-label="Previous level"
-                    >
-                      <ChevronDown size={14} style={{ color: accent }} />
-                    </button>
-
-                    {/* Level label */}
-                    <span
-                      className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-center truncate max-w-[100px]"
+                    {/* Label */}
+                    <div
+                      className="flex flex-col items-center transition-all duration-300"
                       style={{
-                        color: `${accent}c0`,
-                        textShadow: `0 0 8px ${accent}40`,
+                        marginTop: isCenter ? 14 : 8,
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {label}
-                    </span>
+                      <span
+                        className={`font-bold uppercase text-center transition-all duration-300 ${
+                          isCenter
+                            ? "text-[12px] sm:text-[14px] tracking-[0.16em]"
+                            : "text-[9px] sm:text-[10px] tracking-[0.1em]"
+                        }`}
+                        style={{
+                          color: isCenter ? accent : `${accent}99`,
+                          textShadow: isCenter
+                            ? `0 0 16px ${accent}80, 0 1px 2px rgba(0,0,0,0.7)`
+                            : `0 0 6px ${accent}40, 0 1px 2px rgba(0,0,0,0.6)`,
+                        }}
+                      >
+                        {towerName}
+                      </span>
+                      {isCenter && (
+                        <span
+                          className="mt-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black tabular-nums tracking-[0.15em]"
+                          style={{
+                            background: `color-mix(in oklch, ${accent} 18%, transparent)`,
+                            border: `1px solid ${accent}55`,
+                            color: accent,
+                            textShadow: `0 0 8px ${accent}90`,
+                          }}
+                        >
+                          LV.{tl.level}
+                          {tl.level === 4 && (tl.upgrade === "B" ? " B" : " A")}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
+            <button
+              onClick={() => {
+                advanceCarousel(1);
+                resetAutoRotate();
+              }}
+              className="group/arrow absolute top-1/2 -translate-y-1/2 right-2 sm:right-4 z-30 p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+              style={{
+                color: `rgba(${T.accentRgb},0.55)`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = T.accentBright;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = `rgba(${T.accentRgb},0.55)`;
+              }}
+              aria-label="Next towers"
+            >
+              <ChevronRight size={28} strokeWidth={2.2} />
+            </button>
           </div>
-          <button
-            onClick={() => {
-              advanceCarousel(1);
-              resetAutoRotate();
-            }}
-            className="absolute right-2 sm:right-4 z-20 p-2 rounded-lg cursor-pointer flex-shrink-0 transition-all hover:scale-110 active:scale-95"
-            style={{
-              background: `linear-gradient(160deg, rgba(${T.accentDarkRgb},0.3), rgba(0,0,0,0.5))`,
-              border: `1px solid rgba(${T.accentDarkRgb},0.35)`,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-              color: T.accent,
-            }}
-            aria-label="Next towers"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-
-        <div className="flex justify-center gap-1.5 -mt-1">
-          {TOWER_ORDER.map((t, i) => {
-            const active = i === carouselStart;
-            return (
-              <div
-                key={t}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: active ? 14 : 4,
-                  height: 4,
-                  background: active
-                    ? `rgba(${T.accentRgb},0.5)`
-                    : `rgba(${T.accentRgb},0.12)`,
-                }}
-              />
-            );
-          })}
         </div>
 
         <div
-          className="flex items-center justify-center"
-          style={{
-            opacity: stages[2] ? 1 : 0,
-            transform: stages[2] ? "translateY(0)" : "translateY(14px)",
-            transition: "all 700ms ease-out",
-          }}
-        >
-          {STATS.map((s, i) => (
-            <React.Fragment key={s.label}>
-              {i > 0 && (
-                <div
-                  className="w-px h-8 mx-1 sm:mx-2"
-                  style={{ background: `rgba(${T.accentRgb},0.15)` }}
-                />
-              )}
-              <StatBadge value={s.value} label={s.label} />
-            </React.Fragment>
-          ))}
-        </div>
-
-        <div
-          className="flex flex-col items-center gap-3"
+          className="flex flex-col items-center gap-5 mt-3 sm:mt-5"
           style={{
             opacity: stages[3] ? 1 : 0,
             transform: stages[3]
@@ -737,25 +784,39 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             transition: "all 700ms ease-out",
           }}
         >
-          <LandingCTA onClick={onPlay} disabled={exiting} />
+          <div className="relative isolate">
+            <div
+              aria-hidden
+              className="absolute inset-0 -m-8 rounded-full animate-landing-glow-breathe pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse 60% 80% at 50% 50%, rgba(${T.princetonRgb},0.22) 0%, rgba(${T.accentRgb},0.14) 40%, transparent 70%)`,
+                filter: "blur(18px)",
+              }}
+            />
+            <LandingCTA onClick={onPlay} disabled={exiting} />
+          </div>
           <CreditsButton onClick={onCredits} />
         </div>
       </div>
 
       <div
-        className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-landing-scroll-bounce"
+        className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center animate-landing-scroll-bounce"
         style={{
           opacity: stages[4] ? 1 : 0,
           transition: "opacity 1s ease-out",
         }}
+        aria-hidden
       >
-        <span
-          className="text-[10px] uppercase tracking-[0.2em] font-medium"
-          style={{ color: `rgba(${T.accentRgb},0.25)` }}
-        >
-          Scroll
-        </span>
-        <ChevronDown size={18} style={{ color: `rgba(${T.accentRgb},0.3)` }} />
+        <ChevronDown
+          size={16}
+          strokeWidth={2.2}
+          style={{ color: `rgba(${T.accentRgb},0.22)`, marginBottom: -9 }}
+        />
+        <ChevronDown
+          size={16}
+          strokeWidth={2.2}
+          style={{ color: `rgba(${T.accentRgb},0.4)` }}
+        />
       </div>
     </section>
   );
