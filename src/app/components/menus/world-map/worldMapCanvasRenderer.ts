@@ -41,6 +41,7 @@ export const drawWorldMapCanvas = ({
   heroMapPos,
   heroMoving,
   heroFacingRight,
+  paintKeyRef,
 }: DrawWorldMapParams): void => {
   const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
@@ -80,6 +81,66 @@ export const drawWorldMapCanvas = ({
 
   // Use ref-based time to avoid React re-renders on every frame
   const time = animTimeRef.current;
+
+  // --- Bucket rates (used for both internal cache invalidation and the
+  //     mobile-only paint-key frame skip below). Keep in sync with the per-layer
+  //     constants further down; mismatching them just means an extra blit.
+  const DECOR_FPS = isMobile ? 10 : 50;
+  const PATH_FPS = isMobile ? 5 : 50;
+  const NODE_FPS = isMobile ? 5 : 15;
+  const ATMOS_FPS = isMobile ? 10 : 0; // 0 = no cache on desktop
+  const HERO_IDLE_FPS = isMobile ? 15 : 30;
+  const BATTLE_PREVIEW_FPS = 30;
+
+  const decorTimeBucket = Math.floor(time * DECOR_FPS);
+  const pathTimeBucket = Math.floor(time * PATH_FPS);
+  const nodeTimeBucket = Math.floor(time * NODE_FPS);
+  const atmosTimeBucket = ATMOS_FPS > 0 ? Math.floor(time * ATMOS_FPS) : -1;
+
+  // --- MOBILE FRAME SKIP -----------------------------------------------------
+  // The animation loop fires at ~30–50 Hz, but on mobile every visual layer is
+  // bucketed at 5–15 FPS, and desktop-only effects (battle preview, atmosphere)
+  // are skipped entirely. That means most rAF ticks produce an identical image,
+  // yet we were still doing ~6 full-canvas `drawImage` blits per tick (static
+  // bg, decoration ground, path, structure, nodes, atmosphere). On a 1800-px
+  // wide canvas that's ~300 MP/s of compositing for no visible change.
+  //
+  // The key below captures every input that affects the output. If it matches
+  // the last paint, we bail before touching the canvas.
+  //
+  // Desktop keeps the per-frame path because atmospheric clouds/birds/dust are
+  // un-cached and animate every frame.
+  if (isMobile && paintKeyRef) {
+    const heroMovingNow = heroMoving?.current ?? false;
+    const heroX = heroMapPos ? Math.round(heroMapPos.current.x) : 0;
+    const heroY = heroMapPos ? Math.round(heroMapPos.current.y) : 0;
+    const heroFacing = heroFacingRight?.current ? 1 : 0;
+    // When the hero is moving, position updates naturally per-frame; when idle
+    // we still want the sin-bob to animate, so include an idle time bucket.
+    const heroIdleBucket =
+      heroType && !heroMovingNow ? Math.floor(time * HERO_IDLE_FPS) : -1;
+    // Desktop-only battle preview (also animated each frame) — include so if
+    // this renderer is ever called with isMobile=false on a shared path the
+    // key still varies. Currently only matters for desktop but keep parity.
+    const battlePreviewBucket =
+      !isMobile && selectedLevel && !heroMovingNow
+        ? Math.floor(time * BATTLE_PREVIEW_FPS)
+        : -1;
+
+    const composedPaintKey =
+      `${displayW}x${displayH}|` +
+      `d${decorTimeBucket}|p${pathTimeBucket}|n${nodeTimeBucket}|a${atmosTimeBucket}|` +
+      `h:${hoveredLevel ?? ""}|s:${selectedLevel ?? ""}|` +
+      `sk:${JSON.stringify(levelStars)}|uk:${unlockedMaps.join(",")}|` +
+      `ht:${heroType ?? ""}|hm:${heroMovingNow ? 1 : 0}|` +
+      `hp:${heroX},${heroY}|hf:${heroFacing}|hi:${heroIdleBucket}|` +
+      `bp:${battlePreviewBucket}`;
+
+    if (paintKeyRef.current === composedPaintKey) {
+      return;
+    }
+    paintKeyRef.current = composedPaintKey;
+  }
 
   // Clear canvas (cheaper than resizing) — scale map coordinates to display
   ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
@@ -159,8 +220,7 @@ export const drawWorldMapCanvas = ({
 
   // --- Decoration layer caching ---
   // Mobile: 10 FPS keeps animations smooth while only rebuilding 1-in-3 frames
-  const DECOR_FPS = isMobile ? 10 : 50;
-  const decorTimeBucket = Math.floor(time * DECOR_FPS);
+  // (DECOR_FPS / decorTimeBucket computed at the top of the function.)
   const decorCacheValid =
     decorationCache != null &&
     decorationCache.current.groundCanvas !== null &&
@@ -205,8 +265,7 @@ export const drawWorldMapCanvas = ({
   }
 
   // --- PATH CONNECTIONS (desktop keeps full 50fps animation, mobile stays throttled) ---
-  const PATH_FPS = isMobile ? 5 : 50;
-  const pathTimeBucket = Math.floor(time * PATH_FPS);
+  // (PATH_FPS / pathTimeBucket computed at the top of the function.)
   const pathUnlockedKey = unlockedMaps.join(",");
   const pathCacheValid =
     pathCache != null &&
@@ -491,9 +550,8 @@ export const drawWorldMapCanvas = ({
     }
   }
 
-  // === ATMOSPHERE (clouds, birds, dust) — cached on mobile at 2 FPS ===
-  const ATMOS_FPS = isMobile ? 10 : 0; // 0 = no caching (desktop draws every frame)
-  const atmosTimeBucket = ATMOS_FPS > 0 ? Math.floor(time * ATMOS_FPS) : -1;
+  // === ATMOSPHERE (clouds, birds, dust) — cached on mobile at 10 FPS ===
+  // (ATMOS_FPS / atmosTimeBucket computed at the top of the function.)
   const atmosCacheValid =
     ATMOS_FPS > 0 &&
     atmosphereCache != null &&

@@ -695,8 +695,8 @@ const DECORATION_VOLUME_OVERRIDES: Partial<
     anchorOffsetY: -10,
     frontDepthPadding: 16,
     height: 190,
-    length: 130,
-    width: 160,
+    length: 110,
+    width: 110,
   },
   foulke_hall: {
     anchorOffsetY: 0,

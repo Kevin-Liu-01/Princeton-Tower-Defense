@@ -24,7 +24,7 @@ export const TOWER_DATA: Record<
 
     cost: TOWER_STATS.arch.levels[1].cost,
     damage: TOWER_STATS.arch.baseStats.damage,
-    desc: "Sonic crescendo that accelerates with consecutive attacks.",
+    desc: "Crescendo that accelerates with consecutive attacks.",
     levelDesc: {
       1: "Crescendo - Builds up to 4 stacks",
       2: "Resonance - Max 6 stacks, 1.4x damage",
@@ -167,7 +167,7 @@ export const TOWER_DATA: Record<
 
     cost: TOWER_STATS.mortar.levels[1].cost,
     damage: TOWER_STATS.mortar.baseStats.damage,
-    desc: "Fortified artillery emplacement with quadpod-mounted barrel.",
+    desc: "Fortified artillery dealing AoE splash damage.",
     levelDesc: {
       1: "Field Mortar - Quadpod barrel with iron sights",
       2: "Siege Mortar - Propellant injectors, periscope optic, shell feeder",

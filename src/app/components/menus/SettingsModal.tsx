@@ -1203,7 +1203,7 @@ interface SettingsModalProps {
   onDevModeChange?: (enabled: boolean) => void;
 }
 
-const DEV_PASSWORD = "princetonpowerlifting";
+const DEV_PASSWORD = process.env.NEXT_PUBLIC_TD_DEV_PASSWORD ?? "";
 
 function readDevModeFromStorage(): boolean {
   if (typeof window === "undefined") {
@@ -1269,7 +1269,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [confirmReset, resetToDefaults]);
 
   const handleDevPasswordSubmit = useCallback(() => {
-    if (devPassword === DEV_PASSWORD) {
+    if (DEV_PASSWORD !== "" && devPassword === DEV_PASSWORD) {
       setDevUnlocked(true);
       writeDevModeToStorage(true);
       setDevPassword("");

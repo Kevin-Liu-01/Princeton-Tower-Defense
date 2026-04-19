@@ -72,4 +72,11 @@ export interface DrawWorldMapParams {
   heroMapPos?: MutableRefObject<{ x: number; y: number }>;
   heroMoving?: MutableRefObject<boolean>;
   heroFacingRight?: MutableRefObject<boolean>;
+  /**
+   * Mobile-only: tracks the last composed paint state. When nothing visible has
+   * changed since the previous paint, the renderer early-returns and skips ~6
+   * full-canvas blits per frame. Not used on desktop (which paints every frame
+   * because atmospheric layers are un-cached).
+   */
+  paintKeyRef?: MutableRefObject<string>;
 }

@@ -254,6 +254,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     h: number;
     timeBucket: number;
   }>({ canvas: null, h: 0, timeBucket: -1, w: 0 });
+  // Tracks last-composed paint state for the mobile frame-skip path inside
+  // drawWorldMapCanvas. Prevents the ~6 full-canvas blits per rAF tick when
+  // nothing visible has actually changed.
+  const paintKeyRef = useRef<string>("");
   const dragRef = useRef({
     dragStartX: 0,
     dragStartY: 0,
@@ -545,6 +549,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       levels: visibleWorldLevels,
       mapHeight,
       nodeCache: nodeCacheRef,
+      paintKeyRef,
       pathCache: pathCacheRef,
       selectedLevel,
       staticBgCache: staticBgCacheRef,
@@ -576,7 +581,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId: number;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    const frameInterval = 20; // 50fps on both mobile and desktop
+    // Mobile: 30 fps. Desktop: 50 fps. The world-map caches bucket their work
+    // at 5–15 fps on mobile anyway, so polling faster than 30 fps there just
+    // burns CPU on the per-frame blit + paint-key check.
+    const frameInterval = isMobile ? 33 : 20;
 
     let lastTimestamp = 0;
     const HERO_SPEED = 200; // pixels per second
@@ -1714,7 +1722,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             }}
           >
             <OrnateFrame
-              className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 overflow-hidden shadow-2xl min-h-0 animate-wm-border-breathe"
+              className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 overflow-hidden shadow-2xl min-h-0 md:animate-wm-border-breathe"
+              style={{ borderColor: "rgba(180, 140, 60, 0.5)" }}
               cornerSize={20}
               showBorders={true}
               sideBorderScale={0.6}
