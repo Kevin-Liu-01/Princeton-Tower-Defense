@@ -4,6 +4,24 @@ import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { parseRoute } from "../constants/routes";
 import { SITE_URL, SITE_NAME } from "./constants";
 
+const HOME_OG = {
+  alt: "Princeton Tower Defense - Free Browser Tower Defense Game with 26 Levels, 9 Heroes, and 100+ Enemies",
+  height: 630,
+  type: "image/png",
+  url: "/og",
+  width: 1200,
+} as const;
+
+function buildLevelOgImage(level: { id: string; name: string }) {
+  return {
+    alt: `${level.name} — level preview in ${SITE_NAME}`,
+    height: 630,
+    type: "image/png",
+    url: `/og?level=${encodeURIComponent(level.id)}`,
+    width: 1200,
+  } as const;
+}
+
 const REGION_LABEL: Record<string, string> = {
   desert: "Sahara Sands",
   grassland: "Princeton Grounds",
@@ -62,13 +80,6 @@ const CODEX_TAB_META: Record<string, { title: string; description: string }> = {
   },
 };
 
-function buildOgUrl(params?: { level?: string }): string {
-  if (!params?.level) {
-    return "/og";
-  }
-  return `/og?level=${encodeURIComponent(params.level)}`;
-}
-
 function getLevelMeta(levelId: string): Metadata | null {
   const level = WORLD_LEVELS.find((l) => l.id === levelId);
   if (!level) {
@@ -81,19 +92,13 @@ function getLevelMeta(levelId: string): Metadata | null {
   const cleanDesc = level.description.replaceAll("\n", " ");
   const tags = level.tags.join(", ");
   const canonical = `${SITE_URL}/${level.id}`;
-  const ogUrl = buildOgUrl({ level: level.id });
-  const ogImage = {
-    alt: `${level.name} — ${region} ${kind} in ${SITE_NAME}`,
-    height: 630,
-    type: "image/png",
-    url: ogUrl,
-    width: 1200,
-  };
 
   const title = `Play ${level.name} — ${region} ${kind} | ${SITE_NAME}`;
   const description =
     `Play ${level.name} in Princeton Tower Defense — a ${difficulty.toLowerCase()} ${kind.toLowerCase()} level in the ${region} region. ` +
     `${cleanDesc} Tags: ${tags}. Build towers, summon heroes, and cast spells to survive every wave. Share this link to let anyone try this level!`;
+
+  const ogImage = buildLevelOgImage(level);
 
   return {
     alternates: { canonical },
@@ -110,7 +115,7 @@ function getLevelMeta(levelId: string): Metadata | null {
     twitter: {
       card: "summary_large_image",
       description,
-      images: [ogUrl],
+      images: [ogImage.url],
       title,
     },
   };
@@ -145,6 +150,7 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         description: meta.description,
         openGraph: {
           description: meta.description,
+          images: [HOME_OG],
           siteName: SITE_NAME,
           title: `${meta.title} | ${SITE_NAME}`,
           type: "website",
@@ -154,6 +160,7 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         twitter: {
           card: "summary_large_image",
           description: meta.description,
+          images: [HOME_OG.url],
           title: `${meta.title} | ${SITE_NAME}`,
         },
       };
@@ -167,6 +174,7 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         openGraph: {
           description:
             "Build custom tower defense maps with the Princeton TD level creator. Design paths, place hazards, compose waves, and share your maps.",
+          images: [HOME_OG],
           siteName: SITE_NAME,
           title: `Level Creator | ${SITE_NAME}`,
           type: "website",
@@ -184,6 +192,7 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         openGraph: {
           description:
             "Meet the creator of Princeton Tower Defense and learn about the tech stack behind the game.",
+          images: [HOME_OG],
           siteName: SITE_NAME,
           title: `Credits | ${SITE_NAME}`,
           type: "website",
