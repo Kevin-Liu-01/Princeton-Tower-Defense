@@ -98,9 +98,21 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     creator: "@kevskgs",
     description: SITE_DESCRIPTION_SHORT,
-    images: ["/og"],
+    images: [
+      {
+        alt: `${SITE_NAME} - Free browser tower defense game`,
+        height: 630,
+        url: "/og",
+        width: 1200,
+      },
+    ],
     site: "@kevskgs",
     title: `${SITE_NAME} | Free Browser Tower Defense Game`,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: SITE_NAME,
   },
 };
 

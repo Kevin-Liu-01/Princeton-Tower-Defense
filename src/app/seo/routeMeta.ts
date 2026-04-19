@@ -115,7 +115,7 @@ function getLevelMeta(levelId: string): Metadata | null {
     twitter: {
       card: "summary_large_image",
       description,
-      images: [ogImage.url],
+      images: [ogImage],
       title,
     },
   };
@@ -160,7 +160,7 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         twitter: {
           card: "summary_large_image",
           description: meta.description,
-          images: [HOME_OG.url],
+          images: [HOME_OG],
           title: `${meta.title} | ${SITE_NAME}`,
         },
       };

@@ -731,56 +731,71 @@ export function findLevelById(levelId: string): LevelNode | undefined {
   return WORLD_LEVELS.find((l) => l.id === levelId);
 }
 
-function renderPreviewCorners(accent: string): React.ReactElement {
+function renderPreviewCorners(
+  accent: string,
+  boxW: number,
+  boxH: number
+): React.ReactElement {
   const arm = 22;
   const w = 3;
   const inset = 10;
-  const corner = (top: boolean, left: boolean, key: string) => (
-    <div
-      key={key}
-      style={{
-        bottom: top ? "auto" : inset,
-        display: "flex",
-        height: arm,
-        left: left ? inset : "auto",
-        position: "absolute",
-        right: left ? "auto" : inset,
-        top: top ? inset : "auto",
-        width: arm,
-      }}
-    >
-      <div
-        style={{
-          background: accent,
-          boxShadow: `0 0 8px ${accent}80`,
-          display: "flex",
-          height: w,
-          left: 0,
-          position: "absolute",
-          top: top ? 0 : arm - w,
-          width: arm,
-        }}
-      />
-      <div
-        style={{
-          background: accent,
-          boxShadow: `0 0 8px ${accent}80`,
-          display: "flex",
-          height: arm,
-          left: left ? 0 : arm - w,
-          position: "absolute",
-          top: 0,
-          width: w,
-        }}
-      />
-    </div>
-  );
+  const slots: {
+    top: number;
+    left: number;
+    isTop: boolean;
+    isLeft: boolean;
+  }[] = [
+    { isLeft: true, isTop: true, left: inset, top: inset },
+    { isLeft: false, isTop: true, left: boxW - inset - arm, top: inset },
+    { isLeft: true, isTop: false, left: inset, top: boxH - inset - arm },
+    {
+      isLeft: false,
+      isTop: false,
+      left: boxW - inset - arm,
+      top: boxH - inset - arm,
+    },
+  ];
+
   return (
     <>
-      {corner(true, true, "tl")}
-      {corner(true, false, "tr")}
-      {corner(false, true, "bl")}
-      {corner(false, false, "br")}
+      {slots.map((s) => (
+        <div
+          key={`${s.top}-${s.left}`}
+          style={{
+            display: "flex",
+            height: arm,
+            left: s.left,
+            position: "absolute",
+            top: s.top,
+            width: arm,
+          }}
+        >
+          <div
+            style={{
+              background: accent,
+              boxShadow: `0 0 8px ${accent}80`,
+              display: "flex",
+              height: w,
+              left: 0,
+              position: "absolute",
+              top: s.isTop ? 0 : arm - w,
+              width: arm,
+            }}
+          />
+          <div
+            style={{
+              background: accent,
+              boxShadow: `0 0 8px ${accent}80`,
+              display: "flex",
+              height: arm,
+              left: s.isLeft ? 0 : arm - w,
+              position: "absolute",
+              top: 0,
+              width: w,
+            }}
+          />
+        </div>
+      ))}
     </>
   );
 }
@@ -915,7 +930,7 @@ export function renderLevelOGImage(
           width: PREVIEW_W,
         }}
       >
-        {renderPreviewCorners(accent)}
+        {renderPreviewCorners(accent, PREVIEW_W, PREVIEW_H)}
       </div>
 
       {/* Left column: text content */}
@@ -1037,6 +1052,7 @@ export function renderLevelOGImage(
         <div
           style={{
             alignItems: "center",
+            alignSelf: "flex-start",
             background: `rgba(${BG_RGBA},0.55)`,
             border: "1px solid rgba(180,140,60,0.22)",
             borderRadius: 10,
@@ -1044,7 +1060,6 @@ export function renderLevelOGImage(
             gap: 4,
             marginTop: 6,
             padding: "12px 6px",
-            width: "fit-content",
           }}
         >
           {stats.map((s, i) => (
