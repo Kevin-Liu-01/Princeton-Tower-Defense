@@ -17,17 +17,32 @@ const INITIAL_STATE: PreloaderState = {
 
 const imageCache = new Set<string>();
 
+// Per-image timeout so a single stalled request can never hang the loader.
+// Browsers normally fire onerror on failure, but flaky networks / aborted
+// requests occasionally leave an <img> in limbo with neither event firing.
+const IMAGE_LOAD_TIMEOUT_MS = 8000;
+
 function preloadSingleImage(src: string): Promise<void> {
   if (imageCache.has(src)) {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => {
-      imageCache.add(src);
+    let settled = false;
+    const done = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
       resolve();
     };
-    img.onerror = () => resolve();
+    const timer = setTimeout(done, IMAGE_LOAD_TIMEOUT_MS);
+    img.onload = () => {
+      imageCache.add(src);
+      done();
+    };
+    img.onerror = () => done();
     img.src = src;
   });
 }
@@ -138,7 +153,9 @@ export function preloadImagesWithProgress(
 
 /**
  * Convenience hook: preload gate with minimum display time.
- * Returns isReady=true only after both preloading AND min time are done.
+ * Readiness is driven purely by the display timer — image preloading runs
+ * in the background to warm the cache, but never blocks the loading screen
+ * from completing. This avoids spinning forever if an image request stalls.
  */
 export function usePreloadGate(
   urls: string[],
@@ -148,17 +165,13 @@ export function usePreloadGate(
   const [minTimePassed, setMinTimePassed] = useState(false);
 
   useEffect(() => {
-    if (urls.length === 0) {
-      setMinTimePassed(true);
-      return;
-    }
     const t = setTimeout(() => setMinTimePassed(true), minDisplayMs);
     return () => clearTimeout(t);
-  }, [urls.length, minDisplayMs]);
+  }, [minDisplayMs]);
 
   return {
     ...preloader,
-    isReady: preloader.isComplete && minTimePassed,
+    isReady: minTimePassed,
   };
 }
 
@@ -235,37 +248,34 @@ export function useBattleLoadingGate(
     setTotal(0);
 
     const urls = getUrls();
-    const startTime = Date.now();
 
+    // Preload in the background to warm the image cache. We intentionally do
+    // NOT await this before proceeding — the loading screen's lifetime is
+    // driven purely by the display timer so a stalled image request can never
+    // get us stuck on the loading screen.
     preloadImagesWithProgress(urls, (l, t) => {
       if (sessionRef.current !== session) {
         return;
       }
       setLoaded(l);
       setTotal(t);
-    }).then(() => {
+    });
+
+    // Phase 1 → Phase 2 transition: wait for minDisplayMs, then hand off.
+    setTimeout(() => {
       if (sessionRef.current !== session) {
         return;
       }
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, minDisplayMs - elapsed);
+      readyCallbackRef.current();
 
-      // Phase 1 → Phase 2 transition: wait for minDisplayMs
+      // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
       setTimeout(() => {
         if (sessionRef.current !== session) {
           return;
         }
-        readyCallbackRef.current();
-
-        // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
-        setTimeout(() => {
-          if (sessionRef.current !== session) {
-            return;
-          }
-          setActive(false);
-        }, UI_GRACE_MS);
-      }, remaining);
-    });
+        setActive(false);
+      }, UI_GRACE_MS);
+    }, minDisplayMs);
   }, [getUrls, minDisplayMs]);
 
   const cancel = useCallback(() => {
