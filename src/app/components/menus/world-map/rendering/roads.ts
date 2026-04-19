@@ -3,7 +3,13 @@ import { seededRandom } from "../worldMapUtils";
 import type { WorldMapDrawContext } from "./drawContext";
 
 const ROAD_TENSION = 0.35;
-const ROAD_HW = 4;
+const ROAD_HW = 4.5;
+// Distance (in road-half-widths) from centerline to each wheel rut.
+const RUT_OFFSET = 2.4;
+// How far each interior waypoint may drift perpendicular to the local
+// road direction. Bigger = more meandering. End-points are never moved so
+// connector segments still join cleanly.
+const WOBBLE_AMP = 7;
 
 function traceRoadPath(
   ctx: CanvasRenderingContext2D,
@@ -34,265 +40,483 @@ function traceRoadPath(
 }
 
 interface RoadPalette {
-  dirtLight: string;
-  dirtMid: string;
+  /** Wide soft outer wash that feathers the road into the surrounding terrain. */
+  shoulder: string;
+  /** Darkest band, just outside the dirt body. */
   dirtDark: string;
+  /** Main dirt surface colour. */
+  dirtMid: string;
+  /** Slightly lighter wash used for the worn centerline. */
+  dirtLight: string;
+  /** Soft lighter splotches scattered along the road. */
+  patchLight: string;
+  /** Soft darker splotches scattered along the road. */
+  patchDark: string;
+  /** Cart wheel rut colour (paired darker grooves running along the road). */
+  rut: string;
   stoneBody: string[];
   stoneHighlight: string;
   stoneShadow: string;
+  /** Region-flavoured flecks scattered just past the road shoulders
+   *  (grass blades on grassland, snow flecks on winter, embers on volcanic, etc). */
+  edgeTuft: string;
+  /** Soft halo behind each edge tuft so it feels like it sits on the ground. */
+  edgeTuftShadow: string;
 }
 
 function getRoadPalette(avgX: number): RoadPalette {
   if (avgX < 380) {
+    // Grassland — warm beaten earth with grass tufts at the verge.
     return {
-      dirtDark: "rgba(55, 45, 25, 0.35)",
-      dirtLight: "rgba(105, 85, 55, 0.28)",
-      dirtMid: "rgba(85, 70, 40, 0.32)",
+      shoulder: "rgba(70, 55, 30, 0.18)",
+      dirtDark: "rgba(55, 45, 25, 0.42)",
+      dirtMid: "rgba(95, 75, 42, 0.4)",
+      dirtLight: "rgba(135, 110, 70, 0.35)",
+      patchLight: "rgba(160, 130, 80, 0.18)",
+      patchDark: "rgba(40, 30, 14, 0.22)",
+      rut: "rgba(28, 18, 6, 0.38)",
       stoneBody: ["#7a6a4a", "#6a5a38", "#5a4a28", "#8a7a58"],
-      stoneHighlight: "#b0a080",
-      stoneShadow: "#3a2a10",
+      stoneHighlight: "#c8b888",
+      stoneShadow: "#2a1c08",
+      edgeTuft: "#3c5c28",
+      edgeTuftShadow: "#1a2810",
     };
   } else if (avgX < 720) {
+    // Swamp — dark wet mud, mossy verge.
     return {
-      dirtDark: "rgba(40, 35, 22, 0.38)",
-      dirtLight: "rgba(80, 70, 50, 0.3)",
-      dirtMid: "rgba(60, 55, 38, 0.35)",
+      shoulder: "rgba(40, 45, 28, 0.18)",
+      dirtDark: "rgba(28, 32, 20, 0.45)",
+      dirtMid: "rgba(60, 60, 40, 0.42)",
+      dirtLight: "rgba(95, 95, 70, 0.32)",
+      patchLight: "rgba(100, 100, 70, 0.16)",
+      patchDark: "rgba(18, 22, 14, 0.28)",
+      rut: "rgba(12, 18, 8, 0.45)",
       stoneBody: ["#5a6050", "#4a5040", "#3a4030", "#6a7058"],
-      stoneHighlight: "#8a9a80",
-      stoneShadow: "#1a2010",
+      stoneHighlight: "#a0b090",
+      stoneShadow: "#0e1408",
+      edgeTuft: "#2c3e22",
+      edgeTuftShadow: "#0a1208",
     };
   } else if (avgX < 1080) {
+    // Desert — pale sandy track, lighter sand grain spillover.
     return {
-      dirtDark: "rgba(80, 60, 30, 0.35)",
-      dirtLight: "rgba(130, 105, 65, 0.3)",
-      dirtMid: "rgba(110, 85, 50, 0.32)",
+      shoulder: "rgba(150, 120, 75, 0.16)",
+      dirtDark: "rgba(80, 60, 30, 0.4)",
+      dirtMid: "rgba(125, 95, 55, 0.4)",
+      dirtLight: "rgba(170, 140, 90, 0.32)",
+      patchLight: "rgba(200, 170, 110, 0.18)",
+      patchDark: "rgba(70, 50, 22, 0.22)",
+      rut: "rgba(60, 40, 14, 0.35)",
       stoneBody: ["#b09860", "#a08848", "#c0a870", "#907838"],
-      stoneHighlight: "#d8c898",
-      stoneShadow: "#604820",
+      stoneHighlight: "#f0dca8",
+      stoneShadow: "#48320c",
+      edgeTuft: "#dcc090",
+      edgeTuftShadow: "#7a5828",
     };
   } else if (avgX < 1440) {
+    // Winter — packed snow over dark stone, snow flecks at edges.
     return {
-      dirtDark: "rgba(45, 42, 38, 0.35)",
-      dirtLight: "rgba(90, 85, 80, 0.28)",
-      dirtMid: "rgba(70, 65, 60, 0.32)",
+      shoulder: "rgba(150, 160, 175, 0.16)",
+      dirtDark: "rgba(45, 50, 60, 0.42)",
+      dirtMid: "rgba(85, 95, 110, 0.4)",
+      dirtLight: "rgba(180, 195, 215, 0.35)",
+      patchLight: "rgba(225, 235, 245, 0.22)",
+      patchDark: "rgba(35, 42, 55, 0.28)",
+      rut: "rgba(20, 28, 40, 0.4)",
       stoneBody: ["#7888a0", "#687890", "#586878", "#889ab0"],
-      stoneHighlight: "#a8b8d0",
-      stoneShadow: "#384858",
+      stoneHighlight: "#dde6f2",
+      stoneShadow: "#1c2838",
+      edgeTuft: "#e8efff",
+      edgeTuftShadow: "#3c4a64",
     };
   }
+  // Volcanic — charred ash with glowing ember flecks.
   return {
-    dirtDark: "rgba(35, 18, 12, 0.38)",
-    dirtLight: "rgba(70, 45, 35, 0.3)",
-    dirtMid: "rgba(55, 30, 22, 0.35)",
+    shoulder: "rgba(50, 22, 12, 0.18)",
+    dirtDark: "rgba(28, 14, 8, 0.45)",
+    dirtMid: "rgba(60, 32, 20, 0.42)",
+    dirtLight: "rgba(105, 60, 38, 0.32)",
+    patchLight: "rgba(140, 70, 38, 0.18)",
+    patchDark: "rgba(18, 8, 4, 0.28)",
+    rut: "rgba(10, 4, 2, 0.45)",
     stoneBody: ["#6a3525", "#5a2518", "#7a4535", "#4a1508"],
-    stoneHighlight: "#9a6550",
-    stoneShadow: "#2a0a00",
+    stoneHighlight: "#c87a52",
+    stoneShadow: "#180600",
+    edgeTuft: "#ff8a3c",
+    edgeTuftShadow: "#3a1004",
   };
+}
+
+/**
+ * Perturb interior waypoints perpendicular to their local direction (with a
+ * small along-tangent jitter for spacing variation) so the resulting spline
+ * meanders instead of arcing as a tidy parabola through evenly-spaced
+ * anchors.
+ *
+ * The first and last points are returned unchanged so connector roads that
+ * share endpoints (e.g. challenge spurs) still meet cleanly.
+ *
+ * The jitter is seeded from the path itself, so a given road wobbles the
+ * same way on every render.
+ */
+function wobblePath(pts: number[][], amp: number): number[][] {
+  if (pts.length < 3) {
+    return pts;
+  }
+  // Stable seed derived from the start + end so the same road always wobbles
+  // the same way, but different roads diverge.
+  const seed = Math.round(
+    pts[0][0] * 31 + pts[0][1] * 17 + pts.at(-1)![0] * 7 + pts.at(-1)![1] * 3
+  );
+  const out: number[][] = [pts[0]];
+
+  for (let i = 1; i < pts.length - 1; i++) {
+    const prev = pts[i - 1];
+    const curr = pts[i];
+    const next = pts[i + 1];
+
+    const tdx = next[0] - prev[0];
+    const tdy = next[1] - prev[1];
+    const tLen = Math.hypot(tdx, tdy) || 1;
+    const tx = tdx / tLen;
+    const ty = tdy / tLen;
+    const px = -ty;
+    const py = tx;
+
+    // Lateral wobble — main meander signal.
+    const lateral = (seededRandom(seed + i * 137) - 0.5) * 2 * amp;
+
+    // Small along-tangent jitter so the points aren't perfectly equidistant.
+    const longitudinal = (seededRandom(seed + i * 251) - 0.5) * amp * 0.5;
+
+    // Layer in a slow sinusoidal sway so consecutive points don't all jump
+    // in opposite directions (which can read as zigzag instead of curve).
+    const sway =
+      Math.sin(i * 1.7 + seededRandom(seed + 11) * Math.PI) * amp * 0.4;
+
+    out.push([
+      curr[0] + px * (lateral + sway) + tx * longitudinal,
+      curr[1] + py * (lateral + sway) + ty * longitudinal,
+    ]);
+  }
+
+  out.push(pts.at(-1)!);
+  return out;
+}
+
+/**
+ * Walks pts as a Catmull-Rom spline and yields densely-sampled (x, y, tangent)
+ * triples. Used by the rut, patch, and tuft helpers — each one was open-coding
+ * its own copy of bezier sampling, which made the file three times longer than
+ * it needed to be and meant tweaks had to be applied N times.
+ */
+function sampleAlongPath(
+  pts: number[][],
+  density: number,
+  visit: (x: number, y: number, tx: number, ty: number, sIdx: number) => void
+): void {
+  let sIdx = 0;
+  const visitSegment = (
+    p1: number[],
+    c1: number[],
+    c2: number[],
+    p2: number[]
+  ) => {
+    const segLen = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    const count = Math.max(2, Math.ceil(segLen / density));
+    for (let s = 0; s <= count; s++) {
+      const t = s / count;
+      const mt = 1 - t;
+      const bx =
+        mt * mt * mt * p1[0] +
+        3 * mt * mt * t * c1[0] +
+        3 * mt * t * t * c2[0] +
+        t * t * t * p2[0];
+      const by =
+        mt * mt * mt * p1[1] +
+        3 * mt * mt * t * c1[1] +
+        3 * mt * t * t * c2[1] +
+        t * t * t * p2[1];
+      const tdx =
+        3 * mt * mt * (c1[0] - p1[0]) +
+        6 * mt * t * (c2[0] - c1[0]) +
+        3 * t * t * (p2[0] - c2[0]);
+      const tdy =
+        3 * mt * mt * (c1[1] - p1[1]) +
+        6 * mt * t * (c2[1] - c1[1]) +
+        3 * t * t * (p2[1] - c2[1]);
+      const tLen = Math.hypot(tdx, tdy) || 1;
+      visit(bx, by, tdx / tLen, tdy / tLen, sIdx);
+      sIdx++;
+    }
+  };
+
+  if (pts.length === 2) {
+    visitSegment(pts[0], pts[0], pts[1], pts[1]);
+    return;
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[Math.min(pts.length - 1, i + 1)];
+    const p3 = pts[Math.min(pts.length - 1, i + 2)];
+    visitSegment(
+      p1,
+      [
+        p1[0] + (p2[0] - p0[0]) * ROAD_TENSION,
+        p1[1] + (p2[1] - p0[1]) * ROAD_TENSION,
+      ],
+      [
+        p2[0] - (p3[0] - p1[0]) * ROAD_TENSION,
+        p2[1] - (p3[1] - p1[1]) * ROAD_TENSION,
+      ],
+      p2
+    );
+  }
+}
+
+/**
+ * Two parallel cart-wheel ruts running along the road. Drawn as a continuous
+ * polyline traced by sampling the spline at high density and offsetting each
+ * sample perpendicularly by ±RUT_OFFSET. Subtle but immediately reads as a
+ * "well-used" path.
+ */
+function drawWheelRuts(
+  ctx: CanvasRenderingContext2D,
+  pts: number[][],
+  palette: RoadPalette
+): void {
+  const left: [number, number][] = [];
+  const right: [number, number][] = [];
+  sampleAlongPath(pts, 4, (bx, by, tx, ty) => {
+    const px = -ty;
+    const py = tx;
+    left.push([bx - px * RUT_OFFSET, by - py * RUT_OFFSET]);
+    right.push([bx + px * RUT_OFFSET, by + py * RUT_OFFSET]);
+  });
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.strokeStyle = palette.rut;
+  ctx.lineWidth = 1.4;
+  for (const line of [left, right]) {
+    if (line.length < 2) {
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(line[0][0], line[0][1]);
+    for (let i = 1; i < line.length; i++) {
+      ctx.lineTo(line[i][0], line[i][1]);
+    }
+    ctx.stroke();
+  }
+
+  // Tiny highlight on the inside lip of each rut so the groove reads as
+  // recessed rather than just a dark line.
+  ctx.strokeStyle = palette.dirtLight;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = 0.6;
+  for (const line of [left, right]) {
+    if (line.length < 2) {
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(line[0][0], line[0][1]);
+    for (let i = 1; i < line.length; i++) {
+      ctx.lineTo(line[i][0], line[i][1]);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
+ * Soft random splotches of slightly lighter / darker dirt scattered along the
+ * surface. Breaks up the otherwise uniform dirtMid stroke and makes the road
+ * read as worn and patchy.
+ */
+function drawDirtPatches(
+  ctx: CanvasRenderingContext2D,
+  pts: number[][],
+  palette: RoadPalette
+): void {
+  ctx.save();
+  sampleAlongPath(pts, 12, (bx, by, tx, ty, sIdx) => {
+    const px = -ty;
+    const py = tx;
+    const seed = sIdx * 661;
+    if (seededRandom(seed) > 0.55) {
+      return;
+    }
+    const lat = (seededRandom(seed + 17) - 0.5) * ROAD_HW * 1.7;
+    const lon = (seededRandom(seed + 23) - 0.5) * 5;
+    const cx = bx + px * lat + tx * lon;
+    const cy = by + py * lat + ty * lon;
+    const r = 2 + seededRandom(seed + 31) * 3.5;
+    const isLight = seededRandom(seed + 43) > 0.5;
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = isLight ? palette.patchLight : palette.patchDark;
+    ctx.beginPath();
+    ctx.ellipse(
+      cx,
+      cy,
+      r,
+      r * 0.55,
+      seededRandom(seed + 53) * Math.PI,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawCobblestones(
   ctx: CanvasRenderingContext2D,
   pts: number[][],
   palette: RoadPalette
-) {
-  let sIdx = 0;
-  const sampleSegment = (
-    p1: number[],
-    c1: number[],
-    c2: number[],
-    p2: number[]
-  ) => {
-    const segLen = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
-    const count = Math.max(2, Math.ceil(segLen / 18));
-    for (let s = 0; s < count; s++) {
-      const t = (s + 0.5) / count;
-      const mt = 1 - t;
-      const bx =
-        mt * mt * mt * p1[0] +
-        3 * mt * mt * t * c1[0] +
-        3 * mt * t * t * c2[0] +
-        t * t * t * p2[0];
-      const by =
-        mt * mt * mt * p1[1] +
-        3 * mt * mt * t * c1[1] +
-        3 * mt * t * t * c2[1] +
-        t * t * t * p2[1];
-      const tdx =
-        3 * mt * mt * (c1[0] - p1[0]) +
-        6 * mt * t * (c2[0] - c1[0]) +
-        3 * t * t * (p2[0] - c2[0]);
-      const tdy =
-        3 * mt * mt * (c1[1] - p1[1]) +
-        6 * mt * t * (c2[1] - c1[1]) +
-        3 * t * t * (p2[1] - c2[1]);
-      const tLen = Math.hypot(tdx, tdy) || 1;
-      const px = -tdy / tLen;
-      const py = tdx / tLen;
-      const tx = tdx / tLen;
-      const ty = tdy / tLen;
+): void {
+  ctx.save();
+  sampleAlongPath(pts, 14, (bx, by, tx, ty, sIdx) => {
+    const px = -ty;
+    const py = tx;
+    const baseSeed = sIdx * 997 + Math.round(bx * 7.3);
+    const nStones = 1 + Math.floor(seededRandom(baseSeed) * 2);
 
-      const baseSeed = sIdx * 997 + Math.round(bx * 7.3);
-      const nStones = 1 + Math.floor(seededRandom(baseSeed) * 2);
-
-      for (let j = 0; j < nStones; j++) {
-        const lat = (seededRandom(baseSeed + j * 37) - 0.5) * ROAD_HW * 2;
-        const lon = (seededRandom(baseSeed + j * 53) - 0.5) * 3.5;
-        const sx = bx + px * lat + tx * lon;
-        const sy = by + py * lat + ty * lon;
-        const sw = 0.7 + seededRandom(baseSeed + j * 71) * 1.4;
-        const sh = sw * (0.35 + seededRandom(baseSeed + j * 79) * 0.3);
-        const rot = seededRandom(baseSeed + j * 89) * Math.PI;
-        const cIdx = Math.floor(
-          seededRandom(baseSeed + j * 97) * palette.stoneBody.length
-        );
-
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = palette.stoneShadow;
-        ctx.beginPath();
-        ctx.ellipse(
-          sx + 0.3,
-          sy + 0.35,
-          sw * 1.1,
-          sh * 1.15,
-          rot,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-
-        ctx.globalAlpha = 0.5;
-        ctx.fillStyle = palette.stoneBody[cIdx];
-        ctx.beginPath();
-        ctx.ellipse(sx, sy, sw, sh, rot, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.globalAlpha = 0.14;
-        ctx.fillStyle = palette.stoneHighlight;
-        ctx.beginPath();
-        ctx.ellipse(
-          sx - 0.2,
-          sy - 0.2,
-          sw * 0.55,
-          sh * 0.45,
-          rot,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-      sIdx++;
-    }
-  };
-
-  if (pts.length === 2) {
-    sampleSegment(pts[0], pts[0], pts[1], pts[1]);
-  } else {
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[Math.max(0, i - 1)];
-      const p1 = pts[i];
-      const p2 = pts[Math.min(pts.length - 1, i + 1)];
-      const p3 = pts[Math.min(pts.length - 1, i + 2)];
-      sampleSegment(
-        p1,
-        [
-          p1[0] + (p2[0] - p0[0]) * ROAD_TENSION,
-          p1[1] + (p2[1] - p0[1]) * ROAD_TENSION,
-        ],
-        [
-          p2[0] - (p3[0] - p1[0]) * ROAD_TENSION,
-          p2[1] - (p3[1] - p1[1]) * ROAD_TENSION,
-        ],
-        p2
+    for (let j = 0; j < nStones; j++) {
+      const lat = (seededRandom(baseSeed + j * 37) - 0.5) * ROAD_HW * 1.8;
+      const lon = (seededRandom(baseSeed + j * 53) - 0.5) * 3.5;
+      const sx = bx + px * lat + tx * lon;
+      const sy = by + py * lat + ty * lon;
+      // Bigger stones than before — the old 0.7-2.1px were basically
+      // invisible. New range 1.1-2.8px reads as proper paving stones.
+      const sw = 1.1 + seededRandom(baseSeed + j * 71) * 1.7;
+      const sh = sw * (0.45 + seededRandom(baseSeed + j * 79) * 0.3);
+      const rot = seededRandom(baseSeed + j * 89) * Math.PI;
+      const cIdx = Math.floor(
+        seededRandom(baseSeed + j * 97) * palette.stoneBody.length
       );
+
+      // Drop shadow
+      ctx.globalAlpha = 0.32;
+      ctx.fillStyle = palette.stoneShadow;
+      ctx.beginPath();
+      ctx.ellipse(
+        sx + 0.45,
+        sy + 0.55,
+        sw * 1.15,
+        sh * 1.2,
+        rot,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Stone body
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = palette.stoneBody[cIdx];
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, sw, sh, rot, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun-side highlight
+      ctx.globalAlpha = 0.32;
+      ctx.fillStyle = palette.stoneHighlight;
+      ctx.beginPath();
+      ctx.ellipse(
+        sx - 0.35,
+        sy - 0.4,
+        sw * 0.55,
+        sh * 0.45,
+        rot,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
     }
-  }
+  });
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawEdgePebbles(
   ctx: CanvasRenderingContext2D,
   pts: number[][],
   palette: RoadPalette
-) {
-  let sIdx = 5000;
-  const sampleEdge = (
-    p1: number[],
-    c1: number[],
-    c2: number[],
-    p2: number[]
-  ) => {
-    const segLen = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
-    const count = Math.max(1, Math.ceil(segLen / 28));
-    for (let s = 0; s < count; s++) {
-      const t = (s + 0.3) / count;
-      const mt = 1 - t;
-      const bx =
-        mt * mt * mt * p1[0] +
-        3 * mt * mt * t * c1[0] +
-        3 * mt * t * t * c2[0] +
-        t * t * t * p2[0];
-      const by =
-        mt * mt * mt * p1[1] +
-        3 * mt * mt * t * c1[1] +
-        3 * mt * t * t * c2[1] +
-        t * t * t * p2[1];
-      const tdx =
-        3 * mt * mt * (c1[0] - p1[0]) +
-        6 * mt * t * (c2[0] - c1[0]) +
-        3 * t * t * (p2[0] - c2[0]);
-      const tdy =
-        3 * mt * mt * (c1[1] - p1[1]) +
-        6 * mt * t * (c2[1] - c1[1]) +
-        3 * t * t * (p2[1] - c2[1]);
-      const tLen = Math.hypot(tdx, tdy) || 1;
-      const px = -tdy / tLen;
-      const py = tdx / tLen;
+): void {
+  ctx.save();
+  sampleAlongPath(pts, 28, (bx, by, tx, ty, sIdx) => {
+    const px = -ty;
+    const py = tx;
+    for (let side = -1; side <= 1; side += 2) {
+      const eSeed = (sIdx + 5000) * 773 + side * 500;
+      const offset = ROAD_HW + 1.5 + seededRandom(eSeed) * 2.5;
+      const ex = bx + px * offset * side;
+      const ey = by + py * offset * side;
+      const ew = 0.5 + seededRandom(eSeed + 11) * 1;
+      const eh = ew * (0.4 + seededRandom(eSeed + 23) * 0.2);
+      const eRot = seededRandom(eSeed + 31) * Math.PI;
 
-      for (let side = -1; side <= 1; side += 2) {
-        const eSeed = sIdx * 773 + side * 500;
-        const offset = ROAD_HW + 1.5 + seededRandom(eSeed) * 2.5;
-        const ex = bx + px * offset * side;
-        const ey = by + py * offset * side;
-        const ew = 0.5 + seededRandom(eSeed + 11) * 1;
-        const eh = ew * (0.4 + seededRandom(eSeed + 23) * 0.2);
-        const eRot = seededRandom(eSeed + 31) * Math.PI;
-
-        ctx.globalAlpha = 0.25;
-        ctx.fillStyle =
-          palette.stoneBody[
-            Math.floor(seededRandom(eSeed + 41) * palette.stoneBody.length)
-          ];
-        ctx.beginPath();
-        ctx.ellipse(ex, ey, ew, eh, eRot, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      sIdx++;
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle =
+        palette.stoneBody[
+          Math.floor(seededRandom(eSeed + 41) * palette.stoneBody.length)
+        ];
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, ew, eh, eRot, 0, Math.PI * 2);
+      ctx.fill();
     }
-  };
-
-  if (pts.length === 2) {
-    sampleEdge(pts[0], pts[0], pts[1], pts[1]);
-  } else {
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[Math.max(0, i - 1)];
-      const p1 = pts[i];
-      const p2 = pts[Math.min(pts.length - 1, i + 1)];
-      const p3 = pts[Math.min(pts.length - 1, i + 2)];
-      sampleEdge(
-        p1,
-        [
-          p1[0] + (p2[0] - p0[0]) * ROAD_TENSION,
-          p1[1] + (p2[1] - p0[1]) * ROAD_TENSION,
-        ],
-        [
-          p2[0] - (p3[0] - p1[0]) * ROAD_TENSION,
-          p2[1] - (p3[1] - p1[1]) * ROAD_TENSION,
-        ],
-        p2
-      );
-    }
-  }
+  });
   ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/**
+ * Region-specific accents scattered just past the road shoulders — grass blades
+ * for grassland, snow flecks for winter, sand grains for desert, mossy bumps
+ * for swamp, ember motes for volcanic. They sell each region's character much
+ * more than another generic pebble would.
+ */
+function drawEdgeTufts(
+  ctx: CanvasRenderingContext2D,
+  pts: number[][],
+  palette: RoadPalette
+): void {
+  ctx.save();
+  sampleAlongPath(pts, 22, (bx, by, tx, ty, sIdx) => {
+    const px = -ty;
+    const py = tx;
+    for (let side = -1; side <= 1; side += 2) {
+      const tSeed = (sIdx + 9000) * 419 + side * 313;
+      // Skip ~half the candidate slots so tufts look organic, not striped.
+      if (seededRandom(tSeed) > 0.55) {
+        continue;
+      }
+      const offset = ROAD_HW + 2.4 + seededRandom(tSeed + 7) * 3.5;
+      const ex =
+        bx + px * offset * side + (seededRandom(tSeed + 13) - 0.5) * 1.5;
+      const ey =
+        by + py * offset * side + (seededRandom(tSeed + 19) - 0.5) * 1.5;
+      const r = 0.7 + seededRandom(tSeed + 29) * 0.9;
+
+      // Soft ground halo
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = palette.edgeTuftShadow;
+      ctx.beginPath();
+      ctx.arc(ex + 0.25, ey + 0.3, r * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tuft body
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = palette.edgeTuft;
+      ctx.beginPath();
+      ctx.arc(ex, ey, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawRoadSegment(
@@ -307,39 +531,64 @@ function drawRoadSegment(
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  const pts = points.map((p) => [p[0], getLevelY(p[1])]);
+  // Convert y-percentages to pixel coords first, *then* wobble. Doing it in
+  // pixel space keeps the wobble amplitude visually consistent regardless of
+  // map height. End-points stay locked so adjacent road segments still
+  // meet at their shared anchor.
+  const pixelPts = points.map((p) => [p[0], getLevelY(p[1])]);
+  const pts = wobblePath(pixelPts, WOBBLE_AMP);
   const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
   const palette = getRoadPalette(avgX);
 
-  // Ground shadow
-  traceRoadPath(ctx, pts, 2, 3);
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
-  ctx.lineWidth = 16;
+  // 1. Wide soft shoulder — feathers the road into the surrounding terrain
+  //    instead of leaving a hard edge against the grass/sand/snow underneath.
+  traceRoadPath(ctx, pts, 0, 0);
+  ctx.strokeStyle = palette.shoulder;
+  ctx.lineWidth = 19;
   ctx.stroke();
 
-  // Road bed (dark border)
+  // 2. Sharper drop shadow under the road
+  traceRoadPath(ctx, pts, 1.5, 2.5);
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.22)";
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  // 3. Dark dirt bed (the silhouette / outer rim of the road body)
   traceRoadPath(ctx, pts, 0, 0);
   ctx.strokeStyle = palette.dirtDark;
   ctx.lineWidth = 13;
   ctx.stroke();
 
-  // Main surface
+  // 4. Main dirt surface
   traceRoadPath(ctx, pts, 0, 0);
   ctx.strokeStyle = palette.dirtMid;
   ctx.lineWidth = 10;
   ctx.stroke();
 
-  // Cobblestone texture
+  // 5. Soft random patches of lighter / darker dirt — kills the uniformity
+  //    of the dirtMid stroke
+  drawDirtPatches(ctx, pts, palette);
+
+  // 6. Two parallel cart-wheel ruts — the single most "road-like" detail
+  drawWheelRuts(ctx, pts, palette);
+
+  // 7. Cobblestones scattered across the surface
   drawCobblestones(ctx, pts, palette);
 
-  // Edge pebbles
+  // 8. Pebbles & gravel just outside the road edge
   drawEdgePebbles(ctx, pts, palette);
 
-  // Worn center highlight
+  // 9. Region-flavoured tufts at the verge (grass / snow / sand / moss / embers)
+  drawEdgeTufts(ctx, pts, palette);
+
+  // 10. Thin worn centerline between the two ruts — where boots have flattened
+  //     the dirt smooth. Narrower than before so the ruts stay visible.
   traceRoadPath(ctx, pts, 0, 0);
   ctx.strokeStyle = palette.dirtLight;
-  ctx.lineWidth = 5;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 2.4;
   ctx.stroke();
+  ctx.globalAlpha = 1;
 
   ctx.restore();
 }
