@@ -1,6 +1,11 @@
 import { headers } from "next/headers";
 
+import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
+import { LEVEL_DATA } from "../constants/maps";
+import { LEVEL_WAVES } from "../constants/waves";
 import { SITE_URL, GAME_STATS } from "./constants";
+
+type LevelNode = (typeof WORLD_LEVELS)[number];
 
 export const OG_SIZE = { height: 630, width: 1200 };
 
@@ -679,6 +684,293 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           }}
         >
           ENTER THE REALM
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const REGION_BG: Record<LevelNode["region"], string> = {
+  desert: "/images/new/gameplay_desert.png",
+  grassland: "/images/new/gameplay_grounds.png",
+  swamp: "/images/new/gameplay_swamp.png",
+  volcanic: "/images/new/gameplay_volcano.png",
+  winter: "/images/new/gameplay_winter.png",
+};
+
+const REGION_LABEL: Record<LevelNode["region"], string> = {
+  desert: "Sahara Sands",
+  grassland: "Princeton Grounds",
+  swamp: "Murky Marshes",
+  volcanic: "Volcanic Depths",
+  winter: "Frozen Frontier",
+};
+
+const REGION_ACCENT: Record<LevelNode["region"], string> = {
+  desert: "#f4b942",
+  grassland: "#7bc96f",
+  swamp: "#7c9a3f",
+  volcanic: "#f87171",
+  winter: "#7dd3fc",
+};
+
+const KIND_LABEL: Record<NonNullable<LevelNode["kind"]> | "campaign", string> =
+  {
+    campaign: "Campaign",
+    challenge: "Challenge",
+    sandbox: "Sandbox",
+  };
+
+const DIFFICULTY_LABEL: Record<LevelNode["difficulty"], string> = {
+  1: "Easy",
+  2: "Medium",
+  3: "Hard",
+};
+
+export function findLevelById(levelId: string): LevelNode | undefined {
+  return WORLD_LEVELS.find((l) => l.id === levelId);
+}
+
+export function renderLevelOGImage(
+  baseUrl: string,
+  level: LevelNode
+): React.ReactElement {
+  const region = REGION_LABEL[level.region];
+  const accent = REGION_ACCENT[level.region];
+  const kind = KIND_LABEL[level.kind ?? "campaign"];
+  const difficulty = DIFFICULTY_LABEL[level.difficulty];
+  const bgUrl = `${baseUrl}${REGION_BG[level.region]}`;
+  const previewPath =
+    LEVEL_DATA[level.id]?.previewImage ?? REGION_BG[level.region];
+  const previewUrl = `${baseUrl}${previewPath}`;
+  const logoUrl = `${baseUrl}/images/og-thumbs/logo.png`;
+  const waveCount = LEVEL_WAVES[level.id]?.length ?? 0;
+  const description = level.description.replaceAll("\n", " ");
+
+  const stats: { l: string; v: string }[] = [
+    { l: "Region", v: region },
+    { l: "Difficulty", v: difficulty },
+    { l: "Type", v: kind },
+  ];
+  if (waveCount > 0) {
+    stats.push({ l: "Waves", v: String(waveCount) });
+  }
+
+  return (
+    <div
+      style={{
+        background: BG,
+        display: "flex",
+        fontFamily: FONT,
+        height: H,
+        overflow: "hidden",
+        position: "relative",
+        width: W,
+      }}
+    >
+      {/* Region background */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={bgUrl}
+        width={W}
+        height={H}
+        alt=""
+        style={{ left: 0, opacity: 0.28, position: "absolute", top: 0 }}
+      />
+
+      {/* Vignette */}
+      <div
+        style={{
+          background: `radial-gradient(ellipse 100% 90% at 50% 45%, rgba(${BG_RGBA},0.05) 0%, rgba(${BG_RGBA},0.78) 80%)`,
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: W,
+        }}
+      />
+
+      {/* Left-to-right gradient that protects text */}
+      <div
+        style={{
+          background: `linear-gradient(90deg, rgba(${BG_RGBA},0.92) 0%, rgba(${BG_RGBA},0.7) 35%, rgba(${BG_RGBA},0.15) 60%, rgba(${BG_RGBA},0) 100%)`,
+          display: "flex",
+          height: H,
+          left: 0,
+          position: "absolute",
+          top: 0,
+          width: W,
+        }}
+      />
+
+      {/* Ornate frame */}
+      {renderFrame()}
+
+      {/* Right: large level preview */}
+      <div
+        style={{
+          border: `2px solid ${accent}50`,
+          borderRadius: 14,
+          boxShadow: `0 0 60px rgba(0,0,0,0.5), 0 0 20px ${accent}25`,
+          display: "flex",
+          height: 450,
+          overflow: "hidden",
+          position: "absolute",
+          right: 56,
+          top: 90,
+          width: 460,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={previewUrl}
+          width={460}
+          height={450}
+          alt=""
+          style={{ display: "flex", objectFit: "cover" }}
+        />
+      </div>
+
+      {/* Left column: text content */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 26,
+          height: H,
+          justifyContent: "center",
+          padding: "36px 0 36px 70px",
+          position: "relative",
+          width: 600,
+        }}
+      >
+        {/* Header: logo + wordmark */}
+        <div style={{ alignItems: "center", display: "flex", gap: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl} width={56} height={56} alt="" />
+          <div
+            style={{
+              color: "rgba(212,168,74,0.7)",
+              display: "flex",
+              fontFamily: FONT,
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: "0.22em",
+            }}
+          >
+            PRINCETON TOWER DEFENSE
+          </div>
+        </div>
+
+        {/* Region tag */}
+        <div style={{ alignItems: "center", display: "flex", gap: 12 }}>
+          <div
+            style={{
+              background: accent,
+              borderRadius: 2,
+              display: "flex",
+              height: 24,
+              width: 4,
+            }}
+          />
+          <div
+            style={{
+              color: accent,
+              display: "flex",
+              fontFamily: FONT,
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+            }}
+          >
+            {region} · {kind}
+          </div>
+        </div>
+
+        {/* Level name */}
+        <div
+          style={{
+            color: "#fbbf24",
+            display: "flex",
+            fontFamily: FONT,
+            fontSize: level.name.length > 16 ? 76 : 92,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            lineHeight: 0.95,
+          }}
+        >
+          {level.name}
+        </div>
+
+        {/* Description */}
+        <div
+          style={{
+            color: "rgba(228,228,231,0.85)",
+            display: "flex",
+            fontFamily: FONT,
+            fontSize: 21,
+            fontWeight: 400,
+            lineHeight: 1.4,
+            maxWidth: 510,
+          }}
+        >
+          {description}
+        </div>
+
+        {/* Stats row */}
+        <div style={{ alignItems: "center", display: "flex", gap: 4 }}>
+          {stats.map((s, i) => (
+            <div key={s.l} style={{ alignItems: "center", display: "flex" }}>
+              {i > 0 && (
+                <div
+                  style={{
+                    background: "rgba(212,168,74,0.2)",
+                    display: "flex",
+                    height: 36,
+                    marginRight: 4,
+                    width: 1,
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  alignItems: "flex-start",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  padding: "0 18px 0 0",
+                  paddingLeft: i === 0 ? 0 : 18,
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(212,168,74,0.45)",
+                    display: "flex",
+                    fontFamily: FONT,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.2em",
+                  }}
+                >
+                  {s.l.toUpperCase()}
+                </div>
+                <div
+                  style={{
+                    color: "#F58025",
+                    display: "flex",
+                    fontFamily: FONT,
+                    fontSize: 24,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  {s.v}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

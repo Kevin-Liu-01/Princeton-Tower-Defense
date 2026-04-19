@@ -43,6 +43,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   openGraph: {
     description: SITE_DESCRIPTION_SHORT,
+    images: [
+      {
+        alt: `${SITE_NAME} - Free browser tower defense game`,
+        height: 630,
+        type: "image/png",
+        url: "/og",
+        width: 1200,
+      },
+    ],
     locale: "en_US",
     siteName: SITE_NAME,
     title: `${SITE_NAME} | Free Tower Defense Game - Play Now`,
@@ -89,6 +98,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     creator: "@kevskgs",
     description: SITE_DESCRIPTION_SHORT,
+    images: ["/og"],
     site: "@kevskgs",
     title: `${SITE_NAME} | Free Browser Tower Defense Game`,
   },

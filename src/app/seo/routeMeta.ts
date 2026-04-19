@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 
 import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
-import { LEVEL_DATA } from "../constants";
 import { parseRoute } from "../constants/routes";
-import { SITE_URL, SITE_NAME, OG_IMAGES, REGION_OG_IMAGE } from "./constants";
-
-type OgImageKey = keyof typeof OG_IMAGES;
+import { SITE_URL, SITE_NAME } from "./constants";
 
 const REGION_LABEL: Record<string, string> = {
   desert: "Sahara Sands",
@@ -65,6 +62,13 @@ const CODEX_TAB_META: Record<string, { title: string; description: string }> = {
   },
 };
 
+function buildOgUrl(params?: { level?: string }): string {
+  if (!params?.level) {
+    return "/og";
+  }
+  return `/og?level=${encodeURIComponent(params.level)}`;
+}
+
 function getLevelMeta(levelId: string): Metadata | null {
   const level = WORLD_LEVELS.find((l) => l.id === levelId);
   if (!level) {
@@ -77,16 +81,14 @@ function getLevelMeta(levelId: string): Metadata | null {
   const cleanDesc = level.description.replaceAll("\n", " ");
   const tags = level.tags.join(", ");
   const canonical = `${SITE_URL}/${level.id}`;
-
-  const levelData = LEVEL_DATA[levelId];
-  const ogImage = levelData?.previewImage
-    ? {
-        alt: `${level.name} level preview — ${region} in Princeton Tower Defense`,
-        height: 450,
-        url: `${SITE_URL}${levelData.previewImage}`,
-        width: 800,
-      }
-    : OG_IMAGES[REGION_OG_IMAGE[level.region] ?? "primary"];
+  const ogUrl = buildOgUrl({ level: level.id });
+  const ogImage = {
+    alt: `${level.name} — ${region} ${kind} in ${SITE_NAME}`,
+    height: 630,
+    type: "image/png",
+    url: ogUrl,
+    width: 1200,
+  };
 
   const title = `Play ${level.name} — ${region} ${kind} | ${SITE_NAME}`;
   const description =
@@ -108,7 +110,7 @@ function getLevelMeta(levelId: string): Metadata | null {
     twitter: {
       card: "summary_large_image",
       description,
-      images: [ogImage],
+      images: [ogUrl],
       title,
     },
   };
@@ -143,7 +145,6 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         description: meta.description,
         openGraph: {
           description: meta.description,
-          images: [OG_IMAGES.primary],
           siteName: SITE_NAME,
           title: `${meta.title} | ${SITE_NAME}`,
           type: "website",
@@ -153,7 +154,6 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         twitter: {
           card: "summary_large_image",
           description: meta.description,
-          images: [OG_IMAGES.primary],
           title: `${meta.title} | ${SITE_NAME}`,
         },
       };
@@ -167,7 +167,6 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         openGraph: {
           description:
             "Build custom tower defense maps with the Princeton TD level creator. Design paths, place hazards, compose waves, and share your maps.",
-          images: [OG_IMAGES.homepage],
           siteName: SITE_NAME,
           title: `Level Creator | ${SITE_NAME}`,
           type: "website",
@@ -185,7 +184,6 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
         openGraph: {
           description:
             "Meet the creator of Princeton Tower Defense and learn about the tech stack behind the game.",
-          images: [OG_IMAGES.homepage],
           siteName: SITE_NAME,
           title: `Credits | ${SITE_NAME}`,
           type: "website",
