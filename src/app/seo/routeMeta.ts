@@ -4,11 +4,20 @@ import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { parseRoute } from "../constants/routes";
 import { SITE_URL, SITE_NAME } from "./constants";
 
+/**
+ * Bump whenever the OG renderer layout changes. Appended to every OG image
+ * URL so Vercel's edge cache + external social-platform unfurl caches see a
+ * new key and re-fetch the freshly-rendered image. Without this the old
+ * layout can stick around for days on Slack / iMessage / Twitter / etc.
+ * even after a deploy.
+ */
+const OG_VERSION = "2";
+
 const HOME_OG = {
   alt: "Princeton Tower Defense - Free Browser Tower Defense Game with 26 Levels, 9 Heroes, and 100+ Enemies",
   height: 630,
   type: "image/png",
-  url: "/og",
+  url: `/og?v=${OG_VERSION}`,
   width: 1200,
 } as const;
 
@@ -17,7 +26,7 @@ function buildLevelOgImage(level: { id: string; name: string }) {
     alt: `${level.name} — level preview in ${SITE_NAME}`,
     height: 630,
     type: "image/png",
-    url: `/og?level=${encodeURIComponent(level.id)}`,
+    url: `/og?level=${encodeURIComponent(level.id)}&v=${OG_VERSION}`,
     width: 1200,
   } as const;
 }
