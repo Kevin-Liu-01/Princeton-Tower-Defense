@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 
 import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
 import { LEVEL_DATA } from "../constants/maps";
-import { LEVEL_WAVES } from "../constants/waves";
 import { SITE_URL, GAME_STATS } from "./constants";
 
 type LevelNode = (typeof WORLD_LEVELS)[number];
@@ -276,33 +275,62 @@ function renderFrame(): React.ReactElement {
         }}
       />
 
-      {/* Center diamonds top + bottom */}
-      <div
-        style={{
-          background: "rgba(212,168,74,0.25)",
-          border: `1.5px solid ${FC}`,
-          display: "flex",
-          height: 14,
-          left: W / 2 - 7,
-          position: "absolute",
-          top: 3,
-          transform: "rotate(45deg)",
-          width: 14,
-        }}
-      />
-      <div
-        style={{
-          background: "rgba(212,168,74,0.25)",
-          border: `1.5px solid ${FC}`,
-          display: "flex",
-          height: 14,
-          left: W / 2 - 7,
-          position: "absolute",
-          top: H - 18,
-          transform: "rotate(45deg)",
-          width: 14,
-        }}
-      />
+      {/* Center diamond finials — one centered on each edge of the outer
+          frame line, with a faceted gem look (gradient body + bright pip).
+          The outer-border line lives at offset 10 so we centre each diamond
+          at offset 11 (=10 + 1px stroke half-width) from its edge. */}
+      {(
+        [
+          { cx: W / 2, cy: 11 },
+          { cx: W / 2, cy: H - 11 },
+          { cx: 11, cy: H / 2 },
+          { cx: W - 11, cy: H / 2 },
+        ] as const
+      ).map((d) => {
+        const size = 18;
+        return (
+          <div
+            key={`${d.cx}-${d.cy}`}
+            style={{
+              display: "flex",
+              height: size,
+              left: d.cx - size / 2,
+              position: "absolute",
+              top: d.cy - size / 2,
+              width: size,
+            }}
+          >
+            {/* Faceted body */}
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${FG} 0%, ${FC} 50%, #6a4d18 100%)`,
+                border: `1.5px solid ${FG}`,
+                boxShadow: `0 0 10px rgba(212,168,74,0.55), inset 0 0 4px rgba(255,240,180,0.35)`,
+                display: "flex",
+                height: size,
+                left: 0,
+                position: "absolute",
+                top: 0,
+                transform: "rotate(45deg)",
+                width: size,
+              }}
+            />
+            {/* Bright sparkle pip */}
+            <div
+              style={{
+                background: "rgba(255,245,200,0.85)",
+                borderRadius: 99,
+                display: "flex",
+                height: 4,
+                left: size / 2 - 2,
+                position: "absolute",
+                top: size / 2 - 2,
+                width: 4,
+              }}
+            />
+          </div>
+        );
+      })}
 
       {/* Ornate corner SVGs */}
       {CORNERS.map((c) => (
@@ -721,83 +749,8 @@ const KIND_LABEL: Record<NonNullable<LevelNode["kind"]> | "campaign", string> =
     sandbox: "Sandbox",
   };
 
-const DIFFICULTY_LABEL: Record<LevelNode["difficulty"], string> = {
-  1: "Easy",
-  2: "Medium",
-  3: "Hard",
-};
-
 export function findLevelById(levelId: string): LevelNode | undefined {
   return WORLD_LEVELS.find((l) => l.id === levelId);
-}
-
-function renderPreviewCorners(
-  accent: string,
-  boxW: number,
-  boxH: number
-): React.ReactElement {
-  const arm = 22;
-  const w = 3;
-  const inset = 10;
-  const slots: {
-    top: number;
-    left: number;
-    isTop: boolean;
-    isLeft: boolean;
-  }[] = [
-    { isLeft: true, isTop: true, left: inset, top: inset },
-    { isLeft: false, isTop: true, left: boxW - inset - arm, top: inset },
-    { isLeft: true, isTop: false, left: inset, top: boxH - inset - arm },
-    {
-      isLeft: false,
-      isTop: false,
-      left: boxW - inset - arm,
-      top: boxH - inset - arm,
-    },
-  ];
-
-  return (
-    <>
-      {slots.map((s) => (
-        <div
-          key={`${s.top}-${s.left}`}
-          style={{
-            display: "flex",
-            height: arm,
-            left: s.left,
-            position: "absolute",
-            top: s.top,
-            width: arm,
-          }}
-        >
-          <div
-            style={{
-              background: accent,
-              boxShadow: `0 0 8px ${accent}80`,
-              display: "flex",
-              height: w,
-              left: 0,
-              position: "absolute",
-              top: s.isTop ? 0 : arm - w,
-              width: arm,
-            }}
-          />
-          <div
-            style={{
-              background: accent,
-              boxShadow: `0 0 8px ${accent}80`,
-              display: "flex",
-              height: arm,
-              left: s.isLeft ? 0 : arm - w,
-              position: "absolute",
-              top: 0,
-              width: w,
-            }}
-          />
-        </div>
-      ))}
-    </>
-  );
 }
 
 export function renderLevelOGImage(
@@ -807,29 +760,16 @@ export function renderLevelOGImage(
   const region = REGION_LABEL[level.region];
   const accent = REGION_ACCENT[level.region];
   const kind = KIND_LABEL[level.kind ?? "campaign"];
-  const difficulty = DIFFICULTY_LABEL[level.difficulty];
-  const bgUrl = `${baseUrl}${REGION_BG[level.region]}`;
   const previewPath =
     LEVEL_DATA[level.id]?.previewImage ?? REGION_BG[level.region];
   const previewUrl = `${baseUrl}${previewPath}`;
   const logoUrl = `${baseUrl}/images/og-thumbs/logo.png`;
-  const waveCount = LEVEL_WAVES[level.id]?.length ?? 0;
-  const description = level.description.replaceAll("\n", " ");
 
-  const stats: { l: string; v: string }[] = [
-    { l: "Region", v: region },
-    { l: "Difficulty", v: difficulty },
-    { l: "Type", v: kind },
-  ];
-  if (waveCount > 0) {
-    stats.push({ l: "Waves", v: String(waveCount) });
-  }
-
-  const PREVIEW_W = 480;
-  const PREVIEW_H = 480;
-  const PREVIEW_X = W - PREVIEW_W - 60;
-  const PREVIEW_Y = (H - PREVIEW_H) / 2;
-  const titleSize = level.name.length > 16 ? 76 : 96;
+  // Scale title to fit the bottom-left zone — long names need to step down so
+  // they don't blow past the right edge of the safe area.
+  const nameLen = level.name.length;
+  const titleSize =
+    nameLen > 22 ? 84 : nameLen > 16 ? 110 : nameLen > 11 ? 132 : 148;
 
   return (
     <div
@@ -843,20 +783,28 @@ export function renderLevelOGImage(
         width: W,
       }}
     >
-      {/* Region background */}
+      {/* Full-bleed level preview as the background. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={bgUrl}
+        src={previewUrl}
         width={W}
         height={H}
         alt=""
-        style={{ left: 0, opacity: 0.32, position: "absolute", top: 0 }}
+        style={{
+          display: "flex",
+          left: 0,
+          objectFit: "cover",
+          position: "absolute",
+          top: 0,
+        }}
       />
 
-      {/* Vignette */}
+      {/* Top-to-bottom darkening gradient — heavier at the corners where the
+          logo and level name sit, almost transparent through the middle so
+          the preview reads clearly. */}
       <div
         style={{
-          background: `radial-gradient(ellipse 100% 90% at 50% 50%, rgba(${BG_RGBA},0.05) 0%, rgba(${BG_RGBA},0.82) 80%)`,
+          background: `linear-gradient(180deg, rgba(${BG_RGBA},0.78) 0%, rgba(${BG_RGBA},0.18) 22%, rgba(${BG_RGBA},0) 45%, rgba(${BG_RGBA},0.35) 65%, rgba(${BG_RGBA},0.92) 100%)`,
           display: "flex",
           height: H,
           left: 0,
@@ -866,10 +814,10 @@ export function renderLevelOGImage(
         }}
       />
 
-      {/* Left-to-right text protection gradient */}
+      {/* Subtle vignette to anchor the corners. */}
       <div
         style={{
-          background: `linear-gradient(90deg, rgba(${BG_RGBA},0.94) 0%, rgba(${BG_RGBA},0.78) 38%, rgba(${BG_RGBA},0.2) 62%, rgba(${BG_RGBA},0) 100%)`,
+          background: `radial-gradient(ellipse 100% 80% at 50% 50%, transparent 55%, rgba(${BG_RGBA},0.45) 100%)`,
           display: "flex",
           height: H,
           left: 0,
@@ -879,100 +827,88 @@ export function renderLevelOGImage(
         }}
       />
 
-      {/* Subtle accent glow behind preview */}
+      {/* Region accent wash in the bottom-left where the title sits. */}
       <div
         style={{
-          background: `radial-gradient(circle at center, ${accent}28 0%, ${accent}00 60%)`,
+          background: `radial-gradient(ellipse 50% 40% at 0% 100%, ${accent}28 0%, ${accent}00 70%)`,
           display: "flex",
-          height: 600,
-          left: PREVIEW_X - 60,
+          height: H,
+          left: 0,
           position: "absolute",
-          top: PREVIEW_Y - 60,
-          width: 600,
+          top: 0,
+          width: W,
         }}
       />
 
       {/* Ornate frame */}
       {renderFrame()}
 
-      {/* Right: large square level preview */}
+      {/* Top-left: PTD logo + wordmark */}
       <div
         style={{
-          border: `2px solid ${accent}55`,
-          borderRadius: 16,
-          boxShadow: `0 0 80px rgba(0,0,0,0.55), 0 0 24px ${accent}30, inset 0 0 0 1px rgba(255,255,255,0.04)`,
+          alignItems: "center",
           display: "flex",
-          height: PREVIEW_H,
-          left: PREVIEW_X,
-          overflow: "hidden",
+          gap: 18,
+          left: 60,
           position: "absolute",
-          top: PREVIEW_Y,
-          width: PREVIEW_W,
+          top: 56,
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={previewUrl}
-          width={PREVIEW_W}
-          height={PREVIEW_H}
-          alt=""
-          style={{ display: "flex", objectFit: "cover" }}
-        />
-      </div>
-      {/* Decorative corner brackets on preview */}
-      <div
-        style={{
-          display: "flex",
-          height: PREVIEW_H,
-          left: PREVIEW_X,
-          position: "absolute",
-          top: PREVIEW_Y,
-          width: PREVIEW_W,
-        }}
-      >
-        {renderPreviewCorners(accent, PREVIEW_W, PREVIEW_H)}
-      </div>
-
-      {/* Left column: text content */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 22,
-          height: H,
-          justifyContent: "center",
-          padding: "40px 0 40px 76px",
-          position: "relative",
-          width: 640,
-        }}
-      >
-        {/* Header: logo + wordmark */}
-        <div style={{ alignItems: "center", display: "flex", gap: 14 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} width={54} height={54} alt="" />
+        <img src={logoUrl} width={64} height={64} alt="" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div
             style={{
-              color: "rgba(212,168,74,0.72)",
+              color: "#fbbf24",
               display: "flex",
               fontFamily: FONT,
-              fontSize: 19,
+              fontSize: 28,
               fontWeight: 700,
-              letterSpacing: "0.22em",
+              letterSpacing: "-0.005em",
+              lineHeight: 1,
+              textShadow: "0 2px 10px rgba(0,0,0,0.7)",
             }}
           >
-            PRINCETON TOWER DEFENSE
+            PRINCETON
+          </div>
+          <div
+            style={{
+              color: "rgba(228,228,231,0.85)",
+              display: "flex",
+              fontFamily: FONT,
+              fontSize: 16,
+              fontWeight: 700,
+              letterSpacing: "0.24em",
+              lineHeight: 1,
+              textShadow: "0 2px 8px rgba(0,0,0,0.7)",
+            }}
+          >
+            TOWER DEFENSE
           </div>
         </div>
+      </div>
 
-        {/* Region · Kind tag */}
+      {/* Bottom-left: region/kind eyebrow + level name */}
+      <div
+        style={{
+          bottom: 60,
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+          left: 60,
+          maxWidth: W - 120,
+          position: "absolute",
+        }}
+      >
+        {/* Region · Kind eyebrow with accent rule */}
         <div style={{ alignItems: "center", display: "flex", gap: 12 }}>
           <div
             style={{
               background: accent,
               borderRadius: 2,
-              boxShadow: `0 0 10px ${accent}90`,
+              boxShadow: `0 0 12px ${accent}aa`,
               display: "flex",
-              height: 26,
+              height: 28,
               width: 4,
             }}
           />
@@ -981,9 +917,10 @@ export function renderLevelOGImage(
               color: accent,
               display: "flex",
               fontFamily: FONT,
-              fontSize: 19,
+              fontSize: 22,
               fontWeight: 700,
-              letterSpacing: "0.2em",
+              letterSpacing: "0.22em",
+              textShadow: "0 2px 8px rgba(0,0,0,0.8)",
               textTransform: "uppercase",
             }}
           >
@@ -1000,117 +937,12 @@ export function renderLevelOGImage(
             fontSize: titleSize,
             fontWeight: 700,
             letterSpacing: "-0.02em",
-            lineHeight: 0.94,
-            textShadow: `0 4px 24px rgba(0,0,0,0.6), 0 0 32px rgba(251,191,36,0.18)`,
+            lineHeight: 0.92,
+            textShadow:
+              "0 4px 28px rgba(0,0,0,0.85), 0 0 48px rgba(251,191,36,0.22)",
           }}
         >
           {level.name}
-        </div>
-
-        {/* Description */}
-        <div
-          style={{
-            color: "rgba(228,228,231,0.88)",
-            display: "flex",
-            fontFamily: FONT,
-            fontSize: 22,
-            fontWeight: 400,
-            lineHeight: 1.4,
-            maxWidth: 520,
-          }}
-        >
-          {description}
-        </div>
-
-        {/* Tag chips */}
-        {level.tags.length > 0 && (
-          <div style={{ display: "flex", gap: 8 }}>
-            {level.tags.map((tag) => (
-              <div
-                key={tag}
-                style={{
-                  background: `rgba(${BG_RGBA},0.6)`,
-                  border: `1px solid ${accent}50`,
-                  borderRadius: 999,
-                  color: `${accent}`,
-                  display: "flex",
-                  fontFamily: FONT,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  padding: "6px 14px",
-                  textTransform: "uppercase",
-                }}
-              >
-                {tag}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Stats row */}
-        <div
-          style={{
-            alignItems: "center",
-            alignSelf: "flex-start",
-            background: `rgba(${BG_RGBA},0.55)`,
-            border: "1px solid rgba(180,140,60,0.22)",
-            borderRadius: 10,
-            display: "flex",
-            gap: 4,
-            marginTop: 6,
-            padding: "12px 6px",
-          }}
-        >
-          {stats.map((s, i) => (
-            <div key={s.l} style={{ alignItems: "center", display: "flex" }}>
-              {i > 0 && (
-                <div
-                  style={{
-                    background: "rgba(212,168,74,0.22)",
-                    display: "flex",
-                    height: 36,
-                    marginRight: 4,
-                    width: 1,
-                  }}
-                />
-              )}
-              <div
-                style={{
-                  alignItems: "flex-start",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 5,
-                  padding: i === 0 ? "0 18px 0 14px" : "0 18px",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(212,168,74,0.55)",
-                    display: "flex",
-                    fontFamily: FONT,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.22em",
-                  }}
-                >
-                  {s.l.toUpperCase()}
-                </div>
-                <div
-                  style={{
-                    color: "#F58025",
-                    display: "flex",
-                    fontFamily: FONT,
-                    fontSize: 24,
-                    fontWeight: 700,
-                    lineHeight: 1,
-                  }}
-                >
-                  {s.v}
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
