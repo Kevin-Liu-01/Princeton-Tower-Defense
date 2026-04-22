@@ -143,9 +143,292 @@ export function renderEffect(
       break;
     }
 
+    case "beam": {
+      if (effect.targetPos) {
+        const targetScreen = worldToScreen(
+          effect.targetPos,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const intensity = Math.max(0, effect.intensity || 1);
+
+        // Find the source lab tower to get correct orb position
+        let sourceX = screenPos.x;
+        let sourceY = screenPos.y;
+
+        let sourceTower: Tower | undefined;
+        if (effect.towerId) {
+          sourceTower = towers.find((t) => t.id === effect.towerId);
+        }
+
+        if (!sourceTower) {
+          for (const tower of towers) {
+            if (tower.type === "lab") {
+              const towerWorld = gridToWorld(tower.pos);
+              const diffX = towerWorld.x - effect.pos.x;
+              const diffY = towerWorld.y - effect.pos.y;
+              if (Math.sqrt(diffX * diffX + diffY * diffY) < 150) {
+                sourceTower = tower;
+                break;
+              }
+            }
+          }
+        }
+
+        if (sourceTower) {
+          const towerWorld = gridToWorld(sourceTower.pos);
+          const towerScreen = worldToScreen(
+            towerWorld,
+            canvasWidth,
+            canvasHeight,
+            dpr,
+            cameraOffset,
+            cameraZoom
+          );
+          towerScreen.y -= isoTileDiamondHalfH(zoom);
+          sourceX = towerScreen.x;
+
+          if (sourceTower._orbScreenY != null) {
+            sourceY = sourceTower._orbScreenY;
+          } else {
+            const towerLevel = effect.towerLevel || sourceTower.level;
+            const towerUpgrade = effect.towerUpgrade || sourceTower.upgrade;
+            const baseHeight = (23 + towerLevel * 7) * zoom;
+            const topY = towerScreen.y - baseHeight;
+            let coilHeight = (30 + towerLevel * 6) * zoom;
+            if (towerLevel === 4) {
+              coilHeight = 52 * zoom;
+            }
+            let orbOffset = 5;
+            if (towerLevel === 4 && towerUpgrade === "A") {
+              orbOffset = 7;
+            } else if (towerLevel === 4 && towerUpgrade === "B") {
+              orbOffset = 4;
+            }
+            sourceY = topY - coilHeight + orbOffset * zoom;
+          }
+        }
+
+        if (effect.sourceYOffset) {
+          sourceY += effect.sourceYOffset * zoom;
+        }
+
+        ctx.save();
+
+        const effectAlpha =
+          progress < 0.3 ? 1 : Math.max(0, (1 - progress) / 0.7);
+        const dx = targetScreen.x - sourceX;
+        const dy = targetScreen.y - sourceY;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const perpX = -dy / dist;
+        const perpY = dx / dist;
+        const angle = Math.atan2(dy, dx);
+        const timeBucket = Math.floor(Date.now() / 30);
+        const seedBase = (hashString32(effect.id) ^ timeBucket) >>> 0;
+        const noise = (seed: number) => seededNoise(seedBase + seed);
+
+        // Erratic core path — high-frequency jitter with violent displacement
+        const segments = Math.max(10, Math.floor(dist / 12));
+        const beamJitter = 16 * zoom * intensity;
+        const beamPts: { x: number; y: number }[] = [
+          { x: sourceX, y: sourceY },
+        ];
+        for (let i = 1; i < segments; i++) {
+          const t = i / segments;
+          const baseX = sourceX + dx * t;
+          const baseY = sourceY + dy * t;
+          const n1 = (noise(17 + i * 13) - 0.5) * 2;
+          const n2 = (noise(41 + i * 7) - 0.5) * 2;
+          const taper = 1 - Math.abs(t - 0.5) * 1.2;
+          const offset = (n1 + n2 * 0.5) * beamJitter * Math.max(0, taper);
+          beamPts.push({
+            x: baseX + perpX * offset,
+            y: baseY + perpY * offset,
+          });
+        }
+        beamPts.push({ x: targetScreen.x, y: targetScreen.y });
+
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const pulse = 0.8 + Math.sin(Date.now() / 25) * 0.2;
+        const bi = intensity * pulse;
+
+        // Layer 1: massive diffuse bloom
+        ctx.shadowColor = `rgba(255, 200, 50, ${0.7 * bi})`;
+        ctx.shadowBlur = 50 * zoom * bi;
+        ctx.strokeStyle = `rgba(255, 170, 30, ${effectAlpha * 0.18 * bi})`;
+        ctx.lineWidth = 32 * zoom * bi;
+        tracePolyline(ctx, beamPts);
+        ctx.stroke();
+
+        // Layer 2: wide hot glow
+        ctx.shadowColor = `rgba(255, 220, 80, ${0.8 * bi})`;
+        ctx.shadowBlur = 28 * zoom * bi;
+        ctx.strokeStyle = `rgba(255, 200, 50, ${effectAlpha * 0.35 * bi})`;
+        ctx.lineWidth = 18 * zoom * bi;
+        tracePolyline(ctx, beamPts);
+        ctx.stroke();
+
+        // Layer 3: bright inner beam
+        ctx.shadowColor = `rgba(255, 240, 120, ${0.85 * bi})`;
+        ctx.shadowBlur = 14 * zoom * bi;
+        ctx.strokeStyle = `rgba(255, 240, 120, ${effectAlpha * 0.65 * bi})`;
+        ctx.lineWidth = 8 * zoom * bi;
+        tracePolyline(ctx, beamPts);
+        ctx.stroke();
+
+        // Layer 4: scorching white-hot core
+        ctx.shadowBlur = 8 * zoom;
+        ctx.shadowColor = "rgba(255, 255, 220, 0.9)";
+        ctx.strokeStyle = `rgba(255, 255, 240, ${effectAlpha * 0.92 * bi})`;
+        ctx.lineWidth = 3.2 * zoom * bi;
+        tracePolyline(ctx, beamPts);
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+
+        // Violent branching sparks — 3-5 forks along the beam
+        const branchCount = 3 + Math.floor(noise(200) * 3);
+        for (let b = 0; b < branchCount; b++) {
+          const bIdx =
+            1 + Math.floor(noise(300 + b * 37) * (beamPts.length - 2));
+          const bp = beamPts[bIdx];
+          const bAngle =
+            angle +
+            (noise(400 + b * 53) - 0.5) * Math.PI * 1.2 +
+            (noise(500 + b * 19) - 0.5) * 0.4;
+          const bLen = (18 + noise(600 + b * 29) * 35) * zoom * bi;
+          const bSegs = 3 + Math.floor(noise(700 + b * 11) * 2);
+          const bPts: { x: number; y: number }[] = [{ x: bp.x, y: bp.y }];
+          for (let s = 1; s <= bSegs; s++) {
+            const bt = s / bSegs;
+            const bn = (noise(800 + b * 41 + s * 23) - 0.5) * 10 * zoom;
+            bPts.push({
+              x:
+                bp.x +
+                Math.cos(bAngle) * bLen * bt +
+                Math.cos(bAngle + Math.PI / 2) * bn,
+              y:
+                bp.y +
+                Math.sin(bAngle) * bLen * bt +
+                Math.sin(bAngle + Math.PI / 2) * bn,
+            });
+          }
+
+          ctx.shadowColor = `rgba(255, 220, 80, ${0.5 * bi})`;
+          ctx.shadowBlur = 10 * zoom * bi;
+          ctx.strokeStyle = `rgba(255, 200, 60, ${effectAlpha * 0.4 * bi})`;
+          ctx.lineWidth = 3.5 * zoom * bi;
+          tracePolyline(ctx, bPts);
+          ctx.stroke();
+
+          ctx.shadowBlur = 4 * zoom;
+          ctx.strokeStyle = `rgba(255, 255, 200, ${effectAlpha * 0.65 * bi})`;
+          ctx.lineWidth = 1.2 * zoom * bi;
+          tracePolyline(ctx, bPts);
+          ctx.stroke();
+
+          // Sub-branch off the end of some forks
+          if (noise(900 + b * 67) > 0.4) {
+            const endPt = bPts.at(-1);
+            const subAngle = bAngle + (noise(950 + b * 31) - 0.5) * Math.PI;
+            const subLen = bLen * 0.5;
+            const subN = (noise(970 + b * 17) - 0.5) * 6 * zoom;
+            ctx.strokeStyle = `rgba(255, 210, 80, ${effectAlpha * 0.3 * bi})`;
+            ctx.lineWidth = 2 * zoom * bi;
+            ctx.shadowBlur = 6 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(endPt.x, endPt.y);
+            ctx.lineTo(
+              endPt.x + Math.cos(subAngle) * subLen * 0.5 + subN,
+              endPt.y + Math.sin(subAngle) * subLen * 0.5 - subN * 0.5
+            );
+            ctx.lineTo(
+              endPt.x + Math.cos(subAngle) * subLen,
+              endPt.y + Math.sin(subAngle) * subLen
+            );
+            ctx.stroke();
+          }
+        }
+
+        ctx.shadowBlur = 0;
+
+        // Source flare at the tower orb
+        const srcFlareRadius = 22 * zoom * bi;
+        const srcGrad = ctx.createRadialGradient(
+          sourceX,
+          sourceY,
+          0,
+          sourceX,
+          sourceY,
+          srcFlareRadius
+        );
+        srcGrad.addColorStop(
+          0,
+          `rgba(255, 255, 230, ${effectAlpha * 0.8 * bi})`
+        );
+        srcGrad.addColorStop(
+          0.25,
+          `rgba(255, 220, 80, ${effectAlpha * 0.5 * bi})`
+        );
+        srcGrad.addColorStop(1, "rgba(255, 170, 30, 0)");
+        ctx.fillStyle = srcGrad;
+        ctx.beginPath();
+        ctx.arc(sourceX, sourceY, srcFlareRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Impact explosion glow
+        const impactPulse = 0.7 + noise(913) * 0.3;
+        const impactRadius = 28 * zoom * bi * impactPulse;
+        const impGrad = ctx.createRadialGradient(
+          targetScreen.x,
+          targetScreen.y,
+          0,
+          targetScreen.x,
+          targetScreen.y,
+          impactRadius
+        );
+        impGrad.addColorStop(
+          0,
+          `rgba(255, 255, 220, ${effectAlpha * 0.85 * bi * impactPulse})`
+        );
+        impGrad.addColorStop(
+          0.3,
+          `rgba(255, 200, 50, ${effectAlpha * 0.5 * bi})`
+        );
+        impGrad.addColorStop(
+          0.65,
+          `rgba(255, 140, 0, ${effectAlpha * 0.2 * bi})`
+        );
+        impGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
+        ctx.fillStyle = impGrad;
+        ctx.beginPath();
+        ctx.arc(targetScreen.x, targetScreen.y, impactRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White-hot impact center
+        ctx.fillStyle = `rgba(255, 255, 255, ${effectAlpha * 0.95 * bi * impactPulse})`;
+        ctx.beginPath();
+        ctx.arc(
+          targetScreen.x,
+          targetScreen.y,
+          5.5 * zoom * bi,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        ctx.restore();
+      }
+      break;
+    }
+
     case "lightning":
     case "zap":
-    case "beam":
     case "chain": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(

@@ -76,9 +76,157 @@ export function renderEffect(
       break;
     }
 
+    case "beam": {
+      if (effect.targetPos) {
+        const targetScreen = worldToScreen(
+          effect.targetPos,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const intensity = effect.intensity || 1;
+        const bDx = targetScreen.x - screenPos.x;
+        const bDy = targetScreen.y - screenPos.y;
+        const bDist = Math.sqrt(bDx * bDx + bDy * bDy) || 1;
+        const bPerpX = -bDy / bDist;
+        const bPerpY = bDx / bDist;
+        const bAngle = Math.atan2(bDy, bDx);
+
+        const segments = Math.max(10, Math.floor(bDist / 12));
+        const timeSeed = Math.floor(Date.now() / 30);
+        const noiseF = (seed: number) => {
+          const v = Math.sin(seed * 127.1 + 311.7) * 43_758.5453;
+          return v - Math.floor(v);
+        };
+        const jitter = 16 * zoom * intensity;
+        const pts: { x: number; y: number }[] = [
+          { x: screenPos.x, y: screenPos.y },
+        ];
+        for (let i = 1; i < segments; i++) {
+          const t = i / segments;
+          const n1 = (noiseF(timeSeed + i * 13 + 17) - 0.5) * 2;
+          const n2 = (noiseF(timeSeed + i * 7 + 41) - 0.5) * 2;
+          const taper = 1 - Math.abs(t - 0.5) * 1.2;
+          const offset = (n1 + n2 * 0.5) * jitter * Math.max(0, taper);
+          pts.push({
+            x: screenPos.x + bDx * t + bPerpX * offset,
+            y: screenPos.y + bDy * t + bPerpY * offset,
+          });
+        }
+        pts.push({ x: targetScreen.x, y: targetScreen.y });
+
+        const pulse = 0.8 + Math.sin(Date.now() / 25) * 0.2;
+        const bi = intensity * pulse;
+
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const tracePts = (p: typeof pts) => {
+          ctx.beginPath();
+          ctx.moveTo(p[0].x, p[0].y);
+          for (let i = 1; i < p.length; i++) {
+            ctx.lineTo(p[i].x, p[i].y);
+          }
+        };
+
+        setShadowBlur(ctx, 50 * zoom * bi, `rgba(255, 200, 50, ${0.7 * bi})`);
+        ctx.strokeStyle = `rgba(255, 170, 30, ${alpha * 0.18 * bi})`;
+        ctx.lineWidth = 32 * zoom * bi;
+        tracePts(pts);
+        ctx.stroke();
+
+        setShadowBlur(ctx, 28 * zoom * bi, `rgba(255, 220, 80, ${0.8 * bi})`);
+        ctx.strokeStyle = `rgba(255, 200, 50, ${alpha * 0.35 * bi})`;
+        ctx.lineWidth = 18 * zoom * bi;
+        tracePts(pts);
+        ctx.stroke();
+
+        setShadowBlur(ctx, 14 * zoom * bi, `rgba(255, 240, 120, ${0.85 * bi})`);
+        ctx.strokeStyle = `rgba(255, 240, 120, ${alpha * 0.65 * bi})`;
+        ctx.lineWidth = 8 * zoom * bi;
+        tracePts(pts);
+        ctx.stroke();
+
+        setShadowBlur(ctx, 8 * zoom, "rgba(255, 255, 220, 0.9)");
+        ctx.strokeStyle = `rgba(255, 255, 240, ${alpha * 0.92 * bi})`;
+        ctx.lineWidth = 3.2 * zoom * bi;
+        tracePts(pts);
+        ctx.stroke();
+
+        clearShadow(ctx);
+
+        // Violent branching sparks
+        const branchCount = 3 + Math.floor(noiseF(timeSeed + 200) * 3);
+        for (let b = 0; b < branchCount; b++) {
+          const bIdx =
+            1 + Math.floor(noiseF(timeSeed + 300 + b * 37) * (pts.length - 2));
+          const bPt = pts[bIdx];
+          const forkAngle =
+            bAngle + (noiseF(timeSeed + 400 + b * 53) - 0.5) * Math.PI * 1.2;
+          const bLen = (18 + noiseF(timeSeed + 600 + b * 29) * 35) * zoom * bi;
+          const bSegs = 3 + Math.floor(noiseF(timeSeed + 700 + b * 11) * 2);
+          const bPts: { x: number; y: number }[] = [{ x: bPt.x, y: bPt.y }];
+          for (let s = 1; s <= bSegs; s++) {
+            const bt = s / bSegs;
+            const bn =
+              (noiseF(timeSeed + 800 + b * 41 + s * 23) - 0.5) * 10 * zoom;
+            bPts.push({
+              x:
+                bPt.x +
+                Math.cos(forkAngle) * bLen * bt +
+                Math.cos(forkAngle + Math.PI / 2) * bn,
+              y:
+                bPt.y +
+                Math.sin(forkAngle) * bLen * bt +
+                Math.sin(forkAngle + Math.PI / 2) * bn,
+            });
+          }
+
+          setShadowBlur(ctx, 10 * zoom * bi, `rgba(255, 220, 80, ${0.5 * bi})`);
+          ctx.strokeStyle = `rgba(255, 200, 60, ${alpha * 0.4 * bi})`;
+          ctx.lineWidth = 3.5 * zoom * bi;
+          tracePts(bPts);
+          ctx.stroke();
+
+          setShadowBlur(ctx, 4 * zoom, "rgba(255, 255, 200, 0.6)");
+          ctx.strokeStyle = `rgba(255, 255, 200, ${alpha * 0.65 * bi})`;
+          ctx.lineWidth = 1.2 * zoom * bi;
+          tracePts(bPts);
+          ctx.stroke();
+        }
+
+        clearShadow(ctx);
+
+        // Impact glow
+        const impR = 26 * zoom * bi;
+        const impGrad = ctx.createRadialGradient(
+          targetScreen.x,
+          targetScreen.y,
+          0,
+          targetScreen.x,
+          targetScreen.y,
+          impR
+        );
+        impGrad.addColorStop(0, `rgba(255, 255, 220, ${alpha * 0.85 * bi})`);
+        impGrad.addColorStop(0.35, `rgba(255, 200, 50, ${alpha * 0.45 * bi})`);
+        impGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
+        ctx.fillStyle = impGrad;
+        ctx.beginPath();
+        ctx.arc(targetScreen.x, targetScreen.y, impR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.95 * bi})`;
+        ctx.beginPath();
+        ctx.arc(targetScreen.x, targetScreen.y, 5 * zoom * bi, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
     case "lightning":
     case "zap":
-    case "beam":
     case "chain": {
       if (effect.targetPos) {
         const targetScreen = worldToScreen(
@@ -91,8 +239,7 @@ export function renderEffect(
         );
         const intensity = effect.intensity || 1;
         const boltColor: LightningColorScheme =
-          (effect.color as LightningColorScheme) ||
-          (effect.type === "beam" ? "yellow" : "blue");
+          (effect.color as LightningColorScheme) || "blue";
         const colors: Record<string, string> = {
           blue: "150, 255, 255",
           green: "180, 240, 120",
@@ -113,7 +260,6 @@ export function renderEffect(
           boltColor
         );
 
-        // Impact spark
         ctx.fillStyle = `rgba(${colors[boltColor]}, ${alpha * intensity})`;
         ctx.beginPath();
         ctx.arc(
