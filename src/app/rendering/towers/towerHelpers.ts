@@ -1281,119 +1281,181 @@ export function draw3DArmorShield(
 ) {
   const sm = size === "small" ? 0.8 : size === "large" ? 1.3 : 1.1;
 
+  // Shield faces outward from the turret — its normal is along `rotation`
+  const cosR = Math.cos(rotation);
+  const sinR = Math.sin(rotation);
+
+  // How much the face points toward the camera (positive sinR = facing us)
+  const faceDot = sinR;
+  // How much we see the face vs the edge
+  const faceVis = Math.max(0.15, (faceDot + 1) * 0.5);
+  const edgeVis = 1 - faceVis;
+
+  // Lightness from iso lighting (upper-left light source)
+  const lightness = 0.4 + cosR * 0.15 + Math.max(0, sinR) * 0.2;
+
+  // Shield dimensions in its local frame
   const shW = 8 * zoom * sm;
-  const shH = 12 * zoom * sm;
-  const shD = 3.5 * zoom * sm;
+  const shH = 14 * zoom * sm;
+  const shDepth = 3 * zoom * sm;
 
-  const sCos = Math.cos(rotation);
-  const lightness = 0.4 + sCos * 0.3;
+  // Horizontal foreshortening: wider when facing camera, narrow when edge-on
+  const horizScale = 0.25 + faceVis * 0.75;
+  const scaledW = shW * horizScale;
 
-  // Shield shape: wider at top, pointed at bottom (kite shield)
-  // Left face (isometric parallelogram with pointed bottom)
-  const leftBase = Math.floor(55 + lightness * 30);
-  ctx.fillStyle = `rgb(${leftBase + 8}, ${leftBase + 5}, ${leftBase})`;
-  ctx.beginPath();
-  ctx.moveTo(centerX - shW, centerY - shH * 0.4);
-  ctx.lineTo(centerX, centerY + shD - shH * 0.4);
-  ctx.lineTo(centerX, centerY + shD + shH * 0.1);
-  ctx.lineTo(centerX - shW * 0.35, centerY + shH * 0.6);
-  ctx.lineTo(centerX - shW, centerY + shH * 0.3);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = `rgb(${leftBase + 20}, ${leftBase + 16}, ${leftBase + 10})`;
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
+  // Shield outline points (kite shield: wide top, pointed bottom)
+  // Defined relative to center, then offset by facing
+  const depthOff = shDepth * (0.5 - faceVis);
+  const sp = (lx: number, ly: number) => ({
+    x: centerX + lx * scaledW + depthOff * cosR * 0.3,
+    y: centerY + ly * shH,
+  });
 
-  // Right face
-  const rightBase = Math.floor(45 + lightness * 22);
-  ctx.fillStyle = `rgb(${rightBase + 5}, ${rightBase + 3}, ${rightBase})`;
-  ctx.beginPath();
-  ctx.moveTo(centerX + shW, centerY - shH * 0.4);
-  ctx.lineTo(centerX, centerY + shD - shH * 0.4);
-  ctx.lineTo(centerX, centerY + shD + shH * 0.1);
-  ctx.lineTo(centerX + shW * 0.35, centerY + shH * 0.6);
-  ctx.lineTo(centerX + shW, centerY + shH * 0.3);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = `rgb(${rightBase + 15}, ${rightBase + 12}, ${rightBase + 8})`;
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
+  const top = sp(0, -0.42);
+  const topL = sp(-1, -0.28);
+  const topR = sp(1, -0.28);
+  const midL = sp(-0.9, 0.1);
+  const midR = sp(0.9, 0.1);
+  const botL = sp(-0.35, 0.42);
+  const botR = sp(0.35, 0.42);
+  const tip = sp(0, 0.58);
 
-  // Top face (diamond)
-  const topBase = Math.floor(65 + lightness * 35);
-  ctx.fillStyle = `rgb(${topBase + 12}, ${topBase + 10}, ${topBase + 5})`;
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY - shH * 0.4 - shD);
-  ctx.lineTo(centerX - shW, centerY - shH * 0.4);
-  ctx.lineTo(centerX, centerY + shD - shH * 0.4);
-  ctx.lineTo(centerX + shW, centerY - shH * 0.4);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = `rgb(${topBase + 20}, ${topBase + 16}, ${topBase + 10})`;
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
+  // Determine which side is the "thick edge" (the side facing away from camera)
+  const showLeftEdge = cosR > 0.05;
+  const showRightEdge = cosR < -0.05;
 
-  // Center boss (raised circle in center of shield)
-  const bossCX = centerX;
-  const bossCY = centerY + shD * 0.15;
-  ctx.fillStyle = `rgb(${Math.floor(35 + lightness * 15)}, ${Math.floor(35 + lightness * 12)}, ${Math.floor(30 + lightness * 10)})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    bossCX,
-    bossCY,
-    5 * zoom * sm,
-    3.5 * zoom * sm,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.strokeStyle = `rgb(${Math.floor(70 + lightness * 25)}, ${Math.floor(70 + lightness * 20)}, ${Math.floor(65 + lightness * 15)})`;
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-
-  // Generate shield number from towerId
-  let hashValue: number;
-  if (typeof towerId === "number" && !Number.isNaN(towerId) && towerId !== 0) {
-    hashValue = towerId;
-  } else {
-    hashValue = Math.abs(
-      [...String(towerId)].reduce((a, b) => {
-        a = (a << 5) - a + b.codePointAt(0);
-        return a & a;
-      }, 0)
-    );
-  }
-  const shieldNumber = ((hashValue * 7 + 13) % 90) + 10;
-  ctx.font = `bold ${5.5 * zoom * sm}px monospace`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = `rgba(220, 200, 150, ${0.7 + lightness * 0.3})`;
-  ctx.fillText(String(shieldNumber), bossCX, bossCY + 0.5 * zoom);
-
-  // Rivets around shield perimeter
-  ctx.fillStyle = "#7a7a88";
-  const rivetPts = [
-    { x: centerX - shW * 0.7, y: centerY - shH * 0.3 + shD * 0.15 },
-    { x: centerX + shW * 0.7, y: centerY - shH * 0.3 + shD * 0.15 },
-    { x: centerX - shW * 0.5, y: centerY + shH * 0.2 + shD * 0.15 },
-    { x: centerX + shW * 0.5, y: centerY + shH * 0.2 + shD * 0.15 },
-    { x: centerX, y: centerY - shH * 0.3 },
-    { x: centerX, y: centerY + shH * 0.45 + shD * 0.1 },
-  ];
-  for (const pt of rivetPts) {
+  // ── Thick edge (visible shield depth on the side facing away) ──
+  if (showLeftEdge) {
+    const edgeW = shDepth * Math.min(1, Math.abs(cosR)) * 0.8;
+    const eb = Math.floor(40 + lightness * 18);
+    ctx.fillStyle = `rgb(${eb}, ${eb - 2}, ${eb - 5})`;
     ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 1.2 * zoom * sm, 0, Math.PI * 2);
+    ctx.moveTo(topL.x - edgeW, topL.y);
+    ctx.lineTo(topL.x, topL.y);
+    ctx.lineTo(midL.x, midL.y);
+    ctx.lineTo(botL.x, botL.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.lineTo(tip.x - edgeW * 0.4, tip.y);
+    ctx.lineTo(botL.x - edgeW * 0.5, botL.y);
+    ctx.lineTo(midL.x - edgeW, midL.y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  if (showRightEdge) {
+    const edgeW = shDepth * Math.min(1, Math.abs(cosR)) * 0.8;
+    const eb = Math.floor(38 + lightness * 15);
+    ctx.fillStyle = `rgb(${eb}, ${eb - 2}, ${eb - 5})`;
+    ctx.beginPath();
+    ctx.moveTo(topR.x + edgeW, topR.y);
+    ctx.lineTo(topR.x, topR.y);
+    ctx.lineTo(midR.x, midR.y);
+    ctx.lineTo(botR.x, botR.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.lineTo(tip.x + edgeW * 0.4, tip.y);
+    ctx.lineTo(botR.x + edgeW * 0.5, botR.y);
+    ctx.lineTo(midR.x + edgeW, midR.y);
+    ctx.closePath();
     ctx.fill();
   }
 
-  // Battle damage scratches
-  ctx.strokeStyle = `rgba(25, 25, 30, ${0.35 + lightness * 0.2})`;
-  ctx.lineWidth = 0.7 * zoom;
+  // ── Main face ──
+  const faceBase = Math.floor(52 + lightness * 35);
+  const faceGrad = ctx.createLinearGradient(topL.x, top.y, topR.x, tip.y);
+  faceGrad.addColorStop(
+    0,
+    `rgb(${faceBase + 8}, ${faceBase + 5}, ${faceBase})`
+  );
+  faceGrad.addColorStop(
+    0.5,
+    `rgb(${faceBase + 15}, ${faceBase + 12}, ${faceBase + 6})`
+  );
+  faceGrad.addColorStop(
+    1,
+    `rgb(${faceBase}, ${faceBase - 3}, ${faceBase - 6})`
+  );
+  ctx.fillStyle = faceGrad;
   ctx.beginPath();
-  ctx.moveTo(centerX + shW * 0.2, centerY - shH * 0.15);
-  ctx.lineTo(centerX + shW * 0.45, centerY + shH * 0.05);
+  ctx.moveTo(top.x, top.y);
+  ctx.lineTo(topL.x, topL.y);
+  ctx.lineTo(midL.x, midL.y);
+  ctx.lineTo(botL.x, botL.y);
+  ctx.lineTo(tip.x, tip.y);
+  ctx.lineTo(botR.x, botR.y);
+  ctx.lineTo(midR.x, midR.y);
+  ctx.lineTo(topR.x, topR.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgb(${faceBase + 22}, ${faceBase + 18}, ${faceBase + 10})`;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
+
+  // ── Center boss (raised ellipse, foreshortened with face) ──
+  const bossRX = 4.5 * zoom * sm * horizScale;
+  const bossRY = 3.5 * zoom * sm;
+  const bossX = centerX + depthOff * cosR * 0.2;
+  const bossY = centerY + shH * 0.02;
+  const bossBase = Math.floor(30 + lightness * 18);
+  ctx.fillStyle = `rgb(${bossBase + 5}, ${bossBase + 3}, ${bossBase})`;
+  ctx.beginPath();
+  ctx.ellipse(bossX, bossY, bossRX, bossRY, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgb(${bossBase + 30}, ${bossBase + 25}, ${bossBase + 18})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // ── Shield number (skip when too edge-on to read) ──
+  if (faceVis > 0.35) {
+    let hashValue: number;
+    if (
+      typeof towerId === "number" &&
+      !Number.isNaN(towerId) &&
+      towerId !== 0
+    ) {
+      hashValue = towerId;
+    } else {
+      hashValue = Math.abs(
+        [...String(towerId)].reduce((a, b) => {
+          a = (a << 5) - a + b.codePointAt(0)!;
+          return a & a;
+        }, 0)
+      );
+    }
+    const shieldNumber = ((hashValue * 7 + 13) % 90) + 10;
+    const fontSize = 5 * zoom * sm * horizScale;
+    if (fontSize > 2) {
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = `rgba(220, 200, 150, ${faceVis * 0.9})`;
+      ctx.fillText(String(shieldNumber), bossX, bossY + 0.5 * zoom);
+    }
+  }
+
+  // ── Rivets (foreshortened positions) ──
+  ctx.fillStyle = `rgba(122, 122, 136, ${0.5 + faceVis * 0.5})`;
+  const rivets = [
+    sp(-0.7, -0.22),
+    sp(0.7, -0.22),
+    sp(-0.5, 0.18),
+    sp(0.5, 0.18),
+    sp(0, -0.35),
+    sp(0, 0.38),
+  ];
+  for (const r of rivets) {
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 1.1 * zoom * sm, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── Battle damage scratch ──
+  if (faceVis > 0.3) {
+    ctx.strokeStyle = `rgba(25, 25, 30, ${0.25 + lightness * 0.15})`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sp(0.2, -0.1).x, sp(0.2, -0.1).y);
+    ctx.lineTo(sp(0.45, 0.06).x, sp(0.45, 0.06).y);
+    ctx.stroke();
+  }
 }
 
 // Draw 3D isometric fuel barrel that rotates with flamethrower turret
@@ -1522,7 +1584,7 @@ export function draw3DFuelTank(
   ctx.fill();
 }
 
-// Draw fuel feeding tube connecting tank to flamethrower turret
+// Draw 3D fuel feeding tube connecting tank to flamethrower turret
 export function drawFuelFeedingTube(
   ctx: CanvasRenderingContext2D,
   tankCenterX: number,
@@ -1536,20 +1598,15 @@ export function drawFuelFeedingTube(
   attackPulse: number,
   tankSide: number
 ) {
-  // Tube shake animation when firing - more intense vibration
   const shakeIntensity = isAttacking ? attackPulse : 0;
   const tubeShakeX = shakeIntensity * Math.sin(time * 80) * 2 * zoom;
   const tubeShakeY = shakeIntensity * Math.cos(time * 60) * 1.5 * zoom;
 
-  // Tube exit point from fuel tank - with connector offset
   const tubeExitX = tankCenterX + (tankSide > 0 ? -6 : 6) * zoom;
   const tubeExitY = tankCenterY - 4 * zoom;
-
-  // Tube entry point to turret feed mechanism
   const tubeEntryX = turretX - 4 * zoom + tubeShakeX;
   const tubeEntryY = turretY - 4 * zoom + tubeShakeY;
 
-  // Multiple control points for a more natural curve
   const tubeMid1X = tubeExitX + (tankSide > 0 ? -8 : 8) * zoom;
   const tubeMid1Y = tubeExitY - 6 * zoom;
   const tubeMid2X =
@@ -1557,7 +1614,6 @@ export function drawFuelFeedingTube(
   const tubeMid2Y =
     (tubeExitY + tubeEntryY) * 0.5 - 10 * zoom + Math.sin(rotation) * 6 * zoom;
 
-  // Helper function to get point on bezier curve
   const getBezierPoint = (t: number) => {
     const t2 = t * t;
     const t3 = t2 * t;
@@ -1578,7 +1634,6 @@ export function drawFuelFeedingTube(
     };
   };
 
-  // Helper to get tangent at point
   const getBezierTangent = (t: number) => {
     const mt = 1 - t;
     const dx =
@@ -1592,335 +1647,273 @@ export function drawFuelFeedingTube(
     return Math.atan2(dy, dx);
   };
 
-  // === OUTER REINFORCED HOSE CASING ===
-  // Shadow/depth layer
-  ctx.strokeStyle = "#1a1a22";
-  ctx.lineWidth = 9 * zoom;
+  // === 3D TUBE: sample bezier and build upper/lower edge paths ===
+  const N = 20;
+  const tubeR = 3.5 * zoom;
+  interface Pt {
+    x: number;
+    y: number;
+  }
+  const upperEdge: Pt[] = [];
+  const lowerEdge: Pt[] = [];
+  const centers: Pt[] = [];
+
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const pt = getBezierPoint(t);
+    const a = getBezierTangent(t);
+    const nx = -Math.sin(a);
+    const ny = Math.cos(a);
+    centers.push(pt);
+    upperEdge.push({
+      x: pt.x + nx * tubeR * 0.35,
+      y: pt.y - tubeR * 0.65 + ny * tubeR * 0.15,
+    });
+    lowerEdge.push({
+      x: pt.x - nx * tubeR * 0.35,
+      y: pt.y + tubeR * 0.65 - ny * tubeR * 0.15,
+    });
+  }
+
+  // Shadow underneath
+  ctx.strokeStyle = "#12121a";
+  ctx.lineWidth = tubeR * 2.4;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(tubeExitX, tubeExitY + 1 * zoom);
-  ctx.bezierCurveTo(
-    tubeMid1X,
-    tubeMid1Y + 1 * zoom,
-    tubeMid2X,
-    tubeMid2Y + 1 * zoom,
-    tubeEntryX,
-    tubeEntryY + 1 * zoom
-  );
+  ctx.moveTo(centers[0].x, centers[0].y + 1.5 * zoom);
+  for (let i = 1; i <= N; i++) {
+    ctx.lineTo(centers[i].x, centers[i].y + 1.5 * zoom);
+  }
   ctx.stroke();
 
-  // Main hose body - dark rubber with metallic sheen
-  const hoseGrad = ctx.createLinearGradient(
-    tubeExitX,
-    tubeExitY - 4 * zoom,
-    tubeEntryX,
-    tubeEntryY + 4 * zoom
+  // Tube body: filled polygon between upper and lower edges
+  const bodyGrad = ctx.createLinearGradient(
+    0,
+    lowerEdge[0].y,
+    0,
+    upperEdge[0].y
   );
-  hoseGrad.addColorStop(0, "#3a3a42");
-  hoseGrad.addColorStop(0.3, "#4a4a52");
-  hoseGrad.addColorStop(0.5, "#5a5a62");
-  hoseGrad.addColorStop(0.7, "#4a4a52");
-  hoseGrad.addColorStop(1, "#3a3a42");
-  ctx.strokeStyle = hoseGrad;
-  ctx.lineWidth = 7 * zoom;
+  bodyGrad.addColorStop(0, "#28282e");
+  bodyGrad.addColorStop(0.3, "#3a3a42");
+  bodyGrad.addColorStop(0.55, "#4e4e58");
+  bodyGrad.addColorStop(0.75, "#58585f");
+  bodyGrad.addColorStop(1, "#4a4a52");
+  ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.moveTo(tubeExitX, tubeExitY);
-  ctx.bezierCurveTo(
-    tubeMid1X,
-    tubeMid1Y,
-    tubeMid2X,
-    tubeMid2Y,
-    tubeEntryX,
-    tubeEntryY
-  );
-  ctx.stroke();
+  ctx.moveTo(upperEdge[0].x, upperEdge[0].y);
+  for (let i = 1; i <= N; i++) {
+    ctx.lineTo(upperEdge[i].x, upperEdge[i].y);
+  }
+  for (let i = N; i >= 0; i--) {
+    ctx.lineTo(lowerEdge[i].x, lowerEdge[i].y);
+  }
+  ctx.closePath();
+  ctx.fill();
 
-  // Inner darker core (fuel channel)
-  ctx.strokeStyle = "#2a2a32";
-  ctx.lineWidth = 4.5 * zoom;
+  // Bottom edge line (dark crease)
+  ctx.strokeStyle = "#1e1e25";
+  ctx.lineWidth = 1 * zoom;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(tubeExitX, tubeExitY);
-  ctx.bezierCurveTo(
-    tubeMid1X,
-    tubeMid1Y,
-    tubeMid2X,
-    tubeMid2Y,
-    tubeEntryX,
-    tubeEntryY
-  );
+  ctx.moveTo(lowerEdge[0].x, lowerEdge[0].y);
+  for (let i = 1; i <= N; i++) {
+    ctx.lineTo(lowerEdge[i].x, lowerEdge[i].y);
+  }
   ctx.stroke();
 
-  // Highlight strip on top of hose
-  ctx.strokeStyle = "rgba(120, 120, 130, 0.4)";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(tubeExitX, tubeExitY - 2.5 * zoom);
-  ctx.bezierCurveTo(
-    tubeMid1X,
-    tubeMid1Y - 2.5 * zoom,
-    tubeMid2X,
-    tubeMid2Y - 2.5 * zoom,
-    tubeEntryX,
-    tubeEntryY - 2.5 * zoom
-  );
-  ctx.stroke();
-
-  // === BRAIDED REINFORCEMENT PATTERN ===
-  const braidSegments = 12;
-  ctx.strokeStyle = "#5a5a62";
+  // Specular highlight along upper edge
+  ctx.strokeStyle = "rgba(140, 140, 155, 0.35)";
   ctx.lineWidth = 1.2 * zoom;
-  for (let i = 0; i < braidSegments; i++) {
-    const t1 = i / braidSegments;
-    const t2 = (i + 0.5) / braidSegments;
-    const p1 = getBezierPoint(t1);
-    const p2 = getBezierPoint(t2);
-    const angle1 = getBezierTangent(t1);
-    const angle2 = getBezierTangent(t2);
+  ctx.beginPath();
+  ctx.moveTo(upperEdge[0].x, upperEdge[0].y);
+  for (let i = 1; i <= N; i++) {
+    ctx.lineTo(upperEdge[i].x, upperEdge[i].y);
+  }
+  ctx.stroke();
 
-    // Cross pattern
-    const offset = 2.5 * zoom;
+  // Ribbed segments (rubber ridges along tube)
+  for (let r = 0; r < 14; r++) {
+    const t = (r + 0.5) / 14;
+    const idx = Math.min(N, Math.floor(t * N));
+    const up = upperEdge[idx];
+    const lo = lowerEdge[idx];
+    const isRidge = r % 2 === 0;
+    ctx.strokeStyle = isRidge
+      ? "rgba(70, 70, 80, 0.5)"
+      : "rgba(35, 35, 42, 0.4)";
+    ctx.lineWidth = (isRidge ? 1.2 : 0.7) * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      p1.x + Math.cos(angle1 + Math.PI / 2) * offset,
-      p1.y + Math.sin(angle1 + Math.PI / 2) * offset * 0.5
-    );
-    ctx.lineTo(
-      p2.x + Math.cos(angle2 - Math.PI / 2) * offset,
-      p2.y + Math.sin(angle2 - Math.PI / 2) * offset * 0.5
-    );
+    ctx.moveTo(up.x, up.y);
+    ctx.lineTo(lo.x, lo.y);
     ctx.stroke();
   }
 
-  // === FUEL FLOW ANIMATION ===
-  // Animated fuel particles flowing through the tube
-  const fuelParticleCount = 8;
+  // === FUEL FLOW PARTICLES ===
   const baseGlow = 0.3 + Math.sin(time * 4) * 0.1;
   const flowGlow = isAttacking ? 0.8 + attackPulse * 0.2 : baseGlow;
-
-  for (let i = 0; i < fuelParticleCount; i++) {
-    // Particles flow faster when attacking
+  for (let i = 0; i < 6; i++) {
     const flowSpeed = isAttacking ? time * 3 + attackPulse * 2 : time * 0.8;
-    const particleT = (i / fuelParticleCount + flowSpeed) % 1;
+    const particleT = (i / 6 + flowSpeed) % 1;
     const particle = getBezierPoint(particleT);
-
-    // Fuel particle glow
-    const particleSize = (1.5 + Math.sin(time * 10 + i) * 0.5) * zoom;
-    const particleAlpha = flowGlow * (0.6 + Math.sin(time * 8 + i * 0.7) * 0.2);
-
-    // Outer glow
-    const glowGrad = ctx.createRadialGradient(
+    const pSize = (1.5 + Math.sin(time * 10 + i) * 0.5) * zoom;
+    const pAlpha = flowGlow * (0.5 + Math.sin(time * 8 + i * 0.7) * 0.15);
+    const pGrad = ctx.createRadialGradient(
       particle.x,
       particle.y,
       0,
       particle.x,
       particle.y,
-      particleSize * 2
+      pSize * 2
     );
-    glowGrad.addColorStop(0, `rgba(255, 150, 50, ${particleAlpha})`);
-    glowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${particleAlpha * 0.5})`);
-    glowGrad.addColorStop(1, `rgba(255, 50, 0, 0)`);
-    ctx.fillStyle = glowGrad;
+    pGrad.addColorStop(0, `rgba(255, 150, 50, ${pAlpha})`);
+    pGrad.addColorStop(0.5, `rgba(255, 100, 30, ${pAlpha * 0.4})`);
+    pGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
+    ctx.fillStyle = pGrad;
     ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particleSize * 2, 0, Math.PI * 2);
+    ctx.arc(particle.x, particle.y, pSize * 2, 0, Math.PI * 2);
     ctx.fill();
-
-    // Bright core
-    ctx.fillStyle = `rgba(255, 200, 100, ${particleAlpha * 1.2})`;
+    ctx.fillStyle = `rgba(255, 200, 100, ${pAlpha})`;
     ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particleSize * 0.6, 0, Math.PI * 2);
+    ctx.arc(particle.x, particle.y, pSize * 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // === HEAVY-DUTY METAL CLAMPS ===
-  const clampCount = 5;
-  for (let i = 0; i < clampCount; i++) {
-    const t = (i + 0.5) / clampCount;
-    const clampPos = getBezierPoint(t);
-    const clampAngle = getBezierTangent(t);
+  // === METAL CLAMPS (3D rings around tube) ===
+  for (let i = 0; i < 4; i++) {
+    const t = (i + 0.5) / 4;
+    const idx = Math.min(N, Math.floor(t * N));
+    const cp = centers[idx];
+    const up = upperEdge[idx];
+    const lo = lowerEdge[idx];
+    const ca = getBezierTangent(t);
 
-    // Clamp perpendicular offset
-    const perpX = Math.cos(clampAngle + Math.PI / 2);
-    const perpY = Math.sin(clampAngle + Math.PI / 2);
+    // Clamp ring — drawn as a filled band from upper to lower edge
+    const clampW = 2 * zoom;
+    const cnx = -Math.sin(ca) * clampW;
+    const cny = Math.cos(ca) * clampW;
 
-    // Clamp band shadow
-    ctx.fillStyle = "#2a2a32";
+    // Back of clamp
+    ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
-    ctx.ellipse(
-      clampPos.x,
-      clampPos.y + 1 * zoom,
-      4.5 * zoom,
-      2.5 * zoom,
-      clampAngle,
-      0,
-      Math.PI * 2
-    );
+    ctx.moveTo(up.x - cnx, up.y - cny);
+    ctx.lineTo(up.x + cnx, up.y + cny);
+    ctx.lineTo(lo.x + cnx, lo.y + cny);
+    ctx.lineTo(lo.x - cnx, lo.y - cny);
+    ctx.closePath();
     ctx.fill();
 
-    // Clamp band - metallic
-    const clampGrad = ctx.createLinearGradient(
-      clampPos.x - perpX * 4 * zoom,
-      clampPos.y - perpY * 4 * zoom,
-      clampPos.x + perpX * 4 * zoom,
-      clampPos.y + perpY * 4 * zoom
-    );
-    clampGrad.addColorStop(0, "#5a5a62");
-    clampGrad.addColorStop(0.3, "#8a8a92");
-    clampGrad.addColorStop(0.5, "#9a9aa2");
-    clampGrad.addColorStop(0.7, "#8a8a92");
-    clampGrad.addColorStop(1, "#5a5a62");
-    ctx.fillStyle = clampGrad;
+    // Front of clamp (lighter)
+    ctx.fillStyle = "#6a6a75";
     ctx.beginPath();
-    ctx.ellipse(
-      clampPos.x,
-      clampPos.y,
-      4 * zoom,
-      2 * zoom,
-      clampAngle,
-      0,
-      Math.PI * 2
-    );
+    ctx.moveTo(up.x - cnx * 0.5, up.y - cny * 0.5);
+    ctx.lineTo(up.x + cnx * 0.5, up.y + cny * 0.5);
+    ctx.lineTo(lo.x + cnx * 0.5, lo.y + cny * 0.5);
+    ctx.lineTo(lo.x - cnx * 0.5, lo.y - cny * 0.5);
+    ctx.closePath();
     ctx.fill();
 
-    // Clamp bolt
-    ctx.fillStyle = "#4a4a52";
+    // Highlight on top of clamp
+    ctx.strokeStyle = "rgba(160, 160, 175, 0.45)";
+    ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.arc(
-      clampPos.x + perpX * 2.5 * zoom,
-      clampPos.y + perpY * 2.5 * zoom * 0.5,
-      1.2 * zoom,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.fillStyle = "#7a7a82";
+    ctx.moveTo(up.x - cnx * 0.5, up.y - cny * 0.5);
+    ctx.lineTo(up.x + cnx * 0.5, up.y + cny * 0.5);
+    ctx.stroke();
+
+    // Bolt
+    ctx.fillStyle = "#8a8a95";
     ctx.beginPath();
-    ctx.arc(
-      clampPos.x + perpX * 2.5 * zoom - 0.3 * zoom,
-      clampPos.y + perpY * 2.5 * zoom * 0.5 - 0.3 * zoom,
-      0.5 * zoom,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(lo.x, lo.y, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // === TANK-SIDE CONNECTOR (heavy duty fitting) ===
-  // Connector base shadow
+  // === CONNECTORS ===
+  // Tank-side connector
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
-  ctx.arc(tubeExitX, tubeExitY + 1.5 * zoom, 6 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeExitX, tubeExitY + 1.5 * zoom, 5.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
-
-  // Connector housing
-  const connectorGrad1 = ctx.createRadialGradient(
-    tubeExitX - 2 * zoom,
-    tubeExitY - 2 * zoom,
+  const cg1 = ctx.createRadialGradient(
+    tubeExitX - 1.5 * zoom,
+    tubeExitY - 1.5 * zoom,
     0,
     tubeExitX,
     tubeExitY,
-    6 * zoom
+    5.5 * zoom
   );
-  connectorGrad1.addColorStop(0, "#7a7a82");
-  connectorGrad1.addColorStop(0.5, "#5a5a62");
-  connectorGrad1.addColorStop(1, "#3a3a42");
-  ctx.fillStyle = connectorGrad1;
+  cg1.addColorStop(0, "#7a7a82");
+  cg1.addColorStop(0.5, "#5a5a62");
+  cg1.addColorStop(1, "#3a3a42");
+  ctx.fillStyle = cg1;
   ctx.beginPath();
-  ctx.arc(tubeExitX, tubeExitY, 5.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeExitX, tubeExitY, 5 * zoom, 0, Math.PI * 2);
   ctx.fill();
-
-  // Connector ring
   ctx.strokeStyle = "#8a8a92";
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.arc(tubeExitX, tubeExitY, 4 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeExitX, tubeExitY, 3.5 * zoom, 0, Math.PI * 2);
   ctx.stroke();
-
-  // Hex bolt pattern
-  for (let i = 0; i < 6; i++) {
-    const boltAngle = (i / 6) * Math.PI * 2 + rotation * 0.5;
-    const boltX = tubeExitX + Math.cos(boltAngle) * 3.5 * zoom;
-    const boltY = tubeExitY + Math.sin(boltAngle) * 3.5 * zoom * 0.6;
+  for (let b = 0; b < 6; b++) {
+    const ba = (b / 6) * Math.PI * 2 + rotation * 0.5;
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
-    ctx.arc(boltX, boltY, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      tubeExitX + Math.cos(ba) * 3.2 * zoom,
+      tubeExitY + Math.sin(ba) * 3.2 * zoom * 0.6,
+      0.8 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
-  // Quick-release lever
-  const leverAngle = Math.PI * 0.3;
-  ctx.strokeStyle = "#cc3030";
-  ctx.lineWidth = 2 * zoom;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(tubeExitX, tubeExitY);
-  ctx.lineTo(
-    tubeExitX + Math.cos(leverAngle) * 8 * zoom,
-    tubeExitY + Math.sin(leverAngle) * 4 * zoom
-  );
-  ctx.stroke();
-  ctx.fillStyle = "#aa2020";
-  ctx.beginPath();
-  ctx.arc(
-    tubeExitX + Math.cos(leverAngle) * 8 * zoom,
-    tubeExitY + Math.sin(leverAngle) * 4 * zoom,
-    2 * zoom,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // === TURRET-SIDE CONNECTOR (feed mechanism) ===
-  // Connector shadow
+  // Turret-side connector
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
-  ctx.arc(tubeEntryX, tubeEntryY + 1 * zoom, 5 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeEntryX, tubeEntryY + 1 * zoom, 4.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
-
-  // Feed mechanism housing
-  const connectorGrad2 = ctx.createRadialGradient(
-    tubeEntryX - 1.5 * zoom,
-    tubeEntryY - 1.5 * zoom,
+  const cg2 = ctx.createRadialGradient(
+    tubeEntryX - 1 * zoom,
+    tubeEntryY - 1 * zoom,
     0,
     tubeEntryX,
     tubeEntryY,
-    5 * zoom
+    4.5 * zoom
   );
-  connectorGrad2.addColorStop(0, "#6a6a72");
-  connectorGrad2.addColorStop(0.5, "#4a4a52");
-  connectorGrad2.addColorStop(1, "#3a3a42");
-  ctx.fillStyle = connectorGrad2;
+  cg2.addColorStop(0, "#6a6a72");
+  cg2.addColorStop(0.5, "#4a4a52");
+  cg2.addColorStop(1, "#3a3a42");
+  ctx.fillStyle = cg2;
   ctx.beginPath();
-  ctx.arc(tubeEntryX, tubeEntryY, 4.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Inner fuel inlet (glows when active)
-  const inletGlow = isAttacking
-    ? 0.8 + attackPulse * 0.2
-    : 0.3 + Math.sin(time * 3) * 0.1;
-  ctx.fillStyle = `rgba(40, 30, 25, 1)`;
-  ctx.beginPath();
-  ctx.arc(tubeEntryX, tubeEntryY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeEntryX, tubeEntryY, 4 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Fuel glow in inlet
-  const inletGlowGrad = ctx.createRadialGradient(
+  const inletGlow = isAttacking
+    ? 0.8 + attackPulse * 0.2
+    : 0.3 + Math.sin(time * 3) * 0.1;
+  ctx.fillStyle = "#28201a";
+  ctx.beginPath();
+  ctx.arc(tubeEntryX, tubeEntryY, 2.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  const igGrad = ctx.createRadialGradient(
     tubeEntryX,
     tubeEntryY,
     0,
     tubeEntryX,
     tubeEntryY,
-    2.5 * zoom
+    2.2 * zoom
   );
-  inletGlowGrad.addColorStop(0, `rgba(255, 150, 50, ${inletGlow})`);
-  inletGlowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${inletGlow * 0.6})`);
-  inletGlowGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
-  ctx.fillStyle = inletGlowGrad;
+  igGrad.addColorStop(0, `rgba(255, 150, 50, ${inletGlow})`);
+  igGrad.addColorStop(0.5, `rgba(255, 100, 30, ${inletGlow * 0.5})`);
+  igGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+  ctx.fillStyle = igGrad;
   ctx.beginPath();
-  ctx.arc(tubeEntryX, tubeEntryY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(tubeEntryX, tubeEntryY, 2.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pressure valve (red safety valve)
+  // Pressure valve
   const valveX = tubeEntryX + 3 * zoom;
   const valveY = tubeEntryY - 3 * zoom;
   ctx.fillStyle = "#222";

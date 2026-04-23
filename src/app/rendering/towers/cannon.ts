@@ -6357,17 +6357,22 @@ export function renderFlamethrower(
   time: number
 ) {
   const rotation = tower.rotation || 0;
-
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
   const foreshorten = Math.abs(cosR);
-  const facingAway = sinR < -0.3;
+
+  // Isometric basis vectors for turret-local positioning
+  const fwdX = cosR;
+  const fwdY = sinR * 0.5;
+  const perpX = -sinR;
+  const perpY = cosR * 0.5;
 
   const timeSinceFire = Date.now() - tower.lastAttack;
+  const isAttacking = timeSinceFire < 300;
+  const attackPulse = isAttacking ? 1 - timeSinceFire / 300 : 0;
   let recoilOffset = 0;
   let turretShake = 0;
-
-  if (timeSinceFire < 300) {
+  if (isAttacking) {
     const firePhase = timeSinceFire / 300;
     if (firePhase < 0.1) {
       recoilOffset = (firePhase / 0.1) * 5 * zoom;
@@ -6385,7 +6390,22 @@ export function renderFlamethrower(
   const turretX = screenPos.x + shakeX;
   const turretY = topY + shakeY;
 
-  // Armored base platform
+  // Turret-local positioning: forward, lateral, vertical offset
+  const tp = (f: number, l: number, v: number = 0) => ({
+    x: turretX + fwdX * f * zoom + perpX * l * zoom,
+    y: turretY + fwdY * f * zoom + perpY * l * zoom - v * zoom,
+  });
+
+  // Rotation-aware anchor positions for all components
+  const mainTank = tp(-9, -9, 12);
+  const secTank = tp(-7, 9, 8);
+  const manifold = tp(-4, 0, 4);
+  const pumpPos = tp(-2, -4, 7);
+  const coilPos = tp(1, 10, 5);
+
+  // ════════════════════════════════════════════════════════════
+  // STATIC BASE PLATFORM (bearing ring — does not rotate)
+  // ════════════════════════════════════════════════════════════
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.ellipse(
@@ -6412,16 +6432,22 @@ export function renderFlamethrower(
   );
   ctx.fill();
 
+  // Gear teeth on bearing edge (rotate with turret)
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
-    const toothAngle = rotation + (i / 16) * Math.PI * 2;
-    const toothX = turretX + Math.cos(toothAngle) * 21 * zoom;
-    const toothY = turretY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
+    const a = rotation + (i / 16) * Math.PI * 2;
     ctx.beginPath();
-    ctx.arc(toothX, toothY, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      turretX + Math.cos(a) * 21 * zoom,
+      turretY - 2 * zoom + Math.sin(a) * 10.5 * zoom,
+      2.5 * zoom,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
 
+  // Top bearing surface
   ctx.fillStyle = "#3a3a42";
   ctx.beginPath();
   ctx.ellipse(
@@ -6435,7 +6461,1659 @@ export function renderFlamethrower(
   );
   ctx.fill();
 
-  if (facingAway) {
+  // ════════════════════════════════════════════════════════════
+  // REAR GROUP: fuel tanks, manifold, pump, plumbing
+  // ════════════════════════════════════════════════════════════
+  const drawRearComponents = () => {
+    // ── Main fuel tank (red, large) — rotates to rear-left ──
+    const mt = mainTank;
+    const mtRX = 9 * zoom;
+    const mtRY = mtRX * 0.45;
+    const mtTop = mt.y - 14 * zoom;
+    const mtBot = mt.y + 10 * zoom;
+
+    const mtGrad = ctx.createLinearGradient(
+      mt.x - mtRX,
+      mt.y,
+      mt.x + mtRX,
+      mt.y
+    );
+    mtGrad.addColorStop(0, "#661010");
+    mtGrad.addColorStop(0.15, "#881515");
+    mtGrad.addColorStop(0.35, "#cc3030");
+    mtGrad.addColorStop(0.5, "#dd4040");
+    mtGrad.addColorStop(0.7, "#aa2020");
+    mtGrad.addColorStop(0.85, "#881515");
+    mtGrad.addColorStop(1, "#551010");
+    ctx.fillStyle = mtGrad;
+    ctx.beginPath();
+    ctx.ellipse(mt.x, mtBot, mtRX, mtRY, 0, 0, Math.PI, false);
+    ctx.lineTo(mt.x - mtRX, mtTop);
+    ctx.ellipse(mt.x, mtTop, mtRX, mtRY, 0, Math.PI, Math.PI * 2, false);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#440808";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(mt.x, mtBot, mtRX, mtRY, 0, 0, Math.PI, false);
+    ctx.stroke();
+
+    // Specular highlight
+    ctx.strokeStyle = "rgba(255, 120, 100, 0.35)";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(mt.x - mtRX * 0.6, mtBot - 2 * zoom);
+    ctx.lineTo(mt.x - mtRX * 0.6, mtTop + 4 * zoom);
+    ctx.stroke();
+
+    // Hazard stripes
+    ctx.lineWidth = 2.5 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const sy = mtTop + 6 * zoom + i * 7 * zoom;
+      ctx.strokeStyle = "#ffcc00";
+      ctx.beginPath();
+      ctx.ellipse(
+        mt.x,
+        sy,
+        mtRX * 0.98,
+        mtRY * 0.98,
+        0,
+        -0.1,
+        Math.PI + 0.1,
+        false
+      );
+      ctx.stroke();
+    }
+    ctx.lineWidth = 1.5 * zoom;
+    for (let i = 0; i < 2; i++) {
+      const sy = mtTop + 9.5 * zoom + i * 7 * zoom;
+      ctx.strokeStyle = "#222";
+      ctx.beginPath();
+      ctx.ellipse(
+        mt.x,
+        sy,
+        mtRX * 0.98,
+        mtRY * 0.98,
+        0,
+        -0.1,
+        Math.PI + 0.1,
+        false
+      );
+      ctx.stroke();
+    }
+
+    // Top cap
+    const mtCapG = ctx.createRadialGradient(
+      mt.x - 2 * zoom,
+      mtTop,
+      0,
+      mt.x,
+      mtTop,
+      mtRX
+    );
+    mtCapG.addColorStop(0, "#5a5a62");
+    mtCapG.addColorStop(0.4, "#4a4a52");
+    mtCapG.addColorStop(0.8, "#3a3a42");
+    mtCapG.addColorStop(1, "#2a2a32");
+    ctx.fillStyle = mtCapG;
+    ctx.beginPath();
+    ctx.ellipse(mt.x, mtTop, mtRX, mtRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+
+    // Cap valve
+    ctx.fillStyle = "#6a6a72";
+    ctx.beginPath();
+    ctx.ellipse(mt.x, mtTop, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7a7a82";
+    ctx.beginPath();
+    ctx.arc(mt.x, mtTop - 1 * zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mounting straps with rivets
+    for (let s = 0; s < 2; s++) {
+      const sy = mtTop + 10 * zoom + s * 10 * zoom;
+      ctx.strokeStyle = "#4a4a55";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        mt.x,
+        sy,
+        mtRX + 1.5 * zoom,
+        mtRY + 1 * zoom,
+        0,
+        -0.15,
+        Math.PI + 0.15,
+        false
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(120, 120, 135, 0.3)";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        mt.x,
+        sy - 0.8 * zoom,
+        mtRX + 1.5 * zoom,
+        mtRY + 1 * zoom,
+        0,
+        0.1,
+        Math.PI - 0.1,
+        false
+      );
+      ctx.stroke();
+      for (const ba of [-0.3, Math.PI + 0.3]) {
+        ctx.fillStyle = "#6a6a78";
+        ctx.beginPath();
+        ctx.arc(
+          mt.x + Math.cos(ba) * (mtRX + 1.5 * zoom),
+          sy + Math.sin(ba) * (mtRY + 1 * zoom),
+          1.5 * zoom,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "rgba(140, 140, 155, 0.4)";
+        ctx.beginPath();
+        ctx.arc(
+          mt.x + Math.cos(ba) * (mtRX + 1.5 * zoom) - 0.3 * zoom,
+          sy + Math.sin(ba) * (mtRY + 1 * zoom) - 0.3 * zoom,
+          0.7 * zoom,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // Pressure relief valve (side of main tank)
+    const prX = mt.x + mtRX * 0.7;
+    const prY = mtTop + 5 * zoom;
+    ctx.fillStyle = "#5a5a65";
+    ctx.beginPath();
+    ctx.ellipse(prX, prY, 2.5 * zoom, 1.8 * zoom, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a3a45";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    ctx.strokeStyle = "#7a7a88";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(prX + 2 * zoom, prY - 1 * zoom);
+    ctx.lineTo(prX + 5 * zoom, prY - 3 * zoom);
+    ctx.stroke();
+    ctx.fillStyle = "#cc2020";
+    ctx.beginPath();
+    ctx.arc(prX + 5 * zoom, prY - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
+    ctx.beginPath();
+    ctx.arc(prX + 4.6 * zoom, prY - 3.4 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fuel outlet fitting (bottom of main tank)
+    const outX = mt.x + mtRX * 0.3;
+    const outY = mtBot + 1 * zoom;
+    ctx.fillStyle = "#4a4a55";
+    ctx.beginPath();
+    ctx.ellipse(outX, outY, 3 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3a45";
+    ctx.beginPath();
+    ctx.ellipse(outX, outY, 1.8 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── Secondary fuel tank (green, small) — rotates to rear-right ──
+    const st = secTank;
+    const stRX = 5.5 * zoom;
+    const stRY = stRX * 0.45;
+    const stTop = st.y - 10 * zoom;
+    const stBot = st.y + 5 * zoom;
+
+    const stGrad = ctx.createLinearGradient(
+      st.x - stRX,
+      st.y,
+      st.x + stRX,
+      st.y
+    );
+    stGrad.addColorStop(0, "#0a3310");
+    stGrad.addColorStop(0.15, "#155518");
+    stGrad.addColorStop(0.35, "#208830");
+    stGrad.addColorStop(0.5, "#28aa38");
+    stGrad.addColorStop(0.7, "#1c8828");
+    stGrad.addColorStop(0.85, "#155518");
+    stGrad.addColorStop(1, "#0a3310");
+    ctx.fillStyle = stGrad;
+    ctx.beginPath();
+    ctx.ellipse(st.x, stBot, stRX, stRY, 0, 0, Math.PI, false);
+    ctx.lineTo(st.x - stRX, stTop);
+    ctx.ellipse(st.x, stTop, stRX, stRY, 0, Math.PI, Math.PI * 2, false);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#083008";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(st.x, stBot, stRX, stRY, 0, 0, Math.PI, false);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(120, 255, 130, 0.35)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(st.x - stRX * 0.6, stBot - 2 * zoom);
+    ctx.lineTo(st.x - stRX * 0.6, stTop + 3 * zoom);
+    ctx.stroke();
+
+    // Hazard stripes
+    ctx.lineWidth = 1.8 * zoom;
+    for (let i = 0; i < 2; i++) {
+      ctx.strokeStyle = "#ffcc00";
+      ctx.beginPath();
+      ctx.ellipse(
+        st.x,
+        stTop + 4 * zoom + i * 5 * zoom,
+        stRX * 0.98,
+        stRY * 0.98,
+        0,
+        -0.1,
+        Math.PI + 0.1,
+        false
+      );
+      ctx.stroke();
+    }
+    ctx.lineWidth = 1 * zoom;
+    ctx.strokeStyle = "#222";
+    ctx.beginPath();
+    ctx.ellipse(
+      st.x,
+      stTop + 6.5 * zoom,
+      stRX * 0.98,
+      stRY * 0.98,
+      0,
+      -0.1,
+      Math.PI + 0.1,
+      false
+    );
+    ctx.stroke();
+
+    // Top cap
+    const stCapG = ctx.createRadialGradient(
+      st.x - 1 * zoom,
+      stTop,
+      0,
+      st.x,
+      stTop,
+      stRX
+    );
+    stCapG.addColorStop(0, "#5a5a62");
+    stCapG.addColorStop(0.4, "#4a4a52");
+    stCapG.addColorStop(0.8, "#3a3a42");
+    stCapG.addColorStop(1, "#2a2a32");
+    ctx.fillStyle = stCapG;
+    ctx.beginPath();
+    ctx.ellipse(st.x, stTop, stRX, stRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+
+    // Cap valve
+    ctx.fillStyle = "#6a6a72";
+    ctx.beginPath();
+    ctx.ellipse(st.x, stTop, 2.5 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7a7a82";
+    ctx.beginPath();
+    ctx.arc(st.x, stTop - 0.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mounting strap
+    const secStrapY = stTop + 6 * zoom;
+    ctx.strokeStyle = "#4a4a55";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      st.x,
+      secStrapY,
+      stRX + 1 * zoom,
+      stRY + 0.8 * zoom,
+      0,
+      -0.15,
+      Math.PI + 0.15,
+      false
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(120, 120, 135, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      st.x,
+      secStrapY - 0.6 * zoom,
+      stRX + 1 * zoom,
+      stRY + 0.8 * zoom,
+      0,
+      0.15,
+      Math.PI - 0.15,
+      false
+    );
+    ctx.stroke();
+    for (const ba of [-0.25, Math.PI + 0.25]) {
+      ctx.fillStyle = "#6a6a78";
+      ctx.beginPath();
+      ctx.arc(
+        st.x + Math.cos(ba) * (stRX + 1 * zoom),
+        secStrapY + Math.sin(ba) * (stRY + 0.8 * zoom),
+        1.2 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // Secondary tank outlet fitting
+    const soX = st.x - stRX * 0.4;
+    const soY = stBot + 0.5 * zoom;
+    ctx.fillStyle = "#4a4a55";
+    ctx.beginPath();
+    ctx.ellipse(soX, soY, 2.2 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3a45";
+    ctx.beginPath();
+    ctx.ellipse(soX, soY, 1.3 * zoom, 0.9 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── Fuel tubes from tanks to manifold (rotation-aware routing) ──
+    const mf = manifold;
+
+    // Primary fuel tube (thick red — main tank to manifold)
+    ctx.strokeStyle = "#3a2828";
+    ctx.lineWidth = 4 * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(outX, outY);
+    ctx.quadraticCurveTo(
+      (outX + mf.x) * 0.5 + perpX * 3 * zoom,
+      (outY + mf.y) * 0.5 + 4 * zoom,
+      mf.x - fwdX * 3 * zoom,
+      mf.y + 2 * zoom
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(180, 80, 70, 0.25)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(outX + 0.5 * zoom, outY - 0.8 * zoom);
+    ctx.quadraticCurveTo(
+      (outX + mf.x) * 0.5 + perpX * 3 * zoom + 0.5 * zoom,
+      (outY + mf.y) * 0.5 + 3 * zoom,
+      mf.x - fwdX * 3 * zoom + 0.5 * zoom,
+      mf.y + 1.2 * zoom
+    );
+    ctx.stroke();
+
+    // Secondary oxidizer tube (green — sec tank to manifold)
+    ctx.strokeStyle = "#1a3320";
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(soX, soY);
+    ctx.quadraticCurveTo(
+      (soX + mf.x) * 0.5 - perpX * 2 * zoom,
+      (soY + mf.y) * 0.5 + 5 * zoom,
+      mf.x + fwdX * 2 * zoom,
+      mf.y + 2 * zoom
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(80, 180, 90, 0.2)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(soX + 0.4 * zoom, soY - 0.6 * zoom);
+    ctx.quadraticCurveTo(
+      (soX + mf.x) * 0.5 - perpX * 2 * zoom + 0.4 * zoom,
+      (soY + mf.y) * 0.5 + 4.4 * zoom,
+      mf.x + fwdX * 2 * zoom + 0.4 * zoom,
+      mf.y + 1.4 * zoom
+    );
+    ctx.stroke();
+
+    // Pilot gas tube (thin blue — main tank cap to igniter)
+    ctx.strokeStyle = "#222838";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(mt.x + 3 * zoom, mtTop + 1 * zoom);
+    ctx.bezierCurveTo(
+      mt.x + 10 * zoom,
+      mtTop - 4 * zoom,
+      turretX - fwdX * 6 * zoom,
+      turretY - 18 * zoom,
+      turretX - fwdX * 3 * zoom,
+      turretY - 12 * zoom
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(80, 120, 200, 0.2)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(mt.x + 3 * zoom, mtTop + 0.3 * zoom);
+    ctx.bezierCurveTo(
+      mt.x + 10 * zoom,
+      mtTop - 4.7 * zoom,
+      turretX - fwdX * 6 * zoom,
+      turretY - 18.7 * zoom,
+      turretX - fwdX * 3 * zoom,
+      turretY - 12.7 * zoom
+    );
+    ctx.stroke();
+
+    // Tube clamps on primary fuel line
+    for (let tc = 0; tc < 2; tc++) {
+      const clampT = 0.3 + tc * 0.35;
+      const u = 1 - clampT;
+      const clX =
+        u * u * outX +
+        2 * u * clampT * ((outX + mf.x) * 0.5 + perpX * 3 * zoom) +
+        clampT * clampT * (mf.x - fwdX * 3 * zoom);
+      const clY =
+        u * u * outY +
+        2 * u * clampT * ((outY + mf.y) * 0.5 + 4 * zoom) +
+        clampT * clampT * (mf.y + 2 * zoom);
+      ctx.fillStyle = "#5a5a68";
+      ctx.beginPath();
+      ctx.ellipse(clX, clY, 3 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#3a3a45";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#7a7a88";
+      ctx.beginPath();
+      ctx.arc(clX + 1.5 * zoom, clY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Tube clamp on oxidizer line
+    {
+      const t2 = 0.45;
+      const u2 = 1 - t2;
+      const oxX =
+        u2 * u2 * soX +
+        2 * u2 * t2 * ((soX + mf.x) * 0.5 - perpX * 2 * zoom) +
+        t2 * t2 * (mf.x + fwdX * 2 * zoom);
+      const oxY =
+        u2 * u2 * soY +
+        2 * u2 * t2 * ((soY + mf.y) * 0.5 + 5 * zoom) +
+        t2 * t2 * (mf.y + 2 * zoom);
+      ctx.fillStyle = "#5a5a68";
+      ctx.beginPath();
+      ctx.ellipse(oxX, oxY, 2.5 * zoom, 1.8 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#3a3a45";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+    }
+
+    // ── Valve manifold block (rotation-aware position) ──
+    {
+      const mfW = 8 * zoom;
+      const mfH = 5 * zoom;
+      const mfD = 3 * zoom;
+
+      // Top face
+      const mTopG = ctx.createLinearGradient(
+        mf.x - mfW * 0.5,
+        mf.y - mfH,
+        mf.x + mfW * 0.5,
+        mf.y - mfH
+      );
+      mTopG.addColorStop(0, "#505058");
+      mTopG.addColorStop(0.4, "#5e5e66");
+      mTopG.addColorStop(1, "#48484f");
+      ctx.fillStyle = mTopG;
+      ctx.beginPath();
+      ctx.moveTo(mf.x, mf.y - mfH - mfD);
+      ctx.lineTo(mf.x + mfW * 0.5, mf.y - mfH - mfD * 0.4);
+      ctx.lineTo(mf.x, mf.y - mfH + mfD * 0.2);
+      ctx.lineTo(mf.x - mfW * 0.5, mf.y - mfH - mfD * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a65";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      // Left face
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.moveTo(mf.x - mfW * 0.5, mf.y - mfH - mfD * 0.4);
+      ctx.lineTo(mf.x, mf.y - mfH + mfD * 0.2);
+      ctx.lineTo(mf.x, mf.y + mfD * 0.2);
+      ctx.lineTo(mf.x - mfW * 0.5, mf.y - mfD * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#2a2a32";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+
+      // Right face
+      ctx.fillStyle = "#44444c";
+      ctx.beginPath();
+      ctx.moveTo(mf.x + mfW * 0.5, mf.y - mfH - mfD * 0.4);
+      ctx.lineTo(mf.x, mf.y - mfH + mfD * 0.2);
+      ctx.lineTo(mf.x, mf.y + mfD * 0.2);
+      ctx.lineTo(mf.x + mfW * 0.5, mf.y - mfD * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#2a2a32";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+
+      // Inlet ports
+      ctx.fillStyle = "#2a2a32";
+      ctx.beginPath();
+      ctx.ellipse(
+        mf.x - mfW * 0.22,
+        mf.y - mfH * 0.45,
+        1.5 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a65";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#2a2a32";
+      ctx.beginPath();
+      ctx.ellipse(
+        mf.x + mfW * 0.22,
+        mf.y - mfH * 0.45,
+        1.5 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a65";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+
+      // Valve handle on top
+      const hY = mf.y - mfH - mfD * 0.8;
+      ctx.strokeStyle = "#6a6a78";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(mf.x - 2 * zoom, hY);
+      ctx.lineTo(mf.x + 2 * zoom, hY);
+      ctx.stroke();
+      ctx.fillStyle = "#dd3030";
+      ctx.beginPath();
+      ctx.arc(mf.x, hY, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 120, 120, 0.35)";
+      ctx.beginPath();
+      ctx.arc(mf.x - 0.4 * zoom, hY - 0.4 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bolts on manifold top
+      const mBolts = [
+        { x: mf.x - mfW * 0.35, y: mf.y - mfH - mfD * 0.3 },
+        { x: mf.x + mfW * 0.35, y: mf.y - mfH - mfD * 0.3 },
+        { x: mf.x, y: mf.y - mfH + mfD * 0.05 },
+      ];
+      for (const bolt of mBolts) {
+        ctx.fillStyle = "#58585e";
+        ctx.beginPath();
+        ctx.arc(bolt.x, bolt.y, 1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(140, 140, 155, 0.3)";
+        ctx.beginPath();
+        ctx.arc(
+          bolt.x - 0.2 * zoom,
+          bolt.y - 0.2 * zoom,
+          0.4 * zoom,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      // ── Inline fuel pump (rotation-aware) ──
+      const pp = pumpPos;
+      const pR = 4 * zoom;
+
+      // Feed tube from manifold top to pump
+      ctx.strokeStyle = "#3a2828";
+      ctx.lineWidth = 3 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(mf.x, mf.y - mfH - mfD * 0.5);
+      ctx.lineTo(pp.x, pp.y + pR * 0.5);
+      ctx.stroke();
+
+      // Pump body
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.ellipse(pp.x, pp.y + 2 * zoom, pR, pR * 0.5, 0, 0, Math.PI, false);
+      ctx.lineTo(pp.x - pR, pp.y - 1 * zoom);
+      ctx.ellipse(
+        pp.x,
+        pp.y - 1 * zoom,
+        pR,
+        pR * 0.5,
+        0,
+        Math.PI,
+        Math.PI * 2,
+        false
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      const pGrad = ctx.createLinearGradient(pp.x - pR, pp.y, pp.x + pR, pp.y);
+      pGrad.addColorStop(0, "#353540");
+      pGrad.addColorStop(0.35, "#4a4a55");
+      pGrad.addColorStop(0.65, "#555560");
+      pGrad.addColorStop(1, "#3a3a42");
+      ctx.fillStyle = pGrad;
+      ctx.beginPath();
+      ctx.ellipse(pp.x, pp.y + 2 * zoom, pR, pR * 0.5, 0, 0, Math.PI, false);
+      ctx.lineTo(pp.x - pR, pp.y - 1 * zoom);
+      ctx.ellipse(
+        pp.x,
+        pp.y - 1 * zoom,
+        pR,
+        pR * 0.5,
+        0,
+        Math.PI,
+        Math.PI * 2,
+        false
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Pump top cap
+      const pCapG = ctx.createRadialGradient(
+        pp.x - 1 * zoom,
+        pp.y - 1 * zoom,
+        0,
+        pp.x,
+        pp.y - 1 * zoom,
+        pR
+      );
+      pCapG.addColorStop(0, "#5a5a65");
+      pCapG.addColorStop(0.5, "#4e4e58");
+      pCapG.addColorStop(1, "#3a3a45");
+      ctx.fillStyle = pCapG;
+      ctx.beginPath();
+      ctx.ellipse(pp.x, pp.y - 1 * zoom, pR, pR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a68";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Motor housing
+      const motorX = pp.x + pR * 0.8;
+      const motorY = pp.y;
+      ctx.fillStyle = "#44444c";
+      ctx.beginPath();
+      ctx.ellipse(motorX, motorY, 2.5 * zoom, 2 * zoom, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a65";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#7a7a88";
+      ctx.beginPath();
+      ctx.arc(motorX, motorY, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spinning indicator
+      const pumpSpin = time * 4;
+      ctx.strokeStyle = "rgba(100, 100, 115, 0.5)";
+      ctx.lineWidth = 0.7 * zoom;
+      for (let ps = 0; ps < 3; ps++) {
+        const psA = pumpSpin + (ps / 3) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(pp.x, pp.y - 1 * zoom);
+        ctx.lineTo(
+          pp.x + Math.cos(psA) * pR * 0.7,
+          pp.y - 1 * zoom + Math.sin(psA) * pR * 0.35
+        );
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#4a4a55";
+      ctx.beginPath();
+      ctx.arc(pp.x, pp.y - 1 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Feed tube from pump to igniter
+      ctx.strokeStyle = "#3a2828";
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(pp.x, pp.y - 1 * zoom - pR * 0.5);
+      ctx.quadraticCurveTo(
+        (pp.x + turretX) * 0.5,
+        turretY - 12 * zoom,
+        turretX,
+        turretY - 10 * zoom
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(180, 80, 70, 0.2)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(pp.x + 0.4 * zoom, pp.y - 1 * zoom - pR * 0.5 - 0.6 * zoom);
+      ctx.quadraticCurveTo(
+        (pp.x + turretX) * 0.5 + 0.4 * zoom,
+        turretY - 12.6 * zoom,
+        turretX + 0.4 * zoom,
+        turretY - 10.6 * zoom
+      );
+      ctx.stroke();
+
+      // Oxidizer tube from manifold to igniter (opposite side)
+      ctx.strokeStyle = "#1a3320";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(mf.x + mfW * 0.25, mf.y - mfH - mfD * 0.3);
+      ctx.bezierCurveTo(
+        mf.x + fwdX * 8 * zoom + perpX * 5 * zoom,
+        mf.y - 10 * zoom,
+        turretX + perpX * 6 * zoom,
+        turretY - 13 * zoom,
+        turretX + perpX * 3 * zoom,
+        turretY - 11 * zoom
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(80, 180, 90, 0.15)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(
+        mf.x + mfW * 0.25 + 0.3 * zoom,
+        mf.y - mfH - mfD * 0.3 - 0.5 * zoom
+      );
+      ctx.bezierCurveTo(
+        mf.x + fwdX * 8 * zoom + perpX * 5 * zoom + 0.3 * zoom,
+        mf.y - 10.5 * zoom,
+        turretX + perpX * 6 * zoom + 0.3 * zoom,
+        turretY - 13.5 * zoom,
+        turretX + perpX * 3 * zoom + 0.3 * zoom,
+        turretY - 11.5 * zoom
+      );
+      ctx.stroke();
+    }
+
+    // Pressure regulator fitting (on output tube near igniter)
+    {
+      const regPos = tp(-1, -2, 6);
+      const regR = 2.5 * zoom;
+      ctx.fillStyle = "#50505a";
+      ctx.beginPath();
+      for (let rh = 0; rh < 6; rh++) {
+        const a = (rh / 6) * Math.PI * 2 - Math.PI / 6;
+        const rx = regPos.x + Math.cos(a) * regR;
+        const ry = regPos.y + Math.sin(a) * regR * 0.65;
+        if (rh === 0) {
+          ctx.moveTo(rx, ry);
+        } else {
+          ctx.lineTo(rx, ry);
+        }
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#3a3a45";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#2a2a32";
+      ctx.beginPath();
+      ctx.arc(regPos.x, regPos.y, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+
+  // ════════════════════════════════════════════════════════════
+  // CENTER GROUP: igniter housing, deflectors, coil, gauge
+  // ════════════════════════════════════════════════════════════
+  const drawCenterComponents = () => {
+    // ── Igniter housing (armored combustion chamber) ──
+    const ignY = turretY - 10 * zoom;
+    const ignRX = 11 * zoom;
+    const ignRY = 7.5 * zoom;
+    const ignH = 7 * zoom;
+
+    // Cylinder body with hot-metal gradient
+    const ignGrad = ctx.createLinearGradient(
+      turretX - ignRX,
+      ignY,
+      turretX + ignRX,
+      ignY
+    );
+    ignGrad.addColorStop(0, "#2a2530");
+    ignGrad.addColorStop(0.2, "#3e3842");
+    ignGrad.addColorStop(0.45, "#504850");
+    ignGrad.addColorStop(0.55, "#585058");
+    ignGrad.addColorStop(0.8, "#3e3842");
+    ignGrad.addColorStop(1, "#2a2530");
+    ctx.fillStyle = ignGrad;
+    ctx.beginPath();
+    ctx.ellipse(turretX, ignY + ignH, ignRX, ignRY, 0, 0, Math.PI, false);
+    ctx.lineTo(turretX - ignRX, ignY);
+    ctx.ellipse(turretX, ignY, ignRX, ignRY, 0, Math.PI, Math.PI * 2, false);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bottom rim edge
+    ctx.strokeStyle = "#1a1a22";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(turretX, ignY + ignH, ignRX, ignRY, 0, 0, Math.PI, false);
+    ctx.stroke();
+
+    // Reinforcement ribs (3 horizontal bands)
+    for (let rb = 0; rb < 3; rb++) {
+      const ribY = ignY + ignH * (0.2 + rb * 0.3);
+      ctx.strokeStyle = "#4a4550";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        turretX,
+        ribY,
+        ignRX + 0.5 * zoom,
+        ignRY + 0.3 * zoom,
+        0,
+        -0.05,
+        Math.PI + 0.05,
+        false
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(100, 95, 110, 0.3)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        turretX,
+        ribY - 0.6 * zoom,
+        ignRX + 0.5 * zoom,
+        ignRY + 0.3 * zoom,
+        0,
+        0.1,
+        Math.PI - 0.1,
+        false
+      );
+      ctx.stroke();
+    }
+
+    // Heat vents (glowing slits in the cylinder wall)
+    for (let hv = 0; hv < 6; hv++) {
+      const hvAngle = (hv / 6) * Math.PI * 2;
+      const hvDepth = Math.cos(hvAngle);
+      if (hvDepth > -0.2) {
+        const hvX = turretX + Math.cos(hvAngle) * ignRX * 0.98;
+        const hvY1 = ignY + ignH * 0.3 + Math.sin(hvAngle) * ignRY * 0.98;
+        const hvY2 = hvY1 + ignH * 0.35;
+        const hvVis = 0.4 + hvDepth * 0.4;
+
+        // Vent slit
+        ctx.strokeStyle = `rgba(20, 18, 25, ${hvVis})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hvX, hvY1);
+        ctx.lineTo(hvX, hvY2);
+        ctx.stroke();
+
+        // Inner combustion glow
+        const ventGlow = isAttacking
+          ? 0.6 + attackPulse * 0.4
+          : 0.25 + Math.sin(time * 4 + hv) * 0.1;
+        ctx.strokeStyle = `rgba(255, 120, 30, ${ventGlow * hvVis})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hvX, hvY1 + 1 * zoom);
+        ctx.lineTo(hvX, hvY2 - 1 * zoom);
+        ctx.stroke();
+      }
+    }
+
+    // Specular highlight on cylinder body
+    ctx.strokeStyle = "rgba(120, 115, 130, 0.25)";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(turretX - ignRX * 0.55, ignY + ignH - 2 * zoom);
+    ctx.lineTo(turretX - ignRX * 0.55, ignY + 3 * zoom);
+    ctx.stroke();
+
+    // Armored top plate with hex bolt pattern
+    const ignTopG = ctx.createRadialGradient(
+      turretX - 2 * zoom,
+      ignY,
+      0,
+      turretX,
+      ignY,
+      ignRX
+    );
+    ignTopG.addColorStop(0, "#626068");
+    ignTopG.addColorStop(0.35, "#555058");
+    ignTopG.addColorStop(0.7, "#484350");
+    ignTopG.addColorStop(1, "#3a3540");
+    ctx.fillStyle = ignTopG;
+    ctx.beginPath();
+    ctx.ellipse(turretX, ignY, ignRX, ignRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Raised rim ring
+    ctx.strokeStyle = "#5a5560";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      turretX,
+      ignY,
+      ignRX - 1 * zoom,
+      ignRY - 0.7 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(100, 95, 110, 0.4)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      turretX,
+      ignY - 0.5 * zoom,
+      ignRX - 1.5 * zoom,
+      ignRY - 1 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+
+    // Hex bolt pattern on top plate
+    for (let hb = 0; hb < 6; hb++) {
+      const hbA = rotation * 0.5 + (hb / 6) * Math.PI * 2;
+      const hbR = ignRX * 0.6;
+      const hbX = turretX + Math.cos(hbA) * hbR;
+      const hbY = ignY + Math.sin(hbA) * hbR * 0.65;
+      ctx.fillStyle = "#48444e";
+      ctx.beginPath();
+      ctx.arc(hbX, hbY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(130, 125, 140, 0.35)";
+      ctx.beginPath();
+      ctx.arc(hbX - 0.3 * zoom, hbY - 0.3 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Central combustion glow through top plate
+    const combGlow = isAttacking
+      ? 0.7 + attackPulse * 0.3
+      : 0.3 + Math.sin(time * 5) * 0.1;
+    const combGrad = ctx.createRadialGradient(
+      turretX,
+      ignY,
+      0,
+      turretX,
+      ignY,
+      5 * zoom
+    );
+    combGrad.addColorStop(0, `rgba(255, 160, 60, ${combGlow * 0.6})`);
+    combGrad.addColorStop(0.5, `rgba(255, 100, 20, ${combGlow * 0.3})`);
+    combGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+    ctx.fillStyle = combGrad;
+    ctx.beginPath();
+    ctx.ellipse(turretX, ignY, 4.5 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── Rotating flame deflector shields ──
+    const flameShieldCount = 5;
+    const shieldThickness = 2.5 * zoom;
+    for (let i = 0; i < flameShieldCount; i++) {
+      const baseAngle = (i / flameShieldCount) * Math.PI * 2;
+      const shieldAngle = rotation + baseAngle;
+      const shieldDepth = Math.cos(shieldAngle);
+      const shieldSide = Math.sin(shieldAngle);
+      const visibility = 0.55 + shieldDepth * 0.35;
+
+      if (shieldDepth > -0.55) {
+        const innerR = 5 * zoom;
+        const outerR = 9 * zoom;
+        const angleSpan = Math.PI / 2.8;
+
+        const p0x = turretX + Math.cos(shieldAngle - angleSpan * 0.4) * innerR;
+        const p0y =
+          ignY + Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.7;
+        const p1x = turretX + Math.cos(shieldAngle - angleSpan * 0.35) * outerR;
+        const p1y =
+          ignY +
+          Math.sin(shieldAngle - angleSpan * 0.35) * outerR * 0.7 -
+          2 * zoom;
+        const p2x = turretX + Math.cos(shieldAngle) * (outerR + 1.5 * zoom);
+        const p2y =
+          ignY +
+          Math.sin(shieldAngle) * (outerR + 1.5 * zoom) * 0.7 -
+          2.5 * zoom;
+        const p3x = turretX + Math.cos(shieldAngle + angleSpan * 0.35) * outerR;
+        const p3y =
+          ignY +
+          Math.sin(shieldAngle + angleSpan * 0.35) * outerR * 0.7 -
+          2 * zoom;
+        const p4x = turretX + Math.cos(shieldAngle + angleSpan * 0.4) * innerR;
+        const p4y =
+          ignY + Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.7;
+
+        // Side thickness face
+        if (shieldSide > -0.3) {
+          const sideGrad = ctx.createLinearGradient(
+            p2x,
+            p2y,
+            p2x,
+            p2y + shieldThickness
+          );
+          sideGrad.addColorStop(0, `rgba(70, 55, 45, ${visibility})`);
+          sideGrad.addColorStop(1, `rgba(50, 40, 35, ${visibility})`);
+          ctx.fillStyle = sideGrad;
+          ctx.beginPath();
+          ctx.moveTo(p1x, p1y);
+          ctx.lineTo(p2x, p2y);
+          ctx.lineTo(p3x, p3y);
+          ctx.lineTo(p3x, p3y + shieldThickness);
+          ctx.lineTo(p2x, p2y + shieldThickness);
+          ctx.lineTo(p1x, p1y + shieldThickness);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = `rgba(100, 75, 60, ${visibility * 0.4})`;
+          ctx.lineWidth = 0.6 * zoom;
+          ctx.stroke();
+        }
+
+        // Front face
+        const shieldGrad = ctx.createLinearGradient(
+          turretX + Math.cos(shieldAngle - angleSpan * 0.3) * outerR,
+          ignY + Math.sin(shieldAngle - angleSpan * 0.3) * outerR * 0.7,
+          turretX + Math.cos(shieldAngle + angleSpan * 0.3) * outerR,
+          ignY + Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.7
+        );
+        if (shieldSide < 0) {
+          shieldGrad.addColorStop(0, `rgba(140, 100, 80, ${visibility})`);
+          shieldGrad.addColorStop(0.5, `rgba(110, 80, 65, ${visibility})`);
+          shieldGrad.addColorStop(1, `rgba(80, 60, 50, ${visibility})`);
+        } else {
+          shieldGrad.addColorStop(0, `rgba(90, 70, 55, ${visibility})`);
+          shieldGrad.addColorStop(0.5, `rgba(100, 75, 60, ${visibility})`);
+          shieldGrad.addColorStop(1, `rgba(80, 60, 50, ${visibility})`);
+        }
+        ctx.fillStyle = shieldGrad;
+        ctx.beginPath();
+        ctx.moveTo(p0x, p0y);
+        ctx.lineTo(p1x, p1y);
+        ctx.lineTo(p2x, p2y);
+        ctx.lineTo(p3x, p3y);
+        ctx.lineTo(p4x, p4y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(180, 120, 80, ${visibility * 0.5})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.stroke();
+
+        // Top edge highlight
+        ctx.strokeStyle = `rgba(200, 160, 120, ${visibility * 0.4})`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(p1x, p1y);
+        ctx.lineTo(p2x, p2y);
+        ctx.lineTo(p3x, p3y);
+        ctx.stroke();
+
+        // Rivet
+        const rivetX = turretX + Math.cos(shieldAngle) * (outerR - 1.5 * zoom);
+        const rivetY =
+          ignY +
+          Math.sin(shieldAngle) * (outerR - 1.5 * zoom) * 0.7 -
+          1.5 * zoom;
+        ctx.fillStyle = `rgba(60, 50, 40, ${visibility})`;
+        ctx.beginPath();
+        ctx.arc(rivetX, rivetY, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(120, 100, 80, ${visibility * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(
+          rivetX - 0.3 * zoom,
+          rivetY - 0.3 * zoom,
+          0.6 * zoom,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    // Inner igniter ring
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(turretX, ignY, 6 * zoom, 4.5 * zoom, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── Ignition coil / transformer (rotation-aware position) ──
+    {
+      const cl = coilPos;
+      const clW = 4 * zoom;
+      const clH = 6 * zoom;
+
+      ctx.fillStyle = "#2a2a35";
+      ctx.save();
+      ctx.translate(cl.x, cl.y);
+      ctx.beginPath();
+      ctx.rect(-clW * 0.5, -clH * 0.5, clW, clH);
+      ctx.fill();
+      ctx.strokeStyle = "#3a3a45";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      ctx.restore();
+
+      // Copper windings
+      ctx.strokeStyle = "#b87333";
+      ctx.lineWidth = 0.8 * zoom;
+      const coilCount = 5;
+      for (let cw = 0; cw < coilCount; cw++) {
+        const cwY = cl.y - clH * 0.35 + (cw / (coilCount - 1)) * clH * 0.7;
+        ctx.beginPath();
+        ctx.ellipse(cl.x, cwY, clW * 0.55, 1.2 * zoom, 0, 0, Math.PI, false);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(220, 160, 80, 0.3)";
+      ctx.lineWidth = 0.4 * zoom;
+      for (let cw = 0; cw < coilCount; cw++) {
+        const cwY = cl.y - clH * 0.35 + (cw / (coilCount - 1)) * clH * 0.7;
+        ctx.beginPath();
+        ctx.ellipse(
+          cl.x,
+          cwY - 0.3 * zoom,
+          clW * 0.5,
+          0.8 * zoom,
+          0,
+          0.3,
+          Math.PI - 0.3,
+          false
+        );
+        ctx.stroke();
+      }
+
+      // Terminal posts
+      ctx.fillStyle = "#8a8a95";
+      ctx.beginPath();
+      ctx.arc(
+        cl.x - 1.2 * zoom,
+        cl.y - clH * 0.5 - 1 * zoom,
+        0.8 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(
+        cl.x + 1.2 * zoom,
+        cl.y - clH * 0.5 - 1 * zoom,
+        0.8 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Wiring to igniter (rotation-aware routing)
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cl.x - 1.2 * zoom, cl.y - clH * 0.5 - 1 * zoom);
+      ctx.quadraticCurveTo(
+        (cl.x + turretX) * 0.5,
+        turretY - 15 * zoom,
+        turretX + perpX * 2 * zoom,
+        turretY - 11 * zoom
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "#882222";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cl.x + 1.2 * zoom, cl.y - clH * 0.5 - 1 * zoom);
+      ctx.quadraticCurveTo(
+        (cl.x + turretX) * 0.5 + perpX * 2 * zoom,
+        turretY - 16 * zoom,
+        turretX + perpX * 3 * zoom,
+        turretY - 10 * zoom
+      );
+      ctx.stroke();
+
+      // Spark glow
+      const sparkA = 0.3 + Math.sin(time * 15) * 0.2;
+      ctx.fillStyle = `rgba(100, 180, 255, ${sparkA})`;
+      ctx.beginPath();
+      ctx.arc(
+        cl.x - 1.2 * zoom,
+        cl.y - clH * 0.5 - 1 * zoom,
+        1.5 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // ── Wiring conduit (rotation-aware path) ──
+    {
+      const wStart = tp(-3, -6, 2);
+      const wMid = tp(0, -2, 4);
+      const wEnd = tp(1, 3, 3);
+      ctx.strokeStyle = "#2a2a32";
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wStart.x, wStart.y);
+      ctx.quadraticCurveTo(wMid.x, wMid.y, wEnd.x, wEnd.y);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(80, 80, 90, 0.3)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wStart.x, wStart.y - 0.6 * zoom);
+      ctx.quadraticCurveTo(
+        wMid.x,
+        wMid.y - 0.6 * zoom,
+        wEnd.x,
+        wEnd.y - 0.6 * zoom
+      );
+      ctx.stroke();
+      // Cable ties
+      for (const tieT of [0.3, 0.7]) {
+        const u = 1 - tieT;
+        const tieX =
+          u * u * wStart.x + 2 * u * tieT * wMid.x + tieT * tieT * wEnd.x;
+        const tieY =
+          u * u * wStart.y + 2 * u * tieT * wMid.y + tieT * tieT * wEnd.y;
+        ctx.fillStyle = "#4a4a55";
+        ctx.beginPath();
+        ctx.ellipse(tieX, tieY, 1.5 * zoom, 2.2 * zoom, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Pilot flame indicator (center glow)
+    const flameGlow = isAttacking ? 0.8 : 0.5 + Math.sin(time * 6) * 0.2;
+    const flameGrad = ctx.createRadialGradient(
+      turretX,
+      ignY,
+      0,
+      turretX,
+      ignY,
+      3.5 * zoom
+    );
+    flameGrad.addColorStop(0, `rgba(255, 200, 100, ${flameGlow})`);
+    flameGrad.addColorStop(0.4, `rgba(255, 140, 50, ${flameGlow * 0.7})`);
+    flameGrad.addColorStop(0.8, `rgba(255, 80, 20, ${flameGlow * 0.4})`);
+    flameGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+    ctx.fillStyle = flameGrad;
+    ctx.beginPath();
+    ctx.arc(turretX, ignY, 3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  // ════════════════════════════════════════════════════════════
+  // FRONT GROUP: blast shield, nozzle collar, heat ring
+  // ════════════════════════════════════════════════════════════
+  const drawFrontComponents = () => {
+    // ── BLAST SHIELD — curved welded-steel heat deflector ──
+    // Arc of heavy plates in front of the igniter, shielding the mechanism
+    const shieldFwd = 5;
+    const shieldSpread = 13;
+    const shieldH = 14 * zoom;
+    const segments = 7;
+    const arcSpread = Math.PI * 0.7;
+
+    for (let i = 0; i < segments; i++) {
+      const t0 = (i / segments - 0.5) * arcSpread;
+      const t1 = ((i + 1) / segments - 0.5) * arcSpread;
+
+      // Outer edge of plate (facing enemy)
+      const o0 = tp(
+        shieldFwd + Math.cos(t0) * 3,
+        Math.sin(t0) * shieldSpread,
+        0
+      );
+      const o1 = tp(
+        shieldFwd + Math.cos(t1) * 3,
+        Math.sin(t1) * shieldSpread,
+        0
+      );
+      // Inner edge (toward turret)
+      const i0 = tp(
+        shieldFwd + Math.cos(t0) * 3 - 1.5,
+        Math.sin(t0) * shieldSpread * 0.8,
+        0
+      );
+      const i1 = tp(
+        shieldFwd + Math.cos(t1) * 3 - 1.5,
+        Math.sin(t1) * shieldSpread * 0.8,
+        0
+      );
+
+      // Depth-based shading
+      const segAngle = (t0 + t1) * 0.5;
+      const segDepth = Math.cos(rotation + segAngle);
+      const lit = 0.25 + Math.max(0, segDepth) * 0.35;
+      const r = Math.floor(45 + lit * 45);
+      const g = Math.floor(40 + lit * 38);
+      const b = Math.floor(35 + lit * 32);
+
+      // Front face (vertical wall)
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.beginPath();
+      ctx.moveTo(o0.x, o0.y - shieldH * 0.3);
+      ctx.lineTo(o1.x, o1.y - shieldH * 0.3);
+      ctx.lineTo(o1.x, o1.y + shieldH * 0.7);
+      ctx.lineTo(o0.x, o0.y + shieldH * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(30, 25, 20, 0.5)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Top edge (thickness visible from above)
+      ctx.fillStyle = `rgb(${r + 18}, ${g + 15}, ${b + 12})`;
+      ctx.beginPath();
+      ctx.moveTo(o0.x, o0.y - shieldH * 0.3);
+      ctx.lineTo(o1.x, o1.y - shieldH * 0.3);
+      ctx.lineTo(i1.x, i1.y - shieldH * 0.3);
+      ctx.lineTo(i0.x, i0.y - shieldH * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Heat tempering discoloration bands (straw → gold → blue)
+      const heatBand = i / segments;
+      let heatColor: string;
+      if (heatBand < 0.25) {
+        heatColor = `rgba(120, 100, 180, ${0.15 + Math.sin(time * 1.5 + i) * 0.04})`;
+      } else if (heatBand < 0.5) {
+        heatColor = `rgba(100, 80, 160, ${0.12 + Math.sin(time * 1.5 + i) * 0.04})`;
+      } else if (heatBand < 0.75) {
+        heatColor = `rgba(180, 150, 60, ${0.12 + Math.sin(time * 1.5 + i) * 0.04})`;
+      } else {
+        heatColor = `rgba(200, 180, 80, ${0.15 + Math.sin(time * 1.5 + i) * 0.04})`;
+      }
+      ctx.fillStyle = heatColor;
+      ctx.beginPath();
+      ctx.moveTo(o0.x, o0.y);
+      ctx.lineTo(o1.x, o1.y);
+      ctx.lineTo(o1.x, o1.y + shieldH * 0.4);
+      ctx.lineTo(o0.x, o0.y + shieldH * 0.4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rivets along top and bottom edges
+      const rvX = (o0.x + o1.x) * 0.5;
+      const rvY = (o0.y + o1.y) * 0.5;
+      ctx.fillStyle = "#5a5a65";
+      ctx.beginPath();
+      ctx.arc(rvX, rvY - shieldH * 0.2, 1.3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(140, 140, 155, 0.35)";
+      ctx.beginPath();
+      ctx.arc(
+        rvX - 0.3 * zoom,
+        rvY - shieldH * 0.2 - 0.3 * zoom,
+        0.5 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.fillStyle = "#5a5a65";
+      ctx.beginPath();
+      ctx.arc(rvX, rvY + shieldH * 0.55, 1.3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Weld seam between plates
+      if (i > 0) {
+        ctx.strokeStyle = `rgba(80, 70, 60, ${lit * 0.6})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(o0.x, o0.y - shieldH * 0.3);
+        ctx.lineTo(o0.x, o0.y + shieldH * 0.7);
+        ctx.stroke();
+      }
+    }
+
+    // Blast shield support brackets (angled struts from igniter to shield)
+    for (const side of [-1, 0, 1]) {
+      const bStart = tp(2, side * 5, 0);
+      const bEnd = tp(shieldFwd, side * shieldSpread * 0.35, 0);
+      ctx.strokeStyle = "#4a4a55";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bStart.x, bStart.y + 2 * zoom);
+      ctx.lineTo(bEnd.x, bEnd.y + 2 * zoom);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(100, 100, 110, 0.3)";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bStart.x, bStart.y + 1 * zoom);
+      ctx.lineTo(bEnd.x, bEnd.y + 1 * zoom);
+      ctx.stroke();
+      // Bracket mounting bolts
+      ctx.fillStyle = "#7a7a88";
+      ctx.beginPath();
+      ctx.arc(bEnd.x, bEnd.y + 2 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7a7a88";
+      ctx.beginPath();
+      ctx.arc(bStart.x, bStart.y + 2 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ── Mixing chamber + nozzle collar (barrel transition) ──
+    const mcFwd = 4;
+    const mcX = turretX + cosR * mcFwd * zoom;
+    const mcY = turretY - 10 * zoom + sinR * mcFwd * 0.5 * zoom;
+    const mcRX = 8 * zoom;
+    const mcRY = 5.5 * zoom;
+    const mcH = 5 * zoom;
+
+    // Chamber cylinder body
+    const mcGrad = ctx.createLinearGradient(mcX - mcRX, mcY, mcX + mcRX, mcY);
+    mcGrad.addColorStop(0, "#2e2a32");
+    mcGrad.addColorStop(0.25, "#403a45");
+    mcGrad.addColorStop(0.5, "#4a4450");
+    mcGrad.addColorStop(0.75, "#403a45");
+    mcGrad.addColorStop(1, "#2e2a32");
+    ctx.fillStyle = mcGrad;
+    ctx.beginPath();
+    ctx.ellipse(mcX, mcY + mcH * 0.5, mcRX, mcRY, 0, 0, Math.PI, false);
+    ctx.lineTo(mcX - mcRX, mcY - mcH * 0.5);
+    ctx.ellipse(
+      mcX,
+      mcY - mcH * 0.5,
+      mcRX,
+      mcRY,
+      0,
+      Math.PI,
+      Math.PI * 2,
+      false
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Bottom edge
+    ctx.strokeStyle = "#1e1a22";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(mcX, mcY + mcH * 0.5, mcRX, mcRY, 0, 0, Math.PI, false);
+    ctx.stroke();
+
+    // Chamber reinforcement band
+    ctx.strokeStyle = "#555060";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      mcX,
+      mcY,
+      mcRX + 0.8 * zoom,
+      mcRY + 0.5 * zoom,
+      0,
+      -0.05,
+      Math.PI + 0.05,
+      false
+    );
+    ctx.stroke();
+
+    // Top cap
+    const mcTopG = ctx.createRadialGradient(
+      mcX - 1 * zoom,
+      mcY - mcH * 0.5,
+      0,
+      mcX,
+      mcY - mcH * 0.5,
+      mcRX
+    );
+    mcTopG.addColorStop(0, "#5a5560");
+    mcTopG.addColorStop(0.5, "#4a4550");
+    mcTopG.addColorStop(1, "#3a3540");
+    ctx.fillStyle = mcTopG;
+    ctx.beginPath();
+    ctx.ellipse(mcX, mcY - mcH * 0.5, mcRX, mcRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5560";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.stroke();
+
+    // Heat glow ring around mixing chamber
+    const heatAlpha = isAttacking
+      ? 0.5 + attackPulse * 0.3
+      : 0.15 + Math.sin(time * 3) * 0.06;
+    ctx.strokeStyle = `rgba(220, 110, 30, ${heatAlpha})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      mcX,
+      mcY - mcH * 0.5,
+      mcRX + 2 * zoom,
+      mcRY + 1.5 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+
+    // Fuel injector array around chamber body
+    for (let ni = 0; ni < 8; ni++) {
+      const niAngle = rotation + (ni / 8) * Math.PI * 2;
+      const niDepth = Math.cos(niAngle);
+      if (niDepth > -0.2) {
+        const niX = mcX + Math.cos(niAngle) * mcRX * 0.95;
+        const niY = mcY + Math.sin(niAngle) * mcRY * 0.95;
+        const niVis = 0.4 + niDepth * 0.4;
+
+        // Injector port
+        ctx.fillStyle = `rgba(25, 22, 30, ${niVis})`;
+        ctx.beginPath();
+        ctx.arc(niX, niY, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glow when firing
+        if (isAttacking) {
+          ctx.fillStyle = `rgba(255, 140, 40, ${attackPulse * niVis * 0.5})`;
+          ctx.beginPath();
+          ctx.arc(niX, niY, 2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Nozzle collar (inner opening where barrel connects)
+    const ncX = mcX + cosR * 2 * zoom;
+    const ncY = mcY - mcH * 0.5 + sinR * 1 * zoom;
+    ctx.fillStyle = "#333338";
+    ctx.beginPath();
+    ctx.ellipse(
+      ncX,
+      ncY + 1.5 * zoom,
+      5.5 * zoom,
+      4 * zoom,
+      rotation,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.ellipse(ncX, ncY, 5 * zoom, 3.5 * zoom, rotation, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+
+    // Bore opening
+    ctx.fillStyle = "#1a1a22";
+    ctx.beginPath();
+    ctx.ellipse(ncX, ncY, 3 * zoom, 2 * zoom, rotation, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner bore glow
+    if (isAttacking) {
+      const boreGlow = attackPulse * 0.6;
+      ctx.fillStyle = `rgba(255, 140, 40, ${boreGlow})`;
+      ctx.beginPath();
+      ctx.ellipse(ncX, ncY, 2.5 * zoom, 1.8 * zoom, rotation, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Spark electrodes flanking the nozzle
+    const sparkBase = tp(7, 0, 10);
+    for (const side of [-1, 1]) {
+      const eOff = perpX * 3.5 * zoom * side;
+      const eOffY = perpY * 3.5 * zoom * side;
+      ctx.strokeStyle = "#7a7a88";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sparkBase.x + eOff, sparkBase.y + eOffY);
+      ctx.lineTo(
+        sparkBase.x + eOff + fwdX * 5 * zoom,
+        sparkBase.y + eOffY + fwdY * 5 * zoom
+      );
+      ctx.stroke();
+      ctx.fillStyle = "#aaaabc";
+      ctx.beginPath();
+      ctx.arc(
+        sparkBase.x + eOff + fwdX * 5 * zoom,
+        sparkBase.y + eOffY + fwdY * 5 * zoom,
+        0.8 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // Spark arc between electrodes
+    if (isAttacking || Math.sin(time * 12) > 0.6) {
+      const sparkAlpha = isAttacking
+        ? 0.6 + attackPulse * 0.4
+        : 0.3 + Math.sin(time * 20) * 0.15;
+      ctx.strokeStyle = `rgba(150, 200, 255, ${sparkAlpha})`;
+      ctx.lineWidth = 0.8 * zoom;
+      const seTip = {
+        x: sparkBase.x + fwdX * 5 * zoom,
+        y: sparkBase.y + fwdY * 5 * zoom,
+      };
+      ctx.beginPath();
+      ctx.moveTo(seTip.x - perpX * 3.5 * zoom, seTip.y - perpY * 3.5 * zoom);
+      ctx.quadraticCurveTo(
+        seTip.x + Math.sin(time * 30) * zoom,
+        seTip.y - 1.5 * zoom + Math.cos(time * 25) * zoom,
+        seTip.x + perpX * 3.5 * zoom,
+        seTip.y + perpY * 3.5 * zoom
+      );
+      ctx.stroke();
+    }
+  };
+
+  // ════════════════════════════════════════════════════════════
+  // DEPTH-ORDERED RENDERING
+  // Rear (tanks, tubes, plumbing) always draws first — they sit
+  // at base elevation below the barrel and housing.
+  // Then the upper components (housing, nozzle, front) sort by Y.
+  // ════════════════════════════════════════════════════════════
+  drawRearComponents();
+
+  const drawNozzle = () => {
     drawFlamethrowerNozzle(
       ctx,
       turretX,
@@ -6447,1368 +8125,13 @@ export function renderFlamethrower(
       time,
       recoilOffset
     );
-  }
-
-  // === 3D ISOMETRIC MAIN FUEL TANK (vertical cylinder) ===
-  const tankCX = turretX - 6 * zoom;
-  const tankRX = 9 * zoom;
-  const tankRY = tankRX * 0.45;
-  const tankTopCapY = turretY - 26 * zoom;
-  const tankBotCapY = turretY + 2 * zoom;
-
-  const tankBodyGrad = ctx.createLinearGradient(
-    tankCX - tankRX,
-    turretY - 12 * zoom,
-    tankCX + tankRX,
-    turretY - 12 * zoom
-  );
-  tankBodyGrad.addColorStop(0, "#661010");
-  tankBodyGrad.addColorStop(0.15, "#881515");
-  tankBodyGrad.addColorStop(0.35, "#cc3030");
-  tankBodyGrad.addColorStop(0.5, "#dd4040");
-  tankBodyGrad.addColorStop(0.7, "#aa2020");
-  tankBodyGrad.addColorStop(0.85, "#881515");
-  tankBodyGrad.addColorStop(1, "#551010");
-  ctx.fillStyle = tankBodyGrad;
-  ctx.beginPath();
-  ctx.ellipse(tankCX, tankBotCapY, tankRX, tankRY, 0, 0, Math.PI, false);
-  ctx.lineTo(tankCX - tankRX, tankTopCapY);
-  ctx.ellipse(
-    tankCX,
-    tankTopCapY,
-    tankRX,
-    tankRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-    false
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Bottom cap edge
-  ctx.strokeStyle = "#440808";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(tankCX, tankBotCapY, tankRX, tankRY, 0, 0, Math.PI, false);
-  ctx.stroke();
-
-  // Specular highlight on cylinder body
-  ctx.strokeStyle = "rgba(255, 120, 100, 0.35)";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(tankCX - tankRX * 0.6, tankBotCapY - 2 * zoom);
-  ctx.lineTo(tankCX - tankRX * 0.6, tankTopCapY + 4 * zoom);
-  ctx.stroke();
-
-  // Hazard stripes wrapping around the cylinder (front-facing arcs)
-  ctx.lineWidth = 2.5 * zoom;
-  for (let i = 0; i < 3; i++) {
-    const stripeY = tankTopCapY + 6 * zoom + i * 7 * zoom;
-    ctx.strokeStyle = "#ffcc00";
-    ctx.beginPath();
-    ctx.ellipse(
-      tankCX,
-      stripeY,
-      tankRX * 0.98,
-      tankRY * 0.98,
-      0,
-      -0.1,
-      Math.PI + 0.1,
-      false
-    );
-    ctx.stroke();
-  }
-
-  // Black hazard stripes between yellow
-  ctx.lineWidth = 1.5 * zoom;
-  for (let i = 0; i < 2; i++) {
-    const stripeY = tankTopCapY + 9.5 * zoom + i * 7 * zoom;
-    ctx.strokeStyle = "#222";
-    ctx.beginPath();
-    ctx.ellipse(
-      tankCX,
-      stripeY,
-      tankRX * 0.98,
-      tankRY * 0.98,
-      0,
-      -0.1,
-      Math.PI + 0.1,
-      false
-    );
-    ctx.stroke();
-  }
-
-  // Top cap (3D ellipse with radial gradient)
-  const topCapGrad = ctx.createRadialGradient(
-    tankCX - 2 * zoom,
-    tankTopCapY,
-    0,
-    tankCX,
-    tankTopCapY,
-    tankRX
-  );
-  topCapGrad.addColorStop(0, "#5a5a62");
-  topCapGrad.addColorStop(0.4, "#4a4a52");
-  topCapGrad.addColorStop(0.8, "#3a3a42");
-  topCapGrad.addColorStop(1, "#2a2a32");
-  ctx.fillStyle = topCapGrad;
-  ctx.beginPath();
-  ctx.ellipse(tankCX, tankTopCapY, tankRX, tankRY, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-
-  // Cap valve on top
-  ctx.fillStyle = "#6a6a72";
-  ctx.beginPath();
-  ctx.ellipse(tankCX, tankTopCapY, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#7a7a82";
-  ctx.beginPath();
-  ctx.arc(tankCX, tankTopCapY - 1 * zoom, 2 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // === MAIN TANK MOUNTING STRAPS ===
-  const strapCount = 2;
-  for (let s = 0; s < strapCount; s++) {
-    const strapY = tankTopCapY + 10 * zoom + s * 10 * zoom;
-    // Strap band (front-facing arc)
-    ctx.strokeStyle = "#4a4a55";
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      tankCX,
-      strapY,
-      tankRX + 1.5 * zoom,
-      tankRY + 1 * zoom,
-      0,
-      -0.15,
-      Math.PI + 0.15,
-      false
-    );
-    ctx.stroke();
-    // Strap highlight
-    ctx.strokeStyle = "rgba(120, 120, 135, 0.3)";
-    ctx.lineWidth = 0.7 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      tankCX,
-      strapY - 0.8 * zoom,
-      tankRX + 1.5 * zoom,
-      tankRY + 1 * zoom,
-      0,
-      0.1,
-      Math.PI - 0.1,
-      false
-    );
-    ctx.stroke();
-    // Strap bolts
-    for (const boltAngle of [-0.3, Math.PI + 0.3]) {
-      const bx = tankCX + Math.cos(boltAngle) * (tankRX + 1.5 * zoom);
-      const by = strapY + Math.sin(boltAngle) * (tankRY + 1 * zoom);
-      ctx.fillStyle = "#6a6a78";
-      ctx.beginPath();
-      ctx.arc(bx, by, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(140, 140, 155, 0.4)";
-      ctx.beginPath();
-      ctx.arc(bx - 0.3 * zoom, by - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // === PRESSURE RELIEF VALVE (side of main tank) ===
-  const prvX = tankCX + tankRX * 0.7;
-  const prvY = tankTopCapY + 5 * zoom;
-  // Valve body
-  ctx.fillStyle = "#5a5a65";
-  ctx.beginPath();
-  ctx.ellipse(prvX, prvY, 2.5 * zoom, 1.8 * zoom, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#3a3a45";
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.stroke();
-  // Valve stem
-  ctx.strokeStyle = "#7a7a88";
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(prvX + 2 * zoom, prvY - 1 * zoom);
-  ctx.lineTo(prvX + 5 * zoom, prvY - 3 * zoom);
-  ctx.stroke();
-  // Valve cap
-  ctx.fillStyle = "#cc2020";
-  ctx.beginPath();
-  ctx.arc(prvX + 5 * zoom, prvY - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
-  ctx.beginPath();
-  ctx.arc(prvX + 4.6 * zoom, prvY - 3.4 * zoom, 0.6 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // === FUEL OUTLET FITTING (bottom of main tank) ===
-  const outletX = tankCX + tankRX * 0.3;
-  const outletY = tankBotCapY + 1 * zoom;
-  ctx.fillStyle = "#4a4a55";
-  ctx.beginPath();
-  ctx.ellipse(outletX, outletY, 3 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#3a3a45";
-  ctx.beginPath();
-  ctx.ellipse(outletX, outletY, 1.8 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Pressure gauge on visible side
-  const gaugeX = turretX + 2 * zoom;
-  const gaugeY = turretY - 6 * zoom;
-  ctx.fillStyle = "#444";
-  ctx.beginPath();
-  ctx.ellipse(
-    gaugeX,
-    gaugeY + 1 * zoom,
-    5.5 * zoom,
-    3 * zoom,
-    0,
-    0,
-    Math.PI,
-    false
-  );
-  ctx.fill();
-  ctx.fillStyle = "#ddd";
-  ctx.beginPath();
-  ctx.arc(gaugeX, gaugeY, 5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#222";
-  ctx.beginPath();
-  ctx.arc(gaugeX, gaugeY, 4 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = "#0f0";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.arc(gaugeX, gaugeY, 3 * zoom, Math.PI * 0.8, Math.PI * 1.2);
-  ctx.stroke();
-  ctx.strokeStyle = "#f00";
-  ctx.beginPath();
-  ctx.arc(gaugeX, gaugeY, 3 * zoom, Math.PI * 1.5, Math.PI * 1.8);
-  ctx.stroke();
-
-  const needleJump =
-    timeSinceFire < 300 ? Math.sin(timeSinceFire * 0.05) * 0.2 : 0;
-  const needleAngle = Math.PI * (0.9 + Math.sin(time * 2) * 0.15 + needleJump);
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(gaugeX, gaugeY);
-  ctx.lineTo(
-    gaugeX + Math.cos(needleAngle) * 3 * zoom,
-    gaugeY + Math.sin(needleAngle) * 3 * zoom
-  );
-  ctx.stroke();
-
-  // Secondary fuel tank — green version
-  const secCX = turretX + 8 * zoom;
-  const secRX = 5.5 * zoom;
-  const secRY = secRX * 0.45;
-  const secTopY = turretY - 19 * zoom;
-  const secBotY = turretY - 1 * zoom;
-
-  // Green cylindrical body
-  const secBodyGrad = ctx.createLinearGradient(
-    secCX - secRX,
-    0,
-    secCX + secRX,
-    0
-  );
-  secBodyGrad.addColorStop(0, "#0a3310");
-  secBodyGrad.addColorStop(0.15, "#155518");
-  secBodyGrad.addColorStop(0.35, "#208830");
-  secBodyGrad.addColorStop(0.5, "#28aa38");
-  secBodyGrad.addColorStop(0.7, "#1c8828");
-  secBodyGrad.addColorStop(0.85, "#155518");
-  secBodyGrad.addColorStop(1, "#0a3310");
-  ctx.fillStyle = secBodyGrad;
-  ctx.beginPath();
-  ctx.ellipse(secCX, secBotY, secRX, secRY, 0, 0, Math.PI, false);
-  ctx.lineTo(secCX - secRX, secTopY);
-  ctx.ellipse(secCX, secTopY, secRX, secRY, 0, Math.PI, Math.PI * 2, false);
-  ctx.closePath();
-  ctx.fill();
-
-  // Bottom cap edge
-  ctx.strokeStyle = "#083008";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(secCX, secBotY, secRX, secRY, 0, 0, Math.PI, false);
-  ctx.stroke();
-
-  // Specular highlight on cylinder body
-  ctx.strokeStyle = "rgba(120, 255, 130, 0.35)";
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(secCX - secRX * 0.6, secBotY - 2 * zoom);
-  ctx.lineTo(secCX - secRX * 0.6, secTopY + 3 * zoom);
-  ctx.stroke();
-
-  // Yellow hazard stripes wrapping around cylinder
-  ctx.lineWidth = 1.8 * zoom;
-  for (let i = 0; i < 2; i++) {
-    const stripeY = secTopY + 4 * zoom + i * 5 * zoom;
-    ctx.strokeStyle = "#ffcc00";
-    ctx.beginPath();
-    ctx.ellipse(
-      secCX,
-      stripeY,
-      secRX * 0.98,
-      secRY * 0.98,
-      0,
-      -0.1,
-      Math.PI + 0.1,
-      false
-    );
-    ctx.stroke();
-  }
-
-  // Black hazard stripes between yellow
-  ctx.lineWidth = 1 * zoom;
-  for (let i = 0; i < 1; i++) {
-    const stripeY = secTopY + 6.5 * zoom + i * 5 * zoom;
-    ctx.strokeStyle = "#222";
-    ctx.beginPath();
-    ctx.ellipse(
-      secCX,
-      stripeY,
-      secRX * 0.98,
-      secRY * 0.98,
-      0,
-      -0.1,
-      Math.PI + 0.1,
-      false
-    );
-    ctx.stroke();
-  }
-
-  // Gray top cap
-  const secCapGrad = ctx.createRadialGradient(
-    secCX - 1 * zoom,
-    secTopY,
-    0,
-    secCX,
-    secTopY,
-    secRX
-  );
-  secCapGrad.addColorStop(0, "#5a5a62");
-  secCapGrad.addColorStop(0.4, "#4a4a52");
-  secCapGrad.addColorStop(0.8, "#3a3a42");
-  secCapGrad.addColorStop(1, "#2a2a32");
-  ctx.fillStyle = secCapGrad;
-  ctx.beginPath();
-  ctx.ellipse(secCX, secTopY, secRX, secRY, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
-
-  // Cap valve
-  ctx.fillStyle = "#6a6a72";
-  ctx.beginPath();
-  ctx.ellipse(secCX, secTopY, 2.5 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#7a7a82";
-  ctx.beginPath();
-  ctx.arc(secCX, secTopY - 0.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // === SECONDARY TANK MOUNTING STRAP ===
-  {
-    const secStrapY = secTopY + 6 * zoom;
-    ctx.strokeStyle = "#4a4a55";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      secCX,
-      secStrapY,
-      secRX + 1 * zoom,
-      secRY + 0.8 * zoom,
-      0,
-      -0.15,
-      Math.PI + 0.15,
-      false
-    );
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(120, 120, 135, 0.25)";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      secCX,
-      secStrapY - 0.6 * zoom,
-      secRX + 1 * zoom,
-      secRY + 0.8 * zoom,
-      0,
-      0.15,
-      Math.PI - 0.15,
-      false
-    );
-    ctx.stroke();
-    // Strap rivets
-    for (const boltA of [-0.25, Math.PI + 0.25]) {
-      const rbx = secCX + Math.cos(boltA) * (secRX + 1 * zoom);
-      const rby = secStrapY + Math.sin(boltA) * (secRY + 0.8 * zoom);
-      ctx.fillStyle = "#6a6a78";
-      ctx.beginPath();
-      ctx.arc(rbx, rby, 1.2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // === SECONDARY TANK OUTLET FITTING ===
-  {
-    const secOutX = secCX - secRX * 0.4;
-    const secOutY = secBotY + 0.5 * zoom;
-    ctx.fillStyle = "#4a4a55";
-    ctx.beginPath();
-    ctx.ellipse(secOutX, secOutY, 2.2 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#3a3a45";
-    ctx.beginPath();
-    ctx.ellipse(secOutX, secOutY, 1.3 * zoom, 0.9 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // === MULTI-TUBE FUEL SYSTEM ===
-  // Shared tube endpoints
-  const mainTankOutX = tankCX + tankRX * 0.3;
-  const mainTankOutY = tankBotCapY + 1 * zoom;
-  const secTankOutX = secCX - secRX * 0.4;
-  const secTankOutY = secBotY + 0.5 * zoom;
-  const igniterInX = turretX;
-  const igniterInY = turretY - 10 * zoom;
-
-  // Valve manifold block position (between tanks and igniter)
-  const manifoldX = turretX + 1 * zoom;
-  const manifoldY = turretY - 3 * zoom;
-  const manifoldW = 8 * zoom;
-  const manifoldH = 5 * zoom;
-  const manifoldD = 3 * zoom;
-
-  // --- Primary fuel tube (thick, red tint — from main tank to manifold) ---
-  ctx.strokeStyle = "#3a2828";
-  ctx.lineWidth = 4 * zoom;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(mainTankOutX, mainTankOutY);
-  ctx.quadraticCurveTo(
-    mainTankOutX + 4 * zoom,
-    manifoldY + 4 * zoom,
-    manifoldX - manifoldW * 0.35,
-    manifoldY + manifoldD * 0.5
-  );
-  ctx.stroke();
-  // Tube highlight
-  ctx.strokeStyle = "rgba(180, 80, 70, 0.25)";
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(mainTankOutX + 0.5 * zoom, mainTankOutY - 0.8 * zoom);
-  ctx.quadraticCurveTo(
-    mainTankOutX + 4.5 * zoom,
-    manifoldY + 3.2 * zoom,
-    manifoldX - manifoldW * 0.35 + 0.5 * zoom,
-    manifoldY + manifoldD * 0.5 - 0.8 * zoom
-  );
-  ctx.stroke();
-
-  // --- Secondary oxidizer tube (medium, green tint — from sec tank to manifold) ---
-  ctx.strokeStyle = "#1a3320";
-  ctx.lineWidth = 3 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(secTankOutX, secTankOutY);
-  ctx.quadraticCurveTo(
-    secTankOutX - 2 * zoom,
-    manifoldY + 5 * zoom,
-    manifoldX + manifoldW * 0.3,
-    manifoldY + manifoldD * 0.5
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(80, 180, 90, 0.2)";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(secTankOutX + 0.4 * zoom, secTankOutY - 0.6 * zoom);
-  ctx.quadraticCurveTo(
-    secTankOutX - 1.6 * zoom,
-    manifoldY + 4.4 * zoom,
-    manifoldX + manifoldW * 0.3 + 0.4 * zoom,
-    manifoldY + manifoldD * 0.5 - 0.6 * zoom
-  );
-  ctx.stroke();
-
-  // --- Pilot gas tube (thin, blue — from main tank cap to igniter) ---
-  ctx.strokeStyle = "#222838";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(tankCX + 3 * zoom, tankTopCapY + 1 * zoom);
-  ctx.bezierCurveTo(
-    tankCX + 10 * zoom,
-    tankTopCapY - 4 * zoom,
-    igniterInX - 6 * zoom,
-    igniterInY - 8 * zoom,
-    igniterInX - 3 * zoom,
-    igniterInY - 2 * zoom
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(80, 120, 200, 0.2)";
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(tankCX + 3 * zoom, tankTopCapY + 0.3 * zoom);
-  ctx.bezierCurveTo(
-    tankCX + 10 * zoom,
-    tankTopCapY - 4.7 * zoom,
-    igniterInX - 6 * zoom,
-    igniterInY - 8.7 * zoom,
-    igniterInX - 3 * zoom,
-    igniterInY - 2.7 * zoom
-  );
-  ctx.stroke();
-
-  // --- Tube clamps on primary fuel line ---
-  for (let tc = 0; tc < 2; tc++) {
-    const clampT = 0.3 + tc * 0.35;
-    const clX =
-      (1 - clampT) * (1 - clampT) * mainTankOutX +
-      2 * (1 - clampT) * clampT * (mainTankOutX + 4 * zoom) +
-      clampT * clampT * (manifoldX - manifoldW * 0.35);
-    const clY =
-      (1 - clampT) * (1 - clampT) * mainTankOutY +
-      2 * (1 - clampT) * clampT * (manifoldY + 4 * zoom) +
-      clampT * clampT * (manifoldY + manifoldD * 0.5);
-    ctx.fillStyle = "#5a5a68";
-    ctx.beginPath();
-    ctx.ellipse(clX, clY, 3 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#3a3a45";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-    // Clamp bolt
-    ctx.fillStyle = "#7a7a88";
-    ctx.beginPath();
-    ctx.arc(clX + 1.5 * zoom, clY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // --- Tube clamp on oxidizer line ---
-  {
-    const oxClampT = 0.45;
-    const oxClX =
-      (1 - oxClampT) * (1 - oxClampT) * secTankOutX +
-      2 * (1 - oxClampT) * oxClampT * (secTankOutX - 2 * zoom) +
-      oxClampT * oxClampT * (manifoldX + manifoldW * 0.3);
-    const oxClY =
-      (1 - oxClampT) * (1 - oxClampT) * secTankOutY +
-      2 * (1 - oxClampT) * oxClampT * (manifoldY + 5 * zoom) +
-      oxClampT * oxClampT * (manifoldY + manifoldD * 0.5);
-    ctx.fillStyle = "#5a5a68";
-    ctx.beginPath();
-    ctx.ellipse(oxClX, oxClY, 2.5 * zoom, 1.8 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#3a3a45";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-  }
-
-  // === VALVE MANIFOLD BLOCK ===
-  {
-    // 3D block: top face
-    const mTopGrad = ctx.createLinearGradient(
-      manifoldX - manifoldW * 0.5,
-      manifoldY - manifoldH,
-      manifoldX + manifoldW * 0.5,
-      manifoldY - manifoldH
-    );
-    mTopGrad.addColorStop(0, "#505058");
-    mTopGrad.addColorStop(0.4, "#5e5e66");
-    mTopGrad.addColorStop(1, "#48484f");
-    ctx.fillStyle = mTopGrad;
-    ctx.beginPath();
-    ctx.moveTo(manifoldX, manifoldY - manifoldH - manifoldD);
-    ctx.lineTo(
-      manifoldX + manifoldW * 0.5,
-      manifoldY - manifoldH - manifoldD * 0.4
-    );
-    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
-    ctx.lineTo(
-      manifoldX - manifoldW * 0.5,
-      manifoldY - manifoldH - manifoldD * 0.4
-    );
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#5a5a65";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
-
-    // Left face
-    ctx.fillStyle = "#3a3a42";
-    ctx.beginPath();
-    ctx.moveTo(
-      manifoldX - manifoldW * 0.5,
-      manifoldY - manifoldH - manifoldD * 0.4
-    );
-    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
-    ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
-    ctx.lineTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldD * 0.4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#2a2a32";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Right face
-    ctx.fillStyle = "#44444c";
-    ctx.beginPath();
-    ctx.moveTo(
-      manifoldX + manifoldW * 0.5,
-      manifoldY - manifoldH - manifoldD * 0.4
-    );
-    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
-    ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
-    ctx.lineTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldD * 0.4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#2a2a32";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Inlet port circles on the block faces
-    // Primary inlet (left face)
-    ctx.fillStyle = "#2a2a32";
-    ctx.beginPath();
-    ctx.ellipse(
-      manifoldX - manifoldW * 0.22,
-      manifoldY - manifoldH * 0.45,
-      1.5 * zoom,
-      1.2 * zoom,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.strokeStyle = "#5a5a65";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Secondary inlet (right face)
-    ctx.fillStyle = "#2a2a32";
-    ctx.beginPath();
-    ctx.ellipse(
-      manifoldX + manifoldW * 0.22,
-      manifoldY - manifoldH * 0.45,
-      1.5 * zoom,
-      1.2 * zoom,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.strokeStyle = "#5a5a65";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Valve handle on top
-    const handleY = manifoldY - manifoldH - manifoldD * 0.8;
-    ctx.strokeStyle = "#6a6a78";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(manifoldX - 2 * zoom, handleY);
-    ctx.lineTo(manifoldX + 2 * zoom, handleY);
-    ctx.stroke();
-    // Handle knob
-    ctx.fillStyle = "#dd3030";
-    ctx.beginPath();
-    ctx.arc(manifoldX, handleY, 1.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255, 120, 120, 0.35)";
-    ctx.beginPath();
-    ctx.arc(
-      manifoldX - 0.4 * zoom,
-      handleY - 0.4 * zoom,
-      0.7 * zoom,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    // Bolts on manifold top face corners
-    const mBolts = [
-      {
-        x: manifoldX - manifoldW * 0.35,
-        y: manifoldY - manifoldH - manifoldD * 0.3,
-      },
-      {
-        x: manifoldX + manifoldW * 0.35,
-        y: manifoldY - manifoldH - manifoldD * 0.3,
-      },
-      { x: manifoldX, y: manifoldY - manifoldH + manifoldD * 0.05 },
-    ];
-    for (const bolt of mBolts) {
-      ctx.fillStyle = "#58585e";
-      ctx.beginPath();
-      ctx.arc(bolt.x, bolt.y, 1 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(140, 140, 155, 0.3)";
-      ctx.beginPath();
-      ctx.arc(
-        bolt.x - 0.2 * zoom,
-        bolt.y - 0.2 * zoom,
-        0.4 * zoom,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
-  }
-
-  // === INLINE FUEL PUMP (between manifold and igniter) ===
-  {
-    const pumpX = manifoldX - 1 * zoom;
-    const pumpY = manifoldY - manifoldH - 3 * zoom;
-    const pumpR = 4 * zoom;
-
-    // Feed tube from manifold top to pump
-    ctx.strokeStyle = "#3a2828";
-    ctx.lineWidth = 3 * zoom;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(manifoldX, manifoldY - manifoldH - manifoldD * 0.5);
-    ctx.lineTo(pumpX, pumpY + pumpR * 0.5);
-    ctx.stroke();
-
-    // Pump cylindrical housing (bottom ellipse of body)
-    ctx.fillStyle = "#3a3a42";
-    ctx.beginPath();
-    ctx.ellipse(
-      pumpX,
-      pumpY + 2 * zoom,
-      pumpR,
-      pumpR * 0.5,
-      0,
-      0,
-      Math.PI,
-      false
-    );
-    ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
-    ctx.ellipse(
-      pumpX,
-      pumpY - 1 * zoom,
-      pumpR,
-      pumpR * 0.5,
-      0,
-      Math.PI,
-      Math.PI * 2,
-      false
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Pump body gradient
-    const pumpGrad = ctx.createLinearGradient(
-      pumpX - pumpR,
-      pumpY,
-      pumpX + pumpR,
-      pumpY
-    );
-    pumpGrad.addColorStop(0, "#353540");
-    pumpGrad.addColorStop(0.35, "#4a4a55");
-    pumpGrad.addColorStop(0.65, "#555560");
-    pumpGrad.addColorStop(1, "#3a3a42");
-    ctx.fillStyle = pumpGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      pumpX,
-      pumpY + 2 * zoom,
-      pumpR,
-      pumpR * 0.5,
-      0,
-      0,
-      Math.PI,
-      false
-    );
-    ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
-    ctx.ellipse(
-      pumpX,
-      pumpY - 1 * zoom,
-      pumpR,
-      pumpR * 0.5,
-      0,
-      Math.PI,
-      Math.PI * 2,
-      false
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Pump top cap
-    const pTopGrad = ctx.createRadialGradient(
-      pumpX - 1 * zoom,
-      pumpY - 1 * zoom,
-      0,
-      pumpX,
-      pumpY - 1 * zoom,
-      pumpR
-    );
-    pTopGrad.addColorStop(0, "#5a5a65");
-    pTopGrad.addColorStop(0.5, "#4e4e58");
-    pTopGrad.addColorStop(1, "#3a3a45");
-    ctx.fillStyle = pTopGrad;
-    ctx.beginPath();
-    ctx.ellipse(pumpX, pumpY - 1 * zoom, pumpR, pumpR * 0.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#5a5a68";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.stroke();
-
-    // Motor housing (small cylinder on the side)
-    const motorX = pumpX + pumpR * 0.8;
-    const motorY = pumpY;
-    ctx.fillStyle = "#44444c";
-    ctx.beginPath();
-    ctx.ellipse(motorX, motorY, 2.5 * zoom, 2 * zoom, 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#5a5a65";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-    // Motor shaft dot
-    ctx.fillStyle = "#7a7a88";
-    ctx.beginPath();
-    ctx.arc(motorX, motorY, 0.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Spinning indicator on pump cap (shows it's running)
-    const pumpSpin = time * 4;
-    ctx.strokeStyle = "rgba(100, 100, 115, 0.5)";
-    ctx.lineWidth = 0.7 * zoom;
-    for (let ps = 0; ps < 3; ps++) {
-      const psAngle = pumpSpin + (ps / 3) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(pumpX, pumpY - 1 * zoom);
-      ctx.lineTo(
-        pumpX + Math.cos(psAngle) * pumpR * 0.7,
-        pumpY - 1 * zoom + Math.sin(psAngle) * pumpR * 0.35
-      );
-      ctx.stroke();
-    }
-    // Center hub
-    ctx.fillStyle = "#4a4a55";
-    ctx.beginPath();
-    ctx.arc(pumpX, pumpY - 1 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Feed tube from pump to igniter
-    ctx.strokeStyle = "#3a2828";
-    ctx.lineWidth = 3 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(pumpX, pumpY - 1 * zoom - pumpR * 0.5);
-    ctx.quadraticCurveTo(
-      pumpX - 2 * zoom,
-      igniterInY + 2 * zoom,
-      igniterInX,
-      igniterInY + 2 * zoom
-    );
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(180, 80, 70, 0.2)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(pumpX + 0.4 * zoom, pumpY - 1 * zoom - pumpR * 0.5 - 0.6 * zoom);
-    ctx.quadraticCurveTo(
-      pumpX - 1.6 * zoom,
-      igniterInY + 1.4 * zoom,
-      igniterInX + 0.4 * zoom,
-      igniterInY + 1.4 * zoom
-    );
-    ctx.stroke();
-
-    // Oxidizer tube from manifold to igniter (goes around the other side)
-    ctx.strokeStyle = "#1a3320";
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(
-      manifoldX + manifoldW * 0.25,
-      manifoldY - manifoldH - manifoldD * 0.3
-    );
-    ctx.bezierCurveTo(
-      manifoldX + manifoldW * 0.6,
-      manifoldY - manifoldH - 5 * zoom,
-      igniterInX + 6 * zoom,
-      igniterInY + 3 * zoom,
-      igniterInX + 3 * zoom,
-      igniterInY + 1 * zoom
-    );
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(80, 180, 90, 0.15)";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(
-      manifoldX + manifoldW * 0.25 + 0.3 * zoom,
-      manifoldY - manifoldH - manifoldD * 0.3 - 0.5 * zoom
-    );
-    ctx.bezierCurveTo(
-      manifoldX + manifoldW * 0.6 + 0.3 * zoom,
-      manifoldY - manifoldH - 5.5 * zoom,
-      igniterInX + 6.3 * zoom,
-      igniterInY + 2.5 * zoom,
-      igniterInX + 3.3 * zoom,
-      igniterInY + 0.5 * zoom
-    );
-    ctx.stroke();
-  }
-
-  // === PRESSURE REGULATOR FITTING (on output tube near igniter) ===
-  {
-    const regX = igniterInX - 1 * zoom;
-    const regY = igniterInY + 4 * zoom;
-    // Hex nut body
-    ctx.fillStyle = "#50505a";
-    const regR = 2.5 * zoom;
-    ctx.beginPath();
-    for (let rh = 0; rh < 6; rh++) {
-      const a = (rh / 6) * Math.PI * 2 - Math.PI / 6;
-      const rx = regX + Math.cos(a) * regR;
-      const ry = regY + Math.sin(a) * regR * 0.65;
-      if (rh === 0) {
-        ctx.moveTo(rx, ry);
-      } else {
-        ctx.lineTo(rx, ry);
-      }
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#3a3a45";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-    // Central bore
-    ctx.fillStyle = "#2a2a32";
-    ctx.beginPath();
-    ctx.arc(regX, regY, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // === 3D IGNITER HOUSING (isometric cylinder) ===
-  const igniterY = turretY - 10 * zoom;
-  const igniterRX = 10 * zoom;
-  const igniterRY = 7 * zoom;
-  const igniterH = 4 * zoom;
-
-  const ignGrad = ctx.createLinearGradient(
-    turretX - igniterRX,
-    igniterY,
-    turretX + igniterRX,
-    igniterY
-  );
-  ignGrad.addColorStop(0, "#353540");
-  ignGrad.addColorStop(0.3, "#4a4a52");
-  ignGrad.addColorStop(0.6, "#555560");
-  ignGrad.addColorStop(1, "#3a3a42");
-  ctx.fillStyle = ignGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    turretX,
-    igniterY + igniterH,
-    igniterRX,
-    igniterRY,
-    0,
-    0,
-    Math.PI,
-    false
-  );
-  ctx.lineTo(turretX - igniterRX, igniterY);
-  ctx.ellipse(
-    turretX,
-    igniterY,
-    igniterRX,
-    igniterRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-    false
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Bottom edge of housing
-  ctx.strokeStyle = "#2a2a32";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    turretX,
-    igniterY + igniterH,
-    igniterRX,
-    igniterRY,
-    0,
-    0,
-    Math.PI,
-    false
-  );
-  ctx.stroke();
-
-  // Housing top cap with radial shading
-  const ignTopGrad = ctx.createRadialGradient(
-    turretX - 2 * zoom,
-    igniterY,
-    0,
-    turretX,
-    igniterY,
-    igniterRX
-  );
-  ignTopGrad.addColorStop(0, "#5a5a62");
-  ignTopGrad.addColorStop(0.5, "#4a4a52");
-  ignTopGrad.addColorStop(1, "#3a3a42");
-  ctx.fillStyle = ignTopGrad;
-  ctx.beginPath();
-  ctx.ellipse(turretX, igniterY, igniterRX, igniterRY, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.stroke();
-
-  // === ROTATING FLAME DEFLECTOR SHIELDS with 3D plate thickness ===
-  const flameShieldCount = 5;
-  const shieldThickness = 2.5 * zoom;
-  for (let i = 0; i < flameShieldCount; i++) {
-    const baseAngle = (i / flameShieldCount) * Math.PI * 2;
-    const shieldAngle = rotation + baseAngle;
-
-    const shieldDepth = Math.cos(shieldAngle);
-    const shieldSide = Math.sin(shieldAngle);
-    const visibility = 0.55 + shieldDepth * 0.35;
-
-    if (shieldDepth > -0.55) {
-      const innerR = 5 * zoom;
-      const outerR = 9 * zoom;
-      const angleSpan = Math.PI / 2.8;
-
-      const p0x = turretX + Math.cos(shieldAngle - angleSpan * 0.4) * innerR;
-      const p0y =
-        igniterY + Math.sin(shieldAngle - angleSpan * 0.4) * innerR * 0.7;
-      const p1x = turretX + Math.cos(shieldAngle - angleSpan * 0.35) * outerR;
-      const p1y =
-        igniterY +
-        Math.sin(shieldAngle - angleSpan * 0.35) * outerR * 0.7 -
-        2 * zoom;
-      const p2x = turretX + Math.cos(shieldAngle) * (outerR + 1.5 * zoom);
-      const p2y =
-        igniterY +
-        Math.sin(shieldAngle) * (outerR + 1.5 * zoom) * 0.7 -
-        2.5 * zoom;
-      const p3x = turretX + Math.cos(shieldAngle + angleSpan * 0.35) * outerR;
-      const p3y =
-        igniterY +
-        Math.sin(shieldAngle + angleSpan * 0.35) * outerR * 0.7 -
-        2 * zoom;
-      const p4x = turretX + Math.cos(shieldAngle + angleSpan * 0.4) * innerR;
-      const p4y =
-        igniterY + Math.sin(shieldAngle + angleSpan * 0.4) * innerR * 0.7;
-
-      // Side/thickness face — outer edge extends downward
-      const edgeVisible = shieldSide > -0.3;
-      if (edgeVisible) {
-        const sideGrad = ctx.createLinearGradient(
-          p2x,
-          p2y,
-          p2x,
-          p2y + shieldThickness
-        );
-        sideGrad.addColorStop(0, `rgba(70, 55, 45, ${visibility})`);
-        sideGrad.addColorStop(1, `rgba(50, 40, 35, ${visibility})`);
-        ctx.fillStyle = sideGrad;
-        ctx.beginPath();
-        ctx.moveTo(p1x, p1y);
-        ctx.lineTo(p2x, p2y);
-        ctx.lineTo(p3x, p3y);
-        ctx.lineTo(p3x, p3y + shieldThickness);
-        ctx.lineTo(p2x, p2y + shieldThickness);
-        ctx.lineTo(p1x, p1y + shieldThickness);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = `rgba(100, 75, 60, ${visibility * 0.4})`;
-        ctx.lineWidth = 0.6 * zoom;
-        ctx.stroke();
-      }
-
-      // Front face
-      const shieldGrad = ctx.createLinearGradient(
-        turretX + Math.cos(shieldAngle - angleSpan * 0.3) * outerR,
-        igniterY + Math.sin(shieldAngle - angleSpan * 0.3) * outerR * 0.7,
-        turretX + Math.cos(shieldAngle + angleSpan * 0.3) * outerR,
-        igniterY + Math.sin(shieldAngle + angleSpan * 0.3) * outerR * 0.7
-      );
-
-      if (shieldSide < 0) {
-        shieldGrad.addColorStop(0, `rgba(140, 100, 80, ${visibility})`);
-        shieldGrad.addColorStop(0.5, `rgba(110, 80, 65, ${visibility})`);
-        shieldGrad.addColorStop(1, `rgba(80, 60, 50, ${visibility})`);
-      } else {
-        shieldGrad.addColorStop(0, `rgba(90, 70, 55, ${visibility})`);
-        shieldGrad.addColorStop(0.5, `rgba(100, 75, 60, ${visibility})`);
-        shieldGrad.addColorStop(1, `rgba(80, 60, 50, ${visibility})`);
-      }
-
-      ctx.fillStyle = shieldGrad;
-      ctx.beginPath();
-      ctx.moveTo(p0x, p0y);
-      ctx.lineTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
-      ctx.lineTo(p3x, p3y);
-      ctx.lineTo(p4x, p4y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Heat-scorched edge
-      ctx.strokeStyle = `rgba(180, 120, 80, ${visibility * 0.5})`;
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.stroke();
-
-      // Top edge highlight for depth
-      ctx.strokeStyle = `rgba(200, 160, 120, ${visibility * 0.4})`;
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
-      ctx.lineTo(p3x, p3y);
-      ctx.stroke();
-
-      // Rivet with highlight
-      const rivetX = turretX + Math.cos(shieldAngle) * (outerR - 1.5 * zoom);
-      const rivetY =
-        igniterY +
-        Math.sin(shieldAngle) * (outerR - 1.5 * zoom) * 0.7 -
-        1.5 * zoom;
-      ctx.fillStyle = `rgba(60, 50, 40, ${visibility})`;
-      ctx.beginPath();
-      ctx.arc(rivetX, rivetY, 1.2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(120, 100, 80, ${visibility * 0.6})`;
-      ctx.beginPath();
-      ctx.arc(
-        rivetX - 0.3 * zoom,
-        rivetY - 0.3 * zoom,
-        0.6 * zoom,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
-  }
-
-  // Inner igniter ring
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(turretX, igniterY, 6 * zoom, 4.5 * zoom, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // === IGNITION COIL / TRANSFORMER ===
-  {
-    const coilX = turretX + 10 * zoom;
-    const coilY = igniterY - 3 * zoom;
-    const coilW = 4 * zoom;
-    const coilH = 6 * zoom;
-
-    // Coil housing (dark box)
-    ctx.fillStyle = "#2a2a35";
-    ctx.save();
-    ctx.translate(coilX, coilY);
-    ctx.beginPath();
-    ctx.rect(-coilW * 0.5, -coilH * 0.5, coilW, coilH);
-    ctx.fill();
-    ctx.strokeStyle = "#3a3a45";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
-    ctx.restore();
-
-    // Copper winding coils (visible wire loops)
-    ctx.strokeStyle = "#b87333";
-    ctx.lineWidth = 0.8 * zoom;
-    const coilCount = 5;
-    for (let cw = 0; cw < coilCount; cw++) {
-      const cwY = coilY - coilH * 0.35 + (cw / (coilCount - 1)) * coilH * 0.7;
-      ctx.beginPath();
-      ctx.ellipse(coilX, cwY, coilW * 0.55, 1.2 * zoom, 0, 0, Math.PI, false);
-      ctx.stroke();
-    }
-    // Copper highlight
-    ctx.strokeStyle = "rgba(220, 160, 80, 0.3)";
-    ctx.lineWidth = 0.4 * zoom;
-    for (let cw = 0; cw < coilCount; cw++) {
-      const cwY = coilY - coilH * 0.35 + (cw / (coilCount - 1)) * coilH * 0.7;
-      ctx.beginPath();
-      ctx.ellipse(
-        coilX,
-        cwY - 0.3 * zoom,
-        coilW * 0.5,
-        0.8 * zoom,
-        0,
-        0.3,
-        Math.PI - 0.3,
-        false
-      );
-      ctx.stroke();
-    }
-
-    // Terminal posts on top
-    ctx.fillStyle = "#8a8a95";
-    ctx.beginPath();
-    ctx.arc(
-      coilX - 1.2 * zoom,
-      coilY - coilH * 0.5 - 1 * zoom,
-      0.8 * zoom,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(
-      coilX + 1.2 * zoom,
-      coilY - coilH * 0.5 - 1 * zoom,
-      0.8 * zoom,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    // Wiring harness from coil to igniter center
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(coilX - 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom);
-    ctx.quadraticCurveTo(
-      turretX + 5 * zoom,
-      igniterY - 5 * zoom,
-      turretX + 2 * zoom,
-      igniterY - 1 * zoom
-    );
-    ctx.stroke();
-    // Second wire
-    ctx.strokeStyle = "#882222";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(coilX + 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom);
-    ctx.quadraticCurveTo(
-      turretX + 7 * zoom,
-      igniterY - 6 * zoom,
-      turretX + 3 * zoom,
-      igniterY
-    );
-    ctx.stroke();
-
-    // Spark indicator near coil (flickering)
-    const sparkAlpha = 0.3 + Math.sin(time * 15) * 0.2;
-    ctx.fillStyle = `rgba(100, 180, 255, ${sparkAlpha})`;
-    ctx.beginPath();
-    ctx.arc(
-      coilX - 1.2 * zoom,
-      coilY - coilH * 0.5 - 1 * zoom,
-      1.5 * zoom,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-  }
-
-  // === WIRING CONDUIT (bundled cable run along the housing) ===
-  {
-    ctx.strokeStyle = "#2a2a32";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(turretX - 8 * zoom, igniterY + 2 * zoom);
-    ctx.quadraticCurveTo(
-      turretX - 4 * zoom,
-      igniterY + 5 * zoom,
-      turretX + 2 * zoom,
-      igniterY + 3 * zoom
-    );
-    ctx.stroke();
-    // Conduit highlight
-    ctx.strokeStyle = "rgba(80, 80, 90, 0.3)";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(turretX - 8 * zoom, igniterY + 1.4 * zoom);
-    ctx.quadraticCurveTo(
-      turretX - 4 * zoom,
-      igniterY + 4.4 * zoom,
-      turretX + 2 * zoom,
-      igniterY + 2.4 * zoom
-    );
-    ctx.stroke();
-    // Cable ties
-    for (const tieT of [0.3, 0.7]) {
-      const u = 1 - tieT;
-      const tieX =
-        u * u * (turretX - 8 * zoom) +
-        2 * u * tieT * (turretX - 4 * zoom) +
-        tieT * tieT * (turretX + 2 * zoom);
-      const tieY =
-        u * u * (igniterY + 2 * zoom) +
-        2 * u * tieT * (igniterY + 5 * zoom) +
-        tieT * tieT * (igniterY + 3 * zoom);
-      ctx.fillStyle = "#4a4a55";
-      ctx.beginPath();
-      ctx.ellipse(tieX, tieY, 1.5 * zoom, 2.2 * zoom, 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // Nozzle mounting collar with depth ring
-  const nozzleCollarX = turretX + cosR * 4 * zoom;
-  const nozzleCollarY = igniterY + sinR * 2.5 * zoom;
-  ctx.fillStyle = "#333338";
-  ctx.beginPath();
-  ctx.ellipse(
-    nozzleCollarX,
-    nozzleCollarY + 1.5 * zoom,
-    5.5 * zoom,
-    4 * zoom,
-    rotation,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.fillStyle = "#3a3a42";
-  ctx.beginPath();
-  ctx.ellipse(
-    nozzleCollarX,
-    nozzleCollarY,
-    5 * zoom,
-    3.5 * zoom,
-    rotation,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-
-  // Pilot flame indicator
-  const flameGlow = timeSinceFire < 300 ? 0.8 : 0.5 + Math.sin(time * 6) * 0.2;
-  const flameGrad = ctx.createRadialGradient(
-    turretX,
-    igniterY,
-    0,
-    turretX,
-    igniterY,
-    3.5 * zoom
-  );
-  flameGrad.addColorStop(0, `rgba(255, 200, 100, ${flameGlow})`);
-  flameGrad.addColorStop(0.4, `rgba(255, 140, 50, ${flameGlow * 0.7})`);
-  flameGrad.addColorStop(0.8, `rgba(255, 80, 20, ${flameGlow * 0.4})`);
-  flameGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
-  ctx.fillStyle = flameGrad;
-  ctx.beginPath();
-  ctx.arc(turretX, igniterY, 3 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // === 3D ISOMETRIC FUEL TANK (LEFT) AND ARMOR PLATE (RIGHT) ===
-  const isAttacking = timeSinceFire < 300;
-  const attackPulse = isAttacking ? 1 - timeSinceFire / 300 : 0;
-
+  };
+
+  // ════════════════════════════════════════════════════════════
+  // SATELLITE FUEL TANK (left) AND ARMOR PLATE (right)
+  // These orbit the turret — included in the upper layer sort
+  // so they depth-sort correctly against the nozzle barrel.
+  // ════════════════════════════════════════════════════════════
   const tankAngle = rotation + Math.PI * 0.5;
   const tankDistance = 24 * zoom;
   const tankCenterX = turretX + Math.cos(tankAngle) * tankDistance;
@@ -7821,17 +8144,10 @@ export function renderFlamethrower(
   const plateCenterY =
     turretY - 8 * zoom + Math.sin(plateAngle) * plateDistance * 0.5;
 
-  const facingPlayer = sinR > 0.2;
-  const tankBehindAll = facingPlayer || Math.sin(tankAngle) < 0;
-  const plateBehindAll = facingPlayer || Math.sin(plateAngle) < 0;
-
   const tankSide = Math.sin(tankAngle);
-  const tankVisible = true;
-  const plateVisible = true;
-
   const towerId = tower.id;
 
-  if (tankBehindAll && tankVisible) {
+  const drawSatelliteTank = () => {
     draw3DFuelTank(
       ctx,
       tankCenterX,
@@ -7856,8 +8172,9 @@ export function renderFlamethrower(
       attackPulse,
       tankSide
     );
-  }
-  if (plateBehindAll && plateVisible) {
+  };
+
+  const drawArmorPlate = () => {
     draw3DArmorShield(
       ctx,
       plateCenterX,
@@ -7867,59 +8184,226 @@ export function renderFlamethrower(
       towerId,
       "small"
     );
+  };
+
+  const upperLayers: { y: number; fn: () => void }[] = [
+    { y: turretY - 10 * zoom, fn: drawCenterComponents },
+    {
+      y: turretY - 10 * zoom + fwdY * 5 * zoom,
+      fn: drawFrontComponents,
+    },
+    {
+      y: turretY - 10 * zoom + fwdY * 8 * zoom,
+      fn: drawNozzle,
+    },
+    { y: tankCenterY, fn: drawSatelliteTank },
+    { y: plateCenterY, fn: drawArmorPlate },
+  ];
+  upperLayers.sort((a, b) => a.y - b.y);
+  for (const l of upperLayers) {
+    l.fn();
   }
 
-  if (!facingAway) {
-    drawFlamethrowerNozzle(
-      ctx,
-      turretX,
-      turretY - 10 * zoom,
-      rotation,
-      foreshorten,
-      zoom,
-      tower,
-      time,
-      recoilOffset
+  // ════════════════════════════════════════════════════════════
+  // PRESSURE GAUGE — 3D isometric dial on main tank body
+  // Faces outward in the turret's lateral direction, tilts with rotation
+  // ════════════════════════════════════════════════════════════
+  {
+    // Gauge mounted on the near side of the main tank, offset in lateral direction
+    const gaugeOrbitAngle = rotation - Math.PI * 0.35;
+    const gaugeDist = 10 * zoom;
+    const gaX = mainTank.x + Math.cos(gaugeOrbitAngle) * gaugeDist;
+    const gaY =
+      mainTank.y + Math.sin(gaugeOrbitAngle) * gaugeDist * 0.5 + 1 * zoom;
+    const gaR = 6.5 * zoom;
+
+    // Face normal: gauge points outward from tank (along orbit angle)
+    const gaNx = Math.cos(gaugeOrbitAngle);
+    const gaNy = Math.sin(gaugeOrbitAngle) * 0.5;
+    const gaNLen = Math.sqrt(gaNx * gaNx + gaNy * gaNy);
+
+    // Foreshortening: how much face is visible vs edge-on
+    // faceDot > 0 = facing toward camera, < 0 = facing away
+    const faceDot = gaNy / gaNLen;
+    const faceVis = Math.max(0.2, (faceDot + 1) * 0.5);
+
+    // Ellipse: major axis perpendicular to face normal, minor foreshortened
+    const gaRot = Math.atan2(gaNy, gaNx) + Math.PI * 0.5;
+    const gaRX = gaR;
+    const gaRY = gaR * Math.max(0.2, faceVis * 0.7);
+    const cosE = Math.cos(gaRot);
+    const sinE = Math.sin(gaRot);
+
+    // Rim depth (housing protrudes from tank surface)
+    const rimD = 2.5 * zoom;
+    const rimNx = gaNx / gaNLen;
+    const rimNy = gaNy / gaNLen;
+    const rimBX = gaX - rimNx * rimD;
+    const rimBY = gaY - rimNy * rimD;
+
+    // Map circular face coords → tilted ellipse screen coords
+    const gaFace = (a: number, r: number) => {
+      const lx = Math.cos(a) * r;
+      const ly = Math.sin(a) * r * (gaRY / gaRX);
+      return { x: gaX + lx * cosE - ly * sinE, y: gaY + lx * sinE + ly * cosE };
+    };
+
+    // Back plate (depth shadow behind gauge)
+    ctx.fillStyle = "#1a1a22";
+    ctx.beginPath();
+    ctx.ellipse(
+      rimBX,
+      rimBY,
+      gaRX + 2 * zoom,
+      gaRY + 1.2 * zoom,
+      gaRot,
+      0,
+      Math.PI * 2
     );
+    ctx.fill();
+
+    // Rim wall (visible edge thickness)
+    ctx.fillStyle = "#4a4a55";
+    ctx.beginPath();
+    ctx.ellipse(
+      rimBX,
+      rimBY,
+      gaRX + 1.2 * zoom,
+      gaRY + 0.8 * zoom,
+      gaRot,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Rim highlight on camera-near edge
+    ctx.strokeStyle = `rgba(130, 130, 145, ${0.2 + faceVis * 0.3})`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      gaX + rimNx * 0.3 * zoom,
+      gaY + rimNy * 0.3 * zoom,
+      gaRX + 1 * zoom,
+      gaRY + 0.7 * zoom,
+      gaRot,
+      Math.PI + 0.3,
+      Math.PI * 2 - 0.3
+    );
+    ctx.stroke();
+
+    // Chrome bezel (front face outer ring)
+    const bezelGrad = ctx.createLinearGradient(
+      gaX - gaRX,
+      gaY - gaRY,
+      gaX + gaRX,
+      gaY + gaRY
+    );
+    bezelGrad.addColorStop(0, "#888");
+    bezelGrad.addColorStop(0.4, "#aaa");
+    bezelGrad.addColorStop(0.6, "#999");
+    bezelGrad.addColorStop(1, "#666");
+    ctx.fillStyle = bezelGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      gaX,
+      gaY,
+      gaRX + 0.8 * zoom,
+      gaRY + 0.5 * zoom,
+      gaRot,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.strokeStyle = "#555";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+
+    // Dial face
+    ctx.fillStyle = "#141414";
+    ctx.beginPath();
+    ctx.ellipse(gaX, gaY, gaRX, gaRY, gaRot, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Colored arc zones
+    const arcW = 1.8 * zoom;
+    ctx.lineWidth = arcW;
+    const zones: { s: number; e: number; c: string }[] = [
+      { s: 0, e: 0.6, c: "#0a5a0a" },
+      { s: 0.6, e: 0.8, c: "#5a5a0a" },
+      { s: 0.8, e: 1, c: "#5a0a0a" },
+    ];
+    for (const z of zones) {
+      ctx.strokeStyle = z.c;
+      ctx.beginPath();
+      ctx.ellipse(
+        gaX,
+        gaY,
+        gaRX * 0.82,
+        gaRY * 0.82,
+        gaRot,
+        Math.PI * 0.75 + z.s * Math.PI * 1.5,
+        Math.PI * 0.75 + z.e * Math.PI * 1.5
+      );
+      ctx.stroke();
+    }
+
+    // Tick marks (projected onto the tilted face)
+    for (let m = 0; m < 10; m++) {
+      const mA = Math.PI * 0.75 + (m / 9) * Math.PI * 1.5;
+      const isMajor = m % 5 === 0;
+      const inner = gaFace(mA, gaR * (isMajor ? 0.6 : 0.68));
+      const outer = gaFace(mA, gaR * 0.88);
+      ctx.strokeStyle = m < 6 ? "#2d2" : m < 8 ? "#dd2" : "#d22";
+      ctx.lineWidth = (isMajor ? 1.5 : 0.7) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(inner.x, inner.y);
+      ctx.lineTo(outer.x, outer.y);
+      ctx.stroke();
+    }
+
+    // Needle (projected onto the tilted face)
+    const gaNJump = isAttacking ? Math.sin(timeSinceFire * 0.05) * 0.3 : 0;
+    const gaNAngle =
+      Math.PI * 0.75 +
+      Math.PI * 1.5 * (0.4 + Math.sin(time * 2) * 0.1 + gaNJump * 0.3);
+    const nTip = gaFace(gaNAngle, gaR * 0.72);
+    const nTail = gaFace(gaNAngle + Math.PI, gaR * 0.12);
+    ctx.strokeStyle = "#ee2222";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(nTail.x, nTail.y);
+    ctx.lineTo(nTip.x, nTip.y);
+    ctx.stroke();
+
+    // Center hub (tilted ellipse)
+    const hubR = 1.8 * zoom;
+    const hubRY = hubR * (gaRY / gaRX);
+    ctx.fillStyle = "#333";
+    ctx.beginPath();
+    ctx.ellipse(gaX, gaY, hubR, hubRY, gaRot, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#888";
+    ctx.beginPath();
+    ctx.ellipse(gaX, gaY, hubR * 0.45, hubRY * 0.45, gaRot, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glass reflection
+    const reflP = gaFace(Math.PI * 1.25, gaR * 0.4);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.09)";
+    ctx.beginPath();
+    ctx.ellipse(
+      reflP.x,
+      reflP.y,
+      gaR * 0.32,
+      gaRY * 0.28,
+      gaRot + 0.3,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
   }
 
-  if (!tankBehindAll && tankVisible) {
-    draw3DFuelTank(
-      ctx,
-      tankCenterX,
-      tankCenterY,
-      tankAngle,
-      zoom,
-      time,
-      isAttacking,
-      attackPulse,
-      "small"
-    );
-    drawFuelFeedingTube(
-      ctx,
-      tankCenterX,
-      tankCenterY,
-      turretX,
-      turretY - 8 * zoom,
-      rotation,
-      zoom,
-      time,
-      isAttacking,
-      attackPulse,
-      tankSide
-    );
-  }
-  if (!plateBehindAll && plateVisible) {
-    draw3DArmorShield(
-      ctx,
-      plateCenterX,
-      plateCenterY,
-      plateAngle,
-      zoom,
-      towerId,
-      "small"
-    );
-  }
+  // (satellite tank, tube, and armor plate are drawn in the upper layer sort above)
 }
 
 // Helper for flamethrower nozzle — 3D hex prism barrel with heat gradient
@@ -8000,191 +8484,19 @@ export function drawFlamethrowerNozzle(
   );
   ctx.stroke();
 
-  // === RECOILING BREECH CAGE — standalone box behind nozzle ===
+  // Breech ring at barrel base (small detail, doesn't extend backward)
   {
-    const timeSinceFire = Date.now() - tower.lastAttack;
-    const cageSides = 6;
-    const cageLen = 8 * zoom;
-    const cageR = hexR * 1.4;
-    const cageGap = 3 * zoom;
-
-    // Punchy recoil
-    let cageRecoil = 0;
-    if (timeSinceFire < 200) {
-      const cPhase = timeSinceFire / 200;
-      cageRecoil =
-        cPhase < 0.12
-          ? (cPhase / 0.12) * 7 * zoom
-          : 7 * zoom * (1 - (cPhase - 0.12) / 0.88);
-    }
-
-    // Cage is offset behind the barrel start with a visible gap
-    const cageFrontPt = {
-      x: axisPoint(startDist).x - fwdX * cageGap,
-      y: axisPoint(startDist).y - fwdY * cageGap,
-    };
-    const cageBackPt = {
-      x: cageFrontPt.x - fwdX * (cageLen + cageRecoil),
-      y: cageFrontPt.y - fwdY * (cageLen + cageRecoil) - cageLen * pitchRate,
-    };
-
-    const cageVerts = generateIsoHexVertices(isoOff, cageR, cageSides);
-    const cageSideNormals = computeHexSideNormals(cosR, cageSides);
-    const cageFacingFwd = fwdY >= 0;
-
-    // --- Draw back face (breech cap) ---
-    const drawBreechCap = () => {
-      const capPt = cageFacingFwd ? cageBackPt : cageFrontPt;
-      drawHexCap(
-        ctx,
-        capPt,
-        cageVerts,
-        cageFacingFwd ? "#4a4a55" : "#5a5a65",
-        "#3a3a45",
-        0.7 * zoom
-      );
-
-      // Breech cap bolts at vertices
-      ctx.fillStyle = "#6a6a78";
-      const boltVerts = scaleVerts(cageVerts, 0.7);
-      for (let i = 0; i < cageSides; i++) {
-        ctx.beginPath();
-        ctx.arc(
-          capPt.x + boltVerts[i].x,
-          capPt.y + boltVerts[i].y,
-          1.3 * zoom,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-
-      // Central breech plate (smaller hex inset)
-      drawHexCap(
-        ctx,
-        capPt,
-        scaleVerts(cageVerts, 0.45),
-        "#555560",
-        "#48484e",
-        0.5 * zoom
-      );
-    };
-
-    // --- Draw front face ---
-    const drawFrontFace = () => {
-      const facePt = cageFacingFwd ? cageFrontPt : cageBackPt;
-      drawHexCap(
-        ctx,
-        facePt,
-        cageVerts,
-        cageFacingFwd ? "#5a5a65" : "#4a4a55",
-        "#3a3a45",
-        0.6 * zoom
-      );
-
-      // Barrel opening hole (dark circle in center)
-      ctx.fillStyle = "#1a1a22";
-      ctx.beginPath();
-      ctx.arc(facePt.x, facePt.y, cageR * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    // --- Draw side faces (depth-sorted) ---
-    const drawSideFaces = () => {
-      const sortedSides = sortSidesByDepth(cageSideNormals);
-
-      for (const i of sortedSides) {
-        const ni = (i + 1) % cageSides;
-        const normal = cageSideNormals[i];
-        const v0 = cageVerts[i];
-        const v1 = cageVerts[ni];
-
-        const lit = Math.max(0.15, 0.25 + Math.max(0, normal) * 0.55);
-        const rc = Math.floor(50 + lit * 55);
-        const gc = Math.floor(50 + lit * 52);
-        const bc = Math.floor(55 + lit * 60);
-
-        ctx.fillStyle = `rgb(${rc}, ${gc}, ${bc})`;
-        ctx.beginPath();
-        ctx.moveTo(cageBackPt.x + v0.x, cageBackPt.y + v0.y);
-        ctx.lineTo(cageBackPt.x + v1.x, cageBackPt.y + v1.y);
-        ctx.lineTo(cageFrontPt.x + v1.x, cageFrontPt.y + v1.y);
-        ctx.lineTo(cageFrontPt.x + v0.x, cageFrontPt.y + v0.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Edge line
-        ctx.strokeStyle = `rgba(25, 25, 35, ${0.3 + Math.max(0, normal) * 0.15})`;
-        ctx.lineWidth = 0.6 * zoom;
-        ctx.stroke();
-
-        // Cage bar groove lines on visible faces
-        if (normal > 0.1) {
-          const grooveT1 = 0.33;
-          const grooveT2 = 0.66;
-          ctx.strokeStyle = `rgba(30, 30, 40, 0.25)`;
-          ctx.lineWidth = 0.5 * zoom;
-          for (const gt of [grooveT1, grooveT2]) {
-            const gv = {
-              x: v0.x + (v1.x - v0.x) * gt,
-              y: v0.y + (v1.y - v0.y) * gt,
-            };
-            ctx.beginPath();
-            ctx.moveTo(cageBackPt.x + gv.x, cageBackPt.y + gv.y);
-            ctx.lineTo(cageFrontPt.x + gv.x, cageFrontPt.y + gv.y);
-            ctx.stroke();
-          }
-
-          // Highlight edge
-          if (normal > 0.3) {
-            ctx.strokeStyle = `rgba(150, 150, 165, ${(normal - 0.3) * 0.3})`;
-            ctx.lineWidth = 0.4 * zoom;
-            ctx.beginPath();
-            ctx.moveTo(cageFrontPt.x + v0.x, cageFrontPt.y + v0.y);
-            ctx.lineTo(cageBackPt.x + v0.x, cageBackPt.y + v0.y);
-            ctx.stroke();
-          }
-        }
-      }
-    };
-
-    // Render faces in correct depth order
-    if (cageFacingFwd) {
-      drawBreechCap();
-      drawSideFaces();
-      drawFrontFace();
-    } else {
-      drawFrontFace();
-      drawSideFaces();
-      drawBreechCap();
-    }
-
-    // Piston rods connecting cage to nozzle (visible in the gap)
-    for (const side of [-1, 1]) {
-      const pistonV = isoOff(side * cageR * 0.5, 0);
-      const rodFront = {
-        x: cageFrontPt.x + pistonV.x,
-        y: cageFrontPt.y + pistonV.y,
-      };
-      const rodBack = {
-        x: axisPoint(startDist).x + pistonV.x,
-        y: axisPoint(startDist).y + pistonV.y,
-      };
-      // Outer sleeve
-      ctx.strokeStyle = "#6a6a75";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rodFront.x, rodFront.y);
-      ctx.lineTo(rodBack.x, rodBack.y);
-      ctx.stroke();
-      // Inner piston rod (bright)
-      ctx.strokeStyle = "#9a9aaa";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rodFront.x, rodFront.y);
-      ctx.lineTo(rodBack.x, rodBack.y);
-      ctx.stroke();
-    }
+    const breechPt = axisPoint(startDist);
+    const breechR = hexR * 1.15;
+    const breechVerts = generateIsoHexVertices(isoOff, breechR, 6);
+    drawHexCap(
+      ctx,
+      breechPt,
+      breechVerts,
+      facingFwd ? "#4a4a55" : "#555560",
+      "#3a3a45",
+      0.6 * zoom
+    );
   }
 
   // === Closures for depth-ordered drawing ===
@@ -8418,20 +8730,13 @@ export function drawFlamethrowerNozzle(
     }
   };
 
-  // Draw from farthest to nearest based on barrel direction
-  if (facingFwd) {
-    drawBarrelBody();
-    drawRingBands();
-    drawMuzzleSection();
-  } else {
-    drawMuzzleSection();
-    drawBarrelBody();
-    drawRingBands();
-  }
-
   // === SECONDARY INJECTOR BARREL — 3D hex prism, side by side ===
-  {
-    const injSide = -1;
+  // Pick the side that is BEHIND the main barrel (further from camera)
+  // perpX points in the lateral direction; positive perpY = that side is
+  // closer to camera, so we want the side with LOWER screen-Y (further).
+  const injSide = perpY > 0 ? -1 : 1;
+
+  const drawInjector = () => {
     const injOffLat = (hexR + 3.5 * zoom) * injSide;
     const injOff = isoOff(injOffLat, 0);
     const injHexR = 2.8 * zoom;
@@ -8709,6 +9014,26 @@ export function drawFlamethrowerNozzle(
       );
       ctx.fill();
     }
+  };
+
+  const drawMainBarrel = () => {
+    drawBarrelBody();
+    drawRingBands();
+    drawMuzzleSection();
+  };
+
+  // Depth-ordered draw: injector behind main barrel when on the far side
+  // The injector's lateral offset produces a screen-Y; compare to main barrel
+  const injTestOff = isoOff((hexR + 3.5 * zoom) * injSide, 0);
+  const injScreenY = pivotY + injTestOff.y;
+  const mainScreenY = pivotY;
+
+  if (injScreenY < mainScreenY) {
+    drawInjector();
+    drawMainBarrel();
+  } else {
+    drawMainBarrel();
+    drawInjector();
   }
 
   // === PILOT FLAME at nozzle tip ===
@@ -8861,47 +9186,61 @@ export function drawFlamethrowerNozzle(
     ctx.restore();
   }
 
-  // Flame effect along barrel axis
+  // Fire blobs projecting from the nozzle when firing
   const timeSinceFire = Date.now() - tower.lastAttack;
   if (timeSinceFire < 500) {
-    const flameIntensity = 1 - timeSinceFire / 500;
+    const intensity = 1 - timeSinceFire / 500;
+    const muzzlePt = axisPoint(totalLen);
+
+    ctx.save();
     ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 25 * zoom * flameIntensity;
+    ctx.shadowBlur = 20 * zoom * intensity;
 
-    for (let i = 0; i < 10; i++) {
-      const flameT = totalLen + i * totalLen * 0.12;
-      const flamePt = axisPoint(flameT);
-      const wobble = Math.sin(time * 35 + i * 0.8) * (2 + i * 0.4) * zoom;
-      const flameSize = (16 - i * 1.2) * zoom * flameIntensity;
+    for (let i = 0; i < 8; i++) {
+      const t = i / 8;
+      const dist = (4 + i * 5) * zoom;
+      const wobX = Math.sin(time * 30 + i * 1.7) * (1.5 + t * 3) * zoom;
+      const wobY = Math.cos(time * 25 + i * 2.3) * (1 + t * 2) * zoom;
 
-      const flameGrad2 = ctx.createRadialGradient(
-        flamePt.x,
-        flamePt.y + wobble,
-        0,
-        flamePt.x,
-        flamePt.y + wobble,
-        flameSize
-      );
-      flameGrad2.addColorStop(0, `rgba(255, 255, 180, ${flameIntensity})`);
-      flameGrad2.addColorStop(
-        0.15,
-        `rgba(255, 220, 80, ${flameIntensity * 0.95})`
-      );
-      flameGrad2.addColorStop(
-        0.4,
-        `rgba(255, 120, 0, ${flameIntensity * 0.75})`
-      );
-      flameGrad2.addColorStop(
-        0.7,
-        `rgba(220, 60, 0, ${flameIntensity * 0.45})`
-      );
-      flameGrad2.addColorStop(1, "rgba(120, 30, 0, 0)");
-      ctx.fillStyle = flameGrad2;
+      const bx = muzzlePt.x + fwdX * dist + perpX * wobX;
+      const by =
+        muzzlePt.y + fwdY * dist + dist * pitchRate + perpY * wobX + wobY * 0.3;
+
+      const size = (12 - i * 1.1) * zoom * intensity * (1 - t * 0.3);
+      const fade = intensity * (1 - t * 0.5);
+
+      const g = ctx.createRadialGradient(bx, by, 0, bx, by, size);
+      g.addColorStop(0, `rgba(255, 255, 200, ${fade * 0.95})`);
+      g.addColorStop(0.15, `rgba(255, 230, 100, ${fade * 0.9})`);
+      g.addColorStop(0.35, `rgba(255, 160, 30, ${fade * 0.7})`);
+      g.addColorStop(0.6, `rgba(240, 80, 0, ${fade * 0.4})`);
+      g.addColorStop(0.85, `rgba(180, 30, 0, ${fade * 0.15})`);
+      g.addColorStop(1, "rgba(100, 10, 0, 0)");
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(flamePt.x, flamePt.y + wobble, flameSize, 0, Math.PI * 2);
+      ctx.arc(bx, by, size, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.shadowBlur = 0;
+
+    // Hot white-yellow core streak along barrel direction
+    for (let c = 0; c < 4; c++) {
+      const cd = (2 + c * 6) * zoom;
+      const cWob = Math.sin(time * 35 + c * 3.1) * 1.5 * zoom;
+      const cx = muzzlePt.x + fwdX * cd + perpX * cWob;
+      const cy = muzzlePt.y + fwdY * cd + cd * pitchRate + perpY * cWob;
+      const cr = (5 - c * 0.8) * zoom * intensity;
+      const ca = intensity * (1 - c * 0.2) * 0.85;
+      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+      cg.addColorStop(0, `rgba(255, 255, 245, ${ca})`);
+      cg.addColorStop(0.4, `rgba(255, 240, 150, ${ca * 0.6})`);
+      cg.addColorStop(1, `rgba(255, 180, 50, 0)`);
+      ctx.fillStyle = cg;
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 }
 

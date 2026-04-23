@@ -1567,10 +1567,36 @@ export function renderEffect(
             ctx.fill();
           }
 
+          // Persistent flame anchor near nozzle — keeps stream connected to barrel
+          {
+            const anchorCount = 4;
+            for (let a = 0; a < anchorCount; a++) {
+              const aT = a * 0.04;
+              if (aT >= 1) {
+                continue;
+              }
+              const ap = bezPerp(aT);
+              const aWob = Math.sin(now / 40 + a * 2.3) * 3 * zoom * (0.2 + aT);
+              const aX = bezX(aT) + ap.x * aWob;
+              const aY = bezY(aT) + ap.y * aWob;
+              const aR = (7 - a * 1) * zoom;
+              const aFade = alpha * (1 - a * 0.15) * 0.75;
+              const aGrad = ctx.createRadialGradient(aX, aY, 0, aX, aY, aR);
+              aGrad.addColorStop(0, `rgba(255, 240, 160, ${aFade})`);
+              aGrad.addColorStop(0.35, `rgba(255, 180, 60, ${aFade * 0.7})`);
+              aGrad.addColorStop(0.7, `rgba(255, 100, 10, ${aFade * 0.3})`);
+              aGrad.addColorStop(1, "rgba(200, 40, 0, 0)");
+              ctx.fillStyle = aGrad;
+              ctx.beginPath();
+              ctx.arc(aX, aY, aR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
           // Nozzle flare at the source
-          if (progress < 0.4) {
-            const nozzleAlpha = alpha * (1 - progress / 0.4) * 0.7;
-            const nozzleR = 6 * zoom;
+          if (progress < 0.5) {
+            const nozzleAlpha = alpha * (1 - progress / 0.5) * 0.8;
+            const nozzleR = 10 * zoom;
             const nozzleGrad = ctx.createRadialGradient(
               p0x,
               p0y,
@@ -1579,12 +1605,16 @@ export function renderEffect(
               p0y,
               nozzleR
             );
-            nozzleGrad.addColorStop(0, `rgba(255, 255, 220, ${nozzleAlpha})`);
+            nozzleGrad.addColorStop(0, `rgba(255, 255, 230, ${nozzleAlpha})`);
             nozzleGrad.addColorStop(
-              0.4,
-              `rgba(255, 200, 80, ${nozzleAlpha * 0.6})`
+              0.3,
+              `rgba(255, 220, 100, ${nozzleAlpha * 0.7})`
             );
-            nozzleGrad.addColorStop(1, `rgba(255, 120, 20, 0)`);
+            nozzleGrad.addColorStop(
+              0.6,
+              `rgba(255, 140, 30, ${nozzleAlpha * 0.35})`
+            );
+            nozzleGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
             ctx.fillStyle = nozzleGrad;
             ctx.beginPath();
             ctx.arc(p0x, p0y, nozzleR, 0, Math.PI * 2);
