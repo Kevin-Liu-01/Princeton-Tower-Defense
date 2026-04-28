@@ -1,7 +1,14 @@
 const __dirname = import.meta.dirname;
 
+const SOCIAL_AND_SEO_BOTS =
+  /Googlebot|GoogleOther|Google-Extended|AdsBot-Google|googleweblight|Storebot-Google|Google-PageRenderer|Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Applebot|Pinterestbot|Bingbot|YandexBot|GPTBot|ChatGPT-User|ClaudeBot|anthropic-ai|PerplexityBot|Bytespider|CCBot|cohere-ai/;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  htmlLimitedBots: SOCIAL_AND_SEO_BOTS,
+  async rewrites() {
+    return [{ source: "/og.png", destination: "/og" }];
+  },
   headers() {
     return [
       {

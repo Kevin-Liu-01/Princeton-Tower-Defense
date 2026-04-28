@@ -48,7 +48,7 @@ export const metadata: Metadata = {
         alt: `${SITE_NAME} - Free browser tower defense game`,
         height: 630,
         type: "image/png",
-        url: "/images/og/home.png",
+        url: "/og.png",
         width: 1200,
       },
     ],
@@ -102,7 +102,7 @@ export const metadata: Metadata = {
       {
         alt: `${SITE_NAME} - Free browser tower defense game`,
         height: 630,
-        url: "/images/og/home.png",
+        url: "/og.png",
         width: 1200,
       },
     ],
