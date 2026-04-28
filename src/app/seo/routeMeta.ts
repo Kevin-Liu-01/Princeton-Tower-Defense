@@ -176,47 +176,81 @@ export function getRouteMetadata(slug: string[] | undefined): Metadata {
     }
 
     case "creator": {
+      const desc =
+        "Design custom tower defense maps in Princeton Tower Defense. Place paths, set enemy waves, add hazards, choose themes, and playtest your creations. 5 themes and full wave editor.";
+      const ogDesc =
+        "Build custom tower defense maps with the Princeton TD level creator. Design paths, place hazards, compose waves, and share your maps.";
+      const title = `Level Creator | ${SITE_NAME}`;
       return {
         alternates: { canonical: `${SITE_URL}/creator` },
-        description:
-          "Design custom tower defense maps in Princeton Tower Defense. Place paths, set enemy waves, add hazards, choose themes, and playtest your creations. 5 themes and full wave editor.",
+        description: desc,
         openGraph: {
-          description:
-            "Build custom tower defense maps with the Princeton TD level creator. Design paths, place hazards, compose waves, and share your maps.",
+          description: ogDesc,
           images: [HOME_OG],
           siteName: SITE_NAME,
-          title: `Level Creator | ${SITE_NAME}`,
+          title,
           type: "website",
           url: `${SITE_URL}/creator`,
         },
         title: "Custom Level Creator - Build Your Own Maps",
+        twitter: {
+          card: "summary_large_image",
+          description: ogDesc,
+          images: [HOME_OG],
+          title,
+        },
       };
     }
 
     case "credits": {
+      const desc =
+        "Princeton Tower Defense was created by Kevin Liu. Built with Next.js, React, TypeScript, and HTML5 Canvas. No game engine — every pixel is hand-rendered.";
+      const ogDesc =
+        "Meet the creator of Princeton Tower Defense and learn about the tech stack behind the game.";
+      const title = `Credits | ${SITE_NAME}`;
       return {
         alternates: { canonical: `${SITE_URL}/credits` },
-        description:
-          "Princeton Tower Defense was created by Kevin Liu. Built with Next.js, React, TypeScript, and HTML5 Canvas. No game engine — every pixel is hand-rendered.",
+        description: desc,
         openGraph: {
-          description:
-            "Meet the creator of Princeton Tower Defense and learn about the tech stack behind the game.",
+          description: ogDesc,
           images: [HOME_OG],
           siteName: SITE_NAME,
-          title: `Credits | ${SITE_NAME}`,
+          title,
           type: "website",
           url: `${SITE_URL}/credits`,
         },
         title: "Credits & About",
+        twitter: {
+          card: "summary_large_image",
+          description: ogDesc,
+          images: [HOME_OG],
+          title,
+        },
       };
     }
 
     case "settings": {
+      const desc =
+        "Configure graphics quality, audio, controls, and accessibility options for Princeton Tower Defense.";
+      const title = `Game Settings | ${SITE_NAME}`;
       return {
         alternates: { canonical: `${SITE_URL}/settings` },
-        description:
-          "Configure graphics quality, audio, controls, and accessibility options for Princeton Tower Defense.",
+        description: desc,
+        openGraph: {
+          description: desc,
+          images: [HOME_OG],
+          siteName: SITE_NAME,
+          title,
+          type: "website",
+          url: `${SITE_URL}/settings`,
+        },
         title: "Game Settings",
+        twitter: {
+          card: "summary_large_image",
+          description: desc,
+          images: [HOME_OG],
+          title,
+        },
       };
     }
   }

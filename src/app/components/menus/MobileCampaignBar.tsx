@@ -1,7 +1,7 @@
 "use client";
 
 import { Star, Map as MapIcon } from "lucide-react";
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { memo, useMemo, useRef, useEffect } from "react";
 
 import { RegionIcon } from "../../sprites";
 import type { LevelStars } from "../../types";
@@ -22,20 +22,23 @@ interface MobileCampaignBarProps {
   isDevMode?: boolean;
 }
 
-export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
+export const MobileCampaignBar = memo(function MobileCampaignBar({
   levelStars,
   unlockedMaps,
   selectedLevel,
   onSelectLevel,
   isDevMode = false,
-}) => {
+}: MobileCampaignBarProps) {
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const campaignLevels = getCampaignLevels(isDevMode);
-  const totalStars = campaignLevels.reduce(
-    (a, l) => a + (levelStars[l.id] || 0),
-    0
+  const campaignLevels = useMemo(
+    () => getCampaignLevels(isDevMode),
+    [isDevMode]
+  );
+  const totalStars = useMemo(
+    () => campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0),
+    [campaignLevels, levelStars]
   );
   const maxStars = campaignLevels.length * 3;
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
@@ -189,4 +192,6 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+MobileCampaignBar.displayName = "MobileCampaignBar";

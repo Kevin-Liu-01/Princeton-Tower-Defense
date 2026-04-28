@@ -18,7 +18,7 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 
 import {
   HERO_DATA,
@@ -47,6 +47,14 @@ import { HERO_OPTIONS, MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
 
 const getHeroRoleLabel = (type: HeroType): string => HERO_ROLES[type].label;
 
+const HERO_STAT_CONFIG = [
+  { bg: "rgba(127,29,29,0.2)", Icon: Heart, iconClass: "text-red-400" },
+  { bg: "rgba(124,45,18,0.2)", Icon: Swords, iconClass: "text-orange-400" },
+  { bg: "rgba(30,58,138,0.2)", Icon: Target, iconClass: "text-blue-400" },
+  { bg: "rgba(20,83,45,0.2)", Icon: Gauge, iconClass: "text-green-400" },
+  { bg: "rgba(88,28,135,0.2)", Icon: Timer, iconClass: "text-purple-400" },
+] as const;
+
 interface MobileLoadoutBarProps {
   selectedHero: HeroType | null;
   setSelectedHero: (hero: HeroType) => void;
@@ -60,7 +68,7 @@ interface MobileLoadoutBarProps {
   downgradeSpell: (spellType: SpellType) => void;
 }
 
-export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
+export const MobileLoadoutBar = memo(function MobileLoadoutBar({
   selectedHero,
   setSelectedHero,
   selectedSpells,
@@ -71,7 +79,7 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
   spellUpgradeLevels,
   upgradeSpell,
   downgradeSpell,
-}) => {
+}: MobileLoadoutBarProps) {
   const [showHeroSheet, setShowHeroSheet] = useState(false);
   const [showSpellSheet, setShowSpellSheet] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -132,19 +140,23 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
       </MobileBottomSheet>
 
       {/* Upgrade Modal */}
-      <SpellUpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        availableStars={availableSpellStars}
-        totalStarsEarned={totalSpellStarsEarned}
-        spentStars={spentSpellStars}
-        spellUpgradeLevels={spellUpgradeLevels}
-        onUpgradeSpell={upgradeSpell}
-        onDowngradeSpell={downgradeSpell}
-      />
+      {showUpgradeModal && (
+        <SpellUpgradeModal
+          isOpen
+          onClose={() => setShowUpgradeModal(false)}
+          availableStars={availableSpellStars}
+          totalStarsEarned={totalSpellStarsEarned}
+          spentStars={spentSpellStars}
+          spellUpgradeLevels={spellUpgradeLevels}
+          onUpgradeSpell={upgradeSpell}
+          onDowngradeSpell={downgradeSpell}
+        />
+      )}
     </>
   );
-};
+});
+
+MobileLoadoutBar.displayName = "MobileLoadoutBar";
 
 // ── Circle Buttons ─────────────────────────────────────────────────────────
 
@@ -440,45 +452,27 @@ function HeroSelectionContent({
                 className="flex items-center gap-0 mt-1 rounded overflow-hidden"
                 style={{ border: "1px solid rgba(100,80,50,0.12)" }}
               >
-                {[
-                  {
-                    bg: "rgba(127,29,29,0.2)",
-                    icon: <Heart size={7} className="text-red-400" />,
-                    value: hero.hp,
-                  },
-                  {
-                    bg: "rgba(124,45,18,0.2)",
-                    icon: <Swords size={7} className="text-orange-400" />,
-                    value: hero.damage,
-                  },
-                  {
-                    bg: "rgba(30,58,138,0.2)",
-                    icon: <Target size={7} className="text-blue-400" />,
-                    value: hero.range,
-                  },
-                  {
-                    bg: "rgba(20,83,45,0.2)",
-                    icon: <Gauge size={7} className="text-green-400" />,
-                    value: hero.speed,
-                  },
-                  {
-                    bg: "rgba(88,28,135,0.2)",
-                    icon: <Timer size={7} className="text-purple-400" />,
-                    value: `${cooldown / 1000}s`,
-                  },
-                ].map((stat, idx) => (
+                {HERO_STAT_CONFIG.map((cfg, idx) => (
                   <div
                     key={idx}
                     className="flex-1 flex items-center justify-center gap-0.5 py-0.5"
                     style={{
-                      background: stat.bg,
+                      background: cfg.bg,
                       borderRight:
                         idx < 4 ? "1px solid rgba(100,80,50,0.08)" : "none",
                     }}
                   >
-                    {stat.icon}
+                    <cfg.Icon size={7} className={cfg.iconClass} />
                     <span className="text-[7px] font-bold text-amber-200/80">
-                      {stat.value}
+                      {
+                        [
+                          hero.hp,
+                          hero.damage,
+                          hero.range,
+                          hero.speed,
+                          `${cooldown / 1000}s`,
+                        ][idx]
+                      }
                     </span>
                   </div>
                 ))}
@@ -524,8 +518,6 @@ function SpellSelectionContent({
   toggleSpell: (spell: SpellType) => void;
   spellUpgradeLevels: SpellUpgradeLevels;
 }) {
-  const SPELL_COLORS = SPELL_FULL_THEMES;
-
   return (
     <div className="space-y-2">
       {/* Slot indicator */}
@@ -560,7 +552,7 @@ function SpellSelectionContent({
         const spell = SPELL_DATA[spellType];
         const isSelected = selectedSpells.includes(spellType);
         const selectionIndex = selectedSpells.indexOf(spellType);
-        const colors = SPELL_COLORS[spellType];
+        const colors = SPELL_FULL_THEMES[spellType];
         const spellLevel = spellUpgradeLevels[spellType] ?? 0;
         const stats = getSpellStatsForType(spellType, spellLevel);
 
@@ -684,7 +676,7 @@ function SpellSelectionContent({
                         : "none",
                   }}
                 >
-                  {stat.icon}
+                  <stat.Icon size={8} className={stat.iconClass} />
                   <span className={`text-[8px] font-bold ${stat.textColor}`}>
                     {stat.value}
                   </span>
@@ -699,7 +691,8 @@ function SpellSelectionContent({
 }
 
 interface SpellStatDisplay {
-  icon: React.ReactNode;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  iconClass: string;
   value: string;
   textColor: string;
   bg: string;
@@ -714,20 +707,23 @@ function getSpellStatsForType(
       const s = getFireballSpellStats(level);
       return [
         {
+          Icon: Flame,
+          iconClass: "text-orange-400/70",
           bg: "rgba(124,45,18,0.15)",
-          icon: <Flame size={8} className="text-orange-400/70" />,
           textColor: "text-orange-300/80",
           value: `${s.damagePerMeteor}×${s.meteorCount}`,
         },
         {
+          Icon: Target,
+          iconClass: "text-red-400/70",
           bg: "rgba(127,29,29,0.15)",
-          icon: <Target size={8} className="text-red-400/70" />,
           textColor: "text-red-300/80",
           value: `${s.impactRadius}`,
         },
         {
+          Icon: Timer,
+          iconClass: "text-amber-400/70",
           bg: "rgba(120,53,15,0.15)",
-          icon: <Timer size={8} className="text-amber-400/70" />,
           textColor: "text-amber-300/80",
           value: `${(s.burnDurationMs / 1000).toFixed(1)}s`,
         },
@@ -737,20 +733,23 @@ function getSpellStatsForType(
       const s = getLightningSpellStats(level);
       return [
         {
+          Icon: Zap,
+          iconClass: "text-yellow-400/70",
           bg: "rgba(113,63,18,0.15)",
-          icon: <Zap size={8} className="text-yellow-400/70" />,
           textColor: "text-yellow-300/80",
           value: `${s.totalDamage}`,
         },
         {
+          Icon: TrendingUp,
+          iconClass: "text-cyan-400/70",
           bg: "rgba(22,78,99,0.15)",
-          icon: <TrendingUp size={8} className="text-cyan-400/70" />,
           textColor: "text-cyan-300/80",
           value: `${s.chainCount}ch`,
         },
         {
+          Icon: Timer,
+          iconClass: "text-blue-400/70",
           bg: "rgba(30,58,138,0.15)",
-          icon: <Timer size={8} className="text-blue-400/70" />,
           textColor: "text-blue-300/80",
           value: `${(s.stunDurationMs / 1000).toFixed(2)}s`,
         },
@@ -760,14 +759,16 @@ function getSpellStatsForType(
       const s = getFreezeSpellStats(level);
       return [
         {
+          Icon: Snowflake,
+          iconClass: "text-cyan-400/70",
           bg: "rgba(22,78,99,0.15)",
-          icon: <Snowflake size={8} className="text-cyan-400/70" />,
           textColor: "text-cyan-300/80",
           value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`,
         },
         {
+          Icon: Target,
+          iconClass: "text-indigo-400/70",
           bg: "rgba(49,46,129,0.15)",
-          icon: <Target size={8} className="text-indigo-400/70" />,
           textColor: "text-indigo-300/80",
           value: s.isGlobal ? "Global" : `${s.maxTargets} max`,
         },
@@ -777,20 +778,23 @@ function getSpellStatsForType(
       const s = getHexWardSpellStats(level);
       return [
         {
+          Icon: Users,
+          iconClass: "text-fuchsia-400/70",
           bg: "rgba(88,28,135,0.15)",
-          icon: <Users size={8} className="text-fuchsia-400/70" />,
           textColor: "text-fuchsia-300/80",
           value: `${s.maxReanimations} raise`,
         },
         {
+          Icon: Eye,
+          iconClass: "text-purple-400/70",
           bg: "rgba(76,29,149,0.15)",
-          icon: <Eye size={8} className="text-purple-400/70" />,
           textColor: "text-purple-300/80",
           value: `${s.maxTargets} mark`,
         },
         {
+          Icon: Timer,
+          iconClass: "text-violet-400/70",
           bg: "rgba(91,33,182,0.15)",
-          icon: <Timer size={8} className="text-violet-400/70" />,
           textColor: "text-violet-300/80",
           value: `${(s.durationMs / 1000).toFixed(0)}s`,
         },
@@ -800,20 +804,23 @@ function getSpellStatsForType(
       const s = getPaydaySpellStats(level);
       return [
         {
+          Icon: Coins,
+          iconClass: "text-amber-400/70",
           bg: "rgba(120,53,15,0.15)",
-          icon: <Coins size={8} className="text-amber-400/70" />,
           textColor: "text-amber-300/80",
           value: `${s.basePayout}`,
         },
         {
+          Icon: TrendingUp,
+          iconClass: "text-green-400/70",
           bg: "rgba(20,83,45,0.15)",
-          icon: <TrendingUp size={8} className="text-green-400/70" />,
           textColor: "text-green-300/80",
           value: `+${s.bonusPerEnemy}/e`,
         },
         {
+          Icon: Timer,
+          iconClass: "text-yellow-400/70",
           bg: "rgba(113,63,18,0.15)",
-          icon: <Timer size={8} className="text-yellow-400/70" />,
           textColor: "text-yellow-300/80",
           value: `${s.auraDurationMs / 1000}s`,
         },
@@ -823,20 +830,23 @@ function getSpellStatsForType(
       const s = getReinforcementSpellStats(level);
       return [
         {
+          Icon: Users,
+          iconClass: "text-emerald-400/70",
           bg: "rgba(6,78,59,0.15)",
-          icon: <Users size={8} className="text-emerald-400/70" />,
           textColor: "text-emerald-300/80",
           value: `×${s.knightCount}`,
         },
         {
+          Icon: Heart,
+          iconClass: "text-red-400/70",
           bg: "rgba(127,29,29,0.15)",
-          icon: <Heart size={8} className="text-red-400/70" />,
           textColor: "text-red-300/80",
           value: `${s.knightHp}`,
         },
         {
+          Icon: Swords,
+          iconClass: "text-orange-400/70",
           bg: "rgba(124,45,18,0.15)",
-          icon: <Swords size={8} className="text-orange-400/70" />,
           textColor: "text-orange-300/80",
           value: `${s.knightDamage}`,
         },

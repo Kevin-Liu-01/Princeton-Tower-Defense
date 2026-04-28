@@ -13,7 +13,7 @@ import {
   Skull,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 
 import { LEVEL_DATA } from "../../constants";
 import type { LevelStats } from "../../hooks/useLocalStorage";
@@ -64,21 +64,36 @@ interface MobileLevelSheetProps {
   isDevMode?: boolean;
 }
 
-function DifficultyDots({ difficulty }: { difficulty: 1 | 2 | 3 }) {
-  const colorMap = { 1: "bg-green-500", 2: "bg-yellow-500", 3: "bg-red-500" };
+const DIFFICULTY_COLORS = {
+  1: "bg-green-500",
+  2: "bg-yellow-500",
+  3: "bg-red-500",
+} as const;
+
+const DifficultyDots = memo(function DifficultyDots({
+  difficulty,
+}: {
+  difficulty: 1 | 2 | 3;
+}) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3].map((d) => (
         <div
           key={d}
-          className={`w-2.5 h-2.5 rounded-full ${d <= difficulty ? colorMap[difficulty] : "bg-stone-700"}`}
+          className={`w-2.5 h-2.5 rounded-full ${d <= difficulty ? DIFFICULTY_COLORS[difficulty] : "bg-stone-700"}`}
         />
       ))}
     </div>
   );
-}
+});
 
-function StarRow({ earned, total = 3 }: { earned: number; total?: number }) {
+const StarRow = memo(function StarRow({
+  earned,
+  total = 3,
+}: {
+  earned: number;
+  total?: number;
+}) {
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: total }, (_, i) => (
@@ -92,9 +107,9 @@ function StarRow({ earned, total = 3 }: { earned: number; total?: number }) {
       ))}
     </div>
   );
-}
+});
 
-export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
+export const MobileLevelSheet = memo(function MobileLevelSheet({
   level,
   levelStars,
   levelStats,
@@ -107,7 +122,7 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
   onNavigatePrev,
   onSelectLevel,
   isDevMode = false,
-}) => {
+}: MobileLevelSheetProps) {
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
 
   const isChallenge = Boolean(level?.kind === "challenge") && !level?.isCustom;
@@ -420,4 +435,6 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
       )}
     </MobileBottomSheet>
   );
-};
+});
+
+MobileLevelSheet.displayName = "MobileLevelSheet";
