@@ -16,8 +16,8 @@ const OG_VERSION = "2";
 const HOME_OG = {
   alt: "Princeton Tower Defense - Free Browser Tower Defense Game with 26 Levels, 9 Heroes, and 100+ Enemies",
   height: 630,
-  type: "image/png",
-  url: "/images/og/home.png",
+  type: "image/jpeg",
+  url: "/images/og/home.jpg",
   width: 1200,
 } as const;
 
