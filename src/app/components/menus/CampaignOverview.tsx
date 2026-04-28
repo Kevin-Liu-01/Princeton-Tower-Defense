@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 
 import { LEVEL_DATA } from "../../constants";
 import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
@@ -299,29 +299,30 @@ interface CampaignOverviewProps {
   onTogglePreview?: () => void;
 }
 
-export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
+export const CampaignOverview = memo(function CampaignOverview({
   levelStars,
   levelStats,
   unlockedMaps,
   onSelectLevel,
   onTogglePreview,
-}) => {
+}: CampaignOverviewProps) {
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
+  const campaignLevels = useMemo(() => getCampaignLevels(), []);
 
   const regionData = useMemo(
     () => getRegionProgressList(levelStars, unlockedSet),
     [levelStars, unlockedSet]
   );
 
-  const campaignLevels = getCampaignLevels();
-  const totalStars = campaignLevels.reduce(
-    (a, l) => a + (levelStars[l.id] || 0),
-    0
+  const totalStars = useMemo(
+    () => campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0),
+    [campaignLevels, levelStars]
   );
   const maxStars = campaignLevels.length * 3;
-  const completedLevels = campaignLevels.filter(
-    (l) => (levelStars[l.id] || 0) > 0
-  ).length;
+  const completedLevels = useMemo(
+    () => campaignLevels.filter((l) => (levelStars[l.id] || 0) > 0).length,
+    [campaignLevels, levelStars]
+  );
   const totalLevels = campaignLevels.length;
 
   const recommended = useMemo(
@@ -329,17 +330,17 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
     [levelStars, unlockedSet]
   );
 
-  const totalBattles = Object.values(levelStats).reduce(
-    (a, s) => a + (s.timesPlayed || 0),
-    0
-  );
-  const totalWins = Object.values(levelStats).reduce(
-    (a, s) => a + (s.timesWon || 0),
-    0
-  );
-  const totalHearts = Object.values(levelStats).reduce(
-    (a, s) => a + (s.bestHearts || 0),
-    0
+  const campaignTotals = useMemo(
+    () =>
+      Object.values(levelStats).reduce(
+        (totals, stats) => ({
+          battles: totals.battles + (stats.timesPlayed || 0),
+          hearts: totals.hearts + (stats.bestHearts || 0),
+          wins: totals.wins + (stats.timesWon || 0),
+        }),
+        { battles: 0, hearts: 0, wins: 0 }
+      ),
+    [levelStats]
   );
 
   const lastPlayed = useMemo(
@@ -353,8 +354,9 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
 
   const isCampaignBeaten = (levelStars[FINAL_CAMPAIGN_LEVEL] || 0) > 0;
-  const isAllLevelsBeaten = campaignLevels.every(
-    (l) => (levelStars[l.id] || 0) > 0
+  const isAllLevelsBeaten = useMemo(
+    () => campaignLevels.every((l) => (levelStars[l.id] || 0) > 0),
+    [campaignLevels, levelStars]
   );
 
   const nextChallenge = useMemo(() => {
@@ -506,7 +508,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <span className="flex items-center gap-1.5 text-[11px]">
             <Swords size={11} className="text-blue-400/80 shrink-0" />
             <span className="text-blue-300 font-bold tabular-nums">
-              {totalBattles}
+              {campaignTotals.battles}
             </span>
             <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
               Played
@@ -516,7 +518,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <span className="flex items-center gap-1.5 text-[11px]">
             <Trophy size={11} className="text-emerald-400/80 shrink-0" />
             <span className="text-emerald-300 font-bold tabular-nums">
-              {totalWins}
+              {campaignTotals.wins}
             </span>
             <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
               Wins
@@ -526,7 +528,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <span className="flex items-center gap-1.5 text-[11px]">
             <Heart size={11} className="text-red-400 fill-red-400 shrink-0" />
             <span className="text-red-300 font-bold tabular-nums">
-              {totalHearts}
+              {campaignTotals.hearts}
             </span>
             <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">
               Lives
@@ -841,4 +843,6 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
       </div>
     </div>
   );
-};
+});
+
+CampaignOverview.displayName = "CampaignOverview";

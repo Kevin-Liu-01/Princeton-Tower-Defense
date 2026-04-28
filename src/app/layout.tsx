@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
     "msapplication-TileColor": "#E87722",
     "theme-color": "#E87722",
-    "twitter:domain": "princeton-tower-defense.vercel.app",
+    "twitter:domain": "ptd.quest",
   },
 
   publisher: SITE_AUTHOR,

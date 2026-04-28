@@ -58,7 +58,7 @@ const ENEMY_TYPES: EnemyType[] = [
   "mage",
   "dire_bear",
   "senior",
-  "frost_giant",
+  "yeti",
 ];
 
 function gridToScreen(

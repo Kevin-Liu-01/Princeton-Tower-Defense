@@ -1,4 +1,4 @@
-export const SITE_URL = "https://princeton-tower-defense.vercel.app";
+export const SITE_URL = "https://ptd.quest";
 export const SITE_NAME = "Princeton Tower Defense";
 export const SITE_AUTHOR = "Kevin Liu";
 export const GITHUB_URL =

@@ -254,9 +254,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     h: number;
     timeBucket: number;
   }>({ canvas: null, h: 0, timeBucket: -1, w: 0 });
-  // Tracks last-composed paint state for the mobile frame-skip path inside
-  // drawWorldMapCanvas. Prevents the ~6 full-canvas blits per rAF tick when
-  // nothing visible has actually changed.
+  // Tracks last-composed paint state inside drawWorldMapCanvas. Prevents the
+  // ~6 full-canvas blits per rAF tick when nothing visible has changed.
   const paintKeyRef = useRef<string>("");
   const dragRef = useRef({
     dragStartX: 0,
@@ -463,13 +462,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     onFreeplayRequest,
   ]);
 
-  const handleLevelClick = (levelId: string) => {
-    if (isLevelUnlocked(levelId)) {
-      setSelectedLevel(levelId);
-      setSelectedMap(levelId);
-      setHoveredLevel(null);
-    }
-  };
+  const handleLevelClick = useCallback(
+    (levelId: string) => {
+      if (isLevelUnlocked(levelId)) {
+        setSelectedLevel(levelId);
+        setSelectedMap(levelId);
+        setHoveredLevel(null);
+      }
+    },
+    [isLevelUnlocked, setSelectedMap]
+  );
 
   const scrollMapToLevel = useCallback(
     (levelId: string) => {
@@ -495,10 +497,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     [visibleWorldLevels, mapHeight, mapScale]
   );
 
-  const handleSidebarLevelClick = (levelId: string) => {
-    handleLevelClick(levelId);
-    scrollMapToLevel(levelId);
-  };
+  const handleSidebarLevelClick = useCallback(
+    (levelId: string) => {
+      handleLevelClick(levelId);
+      scrollMapToLevel(levelId);
+    },
+    [handleLevelClick, scrollMapToLevel]
+  );
+  const showCampaignPreview = useCallback(
+    () => setShowBattlefieldPreview(true),
+    []
+  );
   const handleCustomLevelPlaytest = useCallback(
     (levelId: string) => {
       if (!customLevelById.has(levelId)) {
@@ -581,9 +590,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId: number;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    // Mobile: 30 fps. Desktop: 50 fps. The world-map caches bucket their work
-    // at 5–15 fps on mobile anyway, so polling faster than 30 fps there just
-    // burns CPU on the per-frame blit + paint-key check.
     const frameInterval = isMobile ? 33 : 20;
 
     let lastTimestamp = 0;
@@ -878,7 +884,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
   function goToNextLevel() {
     if (!currentLevel || isCurrentCustomLevel || isCurrentSandboxLevel) {
-      handleLevelClick(visibleWorldLevels[0].id);
+      const firstLevel = visibleWorldLevels[0];
+      if (firstLevel) {
+        handleLevelClick(firstLevel.id);
+      }
       return;
     }
     const unlockedLevels = visibleWorldLevels
@@ -887,17 +896,24 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const currentIndex = unlockedLevels.indexOf(currentLevel.id);
     if (currentIndex === unlockedLevels.length - 1) {
       const firstLevelId = unlockedLevels[0];
-      handleLevelClick(firstLevelId);
+      if (firstLevelId) {
+        handleLevelClick(firstLevelId);
+      }
       return;
     }
     if (currentIndex < unlockedLevels.length - 1) {
       const nextLevelId = unlockedLevels[currentIndex + 1];
-      handleLevelClick(nextLevelId);
+      if (nextLevelId) {
+        handleLevelClick(nextLevelId);
+      }
     }
   }
   function goToPreviousLevel() {
     if (!currentLevel || isCurrentCustomLevel || isCurrentSandboxLevel) {
-      handleLevelClick(visibleWorldLevels[0].id);
+      const firstLevel = visibleWorldLevels[0];
+      if (firstLevel) {
+        handleLevelClick(firstLevel.id);
+      }
       return;
     }
     const unlockedLevels = visibleWorldLevels
@@ -906,12 +922,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const currentIndex = unlockedLevels.indexOf(currentLevel.id);
     if (currentIndex === 0) {
       const lastLevelId = unlockedLevels.at(-1);
-      handleLevelClick(lastLevelId);
+      if (lastLevelId) {
+        handleLevelClick(lastLevelId);
+      }
       return;
     }
     if (currentIndex > 0) {
       const prevLevelId = unlockedLevels[currentIndex - 1];
-      handleLevelClick(prevLevelId);
+      if (prevLevelId) {
+        handleLevelClick(prevLevelId);
+      }
     }
   }
 
@@ -1665,14 +1685,15 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                  {/* CampaignOverview always renders as the base layer */}
-                  <CampaignOverview
-                    levelStars={levelStars}
-                    levelStats={levelStats}
-                    unlockedMaps={unlockedMaps}
-                    onSelectLevel={handleSidebarLevelClick}
-                    onTogglePreview={() => setShowBattlefieldPreview(true)}
-                  />
+                  {!showPreview && (
+                    <CampaignOverview
+                      levelStars={levelStars}
+                      levelStats={levelStats}
+                      unlockedMaps={unlockedMaps}
+                      onSelectLevel={handleSidebarLevelClick}
+                      onTogglePreview={showCampaignPreview}
+                    />
+                  )}
 
                   {/* BattlefieldPreview overlays on top (first-time users or manual toggle) */}
                   {showPreview && (
@@ -1685,7 +1706,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           );
                           if (unlockedLevelsList.length > 0) {
                             const farthestLevel = unlockedLevelsList.at(-1);
-                            handleLevelClick(farthestLevel.id);
+                            if (farthestLevel) {
+                              handleLevelClick(farthestLevel.id);
+                            }
                           }
                         }}
                       />

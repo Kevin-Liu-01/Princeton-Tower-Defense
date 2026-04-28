@@ -32,15 +32,6 @@ export function renderParticle(
     cameraZoom
   );
 
-  if (
-    screenPos.x < -20 ||
-    screenPos.x > canvasWidth + 20 ||
-    screenPos.y < -20 ||
-    screenPos.y > canvasHeight + 20
-  ) {
-    return;
-  }
-
   const zoom = cameraZoom || 1;
   const lifeRatio = particle.life / particle.maxLife;
   const alpha = lifeRatio;
@@ -49,10 +40,25 @@ export function renderParticle(
     return;
   }
 
+  const cullPadding = Math.min(80, Math.max(20, size * 2.2));
+  if (
+    screenPos.x < -cullPadding ||
+    screenPos.x > canvasWidth + cullPadding ||
+    screenPos.y < -cullPadding ||
+    screenPos.y > canvasHeight + cullPadding
+  ) {
+    return;
+  }
+
+  if (particleDensityHint >= 220 && alpha < 0.45) {
+    return;
+  }
+
   const prevAlpha = ctx.globalAlpha;
   ctx.globalAlpha = alpha;
 
-  const simplified = false;
+  const simplified =
+    particleDensityHint >= 96 || (particleDensityHint >= 48 && zoom >= 1.25);
 
   switch (particle.type) {
     case "fire": {
@@ -108,7 +114,6 @@ export function renderParticle(
       renderStorm(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
     }
-    case "explosion":
     default: {
       renderDefault(ctx, screenPos, size, particle.color);
       break;
@@ -195,9 +200,11 @@ function renderSpark(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean
+  simplified: boolean
 ): void {
-  drawGlowEffect(ctx, pos.x, pos.y, color, 4 * zoom);
+  if (!simplified) {
+    drawGlowEffect(ctx, pos.x, pos.y, color, 4 * zoom);
+  }
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
@@ -223,9 +230,11 @@ function renderGold(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean
+  simplified: boolean
 ): void {
-  drawGlowEffect(ctx, pos.x, pos.y, "#c9a227", 5 * zoom);
+  if (!simplified) {
+    drawGlowEffect(ctx, pos.x, pos.y, "#c9a227", 5 * zoom);
+  }
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
@@ -378,8 +387,16 @@ function renderHeal(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean
+  simplified: boolean
 ): void {
+  if (simplified) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
   const outerSize = size * 2;
   const grad = ctx.createRadialGradient(
     pos.x,
@@ -471,9 +488,11 @@ function renderStorm(
   size: number,
   zoom: number,
   color: string,
-  _simplified: boolean
+  simplified: boolean
 ): void {
-  drawGlowEffect(ctx, pos.x, pos.y, "#88aaff", 6 * zoom);
+  if (!simplified) {
+    drawGlowEffect(ctx, pos.x, pos.y, "#88aaff", 6 * zoom);
+  }
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y - size * 1.4);

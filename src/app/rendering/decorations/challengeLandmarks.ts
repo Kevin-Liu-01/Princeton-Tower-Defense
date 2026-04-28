@@ -174,7 +174,7 @@ function drawDetailedCannon(
   dir: CannonDirection,
   t: number
 ): void {
-  const d = dir === "left" ? -1 : dir === "right" ? 1 : 0;
+  const d = dir === "left" ? -1 : dir === "right" ? 1 : 0.72;
   const muzzleX = x + d * 10 * s;
   const muzzleY = y - (9 - Math.abs(d) * 1.5) * s;
 

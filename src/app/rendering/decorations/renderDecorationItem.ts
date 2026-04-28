@@ -14953,41 +14953,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           Math.PI * 2
         );
         ctx.fill();
-        // Backrest - gradient with spiked crown
-        const itBackG = ctx.createLinearGradient(
+        drawIsometricCrystalSpire(
+          ctx,
           screenPos.x,
           screenPos.y - 10 * s,
-          screenPos.x,
-          screenPos.y - 72 * s
+          24 * s,
+          62 * s,
+          "#e1f5fe",
+          "#4fc3f7",
+          "#0277bd"
         );
-        itBackG.addColorStop(0, "#0277BD");
-        itBackG.addColorStop(0.3, "#29B6F6");
-        itBackG.addColorStop(0.6, "#81D4FA");
-        itBackG.addColorStop(0.85, "#b3e5fc");
-        itBackG.addColorStop(1, "#e1f5fe");
-        ctx.fillStyle = itBackG;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 10 * s);
-        ctx.lineTo(screenPos.x - 17 * s, screenPos.y - 46 * s);
-        ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 57 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 72 * s);
-        ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 57 * s);
-        ctx.lineTo(screenPos.x + 17 * s, screenPos.y - 46 * s);
-        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 10 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Facet lines
-        ctx.strokeStyle = "rgba(255,255,255,0.35)";
-        ctx.lineWidth = 1.2 * s;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x, screenPos.y - 10 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 72 * s);
-        ctx.moveTo(screenPos.x - 9 * s, screenPos.y - 12 * s);
-        ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 57 * s);
-        ctx.moveTo(screenPos.x + 9 * s, screenPos.y - 12 * s);
-        ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 57 * s);
-        ctx.stroke();
-        // Frost rune carvings on backrest
+        // Frost rune carvings on the front crystal face
         ctx.strokeStyle = "rgba(128,222,234,0.3)";
         ctx.lineWidth = 0.8 * s;
         ctx.beginPath();
@@ -15007,10 +14983,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Crown jewel with glow
         const itJewelG = ctx.createRadialGradient(
           screenPos.x,
-          screenPos.y - 67 * s,
+          screenPos.y - 61 * s,
           0,
           screenPos.x,
-          screenPos.y - 67 * s,
+          screenPos.y - 61 * s,
           6 * s
         );
         itJewelG.addColorStop(0, "rgba(128,222,234,0.7)");
@@ -15018,17 +14994,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         itJewelG.addColorStop(1, "transparent");
         ctx.fillStyle = itJewelG;
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - 67 * s, 6 * s, 0, Math.PI * 2);
+        ctx.arc(screenPos.x, screenPos.y - 61 * s, 6 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#80DEEA";
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - 67 * s, 3 * s, 0, Math.PI * 2);
+        ctx.arc(screenPos.x, screenPos.y - 61 * s, 3 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.beginPath();
         ctx.arc(
           screenPos.x - 1 * s,
-          screenPos.y - 68 * s,
+          screenPos.y - 62 * s,
           1.2 * s,
           0,
           Math.PI * 2

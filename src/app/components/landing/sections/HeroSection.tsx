@@ -445,7 +445,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             fill
             sizes="115vw"
             className="object-cover"
-            priority={i < 2}
+            priority
           />
         </div>
       ))}

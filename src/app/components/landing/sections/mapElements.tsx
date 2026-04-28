@@ -522,9 +522,23 @@ export function ParchmentOverlay() {
 
 // ─── Shared Section Header (cartographic style) ──────────────────────────────
 
-export function MapSectionHeader({ title }: { title: string }) {
+export function MapSectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
   return (
     <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
+      {subtitle && (
+        <div
+          className="mb-2 sm:mb-3 text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em]"
+          style={{ color: `rgba(${T.accentRgb},0.65)` }}
+        >
+          {subtitle}
+        </div>
+      )}
       <h2
         className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
         style={{

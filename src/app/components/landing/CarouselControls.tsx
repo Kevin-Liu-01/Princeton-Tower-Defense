@@ -9,7 +9,7 @@ const T = LANDING_THEME;
 export function useCarousel(count: number, autoPlayMs = 0) {
   const [active, setActive] = useState(0);
   const pausedRef = useRef(false);
-  const resumeRef = useRef<ReturnType<typeof setTimeout>>();
+  const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!autoPlayMs || count <= 1) {

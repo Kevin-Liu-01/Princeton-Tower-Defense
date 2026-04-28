@@ -88,7 +88,7 @@ export const drawWorldMapCanvas = ({
   const DECOR_FPS = isMobile ? 10 : 50;
   const PATH_FPS = isMobile ? 5 : 50;
   const NODE_FPS = isMobile ? 5 : 15;
-  const ATMOS_FPS = isMobile ? 10 : 0; // 0 = no cache on desktop
+  const ATMOS_FPS = isMobile ? 10 : 50;
   const HERO_IDLE_FPS = isMobile ? 15 : 30;
   const BATTLE_PREVIEW_FPS = 30;
 
@@ -97,20 +97,11 @@ export const drawWorldMapCanvas = ({
   const nodeTimeBucket = Math.floor(time * NODE_FPS);
   const atmosTimeBucket = ATMOS_FPS > 0 ? Math.floor(time * ATMOS_FPS) : -1;
 
-  // --- MOBILE FRAME SKIP -----------------------------------------------------
-  // The animation loop fires at ~30–50 Hz, but on mobile every visual layer is
-  // bucketed at 5–15 FPS, and desktop-only effects (battle preview, atmosphere)
-  // are skipped entirely. That means most rAF ticks produce an identical image,
-  // yet we were still doing ~6 full-canvas `drawImage` blits per tick (static
-  // bg, decoration ground, path, structure, nodes, atmosphere). On a 1800-px
-  // wide canvas that's ~300 MP/s of compositing for no visible change.
-  //
-  // The key below captures every input that affects the output. If it matches
-  // the last paint, we bail before touching the canvas.
-  //
-  // Desktop keeps the per-frame path because atmospheric clouds/birds/dust are
-  // un-cached and animate every frame.
-  if (isMobile && paintKeyRef) {
+  // --- FRAME SKIP ------------------------------------------------------------
+  // Most world-map animation is deliberately bucketed. If no bucket or state
+  // input changed, the composed canvas would be identical, so skip the expensive
+  // full-canvas blits.
+  if (paintKeyRef) {
     const heroMovingNow = heroMoving?.current ?? false;
     const heroX = heroMapPos ? Math.round(heroMapPos.current.x) : 0;
     const heroY = heroMapPos ? Math.round(heroMapPos.current.y) : 0;
@@ -119,9 +110,6 @@ export const drawWorldMapCanvas = ({
     // we still want the sin-bob to animate, so include an idle time bucket.
     const heroIdleBucket =
       heroType && !heroMovingNow ? Math.floor(time * HERO_IDLE_FPS) : -1;
-    // Desktop-only battle preview (also animated each frame) — include so if
-    // this renderer is ever called with isMobile=false on a shared path the
-    // key still varies. Currently only matters for desktop but keep parity.
     const battlePreviewBucket =
       !isMobile && selectedLevel && !heroMovingNow
         ? Math.floor(time * BATTLE_PREVIEW_FPS)

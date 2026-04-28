@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import React, {
   useRef,
   useState,
@@ -11,12 +12,23 @@ import { useImagePreloader } from "../../hooks/useImagePreloader";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
 import { LandingCreditsModal } from "./LandingCreditsModal";
 import { SectionReveal } from "./SectionReveal";
-import { ArsenalShowcase } from "./sections/ArsenalShowcase";
-import { BottomCTA } from "./sections/BottomCTA";
-import { EnemyBestiary } from "./sections/EnemyBestiary";
-import { GameplayShowcase } from "./sections/GameplayShowcase";
-import { HeroCinematic } from "./sections/HeroCinematic";
 import { HeroSection } from "./sections/HeroSection";
+
+const ArsenalShowcase = dynamic(() =>
+  import("./sections/ArsenalShowcase").then((mod) => mod.ArsenalShowcase)
+);
+const BottomCTA = dynamic(() =>
+  import("./sections/BottomCTA").then((mod) => mod.BottomCTA)
+);
+const EnemyBestiary = dynamic(() =>
+  import("./sections/EnemyBestiary").then((mod) => mod.EnemyBestiary)
+);
+const GameplayShowcase = dynamic(() =>
+  import("./sections/GameplayShowcase").then((mod) => mod.GameplayShowcase)
+);
+const HeroCinematic = dynamic(() =>
+  import("./sections/HeroCinematic").then((mod) => mod.HeroCinematic)
+);
 
 const T = LANDING_THEME;
 

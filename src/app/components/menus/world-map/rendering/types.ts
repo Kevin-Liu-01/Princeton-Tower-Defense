@@ -50,7 +50,7 @@ export interface NodeCache {
 }
 
 export interface DrawWorldMapParams {
-  canvasRef: RefObject<HTMLCanvasElement>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   mapHeight: number;
   containerWidth: number;
   hoveredLevel: string | null;
@@ -73,10 +73,9 @@ export interface DrawWorldMapParams {
   heroMoving?: MutableRefObject<boolean>;
   heroFacingRight?: MutableRefObject<boolean>;
   /**
-   * Mobile-only: tracks the last composed paint state. When nothing visible has
+   * Tracks the last composed paint state. When nothing visible has
    * changed since the previous paint, the renderer early-returns and skips ~6
-   * full-canvas blits per frame. Not used on desktop (which paints every frame
-   * because atmospheric layers are un-cached).
+   * full-canvas blits per frame.
    */
   paintKeyRef?: MutableRefObject<string>;
 }

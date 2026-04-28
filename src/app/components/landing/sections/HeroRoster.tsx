@@ -133,7 +133,7 @@ function HeroCard({
 
 function SpellCard({ type }: { type: SpellType }) {
   const data = SPELL_DATA[type];
-  const spellColor = (data as Record<string, unknown>).color as
+  const spellColor = (data as unknown as Record<string, unknown>).color as
     | string
     | undefined;
   const accent = spellColor ?? T.accent;

@@ -421,8 +421,9 @@ export function handleCanvasClickImpl(
           p.issueHeroMoveCommand(p.draggingUnit.heroId, targetPos);
         }
       } else if (p.draggingUnit.kind === "troop") {
+        const draggingTroop = p.draggingUnit;
         const draggedTroop = p.troops.find(
-          (t) => t.id === p.draggingUnit!.troopId
+          (t) => t.id === draggingTroop.troopId
         );
         if (draggedTroop) {
           const moveInfo = getTroopMoveInfo(
@@ -435,7 +436,7 @@ export function handleCanvasClickImpl(
             moveInfo
           );
           if (targetPos) {
-            p.issueTroopFormationMoveCommand(p.draggingUnit.ownerId, targetPos);
+            p.issueTroopFormationMoveCommand(draggingTroop.ownerId, targetPos);
           }
         }
       }
@@ -1128,7 +1129,6 @@ export function handleMouseMoveImpl(
   const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
-  p.setMousePos({ x, y });
 
   if (!isTouch && (e.buttons & 1) === 0) {
     if (p.isBuildDragging) {
@@ -1144,6 +1144,20 @@ export function handleMouseMoveImpl(
       p.setSelectedUnitMoveInfo(null);
     }
   }
+
+  // Keep camera panning on the ref-only path. Hover and mouse-position state
+  // updates during a drag force React work that the renderer does not need.
+  if (p.isPanning && p.panStart && p.panStartOffset) {
+    const dx = (x - p.panStart.x) / p.cameraZoom;
+    const dy = (y - p.panStart.y) / p.cameraZoom;
+    p.setCameraOffset({
+      x: p.panStartOffset.x + dx,
+      y: p.panStartOffset.y + dy,
+    });
+    return;
+  }
+
+  p.setMousePos({ x, y });
 
   const { width, height, dpr } = p.getCanvasDimensions();
   const hoveredWaveBubblePath =
@@ -1166,17 +1180,6 @@ export function handleMouseMoveImpl(
     p.setMoveTargetPos(null);
     p.setMoveTargetValid(false);
     p.setSelectedUnitMoveInfo(null);
-  }
-
-  // ========== CANVAS PANNING ==========
-  if (p.isPanning && p.panStart && p.panStartOffset) {
-    const dx = (x - p.panStart.x) / p.cameraZoom;
-    const dy = (y - p.panStart.y) / p.cameraZoom;
-    p.setCameraOffset({
-      x: p.panStartOffset.x + dx,
-      y: p.panStartOffset.y + dy,
-    });
-    return;
   }
 
   // ========== TOWER REPOSITIONING ==========
@@ -1223,9 +1226,8 @@ export function handleMouseMoveImpl(
         p.setMoveTargetValid(false);
       }
     } else {
-      const draggedTroop = p.troops.find(
-        (t) => t.id === p.draggingUnit!.troopId
-      );
+      const draggingTroop = p.draggingUnit;
+      const draggedTroop = p.troops.find((t) => t.id === draggingTroop.troopId);
       if (!draggedTroop) {
         p.setDraggingUnit(null);
         p.setUnitDragStart(null);
