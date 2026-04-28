@@ -356,38 +356,14 @@ function renderFrame(): React.ReactElement {
 const BG = "rgb(32,24,14)";
 const BG_RGBA = "32,24,14";
 
-const LEFT_MAPS = [
-  "nassau",
-  "poe",
-  "carnegie",
-  "murky_bog",
-  "sunken_temple",
-  "glacier",
-  "fortress",
-  "lava_fields",
-] as const;
-const RIGHT_MAPS = [
-  "oasis",
-  "sphinx",
-  "pyramid",
-  "peak",
-  "caldera",
-  "throne",
-  "witch_hut",
-  "sandbox",
-] as const;
 const MAP_STRIP_W = 160;
-const MAP_IMG_H = 72;
-const MAP_GAP = 8;
 
 function renderMapStrip(
   baseUrl: string,
-  maps: readonly string[],
   side: "left" | "right"
 ): React.ReactElement {
   const fadeDir = side === "left" ? "270deg" : "90deg";
-  const totalH = maps.length * MAP_IMG_H + (maps.length - 1) * MAP_GAP;
-  const topOffset = Math.round((H - totalH) / 2);
+  const stripFile = side === "left" ? "strip-left.png" : "strip-right.png";
 
   return (
     <div
@@ -400,41 +376,14 @@ function renderMapStrip(
         width: MAP_STRIP_W,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: MAP_GAP,
-          left: 8,
-          position: "absolute",
-          top: topOffset,
-          width: MAP_STRIP_W - 16,
-        }}
-      >
-        {maps.map((map) => (
-          <div
-            key={map}
-            style={{
-              borderRadius: 6,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-              display: "flex",
-              height: MAP_IMG_H,
-              overflow: "hidden",
-              width: MAP_STRIP_W - 16,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${baseUrl}/images/previews/${map}.png`}
-              width={MAP_STRIP_W - 16}
-              height={MAP_IMG_H}
-              alt=""
-              style={{ display: "flex", objectFit: "cover" }}
-            />
-          </div>
-        ))}
-      </div>
-      {/* Top/bottom fade */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`${baseUrl}/images/og/${stripFile}`}
+        width={MAP_STRIP_W}
+        height={H}
+        alt=""
+        style={{ display: "flex", objectFit: "cover" }}
+      />
       <div
         style={{
           background: `linear-gradient(180deg, ${BG} 0%, transparent 20%, transparent 80%, ${BG} 100%)`,
@@ -446,7 +395,6 @@ function renderMapStrip(
           width: MAP_STRIP_W,
         }}
       />
-      {/* Inner-edge fade */}
       <div
         style={{
           background: `linear-gradient(${fadeDir}, transparent 40%, ${BG} 100%)`,
@@ -522,8 +470,8 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
       />
 
       {/* Map preview strips */}
-      {renderMapStrip(baseUrl, LEFT_MAPS, "left")}
-      {renderMapStrip(baseUrl, RIGHT_MAPS, "right")}
+      {renderMapStrip(baseUrl, "left")}
+      {renderMapStrip(baseUrl, "right")}
 
       {/* Ornate frame */}
       {renderFrame()}
