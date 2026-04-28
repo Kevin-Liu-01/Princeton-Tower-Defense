@@ -281,10 +281,10 @@ function renderFrame(): React.ReactElement {
           at offset 11 (=10 + 1px stroke half-width) from its edge. */}
       {(
         [
-          { cx: W / 2, cy: 11 },
-          { cx: W / 2, cy: H - 11 },
-          { cx: 11, cy: H / 2 },
-          { cx: W - 11, cy: H / 2 },
+          { cx: W / 2, cy: 15 },
+          { cx: W / 2, cy: H - 15 },
+          { cx: 15, cy: H / 2 },
+          { cx: W - 15, cy: H / 2 },
         ] as const
       ).map((d) => {
         const size = 18;
