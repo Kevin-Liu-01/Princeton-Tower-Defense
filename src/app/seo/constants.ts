@@ -10,7 +10,7 @@ export const AUTHOR_TWITTER = "https://x.com/kevskgs";
 export const AUTHOR_LINKEDIN =
   "https://www.linkedin.com/in/kevin-liu-princeton/";
 export const AUTHOR_DEVPOST = "https://devpost.com/Kevin-Liu-01";
-export const AUTHOR_ITCH = "https://kevin-liu-01.itch.io/";
+export const AUTHOR_EMAIL = "k.bowen.liu@gmail.com";
 
 export const AUTHOR_SAME_AS = [
   AUTHOR_URL,
@@ -18,7 +18,6 @@ export const AUTHOR_SAME_AS = [
   AUTHOR_TWITTER,
   AUTHOR_LINKEDIN,
   AUTHOR_DEVPOST,
-  AUTHOR_ITCH,
 ] as const;
 
 export const SITE_DESCRIPTION =
