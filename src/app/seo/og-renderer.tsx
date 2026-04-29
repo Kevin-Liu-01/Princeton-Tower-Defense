@@ -66,81 +66,6 @@ const FG = "#d4a84a";
 const CS = 56;
 const FONT = "bc-novatica-cyr, sans-serif";
 
-const TOWERS = [
-  "cannon",
-  "library",
-  "lab",
-  "arch",
-  "club",
-  "station",
-  "mortar",
-] as const;
-
-const TOWER_CARD_INFO: Record<
-  string,
-  {
-    name: string;
-    bgTop: string;
-    bgBottom: string;
-    accent: string;
-    imgSize?: number;
-    offsetY?: number;
-  }
-> = {
-  arch: {
-    accent: "#60a5fa",
-    bgBottom: "#12122a",
-    bgTop: "#2e2e5c",
-    name: "Blair Arch",
-    offsetY: 14,
-  },
-  cannon: {
-    accent: "#f87171",
-    bgBottom: "#1e120e",
-    bgTop: "#5c2e1c",
-    name: "Nassau Cannon",
-    offsetY: 7,
-  },
-  club: {
-    accent: "#f59e0b",
-    bgBottom: "#1e1a0e",
-    bgTop: "#504418",
-    imgSize: 150,
-    name: "Eating Club",
-  },
-  lab: {
-    accent: "#facc15",
-    bgBottom: "#141c0e",
-    bgTop: "#304c1c",
-    name: "E-Quad Lab",
-    offsetY: 7,
-  },
-  library: {
-    accent: "#67e8f9",
-    bgBottom: "#0e1822",
-    bgTop: "#1c3a5a",
-    imgSize: 170,
-    offsetY: 4,
-    name: "Firestone Library",
-  },
-  mortar: {
-    accent: "#fb923c",
-    bgBottom: "#1e160e",
-    bgTop: "#503818",
-    imgSize: 150,
-    name: "Palmer Mortar",
-    offsetY: 14,
-  },
-  station: {
-    accent: "#a78bfa",
-    bgBottom: "#1c0e1c",
-    bgTop: "#4c1c4c",
-    name: "Dinky Station",
-    imgSize: 150,
-    offsetY: 24,
-  },
-};
-
 const CORNER_SVG = (
   <svg viewBox="0 0 70 70" width={CS} height={CS}>
     <path
@@ -275,62 +200,43 @@ function renderFrame(): React.ReactElement {
         }}
       />
 
-      {/* Center diamond finials — one centered on each edge of the outer
-          frame line, with a faceted gem look (gradient body + bright pip).
-          The outer-border line lives at offset 10 so we centre each diamond
-          at offset 11 (=10 + 1px stroke half-width) from its edge. */}
+      {/* Center diamond finials on each edge of the outer frame. Pip is
+          nested inside the rotated diamond and counter-rotated so Satori's
+          flex centering keeps it at the exact visual center. */}
       {(
         [
-          { cx: W / 2, cy: 15 },
+          { cx: W / 2, cy: 10 },
           { cx: W / 2, cy: H - 15 },
-          { cx: 15, cy: H / 2 },
-          { cx: W - 15, cy: H / 2 },
+          { cx: 12, cy: H / 2 },
+          { cx: W - 13, cy: H / 2 },
         ] as const
-      ).map((d) => {
-        const size = 18;
-        return (
+      ).map((d) => (
+        <div
+          key={`${d.cx}-${d.cy}`}
+          style={{
+            alignItems: "center",
+            display: "flex",
+            height: 28,
+            justifyContent: "center",
+            left: d.cx - 14,
+            position: "absolute",
+            top: d.cy - 14,
+            width: 28,
+          }}
+        >
           <div
-            key={`${d.cx}-${d.cy}`}
             style={{
+              background: `linear-gradient(135deg, ${FG} 0%, ${FC} 50%, #6a4d18 100%)`,
+              border: `1.5px solid ${FG}`,
+              boxShadow: `0 0 10px rgba(212,168,74,0.55)`,
               display: "flex",
-              height: size,
-              left: d.cx - size / 2,
-              position: "absolute",
-              top: d.cy - size / 2,
-              width: size,
+              height: 14,
+              transform: "rotate(45deg)",
+              width: 14,
             }}
-          >
-            {/* Faceted body */}
-            <div
-              style={{
-                background: `linear-gradient(135deg, ${FG} 0%, ${FC} 50%, #6a4d18 100%)`,
-                border: `1.5px solid ${FG}`,
-                boxShadow: `0 0 10px rgba(212,168,74,0.55), inset 0 0 4px rgba(255,240,180,0.35)`,
-                display: "flex",
-                height: size,
-                left: 0,
-                position: "absolute",
-                top: 0,
-                transform: "rotate(45deg)",
-                width: size,
-              }}
-            />
-            {/* Bright sparkle pip */}
-            <div
-              style={{
-                background: "rgba(255,245,200,0.85)",
-                borderRadius: 99,
-                display: "flex",
-                height: 4,
-                left: size / 2 - 2,
-                position: "absolute",
-                top: size / 2 - 2,
-                width: 4,
-              }}
-            />
-          </div>
-        );
-      })}
+          />
+        </div>
+      ))}
 
       {/* Ornate corner SVGs */}
       {CORNERS.map((c) => (
@@ -525,59 +431,23 @@ export function renderOGImage(baseUrl: string): React.ReactElement {
           </div>
         </div>
 
-        {/* Tower carousel panel */}
+        {/* Tower carousel strip */}
         <div
           style={{
-            background: `rgba(${BG_RGBA},0.7)`,
-            border: "1.5px solid rgba(180,140,60,0.25)",
             borderRadius: 12,
             display: "flex",
             justifyContent: "center",
-            padding: "14px 20px",
+            overflow: "hidden",
           }}
         >
-          <div
-            style={{
-              alignItems: "flex-end",
-              display: "flex",
-              gap: 8,
-              justifyContent: "center",
-            }}
-          >
-            {TOWERS.map((tower) => {
-              const info = TOWER_CARD_INFO[tower];
-              const sz = info.imgSize ?? 180;
-              return (
-                <div
-                  key={tower}
-                  style={{
-                    alignItems: "center",
-                    background: `linear-gradient(170deg, ${info.bgTop}, ${info.bgBottom})`,
-                    border: `1.5px solid ${info.accent}30`,
-                    borderRadius: 8,
-                    boxShadow: `0 2px 10px rgba(0,0,0,0.4), inset 0 0 12px rgba(0,0,0,0.3)`,
-                    display: "flex",
-                    height: 148,
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    width: 112,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`${baseUrl}/images/og-thumbs/towers/${tower}.png`}
-                    width={sz}
-                    height={sz}
-                    alt=""
-                    style={{
-                      display: "flex",
-                      marginTop: info.offsetY ?? 0,
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${baseUrl}/images/og/tower-strip.png`}
+            width={820}
+            height={152}
+            alt=""
+            style={{ display: "flex", objectFit: "contain" }}
+          />
         </div>
 
         {/* Stats row */}

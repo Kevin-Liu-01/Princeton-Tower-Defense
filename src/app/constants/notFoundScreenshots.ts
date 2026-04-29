@@ -4,7 +4,7 @@ export const SCREENSHOTS = [
   "/images/new/gameplay_winter_ui.png",
   "/images/new/gameplay_volcano_ui.png",
   "/images/new/gameplay_swamp_ui.png",
-  "/images/promo/homepage.png",
+  "/images/new/gameplay_sandbox_ui.png",
 ] as const;
 
 export const SCREENSHOT_LABELS = [
@@ -13,5 +13,5 @@ export const SCREENSHOT_LABELS = [
   "Frozen Glacier",
   "Volcanic Caldera",
   "Murky Swamp",
-  "The Battlefield",
+  "Sandbox Arena",
 ] as const;

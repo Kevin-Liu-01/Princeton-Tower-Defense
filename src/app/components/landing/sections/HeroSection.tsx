@@ -218,7 +218,7 @@ function ScrollColumn({
     >
       <div className="hero-rail-slide relative" data-side={side}>
         <div
-          className="hero-rail-track flex flex-col gap-3 py-3"
+          className="hero-rail-track flex flex-col gap-3 py-1.5"
           style={{
             animation: `hero-scroll-${direction} ${levels.length * 5}s linear infinite`,
           }}
@@ -231,13 +231,14 @@ function ScrollColumn({
             />
           ))}
         </div>
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background: `linear-gradient(180deg, ${T.bg} 0%, transparent 22%, transparent 78%, ${T.bg} 100%)`,
-          }}
-        />
       </div>
+      <div
+        className="hero-rail-slide absolute inset-0 pointer-events-none z-10"
+        data-side={side}
+        style={{
+          background: `linear-gradient(180deg, ${T.bg} 0%, transparent 20%, transparent 80%, ${T.bg} 100%)`,
+        }}
+      />
       <div
         className="absolute inset-0 pointer-events-none z-20"
         style={{

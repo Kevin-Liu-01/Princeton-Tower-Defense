@@ -114,7 +114,9 @@ function getVideoGameSchema() {
       `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
       `${SITE_URL}/images/new/gameplay_winter_ui.png`,
       `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
-      `${SITE_URL}/images/promo/homepage.png`,
+      `${SITE_URL}/images/new/gameplay_sandbox_ui.png`,
+      `${SITE_URL}/images/promo/landingpage.png`,
+      `${SITE_URL}/images/promo/worldmap.png`,
     ],
     url: SITE_URL,
   };

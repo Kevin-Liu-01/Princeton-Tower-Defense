@@ -249,10 +249,16 @@ export const OG_IMAGES = {
     width: 1200,
   },
   homepage: {
-    alt: "Princeton Tower Defense main menu with world map showing 5 themed regions",
-    height: 630,
-    url: `${SITE_URL}/images/promo/homepage.png`,
-    width: 1200,
+    alt: "Princeton Tower Defense landing page with world map and campaign overview",
+    height: 1822,
+    url: `${SITE_URL}/images/promo/landingpage.png`,
+    width: 2980,
+  },
+  worldmap: {
+    alt: "Princeton Tower Defense world map with 5 themed regions and campaign progression",
+    height: 1828,
+    url: `${SITE_URL}/images/promo/worldmap.png`,
+    width: 2978,
   },
   primary: {
     alt: "Princeton Tower Defense gameplay - isometric campus map with towers defending against waves of enemies near Nassau Hall",
