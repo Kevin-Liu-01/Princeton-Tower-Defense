@@ -53,8 +53,7 @@ export function drawLevelBattlePreview(
   heroX: number,
   heroY: number,
   levelId: string,
-  time: number,
-  isMobile: boolean
+  time: number
 ) {
   const enemies = getUniqueEnemiesForLevel(levelId);
   if (enemies.length === 0) {
@@ -62,7 +61,7 @@ export function drawLevelBattlePreview(
   }
 
   const theme = getLevelTheme(levelId);
-  const displayCount = isMobile ? 3 : 5;
+  const displayCount = 5;
   const shownEnemies = enemies.slice(0, displayCount);
 
   // Battle dust cloud centered on the hero

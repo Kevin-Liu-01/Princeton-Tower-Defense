@@ -198,7 +198,6 @@ export interface DrawLevelNodesParams {
   isLevelUnlocked: (levelId: string) => boolean;
   getLevelY: (pct: number) => number;
   time: number;
-  isMobile: boolean;
   displayW: number;
   displayH: number;
   dpr: number;
@@ -216,7 +215,6 @@ export function drawLevelNodes({
   isLevelUnlocked,
   getLevelY,
   time,
-  isMobile,
   displayW,
   displayH,
   dpr,
@@ -226,7 +224,7 @@ export function drawLevelNodes({
 }: DrawLevelNodesParams): void {
   let ctx = callerCtx;
 
-  const NODE_FPS = isMobile ? 5 : 15;
+  const NODE_FPS = 15;
   const nodeTimeBucket = Math.floor(time * NODE_FPS);
   const nodeStarsKey = JSON.stringify(levelStars);
   const nodeUnlockedKey = unlockedMaps.join(",");

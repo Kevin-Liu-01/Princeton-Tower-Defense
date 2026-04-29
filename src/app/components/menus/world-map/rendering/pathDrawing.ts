@@ -123,12 +123,10 @@ function drawBrickSeams(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
   seed: number,
-  isMobile: boolean,
   halfWidth: number
 ): void {
   const totalLen = totalPathLength(pts);
-  // Mobile gets fewer, cheaper seams; desktop gets tighter cobblestone feel.
-  const spacing = isMobile ? 15 : 11;
+  const spacing = 11;
   const count = Math.floor(totalLen / spacing);
   if (count < 2) {
     return;
@@ -178,20 +176,17 @@ export function drawGoldenPath(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
   seed: number,
-  isMobile: boolean,
   time?: number
 ): void {
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // 1. Wide diffuse halo — grounds the road into the terrain (desktop only).
-  if (!isMobile) {
-    traceCatmullRom(ctx, pts, 3, 5);
-    ctx.strokeStyle = "rgba(0,0,0,0.16)";
-    ctx.lineWidth = 16;
-    ctx.stroke();
-  }
+  // 1. Wide diffuse halo — grounds the road into the terrain.
+  traceCatmullRom(ctx, pts, 3, 5);
+  ctx.strokeStyle = "rgba(0,0,0,0.16)";
+  ctx.lineWidth = 16;
+  ctx.stroke();
 
   // 2. Drop shadow — sharper near the road edge.
   traceCatmullRom(ctx, pts, 1.5, 2.5);
@@ -234,7 +229,7 @@ export function drawGoldenPath(
   ctx.globalAlpha = 1;
 
   // 8. Cobblestone seams — perpendicular brick lines with a subtle bevel.
-  drawBrickSeams(ctx, pts, seed + 1700, isMobile, 3.1);
+  drawBrickSeams(ctx, pts, seed + 1700, 3.1);
 
   // 9. Thin bright spine — a faint worn centerline where carts would've run.
   traceCatmullRom(ctx, pts, 0, 0);
@@ -245,28 +240,24 @@ export function drawGoldenPath(
   ctx.globalAlpha = 1;
 
   // 10. Edge rivets / flecks — subtle metallic studs along the shoulders.
-  if (!isMobile) {
-    drawEdgeRivets(ctx, pts, seed + 5000);
-  }
+  drawEdgeRivets(ctx, pts, seed + 5000);
 
   // 11. Travelling orbs — glowing motes drifting along the road. Kept for
   //     the "active path" feel. Desktop gets a short trail.
   if (time != null) {
-    const orbCount = isMobile ? 1 : 3;
+    const orbCount = 3;
     for (let orb = 0; orb < orbCount; orb++) {
       const dotPos = (time * 0.4 + orb * 0.33) % 1;
       const [ox, oy] = samplePoint(pts, dotPos);
 
-      if (!isMobile) {
-        for (let trail = 1; trail <= 3; trail++) {
-          const tt = Math.max(0, dotPos - trail * 0.012);
-          const [tx, ty] = samplePoint(pts, tt);
-          ctx.globalAlpha = 0.28 - trail * 0.07;
-          ctx.fillStyle = "#FFE28A";
-          ctx.beginPath();
-          ctx.arc(tx, ty, 3 - trail * 0.65, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      for (let trail = 1; trail <= 3; trail++) {
+        const tt = Math.max(0, dotPos - trail * 0.012);
+        const [tx, ty] = samplePoint(pts, tt);
+        ctx.globalAlpha = 0.28 - trail * 0.07;
+        ctx.fillStyle = "#FFE28A";
+        ctx.beginPath();
+        ctx.arc(tx, ty, 3 - trail * 0.65, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       ctx.globalAlpha = 0.32;

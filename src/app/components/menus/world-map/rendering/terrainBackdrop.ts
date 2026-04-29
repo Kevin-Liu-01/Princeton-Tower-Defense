@@ -10,7 +10,6 @@ interface TerrainBackdropParams {
   ctx: CanvasRenderingContext2D;
   width: number;
   height: number;
-  isMobile: boolean;
   time: number;
 }
 
@@ -18,7 +17,6 @@ export function drawTerrainBackdrop({
   ctx,
   width,
   height,
-  isMobile,
   time,
 }: TerrainBackdropParams) {
   const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
@@ -61,7 +59,7 @@ export function drawTerrainBackdrop({
   ctx.fillRect(0, 0, width, height);
 
   ctx.globalAlpha = 0.15;
-  for (let i = 0; i < (isMobile ? 40 : 100); i++) {
+  for (let i = 0; i < 100; i++) {
     const px = seededRandom(i * 7) * width;
     const py = seededRandom(i * 7 + 1) * height;
     const psize = 30 + seededRandom(i * 7 + 2) * 70;
@@ -101,7 +99,7 @@ export function drawTerrainBackdrop({
   ctx.globalAlpha = 1;
 
   ctx.globalAlpha = 0.1;
-  for (let i = 0; i < (isMobile ? 200 : 600); i++) {
+  for (let i = 0; i < 600; i++) {
     const dx = seededRandom(i * 11) * width;
     const dy = seededRandom(i * 11 + 1) * height;
     const dw = 3 + seededRandom(i * 11 + 2) * 12;
@@ -133,7 +131,7 @@ export function drawTerrainBackdrop({
   }
   ctx.globalAlpha = 1;
 
-  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
+  for (let i = 0; i < 500; i++) {
     const sx = seededRandom(i * 13) * width;
     const sy = seededRandom(i * 13 + 1) * height;
     const ss = 1.2 + seededRandom(i * 13 + 2) * 3;
@@ -188,7 +186,7 @@ export function drawTerrainBackdrop({
   ctx.globalAlpha = 1;
 
   ctx.globalAlpha = 0.4;
-  for (let i = 0; i < (isMobile ? 80 : 300); i++) {
+  for (let i = 0; i < 300; i++) {
     const gx = seededRandom(i * 17) * width;
     const gy = seededRandom(i * 17 + 1) * height;
     let grassColor = "#3a5a2a";
@@ -215,7 +213,7 @@ export function drawTerrainBackdrop({
 
   ctx.globalAlpha = 0.08;
   ctx.lineWidth = 1;
-  for (let i = 0; i < (isMobile ? 40 : 120); i++) {
+  for (let i = 0; i < 120; i++) {
     const cx = seededRandom(i * 19) * width;
     const cy = seededRandom(i * 19 + 1) * height;
     const crackLength = 15 + seededRandom(i * 19 + 2) * 50;
@@ -248,7 +246,7 @@ export function drawTerrainBackdrop({
   ctx.globalAlpha = 1;
 
   ctx.globalAlpha = 0.05;
-  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
+  for (let i = 0; i < 500; i++) {
     const px = seededRandom(i * 3) * width;
     const py = seededRandom(i * 3 + 1) * height;
     const size = 2 + seededRandom(i * 3 + 2) * 12;

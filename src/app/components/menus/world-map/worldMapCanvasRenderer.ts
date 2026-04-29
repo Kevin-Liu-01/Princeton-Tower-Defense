@@ -60,7 +60,7 @@ export const drawWorldMapCanvas = ({
   let ctx: CanvasRenderingContext2D = rawCtx;
 
   const rawDpr = window.devicePixelRatio || 1;
-  const dpr = Math.min(rawDpr, isMobile ? 1 : 2);
+  const dpr = Math.min(rawDpr, 2);
   const width = MAP_WIDTH;
   const height = mapHeight;
   const mapScale = Math.max(1, Math.min(1.5, containerWidth / MAP_WIDTH));
@@ -82,14 +82,11 @@ export const drawWorldMapCanvas = ({
   // Use ref-based time to avoid React re-renders on every frame
   const time = animTimeRef.current;
 
-  // --- Bucket rates (used for both internal cache invalidation and the
-  //     mobile-only paint-key frame skip below). Keep in sync with the per-layer
-  //     constants further down; mismatching them just means an extra blit.
-  const DECOR_FPS = isMobile ? 10 : 50;
-  const PATH_FPS = isMobile ? 5 : 50;
-  const NODE_FPS = isMobile ? 5 : 15;
-  const ATMOS_FPS = isMobile ? 10 : 50;
-  const HERO_IDLE_FPS = isMobile ? 15 : 30;
+  const DECOR_FPS = 50;
+  const PATH_FPS = 50;
+  const NODE_FPS = 15;
+  const ATMOS_FPS = 50;
+  const HERO_IDLE_FPS = 30;
   const BATTLE_PREVIEW_FPS = 30;
 
   const decorTimeBucket = Math.floor(time * DECOR_FPS);
@@ -111,7 +108,7 @@ export const drawWorldMapCanvas = ({
     const heroIdleBucket =
       heroType && !heroMovingNow ? Math.floor(time * HERO_IDLE_FPS) : -1;
     const battlePreviewBucket =
-      !isMobile && selectedLevel && !heroMovingNow
+      selectedLevel && !heroMovingNow
         ? Math.floor(time * BATTLE_PREVIEW_FPS)
         : -1;
 
@@ -161,7 +158,6 @@ export const drawWorldMapCanvas = ({
     drawTerrainBackdrop({
       ctx,
       height,
-      isMobile,
       time,
       width,
     });
@@ -293,7 +289,6 @@ export const drawWorldMapCanvas = ({
       getLevelY,
       height,
       isLevelUnlocked,
-      isMobile,
       time,
     });
   } // end !pathCacheValid
@@ -359,7 +354,6 @@ export const drawWorldMapCanvas = ({
     getLevelY,
     hoveredLevel,
     isLevelUnlocked,
-    isMobile,
     levelStars,
     mapScale,
     nodeCache,
@@ -368,9 +362,8 @@ export const drawWorldMapCanvas = ({
     unlockedMaps,
   });
 
-  // --- ENEMIES surrounding the hero at the selected level (skip on mobile) ---
   const isHeroMoving = heroMoving?.current ?? false;
-  if (!isMobile && selectedLevel && !isHeroMoving && heroMapPos) {
+  if (selectedLevel && !isHeroMoving && heroMapPos) {
     const level = getLevelById(selectedLevel);
     if (level) {
       drawLevelBattlePreview(
@@ -378,8 +371,7 @@ export const drawWorldMapCanvas = ({
         heroMapPos.current.x,
         heroMapPos.current.y,
         level.id,
-        time,
-        isMobile
+        time
       );
     }
   }
@@ -396,8 +388,7 @@ export const drawWorldMapCanvas = ({
       time,
       isHeroMoving,
       heroFacingRight?.current ?? true,
-      attackPhase,
-      isMobile
+      attackPhase
     );
   }
 
@@ -574,7 +565,7 @@ export const drawWorldMapCanvas = ({
   if (!atmosCacheValid) {
     // === ATMOSPHERIC CLOUD LAYER ===
     atmosCtx.save();
-    for (let c = 0; c < (isMobile ? 2 : 12); c++) {
+    for (let c = 0; c < 12; c++) {
       const cloudBaseX =
         seededRandom(c * 37) * width + Math.sin(time * 0.15 + c * 2) * 40;
       const cloudBaseY = 30 + seededRandom(c * 37 + 1) * (height * 0.25);
@@ -595,7 +586,7 @@ export const drawWorldMapCanvas = ({
       atmosCtx.globalAlpha = 0.06 + seededRandom(c * 37 + 4) * 0.06;
       atmosCtx.fillStyle = cloudTint + "1)";
 
-      for (let blob = 0; blob < (isMobile ? 1 : 4); blob++) {
+      for (let blob = 0; blob < 4; blob++) {
         const blobX = cloudBaseX + (blob - 1.5) * cloudW * 0.25;
         const blobY = cloudBaseY + Math.sin(blob * 1.5) * cloudH * 0.3;
         const blobW = cloudW * (0.3 + seededRandom(c + blob * 7) * 0.25);
@@ -610,7 +601,7 @@ export const drawWorldMapCanvas = ({
 
     // === FLYING CREATURES ===
     atmosCtx.save();
-    for (let b = 0; b < (isMobile ? 1 : 8); b++) {
+    for (let b = 0; b < 8; b++) {
       const birdBaseX = seededRandom(b * 53) * width;
       const birdBaseY = 15 + seededRandom(b * 53 + 1) * 35;
       const birdX =
@@ -657,7 +648,7 @@ export const drawWorldMapCanvas = ({
 
     // === ANIMATED DUST MOTES / PARTICLES ===
     atmosCtx.save();
-    for (let d = 0; d < (isMobile ? 3 : 30); d++) {
+    for (let d = 0; d < 30; d++) {
       const dustX =
         seededRandom(d * 67) * width + Math.sin(time * 0.4 + d * 1.3) * 20;
       const dustY =

@@ -590,7 +590,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId: number;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    const frameInterval = isMobile ? 33 : 20;
+    const frameInterval = 20;
 
     let lastTimestamp = 0;
     const HERO_SPEED = 200; // pixels per second

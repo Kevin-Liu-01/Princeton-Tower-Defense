@@ -16,7 +16,6 @@ export interface PathConnectionsParams {
   isLevelUnlocked: (id: string) => boolean;
   height: number;
   time: number;
-  isMobile: boolean;
 }
 
 const LOCKED_PATH_COLORS: Record<string, { partial: string; locked: string }> =
@@ -115,7 +114,6 @@ export function drawPathConnections({
   isLevelUnlocked,
   height,
   time,
-  isMobile,
 }: PathConnectionsParams): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -149,7 +147,7 @@ export function drawPathConnections({
       );
 
       if (isUnlocked) {
-        drawGoldenPath(ctx, pts, seed, isMobile, time);
+        drawGoldenPath(ctx, pts, seed, time);
       } else {
         const lockedColors =
           LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
