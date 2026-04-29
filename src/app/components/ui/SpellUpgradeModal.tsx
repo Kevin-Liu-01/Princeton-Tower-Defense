@@ -1163,7 +1163,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                 style={{
                   WebkitMaskImage:
                     "radial-gradient(ellipse at center, black 40%, transparent 85%)",
-                  backgroundImage: "url('/images/gameplay-latest.png')",
+                  backgroundImage: "url('/images/new/gameplay_grounds.png')",
                   backgroundPosition: "center 40%",
                   backgroundSize: "cover",
                   maskImage:
