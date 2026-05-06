@@ -10,6 +10,11 @@ Defend Princeton-inspired battlefields across 5 hand-crafted biome regions with 
 
 **[Play Now](https://princetontd.vercel.app/)** | **[Report Bug](https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues)** | **[Portfolio](https://www.kevin-liu.tech/)**
 
+
+---
+<div align="center">
+Special thanks to [Nicky He](https://github.com/NickyHeC) for her relentless QA and suggestions.
+</div>
 </div>
 
 ---
