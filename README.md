@@ -10,8 +10,8 @@ Defend Princeton-inspired battlefields across 5 hand-crafted biome regions with 
 
 **[Play Now](https://princetontd.vercel.app/)** | **[Report Bug](https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues)** | **[Portfolio](https://www.kevin-liu.tech/)**
 
-
 ---
+
 <div align="center">
 Special thanks to [Nicky He](https://github.com/NickyHeC) for her relentless QA and suggestions.
 </div>
@@ -254,7 +254,7 @@ A built-in map editor for designing and playing custom levels. Define paths, pla
 
 An endless, procedurally themed wave arena for testing builds and experimenting with tower compositions. Sandbox starts with 10,000 paw points and generates waves infinitely, cycling through themed enemy packs (Dark Fantasy, Bug Swarm, Beast Horde, and more) with boss waves every 5 rounds and chaos waves every 10.
 
-![Sandbox with Console](public/videos/sandbox-console.mp4)
+<video src="public/videos/sandbox-console.mp4" autoplay loop muted playsinline width="100%"></video>
 
 ---
 
