@@ -4278,11 +4278,17 @@ export const LEVEL_DATA: Record<
     camera: { offset: { x: -20, y: -260 }, zoom: 0.72 },
     decorations: [
       // Big ruins and landmarks scattered around the arena
-      { pos: { x: 16, y: 16 }, size: 2.5, type: "ruined_temple", variant: 0 },
-      { pos: { x: 2, y: 2 }, size: 1.8, type: "ruined_temple", variant: 0 },
-      { pos: { x: 28, y: 2 }, size: 1.6, type: "ruined_temple", variant: 1 },
-      { pos: { x: 26, y: 28 }, size: 1.4, type: "ruined_temple", variant: 2 },
-      { pos: { x: 2, y: 28 }, size: 1.3, type: "ruined_temple", variant: 3 },
+      { pos: { x: 6, y: 10 }, type: "ruined_temple", variant: 2 },
+      { pos: { x: 28, y: 22 }, type: "ruined_temple", variant: 1 },
+      { pos: { x: 15, y: 15 }, size: 2.5, type: "ruined_temple", variant: 4 },
+      { pos: { x: 14, y: 14 }, size: 2, type: "ruined_temple", variant: 1 },
+      { pos: { x: 15, y: 13 }, size: 1.5, type: "ruined_temple", variant: 6 },
+
+
+      { pos: { x: 2, y: 2 }, size: 1.4, type: "ruined_temple", variant: 1 },
+      { pos: { x: 28, y: 2 }, size: 1.6, type: "ruined_temple", variant: 3 },
+      { pos: { x: 28, y: 28 }, size: 1.4, type: "ruined_temple", variant: 2 },
+      { pos: { x: 2, y: 28 }, size: 1.3, type: "ruined_temple", variant: 1 },
       { pos: { x: 16, y: 30 }, size: 1.5, type: "ruined_temple", variant: 4 },
       { pos: { x: 8, y: 16 }, size: 1.2, type: "ruined_temple", variant: 5 },
       { pos: { x: 24, y: 16 }, size: 1.2, type: "ruined_temple", variant: 6 },
@@ -4292,10 +4298,10 @@ export const LEVEL_DATA: Record<
       { pos: { x: 10, y: 24 }, type: "sunken_pillar", variant: 2 },
       { pos: { x: 22, y: 24 }, type: "sunken_pillar", variant: 0 },
       // Statues guarding the entry/exit
-      { pos: { x: 1, y: 14 }, type: "statue", variant: 4 },
-      { pos: { x: 1, y: 18 }, type: "statue", variant: 7 },
-      { pos: { x: 31, y: 14 }, type: "statue", variant: 5 },
-      { pos: { x: 31, y: 18 }, type: "statue", variant: 6 },
+      { pos: { x: 1, y: 13.5 }, type: "statue", variant: 4 },
+      { pos: { x: 1, y: 17.5 }, type: "statue", variant: 6 },
+      { pos: { x: 30, y: 13.5 }, type: "demon_statue", variant: 1 },
+      { pos: { x: 30, y: 17.5 }, type: "statue", variant: 7 },
       // Demon statues inside the arena
       { pos: { x: 16, y: 8 }, type: "demon_statue", variant: 1 },
       { pos: { x: 16, y: 24 }, type: "demon_statue", variant: 3 },
@@ -4309,8 +4315,6 @@ export const LEVEL_DATA: Record<
       { pos: { x: 6, y: 26 }, type: "campfire", variant: 0 },
       { pos: { x: 26, y: 26 }, type: "campfire", variant: 1 },
       // Broken arches and ruins around edges
-      { pos: { x: 4, y: 10 }, type: "ruined_temple", variant: 0 },
-      { pos: { x: 28, y: 22 }, type: "ruined_temple", variant: 1 },
       { pos: { x: 20, y: 6 }, type: "battle_crater", variant: 0 },
       { pos: { x: 12, y: 26 }, type: "battle_crater", variant: 1 },
       { pos: { x: 14, y: 6 }, type: "skeleton_pile", variant: 0 },

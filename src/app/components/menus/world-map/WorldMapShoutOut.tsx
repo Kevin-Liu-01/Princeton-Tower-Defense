@@ -88,7 +88,7 @@ export function WorldMapShoutOut({ visible = true }: WorldMapShoutOutProps) {
                   textShadow: "0 0 10px rgba(252,211,77,0.15)",
                 }}
               >
-                Shout Us Out!
+                Shout Me Out!
               </span>
               <ExternalLink
                 size={12}
