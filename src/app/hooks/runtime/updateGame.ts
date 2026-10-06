@@ -42,9 +42,7 @@ import {
   SCOTT_DAMAGE_BUFF,
   BEACON_RANGE_BUFF,
   BEACON_BUFF_RANGE,
-  INVESTMENT_BANK_RANGE_BUFF,
   INVESTMENT_BANK_BUFF_RANGE,
-  RECRUITMENT_CENTER_DAMAGE_BUFF,
   RECRUITMENT_CENTER_BUFF_RANGE,
   CHRONO_RELAY_SPEED_BUFF,
   CHRONO_RELAY_BUFF_RANGE,
@@ -62,7 +60,7 @@ import {
   SUMMON_CHANNEL_DURATION,
   SUMMON_MINION_FADE_DURATION,
 } from "../../constants";
-import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
+import { calculateTowerStats } from "../../constants/towerStats";
 import { EnemyMutationBatch } from "../../game/enemyMutationBatch";
 import { acquireEnemy } from "../../game/entityPool";
 import {
@@ -155,7 +153,6 @@ import {
   SUNFORGE_GEM_Y_OFFSET,
 } from "../../rendering/towers/sentinelTheme";
 import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
-import { insertionSortBy } from "../../rendering/utils/insertionSort";
 import type {
   Position,
   Tower,
@@ -581,12 +578,16 @@ export function updateGameTick(
   const getEnemyAimPosCached = enemyPosCache.getAimPos;
 
   const enemiesByProgress = [...enemies];
-  insertionSortBy(enemiesByProgress, (e) => -(e.pathIndex + e.progress));
+  // This list is rebuilt in spawn order, not retained in sorted order.
+  enemiesByProgress.sort(
+    (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
+  );
 
   const enemyHash = buildEnemySpatialHash(enemies, getEnemyPosCached);
 
   const troopCellSize = 120;
   const troopBuckets = new Map<string, Troop[]>();
+  const troopsByOwner = new Map<string, Troop[]>();
   for (const troop of troops) {
     const cellKey = getTroopCellKey(troop.pos.x, troop.pos.y, troopCellSize);
     const bucket = troopBuckets.get(cellKey);
@@ -594,6 +595,13 @@ export function updateGameTick(
       bucket.push(troop);
     } else {
       troopBuckets.set(cellKey, [troop]);
+    }
+
+    const ownerTroops = troopsByOwner.get(troop.ownerId);
+    if (ownerTroops) {
+      ownerTroops.push(troop);
+    } else {
+      troopsByOwner.set(troop.ownerId, [troop]);
     }
   }
 
@@ -672,8 +680,17 @@ export function updateGameTick(
           club.id !== t.id
         ) {
           const clubPos = gridToWorld(club.pos);
-          if (distance(tWorldPos, clubPos) <= INVESTMENT_BANK_BUFF_RANGE) {
-            rangeMultiplier *= INVESTMENT_BANK_RANGE_BUFF;
+          const clubStats = calculateTowerStats(
+            club.type,
+            club.level,
+            club.upgrade,
+            1,
+            1,
+            club.capstone
+          );
+          const buffRange = clubStats.range || INVESTMENT_BANK_BUFF_RANGE;
+          if (distance(tWorldPos, clubPos) <= buffRange) {
+            rangeMultiplier *= 1 + (clubStats.rangeBuff ?? 0.15);
           }
         }
       });
@@ -697,8 +714,17 @@ export function updateGameTick(
           club.id !== t.id
         ) {
           const clubPos = gridToWorld(club.pos);
-          if (distance(tWorldPos, clubPos) <= RECRUITMENT_CENTER_BUFF_RANGE) {
-            damageMultiplier *= RECRUITMENT_CENTER_DAMAGE_BUFF;
+          const clubStats = calculateTowerStats(
+            club.type,
+            club.level,
+            club.upgrade,
+            1,
+            1,
+            club.capstone
+          );
+          const buffRange = clubStats.range || RECRUITMENT_CENTER_BUFF_RANGE;
+          if (distance(tWorldPos, clubPos) <= buffRange) {
+            damageMultiplier *= 1 + (clubStats.damageBuff ?? 0.15);
           }
         }
       });
@@ -723,6 +749,16 @@ export function updateGameTick(
         damageMultiplier > 1 ||
         attackSpeedMultiplier > 1;
 
+      const boostEnd = isScottActive ? t.boostEnd : undefined;
+      if (
+        t.rangeBoost === rangeMultiplier &&
+        t.damageBoost === damageMultiplier &&
+        t.attackSpeedBoost === attackSpeedMultiplier &&
+        t.isBuffed === hasAnyBuff &&
+        t.boostEnd === boostEnd
+      ) {
+        return t;
+      }
       return {
         ...t,
         rangeBoost: rangeMultiplier,
@@ -1360,7 +1396,12 @@ export function updateGameTick(
   if (vaultEntries.length > 0 && anyVaultAlive) {
     const vaultEnemyUpdates = new Map<
       string,
-      { inCombat: true; lastTroopAttack: number; facingRight: boolean }
+      {
+        attackTargetPos: Position;
+        facingRight: boolean;
+        inCombat: true;
+        lastTroopAttack: number;
+      }
     >();
     enemies.forEach((enemy) => {
       const enemyPos = getEnemyPosCached(enemy);
@@ -1395,6 +1436,7 @@ export function updateGameTick(
         return { ...prev, [vaultHit.key]: newVal };
       });
       vaultEnemyUpdates.set(enemy.id, {
+        attackTargetPos: { ...vaultHit.worldPos },
         facingRight: getFacingRightFromDelta(
           vaultHit.worldPos.x - enemyPos.x,
           vaultHit.worldPos.y - enemyPos.y,
@@ -1514,6 +1556,7 @@ export function updateGameTick(
               }
               return {
                 ...enemy,
+                attackTargetPos: { ...hero.pos },
                 abilityCooldowns: tauntAbilities
                   ? buildAbilityCooldowns(
                       enemy.abilityCooldowns,
@@ -1599,6 +1642,7 @@ export function updateGameTick(
               addParticles(vaultHit.worldPos, "smoke", 3);
               return {
                 ...enemy,
+                attackTargetPos: { ...vaultHit.worldPos },
                 combatTarget: "vault_objective",
                 facingRight: getFacingRightFromDelta(
                   vaultHit.worldPos.x - enemyPos.x,
@@ -1722,6 +1766,7 @@ export function updateGameTick(
             }
             return {
               ...enemy,
+              attackTargetPos: { ...nearbyHero.pos },
               abilityCooldowns: heroAbilities
                 ? buildAbilityCooldowns(
                     enemy.abilityCooldowns,
@@ -1963,6 +2008,7 @@ export function updateGameTick(
   const troopCombatAbilityUpdates: Record<
     string,
     {
+      attackTargetPos?: Position;
       lastAbilityUse: number;
       lastAbilityType: EnemyAbilityType;
       abilityCooldowns: Record<string, number>;
@@ -2033,6 +2079,7 @@ export function updateGameTick(
           troopAbilityEffects[nearbyTroop.id] = existing;
 
           troopCombatAbilityUpdates[enemy.id] = {
+            attackTargetPos: { ...nearbyTroop.pos },
             abilityCooldowns: buildAbilityCooldowns(
               enemy.abilityCooldowns,
               troopAbils.activatedTypes,
@@ -2118,6 +2165,7 @@ export function updateGameTick(
         } else {
           troopCombatAbilityUpdates[enemy.id] = {
             ...troopCombatAbilityUpdates[enemy.id],
+            attackTargetPos: { ...nearbyTroop.pos },
             lastTroopAttack: now,
           } as (typeof troopCombatAbilityUpdates)[string];
         }
@@ -2371,6 +2419,7 @@ export function updateGameTick(
             });
             return {
               ...enemy,
+              attackTargetPos: { ...nearbyHero.pos },
               combatTarget: nearbyHero.id,
               damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               facingRight: getFacingRightFromDelta(
@@ -2414,6 +2463,7 @@ export function updateGameTick(
             const abilityPatch = troopCombatAbilityUpdates[enemy.id];
             return {
               ...enemy,
+              attackTargetPos: { ...nearbyTroop.pos },
               combatTarget: nearbyTroop.id,
               damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               facingRight: troopFacing,
@@ -2593,6 +2643,7 @@ export function updateGameTick(
               ]);
               return {
                 ...enemy,
+                attackTargetPos: { ...rangedTarget.pos },
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
                 lastRangedAttack: now,
                 // Don't move - attacking from range
@@ -2719,6 +2770,9 @@ export function updateGameTick(
       }
       return {
         ...enemy,
+        ...(update.attackTargetPos && {
+          attackTargetPos: update.attackTargetPos,
+        }),
         ...(update.lastTroopAttack !== undefined && {
           lastTroopAttack: update.lastTroopAttack,
         }),
@@ -3808,8 +3862,20 @@ export function updateGameTick(
     }
   >();
 
+  const towerDebuffEnemies = enemies.filter((enemy) =>
+    ENEMY_DATA[enemy.type].abilities?.some((ability) =>
+      ability.type.startsWith("tower_")
+    )
+  );
   setTowers((prevTowers) =>
     prevTowers.map((tower) => {
+      if (
+        towerDebuffEnemies.length === 0 &&
+        !tower.debuffs?.length &&
+        !tower.disabledUntil
+      ) {
+        return tower;
+      }
       const towerWorldPos = gridToWorld(tower.pos);
       const updated = { ...tower };
 
@@ -3825,7 +3891,7 @@ export function updateGameTick(
       }
 
       // Check for enemies with tower debuff abilities nearby
-      for (const enemy of enemies) {
+      for (const enemy of towerDebuffEnemies) {
         const eData = ENEMY_DATA[enemy.type];
         if (!eData.abilities) {
           continue;
@@ -4019,10 +4085,66 @@ export function updateGameTick(
         tower.level,
         tower.upgrade,
         tower.rangeBoost || 1,
-        tower.damageBoost || 1
+        tower.damageBoost || 1,
+        tower.capstone
       );
       const finalRange = towerStats.range * rangeMod;
       const finalDamageMult = (tower.damageBoost || 1) * damageMod;
+
+      if (
+        tower.capstone &&
+        tower.type !== "station" &&
+        towerStats.spawnTroopType &&
+        (towerStats.maxTroops ?? 0) > 0
+      ) {
+        const ownedTroops = troopsByOwner.get(tower.id) ?? [];
+        const spawnInterval = towerStats.spawnInterval ?? 15_000;
+        const effectiveSpawnInterval =
+          gameSpeed > 0 ? spawnInterval / gameSpeed : spawnInterval;
+        const canSpawnTroop =
+          ownedTroops.length < (towerStats.maxTroops ?? 0) &&
+          now - (tower.lastSpawn ?? 0) >= effectiveSpawnInterval &&
+          !isInResetTransition;
+
+        if (canSpawnTroop) {
+          const troopType = towerStats.spawnTroopType;
+          const troopData = TROOP_DATA[troopType];
+          const rallyPoint = findClosestRoadPoint(
+            towerWorldPos,
+            activeWaveSpawnPaths,
+            selectedMap
+          );
+          addTroopEntities([
+            {
+              facingRight: getFacingRightFromDelta(
+                rallyPoint.x - towerWorldPos.x,
+                rallyPoint.y - towerWorldPos.y
+              ),
+              hp: troopData.hp,
+              id: generateId("troop"),
+              lastAttack: 0,
+              maxHp: troopData.hp,
+              moveRadius: 190,
+              moving: true,
+              ownerId: tower.id,
+              ownerType: "default",
+              pos: towerWorldPos,
+              rotation: Math.atan2(
+                rallyPoint.y - towerWorldPos.y,
+                rallyPoint.x - towerWorldPos.x
+              ),
+              selected: false,
+              spawnPoint: rallyPoint,
+              targetPos: rallyPoint,
+              type: troopType,
+              userTargetPos: rallyPoint,
+              visualTier: towerStats.spawnTroopType === "campus_golem" ? 5 : 4,
+            },
+          ]);
+          queueTowerPatch(tower.id, { lastSpawn: now });
+          addParticles(towerWorldPos, "glow", 18);
+        }
+      }
 
       if (tower.type === "club") {
         // ENHANCED CLUB TOWER - More useful income generator
@@ -4032,27 +4154,8 @@ export function updateGameTick(
         // Level 4A: Investment Bank - 40 PP every 5s + 10% bonus on all income
         // Level 4B: Recruitment Center - 20 PP every 6s + 15% damage buff to nearby towers
 
-        const incomeInterval =
-          tower.level === 1
-            ? 8000
-            : tower.level === 2
-              ? 7000
-              : tower.level === 3
-                ? 6000
-                : tower.upgrade === "A"
-                  ? 5000
-                  : 6000;
-
-        const baseAmount =
-          tower.level === 1
-            ? 8
-            : tower.level === 2
-              ? 15
-              : tower.level === 3
-                ? 25
-                : tower.upgrade === "A"
-                  ? 40
-                  : 20;
+        const incomeInterval = towerStats.incomeInterval ?? 8000;
+        const baseAmount = towerStats.income ?? 0;
 
         // Scale income interval with game speed (faster at higher speeds)
         const effectiveIncomeInterval =
@@ -4062,8 +4165,10 @@ export function updateGameTick(
           let amount = baseAmount;
 
           // Investment Bank bonus: 10% bonus on income
-          if (tower.level === 4 && tower.upgrade === "A") {
-            amount = Math.floor(amount * 1.1);
+          if (towerStats.bonusIncomeMultiplier) {
+            amount = Math.floor(
+              amount * (1 + towerStats.bonusIncomeMultiplier)
+            );
           }
 
           addPawPoints(amount);
@@ -4095,34 +4200,32 @@ export function updateGameTick(
         let appliedDamage = false;
 
         // OPTIMIZED: Batch all library slow/damage effects into a single setEnemies call
-        const slowAmount =
-          tower.level === 1
-            ? 0.2
-            : tower.level === 2
-              ? 0.35
-              : tower.level === 3
-                ? 0.45 // Arcane Library
-                : 0.5; // Both Earthquake and Blizzard cap at 50%
+        const slowAmount = towerStats.slowAmount ?? 0.2;
 
         // Scale library damage intervals with game speed
         const libraryDamageInterval = gameSpeed > 0 ? 500 / gameSpeed : 500;
         const shouldApplyArcaneDamage =
           tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
         // Blizzard freeze: 25% chance every 2 seconds (scaled with game speed, uses separate timer)
-        const blizzardFreezeInterval = gameSpeed > 0 ? 2000 / gameSpeed : 2000;
+        const baseBlizzardFreezeInterval = towerStats.attackSpeed * 2;
+        const blizzardFreezeInterval =
+          gameSpeed > 0
+            ? baseBlizzardFreezeInterval / gameSpeed
+            : baseBlizzardFreezeInterval;
         const lastFreezeCheck = tower.lastFreezeCheck || 0;
         const shouldCheckBlizzardFreeze =
           tower.level === 4 &&
           tower.upgrade === "B" &&
           now - lastFreezeCheck > blizzardFreezeInterval;
         const shouldApplyBlizzardFreeze =
-          shouldCheckBlizzardFreeze && Math.random() < 0.25;
+          shouldCheckBlizzardFreeze &&
+          Math.random() < (towerStats.stunChance ?? 0.25);
         const shouldApplyEarthquakeDamage =
           tower.level === 4 &&
           tower.upgrade === "A" &&
           now - tower.lastAttack > libraryDamageInterval;
         const arcaneDamage = 8 * finalDamageMult;
-        const earthquakeDamage = 35;
+        const earthquakeDamage = towerStats.damage;
 
         // Collect enemy IDs affected by this tower for batched update
         const affectedEnemyIds = new Set<string>();
@@ -4167,7 +4270,7 @@ export function updateGameTick(
                 // Blizzard freeze
                 if (shouldApplyBlizzardFreeze) {
                   newEnemy.frozen = true;
-                  newEnemy.stunUntil = now + 2000;
+                  newEnemy.stunUntil = now + (towerStats.stunDuration ?? 2000);
                   newEnemy.slowIntensity = 1;
                 }
 
@@ -4325,8 +4428,9 @@ export function updateGameTick(
         }
       } else if (tower.type === "station") {
         // Count living troops belonging to this station
-        const stationTroops = troops.filter((t) => t.ownerId === tower.id);
+        const stationTroops = troopsByOwner.get(tower.id) ?? [];
         const pendingRespawns = tower.pendingRespawns || [];
+        const maxStationTroops = towerStats.maxTroops ?? MAX_STATION_TROOPS;
 
         // Process pending respawns - decrement timers and spawn when ready
         const troopsToSpawn: Troop[] = [];
@@ -4343,7 +4447,7 @@ export function updateGameTick(
           const newTimer = r.timer - deltaTime;
           if (
             newTimer <= 0 &&
-            stationTroops.length + troopsToSpawn.length < MAX_STATION_TROOPS
+            stationTroops.length + troopsToSpawn.length < maxStationTroops
           ) {
             const futureCount = stationTroops.length + troopsToSpawn.length + 1;
             const formationOffsets = getFormationOffsets(futureCount);
@@ -4354,9 +4458,12 @@ export function updateGameTick(
               y: rallyPoint.y + slotOffset.y,
             };
 
-            const troopHP =
+            const baseTroopHP =
               TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp ||
               DEFAULT_TROOP_HP;
+            const troopHP = Math.round(
+              baseTroopHP * (tower.capstone ? 1.35 : 1)
+            );
             troopsToSpawn.push({
               id: generateId("troop"),
               ownerId: tower.id,
@@ -4368,6 +4475,11 @@ export function updateGameTick(
               targetPos,
               lastAttack: 0,
               type: r.troopType as TroopType,
+              overrideDamage: tower.capstone
+                ? Math.round(
+                    (TROOP_DATA[r.troopType as TroopType]?.damage ?? 20) * 1.3
+                  )
+                : undefined,
               rotation: Math.atan2(
                 targetPos.y - stationPos.y,
                 targetPos.x - stationPos.x
@@ -4384,6 +4496,7 @@ export function updateGameTick(
                 (tower.rangeBoost || 1),
               spawnSlot: r.slot,
               userTargetPos: targetPos,
+              visualTier: tower.capstone ? 5 : undefined,
             });
             addParticles(stationPos, "glow", 12);
             // Don't add to remaining (remove from pending)
@@ -4402,7 +4515,7 @@ export function updateGameTick(
           stationTroops.length +
           troopsToSpawn.length +
           remainingRespawns.length;
-        const canSpawn = totalOccupied < MAX_STATION_TROOPS;
+        const canSpawn = totalOccupied < maxStationTroops;
 
         const occupiedSlots = new Set([
           ...stationTroops.map((t) => t.spawnSlot ?? 0),
@@ -4410,7 +4523,9 @@ export function updateGameTick(
           ...remainingRespawns.map((r) => r.slot),
         ]);
         const availableSlot =
-          [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? -1;
+          Array.from({ length: maxStationTroops }, (_, slot) => slot).find(
+            (slot) => !occupiedSlots.has(slot)
+          ) ?? -1;
 
         // Train animation
         const currentProgress = tower.trainAnimProgress || 0;
@@ -4423,7 +4538,9 @@ export function updateGameTick(
           const arrivedAtPlatform = currentProgress < 0.3 && newProgress >= 0.3;
 
           // Scale station spawn interval with game speed
-          const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
+          const baseSpawnInterval = towerStats.spawnInterval ?? 8000;
+          const stationSpawnInterval =
+            gameSpeed > 0 ? baseSpawnInterval / gameSpeed : baseSpawnInterval;
           if (
             arrivedAtPlatform &&
             now - tower.lastAttack > stationSpawnInterval &&
@@ -4458,17 +4575,11 @@ export function updateGameTick(
 
             // Determine troop type based on tower level
             // Level 1: footsoldier, Level 2: armored, Level 3: elite, Level 4A: centaur, Level 4B: cavalry
-            const troopType =
-              tower.level === 1
-                ? "footsoldier"
-                : tower.level === 2
-                  ? "armored"
-                  : tower.level === 3
-                    ? "elite"
-                    : tower.upgrade === "A"
-                      ? "centaur"
-                      : "cavalry";
-            const troopHP = TROOP_DATA[troopType]?.hp || DEFAULT_TROOP_HP;
+            const troopType = towerStats.spawnTroopType ?? "footsoldier";
+            const baseTroopHP = TROOP_DATA[troopType]?.hp || DEFAULT_TROOP_HP;
+            const troopHP = Math.round(
+              baseTroopHP * (tower.capstone ? 1.35 : 1)
+            );
 
             const newTroop: Troop = {
               id: generateId("troop"),
@@ -4481,6 +4592,9 @@ export function updateGameTick(
               targetPos,
               lastAttack: 0,
               type: troopType,
+              overrideDamage: tower.capstone
+                ? Math.round(TROOP_DATA[troopType].damage * 1.3)
+                : undefined,
               rotation: Math.atan2(
                 targetPos.y - stationPos.y,
                 targetPos.x - stationPos.x
@@ -4497,6 +4611,7 @@ export function updateGameTick(
                 (tower.rangeBoost || 1),
               spawnSlot: availableSlot,
               userTargetPos: targetPos,
+              visualTier: tower.capstone ? 5 : undefined,
             };
 
             // Also update existing troops to reposition in new formation
@@ -4568,8 +4683,8 @@ export function updateGameTick(
         const isGatling = tower.level === 4 && tower.upgrade === "A";
         const isFlamethrower = tower.level === 4 && tower.upgrade === "B";
 
-        // Get all valid enemies in range for targeting
-        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
+        // Only the leading enemy is needed; splash/chain damage is resolved separately.
+        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange, 1);
 
         // Continuously track target even when not firing
         if (validEnemies.length > 0) {
@@ -4593,7 +4708,10 @@ export function updateGameTick(
         const cannonStats = calculateTowerStats(
           tower.type,
           tower.level,
-          tower.upgrade
+          tower.upgrade,
+          1,
+          1,
+          tower.capstone
         );
         const attackCooldown = cannonStats.attackSpeed;
         const effectiveAttackCooldown =
@@ -4626,10 +4744,9 @@ export function updateGameTick(
               hp: newHp,
             };
             if (isFlamethrower) {
-              const flameStats = TOWER_STATS.cannon.upgrades.B.stats;
               updates.burning = true;
-              updates.burnDamage = flameStats.burnDamage ?? 15;
-              updates.burnUntil = now + (flameStats.burnDuration ?? 3000);
+              updates.burnDamage = cannonStats.burnDamage ?? 15;
+              updates.burnUntil = now + (cannonStats.burnDuration ?? 3000);
             }
             return { ...enemy, ...updates };
           });
@@ -4667,7 +4784,10 @@ export function updateGameTick(
         const labStats = calculateTowerStats(
           tower.type,
           tower.level,
-          tower.upgrade
+          tower.upgrade,
+          1,
+          1,
+          tower.capstone
         );
         const attackCooldown = labStats.attackSpeed;
         const effectiveLabCooldown =
@@ -4690,7 +4810,7 @@ export function updateGameTick(
         }
 
         if (now - tower.lastAttack > effectiveLabCooldown) {
-          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
+          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange, 1);
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetAimPos = getEnemyAimPosCached(target);
@@ -4848,7 +4968,10 @@ export function updateGameTick(
         const archStats = calculateTowerStats(
           tower.type,
           tower.level,
-          tower.upgrade
+          tower.upgrade,
+          1,
+          1,
+          tower.capstone
         );
         const maxStacks = archStats.crescendoMaxStacks || 4;
         const speedMult = archStats.crescendoSpeedMult || 0.92;
@@ -4883,7 +5006,7 @@ export function updateGameTick(
             ? crescendoCooldown / gameSpeed / attackSpeedMultiplier
             : crescendoCooldown;
         if (now - tower.lastAttack > effectiveArcherSpeed) {
-          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
+          const validEnemies = getEnemiesInRange(towerWorldPos, finalRange, 1);
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetAimPos = getEnemyAimPosCached(target);
@@ -4955,7 +5078,10 @@ export function updateGameTick(
         const mortarStats = calculateTowerStats(
           tower.type,
           tower.level,
-          tower.upgrade
+          tower.upgrade,
+          1,
+          1,
+          tower.capstone
         );
         const attackCooldown = mortarStats.attackSpeed;
         const effectiveAttackCooldown =
@@ -5044,7 +5170,7 @@ export function updateGameTick(
             addParticles(barrelOrigin.from, "smoke", 6);
           }
         } else if (isMissileBattery) {
-          const autoEnemies = getEnemiesInRange(towerWorldPos, finalRange);
+          const autoEnemies = getEnemiesInRange(towerWorldPos, finalRange, 1);
           if (autoEnemies.length > 0) {
             const autoTarget = autoEnemies[0];
             const autoPos = getEnemyAimPosCached(autoTarget);
@@ -5112,7 +5238,7 @@ export function updateGameTick(
           const validEnemies = getEnemiesInRange(
             towerWorldPos,
             finalRange,
-            undefined,
+            1,
             (e) => !ENEMY_DATA[e.type as EnemyType]?.flying
           );
 
@@ -5161,6 +5287,8 @@ export function updateGameTick(
                   arcHeight: 100 + i * 15,
                   color: "#ff4400",
                   damage: damage * 0.55,
+                  burnDamage: mortarStats.burnDamage,
+                  burnDuration: mortarStats.burnDuration,
                   elevation: emberBarrel.elevation,
                   from: emberBarrel.from,
                   id: generateId("emb"),
@@ -5227,7 +5355,7 @@ export function updateGameTick(
             : towerData.attackSpeed)
       ) {
         // Generic tower attack (fallback)
-        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange);
+        const validEnemies = getEnemiesInRange(towerWorldPos, finalRange, 1);
         if (validEnemies.length > 0) {
           const target = validEnemies[0];
           const targetPos = getEnemyPosCached(target);
@@ -5235,7 +5363,10 @@ export function updateGameTick(
           const genericStats = calculateTowerStats(
             tower.type,
             tower.level,
-            tower.upgrade
+            tower.upgrade,
+            1,
+            1,
+            tower.capstone
           );
           const damage = genericStats.damage * finalDamageMult;
           queueTowerEnemyMutation(target.id, (enemy) => {
@@ -5334,7 +5465,7 @@ export function updateGameTick(
       getEnemiesInRange(
         hero.pos,
         HERO_COMBAT_STATS.nassauMeleeRange,
-        undefined,
+        1,
         heroAirTargetPredicate
       ).length > 0;
     const heroAttackSpeed = isNassauMelee
@@ -5354,7 +5485,7 @@ export function updateGameTick(
       const validEnemies = getEnemiesInRange(
         hero.pos,
         heroRange,
-        undefined,
+        hero.type === "tenor" ? 3 : 1,
         heroAirTargetPredicate
       );
       if (validEnemies.length > 0) {
@@ -5581,6 +5712,12 @@ export function updateGameTick(
               damage: blueActive
                 ? HERO_COMBAT_STATS.nassauBlueFireballDamage
                 : heroData.damage,
+              burnDamage: blueActive
+                ? HERO_COMBAT_STATS.nassauBlueFireballBurnDamage
+                : HERO_COMBAT_STATS.nassauFireballBurnDamage,
+              burnDuration: blueActive
+                ? HERO_COMBAT_STATS.nassauBlueFireballBurnDuration
+                : HERO_COMBAT_STATS.nassauFireballBurnDuration,
               from: hero.pos,
               id: generateId("proj"),
               isAoE: true,
@@ -5766,7 +5903,7 @@ export function updateGameTick(
         const validEnemies = getEnemiesInRange(
           troop.pos,
           attackRange,
-          Number.POSITIVE_INFINITY,
+          1,
           (enemy) => !ENEMY_DATA[enemy.type].flying || canHitFlying
         );
         if (validEnemies.length > 0) {
@@ -6016,7 +6153,8 @@ export function updateGameTick(
         center: Position;
         radius: number;
         damage: number;
-        isBurning: boolean;
+        burnDamage?: number;
+        burnDuration?: number;
       }[] = [];
       const queuedImpactParticles: { pos: Position; type: string }[] = [];
       const queuedImpactEffects: Effect[] = [];
@@ -6107,9 +6245,10 @@ export function updateGameTick(
             type: impactEffectType,
           });
           mortarAoEEvents.push({
+            burnDamage: proj.burnDamage,
+            burnDuration: proj.burnDuration,
             center: proj.to,
             damage: proj.damage,
-            isBurning: proj.type === "ember" || isPhoenixFireball,
             radius: proj.aoeRadius,
           });
           queuedImpactParticles.push({
@@ -6171,14 +6310,16 @@ export function updateGameTick(
           for (const enemy of prevEnemies) {
             const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
             let totalDamage = 0;
-            let shouldBurn = false;
+            let burnDamage = 0;
+            let burnDuration = 0;
             for (const aoe of mortarAoEEvents) {
               const dist = distance(enemyPos, aoe.center);
               if (dist <= aoe.radius) {
                 const falloff = 1 - (dist / aoe.radius) * 0.4;
                 totalDamage += getEnemyDamageTaken(enemy, aoe.damage * falloff);
-                if (aoe.isBurning) {
-                  shouldBurn = true;
+                if ((aoe.burnDamage ?? 0) > burnDamage) {
+                  burnDamage = aoe.burnDamage ?? 0;
+                  burnDuration = aoe.burnDuration ?? 0;
                 }
               }
             }
@@ -6189,7 +6330,12 @@ export function updateGameTick(
             emitDamageNumber(enemyPos, totalDamage, "aoe");
             const newHp = enemy.hp - totalDamage;
             if (newHp <= 0) {
-              onEnemyKill(enemy, enemyPos, 12, shouldBurn ? "fire" : "default");
+              onEnemyKill(
+                enemy,
+                enemyPos,
+                12,
+                burnDamage > 0 ? "fire" : "default"
+              );
               continue;
             }
             const updates: Partial<Enemy> = {
@@ -6197,11 +6343,10 @@ export function updateGameTick(
               hp: newHp,
               lastDamageTaken: nowMs,
             };
-            if (shouldBurn) {
-              const emberStats = TOWER_STATS.mortar.upgrades.B.stats;
+            if (burnDamage > 0) {
               updates.burning = true;
-              updates.burnDamage = emberStats.burnDamage ?? 25;
-              updates.burnUntil = nowMs + (emberStats.burnDuration ?? 4000);
+              updates.burnDamage = burnDamage;
+              updates.burnUntil = nowMs + burnDuration;
             }
             nextEnemies.push({ ...enemy, ...updates });
           }
@@ -6273,12 +6418,16 @@ export function updateGameTick(
     enforceParticleCap(dynamicParticleCap);
   }
   // Update spell cooldowns
-  setSpells((prev) =>
-    prev.map((spell) => ({
-      ...spell,
-      cooldown: Math.max(0, spell.cooldown - deltaTime),
-    }))
-  );
+  setSpells((prev) => {
+    if (!prev.some((spell) => spell.cooldown > 0)) {
+      return prev;
+    }
+    return prev.map((spell) =>
+      spell.cooldown > 0
+        ? { ...spell, cooldown: Math.max(0, spell.cooldown - deltaTime) }
+        : spell
+    );
+  });
 
   enemyBatch.flush(setEnemies);
 }

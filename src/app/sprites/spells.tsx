@@ -1185,7 +1185,7 @@ export const SpellSprite: React.FC<{
     [type, size, animated]
   );
 
-  useSpriteTicker(animated, 30, renderSpell);
+  useSpriteTicker(animated, 30, renderSpell, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>

@@ -189,7 +189,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     false,
   ]);
   useEffect(() => {
-    const delays = [80, 220, 380, 540, 700];
+    const delays = [0, 40, 80, 120, 160];
     const timers = delays.map((d, i) =>
       setTimeout(
         () =>
@@ -585,18 +585,25 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   // Reading a ref inside rAF avoids coupling the effect to React state.
   // (assigned after showPreview is derived, below)
   const showPreviewRef = useRef(false);
+  const mapCovered = showCodex || showCreator || showSettings || showCredits;
 
   useEffect(() => {
-    let animationId: number;
+    if (mapCovered) {
+      return;
+    }
+    let animationId = 0;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    const frameInterval = 20;
+    const frameInterval = 1000 / 30;
 
     let lastTimestamp = 0;
     const HERO_SPEED = 200; // pixels per second
 
     const animate = (timestamp: number) => {
-      const dt = lastTimestamp > 0 ? (timestamp - lastTimestamp) / 1000 : 0;
+      const dt =
+        lastTimestamp > 0
+          ? Math.min((timestamp - lastTimestamp) / 1000, 0.05)
+          : 0;
       lastTimestamp = timestamp;
 
       // Interpolate hero position toward target
@@ -619,7 +626,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         }
       }
 
-      if (timestamp - lastDrawTime > frameInterval) {
+      if (
+        timestamp - lastDrawTime >=
+        (heroMovingRef.current ? 1000 / 60 : frameInterval)
+      ) {
         animTimeRef.current = timestamp / 1000;
         lastDrawTime = timestamp;
         drawMapRef.current();
@@ -633,9 +643,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
       animationId = requestAnimationFrame(animate);
     };
-    animate(0);
-    return () => cancelAnimationFrame(animationId);
-  }, [isMobile]);
+    const resume = () => {
+      cancelAnimationFrame(animationId);
+      lastTimestamp = 0;
+      if (!document.hidden) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener("visibilitychange", resume);
+    resume();
+    return () => {
+      cancelAnimationFrame(animationId);
+      document.removeEventListener("visibilitychange", resume);
+    };
+  }, [isMobile, mapCovered]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (dragRef.current.isDragging) {

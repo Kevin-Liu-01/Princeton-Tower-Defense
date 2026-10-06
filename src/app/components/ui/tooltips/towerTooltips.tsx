@@ -73,7 +73,8 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
     tower.level,
     tower.upgrade,
     tower.rangeBoost || 1,
-    tower.damageBoost || 1
+    tower.damageBoost || 1,
+    tower.capstone
   );
 
   const hasRangeBuff = (tower.rangeBoost || 1) > 1;

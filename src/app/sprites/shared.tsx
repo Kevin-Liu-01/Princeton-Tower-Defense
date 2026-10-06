@@ -286,7 +286,7 @@ export const SpecialTowerSprite: React.FC<{
     [type, size, canvasSize, animated]
   );
 
-  useSpriteTicker(animated, 50, render);
+  useSpriteTicker(animated, 50, render, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>
@@ -331,7 +331,7 @@ export const HazardSprite: React.FC<{
     [type, size, canvasSize, animated]
   );
 
-  useSpriteTicker(animated, 50, render);
+  useSpriteTicker(animated, 50, render, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>

@@ -10,6 +10,14 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
     hp: 1100,
     name: "Armored Soldier",
   },
+  campus_golem: {
+    attackSpeed: 1450,
+    color: "#8f8777",
+    damage: 105,
+    desc: "A colossal guardian hewn from Nassau Hall stone. Ivy-bound fists pin the strongest invaders in place while orange runes burn between its ancient blocks.",
+    hp: 4200,
+    name: "FitzRandolph Golem",
+  },
   cavalry: {
     attackSpeed: 1100,
     color: "#daa520",

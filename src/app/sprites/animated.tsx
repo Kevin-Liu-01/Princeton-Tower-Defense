@@ -134,7 +134,7 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     [size, canvasSize]
   );
 
-  useSpriteTicker(true, 50, renderCastle);
+  useSpriteTicker(true, 50, renderCastle, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>
@@ -200,7 +200,7 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
     [size, canvasW, canvasH]
   );
 
-  useSpriteTicker(true, 80, renderMarchingEnemies);
+  useSpriteTicker(true, 80, renderMarchingEnemies, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, 60)}>

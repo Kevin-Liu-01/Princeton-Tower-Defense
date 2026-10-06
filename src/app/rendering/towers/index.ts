@@ -16,6 +16,7 @@ import {
   worldToScreenRounded,
   isoTileDiamondHalfH,
 } from "../../utils";
+import { getScenePressure } from "../performance";
 import { renderArchTower } from "./arch";
 import { drawStar, renderCannonTower } from "./cannon";
 import { renderClubTower } from "./club";
@@ -28,6 +29,10 @@ import {
   getTowerFoundationSize,
   getTowerVisualMetrics,
 } from "./towerHelpers";
+import {
+  drawCachedTowerSprite,
+  isCacheableTowerType,
+} from "./towerSpriteCache";
 
 export {
   getTowerFoundationSize,
@@ -170,6 +175,7 @@ export function renderTower(
   selectedTower: string | null,
   enemies: Enemy[],
   selectedMap: string,
+  frameNowMs: number,
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
@@ -184,12 +190,50 @@ export function renderTower(
   );
   const zoom = cameraZoom || 1;
   screenPos.y -= isoTileDiamondHalfH(zoom);
-  const time = Date.now() / 1000;
+  const time = frameNowMs / 1000;
   const isHovered = hoveredTower === tower.id;
   const isSelected = selectedTower === tower.id;
   const colors = TOWER_COLORS[tower.type];
+  const gameSettings = getGameSettings();
 
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
+
+  if (tower.capstone) {
+    const masterworkTime = gameSettings.animation.towerAnimations ? time : 0;
+    const masterworkPulse = 0.72 + Math.sin(masterworkTime * 2.4) * 0.16;
+    ctx.save();
+    ctx.strokeStyle = `rgba(251, 191, 36, ${masterworkPulse})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.setLineDash([3 * zoom, 7 * zoom]);
+    ctx.lineDashOffset = -masterworkTime * 12 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y + 4 * zoom,
+      34 * zoom,
+      16 * zoom,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(255, 145, 35, ${masterworkPulse})`;
+    for (let sparkIndex = 0; sparkIndex < 3; sparkIndex++) {
+      const sparkAngle =
+        masterworkTime * 0.8 + sparkIndex * ((Math.PI * 2) / 3);
+      ctx.beginPath();
+      ctx.arc(
+        screenPos.x + Math.cos(sparkAngle) * 30 * zoom,
+        screenPos.y - 18 * zoom + Math.sin(sparkAngle) * 9 * zoom,
+        1.5 * zoom,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   const glowShadowY = screenPos.y + 6 * zoom;
 
@@ -252,66 +296,110 @@ export function renderTower(
   ctx.ellipse(screenPos.x, glowShadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  switch (tower.type) {
-    case "cannon": {
-      renderCannonTower(
-        ctx,
-        screenPos,
-        tower,
-        zoom,
-        time,
-        colors,
-        enemies,
-        selectedMap,
-        canvasWidth,
-        canvasHeight,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
-      break;
+  const drawTowerBody = (
+    targetCtx: CanvasRenderingContext2D,
+    targetX: number,
+    targetY: number
+  ): void => {
+    const targetPosition = { x: targetX, y: targetY };
+
+    switch (tower.type) {
+      case "cannon": {
+        renderCannonTower(
+          targetCtx,
+          targetPosition,
+          tower,
+          zoom,
+          time,
+          colors,
+          enemies,
+          selectedMap,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        break;
+      }
+      case "library": {
+        renderLibraryTower(
+          targetCtx,
+          targetPosition,
+          tower,
+          zoom,
+          time,
+          colors
+        );
+        break;
+      }
+      case "lab": {
+        renderLabTower(
+          targetCtx,
+          targetPosition,
+          tower,
+          zoom,
+          time,
+          colors,
+          enemies,
+          selectedMap,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        break;
+      }
+      case "arch": {
+        renderArchTower(targetCtx, targetPosition, tower, zoom, time, colors);
+        break;
+      }
+      case "club": {
+        renderClubTower(targetCtx, targetPosition, tower, zoom, time, colors);
+        break;
+      }
+      case "station": {
+        renderStationTower(
+          targetCtx,
+          targetPosition,
+          tower,
+          zoom,
+          time,
+          colors
+        );
+        break;
+      }
+      case "mortar": {
+        renderMortarTower(targetCtx, targetPosition, tower, zoom, time, colors);
+        break;
+      }
     }
-    case "library": {
-      renderLibraryTower(ctx, screenPos, tower, zoom, time, colors);
-      break;
-    }
-    case "lab": {
-      renderLabTower(
-        ctx,
-        screenPos,
-        tower,
-        zoom,
-        time,
-        colors,
-        enemies,
-        selectedMap,
-        canvasWidth,
-        canvasHeight,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
-      break;
-    }
-    case "arch": {
-      renderArchTower(ctx, screenPos, tower, zoom, time, colors);
-      break;
-    }
-    case "club": {
-      renderClubTower(ctx, screenPos, tower, zoom, time, colors);
-      break;
-    }
-    case "station": {
-      renderStationTower(ctx, screenPos, tower, zoom, time, colors);
-      break;
-    }
-    case "mortar": {
-      renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
-      break;
-    }
+  };
+
+  if (isCacheableTowerType(tower.type)) {
+    const cacheTime =
+      getScenePressure().skipDecorativeEffects ||
+      !gameSettings.animation.towerAnimations
+        ? 0
+        : time;
+    drawCachedTowerSprite(
+      ctx,
+      screenPos.x,
+      screenPos.y,
+      tower.type,
+      tower.level,
+      tower.upgrade,
+      tower.rotation ?? 0,
+      zoom,
+      cacheTime,
+      drawTowerBody
+    );
+  } else {
+    drawTowerBody(ctx, screenPos.x, screenPos.y);
   }
 
-  if (getGameSettings().ui.showTowerBadges) {
+  if (gameSettings.ui.showTowerBadges) {
     if (tower.level > 1) {
       const starY = screenPos.y + 20 * zoom - tower.level * 8 * zoom;
       ctx.fillStyle = "#c9a227";
@@ -337,6 +425,14 @@ export function renderTower(
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(tower.upgrade, screenPos.x, badgeY);
+
+      if (tower.capstone) {
+        ctx.strokeStyle = "#fde68a";
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, badgeY, 9 * zoom, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
   }
 }

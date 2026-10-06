@@ -55,7 +55,7 @@ export const TowerSprite: React.FC<{
     [type, size, canvasSize, level, upgrade, animated]
   );
 
-  useSpriteTicker(animated, 50, render);
+  useSpriteTicker(animated, 50, render, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>

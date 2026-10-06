@@ -44,6 +44,7 @@ export function renderHero(
   canvasWidth: number,
   canvasHeight: number,
   dpr: number,
+  frameNowMs: number,
   cameraOffset?: Position,
   cameraZoom?: number,
   targetPos?: Position,
@@ -59,7 +60,7 @@ export function renderHero(
   );
   const zoom = cameraZoom || 1;
   const hData = HERO_DATA[hero.type];
-  const time = Date.now() / 1000;
+  const time = frameNowMs / 1000;
 
   // Selection glow - uses hero's theme color
   if (hero.selected) {
@@ -101,7 +102,7 @@ export function renderHero(
   let abilityScaleBoost = 0;
   if (hero.type === "ivy") {
     const MORPH_MS = 1200;
-    const now = Date.now();
+    const now = frameNowMs;
     const remaining = hero.abilityEnd ? hero.abilityEnd - now : 0;
     const morphT = remaining > 0 ? Math.min(1, 1 - remaining / MORPH_MS) : 1;
     if (hero.abilityActive) {
@@ -386,7 +387,7 @@ export function renderHero(
 
     // Pulsing edge glow when low health
     if (hpPercent <= 0.25) {
-      const pulseAlpha = 0.3 + Math.sin(Date.now() / 200) * 0.2;
+      const pulseAlpha = 0.3 + Math.sin(frameNowMs / 200) * 0.2;
       ctx.shadowColor = `rgba(239, 68, 68, ${pulseAlpha})`;
       ctx.shadowBlur = 6 * zoom;
       ctx.strokeStyle = `rgba(239, 68, 68, ${pulseAlpha})`;

@@ -86,9 +86,11 @@ function parseColor(color: string): [number, number, number] {
   return [128, 128, 128];
 }
 
+const clampColorChannel = (value: number): number =>
+  Math.max(0, Math.min(255, Math.round(value)));
+
 function toHex(r: number, g: number, b: number): string {
-  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
-  return `#${clamp(r).toString(16).padStart(2, "0")}${clamp(g).toString(16).padStart(2, "0")}${clamp(b).toString(16).padStart(2, "0")}`;
+  return `#${clampColorChannel(r).toString(16).padStart(2, "0")}${clampColorChannel(g).toString(16).padStart(2, "0")}${clampColorChannel(b).toString(16).padStart(2, "0")}`;
 }
 
 function desaturate(
@@ -143,6 +145,7 @@ const paletteCache = new Map<
   string,
   { color: string; dark: string; light: string }
 >();
+const MAX_PALETTE_CACHE_ENTRIES = 512;
 
 export function getRegionalPalette(
   baseColor: string,
@@ -150,26 +153,27 @@ export function getRegionalPalette(
   darken: (c: string, n: number) => string,
   lighten: (c: string, n: number) => string
 ): { color: string; dark: string; light: string } {
-  if (region === "grassland") {
-    return {
-      color: baseColor,
-      dark: darken(baseColor, 30),
-      light: lighten(baseColor, 20),
-    };
-  }
-
   const key = `${baseColor}|${region}`;
   const cached = paletteCache.get(key);
   if (cached) {
     return cached;
   }
 
-  const transformed = transformColorForRegion(baseColor, region);
+  const transformed =
+    region === "grassland"
+      ? baseColor
+      : transformColorForRegion(baseColor, region);
   const palette = {
     color: transformed,
     dark: darken(transformed, 30),
     light: lighten(transformed, 20),
   };
+  if (paletteCache.size >= MAX_PALETTE_CACHE_ENTRIES) {
+    const oldestKey = paletteCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      paletteCache.delete(oldestKey);
+    }
+  }
   paletteCache.set(key, palette);
   return palette;
 }

@@ -20,8 +20,12 @@ interface DevActionResult {
 interface DevPerfSnapshot {
   fps: number;
   frameMs: number;
+  frameP95Ms: number;
   updateMs: number;
+  updateP95Ms: number;
   renderMs: number;
+  renderP95Ms: number;
+  sampleCount: number;
   quality: "high" | "medium" | "low";
   towers: number;
   enemies: number;
@@ -30,6 +34,8 @@ interface DevPerfSnapshot {
   effects: number;
   particles: number;
 }
+
+const P95_FRAME_BUDGET_MS = 300;
 
 interface DevConfigMenuProps {
   gameState: GameState;
@@ -242,13 +248,49 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                 </div>
                 {devPerfEnabled ? (
                   <div className="space-y-1 font-mono text-[11px] text-emerald-100">
-                    <div>
-                      fps {devPerfSnapshot.fps} | frame{" "}
-                      {devPerfSnapshot.frameMs}ms
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span>p95 frame {devPerfSnapshot.frameP95Ms}ms</span>
+                      <span
+                        className={
+                          devPerfSnapshot.frameP95Ms <= P95_FRAME_BUDGET_MS
+                            ? "text-emerald-300"
+                            : "text-rose-300"
+                        }
+                      >
+                        {devPerfSnapshot.frameP95Ms <= P95_FRAME_BUDGET_MS
+                          ? "PASS"
+                          : "OVER"}
+                      </span>
+                    </div>
+                    <div
+                      aria-label={`p95 frame budget: ${devPerfSnapshot.frameP95Ms} of ${P95_FRAME_BUDGET_MS} milliseconds`}
+                      aria-valuemax={P95_FRAME_BUDGET_MS}
+                      aria-valuemin={0}
+                      aria-valuenow={Math.min(
+                        devPerfSnapshot.frameP95Ms,
+                        P95_FRAME_BUDGET_MS
+                      )}
+                      className="h-1.5 overflow-hidden rounded-full bg-emerald-950/80 ring-1 ring-inset ring-emerald-300/20"
+                      role="progressbar"
+                    >
+                      <div
+                        className="h-full rounded-full bg-emerald-300 transition-[width] duration-200 motion-reduce:transition-none"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (devPerfSnapshot.frameP95Ms / P95_FRAME_BUDGET_MS) *
+                              100
+                          )}%`,
+                        }}
+                      />
                     </div>
                     <div>
-                      update {devPerfSnapshot.updateMs}ms | render{" "}
-                      {devPerfSnapshot.renderMs}ms
+                      avg {devPerfSnapshot.frameMs}ms · fps{" "}
+                      {devPerfSnapshot.fps} · n={devPerfSnapshot.sampleCount}
+                    </div>
+                    <div>
+                      p95 update {devPerfSnapshot.updateP95Ms}ms · render{" "}
+                      {devPerfSnapshot.renderP95Ms}ms
                     </div>
                     <div>quality {devPerfSnapshot.quality}</div>
                     <div>

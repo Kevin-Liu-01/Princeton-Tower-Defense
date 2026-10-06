@@ -8,18 +8,22 @@ const T = LANDING_THEME;
 
 interface LandingCTAProps {
   onClick: () => void;
+  onIntent?: () => void;
   disabled: boolean;
   label?: string;
 }
 
 export function LandingCTA({
   onClick,
+  onIntent,
   disabled,
   label = "Enter the Realm",
 }: LandingCTAProps) {
   return (
     <button
       onClick={onClick}
+      onPointerEnter={onIntent}
+      onFocus={onIntent}
       disabled={disabled}
       className="group relative px-12 sm:px-16 py-4 sm:py-[1.15rem] rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.04] hover:-translate-y-0.5 active:scale-95 active:translate-y-0 disabled:pointer-events-none"
       style={{

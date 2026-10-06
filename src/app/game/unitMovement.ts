@@ -38,6 +38,18 @@ export function getFacingRightFromDelta(
   return screenDx >= 0;
 }
 
+export function getFacingRightToward(
+  origin: Position,
+  target: Position,
+  fallbackFacingRight: boolean = true
+): boolean {
+  return getFacingRightFromDelta(
+    target.x - origin.x,
+    target.y - origin.y,
+    fallbackFacingRight
+  );
+}
+
 export function stepTowardTarget({
   current,
   target,

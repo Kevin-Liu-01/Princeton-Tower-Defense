@@ -1,12 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import {
-  HERO_DATA,
-  TROOP_DATA,
-  HERO_ABILITY_COOLDOWNS,
-  HERO_COMBAT_STATS,
-  DEFAULT_TROOP_HP,
-} from "../../constants";
+import { HERO_ABILITY_COOLDOWNS, HERO_COMBAT_STATS } from "../../constants";
 import { getEnemyPosWithPath } from "../../game/setup";
 import { getEnemyDamageTaken } from "../../game/status";
 import type {
@@ -21,8 +15,7 @@ import type {
   HeroType,
   DeathCause,
 } from "../../types";
-import { distance, generateId } from "../../utils";
-import { gridToWorld } from "../../utils";
+import { distance, generateId, gridToWorld } from "../../utils";
 import { isDefined } from "./runtimeConfig";
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
@@ -147,15 +140,8 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
 }
 
 function triggerMatheyShield(p: HeroAbilityParams): void {
-  const {
-    hero,
-    enemies,
-    selectedMap,
-    setHero,
-    setEnemies,
-    setEffects,
-    addParticles,
-  } = p;
+  const { hero, selectedMap, setHero, setEnemies, setEffects, addParticles } =
+    p;
   const tauntRadius = 150;
   const duration = 10_000;
 
@@ -316,7 +302,7 @@ function triggerScottInspiration(p: HeroAbilityParams): void {
 }
 
 function triggerCaptainRally(p: HeroAbilityParams): void {
-  const { hero, setEffects, addParticles, addTroopEntities } = p;
+  const { hero, setEffects, setTroops, addParticles } = p;
   const summonedKnightHP = HERO_COMBAT_STATS.captainKnightHp;
   const knightOffsets = [
     { x: -35, y: -20 },
@@ -348,7 +334,12 @@ function triggerCaptainRally(p: HeroAbilityParams): void {
       userTargetPos: knightPos,
     };
   });
-  addTroopEntities(newTroops);
+  setTroops((currentTroops) => [
+    ...currentTroops.filter(
+      (troop) => troop.ownerId !== hero.id || troop.ownerType !== "hero_summon"
+    ),
+    ...newTroops,
+  ]);
   setEffects((ef) => [
     ...ef,
     {
@@ -364,7 +355,7 @@ function triggerCaptainRally(p: HeroAbilityParams): void {
 }
 
 function triggerEngineerTurret(p: HeroAbilityParams): void {
-  const { hero, setEffects, addParticles, addTroopEntity } = p;
+  const { hero, setEffects, setTroops, addParticles } = p;
   const turretPos = { x: hero.pos.x + 40, y: hero.pos.y };
   const turretHP = HERO_COMBAT_STATS.engineerTurretHp;
   const newTurret: Troop = {
@@ -377,6 +368,7 @@ function triggerEngineerTurret(p: HeroAbilityParams): void {
     moveRadius: 0,
     moving: false,
     ownerId: hero.id,
+    ownerType: "hero_summon",
     pos: turretPos,
     rallyPoint: null,
     rotation: 0,
@@ -386,7 +378,10 @@ function triggerEngineerTurret(p: HeroAbilityParams): void {
     targetPos: undefined,
     type: "turret" as TroopType,
   };
-  addTroopEntity(newTurret);
+  setTroops((currentTroops) => [
+    ...currentTroops.filter((troop) => troop.ownerId !== hero.id),
+    newTurret,
+  ]);
   setEffects((ef) => [
     ...ef,
     {

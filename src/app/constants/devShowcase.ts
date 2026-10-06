@@ -12,6 +12,7 @@ const ALL_TOWER_TYPES: TowerType[] = [
 ];
 
 interface TowerVariant {
+  capstone?: boolean;
   level: 1 | 2 | 3 | 4;
   upgrade?: TowerUpgrade;
   label: string;
@@ -23,6 +24,8 @@ const UPGRADE_ROWS: TowerVariant[] = [
   { label: "L3", level: 3 },
   { label: "L4A", level: 4, upgrade: "A" },
   { label: "L4B", level: 4, upgrade: "B" },
+  { capstone: true, label: "L4A-masterwork", level: 4, upgrade: "A" },
+  { capstone: true, label: "L4B-masterwork", level: 4, upgrade: "B" },
 ];
 
 const GRID_START_X = 3;
@@ -51,10 +54,13 @@ export function buildShowcaseTowers(): Tower[] {
 
       const isStation = type === "station";
       const tower: Tower = {
+        capstone: variant.capstone,
         id: makeShowcaseId(type, variant),
         lastAttack: 0,
         level: variant.level,
-        occupiedSpawnSlots: isStation ? [false, false, false] : undefined,
+        occupiedSpawnSlots: isStation
+          ? [false, false, false, ...(variant.capstone ? [false] : [])]
+          : undefined,
         pendingRespawns: isStation ? [] : undefined,
         pos: { x, y },
         rotation:

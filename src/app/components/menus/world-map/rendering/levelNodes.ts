@@ -7,6 +7,7 @@ import {
 import type { RegionType } from "../../../../sprites/regionIconDrawing";
 import type { LevelStars } from "../../../../types";
 import type { LevelNode } from "../worldMapData";
+import { prepareLayer } from "./prepareLayer";
 import type { NodeCache } from "./types";
 
 type RegionKey = RegionType;
@@ -243,9 +244,7 @@ export function drawLevelNodes({
 
   if (nodeCache && !nodeCacheValid) {
     const nc = nodeCache.current.canvas ?? document.createElement("canvas");
-    nc.width = displayW * dpr;
-    nc.height = displayH * dpr;
-    const nCtx = nc.getContext("2d");
+    const nCtx = prepareLayer(nc, displayW * dpr, displayH * dpr);
     if (nCtx) {
       nCtx.clearRect(0, 0, nc.width, nc.height);
       _nodeSavedCtx = ctx;

@@ -4,6 +4,7 @@ import type { Troop, Position, TroopOwnerType } from "../../types";
 import { worldToScreen, worldToScreenRounded } from "../../utils";
 import { getPerformanceSettings, getScenePressure } from "../performance";
 import { drawArmoredTroop } from "./armored";
+import { drawCampusGolemTroop } from "./campusGolem";
 import { drawCavalryTroop } from "./cavalry";
 import { drawCentaurTroop } from "./centaur";
 import { drawEliteTroop } from "./elite";
@@ -26,6 +27,7 @@ export function renderTroop(
   canvasWidth: number,
   canvasHeight: number,
   dpr: number,
+  frameNowMs: number,
   cameraOffset?: Position,
   cameraZoom?: number,
   targetPos?: Position,
@@ -42,14 +44,14 @@ export function renderTroop(
   const zoom = cameraZoom || 1;
   const troopType = troop.type || "footsoldier";
   const tData = TROOP_DATA[troopType];
-  const time = Date.now() / 1000;
+  const time = frameNowMs / 1000;
   const pressure = getScenePressure();
   const lowDetail = pressure.skipDecorativeEffects;
   const minDetail = pressure.skipNonEssentialParticles;
 
   const ghostRemainingRatio =
     troop.isHexGhost && troop.hexGhostExpireTime
-      ? Math.max(0, Math.min(1, (troop.hexGhostExpireTime - Date.now()) / 8000))
+      ? Math.max(0, Math.min(1, (troop.hexGhostExpireTime - frameNowMs) / 8000))
       : 1;
   const ghostAlpha = troop.isHexGhost
     ? 0.42 +
@@ -177,7 +179,7 @@ export function renderTroop(
   const troopHealActive =
     !minDetail &&
     troop.healFlash &&
-    (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
+    (frameNowMs - troop.healFlash < 500 || troop.hp < troop.maxHp);
   if (troopHealActive) {
     const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15;
 
@@ -443,6 +445,7 @@ export function drawTroopSprite(
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
     armored: 1.65,
+    campus_golem: 2.25,
     cavalry: 1.6,
     centaur: 1.6,
     elite: 1.7,
@@ -521,6 +524,20 @@ export function drawTroopSprite(
     }
     case "armored": {
       drawArmoredTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos
+      );
+      break;
+    }
+    case "campus_golem": {
+      drawCampusGolemTroop(
         ctx,
         x,
         scaledY,

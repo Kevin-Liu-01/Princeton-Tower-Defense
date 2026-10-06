@@ -12,9 +12,7 @@ import React, { useState, useEffect } from "react";
 
 import { LEVEL_DATA } from "../../constants";
 import { resolveLoadingTheme } from "../../constants/loadingAssets";
-import type { LoadingTheme } from "../../constants/loadingAssets";
 import { RegionIcon } from "../../sprites";
-import type { RegionType } from "../../sprites";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import { WORLD_LEVELS } from "./world-map/worldMapData";
 
@@ -25,6 +23,9 @@ const REGION_LABEL: Record<string, string> = {
   volcanic: "Volcanic Depths",
   winter: "Frozen Frontier",
 };
+
+type RegionIconType = React.ComponentProps<typeof RegionIcon>["type"];
+type ResolvedLoadingTheme = ReturnType<typeof resolveLoadingTheme>;
 
 const DIFFICULTY_LABEL: Record<number, string> = {
   1: "Easy",
@@ -58,7 +59,7 @@ export function FreeplayDisclaimer({
   const levelName = levelData?.name ?? worldLevel?.name ?? levelId;
   const region = (worldLevel?.region ??
     levelData?.region ??
-    "grassland") as RegionType;
+    "grassland") as RegionIconType;
   const regionLabel = REGION_LABEL[region] ?? region;
   const difficulty = worldLevel?.difficulty ?? levelData?.difficulty ?? 1;
   const difficultyLabel = DIFFICULTY_LABEL[difficulty];
@@ -112,6 +113,7 @@ export function FreeplayDisclaimer({
 
         {/* Back button */}
         <button
+          type="button"
           onClick={onBack}
           className="absolute top-5 left-5 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
           style={{
@@ -224,6 +226,7 @@ export function FreeplayDisclaimer({
                     src={previewImage}
                     alt={`${levelName} preview`}
                     fill
+                    loading="eager"
                     sizes="(max-width: 640px) 90vw, 400px"
                     className="object-cover"
                   />
@@ -323,6 +326,7 @@ export function FreeplayDisclaimer({
             }}
           >
             <button
+              type="button"
               onClick={onStart}
               className="group relative flex items-center gap-2.5 px-8 py-3 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
               style={{
@@ -362,7 +366,7 @@ function BackgroundLayer({
   theme,
   previewImage,
 }: {
-  theme: LoadingTheme;
+  theme: ResolvedLoadingTheme;
   previewImage?: string;
 }) {
   const bgSrc = previewImage ?? theme.bgImage;

@@ -67,7 +67,7 @@ export const HeroSprite: React.FC<{
     [type, baseW, baseH, canvasW, canvasH, animated]
   );
 
-  useSpriteTicker(animated, 50, renderHero);
+  useSpriteTicker(animated, 50, renderHero, canvasRef);
 
   return (
     <div style={spriteContainerStyle(baseW, baseH)}>

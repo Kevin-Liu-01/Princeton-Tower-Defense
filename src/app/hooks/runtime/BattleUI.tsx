@@ -50,6 +50,7 @@ import type {
   DraggingTower,
   SpecialTower,
   Decoration,
+  HoveredLandmarkInfo,
   SpellUpgradeLevels,
 } from "../../types";
 import { gridToWorld, worldToScreen } from "../../utils";
@@ -74,6 +75,7 @@ export interface BattleUIProps {
   handlePointerDown: (e: React.PointerEvent<HTMLCanvasElement>) => void;
   handleCanvasClick: (e: React.PointerEvent<HTMLCanvasElement>) => void;
   handleMouseMove: (e: React.PointerEvent<HTMLCanvasElement>) => void;
+  handleCanvasPointerCancel: (e: React.PointerEvent<HTMLCanvasElement>) => void;
   handleCanvasPointerLeave: () => void;
 
   // Visual / theme
@@ -95,7 +97,7 @@ export interface BattleUIProps {
   currentWave: number;
   totalWaves: number;
   gameSpeed: number;
-  setGameSpeed: (speed: number) => void;
+  setGameSpeed: (speed: number | ((previousSpeed: number) => number)) => void;
 
   // HUD spell indicators
   goldSpellActive: boolean;
@@ -166,7 +168,7 @@ export interface BattleUIProps {
   mousePos: Position;
 
   // Tower upgrade callbacks
-  upgradeTower: (towerId: string, path: "A" | "B") => void;
+  upgradeTower: (towerId: string, path?: "A" | "B") => void;
   sellTower: (towerId: string) => void;
   setMissileMortarTargetingId: React.Dispatch<
     React.SetStateAction<string | null>
@@ -185,7 +187,7 @@ export interface BattleUIProps {
   getSpecialTowerKey: (tower: Pick<SpecialTower, "type" | "pos">) => string;
 
   // Environment hover
-  hoveredLandmark: string | null;
+  hoveredLandmark: HoveredLandmarkInfo | null;
   hoveredHazardType: string | null;
 
   // Previous game speed for inspector
@@ -262,6 +264,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   handlePointerDown,
   handleCanvasClick,
   handleMouseMove,
+  handleCanvasPointerCancel,
   handleCanvasPointerLeave,
   fadeOverlayBackground,
   isPanning,
@@ -414,6 +417,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
             onPointerDown={handlePointerDown}
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
+            onPointerCancel={handleCanvasPointerCancel}
             onPointerLeave={handleCanvasPointerLeave}
             className={`absolute inset-0 w-full h-full touch-none game-start-fade ${
               isPanning
@@ -469,7 +473,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
               totalPausedTimeRef={totalPausedTimeRef}
             />
             {!cameraModeActive && (
-              <div className="mt-2 flex px-2 items-start justify-between gap-2 sm:gap-3">
+              <div className="mt-2 hidden items-start justify-between gap-2 px-2 sm:flex sm:gap-3">
                 <EnemyInspector
                   isActive={inspectorActive}
                   setIsActive={setInspectorActive}
@@ -642,8 +646,10 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                 !hoveredSpecialTower &&
                 !selectedTower && (
                   <LandmarkTooltip
-                    landmarkType={hoveredLandmark}
+                    heightTag={hoveredLandmark.heightTag}
+                    landmarkType={hoveredLandmark.type}
                     position={mousePos}
+                    scale={hoveredLandmark.scale}
                   />
                 )}
               {!isTouchDeviceRef.current &&
@@ -782,7 +788,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
         </div>
       </div>
       {!cameraModeActive && (
-        <div className="flex flex-col flex-shrink-0 battle-ui-fade">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[130] flex flex-col battle-ui-fade sm:relative sm:z-auto sm:flex-shrink-0 sm:pointer-events-auto">
           <BuildMenu
             pawPoints={pawPoints}
             buildingTower={buildingTower}

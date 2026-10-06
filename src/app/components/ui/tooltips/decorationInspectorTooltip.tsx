@@ -4,7 +4,11 @@ import { Eye } from "lucide-react";
 import React from "react";
 
 import type { Decoration, Position } from "../../../types";
-import { getDecorationVolumeSpec, worldToGrid } from "../../../utils";
+import {
+  getDecorationRenderDimensions,
+  getDecorationVolumeSpec,
+  worldToGrid,
+} from "../../../utils";
 import { GOLD, PANEL, panelGradient } from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
 
@@ -38,11 +42,16 @@ export const DecorationInspectorTooltip: React.FC<
   DecorationInspectorTooltipProps
 > = ({ decoration, position }) => {
   const volume = getDecorationVolumeSpec(decoration.type, decoration.heightTag);
+  const dimensions = getDecorationRenderDimensions(
+    decoration.type,
+    decoration.scale,
+    decoration.heightTag
+  );
   const gridPos = worldToGrid({ x: decoration.x, y: decoration.y });
   const displayName = decoration.type
     .replaceAll("_", " ")
     .replaceAll(/\b\w/g, (char) => char.toUpperCase());
-  const coords = getTooltipPosition(position, { height: 190, width: 220 });
+  const coords = getTooltipPosition(position, { height: 220, width: 220 });
   const tagColor = HEIGHT_TAG_COLORS[volume.heightTag] ?? "text-stone-400";
 
   return (
@@ -81,8 +90,16 @@ export const DecorationInspectorTooltip: React.FC<
       </div>
       <div className="px-3 py-2 space-y-1">
         <Row label="Type" value={decoration.type} />
-        <Row label="Height" value={volume.heightTag} valueClass={tagColor} />
+        <Row label="Class" value={volume.heightTag} valueClass={tagColor} />
         <Row label="Scale" value={decoration.scale.toFixed(2)} />
+        <Row
+          label="Occlusion W × D"
+          value={`${Math.round(dimensions.width)} × ${Math.round(dimensions.depth)} px`}
+        />
+        <Row
+          label="Occlusion H"
+          value={`${Math.round(dimensions.height)} px @ 100%`}
+        />
         <Row label="Variant" value={String(decoration.variant)} />
         <Row
           label="Grid"

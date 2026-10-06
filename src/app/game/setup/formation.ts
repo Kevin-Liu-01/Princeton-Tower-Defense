@@ -12,9 +12,18 @@ export const getFormationOffsets = (count: number): Position[] => {
     ];
   }
 
+  if (count === 3) {
+    return [
+      { x: 0, y: -28 },
+      { x: -28, y: 18 },
+      { x: 28, y: 18 },
+    ];
+  }
+
   return [
-    { x: 0, y: -28 },
-    { x: -28, y: 18 },
-    { x: 28, y: 18 },
+    { x: -24, y: -22 },
+    { x: 24, y: -22 },
+    { x: -24, y: 22 },
+    { x: 24, y: 22 },
   ];
 };

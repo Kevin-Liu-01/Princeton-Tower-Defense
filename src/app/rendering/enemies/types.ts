@@ -233,7 +233,7 @@ const STONE_FLASH_PROFILE: EnemyFlashProfile = {
   rimColor: "rgba(160, 160, 175, 0.88)",
 };
 
-export function getEnemyFlashProfile(
+function resolveEnemyFlashProfile(
   enemyType: Enemy["type"],
   category?: string
 ): EnemyFlashProfile {
@@ -301,4 +301,20 @@ export function getEnemyFlashProfile(
   }
 
   return DEFAULT_FLASH_PROFILE;
+}
+
+const enemyFlashProfileCache = new Map<string, EnemyFlashProfile>();
+
+export function getEnemyFlashProfile(
+  enemyType: Enemy["type"],
+  category?: string
+): EnemyFlashProfile {
+  const cacheKey = `${enemyType}|${category ?? ""}`;
+  const cached = enemyFlashProfileCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  const profile = resolveEnemyFlashProfile(enemyType, category);
+  enemyFlashProfileCache.set(cacheKey, profile);
+  return profile;
 }

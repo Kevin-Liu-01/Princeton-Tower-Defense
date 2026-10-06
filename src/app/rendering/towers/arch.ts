@@ -121,7 +121,14 @@ export function renderArchTower(
   }
 
   // Crescendo intensity: amplifies all visual effects based on stack count
-  const archStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+  const archStats = calculateTowerStats(
+    tower.type,
+    tower.level,
+    tower.upgrade,
+    1,
+    1,
+    tower.capstone
+  );
   const maxCrescendo = archStats.crescendoMaxStacks || 4;
   const crescendoStacks = tower.crescendoStacks || 0;
   const crescendoRatio = Math.min(crescendoStacks / maxCrescendo, 1);

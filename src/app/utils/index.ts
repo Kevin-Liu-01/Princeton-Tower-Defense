@@ -480,6 +480,18 @@ export interface DecorationVolumeSpec {
   offsetBaseScale: number;
 }
 
+export interface DecorationRenderDimensions {
+  depth: number;
+  height: number;
+  width: number;
+}
+
+export interface DecorationHitboxSpec {
+  centerOffsetY: number;
+  radiusX: number;
+  radiusY: number;
+}
+
 const DECORATION_VOLUME_DEFAULTS_BY_TAG: Record<
   DecorationHeightTag,
   Omit<DecorationVolumeSpec, "heightTag">
@@ -971,6 +983,38 @@ export function getDecorationVolumeSpec(
   };
 }
 
+export function getDecorationRenderDimensions(
+  type: string,
+  scale: number,
+  explicitHeightTag?: DecorationHeightTag
+): DecorationRenderDimensions {
+  const volume = getDecorationVolumeSpec(type, explicitHeightTag);
+  const safeScale = Math.max(0, scale);
+  return {
+    depth: volume.length * safeScale,
+    height: volume.height * safeScale,
+    width: volume.width * safeScale,
+  };
+}
+
+export function getDecorationHitboxSpec(
+  type: string,
+  scale: number,
+  explicitHeightTag?: DecorationHeightTag
+): DecorationHitboxSpec {
+  const dimensions = getDecorationRenderDimensions(
+    type,
+    scale,
+    explicitHeightTag
+  );
+  const minimumRadius = 18 * Math.max(0, scale);
+  return {
+    centerOffsetY: dimensions.height * 0.26,
+    radiusX: Math.max(minimumRadius, dimensions.width * 0.34),
+    radiusY: Math.max(minimumRadius, dimensions.height * 0.28),
+  };
+}
+
 export function getDecorationWorldOffset(
   type: string,
   scale: number,
@@ -1185,7 +1229,7 @@ export function getLandmarkSpawnExclusion(
     return null;
   }
   const coreR = volume.landmarkCoreRadius * size;
-  const fullR = coreR + volume.landmarkFullPadding;
+  const fullR = (volume.landmarkCoreRadius + volume.landmarkFullPadding) * size;
   return { coreR, fullR };
 }
 
@@ -1211,48 +1255,6 @@ export const BACKGROUND_BLOCKING_DECORATION_TYPES = new Set<string>([
   "pond",
   "lava_pool",
 ]);
-
-// Vertical offset for landmark hitboxes (in scale units). Tall structures like pyramids
-// draw upward from their base—the hitbox center is shifted up so hovering the visible
-// body triggers the tooltip instead of requiring a hover near the ground.
-export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
-  // Pyramid body spans from ~-60s (tip) to +25s (base), so center should be only
-  // modestly above anchor. A larger value drifts the tooltip hitbox far above.
-  alexander_hall: 42,
-  ashen_spiral: 18,
-  blair_arch: 50,
-  blight_basin: 18,
-  cannon_crest: 18,
-  cleveland_tower: 65,
-  clio_hall: 40,
-  demon_statue: 22,
-  east_pyne: 45,
-  fine_hall: 48,
-  firestone_library: 40,
-  fortress: 65,
-  foulke_hall: 48,
-  frist_outpost: 52,
-  giant_sphinx: 60,
-  glacier: 55,
-  holder_hall: 50,
-  ice_throne: 50,
-  ivy_crossroads: 34,
-  mccosh_hall: 45,
-  nassau_hall: 50,
-  obelisk: 35,
-  obsidian_castle: 55,
-  princeton_chapel: 55,
-  prospect_house: 42,
-  pyramid: 20,
-  robertson_hall: 35,
-  sphinx: 10,
-  statue: 22,
-  sunscorch_labyrinth: 18,
-  tiger_stadium: 35,
-  triad_keep: 58,
-  whig_hall: 40,
-  witch_cottage: 30,
-};
 
 // Get the core grid cells a tower occupies (for bounds/path/blocked checks).
 // This always returns the anchor cell; the extended exclusion zone from larger

@@ -34,9 +34,10 @@ const T = LANDING_THEME;
 
 interface LandingPageProps {
   onPlay: () => void;
+  onPlayIntent?: () => void;
 }
 
-export function LandingPage({ onPlay }: LandingPageProps) {
+export function LandingPage({ onPlay, onPlayIntent }: LandingPageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [exiting, setExiting] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
@@ -48,8 +49,16 @@ export function LandingPage({ onPlay }: LandingPageProps) {
     if (exiting) {
       return;
     }
+    onPlayIntent?.();
     setExiting(true);
-    setTimeout(onPlay, 700);
+  }, [exiting, onPlayIntent]);
+
+  useEffect(() => {
+    if (!exiting) {
+      return;
+    }
+    const timer = setTimeout(onPlay, 200);
+    return () => clearTimeout(timer);
   }, [exiting, onPlay]);
 
   const handleOpenCredits = useCallback(() => setShowCredits(true), []);
@@ -73,11 +82,12 @@ export function LandingPage({ onPlay }: LandingPageProps) {
         background: T.bg,
         opacity: exiting ? 0 : 1,
         transform: exiting ? "scale(1.02)" : "scale(1)",
-        transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
+        transition: "opacity 0.2s ease-out, transform 0.2s ease-out",
       }}
     >
       <HeroSection
         onPlay={handlePlay}
+        onPlayIntent={onPlayIntent}
         exiting={exiting}
         onCredits={handleOpenCredits}
       />

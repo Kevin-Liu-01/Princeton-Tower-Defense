@@ -15,6 +15,7 @@ import {
 
 export const TROOP_COLORS: Record<TroopType, string> = {
   armored: "#708090",
+  campus_golem: "#8f8777",
   cavalry: "#daa520",
   centaur: "#8b4513",
   elite: "#c0c0c0",
@@ -71,6 +72,7 @@ export const TroopSprite: React.FC<{
 
       const TROOP_SPRITE_SCALES: Record<string, number> = {
         armored: 1.4,
+        campus_golem: 2.25,
         cavalry: 1.85,
         centaur: 1.85,
         elite: 1.4,
@@ -86,6 +88,7 @@ export const TroopSprite: React.FC<{
       };
       const TROOP_SPRITE_CY: Record<string, number> = {
         armored: 0.6,
+        campus_golem: 0.68,
         cavalry: 0.61,
         centaur: 0.61,
         elite: 0.62,
@@ -140,7 +143,7 @@ export const TroopSprite: React.FC<{
     ]
   );
 
-  useSpriteTicker(animated, 50, renderTroop);
+  useSpriteTicker(animated, 50, renderTroop, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>

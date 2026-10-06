@@ -30,6 +30,7 @@ import type {
   SpellType,
   DraggingTower,
   Decoration,
+  HoveredLandmarkInfo,
   SpecialTower,
   SpellUpgradeLevels,
 } from "../../types";
@@ -46,7 +47,7 @@ import {
   findClosestPathPointWithinRadius,
   getTroopMoveInfo,
   LANDMARK_DECORATION_TYPES,
-  LANDMARK_HITBOX_Y_OFFSET,
+  getDecorationHitboxSpec,
   getMapDecorationWorldPos,
   resolveMapDecorationRuntimePlacement,
 } from "../../utils";
@@ -185,7 +186,7 @@ export interface CanvasEventParams {
   setHoveredTower: (v: string | null) => void;
   setHoveredHero: (v: boolean) => void;
   setHoveredSpecialTower: (v: SpecialTower | null) => void;
-  setHoveredLandmark: (v: string | null) => void;
+  setHoveredLandmark: (v: HoveredLandmarkInfo | null) => void;
   setHoveredHazardType: (v: string | null) => void;
   setHoveredWaveBubblePathKey: (v: string | null) => void;
   setHoveredInspectEnemy: (v: string | null) => void;
@@ -272,7 +273,10 @@ export function handlePointerDownImpl(
         p.cameraOffset,
         p.cameraZoom
       );
-      const hitboxRadius = getTowerHitboxRadius(tower, p.cameraZoom);
+      const hitboxRadius = Math.max(
+        getTowerHitboxRadius(tower, p.cameraZoom),
+        isTouch ? 38 : 0
+      );
       if (distance(clickPos, screenPos) < hitboxRadius) {
         return;
       }
@@ -289,7 +293,10 @@ export function handlePointerDownImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    const hitboxRadius = getTowerHitboxRadius(t, p.cameraZoom);
+    const hitboxRadius = Math.max(
+      getTowerHitboxRadius(t, p.cameraZoom),
+      isTouch ? 38 : 0
+    );
     return distance(clickPos, screenPos) < hitboxRadius;
   });
 
@@ -303,7 +310,7 @@ export function handlePointerDownImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    clickedHero = distance(clickPos, heroScreen) < 28;
+    clickedHero = distance(clickPos, heroScreen) < (isTouch ? 38 : 28);
   }
 
   const clickedTroop = p.troops.find((t) => {
@@ -315,7 +322,7 @@ export function handlePointerDownImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    return distance(clickPos, troopScreen) < 22;
+    return distance(clickPos, troopScreen) < (isTouch ? 34 : 22);
   });
 
   if (clickedHero && p.hero && !p.hero.dead) {
@@ -374,10 +381,11 @@ export function handleCanvasClickImpl(
 
   // ========== STOP PANNING ==========
   if (p.isPanning) {
+    const panThreshold = isTouch ? 12 : 5;
     const wasPanning =
       p.panStart &&
-      (Math.abs(clickX - p.panStart.x) > 5 ||
-        Math.abs(clickY - p.panStart.y) > 5);
+      (Math.abs(clickX - p.panStart.x) > panThreshold ||
+        Math.abs(clickY - p.panStart.y) > panThreshold);
     p.setIsPanning(false);
     p.setPanStart(null);
     p.setPanStartOffset(null);
@@ -393,11 +401,12 @@ export function handleCanvasClickImpl(
 
   // ========== HERO/TROOP DRAG RELOCATION ==========
   if (p.draggingUnit) {
+    const unitMoveThreshold = isTouch ? 10 : 4;
     const movedEnough =
       p.unitDragMoved ||
       (!!p.unitDragStart &&
-        (Math.abs(clickX - p.unitDragStart.x) > 4 ||
-          Math.abs(clickY - p.unitDragStart.y) > 4));
+        (Math.abs(clickX - p.unitDragStart.x) > unitMoveThreshold ||
+          Math.abs(clickY - p.unitDragStart.y) > unitMoveThreshold));
 
     if (movedEnough) {
       const clickWorldPos = screenToWorld(
@@ -1050,7 +1059,10 @@ export function handleCanvasClickImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    const hitboxRadius = getTowerHitboxRadius(t, p.cameraZoom);
+    const hitboxRadius = Math.max(
+      getTowerHitboxRadius(t, p.cameraZoom),
+      isTouch ? 38 : 0
+    );
     return distance(clickPos, screenPos) < hitboxRadius;
   });
   if (clickedTower) {
@@ -1070,7 +1082,7 @@ export function handleCanvasClickImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    if (distance(clickPos, heroScreen) < 28) {
+    if (distance(clickPos, heroScreen) < (isTouch ? 38 : 28)) {
       p.setHero((prev) => (prev ? { ...prev, selected: true } : null));
       p.setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
       p.setSelectedTower(null);
@@ -1087,7 +1099,7 @@ export function handleCanvasClickImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    if (distance(clickPos, troopScreen) < 22) {
+    if (distance(clickPos, troopScreen) < (isTouch ? 34 : 22)) {
       p.setTroops((prev) =>
         prev.map((t) => ({ ...t, selected: t.id === troop.id }))
       );
@@ -1192,8 +1204,8 @@ export function handleMouseMoveImpl(
   if (p.draggingUnit && p.unitDragStart) {
     if (
       !p.unitDragMoved &&
-      (Math.abs(x - p.unitDragStart.x) > 4 ||
-        Math.abs(y - p.unitDragStart.y) > 4)
+      (Math.abs(x - p.unitDragStart.x) > (isTouch ? 10 : 4) ||
+        Math.abs(y - p.unitDragStart.y) > (isTouch ? 10 : 4))
     ) {
       p.setUnitDragMoved(true);
     }
@@ -1412,7 +1424,7 @@ export function handleMouseMoveImpl(
     }
   }
 
-  let foundLandmark: string | null = null;
+  let foundLandmark: HoveredLandmarkInfo | null = null;
   const levelData = LEVEL_DATA[p.selectedMap];
   if (levelData?.decorations) {
     for (const deco of levelData.decorations) {
@@ -1434,13 +1446,21 @@ export function handleMouseMoveImpl(
           p.cameraOffset,
           p.cameraZoom
         );
-        const scale =
-          (resolvedPlacement?.scale ?? (deco.size || 1)) * p.cameraZoom;
-        const hitRadius = scale * 35;
-        const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
-        const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
-        if (distance({ x, y }, hitCenter) < hitRadius) {
-          foundLandmark = decoType;
+        const objectScale = resolvedPlacement?.scale ?? (deco.size || 1);
+        const hitbox = getDecorationHitboxSpec(
+          decoType,
+          objectScale * p.cameraZoom,
+          deco.heightTag
+        );
+        const normalizedX = (x - decoScreen.x) / hitbox.radiusX;
+        const normalizedY =
+          (y - (decoScreen.y - hitbox.centerOffsetY)) / hitbox.radiusY;
+        if (normalizedX ** 2 + normalizedY ** 2 <= 1) {
+          foundLandmark = {
+            heightTag: deco.heightTag,
+            scale: objectScale,
+            type: decoType,
+          };
           break;
         }
       }

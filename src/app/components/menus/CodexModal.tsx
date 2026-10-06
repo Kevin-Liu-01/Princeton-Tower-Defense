@@ -577,6 +577,7 @@ const TROOP_DISPLAY_ORDER: TroopType[] = [
   "armored",
   "elite",
   "knight",
+  "campus_golem",
   "centaur",
   "cavalry",
   "reinforcement",
@@ -599,7 +600,7 @@ const TROOP_CATEGORY_MAP: Record<
   summoned: {
     color: "text-purple-300",
     label: "Summoned Units",
-    types: ["reinforcement", "turret"],
+    types: ["campus_golem", "reinforcement", "turret"],
   },
   hex: {
     color: "text-fuchsia-300",
@@ -1098,13 +1099,15 @@ export const CodexModal: React.FC<CodexModalProps> = ({
     1
   );
 
-  const towerAllLevelStats = towerTypes.flatMap((t) =>
-    [1, 2, 3]
-      .map((lvl) => calculateTowerStats(t, lvl, undefined, 1, 1))
-      .concat(
-        ["A", "B"].map((p) => calculateTowerStats(t, 4, p as "A" | "B", 1, 1))
-      )
-  );
+  const towerAllLevelStats = towerTypes.flatMap((towerType) => [
+    ...[1, 2, 3].map((level) =>
+      calculateTowerStats(towerType, level, undefined, 1, 1)
+    ),
+    ...(["A", "B"] as const).flatMap((path) => [
+      calculateTowerStats(towerType, 4, path, 1, 1),
+      calculateTowerStats(towerType, 4, path, 1, 1, true),
+    ]),
+  ]);
   const towerGlobalMaxDmg = Math.max(
     ...towerAllLevelStats.map((s) => s.damage),
     1
@@ -1565,9 +1568,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({
           />
           <Image
             src="/images/new/gameplay_volcano.png"
-            alt="Battle Scene"
+            alt=""
             fill
-            sizes="100vw"
+            loading="eager"
+            sizes="(max-width: 1152px) 100vw, 1152px"
             className="z-5 object-bottom object-cover opacity-[0.05] pointer-events-none select-none"
           />
 
@@ -2871,6 +2875,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                         <div className="grid sm:grid-cols-2 gap-6">
                           {(["A", "B"] as const).map((path) => {
                             const upgrade = tower.upgrades[path];
+                            const capstone =
+                              TOWER_STATS[selectedTower].upgrades[path]
+                                .capstone;
                             const stats = getDynamicStats(
                               selectedTower,
                               4,
@@ -2948,6 +2955,34 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                     >
                                       {upgrade.effect}
                                     </p>
+                                  </div>
+
+                                  <div className="rounded-lg border border-amber-500/40 bg-amber-950/35 p-3">
+                                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
+                                        <Sparkles size={12} /> Masterwork
+                                      </div>
+                                      <span className="flex items-center gap-1 text-xs font-bold text-amber-400">
+                                        <Coins size={12} /> {capstone.cost} PP
+                                      </span>
+                                    </div>
+                                    <div className="font-bold text-amber-100">
+                                      {capstone.name}
+                                    </div>
+                                    <p className="mt-1 text-xs leading-relaxed text-amber-200/75">
+                                      {capstone.effect}
+                                    </p>
+                                    {capstone.stats.spawnTroopType ? (
+                                      <div className="mt-2 flex items-center gap-2 rounded-md border border-orange-400/25 bg-black/20 px-2 py-1.5 text-xs text-orange-200">
+                                        <Users size={13} />
+                                        Summons{" "}
+                                        {
+                                          TROOP_DATA[
+                                            capstone.stats.spawnTroopType
+                                          ].name
+                                        }
+                                      </div>
+                                    ) : null}
                                   </div>
 
                                   {/* Troop info for Station */}

@@ -4,6 +4,7 @@ import type { WorldMapDrawContext } from "./rendering/drawContext";
 import { drawLevelBattlePreview } from "./rendering/levelBattlePreview";
 import { drawLevelNodes } from "./rendering/levelNodes";
 import { drawPathConnections } from "./rendering/pathConnections";
+import { prepareLayer } from "./rendering/prepareLayer";
 import { drawRoads } from "./rendering/roads";
 import { drawStructureLandmarkLayer } from "./rendering/structureLandmarkLayer";
 import { drawTerrainBackdrop } from "./rendering/terrainBackdrop";
@@ -70,22 +71,39 @@ export const drawWorldMapCanvas = ({
   // Only resize canvas when dimensions actually change (expensive operation)
   const needsResize =
     lastCanvasSizeRef.current.w !== displayW ||
-    lastCanvasSizeRef.current.h !== displayH;
+    lastCanvasSizeRef.current.h !== displayH ||
+    canvas.width !== Math.round(displayW * dpr) ||
+    canvas.height !== Math.round(displayH * dpr);
   if (needsResize) {
-    canvas.width = displayW * dpr;
-    canvas.height = displayH * dpr;
+    canvas.width = Math.round(displayW * dpr);
+    canvas.height = Math.round(displayH * dpr);
     canvas.style.width = `${displayW}px`;
     canvas.style.height = `${displayH}px`;
     lastCanvasSizeRef.current = { h: displayH, w: displayW };
+    for (const cache of [
+      staticBgCache,
+      decorationCache,
+      fogOverlayCache,
+      pathCache,
+      nodeCache,
+      atmosphereCache,
+    ]) {
+      if (cache) {
+        cache.current.w = 0;
+      }
+    }
+    if (paintKeyRef) {
+      paintKeyRef.current = "";
+    }
   }
 
   // Use ref-based time to avoid React re-renders on every frame
   const time = animTimeRef.current;
 
-  const DECOR_FPS = 50;
-  const PATH_FPS = 50;
+  const DECOR_FPS = isMobile ? 8 : 15;
+  const PATH_FPS = 15;
   const NODE_FPS = 15;
-  const ATMOS_FPS = 50;
+  const ATMOS_FPS = isMobile ? 8 : 15;
   const HERO_IDLE_FPS = 30;
   const BATTLE_PREVIEW_FPS = 30;
 
@@ -143,9 +161,7 @@ export const drawWorldMapCanvas = ({
   if (staticBgCache && !bgCacheValid) {
     const bgCanvas =
       staticBgCache.current.canvas ?? document.createElement("canvas");
-    bgCanvas.width = displayW * dpr;
-    bgCanvas.height = displayH * dpr;
-    const bgCtx = bgCanvas.getContext("2d");
+    const bgCtx = prepareLayer(bgCanvas, displayW * dpr, displayH * dpr);
     if (bgCtx) {
       _savedCtx = ctx;
       ctx = bgCtx;
@@ -203,7 +219,7 @@ export const drawWorldMapCanvas = ({
   };
 
   // --- Decoration layer caching ---
-  // Mobile: 10 FPS keeps animations smooth while only rebuilding 1-in-3 frames
+  // Ambient layers update less often than hero movement and pointer feedback.
   // (DECOR_FPS / decorTimeBucket computed at the top of the function.)
   const decorCacheValid =
     decorationCache != null &&
@@ -217,9 +233,7 @@ export const drawWorldMapCanvas = ({
   if (decorationCache && !decorCacheValid) {
     const gc =
       decorationCache.current.groundCanvas ?? document.createElement("canvas");
-    gc.width = displayW * dpr;
-    gc.height = displayH * dpr;
-    const gcCtx = gc.getContext("2d");
+    const gcCtx = prepareLayer(gc, displayW * dpr, displayH * dpr);
     if (gcCtx) {
       gcCtx.clearRect(0, 0, gc.width, gc.height);
       _decorSavedCtx = ctx;
@@ -248,7 +262,7 @@ export const drawWorldMapCanvas = ({
     ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
   }
 
-  // --- PATH CONNECTIONS (desktop keeps full 50fps animation, mobile stays throttled) ---
+  // --- Cached path connections ---
   // (PATH_FPS / pathTimeBucket computed at the top of the function.)
   const pathUnlockedKey = unlockedMaps.join(",");
   const pathCacheValid =
@@ -263,9 +277,7 @@ export const drawWorldMapCanvas = ({
 
   if (pathCache && !pathCacheValid) {
     const pc = pathCache.current.canvas ?? document.createElement("canvas");
-    pc.width = displayW * dpr;
-    pc.height = displayH * dpr;
-    const pCtx = pc.getContext("2d");
+    const pCtx = prepareLayer(pc, displayW * dpr, displayH * dpr);
     if (pCtx) {
       pCtx.clearRect(0, 0, pc.width, pc.height);
       _pathSavedCtx = ctx;
@@ -311,9 +323,7 @@ export const drawWorldMapCanvas = ({
     const sc =
       decorationCache.current.structureCanvas ??
       document.createElement("canvas");
-    sc.width = displayW * dpr;
-    sc.height = displayH * dpr;
-    const scCtx = sc.getContext("2d");
+    const scCtx = prepareLayer(sc, displayW * dpr, displayH * dpr);
     if (scCtx) {
       scCtx.clearRect(0, 0, sc.width, sc.height);
       _structSavedCtx = ctx;
@@ -545,9 +555,7 @@ export const drawWorldMapCanvas = ({
   if (ATMOS_FPS > 0 && atmosphereCache && !atmosCacheValid) {
     const ac =
       atmosphereCache.current.canvas ?? document.createElement("canvas");
-    ac.width = displayW * dpr;
-    ac.height = displayH * dpr;
-    const acCtx = ac.getContext("2d");
+    const acCtx = prepareLayer(ac, displayW * dpr, displayH * dpr);
     if (acCtx) {
       acCtx.clearRect(0, 0, ac.width, ac.height);
       acCtx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
@@ -699,9 +707,7 @@ export const drawWorldMapCanvas = ({
     if (fogOverlayCache && !fogCacheValid) {
       const fc =
         fogOverlayCache.current.canvas ?? document.createElement("canvas");
-      fc.width = displayW * dpr;
-      fc.height = displayH * dpr;
-      const fCtx = fc.getContext("2d");
+      const fCtx = prepareLayer(fc, displayW * dpr, displayH * dpr);
       if (fCtx) {
         fCtx.clearRect(0, 0, fc.width, fc.height);
         fCtx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);

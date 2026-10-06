@@ -1,11 +1,11 @@
 import {
   ENEMY_DATA,
   ISO_Y_RATIO,
-  LEVEL_DATA,
   SUMMON_CHANNEL_DURATION,
   ENEMY_REGEN_DELAY_MS,
   getEnemyNativeRegion,
 } from "../../constants";
+import { getFacingRightToward } from "../../game/unitMovement";
 import type { Enemy, EnemyType, Position, MapTheme } from "../../types";
 import {
   worldToScreen,
@@ -19,10 +19,13 @@ import type { InspectRenderPass } from "../effects/inspectIndicator";
 import { getPerformanceSettings } from "../performance";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
+import { drawCachedEnemySprite } from "./enemySpriteCache";
+import {
+  getEnemyAttackEffectFacingScale,
+  getEnemySpriteFacingScale,
+} from "./orientation";
 import { getRegionalPalette } from "./regionColors";
 import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
-
-const mapThemeCache = new Map<string, MapTheme>();
 
 /**
  * Internal `size *=` multiplier used by each enemy's draw function.
@@ -127,17 +130,6 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   ash_moth: 1.2,
   brood_mother: 1.8,
 };
-
-function getMapTheme(selectedMap: string): MapTheme {
-  const cached = mapThemeCache.get(selectedMap);
-  if (cached) {
-    return cached;
-  }
-  const levelData = LEVEL_DATA[selectedMap];
-  const theme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
-  mapThemeCache.set(selectedMap, theme);
-  return theme;
-}
 
 import {
   getAbilityActivationPhase,
@@ -271,17 +263,6 @@ import {
   drawIceWitchEnemy,
 } from "./winter";
 
-const RIGHT_FACING_ENEMY_SPRITES = new Set([
-  "catapult",
-  "crossbowman",
-  "dire_wolf",
-  "timber_wolf",
-  "mammoth",
-  "vine_serpent",
-  "volcanic_drake",
-  "salamander",
-]);
-
 export function renderEnemy(
   ctx: CanvasRenderingContext2D,
   enemy: Enemy,
@@ -289,9 +270,10 @@ export function renderEnemy(
   canvasHeight: number,
   dpr: number,
   selectedMap: string,
+  frameNowMs: number,
+  region: MapTheme,
   cameraOffset?: Position,
-  cameraZoom?: number,
-  enemyDensityHint: number = 0
+  cameraZoom?: number
 ) {
   const pathKey = enemy.pathKey || selectedMap;
   const worldPos = getEnemyPosition(enemy, pathKey);
@@ -305,7 +287,7 @@ export function renderEnemy(
   );
   const zoom = cameraZoom || 1;
   const eData = ENEMY_DATA[enemy.type];
-  const now = Date.now();
+  const now = frameNowMs;
   const time = now / 1000;
   const spawnAlpha = Math.min(1, enemy.spawnProgress);
   if (spawnAlpha <= 0) {
@@ -362,41 +344,75 @@ export function renderEnemy(
       ? 1 - Math.sin(damageFlashIntensity * Math.PI) * 0.03
       : 1;
 
-  // These enemy sprites are drawn facing right instead of the default left,
-  // so we invert the flip (same pattern as cavalry/centaur in troops renderer).
-  const spriteReversed = RIGHT_FACING_ENEMY_SPRITES.has(enemy.type);
-  const effectiveFacingRight = spriteReversed
-    ? !enemy.facingRight
-    : enemy.facingRight;
-  const facingFlip = effectiveFacingRight ? -1 : 1;
+  const movementFacingRight = enemy.facingRight ?? false;
+  const activeFacingRight =
+    attackPhase > 0 && enemy.attackTargetPos
+      ? getFacingRightToward(
+          worldPos,
+          enemy.attackTargetPos,
+          movementFacingRight
+        )
+      : movementFacingRight;
+  const spriteFacingScale = getEnemySpriteFacingScale(
+    enemy.type,
+    activeFacingRight
+  );
   ctx.save();
   ctx.translate(screenPos.x, drawY);
   ctx.scale(
-    attackScalePulse * hurtScalePulse * facingFlip,
+    attackScalePulse * hurtScalePulse * spriteFacingScale,
     attackScalePulse * hurtScalePulse
   );
   ctx.translate(-screenPos.x, -drawY);
 
-  const region = getMapTheme(selectedMap);
-
-  if (hasEnemyAura(eData.category)) {
-    renderEnemyAura(ctx, eData.category!, screenPos.x, drawY, size, now, zoom);
+  const enemyCategory = eData.category;
+  if (enemyCategory && hasEnemyAura(enemyCategory)) {
+    renderEnemyAura(ctx, enemyCategory, screenPos.x, drawY, size, now, zoom);
   }
 
-  drawEnemySprite(
-    ctx,
-    screenPos.x,
-    drawY,
-    size,
-    enemy.type,
-    eData.color,
-    damageFlashIntensity,
-    time,
-    isFlying,
-    zoom,
-    attackPhase,
-    region
-  );
+  if (attackPhase === 0 && damageFlashIntensity === 0) {
+    drawCachedEnemySprite(
+      ctx,
+      screenPos.x,
+      drawY,
+      enemy.type,
+      size,
+      zoom,
+      time,
+      region,
+      (spriteCtx, x, y, spriteTime) => {
+        drawEnemySprite(
+          spriteCtx,
+          x,
+          y,
+          size,
+          enemy.type,
+          eData.color,
+          0,
+          spriteTime,
+          isFlying,
+          zoom,
+          0,
+          region
+        );
+      }
+    );
+  } else {
+    drawEnemySprite(
+      ctx,
+      screenPos.x,
+      drawY,
+      size,
+      enemy.type,
+      eData.color,
+      damageFlashIntensity,
+      time,
+      isFlying,
+      zoom,
+      attackPhase,
+      region
+    );
+  }
 
   if (damageFlashIntensity > 0) {
     const hurtAlpha = damageFlashIntensity * 0.24;
@@ -481,14 +497,19 @@ export function renderEnemy(
     }
   }
 
+  ctx.restore();
+
   // Attack animation effects
   if (attackPhase > 0) {
-    if (spriteReversed) {
-      ctx.save();
-      ctx.translate(screenPos.x, drawY);
-      ctx.scale(-1, 1);
-      ctx.translate(-screenPos.x, -drawY);
-    }
+    const effectFacingScale =
+      getEnemyAttackEffectFacingScale(activeFacingRight);
+    ctx.save();
+    ctx.translate(screenPos.x, drawY);
+    ctx.scale(
+      attackScalePulse * hurtScalePulse * effectFacingScale,
+      attackScalePulse * hurtScalePulse
+    );
+    ctx.translate(-screenPos.x, -drawY);
     renderEnemyAttackEffect(
       ctx,
       enemy.type,
@@ -502,12 +523,8 @@ export function renderEnemy(
       eData.color,
       enemy.pathIndex
     );
-    if (spriteReversed) {
-      ctx.restore();
-    }
+    ctx.restore();
   }
-
-  ctx.restore();
 
   // Ability activation flash
   if (enemy.lastAbilityType && enemy.lastAbilityUse) {

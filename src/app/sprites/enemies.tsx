@@ -75,23 +75,23 @@ const CODEX_SPRITE_ADJUSTMENTS: Partial<
 
   // fantasy.ts — 1.15×–2.2×
   dire_bear: { offsetY: 0, scale: 0.77 },
-  ancient_ent: { offsetY: 0, scale: 0.7 },
+  ancient_ent: { offsetY: 0.02, scale: 0.76 },
   forest_troll: { offsetY: 0, scale: 0.91 },
   timber_wolf: { offsetY: 0, scale: 0.77 },
-  giant_eagle: { offsetY: 0, scale: 0.87 },
-  swamp_hydra: { offsetY: 0, scale: 0.63 },
+  giant_eagle: { offsetY: 0.02, scale: 0.98 },
+  swamp_hydra: { offsetY: 0.03, scale: 0.72 },
   giant_toad: { offsetY: 0, scale: 0.74 },
   vine_serpent: { offsetY: 0, scale: 0.77 },
-  marsh_troll: { offsetY: 0, scale: 0.71 },
+  marsh_troll: { offsetY: 0.02, scale: 0.8 },
   phoenix: { offsetY: 0, scale: 0.67 },
-  basilisk: { offsetY: 0, scale: 0.69 },
+  basilisk: { offsetY: 0.03, scale: 0.78 },
   djinn: { offsetY: 0, scale: 0.74 },
-  manticore: { offsetY: 0, scale: 0.71 },
+  manticore: { offsetY: 0.03, scale: 0.8 },
   frost_troll: { offsetY: 0, scale: 0.71 },
   dire_wolf: { offsetY: 0, scale: 0.69 },
-  wendigo: { offsetY: 0, scale: 0.71 },
+  wendigo: { offsetY: 0.03, scale: 0.79 },
   mammoth: { offsetY: 0, scale: 0.6 },
-  lava_golem: { offsetY: 0, scale: 0.67 },
+  lava_golem: { offsetY: 0.03, scale: 0.74 },
   volcanic_drake: { offsetY: 0, scale: 0.71 },
   salamander: { offsetY: 0, scale: 0.83 },
 
@@ -132,7 +132,31 @@ const CODEX_SPRITE_ADJUSTMENTS: Partial<
   fire_ant: { offsetY: 0, scale: 0.71 },
   magma_beetle: { offsetY: 0, scale: 0.74 },
   ash_moth: { offsetY: 0, scale: 0.83 },
-  brood_mother: { offsetY: 0, scale: 0.56 },
+  brood_mother: { offsetY: 0.03, scale: 0.62 },
+};
+
+const STATIC_PREVIEW_TIMES: Partial<Record<EnemyType, number>> = {
+  ancient_ent: 0.8,
+  basilisk: 0.65,
+  brood_mother: 0.55,
+  giant_eagle: 0.38,
+  lava_golem: 0.72,
+  manticore: 0.42,
+  marsh_troll: 0.58,
+  swamp_hydra: 0.7,
+  wendigo: 0.62,
+};
+
+const PREVIEW_COLOR_OVERRIDES: Partial<Record<EnemyType, string>> = {
+  ancient_ent: "#3f6b24",
+  basilisk: "#808044",
+  brood_mother: "#34252e",
+  giant_eagle: "#d2ad5d",
+  lava_golem: "#a5320e",
+  manticore: "#a45c24",
+  marsh_troll: "#5b7043",
+  swamp_hydra: "#3f6a3f",
+  wendigo: "#51546b",
 };
 
 export const EnemySprite: React.FC<{
@@ -164,10 +188,11 @@ export const EnemySprite: React.FC<{
       }
 
       const gameSize = eData.size || 24;
+      const previewColor = PREVIEW_COLOR_OVERRIDES[type] ?? eData.color;
       const baseZoom = Math.max(0.1, (size * 0.65) / gameSize);
       const cx = size / 2;
       const baseCy = size * 0.55;
-      const t = animated ? time * 0.08 : 0;
+      const t = animated ? time * 0.08 : (STATIC_PREVIEW_TIMES[type] ?? 0);
 
       const adj = CODEX_SPRITE_ADJUSTMENTS[type];
       const zoom = baseZoom * (adj?.scale ?? 1);
@@ -182,7 +207,7 @@ export const EnemySprite: React.FC<{
           0,
           gameSize * zoom,
           type,
-          eData.color,
+          previewColor,
           0,
           t,
           !!eData.flying,
@@ -198,7 +223,7 @@ export const EnemySprite: React.FC<{
     [type, size, canvasSize, animated, region]
   );
 
-  useSpriteTicker(animated, 50, renderEnemy);
+  useSpriteTicker(animated, 50, renderEnemy, canvasRef);
 
   return (
     <div style={spriteContainerStyle(size, size)}>

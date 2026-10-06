@@ -1,48 +1,23 @@
-import { interceptShadows, refreshShadowCache } from "../performance";
+import { getEffectiveShadowBlur, interceptShadows } from "../performance";
 
 interface CachedSprite {
   canvas: HTMLCanvasElement;
-  cx: number;
-  cy: number;
+  context: CanvasRenderingContext2D;
+  frame: number;
+  padding: number;
+  pixels: number;
 }
 
 const cache = new Map<string, CachedSprite>();
-const MAX_ENTRIES = 256;
-const TIME_QUANT_DIVISOR = 6;
-
-let evictionQueue: string[] = [];
-
-function quantize(v: number, step: number): number {
-  return Math.round(v / step) * step;
-}
-
-function buildKey(
-  type: string,
-  size: number,
-  zoom: number,
-  time: number,
-  region: string
-): string {
-  const sq = quantize(size, 0.5);
-  const zq = quantize(zoom, 0.25);
-  const tq = Math.floor(time * TIME_QUANT_DIVISOR);
-  return `${type}:${sq}:${zq}:${region}:${tq}`;
-}
-
-function evictIfNeeded(): void {
-  while (cache.size >= MAX_ENTRIES && evictionQueue.length > 0) {
-    const old = evictionQueue.shift()!;
-    cache.delete(old);
-  }
-}
+const MAX_ENTRIES = 96;
+const MAX_PIXELS = 4 * 1024 * 1024; // 16 MiB of RGBA backing stores.
+const ANIMATION_FPS = 30;
+let cachedPixels = 0;
 
 /**
- * Attempt to draw the enemy sprite from cache. Returns true on cache hit.
- * On miss, renders to an offscreen canvas, stores it, then blits to ctx.
- *
- * @param drawSprite - callback that draws the actual sprite centered at (cx, cy)
- *                     on the provided context. This avoids importing all the
- *                     per-type draw functions here.
+ * Share idle body artwork across enemies, keeping movement, facing, shadows,
+ * health bars, damage feedback and attack animations outside the cache.
+ * Each visual variant owns one reusable bitmap, not a history of time slices.
  */
 export function drawCachedEnemySprite(
   ctx: CanvasRenderingContext2D,
@@ -53,44 +28,90 @@ export function drawCachedEnemySprite(
   zoom: number,
   time: number,
   region: string,
-  drawSprite: (offCtx: CanvasRenderingContext2D, cx: number, cy: number) => void
+  drawSprite: (
+    offCtx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    spriteTime: number
+  ) => void
 ): void {
-  const key = buildKey(type, size, zoom, time, region);
+  // Match the destination's backing resolution, including Retina canvases.
+  const transform = ctx.getTransform();
+  const resolution = Math.min(
+    2,
+    Math.max(1, Math.hypot(transform.a, transform.b))
+  );
+  const key = `${type}:${size}:${zoom}:${region}:${resolution}:${getEffectiveShadowBlur(1)}`;
+  const frame = Math.floor(time * ANIMATION_FPS);
+  let sprite = cache.get(key);
 
-  const hit = cache.get(key);
-  if (hit) {
-    ctx.drawImage(hit.canvas, x - hit.cx, y - hit.cy);
-    return;
+  if (!sprite) {
+    const padding = Math.ceil(size * 4);
+    const side = Math.ceil(padding * 2 * resolution);
+    const pixels = side * side;
+    if (pixels > MAX_PIXELS || side <= 0) {
+      drawSprite(ctx, x, y, time);
+      return;
+    }
+    while (cache.size >= MAX_ENTRIES || cachedPixels + pixels > MAX_PIXELS) {
+      const oldestEntry = cache.entries().next().value;
+      if (!oldestEntry) {
+        break;
+      }
+      const [oldestKey, oldest] = oldestEntry;
+      cachedPixels -= oldest.pixels;
+      oldest.canvas.width = 1;
+      oldest.canvas.height = 1;
+      cache.delete(oldestKey);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = side;
+    canvas.height = side;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      drawSprite(ctx, x, y, time);
+      return;
+    }
+    interceptShadows(context);
+    context.setTransform(resolution, 0, 0, resolution, 0, 0);
+    sprite = { canvas, context, frame: -1, padding, pixels };
+    cachedPixels += pixels;
   }
 
-  const padding = Math.ceil(size * 3.5);
-  const w = padding * 2;
-  const h = padding * 2;
-  const cx = padding;
-  const cy = padding;
-
-  const offCanvas = document.createElement("canvas");
-  offCanvas.width = w;
-  offCanvas.height = h;
-  const offCtx = offCanvas.getContext("2d");
-  if (!offCtx) {
-    drawSprite(ctx, x, y);
-    return;
+  // Keep frequently drawn variants resident as types enter and leave the wave.
+  cache.delete(key);
+  cache.set(key, sprite);
+  if (sprite.frame !== frame) {
+    sprite.context.clearRect(
+      0,
+      0,
+      sprite.canvas.width / resolution,
+      sprite.canvas.height / resolution
+    );
+    sprite.context.save();
+    drawSprite(
+      sprite.context,
+      sprite.padding,
+      sprite.padding,
+      frame / ANIMATION_FPS
+    );
+    sprite.context.restore();
+    sprite.frame = frame;
   }
-
-  interceptShadows(offCtx);
-  refreshShadowCache();
-
-  drawSprite(offCtx, cx, cy);
-
-  evictIfNeeded();
-  cache.set(key, { canvas: offCanvas, cx, cy });
-  evictionQueue.push(key);
-
-  ctx.drawImage(offCanvas, x - cx, y - cy);
+  ctx.drawImage(
+    sprite.canvas,
+    x - sprite.padding,
+    y - sprite.padding,
+    sprite.canvas.width / resolution,
+    sprite.canvas.height / resolution
+  );
 }
 
 export function clearEnemySpriteCache(): void {
+  for (const sprite of cache.values()) {
+    sprite.canvas.width = 1;
+    sprite.canvas.height = 1;
+  }
   cache.clear();
-  evictionQueue = [];
+  cachedPixels = 0;
 }

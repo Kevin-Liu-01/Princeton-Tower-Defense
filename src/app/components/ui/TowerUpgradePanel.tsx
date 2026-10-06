@@ -42,7 +42,6 @@ import {
   STATION_TROOP_RANGE,
   TOWER_DATA,
   TROOP_DATA,
-  ISO_PRISM_D_FACTOR,
   TOWER_TAGS,
   TOWER_ROLE_STYLES,
 } from "../../constants";
@@ -51,6 +50,7 @@ import {
   getUpgradeCost,
   TOWER_STATS,
 } from "../../constants/towerStats";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import {
   getTowerFoundationSize,
   getTowerVisualMetrics,
@@ -172,6 +172,25 @@ function buildActionButtons(
       subLabel: `${upgradeCost} PP`,
       tooltip: towerData.upgrades.B.effect,
     });
+  }
+
+  if (tower.level === 4 && tower.upgrade && !tower.capstone) {
+    const capstone = TOWER_STATS[tower.type]?.upgrades[tower.upgrade].capstone;
+    if (capstone) {
+      buttons.push({
+        angle: -90,
+        bgGradient: "linear-gradient(180deg, #92400e 0%, #451a03 100%)",
+        borderColor: "rgba(251,191,36,0.85)",
+        disabled: pawPoints < capstone.cost,
+        glowColor: "rgba(251,191,36,0.4)",
+        icon: <Sparkles size={20} className="text-amber-100" />,
+        id: "capstone",
+        label: capstone.name,
+        onClick: () => upgradeTower(tower.id),
+        subLabel: `${capstone.cost} PP`,
+        tooltip: capstone.effect,
+      });
+    }
   }
 
   // --- Mortar special buttons (bottom-right quadrant) ---
@@ -407,6 +426,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   onRallyTroops,
 }) => {
   const sizes = useResponsiveSizes();
+  const isMobile = useMediaQuery("(max-width: 639px)");
   const panelRef = React.useRef<HTMLDivElement>(null);
   const [measuredHeight, setMeasuredHeight] = React.useState(0);
 
@@ -426,7 +446,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const towerData = TOWER_DATA[tower.type];
   const towerStatsDef = TOWER_STATS[tower.type];
 
-  const upgradeCost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
+  const upgradeCost = getUpgradeCost(
+    tower.type,
+    tower.level,
+    tower.upgrade,
+    tower.capstone
+  );
 
   const baseCost = TOWER_DATA[tower.type].cost;
   const level2Cost =
@@ -435,7 +460,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     tower.level >= 3 ? TOWER_STATS[tower.type]?.levels[3]?.cost || 250 : 0;
   const level4Cost =
     tower.level >= 4 ? TOWER_STATS[tower.type]?.level4Cost || 400 : 0;
-  const totalInvested = baseCost + level2Cost + level3Cost + level4Cost;
+  const capstoneCost =
+    tower.capstone && tower.upgrade
+      ? TOWER_STATS[tower.type]?.upgrades[tower.upgrade].capstone.cost || 0
+      : 0;
+  const totalInvested =
+    baseCost + level2Cost + level3Cost + level4Cost + capstoneCost;
   const sellValue = Math.round(totalInvested * 0.7);
 
   const baseStats = calculateTowerStats(
@@ -443,7 +473,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     tower.level,
     tower.upgrade,
     1,
-    1
+    1,
+    tower.capstone
   );
   const rangeBoost = tower.rangeBoost || 1;
   const damageBoost = tower.damageBoost || 1;
@@ -453,7 +484,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     tower.level,
     tower.upgrade,
     rangeBoost,
-    damageBoost
+    damageBoost,
+    tower.capstone
   );
   const nextStats =
     tower.level < 4
@@ -779,10 +811,16 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  const activeUpgradeStats =
+  const activeUpgradePath =
     tower.level === 4 && tower.upgrade
-      ? towerStatsDef?.upgrades?.[tower.upgrade]?.stats
+      ? towerStatsDef?.upgrades?.[tower.upgrade]
       : null;
+  const activeUpgradeStats = activeUpgradePath
+    ? {
+        ...activeUpgradePath.stats,
+        ...(tower.capstone ? activeUpgradePath.capstone.stats : {}),
+      }
+    : null;
 
   if (tower.type !== "club") {
     if (activeUpgradeStats?.rangeBuff) {
@@ -845,7 +883,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   );
 
   // ---- Panel positioning ----
-  const panelWidth = 260;
+  const panelWidth = isMobile ? Math.max(280, window.innerWidth - 16) : 260;
   let panelX = screenPos.x - panelWidth / 2;
   panelX = Math.max(10, Math.min(panelX, window.innerWidth - panelWidth - 10));
 
@@ -859,62 +897,122 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const maxPanelH = flipBelow
     ? window.innerHeight - belowAnchorY - 10
     : aboveAnchorY - 10;
+  const mobileActionRows = Math.ceil(circleButtons.length / 3);
+  const mobileActionTrayHeight = mobileActionRows * 58 + 12;
 
   // =========================================================================
   // RENDER
   // =========================================================================
   return (
     <>
+      {isMobile ? (
+        <button
+          type="button"
+          aria-label="Close tower details"
+          onClick={onClose}
+          className="fixed inset-0 cursor-default bg-black/35 backdrop-blur-[1px]"
+          style={{ zIndex: 198 }}
+        />
+      ) : null}
+
       {/* Semi-transparent overlay with circular cutout */}
       <div
         className="fixed inset-0"
         style={{
-          background: `radial-gradient(circle at ${circleCenterX}px ${circleCenterY}px, transparent ${circleRadius - 2}px, rgba(0, 0, 0, 0.35) ${circleRadius + 6}px)`,
+          background: isMobile
+            ? "transparent"
+            : `radial-gradient(circle at ${circleCenterX}px ${circleCenterY}px, transparent ${circleRadius - 2}px, rgba(0, 0, 0, 0.35) ${circleRadius + 6}px)`,
           pointerEvents: "none",
           zIndex: 199,
         }}
       />
 
       {/* Elaborate SVG ring */}
-      <ElaborateRing
-        cx={circleCenterX}
-        cy={circleCenterY}
-        radius={circleRadius}
-        buttons={circleButtons}
-      />
+      {!isMobile ? (
+        <ElaborateRing
+          cx={circleCenterX}
+          cy={circleCenterY}
+          radius={circleRadius}
+          buttons={circleButtons}
+        />
+      ) : null}
 
       {/* Circle action buttons */}
-      {circleButtons.map((btn) => {
-        const rad = btn.angle * DEG_TO_RAD;
-        const bx = circleCenterX + Math.cos(rad) * btnOrbitRadius;
-        const by = circleCenterY + Math.sin(rad) * btnOrbitRadius;
-        return (
-          <CircleActionButton
-            key={btn.id}
-            x={bx}
-            y={by}
-            size={btnSize}
-            icon={btn.icon}
-            label={btn.label}
-            subLabel={btn.subLabel}
-            tooltip={btn.tooltip}
-            onClick={btn.onClick}
-            disabled={btn.disabled}
-            borderColor={btn.borderColor}
-            glowColor={btn.glowColor}
-            bgGradient={btn.bgGradient}
-          />
-        );
-      })}
+      {isMobile ? (
+        <div
+          className="fixed inset-x-2 bottom-2 grid gap-2 rounded-2xl p-2 shadow-2xl backdrop-blur-md"
+          style={{
+            background:
+              "linear-gradient(160deg, rgba(31,22,10,0.98), rgba(13,8,4,0.98))",
+            border: `1.5px solid ${GOLD.border35}`,
+            gridTemplateColumns: `repeat(${Math.min(circleButtons.length, 3)}, minmax(0, 1fr))`,
+            paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+            zIndex: 202,
+          }}
+        >
+          {circleButtons.map((button) => (
+            <button
+              key={button.id}
+              type="button"
+              onClick={button.onClick}
+              disabled={button.disabled}
+              className="flex min-h-[3.125rem] items-center justify-center gap-1.5 rounded-xl px-2 py-1.5 text-left transition-transform active:scale-95 disabled:opacity-40"
+              style={{
+                background: button.bgGradient,
+                border: `1.5px solid ${button.borderColor}`,
+                boxShadow: `0 0 12px ${button.glowColor}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+              }}
+            >
+              <span className="shrink-0">{button.icon}</span>
+              <span className="min-w-0">
+                <span className="block truncate text-[10px] font-black text-amber-100">
+                  {button.label}
+                </span>
+                {button.subLabel ? (
+                  <span className="block text-[9px] font-bold text-amber-300/80">
+                    {button.subLabel}
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        circleButtons.map((btn) => {
+          const rad = btn.angle * DEG_TO_RAD;
+          const bx = circleCenterX + Math.cos(rad) * btnOrbitRadius;
+          const by = circleCenterY + Math.sin(rad) * btnOrbitRadius;
+          return (
+            <CircleActionButton
+              key={btn.id}
+              x={bx}
+              y={by}
+              size={btnSize}
+              icon={btn.icon}
+              label={btn.label}
+              subLabel={btn.subLabel}
+              tooltip={btn.tooltip}
+              onClick={btn.onClick}
+              disabled={btn.disabled}
+              borderColor={btn.borderColor}
+              glowColor={btn.glowColor}
+              bgGradient={btn.bgGradient}
+            />
+          );
+        })
+      )}
 
       {/* Info panel (stats only) */}
       <div
         ref={panelRef}
         className="fixed pointer-events-none"
         style={{
+          bottom: isMobile
+            ? `calc(${mobileActionTrayHeight}px + max(0.75rem, env(safe-area-inset-bottom)))`
+            : undefined,
           left: panelX,
-          top: panelY,
-          transform: panelTransform,
+          top: isMobile ? undefined : panelY,
+          transform: isMobile ? "none" : panelTransform,
           width: panelWidth,
           zIndex: 200,
         }}
@@ -926,7 +1024,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             background: panelGradient,
             border: `2px solid ${GOLD.border35}`,
             boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
-            maxHeight: maxPanelH,
+            maxHeight: isMobile ? "min(54dvh, 31rem)" : maxPanelH,
             overflowY: "auto",
           }}
           onClick={(e) => e.stopPropagation()}
@@ -938,14 +1036,15 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           />
 
           <button
+            type="button"
             onClick={() => onClose()}
-            className="absolute top-1.5 right-1.5 p-0.5 rounded-md transition-all hover:scale-110 z-20"
+            className={`absolute right-1.5 top-1.5 z-20 flex items-center justify-center rounded-md transition-all hover:scale-110 ${isMobile ? "h-11 w-11" : "p-0.5"}`}
             style={{
               background: PANEL.bgWarmMid,
               border: "1px solid " + GOLD.border25,
             }}
           >
-            <X size={12} className="text-amber-400" />
+            <X size={isMobile ? 20 : 12} className="text-amber-400" />
           </button>
 
           {/* Header */}
@@ -992,14 +1091,25 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               </div>
               {tower.level === 4 && tower.upgrade && (
                 <div className="text-[9px] text-amber-400 font-medium">
-                  {towerData.upgrades[tower.upgrade].name}
+                  {tower.capstone
+                    ? TOWER_STATS[tower.type].upgrades[tower.upgrade].capstone
+                        .name
+                    : towerData.upgrades[tower.upgrade].name}
                 </div>
               )}
               <div className="text-[8px] text-amber-500/80 mt-0.5 line-clamp-2">
                 {tower.level === 4 && tower.upgrade
-                  ? towerData.upgrades[tower.upgrade].desc
+                  ? tower.capstone
+                    ? TOWER_STATS[tower.type].upgrades[tower.upgrade].capstone
+                        .description
+                    : towerData.upgrades[tower.upgrade].desc
                   : towerData.desc}
               </div>
+              {tower.capstone ? (
+                <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-amber-300/50 bg-amber-950/70 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.18em] text-amber-200">
+                  <Sparkles size={8} /> Masterwork
+                </div>
+              ) : null}
               <div className="flex flex-wrap gap-0.5 mt-1">
                 {TOWER_TAGS[tower.type].map((tag) => (
                   <TagBadge key={tag} tag={tag} size={8} />

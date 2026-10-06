@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import React from "react";
 
 import type {
@@ -12,11 +13,20 @@ import type {
   CustomLevelDraftInput,
   CustomLevelUpsertResult,
 } from "../../../customLevels/types";
-import { CreatorModal } from "../../creator";
-import { CodexModal } from "../CodexModal";
 import type { CodexTabId } from "../CodexModal";
-import { CreditsModal } from "../CreditsModal";
-import { SettingsModal } from "../SettingsModal";
+
+const CreatorModal = dynamic(() =>
+  import("../../creator/CreatorModal").then((module) => module.CreatorModal)
+);
+const CodexModal = dynamic(() =>
+  import("../CodexModal").then((module) => module.CodexModal)
+);
+const CreditsModal = dynamic(() =>
+  import("../CreditsModal").then((module) => module.CreditsModal)
+);
+const SettingsModal = dynamic(() =>
+  import("../SettingsModal").then((module) => module.SettingsModal)
+);
 
 interface SettingsState {
   settings: GameSettings;

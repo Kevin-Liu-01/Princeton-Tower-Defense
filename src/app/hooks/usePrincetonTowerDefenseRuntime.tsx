@@ -65,6 +65,7 @@ import type {
   LevelStars,
   DraggingTower,
   Decoration,
+  HoveredLandmarkInfo,
   SpecialTower,
 } from "../types";
 // Utils
@@ -418,7 +419,11 @@ export function usePrincetonTowerDefenseRuntime() {
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
   const [, setHoveredBuildTower] = useState<TowerType | null>(null);
   const [hoveredHero, setHoveredHero] = useState(false);
-  const [mousePos, setMousePos] = useState<Position>({ x: 0, y: 0 });
+  const [mousePos, publishMousePos] = useState<Position>({ x: 0, y: 0 });
+  const lastMousePublishRef = useRef(0);
+  const setMousePos = useCallback((position: Position) => {
+    mousePosRef.current = position;
+  }, []);
   const [buildingTower, setBuildingTower] = useState<TowerType | null>(null);
   const [draggingTower, setDraggingTower] = useState<DraggingTower | null>(
     null
@@ -440,7 +445,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecialTower, setHoveredSpecialTower] =
     useState<SpecialTower | null>(null);
-  const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
+  const [hoveredLandmark, setHoveredLandmark] =
+    useState<HoveredLandmarkInfo | null>(null);
   const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(
     null
   );
@@ -485,6 +491,13 @@ export function usePrincetonTowerDefenseRuntime() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<Position | null>(null);
   const [panStartOffset, setPanStartOffset] = useState<Position | null>(null);
+  const activeTouchPointersRef = useRef<Map<number, Position>>(new Map());
+  const suppressedTouchPointersRef = useRef<Set<number>>(new Set());
+  const pinchGestureRef = useRef<{
+    active: boolean;
+    distance: number;
+    midpoint: Position | null;
+  }>({ active: false, distance: 0, midpoint: null });
   const [isBuildDragging, setIsBuildDragging] = useState(false);
   // Tower repositioning state (drag existing towers to move them)
   const [repositioningTower, setRepositioningTower] = useState<string | null>(
@@ -530,13 +543,17 @@ export function usePrincetonTowerDefenseRuntime() {
     enemies: 0,
     fps: 0,
     frameMs: 16.7,
+    frameP95Ms: 0,
     particles: 0,
     projectiles: 0,
     quality: "high",
     renderMs: 0,
+    renderP95Ms: 0,
+    sampleCount: 0,
     towers: 0,
     troops: 0,
     updateMs: 0,
+    updateP95Ms: 0,
   });
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -545,7 +562,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTouchTimeRef = useRef<number>(0); // Track touch to prevent duplicate click events
   const isTouchDeviceRef = useRef<boolean>(false); // Track if user is using touch input
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number | undefined>();
   const lastTimeRef = useRef<number>(0);
   const lastGestureScaleRef = useRef<number | null>(null);
   const renderQualityRef = useRef<RenderQuality>("high");
@@ -685,7 +702,7 @@ export function usePrincetonTowerDefenseRuntime() {
     [renderDprCap]
   );
 
-  const { stableZoomRef } = useZoomSetup(
+  const { stableZoomRef, zoomCameraAtClientPoint } = useZoomSetup(
     {
       battleOutcome,
       cachedAmbientLayerRef,
@@ -1339,7 +1356,15 @@ export function usePrincetonTowerDefenseRuntime() {
   // PERFORMANCE FIX: Keep refs updated with latest callbacks
   // The game loop uses these refs, so the actual identity of render/updateGame doesn't matter.
   updateGameRef.current = updateGame;
-  renderRef.current = () =>
+  renderRef.current = () => {
+    const now = performance.now();
+    if (
+      mousePosRef.current !== mousePos &&
+      now - lastMousePublishRef.current >= 1000 / 30
+    ) {
+      lastMousePublishRef.current = now;
+      publishMousePos(mousePosRef.current);
+    }
     renderScene({
       activeSentinelTargetKey,
       activeWaveSpawnPaths,
@@ -1409,9 +1434,9 @@ export function usePrincetonTowerDefenseRuntime() {
       vaultFlash,
       waveStartConfirm,
     });
+  };
   targetingSpellRef.current = targetingSpell;
   placingTroopRef.current = placingTroop;
-  mousePosRef.current = mousePos;
   missileMortarTargetingIdRef.current = missileMortarTargetingId;
   flushParticleQueueRef.current = flushQueuedParticles;
 
@@ -1599,22 +1624,168 @@ export function usePrincetonTowerDefenseRuntime() {
     waveStartConfirm,
   };
 
+  const clearTouchCameraInteraction = useCallback(() => {
+    setIsPanning(false);
+    setPanStart(null);
+    setPanStartOffset(null);
+    setDraggingUnit(null);
+    setUnitDragStart(null);
+    setUnitDragMoved(false);
+    setMoveTargetPos(null);
+    setMoveTargetValid(false);
+    setSelectedUnitMoveInfo(null);
+  }, []);
+
+  const getPinchMetrics = useCallback(() => {
+    const [first, second] = [...activeTouchPointersRef.current.values()];
+    if (!first || !second) {
+      return null;
+    }
+    return {
+      distance: Math.hypot(second.x - first.x, second.y - first.y),
+      midpoint: {
+        x: (first.x + second.x) / 2,
+        y: (first.y + second.y) / 2,
+      },
+    };
+  }, []);
+
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) =>
-      handlePointerDownImpl(canvasEventParamsRef.current, e),
-    []
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (event.pointerType !== "touch") {
+        handlePointerDownImpl(canvasEventParamsRef.current, event);
+        return;
+      }
+
+      activeTouchPointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+      event.currentTarget.setPointerCapture(event.pointerId);
+
+      const cameraGestureAllowed =
+        !buildingTower &&
+        !placingTroop &&
+        !targetingSpell &&
+        !repositioningTower;
+      const metrics = getPinchMetrics();
+      if (!cameraGestureAllowed || !metrics || metrics.distance < 8) {
+        handlePointerDownImpl(canvasEventParamsRef.current, event);
+        return;
+      }
+
+      for (const pointerId of activeTouchPointersRef.current.keys()) {
+        suppressedTouchPointersRef.current.add(pointerId);
+      }
+      pinchGestureRef.current = {
+        active: true,
+        distance: metrics.distance,
+        midpoint: metrics.midpoint,
+      };
+      clearTouchCameraInteraction();
+      event.preventDefault();
+    },
+    [
+      buildingTower,
+      clearTouchCameraInteraction,
+      getPinchMetrics,
+      placingTroop,
+      repositioningTower,
+      targetingSpell,
+    ]
   );
 
   const handleCanvasClick = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) =>
-      handleCanvasClickImpl(canvasEventParamsRef.current, e),
-    []
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (event.pointerType === "touch") {
+        activeTouchPointersRef.current.delete(event.pointerId);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        const shouldSuppressClick =
+          pinchGestureRef.current.active ||
+          suppressedTouchPointersRef.current.has(event.pointerId);
+        suppressedTouchPointersRef.current.delete(event.pointerId);
+
+        if (shouldSuppressClick) {
+          if (activeTouchPointersRef.current.size < 2) {
+            pinchGestureRef.current = {
+              active: false,
+              distance: 0,
+              midpoint: null,
+            };
+            clearTouchCameraInteraction();
+          }
+          event.preventDefault();
+          return;
+        }
+      }
+
+      handleCanvasClickImpl(canvasEventParamsRef.current, event);
+    },
+    [clearTouchCameraInteraction]
   );
 
   const handleMouseMove = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) =>
-      handleMouseMoveImpl(canvasEventParamsRef.current, e),
-    []
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      if (
+        event.pointerType === "touch" &&
+        activeTouchPointersRef.current.has(event.pointerId)
+      ) {
+        activeTouchPointersRef.current.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+        });
+
+        if (pinchGestureRef.current.active) {
+          const metrics = getPinchMetrics();
+          const previous = pinchGestureRef.current;
+          if (metrics && previous.midpoint && previous.distance >= 8) {
+            const zoomFactor = metrics.distance / previous.distance;
+            const deltaX = metrics.midpoint.x - previous.midpoint.x;
+            const deltaY = metrics.midpoint.y - previous.midpoint.y;
+            setCameraOffset((offset) => ({
+              x: offset.x + deltaX / cameraZoomRef.current,
+              y: offset.y + deltaY / cameraZoomRef.current,
+            }));
+            zoomCameraAtClientPoint(
+              metrics.midpoint.x,
+              metrics.midpoint.y,
+              zoomFactor
+            );
+            pinchGestureRef.current = {
+              active: true,
+              distance: metrics.distance,
+              midpoint: metrics.midpoint,
+            };
+          }
+          event.preventDefault();
+          return;
+        }
+      }
+
+      handleMouseMoveImpl(canvasEventParamsRef.current, event);
+    },
+    [getPinchMetrics, setCameraOffset, zoomCameraAtClientPoint]
+  );
+
+  const handleCanvasPointerCancel = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      activeTouchPointersRef.current.delete(event.pointerId);
+      suppressedTouchPointersRef.current.delete(event.pointerId);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      if (activeTouchPointersRef.current.size < 2) {
+        pinchGestureRef.current = {
+          active: false,
+          distance: 0,
+          midpoint: null,
+        };
+        clearTouchCameraInteraction();
+      }
+    },
+    [clearTouchCameraInteraction]
   );
 
   const handleCanvasPointerLeave = useCallback(() => {
@@ -2105,6 +2276,7 @@ export function usePrincetonTowerDefenseRuntime() {
         handlePointerDown={handlePointerDown}
         handleCanvasClick={handleCanvasClick}
         handleMouseMove={handleMouseMove}
+        handleCanvasPointerCancel={handleCanvasPointerCancel}
         handleCanvasPointerLeave={handleCanvasPointerLeave}
         fadeOverlayBackground={fadeOverlayBackground}
         isPanning={isPanning}

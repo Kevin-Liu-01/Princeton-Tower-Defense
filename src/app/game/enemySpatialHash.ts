@@ -49,14 +49,15 @@ export function buildEnemySpatialHash(
     predicate?: (e: Enemy) => boolean
   ): Enemy[] => {
     const rangeSq = range * range;
-    const baseCx = Math.floor(origin.x / cellSize);
-    const baseCy = Math.floor(origin.y / cellSize);
-    const cellRadius = Math.ceil(range / cellSize);
+    const minCx = Math.floor((origin.x - range) / cellSize);
+    const maxCx = Math.floor((origin.x + range) / cellSize);
+    const minCy = Math.floor((origin.y - range) / cellSize);
+    const maxCy = Math.floor((origin.y + range) / cellSize);
     const result: Enemy[] = [];
 
-    for (let dy = -cellRadius; dy <= cellRadius; dy++) {
-      for (let dx = -cellRadius; dx <= cellRadius; dx++) {
-        const bucket = buckets.get(cellKey(baseCx + dx, baseCy + dy));
+    for (let cy = minCy; cy <= maxCy; cy++) {
+      for (let cx = minCx; cx <= maxCx; cx++) {
+        const bucket = buckets.get(cellKey(cx, cy));
         if (!bucket) {
           continue;
         }
@@ -80,13 +81,14 @@ export function buildEnemySpatialHash(
   ): Enemy | null => {
     let bestDistSq = range * range;
     let best: Enemy | null = null;
-    const baseCx = Math.floor(origin.x / cellSize);
-    const baseCy = Math.floor(origin.y / cellSize);
-    const cellRadius = Math.ceil(range / cellSize);
+    const minCx = Math.floor((origin.x - range) / cellSize);
+    const maxCx = Math.floor((origin.x + range) / cellSize);
+    const minCy = Math.floor((origin.y - range) / cellSize);
+    const maxCy = Math.floor((origin.y + range) / cellSize);
 
-    for (let dy = -cellRadius; dy <= cellRadius; dy++) {
-      for (let dx = -cellRadius; dx <= cellRadius; dx++) {
-        const bucket = buckets.get(cellKey(baseCx + dx, baseCy + dy));
+    for (let cy = minCy; cy <= maxCy; cy++) {
+      for (let cx = minCx; cx <= maxCx; cx++) {
+        const bucket = buckets.get(cellKey(cx, cy));
         if (!bucket) {
           continue;
         }

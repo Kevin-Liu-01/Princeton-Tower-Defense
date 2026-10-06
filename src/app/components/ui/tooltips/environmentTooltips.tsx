@@ -25,19 +25,16 @@ import {
 } from "lucide-react";
 import React from "react";
 
-import type { Position } from "../../../types";
-import {
-  GOLD,
-  PANEL,
-  RED_CARD,
-  dividerGradient,
-  panelGradient,
-} from "../system/theme";
+import type { DecorationHeightTag, Position } from "../../../types";
+import { getDecorationRenderDimensions } from "../../../utils";
+import { GOLD, PANEL, dividerGradient, panelGradient } from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
 
 interface LandmarkTooltipProps {
+  heightTag?: DecorationHeightTag;
   landmarkType: string;
   position: Position;
+  scale: number;
 }
 
 const LANDMARK_INFO: Record<
@@ -177,21 +174,21 @@ const LANDMARK_INFO: Record<
     name: "Frost Citadel",
   },
   frozen_gate: {
-    desc: "A frozen gate that defends the battlefield.",
+    desc: "An icebound portcullis reinforced with frost-rimed stone buttresses.",
     icon: <Fence className="text-cyan-400" size={16} />,
-    lore: "The gate doesn't seem to be very sturdy.",
+    lore: "Each thaw seals the joints again, leaving the gate stronger than the winter before.",
     name: "Frozen Gate",
   },
   frozen_waterfall: {
-    desc: "A frozen waterfall that flows through the battlefield.",
+    desc: "A sheer cascade flash-frozen into layered blue-white columns.",
     icon: <Snowflake className="text-cyan-400" size={16} />,
-    lore: "The waterfall is frozen solid and cannot be passed through.",
+    lore: "Water still murmurs behind the ice, but the frozen face is impassable.",
     name: "Frozen Waterfall",
   },
   gate: {
-    desc: "A gate that defends the battlefield.",
+    desc: "A fortified timber passage braced with iron straps and flanking posts.",
     icon: <Fence className="text-cyan-400" size={16} />,
-    lore: "The gate doesn't seem to be very sturdy.",
+    lore: "Its hinges bear the scars of every army that tried to force the crossing.",
     name: "Gate",
   },
   giant_sphinx: {
@@ -231,9 +228,9 @@ const LANDMARK_INFO: Record<
     name: "Ice Throne",
   },
   idol_statue: {
-    desc: "A statue of an idol that stands in the battlefield.",
+    desc: "A moss-darkened guardian idol carved with staring eyes and ritual glyphs.",
     icon: <Landmark className="text-amber-400" size={16} />,
-    lore: "A less impressive statue of a less impressive idol.",
+    lore: "Offerings vanish from its feet overnight, though no tracks ever lead away.",
     name: "Idol Statue",
   },
   infernal_gate: {
@@ -279,9 +276,9 @@ const LANDMARK_INFO: Record<
     name: "Obsidian Castle",
   },
   obsidian_pillar: {
-    desc: "A pillar of obsidian that stands in the battlefield.",
+    desc: "A faceted volcanic-glass monolith veined with trapped ember light.",
     icon: <Shield className="text-purple-400" size={16} />,
-    lore: "Combined with a crystal, it could heal a dragon.",
+    lore: "The pillar stores the heat of every eruption it has survived.",
     name: "Obsidian Pillar",
   },
   princeton_chapel: {
@@ -321,9 +318,9 @@ const LANDMARK_INFO: Record<
     name: "Sarcophagus",
   },
   skull_throne: {
-    desc: "A throne made of skulls that stands in the battlefield.",
+    desc: "A black-iron seat raised on a grisly dais of fused skulls and horn.",
     icon: <Skull className="text-red-400" size={16} />,
-    lore: "How many souls does it take to get some seating?",
+    lore: "The throne is empty, but every skull turns toward anyone who approaches it.",
     name: "Skull Throne",
   },
   sphinx: {
@@ -369,9 +366,9 @@ const LANDMARK_INFO: Record<
     name: "Triad Keep",
   },
   volcano_rim: {
-    desc: "A rim of lava that surrounds the battlefield.",
+    desc: "A broken caldera lip of basalt, ash, and exposed channels of molten rock.",
     icon: <Flame className="text-orange-400" size={16} />,
-    lore: "The precipice of eternal fire.",
+    lore: "The ledge marks the last stable ground before the mountain opens below.",
     name: "Volcano Rim",
   },
   war_monument: {
@@ -395,8 +392,10 @@ const LANDMARK_INFO: Record<
 };
 
 export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
+  heightTag,
   landmarkType,
   position,
+  scale,
 }) => {
   const info = LANDMARK_INFO[landmarkType] || {
     desc: "A notable landmark on the battlefield.",
@@ -407,7 +406,13 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
       .replaceAll(/\b\w/g, (c) => c.toUpperCase()),
   };
 
-  const coords = getTooltipPosition(position, { height: 180, width: 280 });
+  const dimensions = getDecorationRenderDimensions(
+    landmarkType,
+    scale,
+    heightTag
+  );
+  const bounds = `${Math.round(dimensions.width)} × ${Math.round(dimensions.depth)} × ${Math.round(dimensions.height)} px`;
+  const coords = getTooltipPosition(position, { height: 205, width: 280 });
 
   return (
     <div
@@ -461,6 +466,15 @@ export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({
         <p className="text-[11px] text-amber-100/80 leading-relaxed">
           {info.desc}
         </p>
+
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-amber-500/10 bg-black/15 px-2 py-1">
+          <span className="text-[8px] font-semibold uppercase tracking-[0.16em] text-amber-500/55">
+            Occlusion W × D × H
+          </span>
+          <span className="whitespace-nowrap text-[9px] font-medium tabular-nums text-cyan-200/75">
+            {bounds} @ 100%
+          </span>
+        </div>
 
         <div className="my-2.5 h-px" style={{ background: dividerGradient }} />
 

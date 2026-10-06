@@ -91,6 +91,7 @@ export interface Tower {
   pos: GridPosition;
   level: 1 | 2 | 3 | 4;
   upgrade?: TowerUpgrade;
+  capstone?: boolean;
   lastAttack: number;
   rotation: number;
   target?: string;
@@ -425,6 +426,9 @@ export interface Enemy {
   dead?: boolean;
   // Directional facing (true = moving right on screen)
   facingRight?: boolean;
+  // Snapshot of the most recent attack target. Rendering uses this during the
+  // attack animation so movement and attack direction cannot overwrite each other.
+  attackTargetPos?: Position;
   // Summoner cooldown tracking
   lastSummon?: number;
   // Summoning channel state
@@ -536,6 +540,7 @@ export interface Hero {
 export type TroopType =
   | "footsoldier"
   | "armored"
+  | "campus_golem"
   | "elite"
   | "knight"
   | "reinforcement"
@@ -717,6 +722,8 @@ export interface Projectile {
   elevation?: number;
   isFlamethrower?: boolean;
   damage?: number;
+  burnDamage?: number;
+  burnDuration?: number;
   targetType?: "hero" | "troop" | "enemy";
   targetId?: string;
   // AoE properties
@@ -1396,6 +1403,12 @@ export interface Decoration {
   rotation: number;
   variant: number;
   heightTag?: DecorationHeightTag;
+}
+
+export interface HoveredLandmarkInfo {
+  heightTag?: DecorationHeightTag;
+  scale: number;
+  type: string;
 }
 
 // ============================================================================

@@ -76,8 +76,8 @@ const MAX_CARD_TAGS = 3;
 
 const CARD_W = 130;
 const CARD_H = 172;
-const SPRITE_VIS = 80;
-const SPRITE_SCALE = 2.2;
+const SPRITE_VIS = 88;
+const SPRITE_SCALE = 2.4;
 const SPRITE_CANVAS = Math.round(SPRITE_VIS * SPRITE_SCALE);
 
 function CreatureCard({ entry }: { entry: BestiaryEntry }) {
@@ -139,20 +139,31 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
           )}
         </div>
 
-        <div className="relative flex-1 flex items-center justify-center">
+        <div className="relative flex-1 flex items-center justify-center overflow-hidden">
           <div
-            className="absolute -inset-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            className="absolute -inset-2 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{
-              background: `radial-gradient(circle, ${data.color}18, transparent 70%)`,
+              background: `radial-gradient(circle at 50% 34%, ${data.color}2e, ${data.color}0d 38%, transparent 72%)`,
             }}
           />
-          <SpriteDisplay visualSize={SPRITE_VIS} canvasScale={SPRITE_SCALE}>
-            <EnemySprite
-              type={entry.type}
-              size={SPRITE_CANVAS}
-              region={entry.region}
-            />
-          </SpriteDisplay>
+          <div
+            aria-hidden="true"
+            className="absolute bottom-1 left-1/2 h-5 w-[72%] -translate-x-1/2 rounded-[50%]"
+            style={{
+              background: `radial-gradient(ellipse, ${data.color}30 0%, rgba(0,0,0,0.48) 48%, transparent 74%)`,
+              borderBottom: `1px solid ${data.color}2b`,
+              transform: "translateX(-50%) perspective(40px) rotateX(58deg)",
+            }}
+          />
+          <div className="relative z-[1]">
+            <SpriteDisplay visualSize={SPRITE_VIS} canvasScale={SPRITE_SCALE}>
+              <EnemySprite
+                type={entry.type}
+                size={SPRITE_CANVAS}
+                region={entry.region}
+              />
+            </SpriteDisplay>
+          </div>
         </div>
 
         <div

@@ -120,7 +120,6 @@ import type { SpellReticleVariant } from "../../rendering/ui/reticles";
 import { drawWaveStartBubble } from "../../rendering/ui/waveStartBubble";
 import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
 import { drawTriangle, drawRoundedRect } from "../../rendering/utils/drawUtils";
-import { insertionSortBy } from "../../rendering/utils/insertionSort";
 import type {
   Position,
   Tower,
@@ -473,6 +472,7 @@ export function renderScene(params: RenderSceneParams): void {
   const width = canvas.width / dpr;
   const height = canvas.height / dpr;
   const frameNowMs = performance.now();
+  const frameEpochMs = Date.now();
   const nowSeconds = frameNowMs / 1000;
   const renderQuality = renderQualityRef.current;
   renderFrameIndexRef.current += 1;
@@ -481,7 +481,7 @@ export function renderScene(params: RenderSceneParams): void {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
 
-  setProjectileRenderTime(Date.now());
+  setProjectileRenderTime(frameEpochMs);
 
   if (!isZoomDebouncingRef.current) {
     stableZoomRef.current = cameraZoom;
@@ -2707,7 +2707,8 @@ export function renderScene(params: RenderSceneParams): void {
       });
     }
   }
-  insertionSortBy(renderables, (r) => r.isoY);
+  // Entities are appended in type groups each frame; use a stable O(n log n) sort.
+  renderables.sort((a, b) => a.isoY - b.isoY);
   updateScenePressure(renderables.length);
   refreshShadowCache();
 
@@ -3039,7 +3040,10 @@ export function renderScene(params: RenderSceneParams): void {
       const tStats = calculateTowerStats(
         tower.type,
         tower.level,
-        tower.upgrade
+        tower.upgrade,
+        1,
+        1,
+        tower.capstone
       );
       const missileSpeed = gameSpeedRef.current;
       const cd =
@@ -3088,7 +3092,14 @@ export function renderScene(params: RenderSceneParams): void {
       cameraOffset,
       cameraZoom
     );
-    const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+    const tStats = calculateTowerStats(
+      tower.type,
+      tower.level,
+      tower.upgrade,
+      1,
+      1,
+      tower.capstone
+    );
     const missileSpeed = gameSpeedRef.current;
     const cd =
       missileSpeed > 0
@@ -3488,13 +3499,14 @@ export function renderScene(params: RenderSceneParams): void {
           selectedTower,
           enemies,
           selectedMap,
+          frameEpochMs,
           cameraOffset,
           cameraZoom
         );
         {
           const tower = r.data as Tower;
           const activeDebuffs = tower.debuffs?.filter(
-            (d) => d.until > frameNowMs
+            (debuff) => debuff.until > frameEpochMs
           );
           if (activeDebuffs && activeDebuffs.length > 0) {
             const towerPos = gridToWorld(tower.pos);
@@ -3526,9 +3538,10 @@ export function renderScene(params: RenderSceneParams): void {
           canvas.height,
           dpr,
           selectedMap,
+          frameEpochMs,
+          mapTheme,
           cameraOffset,
-          cameraZoom,
-          enemies.length
+          cameraZoom
         );
         break;
       }
@@ -3550,6 +3563,7 @@ export function renderScene(params: RenderSceneParams): void {
           canvas.width,
           canvas.height,
           dpr,
+          frameEpochMs,
           cameraOffset,
           cameraZoom,
           heroTargetPos,
@@ -3604,6 +3618,7 @@ export function renderScene(params: RenderSceneParams): void {
           canvas.width,
           canvas.height,
           dpr,
+          frameEpochMs,
           cameraOffset,
           cameraZoom,
           targetPos,

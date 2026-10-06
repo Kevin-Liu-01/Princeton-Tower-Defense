@@ -2248,7 +2248,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       },
     ],
     armor: 0.15,
-    bounty: 12,
+    bounty: 28,
     category: "winter",
     color: "#4a4a5a",
     desc: "Enormous alpha predators with frost-rimed fur and eyes that glow with glacial hunger. They hunt in coordinated packs, flanking defenses with terrifying speed while their freezing bites slow everything they touch. Too fast to outrun, too tough to ignore, and too smart to corner — the apex pack hunters of the frozen wastes.",
@@ -2315,16 +2315,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     ],
     aoeDamage: 120,
     aoeRadius: 130,
-    armor: 0.55,
+    armor: 0.48,
     attackSpeed: 2800,
-    bounty: 150,
+    bounty: 300,
     category: "winter",
     color: "#8b7355",
     desc: "Colossal armored war-beasts carrying howdahs full of archers that rain arrows while the mammoth itself charges through defenses. Their iron-tipped tusks and seismic footfalls stun and scatter everything in their path, and their thick hide turns away most projectiles. A mobile fortress that must be dismantled piece by piece.",
     flying: false,
-    hp: 10_000,
+    hp: 8200,
     isRanged: true,
-    liveCost: 6,
+    liveCost: 5,
     name: "War Mammoth",
     projectileDamage: 65,
     range: 200,
@@ -3587,18 +3587,27 @@ const CATEGORY_NATIVE_REGION: Partial<Record<EnemyCategory, MapTheme>> = {
   winter: "winter",
 };
 
+const enemyNativeRegionCache = new Map<EnemyType, MapTheme | null>();
+
 export function getEnemyNativeRegion(type: EnemyType): MapTheme | null {
+  if (enemyNativeRegionCache.has(type)) {
+    return enemyNativeRegionCache.get(type) ?? null;
+  }
   const data = ENEMY_DATA[type];
   if (!data) {
     return null;
   }
   if (data.nativeRegion) {
+    enemyNativeRegionCache.set(type, data.nativeRegion);
     return data.nativeRegion;
   }
   const cat = data.category;
   if (cat && CATEGORY_NATIVE_REGION[cat]) {
-    return CATEGORY_NATIVE_REGION[cat]!;
+    const nativeRegion = CATEGORY_NATIVE_REGION[cat] ?? null;
+    enemyNativeRegionCache.set(type, nativeRegion);
+    return nativeRegion;
   }
+  enemyNativeRegionCache.set(type, null);
   return null;
 }
 

@@ -2930,20 +2930,10 @@ export function renderClevelandTower(p: LandmarkParams): void {
   drawStoneBlockTexture(ctx, bx, by, Ts, THs, s, "left", 73);
   drawMortarLines(ctx, bx, by, Ts, THs, 8, "rgba(0,0,0,0.04)", s);
 
-  // String courses (horizontal stone bands)
-  for (let band = 0; band < 3; band++) {
-    const bandY = by - THs * ((band + 1) / 4);
-    drawIsometricPrism(
-      ctx,
-      bx,
-      bandY + s,
-      12.5 * s,
-      12.5 * s,
-      s,
-      pal.cornice,
-      pal.trimLight,
-      pal.trim
-    );
+  // Thin string courses divide the shaft without exposing oversized top
+  // diamonds. A complete prism here reads as a stack of disconnected floors.
+  for (let band = 1; band <= 3; band++) {
+    drawStringCourse(ctx, bx, by, Ts, Ts, THs, s, band / 4, pal.cornice);
   }
 
   // Windows at multiple levels on flat faces

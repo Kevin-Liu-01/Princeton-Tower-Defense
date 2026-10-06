@@ -97,6 +97,76 @@ interface LevelPreview {
   name: string;
 }
 
+interface PreviewFallbackTheme {
+  base: string;
+  glow: string;
+  ridge: string;
+}
+
+const DEFAULT_PREVIEW_FALLBACK: PreviewFallbackTheme = {
+  base: "#172116",
+  glow: "rgba(114, 163, 89, 0.7)",
+  ridge: "rgba(32, 55, 34, 0.92)",
+};
+
+const PREVIEW_FALLBACKS: Record<string, PreviewFallbackTheme> = {
+  caldera: {
+    base: "#25100d",
+    glow: "rgba(236, 76, 27, 0.78)",
+    ridge: "rgba(71, 25, 17, 0.95)",
+  },
+  fortress: {
+    base: "#101c28",
+    glow: "rgba(135, 215, 242, 0.76)",
+    ridge: "rgba(30, 65, 82, 0.94)",
+  },
+  glacier: {
+    base: "#102331",
+    glow: "rgba(112, 219, 244, 0.76)",
+    ridge: "rgba(34, 83, 103, 0.94)",
+  },
+  lava_fields: {
+    base: "#28100b",
+    glow: "rgba(255, 104, 21, 0.82)",
+    ridge: "rgba(88, 29, 15, 0.96)",
+  },
+  oasis: {
+    base: "#30200e",
+    glow: "rgba(244, 184, 70, 0.78)",
+    ridge: "rgba(113, 71, 24, 0.92)",
+  },
+  peak: {
+    base: "#12202d",
+    glow: "rgba(143, 210, 238, 0.76)",
+    ridge: "rgba(42, 73, 94, 0.94)",
+  },
+  pyramid: {
+    base: "#33210d",
+    glow: "rgba(241, 177, 57, 0.8)",
+    ridge: "rgba(126, 77, 22, 0.94)",
+  },
+  sphinx: {
+    base: "#38230d",
+    glow: "rgba(251, 190, 64, 0.78)",
+    ridge: "rgba(132, 79, 21, 0.94)",
+  },
+  sunken_temple: {
+    base: "#0c2421",
+    glow: "rgba(44, 180, 151, 0.7)",
+    ridge: "rgba(20, 70, 61, 0.95)",
+  },
+  throne: {
+    base: "#24100d",
+    glow: "rgba(208, 63, 27, 0.8)",
+    ridge: "rgba(79, 24, 18, 0.96)",
+  },
+  witch_hut: {
+    base: "#171225",
+    glow: "rgba(140, 75, 188, 0.74)",
+    ridge: "rgba(50, 31, 70, 0.95)",
+  },
+};
+
 const LEFT_PREVIEWS: LevelPreview[] = [
   { file: "nassau", id: "nassau", name: "Nassau Hall" },
   { file: "poe", id: "poe", name: "Poe Field" },
@@ -119,6 +189,8 @@ const RIGHT_PREVIEWS: LevelPreview[] = [
   { file: "murky_bog", id: "bog", name: "Murky Bog" },
 ];
 
+const RAIL_CYCLE_IDS = ["first", "second", "third", "fourth"] as const;
+
 interface TowerLevel {
   level: 1 | 2 | 3 | 4;
   upgrade?: "A" | "B";
@@ -139,8 +211,15 @@ function LevelCard({
   preview: LevelPreview;
   side: "left" | "right";
 }) {
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "failed">(
+    "loading"
+  );
+  const fallbackTheme =
+    PREVIEW_FALLBACKS[preview.file] ?? DEFAULT_PREVIEW_FALLBACK;
+
   return (
     <Link
+      prefetch={false}
       href={`/${preview.id}`}
       className="relative w-full flex-shrink-0 block group transition-all duration-300 hover:scale-[1.06] hover:z-10 p-[3px] rounded-lg"
       style={{
@@ -158,14 +237,40 @@ function LevelCard({
             "inset 0 0 0 1px rgba(40,28,8,0.6), inset 0 0 4px rgba(0,0,0,0.4)",
         }}
       >
-        <Image
-          src={`/images/previews/${preview.file}.png`}
-          alt={preview.name}
-          fill
-          sizes="220px"
-          loading="lazy"
-          className="object-cover transition-all duration-300 group-hover:brightness-125"
-        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            background: `radial-gradient(circle at 68% 28%, ${fallbackTheme.glow} 0%, transparent 34%), linear-gradient(155deg, ${fallbackTheme.ridge} 0%, ${fallbackTheme.base} 72%)`,
+          }}
+        >
+          <div
+            className="absolute -bottom-[48%] -left-[10%] h-[88%] w-[72%] -rotate-12 rounded-[45%]"
+            style={{ background: fallbackTheme.ridge }}
+          />
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(115deg, transparent 0 13px, rgba(255,255,255,0.18) 14px, transparent 15px)",
+            }}
+          />
+        </div>
+        {imageState !== "failed" && (
+          <Image
+            src={`/images/previews/${preview.file}.png`}
+            alt={preview.name}
+            fill
+            sizes="220px"
+            loading="lazy"
+            draggable={false}
+            onLoad={() => setImageState("loaded")}
+            onError={() => setImageState("failed")}
+            className={`object-cover transition-all duration-300 group-hover:brightness-125 ${
+              imageState === "loaded" ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        )}
         <div
           className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-none"
           style={{
@@ -209,26 +314,29 @@ function ScrollColumn({
   levels: LevelPreview[];
   direction: "up" | "down";
 }) {
-  const doubled = [...levels, ...levels];
   const side = direction === "up" ? "left" : "right";
   return (
     <div
       className="hero-rail absolute top-0 bottom-0 w-[180px] lg:w-[220px] hidden md:block"
       style={{ [side]: 0, overflowX: "visible", overflowY: "clip" }}
     >
-      <div className="hero-rail-slide relative" data-side={side}>
+      <div className="hero-rail-slide relative py-1.5" data-side={side}>
         <div
-          className="hero-rail-track flex flex-col gap-3 py-1.5"
+          className="hero-rail-track flex flex-col"
           style={{
             animation: `hero-scroll-${direction} ${levels.length * 5}s linear infinite`,
           }}
         >
-          {doubled.map((preview, i) => (
-            <LevelCard
-              key={`${preview.file}-${i}`}
-              preview={preview}
-              side={side}
-            />
+          {RAIL_CYCLE_IDS.map((cycleId) => (
+            <div className="flex flex-col gap-3 pb-3" key={cycleId}>
+              {levels.map((preview) => (
+                <LevelCard
+                  key={`${cycleId}-${preview.file}`}
+                  preview={preview}
+                  side={side}
+                />
+              ))}
+            </div>
           ))}
         </div>
       </div>
@@ -363,13 +471,19 @@ function CreditsButton({ onClick }: { onClick: () => void }) {
 
 interface HeroSectionProps {
   onPlay: () => void;
+  onPlayIntent?: () => void;
   exiting: boolean;
   onCredits: () => void;
 }
 
 const CAROUSEL_INTERVAL_MS = 3500;
 
-export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
+export function HeroSection({
+  onPlay,
+  onPlayIntent,
+  exiting,
+  onCredits,
+}: HeroSectionProps) {
   const activeSlide = useCrossfade(
     HERO_SLIDESHOW_IMAGES.length,
     CROSSFADE_INTERVAL_MS
@@ -794,7 +908,11 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
                 filter: "blur(18px)",
               }}
             />
-            <LandingCTA onClick={onPlay} disabled={exiting} />
+            <LandingCTA
+              onIntent={onPlayIntent}
+              onClick={onPlay}
+              disabled={exiting}
+            />
           </div>
           <CreditsButton onClick={onCredits} />
         </div>

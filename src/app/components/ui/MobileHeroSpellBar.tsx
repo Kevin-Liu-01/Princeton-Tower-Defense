@@ -1,6 +1,6 @@
 "use client";
 
-import { Coins } from "lucide-react";
+import { Coins, Sparkles, X } from "lucide-react";
 import React from "react";
 
 import {
@@ -18,6 +18,7 @@ import type {
   Enemy,
   SpellUpgradeLevels,
 } from "../../types";
+import { hexToRgba } from "../../utils/colorUtils";
 import {
   heroFrameElements,
   spellFrameElements,
@@ -41,8 +42,6 @@ const SPELL_ACCENT: Record<
 );
 
 // ── Ornate Frame Constants ──────────────────────────────────────────────────
-
-import { hexToRgba } from "../../utils/colorUtils";
 
 const DEG_TO_RAD = Math.PI / 180;
 const ANGLES_ALL = [0, 45, 90, 135, 180, 225, 270, 315];
@@ -183,6 +182,7 @@ function MobileHeroCircle({
 
       {/* ─── Main hero button ─── */}
       <button
+        type="button"
         onClick={onClick}
         className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
       >
@@ -447,6 +447,7 @@ function MobileAbilityCircle({
 
       {/* ─── Main ability button ─── */}
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onUseAbility();
@@ -664,6 +665,7 @@ function MobileSpellCircle({
 
       {/* ─── Main spell button ─── */}
       <button
+        type="button"
         onClick={onClick}
         disabled={!active}
         className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
@@ -843,37 +845,77 @@ export const MobileHeroSpellBar: React.FC<MobileHeroSpellBarProps> = ({
   onUseHeroAbility,
   castSpell,
 }) => {
+  const [actionsOpen, setActionsOpen] = React.useState(false);
+
   if (!hero) {
     return null;
   }
 
   return (
     <>
-      <div className="flex items-end justify-between w-full px-2 pb-3">
-        {/* Left: Hero + Ability */}
-        <div className="flex items-end gap-3 pointer-events-auto">
+      <div className="relative flex w-full items-end justify-between px-3 pb-2">
+        <div className="pointer-events-auto flex items-end gap-2">
           <MobileHeroCircle hero={hero} onClick={toggleHeroSelection} />
           <MobileAbilityCircle hero={hero} onUseAbility={onUseHeroAbility} />
         </div>
 
-        {/* Right: Spells */}
-        <div className="flex items-end gap-3 pointer-events-auto">
-          {spells.map((spell) => {
-            const isTargeting =
-              targetingSpell === spell.type ||
-              (spell.type === "reinforcements" && placingTroop);
-            return (
-              <MobileSpellCircle
-                key={spell.type}
-                spell={spell}
-                spellLevel={spellUpgradeLevels[spell.type] ?? 0}
-                canCast={canCastSpell(spell, pawPoints, enemies)}
-                isTargeting={isTargeting}
-                onClick={() => castSpell(spell.type)}
-              />
-            );
-          })}
-        </div>
+        <button
+          type="button"
+          aria-expanded={actionsOpen}
+          aria-label={
+            actionsOpen ? "Close spell actions" : "Open spell actions"
+          }
+          onClick={() => setActionsOpen((open) => !open)}
+          className="pointer-events-auto flex h-12 min-w-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 text-amber-200 shadow-xl active:scale-95"
+          style={{
+            background: actionsOpen
+              ? "linear-gradient(160deg, rgba(114,72,20,0.98), rgba(38,23,8,0.98))"
+              : "linear-gradient(160deg, rgba(42,30,14,0.96), rgba(20,14,7,0.96))",
+            border: actionsOpen
+              ? "2px solid rgba(251,191,36,0.72)"
+              : "2px solid rgba(180,140,60,0.42)",
+            boxShadow: actionsOpen
+              ? "0 0 18px rgba(251,191,36,0.2), inset 0 1px 0 rgba(255,255,255,0.08)"
+              : "0 5px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}
+        >
+          {actionsOpen ? <X size={18} /> : <Sparkles size={18} />}
+          <span className="text-[9px] font-black uppercase tracking-[0.12em]">
+            {actionsOpen ? "Close" : "Spells"}
+          </span>
+        </button>
+
+        {actionsOpen ? (
+          <div
+            className="pointer-events-auto absolute bottom-[4.6rem] right-2 flex items-end gap-3 rounded-2xl px-3 pb-3 pt-2 shadow-2xl backdrop-blur-md"
+            style={{
+              background:
+                "linear-gradient(160deg, rgba(28,20,10,0.96), rgba(12,8,4,0.96))",
+              border: "1.5px solid rgba(180,140,60,0.42)",
+              boxShadow:
+                "0 12px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+            }}
+          >
+            {spells.map((spell) => {
+              const isTargeting =
+                targetingSpell === spell.type ||
+                (spell.type === "reinforcements" && placingTroop);
+              return (
+                <MobileSpellCircle
+                  key={spell.type}
+                  spell={spell}
+                  spellLevel={spellUpgradeLevels[spell.type] ?? 0}
+                  canCast={canCastSpell(spell, pawPoints, enemies)}
+                  isTargeting={isTargeting}
+                  onClick={() => {
+                    castSpell(spell.type);
+                    setActionsOpen(false);
+                  }}
+                />
+              );
+            })}
+          </div>
+        ) : null}
       </div>
       <style>{`@keyframes mobileShimmer { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
     </>

@@ -120,6 +120,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   totalPausedTimeRef,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"restart" | "quit" | null>(
     null
   );
@@ -139,8 +140,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const [ppPulse, setPpPulse] = useState(false);
   const [livesShake, setLivesShake] = useState(false);
   const [livesFlash, setLivesFlash] = useState(false);
-  const livesShakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const livesFlashTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const livesShakeTimerRef = useRef<
+    ReturnType<typeof setTimeout> | undefined
+  >();
+  const livesFlashTimerRef = useRef<
+    ReturnType<typeof setTimeout> | undefined
+  >();
 
   const [activeEatingClubFloaters, setActiveEatingClubFloaters] = useState<
     { id: string; amount: number; startTime: number }[]
@@ -1170,122 +1175,133 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   )}
                 </div>
               </div>
-              <div className="flex flex-1 items-center justify-center min-w-0">
-                {/* Speed — minimal: rewind / label / forward */}
-                <div
-                  className="relative flex h-8 items-center overflow-hidden rounded-lg"
+              <div className="relative flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={gameSpeed === 0 ? "Resume game" : "Pause game"}
+                  onClick={() => {
+                    if (pauseLocked) {
+                      return;
+                    }
+                    if (gameSpeed === 0) {
+                      setGameSpeed(1);
+                      exitInspectorOnSpeed();
+                    } else {
+                      setGameSpeed(0);
+                    }
+                  }}
+                  disabled={pauseLocked}
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl active:scale-95 ${pauseLocked ? "cursor-not-allowed opacity-40" : ""}`}
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
-                    border: "1.5px solid rgba(90,110,40,0.3)",
-                    boxShadow:
-                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                    background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
+                    border: `1.5px solid ${GOLD.border35}`,
                   }}
                 >
-                  <button
-                    onClick={() => {
-                      if (!pauseLocked) {
-                        setGameSpeed((prev) => Math.max(prev - 0.5, 0));
-                        exitInspectorOnSpeed();
-                      }
-                    }}
-                    disabled={pauseLocked}
-                    className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
-                    style={{
-                      background:
-                        "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
-                      borderRight: "1px solid rgba(90,110,40,0.2)",
-                    }}
-                  >
-                    <Rewind size={10} className="text-green-400/80" />
-                  </button>
-                  <span
-                    className="relative z-10 min-w-[36px] text-center text-[11px] font-black tabular-nums px-1"
-                    style={{ color: "#bef264" }}
-                  >
+                  {pauseLocked ? (
+                    <Lock size={18} className="text-amber-300/60" />
+                  ) : gameSpeed === 0 ? (
+                    <Play size={18} className="text-amber-300" />
+                  ) : (
+                    <Pause size={18} className="text-amber-300" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Increase game speed"
+                  onClick={() => {
+                    if (pauseLocked) {
+                      return;
+                    }
+                    setGameSpeed((speed) =>
+                      speed <= 0 || speed >= 3 ? 1 : Math.floor(speed) + 1
+                    );
+                    exitInspectorOnSpeed();
+                  }}
+                  disabled={pauseLocked}
+                  className={`flex h-11 min-w-12 flex-col items-center justify-center rounded-xl px-1 active:scale-95 ${pauseLocked ? "cursor-not-allowed opacity-40" : ""}`}
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(32,47,15,0.96), rgba(15,24,7,0.96))",
+                    border: "1.5px solid rgba(130,180,50,0.42)",
+                  }}
+                >
+                  <FastForward size={15} className="text-lime-300" />
+                  <span className="text-[10px] font-black tabular-nums text-lime-200">
                     {gameSpeed}x
                   </span>
-                  <button
-                    onClick={() => {
-                      if (!pauseLocked) {
-                        setGameSpeed((prev) => Math.min(prev + 0.5, 5));
-                        exitInspectorOnSpeed();
-                      }
-                    }}
-                    disabled={pauseLocked}
-                    className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
-                    style={{
-                      background:
-                        "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
-                      borderLeft: "1px solid rgba(90,110,40,0.2)",
-                    }}
-                  >
-                    <FastForward size={10} className="text-green-400/80" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-0.5 shrink-0">
-                {/* Game controls — compact */}
-                <div
-                  className="relative flex h-8 items-center gap-0.5 rounded-lg px-0.5"
+                </button>
+                <button
+                  type="button"
+                  aria-expanded={mobileMenuOpen}
+                  aria-label="Open game menu"
+                  onClick={() => setMobileMenuOpen((open) => !open)}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-orange-300 active:scale-95"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
-                    border: `1.5px solid ${GOLD.border25}`,
-                    boxShadow:
-                      "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                      "linear-gradient(135deg, rgba(74,39,9,0.96), rgba(32,17,5,0.96))",
+                    border: `1.5px solid ${GOLD.border35}`,
                   }}
                 >
-                  <button
-                    onClick={() => {
-                      if (pauseLocked) {
-                        return;
-                      }
-                      if (gameSpeed === 0) {
-                        setGameSpeed(1);
-                        exitInspectorOnSpeed();
-                      } else {
-                        setGameSpeed(0);
-                      }
-                    }}
-                    disabled={pauseLocked}
-                    className={`relative z-10 rounded-md p-1 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125"}`}
-                    style={{
-                      background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
-                      border: `1px solid ${GOLD.border35}`,
-                    }}
-                  >
-                    {pauseLocked ? (
-                      <Lock size={12} className="text-amber-300/60" />
-                    ) : gameSpeed === 0 ? (
-                      <Play size={12} className="text-amber-300" />
-                    ) : (
-                      <Pause size={12} className="text-amber-300" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setConfirmAction("restart")}
-                    className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
+                  <Settings size={19} />
+                </button>
+
+                {mobileMenuOpen ? (
+                  <div
+                    className="pointer-events-auto absolute right-0 top-[3.25rem] grid w-44 gap-1.5 rounded-2xl p-2 shadow-2xl backdrop-blur-md"
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))",
-                      border: "1px solid rgba(60,140,80,0.35)",
+                        "linear-gradient(160deg, rgba(36,25,12,0.98), rgba(14,9,4,0.98))",
+                      border: `1.5px solid ${GOLD.border35}`,
                     }}
                   >
-                    <RefreshCcw size={12} className="text-emerald-300" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmAction("quit")}
-                    className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))",
-                      border: "1px solid rgba(200,60,60,0.45)",
-                    }}
-                  >
-                    <LogOut size={12} className="text-red-300" />
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSettings(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-bold text-orange-200 active:scale-[0.98]"
+                      style={{ background: "rgba(120,60,12,0.28)" }}
+                    >
+                      <Settings size={17} /> Settings
+                    </button>
+                    {onTogglePhotoMode ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onTogglePhotoMode();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-bold text-indigo-200 active:scale-[0.98]"
+                        style={{ background: "rgba(66,58,132,0.28)" }}
+                      >
+                        <Camera size={17} /> Photo mode
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmAction("restart");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-bold text-emerald-200 active:scale-[0.98]"
+                      style={{ background: "rgba(20,100,50,0.25)" }}
+                    >
+                      <RefreshCcw size={17} /> Restart level
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmAction("quit");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-bold text-red-200 active:scale-[0.98]"
+                      style={{ background: "rgba(120,25,25,0.28)" }}
+                    >
+                      <LogOut size={17} /> Quit to map
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </HudSurface>

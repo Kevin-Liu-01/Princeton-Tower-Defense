@@ -1,4 +1,5 @@
 import type { WaveGroup } from "../types";
+import { prepareLevelWaves } from "./waveBalance";
 
 // =============================================================================
 // LEVEL-SPECIFIC WAVES CONFIGURATION
@@ -12,7 +13,7 @@ import type { WaveGroup } from "../types";
 // Each wave features a distinct enemy mix - no two adjacent waves share a lead type.
 // Previously unused enemies (thornwalker, crossbowman, frostling)
 // are now integrated into the rotation.
-export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
+const AUTHORED_LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   // GRASSLAND REGION
   // Regional: frosh, athlete, tiger_fan
@@ -92,7 +93,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { count: 3, delay: 2800, interval: 900, type: "skeleton_knight" },
       { count: 5, delay: 2500, interval: 600, type: "tiger_fan" },
       { count: 2, delay: 2500, interval: 1200, type: "bone_mage" },
-      { count: 3, delay: 2500, interval: 800, type: "forest_troll" },
+      { count: 3, delay: 2500, interval: 800, type: "thornwalker" },
     ],
     // Wave 11: Bug infestation
     [
@@ -3463,5 +3464,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     ],
   ],
 };
+
+export const LEVEL_WAVES = prepareLevelWaves(AUTHORED_LEVEL_WAVES);
 
 export const WAVES: WaveGroup[][] = LEVEL_WAVES.poe;

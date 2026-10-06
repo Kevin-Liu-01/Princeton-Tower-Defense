@@ -61,6 +61,13 @@ export interface TowerLevelUpgrade {
 }
 
 export interface TowerUpgradePath {
+  capstone: {
+    cost: number;
+    description: string;
+    effect: string;
+    name: string;
+    stats: Partial<TowerBaseStats>;
+  };
   name: string;
   description: string;
   effect: string;
@@ -120,6 +127,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Blair Arch",
     upgrades: {
       A: {
+        capstone: {
+          cost: 850,
+          description: "Blair's bells shake the whole battlefield",
+          effect: "50% stun chance, 1.6s stuns, and ten crescendo stacks",
+          name: "The Great Bell",
+          stats: {
+            crescendoMaxStacks: 10,
+            damage: 62,
+            range: 385,
+            stunChance: 0.5,
+            stunDuration: 1600,
+          },
+        },
         description: "Stunning crescendo attacks",
         effect: "35% stun chance, max 8 crescendo stacks",
         name: "Shockwave Siren",
@@ -136,6 +156,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 900,
+          description: "A finale that never loses the beat",
+          effect: "Fourteen stacks with faster, harder crescendo attacks",
+          name: "Orange Key Finale",
+          stats: {
+            crescendoDamageMult: 0.075,
+            crescendoMaxStacks: 14,
+            crescendoSpeedMult: 0.9,
+            damage: 50,
+            range: 400,
+          },
+        },
         description: "Ultimate sonic crescendo",
         effect: "Max 12 stacks with enhanced per-stack bonus",
         name: "Symphony Hall",
@@ -181,6 +214,13 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Nassau Cannon",
     upgrades: {
       A: {
+        capstone: {
+          cost: 800,
+          description: "A rotary salute loud enough for Cannon Green",
+          effect: "Faster fire, longer range, and heavier rounds",
+          name: "Cannon Green Salute",
+          stats: { attackSpeed: 110, damage: 58, range: 400 },
+        },
         description: "Rapid-fire machine gun",
         effect: "8x attack speed, 0.4x damage per shot",
         name: "Gatling Gun",
@@ -192,6 +232,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 850,
+          description: "The Nassau lion breathes an unbroken river of fire",
+          effect: "Stronger flames burn for 4.5 seconds in a wider cone",
+          name: "Nassau Dragon",
+          stats: {
+            burnDamage: 28,
+            burnDuration: 4500,
+            damage: 42,
+            range: 330,
+            splashRadius: 65,
+          },
+        },
         description: "Continuous fire stream",
         effect: "Deals burn damage over time to enemies",
         name: "Flamethrower",
@@ -239,6 +292,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Eating Club",
     upgrades: {
       A: {
+        capstone: {
+          cost: 950,
+          description: "Compound interest becomes a campus institution",
+          effect: "70 PP every 4.5s with stronger global and range bonuses",
+          name: "Endowment Eternal",
+          stats: {
+            bonusIncomeMultiplier: 0.18,
+            income: 70,
+            incomeInterval: 4500,
+            range: 230,
+            rangeBuff: 0.2,
+          },
+        },
         description: "Maximum passive income",
         effect: "40 PP every 5s + 10% bonus income + 15% range aura",
         name: "Investment Bank",
@@ -252,6 +318,21 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 900,
+          description: "A legendary senior knight answers every call",
+          effect: "24% damage aura and one respawning Bicker Knight",
+          name: "The Bicker Legion",
+          stats: {
+            damageBuff: 0.24,
+            income: 30,
+            incomeInterval: 5000,
+            maxTroops: 1,
+            range: 240,
+            spawnInterval: 16_000,
+            spawnTroopType: "knight",
+          },
+        },
         description: "Income + tower support",
         effect: "20 PP every 6s + 15% damage buff to nearby towers",
         name: "Recruitment Center",
@@ -271,7 +352,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       attackSpeed: 800,
       chainRange: 150,
       chainTargets: 3,
-      damage: 35,
+      damage: 28,
       range: 200,
       specialEffect: "Chain lightning bouncing between enemies",
     },
@@ -283,42 +364,66 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       },
       2: {
         cost: 150,
-        description: "Enhanced Zapper - Chains to 4 enemies, 1.5x damage",
-        multipliers: { damage: 1.5 },
+        description: "Enhanced Zapper - Chains to 4 enemies, 1.45x damage",
+        multipliers: { damage: 1.45 },
         overrides: { chainTargets: 4 },
       },
       3: {
         cost: 250,
-        description: "Tesla Coil - Chains to 5 enemies, 2x damage",
-        multipliers: { damage: 2 },
+        description: "Tesla Coil - Chains to 5 enemies, 1.9x damage",
+        multipliers: { damage: 1.9 },
         overrides: { chainTargets: 5 },
       },
     },
     name: "E-Quad Lab",
     upgrades: {
       A: {
+        capstone: {
+          cost: 900,
+          description: "A defended thesis written in coherent plasma",
+          effect: "Longer beam range and a steeper lock-on damage ramp",
+          name: "Plasma Thesis",
+          stats: {
+            damage: 18,
+            lockOnDamageMult: 0.045,
+            lockOnMaxStacks: 140,
+            range: 350,
+          },
+        },
         description: "Concentrated laser attack",
         effect: "Continuous lock-on, damage increases over time",
         name: "Focused Beam",
         stats: {
           attackSpeed: 100,
           chainTargets: 1,
-          damage: 35 * 2 * 1.3 * 0.15,
-          lockOnDamageMult: 0.045,
+          damage: 12,
+          lockOnDamageMult: 0.04,
           lockOnDecayTime: 600,
-          lockOnMaxStacks: 120,
+          lockOnMaxStacks: 110,
           range: 320,
           specialEffect: "Lock-on damage ramp",
         },
       },
       B: {
+        capstone: {
+          cost: 900,
+          description: "Every alum conducts the spark to the next",
+          effect: "Lightning chains through ten targets over longer hops",
+          name: "Tesla Alumni Network",
+          stats: {
+            chainRange: 210,
+            chainTargets: 10,
+            damage: 75,
+            range: 340,
+          },
+        },
         description: "Multi-target electricity",
-        effect: "Chains to up to 8 enemies",
+        effect: "Chains to up to 7 enemies",
         name: "Chain Lightning",
         stats: {
           chainRange: 180,
-          chainTargets: 8,
-          damage: 35 * 2 * 1.3 * 0.7,
+          chainTargets: 7,
+          damage: 60,
           range: 300,
           specialEffect: "Bouncing lightning",
         },
@@ -355,6 +460,22 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Firestone Library",
     upgrades: {
       A: {
+        capstone: {
+          cost: 950,
+          description: "Firestone awakens a guardian carved from Nassau stone",
+          effect:
+            "One mighty campus golem blocks enemies beside stronger quakes",
+          name: "FitzRandolph Golem",
+          stats: {
+            damage: 55,
+            maxTroops: 1,
+            range: 360,
+            slowAmount: 0.52,
+            spawnInterval: 14_000,
+            spawnTroopType: "campus_golem",
+            splashRadius: 110,
+          },
+        },
         description: "Seismic waves damage and slow",
         effect: "Deals 35 AoE damage + 45% slow",
         name: "EQ Smasher",
@@ -368,6 +489,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 950,
+          description: "The rare books room exhales a permanent deep winter",
+          effect: "Wider slow field with 38% chance for 2.6s freezes",
+          name: "Firestone Deep Freeze",
+          stats: {
+            attackSpeed: 900,
+            range: 420,
+            slowAmount: 0.55,
+            stunChance: 0.38,
+            stunDuration: 2600,
+          },
+        },
         description: "Freezes enemies completely",
         effect: "45% slow + 25% freeze chance every 2s",
         name: "Blizzard",
@@ -412,6 +546,18 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Palmer Mortar",
     upgrades: {
       A: {
+        capstone: {
+          cost: 1000,
+          description: "A pyrotechnic reunion delivered by precision ordnance",
+          effect: "Faster barrages with 190 damage and a massive blast radius",
+          name: "Reunions Barrage",
+          stats: {
+            attackSpeed: 3300,
+            damage: 190,
+            range: 460,
+            splashRadius: 190,
+          },
+        },
         description: "Targeted missile strikes on selected area",
         effect: "Click to target area for devastating missile barrages",
         name: "Missile Battery",
@@ -424,6 +570,20 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 1000,
+          description: "Prospect Avenue's furnaces turn the road to cinders",
+          effect: "Larger ember fields burn for 42 damage over five seconds",
+          name: "Prospect Pyre",
+          stats: {
+            attackSpeed: 2100,
+            burnDamage: 42,
+            burnDuration: 5000,
+            damage: 55,
+            range: 390,
+            splashRadius: 210,
+          },
+        },
         description: "Rains burning embers across the field",
         effect: "Scatters burning ember piles that deal DoT",
         name: "Ember Foundry",
@@ -470,6 +630,13 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     name: "Dinky Station",
     upgrades: {
       A: {
+        capstone: {
+          cost: 900,
+          description: "Veteran centaurs lead the P-rade at full gallop",
+          effect: "Four centaur vanguards deploy and return more quickly",
+          name: "P-rade Vanguard",
+          stats: { maxTroops: 4, spawnInterval: 3000 },
+        },
         description: "Half-human, half-horse warriors",
         effect: "Spawns centaur troops with ranged attacks",
         name: "Centaur Stables",
@@ -480,6 +647,13 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         },
       },
       B: {
+        capstone: {
+          cost: 950,
+          description: "The FitzRandolph gate opens for the final charge",
+          effect: "Four royal lancers deploy with accelerated reinforcements",
+          name: "FitzRandolph Lancers",
+          stats: { maxTroops: 4, spawnInterval: 4200 },
+        },
         description: "Mounted knights on warhorses",
         effect: "Spawns tanky cavalry with charge ability",
         name: "Royal Cavalry",
@@ -505,7 +679,8 @@ export function calculateTowerStats(
   level: number,
   upgrade?: "A" | "B",
   rangeBoost: number = 1,
-  damageBoost: number = 1
+  damageBoost: number = 1,
+  capstone: boolean = false
 ): TowerBaseStats {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) {
@@ -556,7 +731,7 @@ export function calculateTowerStats(
     }
 
     if (levelData.overrides) {
-      stats = { ...stats, ...levelData.overrides };
+      Object.assign(stats, levelData.overrides);
     }
   }
 
@@ -579,6 +754,10 @@ export function calculateTowerStats(
     }
   }
 
+  if (level >= 4 && upgrade && capstone) {
+    stats = { ...stats, ...towerDef.upgrades[upgrade].capstone.stats };
+  }
+
   // Apply external buffs
   stats.range *= rangeBoost;
   stats.damage *= damageBoost;
@@ -592,7 +771,8 @@ export function calculateTowerStats(
 export function getUpgradeCost(
   towerType: string,
   currentLevel: number,
-  _upgrade?: "A" | "B"
+  upgrade?: "A" | "B",
+  capstone: boolean = false
 ): number {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) {
@@ -602,6 +782,13 @@ export function getUpgradeCost(
   if (currentLevel < 3) {
     const nextLevel = (currentLevel + 1) as 1 | 2 | 3;
     return towerDef.levels[nextLevel]?.cost || 0;
+  }
+
+  if (currentLevel >= 4) {
+    if (!upgrade || capstone) {
+      return 0;
+    }
+    return towerDef.upgrades[upgrade].capstone.cost;
   }
 
   // Level 4 upgrade cost from tower definition

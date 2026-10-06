@@ -6,16 +6,9 @@ import {
   MAP_PATHS,
   DEFAULT_TROOP_HP,
 } from "../../constants";
-import { getUpgradeCost } from "../../constants/towerStats";
+import { getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { getTowerParticleWorldPos } from "../../rendering";
-import type {
-  Position,
-  Tower,
-  Troop,
-  TowerType,
-  TroopType,
-  Particle,
-} from "../../types";
+import type { Position, Tower, Troop, TroopType, Particle } from "../../types";
 import { gridToWorld } from "../../utils";
 import type { GameEventLogAPI } from "../useGameEventLog";
 
@@ -47,12 +40,63 @@ export function upgradeTowerImpl(
     return;
   }
 
-  const cost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
+  const cost = getUpgradeCost(
+    tower.type,
+    tower.level,
+    tower.upgrade,
+    tower.capstone
+  );
   if (cost === 0 || currentPawPoints < cost) {
     return;
   }
 
   if (tower.level === 3 && !choice) {
+    return;
+  }
+
+  if (tower.level === 4 && tower.upgrade && !tower.capstone) {
+    const capstone = TOWER_STATS[tower.type]?.upgrades[tower.upgrade].capstone;
+    if (!capstone) {
+      return;
+    }
+
+    p.setTowers((prev) =>
+      prev.map((candidate) =>
+        candidate.id === towerId
+          ? { ...candidate, capstone: true, lastSpawn: 0 }
+          : candidate
+      )
+    );
+
+    if (tower.type === "station") {
+      p.setTroops((prev) =>
+        prev.map((troop) => {
+          if (troop.ownerId !== towerId) {
+            return troop;
+          }
+          const maxHp = Math.round(troop.maxHp * 1.35);
+          return {
+            ...troop,
+            hp: Math.round((troop.hp / troop.maxHp) * maxHp),
+            maxHp,
+            overrideDamage: Math.round(
+              (troop.overrideDamage ??
+                TROOP_DATA[troop.type ?? "elite"].damage) * 1.3
+            ),
+            visualTier: 5,
+          };
+        })
+      );
+    }
+
+    p.removePawPoints(cost);
+    p.addParticles(getTowerParticleWorldPos(tower), "glow", 32);
+    p.gameEventLogRef.current.log(
+      "tower_upgraded",
+      `Completed ${capstone.name} for ${cost} PP`,
+      { capstone: capstone.name, cost, towerType: tower.type }
+    );
+    p.setSelectedTower(null);
     return;
   }
 
@@ -140,16 +184,21 @@ export function sellTowerImpl(towerId: string, p: SellTowerParams): void {
   if (!tower) {
     return;
   }
-  const refund =
-    Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
-    (tower.level - 1) *
-      (tower.level === 2
-        ? 150 * 0.7
-        : tower.level === 3
-          ? 250 * 0.7
-          : tower.level === 4
-            ? 350 * 0.7
-            : 0);
+  const towerDefinition = TOWER_STATS[tower.type];
+  let totalInvested = TOWER_DATA[tower.type].cost;
+  if (tower.level >= 2) {
+    totalInvested += towerDefinition.levels[2].cost;
+  }
+  if (tower.level >= 3) {
+    totalInvested += towerDefinition.levels[3].cost;
+  }
+  if (tower.level >= 4) {
+    totalInvested += towerDefinition.level4Cost;
+  }
+  if (tower.capstone && tower.upgrade) {
+    totalInvested += towerDefinition.upgrades[tower.upgrade].capstone.cost;
+  }
+  const refund = Math.round(totalInvested * 0.7);
   p.addPawPoints(refund);
   p.addParticles(getTowerParticleWorldPos(tower), "smoke", 15);
   p.removeTowerEntity(towerId);

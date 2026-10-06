@@ -66,6 +66,7 @@ import {
   renderInfernalGate,
   renderNassauHall,
 } from "./landmarkBuildings";
+import { drawDecorationMasterworkFinish } from "./masterworkFinish";
 import {
   renderPrincetonChapel,
   renderFirestoneLibrary,
@@ -34830,6 +34831,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       });
       break;
     }
+  }
+
+  if (!shadowOnly) {
+    drawDecorationMasterworkFinish({
+      ctx,
+      scale: s,
+      time: decorTime,
+      type,
+      variant,
+      x: screenPos.x,
+      y: screenPos.y,
+    });
   }
 }
 

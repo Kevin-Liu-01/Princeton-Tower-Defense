@@ -8,280 +8,172 @@ export interface PreloaderState {
   isComplete: boolean;
 }
 
-const INITIAL_STATE: PreloaderState = {
-  isComplete: false,
-  loaded: 0,
-  progress: 0,
-  total: 0,
-};
-
 const imageCache = new Set<string>();
-
-// Per-image timeout so a single stalled request can never hang the loader.
-// Browsers normally fire onerror on failure, but flaky networks / aborted
-// requests occasionally leave an <img> in limbo with neither event firing.
+const pendingImages = new Map<string, Promise<void>>();
 const IMAGE_LOAD_TIMEOUT_MS = 8000;
 
 function preloadSingleImage(src: string): Promise<void> {
   if (imageCache.has(src)) {
     return Promise.resolve();
   }
-  return new Promise((resolve) => {
-    const img = new Image();
-    let settled = false;
-    const done = () => {
-      if (settled) {
-        return;
+  const pending = pendingImages.get(src);
+  if (pending) {
+    return pending;
+  }
+  const request = (async () => {
+    const image = new Image();
+    image.src = src;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        image.decode(),
+        new Promise<void>((resolve) => {
+          timer = setTimeout(resolve, IMAGE_LOAD_TIMEOUT_MS);
+        }),
+      ]);
+      if (image.complete && image.naturalWidth > 0) {
+        imageCache.add(src);
       }
-      settled = true;
+    } catch {
+      // Missing artwork must not block navigation.
+    } finally {
       clearTimeout(timer);
-      resolve();
-    };
-    const timer = setTimeout(done, IMAGE_LOAD_TIMEOUT_MS);
-    img.onload = () => {
-      imageCache.add(src);
-      done();
-    };
-    img.onerror = () => done();
-    img.src = src;
-  });
+    }
+  })();
+  pendingImages.set(src, request);
+  void request.finally(() => pendingImages.delete(src));
+  return request;
 }
 
-/**
- * Hook-based preloader: loads all URLs on mount (once).
- * Good for gating initial renders (e.g. world map load).
- */
-export function useImagePreloader(urls: string[]): PreloaderState {
-  const [state, setState] = useState<PreloaderState>(INITIAL_STATE);
-  const hasStarted = useRef(false);
-
-  useEffect(() => {
-    if (urls.length === 0 || hasStarted.current) {
-      return;
-    }
-    hasStarted.current = true;
-
-    const total = urls.length;
-    let loaded = urls.filter((u) => imageCache.has(u)).length;
-    setState({
-      isComplete: loaded >= total,
-      loaded,
-      progress: loaded / total,
-      total,
-    });
-
-    const uncached = urls.filter((u) => !imageCache.has(u));
-    if (uncached.length === 0) {
-      return;
-    }
-
-    const CONCURRENCY = 6;
-    let idx = 0;
-
-    function next(): Promise<void> {
-      if (idx >= uncached.length) {
-        return Promise.resolve();
-      }
-      const url = uncached[idx++];
-      return preloadSingleImage(url).then(() => {
-        loaded++;
-        setState({
-          isComplete: loaded >= total,
-          loaded,
-          progress: loaded / total,
-          total,
-        });
-        return next();
-      });
-    }
-
-    Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () =>
-        next()
-      )
-    );
-  }, [urls]);
-
-  return state;
-}
-
-/**
- * Imperative preloader with progress callback.
- * Good for transitions (e.g. world map → battle).
- */
-export function preloadImagesWithProgress(
+/** Share in-flight decodes between pages and limit concurrent image work. */
+export async function preloadImagesWithProgress(
   urls: string[],
   onProgress: (loaded: number, total: number) => void
 ): Promise<void> {
-  const total = urls.length;
-  if (total === 0) {
-    onProgress(0, 0);
-    return Promise.resolve();
-  }
-
-  const uncached = urls.filter((u) => !imageCache.has(u));
+  const unique = [...new Set(urls)];
+  const total = unique.length;
+  const uncached = unique.filter((url) => !imageCache.has(url));
   let loaded = total - uncached.length;
+  let index = 0;
   onProgress(loaded, total);
-
-  if (uncached.length === 0) {
-    return Promise.resolve();
-  }
-
-  const CONCURRENCY = 6;
-  let idx = 0;
-
-  return new Promise((resolve) => {
-    function next(): Promise<void> {
-      if (idx >= uncached.length) {
-        return Promise.resolve();
+  await Promise.all(
+    Array.from({ length: Math.min(6, uncached.length) }, async () => {
+      while (index < uncached.length) {
+        const url = uncached[index++];
+        await preloadSingleImage(url);
+        onProgress(++loaded, total);
       }
-      const url = uncached[idx++];
-      return preloadSingleImage(url).then(() => {
-        loaded++;
-        onProgress(loaded, total);
-        return next();
-      });
-    }
-
-    Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uncached.length) }, () =>
-        next()
-      )
-    ).then(() => resolve());
-  });
+    })
+  );
 }
 
-/**
- * Convenience hook: preload gate with minimum display time.
- * Readiness is driven purely by the display timer — image preloading runs
- * in the background to warm the cache, but never blocks the loading screen
- * from completing. This avoids spinning forever if an image request stalls.
- */
+export function useImagePreloader(urls: string[]): PreloaderState {
+  // A value key prevents fresh but equivalent URL arrays from restarting work.
+  const key = JSON.stringify([...new Set(urls)]);
+  const [state, setState] = useState<PreloaderState>({
+    loaded: 0,
+    total: 0,
+    progress: 0,
+    isComplete: false,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    void preloadImagesWithProgress(
+      JSON.parse(key) as string[],
+      (loaded, total) => {
+        if (!cancelled) {
+          setState({
+            loaded,
+            total,
+            progress: total ? loaded / total : 1,
+            isComplete: loaded === total,
+          });
+        }
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+  return state;
+}
+
+/** Ready as soon as assets finish; the deadline only bounds slow requests. */
 export function usePreloadGate(
   urls: string[],
-  minDisplayMs = 2000
+  maxWaitMs = 2000
 ): PreloaderState & { isReady: boolean } {
   const preloader = useImagePreloader(urls);
-  const [minTimePassed, setMinTimePassed] = useState(false);
-
+  const [deadlinePassed, setDeadlinePassed] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMinTimePassed(true), minDisplayMs);
-    return () => clearTimeout(t);
-  }, [minDisplayMs]);
-
-  return {
-    ...preloader,
-    isReady: minTimePassed,
-  };
+    const timer = setTimeout(() => setDeadlinePassed(true), maxWaitMs);
+    return () => clearTimeout(timer);
+  }, [maxWaitMs]);
+  return { ...preloader, isReady: preloader.isComplete || deadlinePassed };
 }
 
-/**
- * Hook for managing battle loading transitions.
- * Returns controls to trigger loading and current state.
- */
-/**
- * Progress that smoothly fills over the full display window.
- * Accounts for asset loading AND UI render/initialization time.
- */
-function useSyntheticProgress(active: boolean, minDisplayMs: number): number {
-  const [display, setDisplay] = useState(0);
-  const rafRef = useRef(0);
-  const startRef = useRef(0);
-
-  useEffect(() => {
-    if (!active) {
-      setDisplay(0);
-      return;
-    }
-    startRef.current = Date.now();
-
-    const tick = () => {
-      const elapsed = Date.now() - startRef.current;
-      const t = Math.min(elapsed / minDisplayMs, 1);
-      const eased = 1 - (1 - t) ** 2.2;
-      setDisplay(eased);
-
-      if (eased < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        setDisplay(1);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active, minDisplayMs]);
-
-  return display;
-}
-
-/**
- * Battle loading gate with two visual phases:
- *
- * Phase 1 (blocking): Loading screen visible while assets preload.
- *   gameState stays "menu"/"setup". Lasts until minDisplayMs elapses.
- *
- * Phase 2 (overlay): onReady fires → gameState becomes "playing" →
- *   BattleUI renders behind the still-visible LoadingOverlay.
- *   After a grace period for UI to paint, active→false and overlay fades.
- */
+/** Asset-driven handoff with a bounded deadline and one paint before reveal. */
 export function useBattleLoadingGate(
   getUrls: () => string[],
-  minDisplayMs = 2200,
+  maxWaitMs = 2200,
   onReady: () => void
 ) {
   const [active, setActive] = useState(false);
-  const [loaded, setLoaded] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState({ loaded: 0, total: 0 });
   const readyCallbackRef = useRef(onReady);
   readyCallbackRef.current = onReady;
   const sessionRef = useRef(0);
-
-  const visualProgress = useSyntheticProgress(active, minDisplayMs);
-
-  const UI_GRACE_MS = 400;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const frameRef = useRef(0);
+  const clearPending = useCallback(() => {
+    sessionRef.current++;
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+    }
+    cancelAnimationFrame(frameRef.current);
+  }, []);
+  useEffect(() => clearPending, [clearPending]);
 
   const trigger = useCallback(() => {
-    const session = ++sessionRef.current;
+    clearPending();
+    const session = sessionRef.current;
     setActive(true);
-    setLoaded(0);
-    setTotal(0);
-
-    const urls = getUrls();
-
-    // Preload in the background to warm the image cache. We intentionally do
-    // NOT await this before proceeding — the loading screen's lifetime is
-    // driven purely by the display timer so a stalled image request can never
-    // get us stuck on the loading screen.
-    preloadImagesWithProgress(urls, (l, t) => {
-      if (sessionRef.current !== session) {
+    setCounts({ loaded: 0, total: 0 });
+    let handedOff = false;
+    const finish = () => {
+      if (sessionRef.current !== session || handedOff) {
         return;
       }
-      setLoaded(l);
-      setTotal(t);
-    });
-
-    // Phase 1 → Phase 2 transition: wait for minDisplayMs, then hand off.
-    setTimeout(() => {
-      if (sessionRef.current !== session) {
-        return;
+      handedOff = true;
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
       }
       readyCallbackRef.current();
-
-      // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
-      setTimeout(() => {
-        if (sessionRef.current !== session) {
-          return;
-        }
-        setActive(false);
-      }, UI_GRACE_MS);
-    }, minDisplayMs);
-  }, [getUrls, minDisplayMs]);
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = requestAnimationFrame(() => {
+          if (sessionRef.current === session) {
+            setActive(false);
+          }
+        });
+      });
+    };
+    timerRef.current = setTimeout(finish, maxWaitMs);
+    void preloadImagesWithProgress(getUrls(), (loaded, total) => {
+      if (sessionRef.current === session) {
+        setCounts({ loaded, total });
+      }
+    }).then(finish);
+  }, [clearPending, getUrls, maxWaitMs]);
 
   const cancel = useCallback(() => {
-    sessionRef.current++;
+    clearPending();
     setActive(false);
-  }, []);
-
-  return { active, cancel, loaded, progress: visualProgress, total, trigger };
+  }, [clearPending]);
+  return {
+    active,
+    cancel,
+    ...counts,
+    progress: counts.total ? counts.loaded / counts.total : 0,
+    trigger,
+  };
 }
