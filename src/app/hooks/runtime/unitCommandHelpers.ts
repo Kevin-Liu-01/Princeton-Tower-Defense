@@ -85,11 +85,17 @@ export function issueTroopFormationMoveCommandImpl(
   targetPos: Position,
   towers: Tower[],
   setTroops: Setter<Troop[]>,
-  addParticles: (pos: Position, type: Particle["type"], count: number) => void
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  setTowers?: Setter<Tower[]>
 ): void {
-  const station = towers.find(
-    (tower) => tower.id === ownerId && tower.type === "station"
-  );
+  const station = towers.find((tower) => tower.id === ownerId);
+  if (station && setTowers) {
+    setTowers((prev) =>
+      prev.map((tower) =>
+        tower.id === ownerId ? { ...tower, rallyPoint: targetPos } : tower
+      )
+    );
+  }
   const isBarracksTroop = isBarracksOwnerId(ownerId);
   const isSpellTroop = ownerId.startsWith("spell");
   setTroops((prev) => {

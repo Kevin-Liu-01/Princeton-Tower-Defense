@@ -1902,9 +1902,7 @@ export function getTroopMoveInfo(
   specialTowers?: { type: string; pos: { x: number; y: number } }[]
 ): TroopMoveInfo {
   // Check if owned by a dinky station
-  const station = towers.find(
-    (t) => t.id === troop.ownerId && t.type === "station"
-  );
+  const station = towers.find((t) => t.id === troop.ownerId);
   if (station) {
     const boostedRange = STATION_TROOP_RANGE * (station.rangeBoost || 1);
     return {

@@ -1,7 +1,12 @@
 import type { MutableRefObject } from "react";
 
+import {
+  createFramePacer,
+  usesMobileRenderBudget,
+} from "../../rendering/deviceProfile";
 import { clearEnemySpriteCache } from "../../rendering/enemies/enemySpriteCache";
 import { setPerformanceSettings } from "../../rendering/performance";
+import { clearTowerSpriteCache } from "../../rendering/towers/towerSpriteCache";
 import type { EntityCounts } from "./renderScene";
 import {
   DEV_CONFIG_MENU_ENABLED,
@@ -103,11 +108,17 @@ export function startGameLoop(
 ): () => void {
   // A fresh battle must not inherit the previous loop's elapsed frame time.
   refs.lastTimeRef.current = 0;
+  const mobile = usesMobileRenderBudget();
+  const pacer = mobile ? createFramePacer(60) : null;
   const frameSamples = createPerformanceSampleWindow();
   const updateSamples = createPerformanceSampleWindow();
   const renderSamples = createPerformanceSampleWindow();
 
   const gameLoop = (timestamp: number) => {
+    if (pacer && !pacer.shouldDraw(timestamp)) {
+      refs.gameLoopRef.current = requestAnimationFrame(gameLoop);
+      return;
+    }
     const rawDelta = refs.lastTimeRef.current
       ? timestamp - refs.lastTimeRef.current
       : 0;
@@ -134,7 +145,7 @@ export function startGameLoop(
         const sustainedSince = refs.qualityThresholdSustainedSinceRef.current;
         if (sustainedSince === 0) {
           refs.qualityThresholdSustainedSinceRef.current = timestamp;
-        } else if (timestamp - sustainedSince > 750) {
+        } else if (timestamp - sustainedSince > (mobile ? 350 : 750)) {
           refs.renderQualityRef.current = nextQuality;
           refs.qualityLastChangedAtRef.current = timestamp;
           refs.qualityThresholdSustainedSinceRef.current = 0;
@@ -172,7 +183,9 @@ export function startGameLoop(
       DEV_CONFIG_MENU_ENABLED && refs.devPerfEnabledRef.current;
     if (shouldSampleDevPerf) {
       const updateStart = performance.now();
-      refs.updateGameRef.current(deltaTime);
+      if (refs.gameSpeedRef.current > 0) {
+        refs.updateGameRef.current(deltaTime);
+      }
       const updateMs = performance.now() - updateStart;
       refs.flushParticleQueueRef.current();
 
@@ -226,17 +239,32 @@ export function startGameLoop(
         });
       }
     } else {
-      refs.updateGameRef.current(deltaTime);
+      if (refs.gameSpeedRef.current > 0) {
+        refs.updateGameRef.current(deltaTime);
+      }
       refs.flushParticleQueueRef.current();
       refs.renderRef.current();
     }
     refs.gameLoopRef.current = requestAnimationFrame(gameLoop);
   };
-  refs.gameLoopRef.current = requestAnimationFrame(gameLoop);
+  const resume = () => {
+    if (refs.gameLoopRef.current) {
+      cancelAnimationFrame(refs.gameLoopRef.current);
+    }
+    refs.lastTimeRef.current = 0;
+    pacer?.reset();
+    if (!document.hidden) {
+      refs.gameLoopRef.current = requestAnimationFrame(gameLoop);
+    }
+  };
+  document.addEventListener("visibilitychange", resume);
+  resume();
   return () => {
+    document.removeEventListener("visibilitychange", resume);
     if (refs.gameLoopRef.current) {
       cancelAnimationFrame(refs.gameLoopRef.current);
     }
     clearEnemySpriteCache();
+    clearTowerSpriteCache();
   };
 }

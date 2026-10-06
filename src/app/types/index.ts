@@ -97,6 +97,7 @@ export interface Tower {
   target?: string;
   targetId?: string;
   spawnRange?: number;
+  rallyPoint?: Position;
   // Station-specific
   trainArriving?: boolean;
   trainProgress?: number;

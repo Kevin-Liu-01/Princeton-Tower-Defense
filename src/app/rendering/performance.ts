@@ -1,3 +1,4 @@
+import { usesMobileRenderBudget } from "./deviceProfile";
 // Princeton Tower Defense - Performance Optimization Module
 // Handles browser-specific optimizations, especially for Firefox
 
@@ -90,6 +91,14 @@ export function getPerformanceSettings(): PerformanceSettings {
     currentSettings = isFirefox()
       ? { ...firefoxDefaults }
       : { ...defaultSettings };
+  }
+  if (usesMobileRenderBudget()) {
+    currentSettings.disableShadows = true;
+    currentSettings.reducedParticles = true;
+    currentSettings.reducedFogQuality = true;
+    currentSettings.showGodRays = false;
+    currentSettings.showAurora = false;
+    currentSettings.showScreenGlow = false;
   }
   return currentSettings;
 }
@@ -402,12 +411,13 @@ const PRESSURE_SHADOWS_OFF = 250;
 const PRESSURE_SIMPLIFY_ENEMIES = 300;
 
 export function updateScenePressure(renderableCount: number): ScenePressure {
+  const pressure = renderableCount * (usesMobileRenderBudget() ? 2 : 1);
   currentScenePressure = {
-    forceShadowsOff: renderableCount > PRESSURE_SHADOWS_OFF,
-    forceSimplifiedGradients: renderableCount > PRESSURE_SIMPLIFY_GRADIENTS,
+    forceShadowsOff: pressure > PRESSURE_SHADOWS_OFF,
+    forceSimplifiedGradients: pressure > PRESSURE_SIMPLIFY_GRADIENTS,
     simplifyEnemies: renderableCount > PRESSURE_SIMPLIFY_ENEMIES,
-    skipDecorativeEffects: renderableCount > PRESSURE_SKIP_DECORATIVE,
-    skipNonEssentialParticles: renderableCount > PRESSURE_SKIP_PARTICLES,
+    skipDecorativeEffects: pressure > PRESSURE_SKIP_DECORATIVE,
+    skipNonEssentialParticles: pressure > PRESSURE_SKIP_PARTICLES,
     total: renderableCount,
   };
   return currentScenePressure;

@@ -1,6 +1,10 @@
 import type { MutableRefObject, RefObject } from "react";
 
 import { TILE_SIZE, GRID_WIDTH, GRID_HEIGHT } from "../../constants";
+import {
+  getBattleResolutionCap,
+  usesMobileRenderBudget,
+} from "../../rendering/deviceProfile";
 import type { Position, SpecialTower } from "../../types";
 
 export function getSpecialTowerKeyImpl(
@@ -36,7 +40,10 @@ export function getRenderDprImpl(renderDprCap: number): number {
   if (typeof window === "undefined") {
     return 1;
   }
-  return Math.min(window.devicePixelRatio || 1, renderDprCap);
+  return Math.min(
+    window.devicePixelRatio || 1,
+    getBattleResolutionCap(renderDprCap, usesMobileRenderBudget())
+  );
 }
 
 export function getCanvasDimensionsImpl(

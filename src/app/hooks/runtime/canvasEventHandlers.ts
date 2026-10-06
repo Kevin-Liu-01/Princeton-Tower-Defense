@@ -322,7 +322,16 @@ export function handlePointerDownImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    return distance(clickPos, troopScreen) < (isTouch ? 34 : 22);
+    return (
+      distance(clickPos, {
+        x: troopScreen.x,
+        y: troopScreen.y - (t.type === "campus_golem" ? 18 * p.cameraZoom : 0),
+      }) <
+      Math.max(
+        isTouch ? 34 : 22,
+        (t.type === "campus_golem" ? 30 : 18) * p.cameraZoom
+      )
+    );
   });
 
   if (clickedHero && p.hero && !p.hero.dead) {
@@ -1099,7 +1108,18 @@ export function handleCanvasClickImpl(
       p.cameraOffset,
       p.cameraZoom
     );
-    if (distance(clickPos, troopScreen) < (isTouch ? 34 : 22)) {
+    if (
+      distance(clickPos, {
+        x: troopScreen.x,
+        y:
+          troopScreen.y -
+          (troop.type === "campus_golem" ? 18 * p.cameraZoom : 0),
+      }) <
+      Math.max(
+        isTouch ? 34 : 22,
+        (troop.type === "campus_golem" ? 30 : 18) * p.cameraZoom
+      )
+    ) {
       p.setTroops((prev) =>
         prev.map((t) => ({ ...t, selected: t.id === troop.id }))
       );

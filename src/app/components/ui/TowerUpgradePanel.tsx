@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Heart,
   Timer,
   Zap,
   ChevronsUp,
@@ -50,6 +49,7 @@ import {
   getUpgradeCost,
   TOWER_STATS,
 } from "../../constants/towerStats";
+import { getTowerGarrison } from "../../game/towerGarrison";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import {
   getTowerFoundationSize,
@@ -231,7 +231,7 @@ function buildActionButtons(
   }
 
   // --- Station deploy/rally button (top, swapped with upgrade) ---
-  if (tower.type === "station") {
+  if (getTowerGarrison(tower)) {
     buttons.push({
       angle: -90,
       bgGradient: "linear-gradient(180deg, #064e3b 0%, #022c22 100%)",
@@ -239,7 +239,11 @@ function buildActionButtons(
       glowColor: "rgba(52,211,153,0.3)",
       icon: <Flag size={18} className="text-emerald-200" />,
       id: "deploy",
-      label: "Deploy",
+      label: "Rally",
+      disabled: !tower.currentTroopCount,
+      tooltip: tower.currentTroopCount
+        ? "Select your defenders, then choose a road position."
+        : "Your defenders are preparing to deploy.",
       onClick: () => onRallyTroops?.(tower.id),
     });
   }
@@ -1073,6 +1077,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                   size={sizes.towerIconLarge}
                   level={tower.level}
                   upgrade={tower.upgrade}
+                  capstone={tower.capstone}
+                  animated={tower.capstone}
                 />
               </div>
             </div>
@@ -1547,95 +1553,72 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           )}
 
-          {/* Dinky Station Troop Display */}
-          {tower.type === "station" &&
-            (() => {
-              const getTroopKey = () => {
-                if (tower.level === 1) {
-                  return "footsoldier";
-                }
-                if (tower.level === 2) {
-                  return "armored";
-                }
-                if (tower.level === 3) {
-                  return "elite";
-                }
-                if (tower.level === 4) {
-                  if (tower.upgrade === "B") {
-                    return "cavalry";
-                  }
-                  if (tower.upgrade === "A") {
-                    return "centaur";
-                  }
-                  return "knight";
-                }
-                return "footsoldier";
-              };
-              const troop = TROOP_DATA[getTroopKey()];
-              if (!troop) {
-                return null;
-              }
-
-              return (
-                <div className="mb-1.5 bg-stone-900/50 rounded-md p-1.5 border border-stone-700/40">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Users size={12} className="text-amber-400" />
-                    <span className="text-[9px] font-bold text-amber-300">
-                      Garrison: {troop.name}
-                    </span>
-                    <span className="text-[7px] bg-stone-800 px-1 py-0.5 rounded text-stone-400 ml-auto">
-                      {troop.isMounted
-                        ? "Mounted"
-                        : troop.isRanged
-                          ? "Ranged"
-                          : "Infantry"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1 mb-1">
-                    <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
-                      <Heart size={10} className="mx-auto text-red-400" />
-                      <div className="text-[7px] text-red-500">HP</div>
-                      <span className="text-red-200 font-bold text-[10px]">
-                        {troop.hp}
-                      </span>
-                    </div>
-                    <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
-                      <Swords size={10} className="mx-auto text-orange-400" />
-                      <div className="text-[7px] text-orange-500">DMG</div>
-                      <span className="text-orange-200 font-bold text-[10px]">
-                        {troop.damage}
-                      </span>
-                    </div>
-                    <div className="bg-green-950/40 p-1 rounded border border-green-900/30 text-center">
-                      <Gauge size={10} className="mx-auto text-green-400" />
-                      <div className="text-[7px] text-green-500">Atk Spd</div>
-                      <span className="text-green-200 font-bold text-[10px]">
-                        {(troop.attackSpeed / 1000).toFixed(1)}s
-                      </span>
-                    </div>
-                    <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
-                      {troop.isRanged ? (
-                        <Crosshair
-                          size={10}
-                          className="mx-auto text-blue-400"
-                        />
-                      ) : (
-                        <Swords size={10} className="mx-auto text-blue-400" />
-                      )}
-                      <div className="text-[7px] text-blue-500">
-                        {troop.isRanged ? "Range" : "Type"}
-                      </div>
-                      <span className="text-blue-200 font-bold text-[10px]">
-                        {troop.isRanged ? troop.range : "Melee"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-[7px] text-stone-400 text-center italic">
-                    {troop.desc}
-                  </div>
+          {(() => {
+            const garrison = getTowerGarrison(tower);
+            if (!garrison) {
+              return null;
+            }
+            const cooldown = tower.pendingRespawns?.reduce(
+              (min, item) => Math.min(min, item.timer),
+              Infinity
+            );
+            return (
+              <section
+                className="mb-2 rounded-md border border-emerald-700/40 bg-emerald-950/30 p-2"
+                aria-label="Tower defenders"
+              >
+                <div className="flex items-center justify-between gap-2 text-xs font-bold text-emerald-200">
+                  <span>{garrison.name}</span>
+                  <span>
+                    {tower.currentTroopCount ?? 0}/{garrison.maxTroops} active
+                  </span>
                 </div>
-              );
-            })()}
+                <dl className="mt-2 grid grid-cols-2 gap-1 text-[10px] text-stone-200">
+                  <div>
+                    <dt className="text-stone-400">Health</dt>
+                    <dd>{garrison.hp.toLocaleString()} HP</dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-400">Attack</dt>
+                    <dd>
+                      {garrison.damage} every{" "}
+                      {(garrison.attackSpeed / 1000).toFixed(2)}s
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-400">Rally range</dt>
+                    <dd>{Math.round(garrison.moveRadius)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-400">Deployment interval</dt>
+                    <dd>{garrison.spawnInterval / 1000}s</dd>
+                  </div>
+                </dl>
+                <p className="mt-1 text-[10px] text-emerald-300" role="status">
+                  {cooldown !== undefined && Number.isFinite(cooldown)
+                    ? `Returning in ${Math.ceil(cooldown / 1000)}s`
+                    : (tower.currentTroopCount ?? 0) > 0
+                      ? "Defenders ready"
+                      : "Preparing to deploy"}
+                </p>
+                <button
+                  type="button"
+                  disabled={!tower.currentTroopCount}
+                  onClick={() => onRallyTroops?.(tower.id)}
+                  className="mt-2 w-full rounded border border-emerald-600/50 bg-emerald-900/50 px-2 py-1.5 text-xs font-semibold text-emerald-100 disabled:opacity-40"
+                >
+                  Relocate defenders
+                </button>
+                <p className="mt-1 text-[10px] leading-relaxed text-stone-400">
+                  Select a road inside the rally circle. Returning defenders
+                  remember this position.{" "}
+                  {garrison.type === "campus_golem"
+                    ? "The golem blocks and punches ground enemies; it cannot hit flying enemies."
+                    : garrison.description}
+                </p>
+              </section>
+            );
+          })()}
 
           {/* Cannon Special Display (level 4 only) */}
           {tower.type === "cannon" &&

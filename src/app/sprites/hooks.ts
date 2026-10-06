@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect } from "react";
 
+import { usesMobileRenderBudget } from "../rendering/deviceProfile";
+
 export const SPRITE_PAD = 1.8;
 
 export function spriteContainerStyle(
@@ -26,7 +28,10 @@ export function setupSpriteCanvas(
   width: number,
   height: number
 ): CanvasRenderingContext2D | null {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(
+    window.devicePixelRatio || 1,
+    usesMobileRenderBudget() ? 1.5 : 2
+  );
   const pixelWidth = Math.max(1, Math.round(width * dpr));
   const pixelHeight = Math.max(1, Math.round(height * dpr));
   const backingStoreChanged =
@@ -105,15 +110,18 @@ const scheduleSharedAnimationFrame = (): void => {
 
 function runSharedAnimationFrame(now: number): void {
   sharedAnimationFrameId = 0;
+  const interval = usesMobileRenderBudget()
+    ? 1000 / 20
+    : SPRITE_FRAME_INTERVAL_MS;
   for (const [animationId, animation] of activeAnimations) {
     if (!animation.visible) {
       continue;
     }
     const elapsed = now - animation.lastRenderedAt;
-    if (elapsed < SPRITE_FRAME_INTERVAL_MS) {
+    if (elapsed < interval) {
       continue;
     }
-    animation.lastRenderedAt = now - (elapsed % SPRITE_FRAME_INTERVAL_MS);
+    animation.lastRenderedAt = now - (elapsed % interval);
     try {
       animation.render((now - animation.startedAt) / animation.frameMs);
     } catch {

@@ -17,7 +17,15 @@ export const TowerSprite: React.FC<{
   level?: number;
   upgrade?: "A" | "B";
   animated?: boolean;
-}> = ({ type, size = 48, level = 1, upgrade, animated = false }) => {
+  capstone?: boolean;
+}> = ({
+  type,
+  size = 48,
+  level = 1,
+  upgrade,
+  capstone = false,
+  animated = false,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasSize = Math.ceil(size * SPRITE_PAD);
 
@@ -48,11 +56,12 @@ export const TowerSprite: React.FC<{
         type,
         level as 1 | 2 | 3 | 4,
         upgrade as TowerUpgrade | undefined,
-        t
+        t,
+        capstone
       );
       ctx.restore();
     },
-    [type, size, canvasSize, level, upgrade, animated]
+    [type, size, canvasSize, level, upgrade, capstone, animated]
   );
 
   useSpriteTicker(animated, 50, render, canvasRef);

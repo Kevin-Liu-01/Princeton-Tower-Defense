@@ -1,3 +1,5 @@
+import { usesMobileRenderBudget } from "../../../../rendering/deviceProfile";
+import { interceptShadows } from "../../../../rendering/performance";
 /** Reuse backing storage; assigning canvas dimensions reallocates its bitmap. */
 export function prepareLayer(
   canvas: HTMLCanvasElement,
@@ -19,6 +21,9 @@ export function prepareLayer(
   } else {
     // Older browsers need the dimension reset to clear all drawing state.
     canvas.width = pixelWidth;
+  }
+  if (usesMobileRenderBudget()) {
+    interceptShadows(ctx);
   }
   return ctx;
 }

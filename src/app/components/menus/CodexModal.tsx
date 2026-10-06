@@ -90,6 +90,7 @@ import {
   deriveEnemyTags,
 } from "../../constants";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
+import { getTowerGarrison } from "../../game/towerGarrison";
 import {
   KNIGHT_VARIANT_LABELS,
   KNIGHT_COLOR_VARIATIONS,
@@ -2883,6 +2884,24 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                               4,
                               path
                             );
+                            const finalStats = calculateTowerStats(
+                              selectedTower,
+                              4,
+                              path,
+                              1,
+                              1,
+                              true
+                            );
+                            const finalGarrison = getTowerGarrison({
+                              id: "preview",
+                              type: selectedTower as keyof typeof TOWER_DATA,
+                              pos: { x: 0, y: 0 },
+                              level: 4,
+                              upgrade: path,
+                              capstone: true,
+                              lastAttack: 0,
+                              rotation: 0,
+                            });
                             const isStation = selectedTower === "station";
                             const troop = isStation
                               ? getTroopForLevel(4, path)
@@ -2966,12 +2985,82 @@ export const CodexModal: React.FC<CodexModalProps> = ({
                                         <Coins size={12} /> {capstone.cost} PP
                                       </span>
                                     </div>
+                                    <div className="flex justify-center py-2">
+                                      <TowerSprite
+                                        type={
+                                          selectedTower as keyof typeof TOWER_DATA
+                                        }
+                                        size={112}
+                                        level={4}
+                                        upgrade={path}
+                                        capstone
+                                        animated
+                                      />
+                                    </div>
                                     <div className="font-bold text-amber-100">
                                       {capstone.name}
                                     </div>
                                     <p className="mt-1 text-xs leading-relaxed text-amber-200/75">
                                       {capstone.effect}
                                     </p>
+                                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-amber-100">
+                                      <div>
+                                        <dt className="text-stone-400">
+                                          Damage / hit
+                                        </dt>
+                                        <dd>{finalStats.damage}</dd>
+                                      </div>
+                                      <div>
+                                        <dt className="text-stone-400">
+                                          Attack interval
+                                        </dt>
+                                        <dd>
+                                          {finalStats.attackSpeed / 1000}s
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt className="text-stone-400">
+                                          Range
+                                        </dt>
+                                        <dd>{finalStats.range}</dd>
+                                      </div>
+                                      {finalStats.splashRadius ? (
+                                        <div>
+                                          <dt className="text-stone-400">
+                                            Splash radius
+                                          </dt>
+                                          <dd>{finalStats.splashRadius}</dd>
+                                        </div>
+                                      ) : null}
+                                      {finalStats.income ? (
+                                        <div>
+                                          <dt className="text-stone-400">
+                                            Income
+                                          </dt>
+                                          <dd>
+                                            {finalStats.income} PP /{" "}
+                                            {(finalStats.incomeInterval ?? 0) /
+                                              1000}
+                                            s
+                                          </dd>
+                                        </div>
+                                      ) : null}
+                                    </dl>
+                                    {finalGarrison ? (
+                                      <p className="mt-3 text-xs leading-relaxed text-emerald-200">
+                                        {finalGarrison.maxTroops} ×{" "}
+                                        {finalGarrison.name} ·{" "}
+                                        {finalGarrison.hp.toLocaleString()} HP ·{" "}
+                                        {finalGarrison.damage} damage /{" "}
+                                        {(
+                                          finalGarrison.attackSpeed / 1000
+                                        ).toFixed(2)}
+                                        s · {finalGarrison.spawnInterval / 1000}
+                                        s deployment interval. Select a defender
+                                        or use Rally to relocate; replacements
+                                        return to that position.
+                                      </p>
+                                    ) : null}
                                     {capstone.stats.spawnTroopType ? (
                                       <div className="mt-2 flex items-center gap-2 rounded-md border border-orange-400/25 bg-black/20 px-2 py-1.5 text-xs text-orange-200">
                                         <Users size={13} />

@@ -26,7 +26,10 @@ import {
   TOWER_DATA,
   TOWER_TAGS,
 } from "../../../constants";
-import { calculateTowerStats } from "../../../constants/towerStats";
+import {
+  calculateTowerStats,
+  TOWER_STATS,
+} from "../../../constants/towerStats";
 import { TowerSprite } from "../../../sprites";
 import type { Position, Tower, TowerType } from "../../../types";
 import { TagBadge } from "../primitives/TagBadge";
@@ -119,6 +122,7 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
               size={36}
               level={tower.level}
               upgrade={tower.upgrade}
+              capstone={tower.capstone}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -136,7 +140,10 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({
             </div>
             {tower.level === 4 && tower.upgrade && (
               <div className="text-[9px] text-amber-400/80 font-medium">
-                {towerData.upgrades[tower.upgrade].name}
+                {tower.capstone
+                  ? TOWER_STATS[tower.type].upgrades[tower.upgrade].capstone
+                      .name
+                  : towerData.upgrades[tower.upgrade].name}
               </div>
             )}
             <div className="flex flex-wrap gap-0.5 mt-1">

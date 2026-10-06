@@ -226,7 +226,8 @@ export function renderTroop(
     troop.visualTier,
     mapTheme,
     troop.id,
-    troop.knightVariant
+    troop.knightVariant,
+    troop.moving
   );
 
   ctx.restore();
@@ -441,7 +442,8 @@ export function drawTroopSprite(
   visualTier?: number,
   mapTheme?: MapTheme,
   troopId?: string,
-  knightVariant?: number
+  knightVariant?: number,
+  moving = false
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
     armored: 1.65,
@@ -546,7 +548,8 @@ export function drawTroopSprite(
         time,
         zoom,
         attackPhase,
-        targetPos
+        targetPos,
+        moving
       );
       break;
     }

@@ -19,6 +19,7 @@ import {
   isHexWardGhostHarvestActive,
 } from "../../game/status";
 import { acquireParticle, enforceParticleCap } from "../../rendering";
+import { usesMobileRenderBudget } from "../../rendering/deviceProfile";
 import { getPerformanceSettings } from "../../rendering/performance";
 import type {
   Position,
@@ -239,7 +240,8 @@ export function flushQueuedParticlesImpl(
     counts.enemies + counts.projectiles * 0.8 + counts.effects * 0.6;
   const budget =
     pressure > 260 ? 24 : pressure > 180 ? 36 : pressure > 120 ? 56 : 84;
-  let remaining = budget;
+  const mobile = usesMobileRenderBudget();
+  let remaining = mobile ? Math.min(budget, 24) : budget;
 
   for (const burst of bursts) {
     if (remaining <= 0) {
@@ -285,7 +287,7 @@ export function flushQueuedParticlesImpl(
         : pressure > 120
           ? 260
           : MAX_PARTICLES;
-  enforceParticleCap(dynamicCap);
+  enforceParticleCap(mobile ? Math.min(dynamicCap, 100) : dynamicCap);
 }
 
 // ── awardBounty impl ────────────────────────────────────────────────────────

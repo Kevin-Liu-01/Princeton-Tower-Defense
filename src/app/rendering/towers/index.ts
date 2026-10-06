@@ -16,9 +16,9 @@ import {
   worldToScreenRounded,
   isoTileDiamondHalfH,
 } from "../../utils";
-import { getScenePressure } from "../performance";
 import { renderArchTower } from "./arch";
 import { drawStar, renderCannonTower } from "./cannon";
+import { drawCapstoneModel } from "./capstoneModels";
 import { renderClubTower } from "./club";
 import { renderLabTower } from "./lab";
 import { renderLibraryTower } from "./library";
@@ -29,10 +29,7 @@ import {
   getTowerFoundationSize,
   getTowerVisualMetrics,
 } from "./towerHelpers";
-import {
-  drawCachedTowerSprite,
-  isCacheableTowerType,
-} from "./towerSpriteCache";
+import { drawCachedTowerSprite, canCacheTowerSprite } from "./towerSpriteCache";
 
 export {
   getTowerFoundationSize,
@@ -47,29 +44,24 @@ export {
   renderTowerGroundTransition,
 } from "./towerRange";
 
-const TOWER_SPRITE_SCALE: Record<TowerType, number> = {
-  arch: 0.95,
-  cannon: 0.84,
-  club: 0.7,
-  lab: 1,
-  library: 0.94,
-  mortar: 0.9,
-  station: 0.95,
-};
-
 const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
   cannon: Math.PI * 0.75,
   mortar: -Math.PI * 0.5,
 };
 
-const TOWER_SPRITE_FOOT_MULT: Partial<Record<TowerType, number>> = {
-  arch: 0.22,
-  cannon: 0.4,
-  club: 0.78,
-  lab: 0.38,
-  library: 0.4,
-  mortar: 0.45,
-  station: 0.23,
+// Full artwork envelopes, including roofs, barrels, smoke and foundations.
+// These deliberately differ from the compact gameplay hitbox metrics.
+const SPRITE_ENVELOPES: Record<
+  TowerType,
+  { above: number; below: number; halfWidth: number; levelRise: number }
+> = {
+  arch: { above: 130, below: 44, halfWidth: 64, levelRise: 7 },
+  cannon: { above: 70, below: 30, halfWidth: 58, levelRise: 13 },
+  club: { above: 92, below: 30, halfWidth: 48, levelRise: 16 },
+  lab: { above: 102, below: 30, halfWidth: 55, levelRise: 18 },
+  library: { above: 102, below: 38, halfWidth: 58, levelRise: 16 },
+  mortar: { above: 62, below: 34, halfWidth: 64, levelRise: 9 },
+  station: { above: 95, below: 42, halfWidth: 80, levelRise: 7 },
 };
 
 export function drawTowerSprite(
@@ -80,10 +72,12 @@ export function drawTowerSprite(
   type: TowerType,
   level: 1 | 2 | 3 | 4 = 1,
   upgrade?: TowerUpgrade,
-  time: number = 0
+  time: number = 0,
+  capstone = false
 ): void {
   const tower: Tower = {
     id: "__sprite__",
+    capstone,
     lastAttack: 0,
     level,
     pos: { col: 0, row: 0 },
@@ -93,19 +87,14 @@ export function drawTowerSprite(
   };
 
   const colors = TOWER_COLORS[type];
-  const metrics = getTowerVisualMetrics(tower);
-  const baseVisualH = metrics.visualHeight;
-  const targetFit = size * 0.85;
-  const typeScale = TOWER_SPRITE_SCALE[type] ?? 1;
-  const lvl4Scale = level === 4 ? 1.05 : 1;
-  const zoom =
-    Math.max(0.1, Math.min(targetFit / baseVisualH, size / 80)) *
-    typeScale *
-    lvl4Scale;
-
-  const footMult = TOWER_SPRITE_FOOT_MULT[type] ?? 0.25;
-  const footY = y + baseVisualH * zoom * footMult;
-  const screenPos: Position = { x, y: footY };
+  const envelope = SPRITE_ENVELOPES[type];
+  const above = capstone ? 214 : envelope.above + level * envelope.levelRise;
+  const height = above + envelope.below;
+  const zoom = (size * 0.94) / Math.max(height, envelope.halfWidth * 2);
+  const screenPos: Position = {
+    x,
+    y: y + ((above - envelope.below) * zoom) / 2,
+  };
 
   ctx.save();
   switch (type) {
@@ -162,6 +151,7 @@ export function drawTowerSprite(
       break;
     }
   }
+  drawCapstoneModel(ctx, screenPos, tower, zoom, time);
   ctx.restore();
 }
 
@@ -375,14 +365,17 @@ export function renderTower(
         break;
       }
     }
+    drawCapstoneModel(
+      targetCtx,
+      targetPosition,
+      tower,
+      zoom,
+      gameSettings.animation.towerAnimations ? time : 0
+    );
   };
 
-  if (isCacheableTowerType(tower.type)) {
-    const cacheTime =
-      getScenePressure().skipDecorativeEffects ||
-      !gameSettings.animation.towerAnimations
-        ? 0
-        : time;
+  if (canCacheTowerSprite(tower, frameNowMs)) {
+    const cacheTime = !gameSettings.animation.towerAnimations ? 0 : time;
     drawCachedTowerSprite(
       ctx,
       screenPos.x,
@@ -393,7 +386,8 @@ export function renderTower(
       tower.rotation ?? 0,
       zoom,
       cacheTime,
-      drawTowerBody
+      drawTowerBody,
+      `${tower.capstone ?? false}:${tower.mortarAutoAim !== false}`
     );
   } else {
     drawTowerBody(ctx, screenPos.x, screenPos.y);

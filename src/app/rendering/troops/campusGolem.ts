@@ -38,8 +38,10 @@ export const drawCampusGolemTroop = (
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
+  moving = false
 ): void => {
+  const stride = moving ? Math.sin(time * 7) * size * 0.065 : 0;
   const breathe = Math.sin(time * 1.8) * size * 0.012;
   const runePulse = 0.6 + Math.sin(time * 4.2) * 0.3;
   const attackSwing = Math.sin(attackPhase * Math.PI) * size * 0.3;
@@ -59,7 +61,7 @@ export const drawCampusGolemTroop = (
   drawStoneBlock(
     ctx,
     x - size * 0.17,
-    y + size * 0.22,
+    y + size * 0.22 + stride,
     size * 0.25,
     size * 0.3,
     3 * zoom
@@ -67,7 +69,7 @@ export const drawCampusGolemTroop = (
   drawStoneBlock(
     ctx,
     x + size * 0.17,
-    y + size * 0.22,
+    y + size * 0.22 - stride,
     size * 0.25,
     size * 0.3,
     3 * zoom

@@ -1,4 +1,9 @@
 import { LEVEL_DATA } from "../../../constants";
+import { usesMobileRenderBudget } from "../../../rendering/deviceProfile";
+import {
+  interceptShadows,
+  refreshShadowCache,
+} from "../../../rendering/performance";
 import { drawDecorationGroundLayer } from "./rendering/decorationGroundLayer";
 import type { WorldMapDrawContext } from "./rendering/drawContext";
 import { drawLevelBattlePreview } from "./rendering/levelBattlePreview";
@@ -60,8 +65,13 @@ export const drawWorldMapCanvas = ({
   }
   let ctx: CanvasRenderingContext2D = rawCtx;
 
+  const mobile = isMobile || usesMobileRenderBudget();
+  if (mobile) {
+    refreshShadowCache();
+    interceptShadows(rawCtx);
+  }
   const rawDpr = window.devicePixelRatio || 1;
-  const dpr = Math.min(rawDpr, 2);
+  const dpr = Math.min(rawDpr, mobile ? 1 : 2);
   const width = MAP_WIDTH;
   const height = mapHeight;
   const mapScale = Math.max(1, Math.min(1.5, containerWidth / MAP_WIDTH));
@@ -100,12 +110,14 @@ export const drawWorldMapCanvas = ({
   // Use ref-based time to avoid React re-renders on every frame
   const time = animTimeRef.current;
 
-  const DECOR_FPS = isMobile ? 8 : 15;
-  const PATH_FPS = 15;
-  const NODE_FPS = 15;
-  const ATMOS_FPS = isMobile ? 8 : 15;
-  const HERO_IDLE_FPS = 30;
-  const BATTLE_PREVIEW_FPS = 30;
+  // Phone maps retain their scenery layers; only selection and the moving hero
+  // need animation. Repainting all seven map-sized layers dominated touch latency.
+  const DECOR_FPS = mobile ? 0 : 15;
+  const PATH_FPS = mobile ? 0 : 15;
+  const NODE_FPS = mobile ? 0 : 15;
+  const ATMOS_FPS = mobile ? 0 : 15;
+  const HERO_IDLE_FPS = mobile ? 12 : 30;
+  const BATTLE_PREVIEW_FPS = mobile ? 12 : 30;
 
   const decorTimeBucket = Math.floor(time * DECOR_FPS);
   const pathTimeBucket = Math.floor(time * PATH_FPS);

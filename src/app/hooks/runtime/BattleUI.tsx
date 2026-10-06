@@ -404,12 +404,12 @@ export const BattleUI: React.FC<BattleUIProps> = ({
         >
           <canvas
             ref={backdropCanvasRef}
-            className="absolute pointer-events-none game-start-fade"
+            className="absolute pointer-events-none"
             style={{ left: 0, top: 0, willChange: "transform" }}
           />
           <canvas
             ref={bgCanvasRef}
-            className="absolute pointer-events-none game-start-fade"
+            className="absolute pointer-events-none"
             style={{ left: 0, top: 0, willChange: "transform" }}
           />
           <canvas
@@ -419,7 +419,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
             onPointerMove={handleMouseMove}
             onPointerCancel={handleCanvasPointerCancel}
             onPointerLeave={handleCanvasPointerLeave}
-            className={`absolute inset-0 w-full h-full touch-none game-start-fade ${
+            className={`absolute inset-0 w-full h-full touch-none ${
               isPanning
                 ? "cursor-grabbing"
                 : repositioningTower

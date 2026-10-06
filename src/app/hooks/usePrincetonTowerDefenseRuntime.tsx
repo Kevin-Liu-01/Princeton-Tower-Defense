@@ -46,6 +46,7 @@ import {
 } from "../game/setup";
 import { initParticlePool, getActiveParticleCount } from "../rendering";
 import type { RuntimeDecoration } from "../rendering/decorations/decorationHelpers";
+import { usesMobileRenderBudget } from "../rendering/deviceProfile";
 import { getWaveStartBubblesScreenData as computeWaveStartBubbles } from "../rendering/ui/waveStartBubble";
 // Types
 import type {
@@ -529,7 +530,7 @@ export function usePrincetonTowerDefenseRuntime() {
   );
   const [cameraModeActive, setCameraModeActive] = useState(false);
   const [renderDprCap, setRenderDprCap] = useState<number>(
-    QUALITY_DPR_CAP.high
+    () => QUALITY_DPR_CAP[usesMobileRenderBudget() ? "medium" : "high"]
   );
   const [isDevModeUnlocked, setIsDevModeUnlocked] =
     useState(readDevModeUnlocked);
@@ -565,7 +566,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const gameLoopRef = useRef<number | undefined>();
   const lastTimeRef = useRef<number>(0);
   const lastGestureScaleRef = useRef<number | null>(null);
-  const renderQualityRef = useRef<RenderQuality>("high");
+  const renderQualityRef = useRef<RenderQuality>(
+    usesMobileRenderBudget() ? "medium" : "high"
+  );
   const rollingFrameMsRef = useRef<number>(16.7);
   const qualityLastChangedAtRef = useRef<number>(0);
   const qualityCooldownMsRef = useRef<number>(QUALITY_TRANSITION_COOLDOWN_MS);
@@ -1501,9 +1504,10 @@ export function usePrincetonTowerDefenseRuntime() {
         targetPos,
         towers,
         setTroops,
-        addParticles
+        addParticles,
+        setTowers
       ),
-    [addParticles, setTroops, towers]
+    [addParticles, setTroops, setTowers, towers]
   );
 
   const clearUnitMoveInteraction = useCallback(() => {

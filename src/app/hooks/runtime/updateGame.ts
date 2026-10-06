@@ -143,10 +143,15 @@ import {
   getEnemyDamageTaken,
 } from "../../game/status";
 import {
+  advanceSummonRespawns,
+  getTowerGarrison,
+} from "../../game/towerGarrison";
+import {
   updateParticlePool,
   enforceParticleCap,
   getTowerParticleWorldPos,
 } from "../../rendering";
+import { usesMobileRenderBudget } from "../../rendering/deviceProfile";
 import {
   getSentinelBoltColor,
   SENTINEL_CRYSTAL_Y_OFFSET,
@@ -2275,6 +2280,7 @@ export function updateGameTick(
           return t;
         }
 
+        const garrison = getTowerGarrison(t);
         const existing = t.pendingRespawns || [];
         const newRespawns = deaths.filter(
           (d) => !existing.some((e) => e.slot === d.slot)
@@ -2291,7 +2297,10 @@ export function updateGameTick(
             ...newRespawns.map((d) => ({
               respawnPos: d.respawnPos,
               slot: d.slot,
-              timer: TROOP_RESPAWN_TIME,
+              timer:
+                t.type === "station"
+                  ? TROOP_RESPAWN_TIME
+                  : (garrison?.spawnInterval ?? TROOP_RESPAWN_TIME),
               troopType: d.troopType,
             })),
           ],
@@ -3445,7 +3454,7 @@ export function updateGameTick(
         let enemiesInSightCount = 0;
         let closestEnemy: Enemy | null = null;
         let closestDist = Infinity;
-        for (const enemy of enemies) {
+        for (const enemy of enemyHash.getInRange(troop.pos, sightRange)) {
           if (!canHitFlying && ENEMY_DATA[enemy.type].flying) {
             continue;
           }
@@ -3742,6 +3751,7 @@ export function updateGameTick(
         if (!deaths || deaths.length === 0) {
           return t;
         }
+        const garrison = getTowerGarrison(t);
         const existing = t.pendingRespawns || [];
         const newRespawns = deaths.filter(
           (d) => !existing.some((e) => e.slot === d.slot)
@@ -3756,7 +3766,10 @@ export function updateGameTick(
             ...newRespawns.map((d) => ({
               respawnPos: d.respawnPos,
               slot: d.slot,
-              timer: TROOP_RESPAWN_TIME,
+              timer:
+                t.type === "station"
+                  ? TROOP_RESPAWN_TIME
+                  : (garrison?.spawnInterval ?? TROOP_RESPAWN_TIME),
               troopType: d.troopType,
             })),
           ],
@@ -4098,22 +4111,25 @@ export function updateGameTick(
         (towerStats.maxTroops ?? 0) > 0
       ) {
         const ownedTroops = troopsByOwner.get(tower.id) ?? [];
-        const spawnInterval = towerStats.spawnInterval ?? 15_000;
-        const effectiveSpawnInterval =
-          gameSpeed > 0 ? spawnInterval / gameSpeed : spawnInterval;
+        const pending = advanceSummonRespawns(tower, deltaTime);
+        if (pending?.length) {
+          queueTowerPatch(tower.id, { pendingRespawns: pending });
+        }
         const canSpawnTroop =
           ownedTroops.length < (towerStats.maxTroops ?? 0) &&
-          now - (tower.lastSpawn ?? 0) >= effectiveSpawnInterval &&
+          (!pending?.length || pending.some((respawn) => respawn.timer <= 0)) &&
           !isInResetTransition;
 
         if (canSpawnTroop) {
           const troopType = towerStats.spawnTroopType;
           const troopData = TROOP_DATA[troopType];
-          const rallyPoint = findClosestRoadPoint(
-            towerWorldPos,
-            activeWaveSpawnPaths,
-            selectedMap
-          );
+          const rallyPoint =
+            tower.rallyPoint ??
+            findClosestRoadPoint(
+              towerWorldPos,
+              activeWaveSpawnPaths,
+              selectedMap
+            );
           addTroopEntities([
             {
               facingRight: getFacingRightFromDelta(
@@ -4124,7 +4140,8 @@ export function updateGameTick(
               id: generateId("troop"),
               lastAttack: 0,
               maxHp: troopData.hp,
-              moveRadius: 190,
+              moveRadius:
+                getTowerGarrison(tower)?.moveRadius ?? STATION_TROOP_RANGE,
               moving: true,
               ownerId: tower.id,
               ownerType: "default",
@@ -4141,7 +4158,11 @@ export function updateGameTick(
               visualTier: towerStats.spawnTroopType === "campus_golem" ? 5 : 4,
             },
           ]);
-          queueTowerPatch(tower.id, { lastSpawn: now });
+          queueTowerPatch(tower.id, {
+            lastSpawn: now,
+            pendingRespawns: [],
+            rallyPoint,
+          });
           addParticles(towerWorldPos, "glow", 18);
         }
       }
@@ -4440,6 +4461,7 @@ export function updateGameTick(
         // Find rally point from existing troops or use road near station
         const existingRallyTroop = stationTroops.find((t) => t.userTargetPos);
         const rallyPoint =
+          tower.rallyPoint ||
           existingRallyTroop?.userTargetPos ||
           findClosestRoadPoint(stationPos, activeWaveSpawnPaths, selectedMap);
 
@@ -4554,6 +4576,7 @@ export function updateGameTick(
               (t) => t.userTargetPos
             );
             const rallyPoint =
+              tower.rallyPoint ||
               existingRallyTroop?.userTargetPos ||
               findClosestRoadPoint(
                 stationPos,
@@ -6066,7 +6089,7 @@ export function updateGameTick(
 
   setTowers((prev) =>
     prev.map((t) => {
-      if (t.type === "station") {
+      if (t.type === "station" || (t.capstone && getTowerGarrison(t))) {
         const troopCount = troopCountByOwner.get(t.id) ?? 0;
         if (t.currentTroopCount === troopCount) {
           return t;
@@ -6415,7 +6438,11 @@ export function updateGameTick(
     updateParticlePool(accumulatedDelta);
     const dynamicParticleCap =
       liveEnemyCount > 180 ? 180 : liveEnemyCount > 120 ? 220 : MAX_PARTICLES;
-    enforceParticleCap(dynamicParticleCap);
+    enforceParticleCap(
+      usesMobileRenderBudget()
+        ? Math.min(dynamicParticleCap, 100)
+        : dynamicParticleCap
+    );
   }
   // Update spell cooldowns
   setSpells((prev) => {

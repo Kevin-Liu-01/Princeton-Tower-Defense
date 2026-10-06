@@ -80,6 +80,10 @@ export function CircleActionButton({
       }}
     >
       <button
+        type="button"
+        aria-label={subLabel ? `${label} · ${subLabel}` : label}
+        onFocus={tooltip ? () => setShowTooltip(true) : undefined}
+        onBlur={tooltip ? () => setShowTooltip(false) : undefined}
         onClick={(event) => {
           event.stopPropagation();
           if (didLongPress.current) {

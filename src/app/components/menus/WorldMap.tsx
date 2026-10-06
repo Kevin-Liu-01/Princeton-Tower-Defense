@@ -33,6 +33,7 @@ import type {
 import type { LevelStats } from "../../hooks/useLocalStorage";
 import { useSettings } from "../../hooks/useSettings";
 import { useUrlNavigation } from "../../hooks/useUrlNavigation";
+import { usesMobileRenderBudget } from "../../rendering/deviceProfile";
 import { RegionIcon } from "../../sprites";
 import type {
   GameState,
@@ -289,14 +290,23 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
       const cw = containerRef.current.clientWidth;
       const ch = containerRef.current.clientHeight;
+      // Keep the last usable dimensions while a panel is hidden or relaying out.
+      if (cw <= 0 || ch <= 0) {
+        return;
+      }
       const scale = Math.max(1, Math.min(1.5, cw / MAP_WIDTH));
       setContainerWidth(cw);
       setMapHeight(ch / scale);
     };
     updateDimensions();
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
     window.addEventListener("resize", updateDimensions);
     window.visualViewport?.addEventListener("resize", updateDimensions);
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", updateDimensions);
       window.visualViewport?.removeEventListener("resize", updateDimensions);
     };
@@ -594,7 +604,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId = 0;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    const frameInterval = 1000 / 30;
+    const mobile = usesMobileRenderBudget();
+    const frameInterval = 1000 / (mobile ? 12 : 30);
 
     let lastTimestamp = 0;
     const HERO_SPEED = 200; // pixels per second
@@ -628,7 +639,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
       if (
         timestamp - lastDrawTime >=
-        (heroMovingRef.current ? 1000 / 60 : frameInterval)
+        (heroMovingRef.current ? 1000 / (mobile ? 30 : 60) : frameInterval)
       ) {
         animTimeRef.current = timestamp / 1000;
         lastDrawTime = timestamp;
@@ -636,7 +647,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
 
       // React state for BattlefieldPreview (~10fps)
-      if (showPreviewRef.current && timestamp - lastPreviewTime > 100) {
+      if (
+        !mobile &&
+        showPreviewRef.current &&
+        timestamp - lastPreviewTime > 100
+      ) {
         setAnimTime(timestamp / 1000);
         lastPreviewTime = timestamp;
       }
@@ -1792,7 +1807,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 >
                   <div
                     ref={canvasWrapperRef}
-                    className="relative game-start-fade"
+                    className="relative"
                     style={{
                       height: `${displayH}px`,
                       margin: displayW <= containerWidth ? "0 auto" : undefined,
