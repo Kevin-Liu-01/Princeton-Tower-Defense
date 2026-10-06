@@ -23,6 +23,10 @@ import type { TowerType, SpellType, HeroType } from "../../types";
 import { OrnateFrame } from "./primitives/OrnateFrame";
 import { TagBadge } from "./primitives/TagBadge";
 import { GOLD, PANEL, panelGradient, dividerGradient } from "./system/theme";
+import {
+  getTutorialPanelPosition,
+  getVisibleTutorialTarget,
+} from "./tutorialLayout";
 
 // =============================================================================
 // PROPS
@@ -54,7 +58,11 @@ function getHighlightElement(step: TutorialStep): HTMLElement | null {
   if (!step.highlight) {
     return null;
   }
-  return document.querySelector(`[data-tutorial="${step.highlight}"]`);
+  return getVisibleTutorialTarget(
+    document.querySelectorAll<HTMLElement>(
+      `[data-tutorial="${step.highlight}"]`
+    )
+  );
 }
 
 function getHighlightRect(el: HTMLElement | null): HighlightRect | null {
@@ -68,47 +76,6 @@ function getHighlightRect(el: HTMLElement | null): HighlightRect | null {
     top: r.top - PADDING,
     width: r.width + PADDING * 2,
   };
-}
-
-function getPanelPosition(
-  step: TutorialStep,
-  highlight: HighlightRect | null
-): React.CSSProperties {
-  if (!highlight) {
-    return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
-  }
-
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  switch (step.position) {
-    case "top-right": {
-      return { right: 16, top: highlight.top + highlight.height + 12 };
-    }
-    case "top-left": {
-      return { left: 16, top: highlight.top + highlight.height + 12 };
-    }
-    case "bottom-left": {
-      const panelBottom = highlight.top - 12;
-      return { bottom: vh - panelBottom, left: 16 };
-    }
-    case "bottom-right": {
-      const panelBottom = highlight.top - 12;
-      return { bottom: vh - panelBottom, right: 16 };
-    }
-    case "bottom-center": {
-      const panelBottom = highlight.top - 12;
-      return {
-        bottom: vh - panelBottom,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
-    }
-    case "center":
-    default: {
-      return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
-    }
-  }
 }
 
 // =============================================================================
@@ -555,6 +522,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     null
   );
   const rafRef = useRef(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
+    left: "50%",
+    top: "50%",
+    transform: "translate(-50%, -50%)",
+    maxHeight: "calc(100dvh - 24px)",
+  });
 
   const step = TUTORIAL_STEPS[currentStep];
   const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
@@ -568,6 +542,31 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
       const el = getHighlightElement(step);
       const rect = getHighlightRect(el);
+      const panel = panelRef.current;
+      if (panel) {
+        const viewport = window.visualViewport;
+        const next = getTutorialPanelPosition(
+          step.position,
+          rect,
+          {
+            width: panel.offsetWidth,
+            height: panel.offsetHeight,
+          },
+          {
+            left: viewport?.offsetLeft ?? 0,
+            top: viewport?.offsetTop ?? 0,
+            width: viewport?.width ?? window.innerWidth,
+            height: viewport?.height ?? window.innerHeight,
+          }
+        );
+        setPanelStyle((prev) =>
+          prev.left === next.left &&
+          prev.top === next.top &&
+          prev.maxHeight === next.maxHeight
+            ? prev
+            : next
+        );
+      }
       setHighlightRect((prev) => {
         if (!rect && !prev) {
           return prev;
@@ -630,7 +629,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   }
 
   const descriptionLines = step.description.split("\n").filter(Boolean);
-  const panelStyle = getPanelPosition(step, highlightRect);
   const showTowerCatalog = step.id === "build-towers";
   const showSpellCatalog = step.id === "use-spells";
   const showUpgradeTree = step.id === "upgrade-towers";
@@ -692,6 +690,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Tutorial panel */}
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tutorial-title"
         className="fixed w-[92vw] sm:w-full max-w-lg rounded-xl sm:rounded-2xl overflow-hidden"
         style={{
           ...panelStyle,
@@ -705,12 +707,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }}
       >
         <OrnateFrame
-          className="relative w-full h-full overflow-hidden"
+          className="relative flex flex-col w-full overflow-hidden"
+          style={{ maxHeight: "inherit" }}
           cornerSize={40}
         >
           {/* Header */}
           <div
-            className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 border-b"
+            className="flex shrink-0 items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 border-b"
             style={{ borderColor: GOLD.border25 }}
           >
             <div
@@ -723,7 +726,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               <BookOpen size={16} className="text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-amber-200 tracking-wide">
+              <h2
+                id="tutorial-title"
+                className="text-sm sm:text-base font-bold text-amber-200 tracking-wide"
+              >
                 {step.title}
               </h2>
               <p className="text-[10px] sm:text-xs text-amber-200/40 mt-0.5">
@@ -733,7 +739,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
 
           {/* Body */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 max-h-[40dvh] sm:max-h-[50dvh] overflow-y-auto">
+          <div className="min-h-0 px-3 sm:px-5 py-3 sm:py-4 max-h-[40dvh] sm:max-h-[50dvh] overflow-y-auto overscroll-contain">
             {descriptionLines.map((line, i) => (
               <p
                 key={i}
@@ -766,7 +772,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           />
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3">
+          <div className="flex shrink-0 flex-wrap gap-2 items-center justify-between px-3 sm:px-5 py-2 sm:py-3">
             {/* Progress dots */}
             <div className="flex gap-1 sm:gap-1.5">
               {TUTORIAL_STEPS.map((_, i) => (
@@ -790,15 +796,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             {/* Buttons */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button
+                type="button"
                 onClick={handleSkip}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs text-amber-200/50 hover:text-amber-200/80 hover:bg-white/5 transition-colors"
+                className="flex min-h-11 items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs text-amber-200/50 hover:text-amber-200/80 hover:bg-white/5 transition-colors"
               >
                 <SkipForward size={11} />
                 Skip
               </button>
               <button
+                type="button"
                 onClick={handleNext}
-                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
+                className="flex min-h-11 items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(180,125,30,0.85), rgba(120,75,15,0.9))",

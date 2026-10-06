@@ -185,6 +185,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
         <button
           type="button"
+          data-tutorial="build-menu"
           aria-expanded={mobileMenuOpen}
           aria-label={
             buildingTower
