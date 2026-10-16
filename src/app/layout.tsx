@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 
+import { GoogleAnalytics } from "./components/GoogleAnalytics";
 import {
   SITE_URL,
   SITE_NAME,
@@ -133,6 +134,7 @@ export default function RootLayout({
       >
         <Theme>{children}</Theme>
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );
