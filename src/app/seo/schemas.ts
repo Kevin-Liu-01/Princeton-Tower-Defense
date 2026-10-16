@@ -17,6 +17,7 @@ import {
 } from "./constants";
 
 const PERSON_ID = `${SITE_URL}/#author`;
+const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
 const GAME_ID = `${SITE_URL}/#game`;
 
@@ -46,6 +47,17 @@ function getPersonSchema() {
     name: SITE_AUTHOR,
     sameAs: [...AUTHOR_SAME_AS],
     url: AUTHOR_URL,
+  };
+}
+
+// The game's brand for Google: the shield logo (512 x 512 PNG) beside the site name.
+function getOrganizationSchema() {
+  return {
+    "@id": ORGANIZATION_ID,
+    "@type": "Organization",
+    logo: `${SITE_URL}/images/logos/princeton-td-logo.png`,
+    name: SITE_NAME,
+    url: SITE_URL,
   };
 }
 
@@ -307,6 +319,7 @@ export function getEntityGraph() {
     "@context": "https://schema.org",
     "@graph": [
       getPersonSchema(),
+      getOrganizationSchema(),
       getWebSiteSchema(),
       getVideoGameSchema(),
       getWebApplicationSchema(),

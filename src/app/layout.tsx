@@ -36,9 +36,14 @@ export const metadata: Metadata = {
   creator: SITE_AUTHOR,
   description: SITE_DESCRIPTION,
   generator: "Next.js",
+  // src/app/favicon.ico (48, 32 and 16 px) is linked by Next's file convention.
   icons: {
-    apple: [{ url: "/images/logos/princeton-td-logo.png" }],
-    icon: [{ sizes: "any", url: "/favicon.ico" }],
+    apple: [
+      { sizes: "180x180", type: "image/png", url: "/apple-touch-icon.png" },
+    ],
+    icon: [
+      { type: "image/svg+xml", url: "/images/logos/princeton-td-logo.svg" },
+    ],
   },
   keywords: KEYWORDS,
   metadataBase: new URL(SITE_URL),
